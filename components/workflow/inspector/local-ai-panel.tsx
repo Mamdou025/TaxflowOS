@@ -59,6 +59,8 @@ import {
   type WorkflowEdge,
   type WorkflowNode,
 } from "@/lib/workflow-store";
+import { appendWorkflowChangeEvent } from "@/src/audit/change-log";
+import { createWorkflowAuditEvent } from "@/src/audit/workflow-events";
 
 type LocalAiPanelProps = {
   disabled?: boolean;
@@ -533,6 +535,34 @@ export function LocalAiPanel({ disabled, workflowName }: LocalAiPanelProps) {
     selectedBlockId,
     selectedEdgeId,
   });
+  const recordAiAuditEvent = ({
+    proposal,
+    reason,
+    type,
+  }: {
+    proposal: AiProposal;
+    reason?: string;
+    type:
+      | "ai_proposal_approved"
+      | "ai_proposal_created"
+      | "ai_proposal_rejected";
+  }) => {
+    appendWorkflowChangeEvent(
+      createWorkflowAuditEvent({
+        actor: MOCK_PANEL_USER,
+        after: {
+          status: proposal.status,
+          title: getProposalTitle(proposal),
+        },
+        proposalId: proposal.id,
+        reason,
+        targetObjectId: proposal.id,
+        targetObjectType: "ai_proposal",
+        type,
+        workflowId: definition.id,
+      })
+    );
+  };
 
   const saveDefinition = ({
     eventMessage,
@@ -611,6 +641,11 @@ export function LocalAiPanel({ disabled, workflowName }: LocalAiPanelProps) {
       eventType: "ai_proposal_created",
       proposals,
     });
+    recordAiAuditEvent({
+      proposal: result.proposal,
+      reason: result.proposal.originalPrompt,
+      type: "ai_proposal_created",
+    });
     setActPrompt("");
     setProposalNote("");
     toast.success("AI proposal created");
@@ -660,6 +695,11 @@ export function LocalAiPanel({ disabled, workflowName }: LocalAiPanelProps) {
       nextNodes: applied.nodes,
       proposals,
     });
+    recordAiAuditEvent({
+      proposal: { ...proposal, status: "approved" },
+      reason: note || "Approved from the local AI panel.",
+      type: "ai_proposal_approved",
+    });
     toast.success("Proposal approved and applied to the draft");
   };
 
@@ -699,6 +739,11 @@ export function LocalAiPanel({ disabled, workflowName }: LocalAiPanelProps) {
       eventMessage: `AI proposal rejected: ${getProposalTitle(proposal)}.`,
       eventType: "ai_proposal_rejected",
       proposals,
+    });
+    recordAiAuditEvent({
+      proposal: { ...proposal, status: "rejected" },
+      reason,
+      type: "ai_proposal_rejected",
     });
     toast.success("Proposal rejected");
   };
@@ -914,31 +959,33 @@ export function LocalAiPanel({ disabled, workflowName }: LocalAiPanelProps) {
               <TinyPill>{`${definition.aiProposals.length} total`}</TinyPill>
             </div>
 
-            {sortedProposals.length === 0 ? (
-              <div className="rounded-md border bg-muted/20 p-3 text-muted-foreground text-sm">
-                No proposals yet.
-              </div>
-            ) : (
-              sortedProposals.map((proposal) => (
-                <ProposalCard
-                  definition={definition}
-                  disabled={disabled}
-                  key={proposal.id}
-                  note={proposalNotes[proposal.id] || ""}
-                  onApprove={handleApproveProposal}
-                  onAskWhy={handleAskWhy}
-                  onNoteChange={(proposalId, value) =>
-                    setProposalNotes((current) => ({
-                      ...current,
-                      [proposalId]: value,
-                    }))
-                  }
-                  onReject={handleRejectProposal}
-                  onRevise={handleReviseNote}
-                  proposal={proposal}
-                />
-              ))
-            )}
+            <div className="max-h-[480px] overflow-y-auto space-y-3">
+              {sortedProposals.length === 0 ? (
+                <div className="rounded-md border bg-muted/20 p-3 text-muted-foreground text-sm">
+                  No proposals yet.
+                </div>
+              ) : (
+                sortedProposals.map((proposal) => (
+                  <ProposalCard
+                    definition={definition}
+                    disabled={disabled}
+                    key={proposal.id}
+                    note={proposalNotes[proposal.id] || ""}
+                    onApprove={handleApproveProposal}
+                    onAskWhy={handleAskWhy}
+                    onNoteChange={(proposalId, value) =>
+                      setProposalNotes((current) => ({
+                        ...current,
+                        [proposalId]: value,
+                      }))
+                    }
+                    onReject={handleRejectProposal}
+                    onRevise={handleReviseNote}
+                    proposal={proposal}
+                  />
+                ))
+              )}
+            </div>
           </div>
         </TabsContent>
       </Tabs>

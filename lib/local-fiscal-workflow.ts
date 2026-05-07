@@ -1,762 +1,159 @@
+import type { BlockCatalogItem as DomainBlockCatalogItem } from "../src/domain/workflow/block-catalog";
+import {
+  BLOCK_FAMILY_STAGE as DOMAIN_BLOCK_FAMILY_STAGE,
+  FISCAL_STAGE_OPTIONS as DOMAIN_FISCAL_STAGE_OPTIONS,
+} from "../src/domain/workflow/block-catalog";
+import type {
+  BlockFamily as DomainBlockFamily,
+  BlockRunStatus as DomainBlockRunStatus,
+  BlockStatus as DomainBlockStatus,
+  BlockSubtype as DomainBlockSubtype,
+  FiscalStage as DomainFiscalStage,
+  WorkflowDefinitionStatus as DomainWorkflowDefinitionStatus,
+} from "../src/domain/workflow/block-types";
+import type {
+  EdgeBindingStatus as DomainEdgeBindingStatus,
+  EdgeStatus as DomainEdgeStatus,
+  WorkflowEdgeHistoryEntry as DomainWorkflowEdgeHistoryEntry,
+  WorkflowRelationshipType as DomainWorkflowRelationshipType,
+} from "../src/domain/workflow/edge-types";
+import {
+  CANDIDATE_OUTPUT_RELATIONSHIP_TYPES as DOMAIN_CANDIDATE_OUTPUT_RELATIONSHIP_TYPES,
+  EDGE_BINDING_STATUS_VALUES as DOMAIN_EDGE_BINDING_STATUS_VALUES,
+  EDGE_STATUS_VALUES as DOMAIN_EDGE_STATUS_VALUES,
+  GOVERNED_OUTPUT_RELATIONSHIP_TYPES as DOMAIN_GOVERNED_OUTPUT_RELATIONSHIP_TYPES,
+  OUTPUT_MAPPING_RELATIONSHIP_TYPES as DOMAIN_OUTPUT_MAPPING_RELATIONSHIP_TYPES,
+  WORKFLOW_RELATIONSHIP_LABELS as DOMAIN_WORKFLOW_RELATIONSHIP_LABELS,
+  WORKFLOW_RELATIONSHIP_TYPES as DOMAIN_WORKFLOW_RELATIONSHIP_TYPES,
+  isCandidateOutputRelationshipType as domainIsCandidateOutputRelationshipType,
+  isGovernedOutputRelationshipType as domainIsGovernedOutputRelationshipType,
+  isOutputMappingRelationshipType as domainIsOutputMappingRelationshipType,
+} from "../src/domain/workflow/edge-types";
+import { getProtectedKindForSubtype } from "../src/domain/workflow/protected-rules";
+import {
+  LOGIC_OUTPUT_GOVERNANCE_WARNING as DOMAIN_LOGIC_OUTPUT_GOVERNANCE_WARNING,
+  getAllowedRelationshipTypesForFamilies,
+} from "../src/domain/workflow/workflow-rules";
+import type {
+  AiProposal as DomainAiProposal,
+  AiProposalHistoryEntry as DomainAiProposalHistoryEntry,
+  AiProposalStatus as DomainAiProposalStatus,
+  BlockRun as DomainBlockRun,
+  GovernanceMetadata as DomainGovernanceMetadata,
+  LocalExecutionLog as DomainLocalExecutionLog,
+  LocalRunRecord as DomainLocalRunRecord,
+  LocalWorkflowExecution as DomainLocalWorkflowExecution,
+  LocalWorkflowSnapshot as DomainLocalWorkflowSnapshot,
+  OutputMappingPreview as DomainOutputMappingPreview,
+  OutputMappingPreviewItem as DomainOutputMappingPreviewItem,
+  PendingWorkflowConnection as DomainPendingWorkflowConnection,
+  RuntimeUiConfig as DomainRuntimeUiConfig,
+  RuntimeUiRow as DomainRuntimeUiRow,
+  RuntimeUiSection as DomainRuntimeUiSection,
+  RuntimeVisibility as DomainRuntimeVisibility,
+  SourceMetadata as DomainSourceMetadata,
+  WorkflowBlock as DomainWorkflowBlock,
+  WorkflowCodeField as DomainWorkflowCodeField,
+  WorkflowDefinition as DomainWorkflowDefinition,
+  WorkflowDraft as DomainWorkflowDraft,
+  WorkflowEdge as DomainWorkflowEdge,
+  WorkflowEvent as DomainWorkflowEvent,
+  WorkflowEventType as DomainWorkflowEventType,
+  WorkflowFormulaField as DomainWorkflowFormulaField,
+  WorkflowPosition as DomainWorkflowPosition,
+  WorkflowStructure as DomainWorkflowStructure,
+  WorkflowVersionSnapshot as DomainWorkflowVersionSnapshot,
+} from "../src/domain/workflow/workflow-types";
+import {
+  AI_PROPOSAL_STATUS_VALUES as DOMAIN_AI_PROPOSAL_STATUS_VALUES,
+  WORKFLOW_EVENT_TYPES as DOMAIN_WORKFLOW_EVENT_TYPES,
+  WORKFLOW_SCHEMA_VERSION as DOMAIN_WORKFLOW_SCHEMA_VERSION,
+} from "../src/domain/workflow/workflow-types";
+import {
+  EXPANDED_MAPPING_PIPELINE_BLOCK_SPECS,
+  EXPANDED_MAPPING_PIPELINE_EDGE_SPECS,
+} from "./workflow/sample-workflows/expanded-mapping-pipeline-demo";
+import {
+  WORKING_SOURCE_DEMO_BLOCK_SPECS,
+  WORKING_SOURCE_DEMO_EDGE_SPECS,
+} from "./workflow/sample-workflows/working-source-rules-demo";
 import type {
   WorkflowEdge as CanvasWorkflowEdge,
   WorkflowNode,
   WorkflowNodeType,
 } from "./workflow-store";
 
+export type BlockCatalogItem = DomainBlockCatalogItem;
+export type BlockFamily = DomainBlockFamily;
+export type BlockRunStatus = DomainBlockRunStatus;
+export type BlockStatus = DomainBlockStatus;
+export type BlockSubtype = DomainBlockSubtype;
+export type FiscalStage = DomainFiscalStage;
+export type WorkflowDefinitionStatus = DomainWorkflowDefinitionStatus;
+export type EdgeBindingStatus = DomainEdgeBindingStatus;
+export type EdgeStatus = DomainEdgeStatus;
+export type WorkflowEdgeHistoryEntry = DomainWorkflowEdgeHistoryEntry;
+export type WorkflowRelationshipType = DomainWorkflowRelationshipType;
+export type AiProposal = DomainAiProposal;
+export type AiProposalHistoryEntry = DomainAiProposalHistoryEntry;
+export type AiProposalStatus = DomainAiProposalStatus;
+export type BlockRun = DomainBlockRun;
+export type GovernanceMetadata = DomainGovernanceMetadata;
+export type LocalExecutionLog = DomainLocalExecutionLog;
+export type LocalRunRecord = DomainLocalRunRecord;
+export type LocalWorkflowExecution = DomainLocalWorkflowExecution;
+export type LocalWorkflowSnapshot = DomainLocalWorkflowSnapshot;
+export type OutputMappingPreview = DomainOutputMappingPreview;
+export type OutputMappingPreviewItem = DomainOutputMappingPreviewItem;
+export type PendingWorkflowConnection = DomainPendingWorkflowConnection;
+export type RuntimeUiConfig = DomainRuntimeUiConfig;
+export type RuntimeUiRow = DomainRuntimeUiRow;
+export type RuntimeUiSection = DomainRuntimeUiSection;
+export type RuntimeVisibility = DomainRuntimeVisibility;
+export type SourceMetadata = DomainSourceMetadata;
+export type WorkflowBlock = DomainWorkflowBlock;
+export type WorkflowCodeField = DomainWorkflowCodeField;
+export type WorkflowDefinition = DomainWorkflowDefinition;
+export type WorkflowDraft = DomainWorkflowDraft;
+export type WorkflowEdge = DomainWorkflowEdge;
+export type WorkflowEvent = DomainWorkflowEvent;
+export type WorkflowEventType = DomainWorkflowEventType;
+export type WorkflowFormulaField = DomainWorkflowFormulaField;
+export type WorkflowPosition = DomainWorkflowPosition;
+export type WorkflowStructure = DomainWorkflowStructure;
+export type WorkflowVersionSnapshot = DomainWorkflowVersionSnapshot;
+
+export const BLOCK_FAMILY_STAGE = DOMAIN_BLOCK_FAMILY_STAGE;
+export const FISCAL_STAGE_OPTIONS = DOMAIN_FISCAL_STAGE_OPTIONS;
+export const CANDIDATE_OUTPUT_RELATIONSHIP_TYPES =
+  DOMAIN_CANDIDATE_OUTPUT_RELATIONSHIP_TYPES;
+export const EDGE_BINDING_STATUS_VALUES = DOMAIN_EDGE_BINDING_STATUS_VALUES;
+export const EDGE_STATUS_VALUES = DOMAIN_EDGE_STATUS_VALUES;
+export const GOVERNED_OUTPUT_RELATIONSHIP_TYPES =
+  DOMAIN_GOVERNED_OUTPUT_RELATIONSHIP_TYPES;
+export const OUTPUT_MAPPING_RELATIONSHIP_TYPES =
+  DOMAIN_OUTPUT_MAPPING_RELATIONSHIP_TYPES;
+export const WORKFLOW_RELATIONSHIP_LABELS = DOMAIN_WORKFLOW_RELATIONSHIP_LABELS;
+export const WORKFLOW_RELATIONSHIP_TYPES = DOMAIN_WORKFLOW_RELATIONSHIP_TYPES;
+export const isCandidateOutputRelationshipType =
+  domainIsCandidateOutputRelationshipType;
+export const isGovernedOutputRelationshipType =
+  domainIsGovernedOutputRelationshipType;
+export const isOutputMappingRelationshipType =
+  domainIsOutputMappingRelationshipType;
+export const LOGIC_OUTPUT_GOVERNANCE_WARNING =
+  DOMAIN_LOGIC_OUTPUT_GOVERNANCE_WARNING;
+
+const AI_PROPOSAL_STATUS_VALUES = DOMAIN_AI_PROPOSAL_STATUS_VALUES;
+const WORKFLOW_EVENT_TYPES = DOMAIN_WORKFLOW_EVENT_TYPES;
+
 export const LOCAL_WORKFLOW_ID = "local-fiscal-studio";
 export const LOCAL_WORKFLOW_STORAGE_KEY = "workflow-studio.local-workflow";
 export const LOCAL_RUNS_STORAGE_KEY = "workflow-studio.local-runs";
-export const LOCAL_WORKFLOW_SCHEMA_VERSION = "workflow-studio.local.v1";
+export const LOCAL_WORKFLOW_SCHEMA_VERSION = DOMAIN_WORKFLOW_SCHEMA_VERSION;
 
 const SYSTEM_USER = "workflow-studio";
 const SAMPLE_CREATED_AT = "2026-04-28T12:00:00.000Z";
-
-export type WorkflowDefinitionStatus = "draft" | "published";
-
-export type FiscalStage =
-  | "source"
-  | "logic"
-  | "validation"
-  | "protected"
-  | "output"
-  | "ai-agent";
-
-export type BlockFamily =
-  | "Source"
-  | "Logic"
-  | "Review / Validation"
-  | "Protected"
-  | "Output"
-  | "AI / Agent";
-
-export type BlockSubtype =
-  | "Manual Entry"
-  | "Excel / Workbook"
-  | "PDF / Document"
-  | "API / HTTP Request"
-  | "Database Query"
-  | "Web / URL"
-  | "AI Search Result"
-  | "Formula"
-  | "Aggregation"
-  | "Transformation"
-  | "Condition"
-  | "Script"
-  | "Classification / Mapping"
-  | "Required Input Check"
-  | "Missing Source Check"
-  | "Low Confidence Warning"
-  | "Manual Override Review"
-  | "Approval Gate"
-  | "Output Readiness Check"
-  | "Protected Input"
-  | "Protected Result"
-  | "Official Line"
-  | "Locked Rate"
-  | "Final Reviewed Amount"
-  | "CSV Export"
-  | "Excel Export"
-  | "PDF Report"
-  | "Evidence Pack"
-  | "Canonical JSON"
-  | "Taxprep Handoff"
-  | "ONESOURCE Handoff"
-  | "AI Search"
-  | "AI Mapping Suggestion"
-  | "AI Formula Proposal"
-  | "AI Workflow Proposal";
-
-export type BlockStatus =
-  | "draft"
-  | "configured"
-  | "needs-review"
-  | "approved"
-  | "locked"
-  | "running"
-  | "success"
-  | "error";
-
-export type EdgeStatus = "active" | "proposed" | "rejected" | "disabled";
-
-export type BlockRunStatus =
-  | "pending"
-  | "running"
-  | "success"
-  | "warning"
-  | "error"
-  | "skipped";
-
-export type WorkflowRelationshipType =
-  | "provides_data_to"
-  | "extracted_into"
-  | "referenced_by"
-  | "transforms_into"
-  | "aggregates_into"
-  | "branches_to"
-  | "depends_on"
-  | "checked_by"
-  | "requires_review_by"
-  | "triggers_validation"
-  | "approves_for"
-  | "blocks_until_resolved"
-  | "certifies"
-  | "feeds_protected_input"
-  | "feeds_protected_result"
-  | "feeds_output_input"
-  | "included_in_output_preview"
-  | "maps_to_output_candidate"
-  | "feeds_ai_context"
-  | "provides_context_to_ai"
-  | "requests_ai_review"
-  | "supplies_candidate_data"
-  | "maps_to_output"
-  | "included_in_handoff"
-  | "proposes"
-  | "suggests_mapping"
-  | "suggests_formula"
-  | "suggests_workflow_change";
-
-export type AiProposalStatus = "proposed" | "approved" | "rejected";
-
-export type AiProposalHistoryEntry = {
-  id: string;
-  action: "created" | "revised" | "approved" | "rejected";
-  by: string;
-  at: string;
-  notes?: string;
-};
-
-export type WorkflowPosition = {
-  x: number;
-  y: number;
-};
-
-export type WorkflowCodeField = {
-  language: "typescript" | "javascript" | "json" | "sql" | "text";
-  body: string;
-  entrypoint?: string;
-};
-
-export type WorkflowFormulaField = {
-  expression: string;
-  outputKey: string;
-  inputs: string[];
-};
-
-export type SourceMetadata = {
-  sourceType: Extract<
-    BlockSubtype,
-    | "Manual Entry"
-    | "Excel / Workbook"
-    | "PDF / Document"
-    | "API / HTTP Request"
-    | "Database Query"
-    | "Web / URL"
-    | "AI Search Result"
-  >;
-  locator: string;
-  valuePreview?: string;
-  immutable: true;
-  treatedAsEvidence: boolean;
-  labelLocked: boolean;
-  locatorLocked: boolean;
-  valuesLocked: boolean;
-};
-
-export type GovernanceMetadata = {
-  protected: boolean;
-  protectedKind?:
-    | "input"
-    | "result"
-    | "official-line"
-    | "locked-rate"
-    | "final-reviewed-amount"
-    | "summary-result";
-  steward: string;
-  lockedInRuntime: boolean;
-  requiresUnlockToEdit: boolean;
-  editIntent?: string;
-  approvalState: "draft" | "review-required" | "approved";
-};
-
-export type RuntimeVisibility = {
-  visible: boolean;
-  editableInRuntime: boolean;
-  generatedUiLocked: boolean;
-  masked: boolean;
-  showInRuns: boolean;
-  outputKey?: string;
-};
-
-export type WorkflowBlock = {
-  id: string;
-  family: BlockFamily;
-  subtype: BlockSubtype;
-  label: string;
-  description: string;
-  status: BlockStatus;
-  position: WorkflowPosition;
-  config: Record<string, unknown>;
-  code?: WorkflowCodeField;
-  formula?: WorkflowFormulaField;
-  source?: SourceMetadata;
-  governance?: GovernanceMetadata;
-  runtime: RuntimeVisibility;
-  catalogId?: string;
-  sample?: boolean;
-  createdBy: string;
-  createdAt: string;
-  updatedBy: string;
-  updatedAt: string;
-};
-
-export type WorkflowEdgeHistoryEntry = {
-  id: string;
-  action:
-    | "created"
-    | "updated"
-    | "approved"
-    | "rejected"
-    | "disabled"
-    | "migrated"
-    | "split";
-  by: string;
-  at: string;
-  notes?: string;
-};
-
-export type WorkflowEdge = {
-  id: string;
-  sourceBlockId: string;
-  targetBlockId: string;
-  relationshipType: WorkflowRelationshipType;
-  reason: string;
-  status: EdgeStatus;
-  createdBy: string;
-  createdAt: string;
-  confidence: number;
-  notes: string;
-  history: WorkflowEdgeHistoryEntry[];
-};
-
-export type BlockRun = {
-  id: string;
-  blockId: string;
-  blockLabel: string;
-  status: BlockRunStatus;
-  startedAt: string;
-  completedAt: string | null;
-  durationMs: number | null;
-  input?: unknown;
-  output?: unknown;
-  error?: { message: string };
-};
-
-export type WorkflowStructure = {
-  layout: "canvas-columns";
-  entryBlockId?: string;
-  blockOrder: string[];
-  columns: Array<{
-    id: string;
-    family: BlockFamily;
-    label: string;
-    blockIds: string[];
-  }>;
-};
-
-export type RuntimeUiRow = {
-  id: string;
-  blockId: string;
-  label: string;
-  family: BlockFamily;
-  subtype: BlockSubtype;
-  visible: boolean;
-  readOnly: boolean;
-  locked: boolean;
-  reviewerOnly: boolean;
-  advancedOnly: boolean;
-  sourceReadOnly: boolean;
-  protectedLocked: boolean;
-  outputKey?: string;
-  allowedActions: string[];
-};
-
-export type RuntimeUiSection = {
-  id: string;
-  label: string;
-  family: BlockFamily;
-  rows: RuntimeUiRow[];
-};
-
-export type RuntimeUiConfig = {
-  runtimeConfigId: string;
-  sourceWorkflowId: string;
-  sourceSnapshotId?: string;
-  generatedAt: string;
-  sections: RuntimeUiSection[];
-  visibleRows: string[];
-  hiddenRows: string[];
-  reviewerOnlyRows: string[];
-  advancedRows: string[];
-  allowedActions: string[];
-};
-
-export type OutputMappingPreviewItem = {
-  outputBlockId: string;
-  outputLabel: string;
-  outputSubtype: BlockSubtype;
-  readinessStatus: "ready" | "missing" | "warning";
-  mappedProtectedValues: Array<{
-    edgeId: string;
-    protectedBlockId: string;
-    protectedLabel: string;
-    relationshipType: Extract<
-      WorkflowRelationshipType,
-      "included_in_handoff" | "maps_to_output"
-    >;
-  }>;
-  candidateLogicMappings: Array<{
-    edgeId: string;
-    logicBlockId: string;
-    logicLabel: string;
-    relationshipType: Extract<
-      WorkflowRelationshipType,
-      | "feeds_output_input"
-      | "included_in_output_preview"
-      | "maps_to_output_candidate"
-    >;
-  }>;
-  governanceWarnings: string[];
-  ignoredRelationshipCount: number;
-  missingRequirements: string[];
-  includedSourceTraceSetting: string;
-  mockPayloadPreview: Record<string, unknown>;
-};
-
-export type OutputMappingPreview = {
-  id: string;
-  sourceWorkflowId: string;
-  sourceSnapshotId?: string;
-  generatedAt: string;
-  outputs: OutputMappingPreviewItem[];
-};
-
-export type WorkflowVersionSnapshot = {
-  id: string;
-  schemaVersion: typeof LOCAL_WORKFLOW_SCHEMA_VERSION;
-  workflowId: string;
-  workflowName: string;
-  versionNumber: number;
-  label: string;
-  status: WorkflowDefinitionStatus;
-  createdBy: string;
-  createdAt: string;
-  changeSummary: string;
-  blockCount: number;
-  edgeCount: number;
-  blockIds: string[];
-  edgeIds: string[];
-  blocks: WorkflowBlock[];
-  edges: WorkflowEdge[];
-  structure: WorkflowStructure;
-  runtimeUiConfig: RuntimeUiConfig;
-  outputMappingPreview: OutputMappingPreview;
-  aiProposals: AiProposal[];
-  mockRuns: BlockRun[];
-  notes?: string;
-  validationWarnings: string[];
-};
-
-export type AiProposal = {
-  id: string;
-  title?: string;
-  originalPrompt: string;
-  interpretedPlan: string;
-  selectedTools: string[];
-  generatedBlocks: WorkflowBlock[];
-  generatedEdges: WorkflowEdge[];
-  generatedCodeOrFormulas: Array<{
-    blockId: string;
-    kind: "code" | "formula";
-    value: string;
-  }>;
-  status: AiProposalStatus;
-  approvalResult?: {
-    approvedBy: string;
-    approvedAt: string;
-    notes?: string;
-  };
-  rejectionResult?: {
-    rejectedBy: string;
-    rejectedAt: string;
-    reason: string;
-  };
-  createdAt: string;
-  createdBy?: string;
-  relatedSelectedBlockId?: string;
-  relatedSelectedEdgeId?: string;
-  confidence?: number;
-  notes?: string;
-  history?: AiProposalHistoryEntry[];
-};
-
-export type WorkflowDefinition = {
-  schemaVersion: typeof LOCAL_WORKFLOW_SCHEMA_VERSION;
-  id: string;
-  name: string;
-  description: string;
-  status: WorkflowDefinitionStatus;
-  metadata: {
-    kind: "generic-fiscal-workflow";
-    sampleWorkflow?: {
-      id: string;
-      label: string;
-      description: string;
-    };
-    tags: string[];
-    createdBy: string;
-    createdAt: string;
-    updatedBy: string;
-    updatedAt: string;
-    notes?: string;
-  };
-  blocks: WorkflowBlock[];
-  edges: WorkflowEdge[];
-  structure: WorkflowStructure;
-  runtimeUiConfig: RuntimeUiConfig;
-  outputMappingPreview: OutputMappingPreview;
-  mockRuns: BlockRun[];
-  versionSnapshots: WorkflowVersionSnapshot[];
-  latestPublishedVersionId?: string;
-  publishedVersion?: {
-    id: string;
-    versionNumber: number;
-    createdAt: string;
-  };
-  aiProposals: AiProposal[];
-  events: WorkflowEvent[];
-};
-
-export type WorkflowDraft = {
-  id: string;
-  definition: WorkflowDefinition;
-  dirty: boolean;
-  selectedBlockId: string | null;
-  lastSavedAt: string | null;
-};
-
-export type PendingWorkflowConnection = {
-  sourceBlockId: string;
-  targetBlockId: string;
-  sourceHandle?: string | null;
-  targetHandle?: string | null;
-  createdAt: string;
-};
-
-export type WorkflowEventType =
-  | "ai_proposal_approved"
-  | "ai_proposal_created"
-  | "ai_proposal_rejected"
-  | "export_workflow"
-  | "import_workflow"
-  | "migration"
-  | "publish_snapshot"
-  | "reset_sample"
-  | "save_draft"
-  | "validation_warning";
-
-export type WorkflowEvent = {
-  id: string;
-  type: WorkflowEventType;
-  message: string;
-  createdAt: string;
-  createdBy: string;
-  details?: Record<string, unknown>;
-};
-
-export type LocalWorkflowSnapshot = WorkflowDefinition;
-
-export type LocalExecutionLog = {
-  id: string;
-  executionId: string;
-  nodeId: string;
-  nodeName: string;
-  nodeType: string;
-  status: "pending" | "running" | "success" | "error";
-  startedAt: Date;
-  completedAt: Date | null;
-  duration: string | null;
-  input?: unknown;
-  output?: unknown;
-  error: string | null;
-};
-
-export type LocalWorkflowExecution = {
-  id: string;
-  workflowId: string;
-  status: "pending" | "running" | "success" | "error" | "cancelled";
-  startedAt: Date;
-  completedAt: Date | null;
-  duration: string | null;
-  error: string | null;
-};
-
-export type LocalRunRecord = {
-  execution: LocalWorkflowExecution;
-  logs: LocalExecutionLog[];
-};
-
-export const WORKFLOW_RELATIONSHIP_TYPES = [
-  "provides_data_to",
-  "extracted_into",
-  "referenced_by",
-  "transforms_into",
-  "aggregates_into",
-  "branches_to",
-  "depends_on",
-  "checked_by",
-  "requires_review_by",
-  "triggers_validation",
-  "approves_for",
-  "blocks_until_resolved",
-  "certifies",
-  "feeds_protected_input",
-  "feeds_protected_result",
-  "feeds_output_input",
-  "included_in_output_preview",
-  "maps_to_output_candidate",
-  "feeds_ai_context",
-  "provides_context_to_ai",
-  "requests_ai_review",
-  "supplies_candidate_data",
-  "maps_to_output",
-  "included_in_handoff",
-  "proposes",
-  "suggests_mapping",
-  "suggests_formula",
-  "suggests_workflow_change",
-] as const satisfies readonly WorkflowRelationshipType[];
-
-export const GOVERNED_OUTPUT_RELATIONSHIP_TYPES = [
-  "maps_to_output",
-  "included_in_handoff",
-] as const satisfies readonly WorkflowRelationshipType[];
-
-export const CANDIDATE_OUTPUT_RELATIONSHIP_TYPES = [
-  "feeds_output_input",
-  "included_in_output_preview",
-  "maps_to_output_candidate",
-] as const satisfies readonly WorkflowRelationshipType[];
-
-export const OUTPUT_MAPPING_RELATIONSHIP_TYPES = [
-  ...GOVERNED_OUTPUT_RELATIONSHIP_TYPES,
-  ...CANDIDATE_OUTPUT_RELATIONSHIP_TYPES,
-] as const satisfies readonly WorkflowRelationshipType[];
-
-export const LOGIC_OUTPUT_GOVERNANCE_WARNING =
-  "Final governed handoffs should usually map from Protected values. This Logic mapping is treated as a draft/candidate mapping.";
-
-const AI_PROPOSAL_RELATIONSHIP_TYPES = [
-  "proposes",
-  "suggests_mapping",
-  "suggests_formula",
-  "suggests_workflow_change",
-] as const satisfies readonly WorkflowRelationshipType[];
-
-const AI_CONTEXT_RELATIONSHIP_TYPES = [
-  "feeds_ai_context",
-  "provides_context_to_ai",
-  "requests_ai_review",
-  "supplies_candidate_data",
-] as const satisfies readonly WorkflowRelationshipType[];
-
-const RELATIONSHIP_TYPES_BY_FAMILY_PAIR: Partial<
-  Record<
-    BlockFamily,
-    Partial<Record<BlockFamily, readonly WorkflowRelationshipType[]>>
-  >
-> = {
-  Logic: {
-    "AI / Agent": AI_CONTEXT_RELATIONSHIP_TYPES,
-    Logic: ["transforms_into", "aggregates_into", "branches_to", "depends_on"],
-    Output: CANDIDATE_OUTPUT_RELATIONSHIP_TYPES,
-    Protected: ["feeds_protected_input", "feeds_protected_result"],
-    "Review / Validation": [
-      "checked_by",
-      "requires_review_by",
-      "triggers_validation",
-    ],
-  },
-  Output: {
-    "AI / Agent": AI_CONTEXT_RELATIONSHIP_TYPES,
-  },
-  Protected: {
-    "AI / Agent": AI_CONTEXT_RELATIONSHIP_TYPES,
-    Output: GOVERNED_OUTPUT_RELATIONSHIP_TYPES,
-  },
-  "Review / Validation": {
-    "AI / Agent": AI_CONTEXT_RELATIONSHIP_TYPES,
-    Protected: ["approves_for", "blocks_until_resolved", "certifies"],
-  },
-  Source: {
-    "AI / Agent": AI_CONTEXT_RELATIONSHIP_TYPES,
-    Logic: ["provides_data_to", "extracted_into", "referenced_by"],
-  },
-};
-
-export const EDGE_STATUS_VALUES = [
-  "active",
-  "proposed",
-  "disabled",
-  "rejected",
-] as const satisfies readonly EdgeStatus[];
-
-const AI_PROPOSAL_STATUS_VALUES = [
-  "proposed",
-  "approved",
-  "rejected",
-] as const satisfies readonly AiProposalStatus[];
-
-const WORKFLOW_EVENT_TYPES = [
-  "ai_proposal_approved",
-  "ai_proposal_created",
-  "ai_proposal_rejected",
-  "export_workflow",
-  "import_workflow",
-  "migration",
-  "publish_snapshot",
-  "reset_sample",
-  "save_draft",
-  "validation_warning",
-] as const satisfies readonly WorkflowEventType[];
-
-export const WORKFLOW_RELATIONSHIP_LABELS: Record<
-  WorkflowRelationshipType,
-  string
-> = {
-  aggregates_into: "Aggregates into",
-  approves_for: "Approves for",
-  blocks_until_resolved: "Blocks until resolved",
-  branches_to: "Branches to",
-  certifies: "Certifies",
-  checked_by: "Checked by",
-  depends_on: "Depends on",
-  extracted_into: "Extracted into",
-  feeds_ai_context: "Feeds AI context",
-  feeds_output_input: "Feeds output input",
-  feeds_protected_input: "Feeds protected input",
-  feeds_protected_result: "Feeds protected result",
-  included_in_output_preview: "Included in output preview",
-  included_in_handoff: "Included in handoff",
-  maps_to_output: "Maps to output",
-  maps_to_output_candidate: "Maps to output candidate",
-  proposes: "Proposes",
-  provides_context_to_ai: "Provides context to AI",
-  provides_data_to: "Provides data to",
-  referenced_by: "Referenced by",
-  requires_review_by: "Requires review by",
-  requests_ai_review: "Requests AI review",
-  suggests_formula: "Suggests formula",
-  suggests_mapping: "Suggests mapping",
-  suggests_workflow_change: "Suggests workflow change",
-  supplies_candidate_data: "Supplies candidate data",
-  transforms_into: "Transforms into",
-  triggers_validation: "Triggers validation",
-};
-
-export function isGovernedOutputRelationshipType(
-  relationshipType: WorkflowRelationshipType
-): relationshipType is (typeof GOVERNED_OUTPUT_RELATIONSHIP_TYPES)[number] {
-  return (
-    GOVERNED_OUTPUT_RELATIONSHIP_TYPES as readonly WorkflowRelationshipType[]
-  ).includes(relationshipType);
-}
-
-export function isCandidateOutputRelationshipType(
-  relationshipType: WorkflowRelationshipType
-): relationshipType is (typeof CANDIDATE_OUTPUT_RELATIONSHIP_TYPES)[number] {
-  return (
-    CANDIDATE_OUTPUT_RELATIONSHIP_TYPES as readonly WorkflowRelationshipType[]
-  ).includes(relationshipType);
-}
-
-export function isOutputMappingRelationshipType(
-  relationshipType: WorkflowRelationshipType
-): relationshipType is (typeof OUTPUT_MAPPING_RELATIONSHIP_TYPES)[number] {
-  return (
-    OUTPUT_MAPPING_RELATIONSHIP_TYPES as readonly WorkflowRelationshipType[]
-  ).includes(relationshipType);
-}
-
-export type BlockCatalogItem = {
-  id: string;
-  family: BlockFamily;
-  subtype: BlockSubtype;
-  label: string;
-  description: string;
-  defaultConfig: Record<string, unknown>;
-};
-
-export const BLOCK_FAMILY_STAGE: Record<BlockFamily, FiscalStage> = {
-  Source: "source",
-  Logic: "logic",
-  "Review / Validation": "validation",
-  Protected: "protected",
-  Output: "output",
-  "AI / Agent": "ai-agent",
-};
-
-export const FISCAL_STAGE_OPTIONS: Array<{
-  id: string;
-  stage: FiscalStage;
-  family: BlockFamily;
-  label: string;
-  description: string;
-}> = [
-  {
-    id: "preset:source",
-    stage: "source",
-    family: "Source",
-    label: "Source",
-    description: "Immutable truth or reference data",
-  },
-  {
-    id: "preset:logic",
-    stage: "logic",
-    family: "Logic",
-    label: "Logic",
-    description: "Transform, calculate, classify, or derive values",
-  },
-  {
-    id: "preset:review-validation",
-    stage: "validation",
-    family: "Review / Validation",
-    label: "Review / Validation",
-    description: "Check whether the workflow is trustworthy",
-  },
-  {
-    id: "preset:protected",
-    stage: "protected",
-    family: "Protected",
-    label: "Protected",
-    description: "Governed inputs, official lines, and protected results",
-  },
-  {
-    id: "preset:output",
-    stage: "output",
-    family: "Output",
-    label: "Output",
-    description: "Generate handoff or export artifacts",
-  },
-  {
-    id: "preset:ai-agent",
-    stage: "ai-agent",
-    family: "AI / Agent",
-    label: "AI / Agent",
-    description: "Propose searches, mappings, formulas, or workflow changes",
-  },
-];
 
 export const BLOCK_CATALOG: BlockCatalogItem[] = [
   {
@@ -771,6 +168,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       outputs: "manualEntry",
       rulebookRef: "Manual source values are locked as evidence.",
       sourceLocator: "manual-entry",
+      toolId: "source.manual_value",
     },
   },
   {
@@ -785,6 +183,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       outputs: "workbookRows",
       rulebookRef: "Workbook rows are immutable source evidence.",
       sourceLocator: "workbook://sheet/range",
+      toolId: "source.manual_table",
     },
   },
   {
@@ -799,6 +198,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       outputs: "documentEvidence",
       rulebookRef: "Document facts are referenced, not overwritten.",
       sourceLocator: "document://page/section",
+      toolId: "source.manual_value",
     },
   },
   {
@@ -813,6 +213,29 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       outputs: "apiReference",
       rulebookRef: "API responses are stored as reference evidence.",
       sourceLocator: "https://api.example.test/reference",
+      toolId: "source.manual_value",
+    },
+  },
+  {
+    id: "source:currency-rate",
+    family: "Source",
+    subtype: "Currency Rate",
+    label: "Bank of Canada FX Rate",
+    description: "External FX rate reference for local calculation",
+    defaultConfig: {
+      documentCurrency: "USD",
+      fapiYear: 2025,
+      inputs: "Bank of Canada rate lookup",
+      outputs: "exchange_rate, rate_metadata",
+      overrideRate: 1.35,
+      rateProvider: "bank_of_canada",
+      rateType: "annual_average",
+      reportingCurrency: "CAD",
+      rulebookRef:
+        "FX rates are captured as source references, then reviewed/protected downstream.",
+      sourceKind: "currency_rate",
+      sourceLocator: "bank-of-canada://annual-average/USD-CAD",
+      toolId: "source.currency_rate",
     },
   },
   {
@@ -827,6 +250,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       outputs: "queryRows",
       rulebookRef: "Database source rows are immutable in the builder.",
       sourceLocator: "database://connection/query",
+      toolId: "source.manual_table",
     },
   },
   {
@@ -841,6 +265,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       outputs: "webReference",
       rulebookRef: "Web references are captured as source evidence.",
       sourceLocator: "https://example.test/source",
+      toolId: "source.manual_value",
     },
   },
   {
@@ -855,6 +280,299 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       outputs: "aiSearchEvidence",
       rulebookRef: "AI search results require downstream review.",
       sourceLocator: "proposal://ai-search-result",
+      toolId: "source.manual_value",
+    },
+  },
+  {
+    id: "source:keyword-rules",
+    family: "Source",
+    subtype: "Keyword Rules",
+    label: "Keyword Rulebook",
+    description: "Editable keyword-to-category rulebook for mapping review",
+    defaultConfig: {
+      keywordRules: [
+        {
+          categoryId: "interest_income",
+          categoryLabel: "Interest Income",
+          confidence: 0.9,
+          keywords: ["interest income", "interest earned", "bank interest"],
+          ruleId: "keyword-rule-interest-income",
+          suggestedLine: "A",
+        },
+        {
+          categoryId: "rental_income",
+          categoryLabel: "Rental Income",
+          confidence: 0.9,
+          keywords: ["rental income", "rent income", "lease income"],
+          ruleId: "keyword-rule-rents",
+          suggestedLine: "A",
+        },
+        {
+          categoryId: "bank_fees",
+          categoryLabel: "Bank Fees",
+          confidence: 0.8,
+          keywords: ["bank charges", "office expenses", "general expenses"],
+          ruleId: "keyword-rule-general-expenses",
+          suggestedLine: "EXPENSES",
+        },
+        {
+          categoryId: "professional_fees",
+          categoryLabel: "Professional Fees",
+          confidence: 0.8,
+          keywords: ["professional fees", "accounting fees", "audit fees"],
+          ruleId: "keyword-rule-accounting-expenses",
+          suggestedLine: "EXPENSES",
+        },
+        {
+          categoryId: "other_income",
+          categoryLabel: "Other Income",
+          confidence: 0.7,
+          keywords: ["other revenue", "miscellaneous income", "sundry income"],
+          ruleId: "keyword-rule-other-fapi-income",
+          suggestedLine: "A",
+        },
+      ],
+      owner: "Fiscal Systems",
+      inputs: "draft keyword rulebook",
+      outputs: "keyword_rules, rule_metadata, rule_version",
+      rulebookRef:
+        "Keyword rulebooks are editable in draft and versioned after use.",
+      sourceKind: "keyword_rules",
+      sourceLocator: "manual-source://keyword-rules",
+      toolId: "source.keyword_rules",
+    },
+  },
+  {
+    id: "source:aggregation-rules",
+    family: "Source",
+    subtype: "Aggregation Rules",
+    label: "Aggregation Rulebook",
+    description: "Editable rollup and formula rulebook for calculation review",
+    defaultConfig: {
+      aggregationRules: [
+        {
+          children: [],
+          description: "Base income rollup from mapped atomic categories.",
+          includeCategoryIds: [
+            "interest_income",
+            "rental_income",
+            "service_income",
+            "other_income",
+          ],
+          label: "Income Base",
+          nodeId: "income_base",
+          nodeType: "group",
+          operation: "sum",
+          order: 10,
+        },
+        {
+          children: [],
+          description: "Base expense rollup from mapped atomic categories.",
+          includeCategoryIds: [
+            "bank_fees",
+            "professional_fees",
+            "interest_expense",
+          ],
+          label: "Expense Base",
+          nodeId: "expense_base",
+          nodeType: "group",
+          operation: "sum",
+          order: 20,
+        },
+        {
+          children: [],
+          description: "Demonstrates subtracting one rollup from another.",
+          label: "Income After Expenses",
+          nodeId: "income_after_expenses",
+          nodeType: "group",
+          operands: [
+            { label: "Income Base", refId: "income_base", refType: "node" },
+            { label: "Expense Base", refId: "expense_base", refType: "node" },
+          ],
+          operation: "subtract",
+          order: 30,
+        },
+        {
+          children: [],
+          description: "Draft adjustment factor used by Result Z.",
+          label: "Z Adjustment Factor",
+          nodeId: "z_adjustment_factor",
+          nodeType: "constant",
+          operation: "pass_through",
+          order: 40,
+          value: 1,
+        },
+        {
+          children: [],
+          label: "Result Z",
+          nodeId: "Z",
+          nodeType: "final_result",
+          operands: [
+            { label: "Income Base", refId: "income_base", refType: "node" },
+            {
+              label: "Z Adjustment Factor",
+              refId: "z_adjustment_factor",
+              refType: "node",
+            },
+          ],
+          operation: "multiply",
+          order: 50,
+          resultName: "Z",
+        },
+        {
+          children: [],
+          label: "Result W",
+          nodeId: "W",
+          nodeType: "final_result",
+          operands: [
+            { label: "Expense Base", refId: "expense_base", refType: "node" },
+          ],
+          operation: "sum",
+          order: 60,
+          resultName: "W",
+        },
+        {
+          children: [],
+          description: "Demonstrates addition of two rollups.",
+          label: "Optional Check Total",
+          nodeId: "optional_check_total",
+          nodeType: "formula",
+          operands: [
+            { label: "Income Base", refId: "income_base", refType: "node" },
+            { label: "Expense Base", refId: "expense_base", refType: "node" },
+          ],
+          operation: "add",
+          order: 70,
+        },
+      ],
+      owner: "Fiscal Systems",
+      inputs: "draft aggregation rulebook",
+      outputs:
+        "aggregation_rules, aggregation_tree, rule_metadata, rule_version",
+      rulebookRef:
+        "Aggregation rulebooks are editable in draft and versioned after use.",
+      sourceKind: "aggregation_rules",
+      sourceLocator: "manual-source://aggregation-rules",
+      toolId: "source.aggregation_rules",
+    },
+  },
+  {
+    id: "source:rollup-rules",
+    family: "Source",
+    subtype: "Rollup Rules",
+    label: "Rollup Rules Source",
+    description: "Editable rulebook for grouping mapped categories into totals",
+    defaultConfig: {
+      owner: "Fiscal Systems",
+      inputs: "draft rollup rulebook",
+      outputs: "rollup_rules, rule_metadata, rule_version",
+      rollupRules: [
+        {
+          description: "Adds income mapped categories.",
+          includeCategoryIds: [
+            "interestIncome",
+            "rents",
+            "royalties",
+            "dividends",
+            "otherFapiIncome",
+          ],
+          label: "Income Bucket",
+          operation: "sum",
+          rollupId: "income_bucket",
+        },
+        {
+          description: "Adds expenses using absolute values.",
+          includeCategoryIds: [
+            "generalExpenses",
+            "legalExpenses",
+            "accountingExpenses",
+          ],
+          label: "Expense Bucket",
+          operation: "sum_abs",
+          rollupId: "expense_bucket",
+        },
+      ],
+      rulebookRef:
+        "Rollup rulebooks group mapped categories without owning final formulas.",
+      sourceKind: "rollup_rules",
+      sourceLocator: "manual-source://rollup-rules",
+      toolId: "source.rollup_rules",
+    },
+  },
+  {
+    id: "source:calculation-rules",
+    family: "Source",
+    subtype: "Calculation Rules",
+    label: "Calculation Rules Source",
+    description:
+      "Editable formula rules over named rollup and protected inputs",
+    defaultConfig: {
+      calculationRules: [
+        {
+          calculationId: "A",
+          description: "A = max(income_bucket - expense_bucket, 0)",
+          label: "A",
+          operands: ["income_bucket", "expense_bucket"],
+          operation: "max_subtract_zero",
+          resultKey: "A",
+        },
+        {
+          calculationId: "GROSS",
+          description: "Gross = A + A1 + A2 + B + C",
+          label: "Gross",
+          operands: ["A", "A1", "A2", "B", "C"],
+          operation: "add",
+          resultKey: "GROSS",
+        },
+        {
+          calculationId: "DEDUCTIONS",
+          description: "Deductions = D + E + F + F1 + G + H",
+          label: "Deductions",
+          operands: ["D", "E", "F", "F1", "G", "H"],
+          operation: "add",
+          resultKey: "DEDUCTIONS",
+        },
+        {
+          calculationId: "FAPI_BRUT",
+          description: "FAPI Brut = max(GROSS - DEDUCTIONS, 0)",
+          label: "FAPI Brut",
+          operands: ["GROSS", "DEDUCTIONS"],
+          operation: "max_subtract_zero",
+          resultKey: "FAPI_BRUT",
+        },
+        {
+          calculationId: "FAT_DEDUCTION",
+          description: "FAT Deduction = min(max(FAT_PAID, 0) * RTF, FAPI_BRUT)",
+          label: "FAT Deduction",
+          operands: ["FAT_PAID", "RTF", "FAPI_BRUT"],
+          operation: "min_multiply_cap",
+          resultKey: "FAT_DEDUCTION",
+        },
+        {
+          calculationId: "NET_FAPI",
+          description: "Net FAPI = max(FAPI_BRUT - FAT_DEDUCTION, 0)",
+          label: "Net FAPI",
+          operands: ["FAPI_BRUT", "FAT_DEDUCTION"],
+          operation: "max_subtract_zero",
+          resultKey: "NET_FAPI",
+        },
+        {
+          calculationId: "NET_FAPI_CAD",
+          description: "Net FAPI CAD = NET_FAPI * FX_RATE",
+          label: "Net FAPI CAD",
+          operands: ["NET_FAPI", "FX_RATE"],
+          operation: "multiply",
+          resultKey: "NET_FAPI_CAD",
+        },
+      ],
+      owner: "Fiscal Systems",
+      inputs: "draft calculation rulebook",
+      outputs: "calculation_rules, rule_metadata, rule_version",
+      rulebookRef:
+        "Calculation rulebooks define formulas over named values without changing Sources.",
+      sourceKind: "calculation_rules",
+      sourceLocator: "manual-source://calculation-rules",
+      toolId: "source.calculation_rules",
     },
   },
   {
@@ -868,6 +586,8 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "upstream values",
       outputs: "formulaResult",
       rulebookRef: "Formula blocks derive values without changing sources.",
+      toolGroup: "calculation",
+      toolId: "logic.formula",
     },
   },
   {
@@ -881,6 +601,226 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "classified rows",
       outputs: "aggregateResult",
       rulebookRef: "Aggregation blocks roll up source-derived rows.",
+      toolGroup: "calculation",
+      toolId: "logic.aggregation",
+    },
+  },
+  {
+    id: "logic:hierarchy-aggregator",
+    family: "Logic",
+    subtype: "Hierarchy Aggregator",
+    label: "Rollup & Calculation Engine",
+    description:
+      "Roll up mapped categories and calculate formula/final result nodes",
+    defaultConfig: {
+      owner: "Fiscal Systems",
+      inputs: "mapped_rows, aggregation_rules",
+      operation: "sum",
+      outputs:
+        "category_totals, node_totals, group_totals, final_totals, aggregation_tree, formula_trace",
+      rulebookRef:
+        "Rollup & Calculation Engine applies Source aggregation rules without mutating source rows.",
+      toolGroup: "calculation",
+      toolId: "logic.hierarchy_aggregator",
+    },
+  },
+  {
+    id: "logic:category-rollup-aggregator",
+    family: "Logic",
+    subtype: "Category Rollup Aggregator",
+    label: "Category Rollup Aggregator",
+    description: "Group mapped rows into category and rollup totals",
+    defaultConfig: {
+      owner: "Fiscal Systems",
+      inputs: "mapped_rows, rollup_rules",
+      outputs:
+        "category_totals, rollup_totals, named_values, included_rows_by_category, included_rows_by_rollup, excluded_rows, rollup_formula_trace, rollup_summary",
+      rulebookRef:
+        "Category Rollup Aggregator only groups and sums mapped rows.",
+      toolGroup: "calculation",
+      toolId: "logic.category_rollup_aggregator",
+    },
+  },
+  {
+    id: "logic:calculation-engine",
+    family: "Logic",
+    subtype: "Calculation Engine",
+    label: "Calculation Engine",
+    description: "Apply formula rules to named values and protected inputs",
+    defaultConfig: {
+      owner: "Fiscal Systems",
+      inputs: "named_values, protected_inputs",
+      outputs:
+        "calculated_results, formula_trace, calculation_summary, named_values",
+      rulebookRef:
+        "Calculation Engine evaluates formulas without grouping source rows.",
+      toolGroup: "calculation",
+      toolId: "logic.calculation_engine",
+      mode: "auto",
+      outputCurrency: "USD",
+      rounding: { moneyDecimals: 2 },
+      formulas: [
+        {
+          calculationId: "A",
+          label: "A",
+          operation: "max_subtract_zero",
+          operands: ["income_bucket", "expense_bucket"],
+          resultKey: "A",
+          description: "A = max(income_bucket - expense_bucket, 0)",
+        },
+        {
+          calculationId: "A1",
+          label: "A1",
+          operation: "multiply",
+          operands: ["debtForgiveness", 2],
+          resultKey: "A1",
+          description: "A1 = debtForgiveness * 2",
+        },
+        {
+          calculationId: "A2",
+          label: "A2",
+          operation: "pass_through",
+          operands: ["priorYearG"],
+          resultKey: "A2",
+          description: "A2 = priorYearG",
+        },
+        {
+          calculationId: "B",
+          label: "B",
+          operation: "multiply",
+          operands: ["capGains", "inclusionRate"],
+          resultKey: "B",
+          description: "B = capGains * inclusionRate",
+        },
+        {
+          calculationId: "C",
+          label: "C",
+          operation: "pass_through",
+          operands: ["cfaIncome"],
+          resultKey: "C",
+          description: "C = cfaIncome",
+        },
+        {
+          calculationId: "D",
+          label: "D",
+          operation: "pass_through",
+          operands: ["businessLosses"],
+          resultKey: "D",
+          description: "D = businessLosses",
+        },
+        {
+          calculationId: "E",
+          label: "E",
+          operation: "pass_through",
+          operands: ["faclCarryforward"],
+          resultKey: "E",
+          description: "E = faclCarryforward",
+        },
+        {
+          calculationId: "F",
+          label: "F",
+          operation: "pass_through",
+          operands: ["prescribedAmount"],
+          resultKey: "F",
+          description: "F = prescribedAmount",
+        },
+        {
+          calculationId: "F1",
+          label: "F1",
+          operation: "pass_through",
+          operands: ["prescribedAmountF1"],
+          resultKey: "F1",
+          description: "F1 = prescribedAmountF1",
+        },
+        {
+          calculationId: "G",
+          label: "G",
+          operation: "pass_through",
+          operands: ["dividendDeductions"],
+          resultKey: "G",
+          description: "G = dividendDeductions",
+        },
+        {
+          calculationId: "H",
+          label: "H",
+          operation: "pass_through",
+          operands: ["partnershipDividends"],
+          resultKey: "H",
+          description: "H = partnershipDividends",
+        },
+        {
+          calculationId: "FAT_PAID",
+          label: "FAT Paid",
+          operation: "pass_through",
+          operands: ["fatPaid"],
+          resultKey: "FAT_PAID",
+          description: "FAT_PAID = fatPaid",
+        },
+        {
+          calculationId: "RTF",
+          label: "RTF",
+          operation: "pass_through",
+          operands: ["rtf"],
+          resultKey: "RTF",
+          description: "RTF = rtf",
+        },
+        {
+          calculationId: "FX_RATE",
+          label: "FX Rate",
+          operation: "pass_through",
+          operands: ["fxRate"],
+          resultKey: "FX_RATE",
+          description: "FX_RATE = fxRate",
+        },
+        {
+          calculationId: "GROSS",
+          label: "Gross",
+          operation: "add",
+          operands: ["A", "A1", "A2", "B", "C"],
+          resultKey: "GROSS",
+          description: "Gross = A + A1 + A2 + B + C",
+        },
+        {
+          calculationId: "DEDUCTIONS",
+          label: "Deductions",
+          operation: "add",
+          operands: ["D", "E", "F", "F1", "G", "H"],
+          resultKey: "DEDUCTIONS",
+          description: "Deductions = D + E + F + F1 + G + H",
+        },
+        {
+          calculationId: "FAPI_BRUT",
+          label: "FAPI Brut",
+          operation: "max_subtract_zero",
+          operands: ["GROSS", "DEDUCTIONS"],
+          resultKey: "FAPI_BRUT",
+          description: "FAPI Brut = max(GROSS - DEDUCTIONS, 0)",
+        },
+        {
+          calculationId: "FAT_DEDUCTION",
+          label: "FAT Deduction",
+          operation: "min_multiply_cap",
+          operands: ["FAT_PAID", "RTF", "FAPI_BRUT"],
+          resultKey: "FAT_DEDUCTION",
+          description: "FAT Deduction = min(max(FAT_PAID, 0) * RTF, FAPI_BRUT)",
+        },
+        {
+          calculationId: "NET_FAPI",
+          label: "Net FAPI",
+          operation: "max_subtract_zero",
+          operands: ["FAPI_BRUT", "FAT_DEDUCTION"],
+          resultKey: "NET_FAPI",
+          description: "Net FAPI = max(FAPI_BRUT - FAT_DEDUCTION, 0)",
+        },
+        {
+          calculationId: "NET_FAPI_CAD",
+          label: "Net FAPI CAD",
+          operation: "multiply",
+          operands: ["NET_FAPI", "FX_RATE"],
+          resultKey: "NET_FAPI_CAD",
+          description: "Net FAPI CAD = NET_FAPI * FX_RATE",
+        },
+      ],
     },
   },
   {
@@ -894,6 +834,83 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "source values",
       outputs: "normalizedValues",
       rulebookRef: "Transformations create downstream corrected values.",
+      toolGroup: "data_preparation",
+      toolId: "logic.transformation",
+    },
+  },
+  {
+    id: "logic:excel-table-reader",
+    family: "Logic",
+    subtype: "Excel Table Reader",
+    label: "Excel Table Reader",
+    description: "Mock parser that extracts rows from an Excel Source",
+    defaultConfig: {
+      owner: "Fiscal Systems",
+      inputs: "Excel workbook Source",
+      outputs: "extractedRows",
+      rulebookRef: "Workbook files remain Sources; readers are Logic tools.",
+      toolGroup: "data_extraction",
+      toolId: "logic.excel_table_reader",
+    },
+  },
+  {
+    id: "logic:pdf-text-parser",
+    family: "Logic",
+    subtype: "PDF Text Parser",
+    label: "PDF Text Parser",
+    description: "Mock parser that extracts text from a PDF Source",
+    defaultConfig: {
+      owner: "Fiscal Systems",
+      inputs: "PDF document Source",
+      outputs: "parsedText",
+      rulebookRef: "PDF files remain Sources; parsers are Logic tools.",
+      toolGroup: "data_extraction",
+      toolId: "logic.pdf_text_parser",
+    },
+  },
+  {
+    id: "logic:pdf-table-parser",
+    family: "Logic",
+    subtype: "PDF Table Parser",
+    label: "PDF Table Parser",
+    description: "Mock parser that extracts table rows from a PDF Source",
+    defaultConfig: {
+      owner: "Fiscal Systems",
+      inputs: "PDF document Source",
+      outputs: "parsedRows",
+      rulebookRef: "PDF tables are parsed downstream without source mutation.",
+      toolGroup: "data_extraction",
+      toolId: "logic.pdf_table_parser",
+    },
+  },
+  {
+    id: "logic:ocr-extract",
+    family: "Logic",
+    subtype: "OCR Extractor",
+    label: "OCR Extractor",
+    description: "Mock OCR extractor for image or document Sources",
+    defaultConfig: {
+      owner: "Fiscal Systems",
+      inputs: "document Source",
+      outputs: "ocrText",
+      rulebookRef: "OCR is a Logic tool and keeps Source evidence immutable.",
+      toolGroup: "data_extraction",
+      toolId: "logic.ocr_extract",
+    },
+  },
+  {
+    id: "logic:api-response-parser",
+    family: "Logic",
+    subtype: "API Response Parser",
+    label: "API Response Parser",
+    description: "Mock parser for raw API response Sources",
+    defaultConfig: {
+      owner: "Fiscal Systems",
+      inputs: "API response Source",
+      outputs: "parsedApiRows",
+      rulebookRef: "Raw API responses remain Sources; parsers are Logic.",
+      toolGroup: "data_extraction",
+      toolId: "logic.api_response_parser",
     },
   },
   {
@@ -907,6 +924,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "validation state",
       outputs: "routingDecision",
       rulebookRef: "Conditions route review paths and do not mutate evidence.",
+      toolGroup: "routing",
     },
   },
   {
@@ -920,6 +938,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "upstream context",
       outputs: "scriptResult",
       rulebookRef: "Scripts are local placeholders in v1.",
+      toolGroup: "routing",
     },
   },
   {
@@ -933,6 +952,8 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "source rows",
       outputs: "mappedRows",
       rulebookRef: "Mappings are downstream annotations, not source edits.",
+      toolGroup: "mapping",
+      toolId: "logic.keyword_mapper",
     },
   },
   {
@@ -946,6 +967,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "required field",
       outputs: "requiredInputFinding",
       rulebookRef: "Required inputs must exist before handoff.",
+      toolId: "review.required_input_check",
     },
   },
   {
@@ -959,6 +981,21 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "protected values",
       outputs: "sourceSupportFinding",
       rulebookRef: "Protected values must reference support.",
+      toolId: "review.required_input_check",
+    },
+  },
+  {
+    id: "review:unmatched-rows-check",
+    family: "Review / Validation",
+    subtype: "Unmatched Rows Check",
+    label: "Unmatched Rows Check",
+    description: "Warn when mapped data still has unmatched rows",
+    defaultConfig: {
+      owner: "Tax Review",
+      inputs: "unmatched rows",
+      outputs: "unmatchedRowsFinding",
+      rulebookRef: "Unmatched rows must be reviewed before handoff.",
+      toolId: "review.unmatched_rows_check",
     },
   },
   {
@@ -972,6 +1009,23 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "confidence scores",
       outputs: "confidenceWarning",
       rulebookRef: "Low-confidence items require review.",
+      toolId: "review.low_confidence_warning",
+    },
+  },
+  {
+    id: "review:formula-consistency-check",
+    family: "Review / Validation",
+    subtype: "Formula Consistency Check",
+    label: "Formula Consistency Check",
+    description: "Compare calculated values to expected workbook results",
+    defaultConfig: {
+      owner: "Tax Review",
+      inputs: "calculator results, expected results",
+      outputs: "validation_result",
+      rulebookRef:
+        "Formula comparisons review Logic output without editing it.",
+      tolerance: 0.01,
+      toolId: "review.formula_consistency_check",
     },
   },
   {
@@ -985,6 +1039,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "override candidates",
       outputs: "overrideDecision",
       rulebookRef: "Overrides are reviewed downstream from sources.",
+      toolId: "review.approval_gate",
     },
   },
   {
@@ -998,6 +1053,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "review findings",
       outputs: "approvalState",
       rulebookRef: "Approval is required before protected output handoff.",
+      toolId: "review.approval_gate",
     },
   },
   {
@@ -1011,6 +1067,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "approved values",
       outputs: "outputReadiness",
       rulebookRef: "Outputs require approved dependencies.",
+      toolId: "review.output_readiness_check",
     },
   },
   {
@@ -1024,6 +1081,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "approved source or override",
       outputs: "protectedInput",
       rulebookRef: "Protected inputs require explicit edit intent.",
+      toolId: "protected.protected_input",
     },
   },
   {
@@ -1037,6 +1095,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "approved logic",
       outputs: "protectedResult",
       rulebookRef: "Protected results are locked at runtime.",
+      toolId: "protected.protected_result",
     },
   },
   {
@@ -1050,6 +1109,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "approved result",
       outputs: "officialLine",
       rulebookRef: "Official lines are governed protected values.",
+      toolId: "protected.protected_result",
     },
   },
   {
@@ -1063,6 +1123,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "approved rate source",
       outputs: "lockedRate",
       rulebookRef: "Locked rates require explicit edit intent.",
+      toolId: "protected.protected_input",
     },
   },
   {
@@ -1076,6 +1137,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "approved results",
       outputs: "finalReviewedAmount",
       rulebookRef: "Final amounts are locked in runtime UI.",
+      toolId: "protected.protected_result",
     },
   },
   {
@@ -1089,6 +1151,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "approved values",
       outputs: "csvExport",
       rulebookRef: "CSV output is generated from approved data.",
+      toolId: "output.evidence_pack_preview",
     },
   },
   {
@@ -1102,6 +1165,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "approved values",
       outputs: "excelExport",
       rulebookRef: "Excel output is generated from approved data.",
+      toolId: "output.evidence_pack_preview",
     },
   },
   {
@@ -1115,6 +1179,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "approved values",
       outputs: "pdfReport",
       rulebookRef: "PDF reports are generated from approved values.",
+      toolId: "output.evidence_pack_preview",
     },
   },
   {
@@ -1128,6 +1193,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "sources and approvals",
       outputs: "evidencePack",
       rulebookRef: "Evidence packs preserve source support.",
+      toolId: "output.evidence_pack_preview",
     },
   },
   {
@@ -1141,6 +1207,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "approved graph state",
       outputs: "canonicalJson",
       rulebookRef: "Canonical JSON is a local v1 export artifact.",
+      toolId: "output.canonical_json",
     },
   },
   {
@@ -1154,6 +1221,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "approved values",
       outputs: "taxprepHandoff",
       rulebookRef: "V1 exports a placeholder, not a live integration.",
+      toolId: "output.evidence_pack_preview",
     },
   },
   {
@@ -1167,6 +1235,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "approved values",
       outputs: "onesourceHandoff",
       rulebookRef: "V1 exports a placeholder, not a live integration.",
+      toolId: "output.evidence_pack_preview",
     },
   },
   {
@@ -1456,19 +1525,7 @@ function getDefaultCatalogItemForFamily(family: BlockFamily): BlockCatalogItem {
 function getProtectedKind(
   subtype: BlockSubtype
 ): NonNullable<GovernanceMetadata["protectedKind"]> {
-  if (subtype === "Protected Input") {
-    return "input";
-  }
-  if (subtype === "Official Line") {
-    return "official-line";
-  }
-  if (subtype === "Locked Rate") {
-    return "locked-rate";
-  }
-  if (subtype === "Final Reviewed Amount") {
-    return "final-reviewed-amount";
-  }
-  return "result";
+  return getProtectedKindForSubtype(subtype);
 }
 
 function getRuntimeDefaults(
@@ -1729,6 +1786,12 @@ function getEdgeStatusFromValue(value: unknown): EdgeStatus {
     : "active";
 }
 
+function getEdgeBindingStatusFromValue(value: unknown): EdgeBindingStatus {
+  return EDGE_BINDING_STATUS_VALUES.includes(value as EdgeBindingStatus)
+    ? (value as EdgeBindingStatus)
+    : "missing";
+}
+
 function getAiProposalStatusFromValue(value: unknown): AiProposalStatus {
   return AI_PROPOSAL_STATUS_VALUES.includes(value as AiProposalStatus)
     ? (value as AiProposalStatus)
@@ -1739,20 +1802,17 @@ export function getAllowedWorkflowRelationshipTypes(
   sourceFamily: BlockFamily,
   targetFamily: BlockFamily
 ): WorkflowRelationshipType[] {
-  if (sourceFamily === "AI / Agent") {
-    return [...AI_PROPOSAL_RELATIONSHIP_TYPES];
-  }
-
-  return [
-    ...(RELATIONSHIP_TYPES_BY_FAMILY_PAIR[sourceFamily]?.[targetFamily] || []),
-  ];
+  return getAllowedRelationshipTypesForFamilies(sourceFamily, targetFamily);
 }
 
 function getDefaultLogicRelationshipType(
   targetBlock: WorkflowBlock
 ): WorkflowRelationshipType | null {
   if (targetBlock.family === "Logic") {
-    if (targetBlock.subtype === "Aggregation") {
+    if (
+      targetBlock.subtype === "Aggregation" ||
+      targetBlock.subtype === "Hierarchy Aggregator"
+    ) {
       return "aggregates_into";
     }
     if (targetBlock.subtype === "Condition") {
@@ -1856,13 +1916,194 @@ export function getWorkflowRelationshipForValue({
   }
 }
 
+type WorkflowEdgeDefaults = {
+  reason: string;
+  relationshipType: WorkflowRelationshipType;
+  sourceOutputRole?: string;
+  targetInputRole?: string;
+  bindingLabel?: string;
+  bindingStatus?: EdgeBindingStatus;
+};
+
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Binding defaults mirror the compact v1 workflow rulebook.
+function getDefaultBindingRoles({
+  sourceBlock,
+  targetBlock,
+}: {
+  sourceBlock: WorkflowBlock;
+  targetBlock: WorkflowBlock;
+}): Pick<
+  WorkflowEdgeDefaults,
+  "bindingLabel" | "bindingStatus" | "sourceOutputRole" | "targetInputRole"
+> {
+  if (
+    targetBlock.config.toolId === "logic.keyword_mapper" ||
+    targetBlock.subtype === "Classification / Mapping"
+  ) {
+    if (sourceBlock.config.sourceKind === "keyword_rules") {
+      return {
+        bindingLabel: "Keyword rules",
+        bindingStatus: "valid",
+        sourceOutputRole: "keyword_rules",
+        targetInputRole: "keyword_rules",
+      };
+    }
+
+    return {
+      bindingLabel: "Data rows",
+      bindingStatus: "valid",
+      sourceOutputRole:
+        sourceBlock.family === "Logic" ? "mapped_rows" : "selected_rows",
+      targetInputRole: "data_rows",
+    };
+  }
+
+  if (targetBlock.subtype === "Aggregation") {
+    return {
+      bindingLabel: "Mapped rows",
+      bindingStatus: "valid",
+      sourceOutputRole: "mapped_rows",
+      targetInputRole: "mapped_rows",
+    };
+  }
+
+  if (
+    targetBlock.subtype === "Hierarchy Aggregator" ||
+    targetBlock.config.toolId === "logic.hierarchy_aggregator"
+  ) {
+    if (sourceBlock.config.sourceKind === "aggregation_rules") {
+      return {
+        bindingLabel: "Aggregation rules",
+        bindingStatus: "valid",
+        sourceOutputRole: "aggregation_rules",
+        targetInputRole: "aggregation_rules",
+      };
+    }
+
+    return {
+      bindingLabel: "Mapped rows",
+      bindingStatus: "valid",
+      sourceOutputRole: "mapped_rows",
+      targetInputRole: "mapped_rows",
+    };
+  }
+
+  if (
+    targetBlock.subtype === "Category Rollup Aggregator" ||
+    targetBlock.config.toolId === "logic.category_rollup_aggregator"
+  ) {
+    if (sourceBlock.config.sourceKind === "rollup_rules") {
+      return {
+        bindingLabel: "Rollup rules",
+        bindingStatus: "valid",
+        sourceOutputRole: "rollup_rules",
+        targetInputRole: "rollup_rules",
+      };
+    }
+
+    return {
+      bindingLabel: "Mapped rows",
+      bindingStatus: "valid",
+      sourceOutputRole: "mapped_rows",
+      targetInputRole: "mapped_rows",
+    };
+  }
+
+  if (
+    targetBlock.subtype === "Calculation Engine" ||
+    targetBlock.config.toolId === "logic.calculation_engine"
+  ) {
+    if (sourceBlock.config.sourceKind === "calculation_rules") {
+      return {
+        bindingLabel: "Calculation rules",
+        bindingStatus: "valid",
+        sourceOutputRole: "calculation_rules",
+        targetInputRole: "calculation_rules",
+      };
+    }
+
+    return {
+      bindingLabel: "Named values",
+      bindingStatus: "valid",
+      sourceOutputRole:
+        sourceBlock.family === "Protected" ? "governed_value" : "named_values",
+      targetInputRole:
+        sourceBlock.family === "Protected"
+          ? "protected_inputs"
+          : "named_values",
+    };
+  }
+
+  if (targetBlock.subtype === "Unmatched Rows Check") {
+    return {
+      bindingLabel: "Unmatched rows",
+      bindingStatus: "valid",
+      sourceOutputRole: "unmatched_rows",
+      targetInputRole: "checked_items",
+    };
+  }
+
+  if (targetBlock.subtype === "Low Confidence Warning") {
+    return {
+      bindingLabel: "Low-confidence rows",
+      bindingStatus: "valid",
+      sourceOutputRole: "low_confidence_rows",
+      targetInputRole: "checked_items",
+    };
+  }
+
+  if (targetBlock.family === "Protected") {
+    let sourceOutputRole = "subtotal";
+    if (sourceBlock.family === "Review / Validation") {
+      sourceOutputRole = "review_status";
+    } else if (sourceBlock.subtype === "Calculation Engine") {
+      sourceOutputRole = "calculated_results";
+    } else if (sourceBlock.subtype === "Hierarchy Aggregator") {
+      sourceOutputRole = "final_totals";
+    }
+
+    return {
+      bindingLabel: "Approved value",
+      bindingStatus: "valid",
+      sourceOutputRole,
+      targetInputRole: "approved_value",
+    };
+  }
+
+  if (targetBlock.family === "Output") {
+    let sourceOutputRole = "mapped_rows";
+    if (sourceBlock.family === "Protected") {
+      sourceOutputRole = "governed_value";
+    } else if (sourceBlock.subtype === "Hierarchy Aggregator") {
+      sourceOutputRole = "aggregation_summary";
+    }
+
+    return {
+      bindingLabel: "Protected values",
+      bindingStatus: "valid",
+      sourceOutputRole,
+      targetInputRole: "protected_values",
+    };
+  }
+
+  if (targetBlock.family === "Review / Validation") {
+    return {
+      bindingLabel: "Checked items",
+      bindingStatus: "warning",
+      targetInputRole: "checked_items",
+    };
+  }
+
+  return { bindingStatus: "missing" };
+}
+
 export function getWorkflowEdgeDefaults({
   sourceBlock,
   targetBlock,
 }: {
   sourceBlock: WorkflowBlock;
   targetBlock: WorkflowBlock;
-}): { reason: string; relationshipType: WorkflowRelationshipType } | null {
+}): WorkflowEdgeDefaults | null {
   const relationshipType = getDefaultWorkflowRelationshipType({
     sourceBlock,
     targetBlock,
@@ -1873,6 +2114,7 @@ export function getWorkflowEdgeDefaults({
   }
 
   return {
+    ...getDefaultBindingRoles({ sourceBlock, targetBlock }),
     relationshipType,
     reason: `${sourceBlock.label} ${WORKFLOW_RELATIONSHIP_LABELS[
       relationshipType
@@ -1903,6 +2145,8 @@ export function getUnsupportedWorkflowRelationshipMessage({
 }
 
 export function createWorkflowEdgeRecord({
+  bindingLabel,
+  bindingStatus = "valid",
   confidence = 1,
   createdAt = new Date().toISOString(),
   createdBy = SYSTEM_USER,
@@ -1911,8 +2155,10 @@ export function createWorkflowEdgeRecord({
   notes = "",
   reason,
   relationshipType = "provides_data_to",
+  sourceOutputRole,
   sourceBlockId,
   status = "active",
+  targetInputRole,
   targetBlockId,
 }: {
   id?: string;
@@ -1920,6 +2166,10 @@ export function createWorkflowEdgeRecord({
   targetBlockId: string;
   relationshipType?: WorkflowRelationshipType;
   reason: string;
+  sourceOutputRole?: string;
+  targetInputRole?: string;
+  bindingLabel?: string;
+  bindingStatus?: EdgeBindingStatus;
   status?: EdgeStatus;
   createdBy?: string;
   createdAt?: string;
@@ -1934,6 +2184,10 @@ export function createWorkflowEdgeRecord({
     targetBlockId,
     relationshipType,
     reason,
+    ...(sourceOutputRole ? { sourceOutputRole } : {}),
+    ...(targetInputRole ? { targetInputRole } : {}),
+    ...(bindingLabel ? { bindingLabel } : {}),
+    bindingStatus,
     status,
     createdBy,
     createdAt,
@@ -1959,7 +2213,15 @@ export function updateWorkflowEdgeRecord(
   updates: Partial<
     Pick<
       WorkflowEdge,
-      "confidence" | "notes" | "reason" | "relationshipType" | "status"
+      | "bindingLabel"
+      | "bindingStatus"
+      | "confidence"
+      | "notes"
+      | "reason"
+      | "relationshipType"
+      | "sourceOutputRole"
+      | "status"
+      | "targetInputRole"
     >
   >,
   historyNote = "Relationship metadata updated."
@@ -2010,6 +2272,9 @@ export function createSplitWorkflowEdgeRecords({
     targetBlockId: insertedBlock.id,
     relationshipType: originalEdge.relationshipType,
     reason: originalEdge.reason,
+    sourceOutputRole: originalEdge.sourceOutputRole,
+    bindingLabel: originalEdge.bindingLabel,
+    bindingStatus: originalEdge.bindingStatus,
     status: originalEdge.status,
     confidence: originalEdge.confidence,
     notes: originalEdge.notes,
@@ -2022,6 +2287,9 @@ export function createSplitWorkflowEdgeRecords({
     targetBlockId: originalEdge.targetBlockId,
     relationshipType: "transforms_into",
     reason: `${insertedBlock.label} continues the split relationship into the original target.`,
+    targetInputRole: originalEdge.targetInputRole,
+    bindingLabel: originalEdge.bindingLabel,
+    bindingStatus: originalEdge.bindingStatus,
     status: originalEdge.status,
     confidence: originalEdge.confidence,
     notes: originalEdge.notes,
@@ -2045,6 +2313,10 @@ export function createCanvasEdgeFromWorkflowEdge(
       relationshipType: edge.relationshipType,
       status: edge.status,
       confidence: edge.confidence,
+      sourceOutputRole: edge.sourceOutputRole,
+      targetInputRole: edge.targetInputRole,
+      bindingLabel: edge.bindingLabel,
+      bindingStatus: edge.bindingStatus,
       label: WORKFLOW_RELATIONSHIP_LABELS[edge.relationshipType],
     },
   };
@@ -2508,6 +2780,7 @@ function normalizeWorkflowEdgeRecord({
       value: edge.relationshipType,
     }),
     status: getEdgeStatusFromValue(edge.status),
+    bindingStatus: getEdgeBindingStatusFromValue(edge.bindingStatus),
     confidence: typeof edge.confidence === "number" ? edge.confidence : 1,
     notes: edge.notes || "",
     history: Array.isArray(edge.history) ? edge.history : [],
@@ -2545,6 +2818,10 @@ function canvasEdgeToWorkflowEdge(
     targetBlockId: edge.target,
     relationshipType: defaults?.relationshipType || "provides_data_to",
     reason: defaults?.reason || "Canvas connection created by builder",
+    sourceOutputRole: defaults?.sourceOutputRole,
+    targetInputRole: defaults?.targetInputRole,
+    bindingLabel: defaults?.bindingLabel,
+    bindingStatus: defaults?.bindingStatus || "missing",
     confidence: 1,
   });
 }
@@ -2622,6 +2899,7 @@ export function createWorkflowDefinitionFromCanvas({
   };
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Import migration normalizes old and current edge shapes in one place.
 function getTypedEdgeFromUnknown(
   value: unknown,
   blockMap?: Map<string, WorkflowBlock>
@@ -2657,6 +2935,16 @@ function getTypedEdgeFromUnknown(
         value: edge.relationshipType,
       }),
       reason: edge.reason || "Imported relationship",
+      ...(typeof edge.sourceOutputRole === "string"
+        ? { sourceOutputRole: edge.sourceOutputRole }
+        : {}),
+      ...(typeof edge.targetInputRole === "string"
+        ? { targetInputRole: edge.targetInputRole }
+        : {}),
+      ...(typeof edge.bindingLabel === "string"
+        ? { bindingLabel: edge.bindingLabel }
+        : {}),
+      bindingStatus: getEdgeBindingStatusFromValue(edge.bindingStatus),
       status: getEdgeStatusFromValue(edge.status),
       createdBy: edge.createdBy || SYSTEM_USER,
       createdAt,
@@ -3143,6 +3431,709 @@ function readStoredWorkflowDefinition(): WorkflowDefinition | null {
   return readStoredWorkflowDefinitionResult().snapshot;
 }
 
+const SINGLE_ITEM_PIPELINE_ROWS = [
+  {
+    account: "4000",
+    amount: 100,
+    currency: "USD",
+    description: "Interest earned on deposit account",
+    label: "Interest income",
+    rowId: "row-001",
+  },
+];
+
+const SINGLE_ITEM_PIPELINE_RULES = [
+  {
+    confidence: 0.95,
+    description: "Classifies interest-related income rows.",
+    keywords: ["interest income", "interest earned", "deposit interest"],
+    matchMode: "contains",
+    priority: 10,
+    ruleId: "rule-001",
+    sectionId: "income",
+    subsectionId: "interest",
+    target: "income_interest",
+  },
+];
+
+function createSingleItemPipelineBlocks() {
+  const specs = [
+    {
+      catalogId: "source:excel-workbook",
+      config: {
+        outputs: "rows",
+        rows: SINGLE_ITEM_PIPELINE_ROWS,
+        sourceKind: "manual_table",
+        sourceLocator: "excel-template-mock://single-item/row-001",
+        toolId: "source.manual_table",
+      },
+      description:
+        "Immutable Excel-like source row. The demo follows row-001 end to end.",
+      id: "single-source-excel-row",
+      label: "Excel Template Row Source",
+      position: { x: 80, y: 140 },
+    },
+    {
+      catalogId: "source:keyword-rules",
+      config: {
+        keywordRules: SINGLE_ITEM_PIPELINE_RULES,
+        outputs: "keyword_rules",
+        sourceKind: "keyword_rules",
+        sourceLocator: "manual-source://single-item-mapping-rules",
+        toolId: "source.keyword_rules",
+      },
+      description:
+        "Editable Keyword Rulebook used by the mapper. Rules are not hardcoded in Logic.",
+      id: "single-source-mapping-rules",
+      label: "Keyword Rulebook",
+      position: { x: 80, y: 380 },
+    },
+    {
+      catalogId: "logic:classification-mapping",
+      config: {
+        conflictStrategy: "highest_confidence",
+        inputs: "data_rows, keyword_rules",
+        lowConfidenceThreshold: 0.75,
+        matchFields: ["label", "description"],
+        matchMode: "contains",
+        outputs: "mapped_rows",
+        toolId: "logic.keyword_mapper",
+        unmatchedStrategy: "send_to_review",
+      },
+      description:
+        "Reusable no-code Logic tool that maps source rows with connected keyword rules.",
+      id: "single-logic-keyword-mapper",
+      label: "Keyword Mapper",
+      position: { x: 380, y: 250 },
+    },
+    {
+      catalogId: "logic:aggregation",
+      config: {
+        aggregationMethod: "sum",
+        amountField: "amount",
+        includeSectionIds: ["income"],
+        includeSubsectionIds: ["interest"],
+        includeTargets: ["income_interest"],
+        inputs: "mapped_rows",
+        outputs: "subtotal",
+        toolId: "logic.aggregation",
+      },
+      description:
+        "Aggregates the mapped single item into the income / interest subtotal.",
+      id: "single-logic-section-aggregator",
+      label: "Section Aggregator",
+      position: { x: 700, y: 250 },
+    },
+    {
+      catalogId: "review:low-confidence-warning",
+      config: {
+        blocking: true,
+        inputs: "mapped_rows",
+        outputs: "validation_result",
+        threshold: 0.75,
+        toolId: "review.confidence_check",
+      },
+      description:
+        "Review / Validation checkpoint that decides whether the mapping is trustworthy.",
+      id: "single-review-confidence-check",
+      label: "Confidence Check",
+      position: { x: 700, y: 470 },
+    },
+    {
+      catalogId: "review:approval-gate",
+      config: {
+        approved: true,
+        inputs: "value_to_approve, validation_result",
+        notes: "Approved for single item pipeline demo.",
+        outputs: "approval_status",
+        reviewer: "demo-reviewer",
+        toolId: "review.approval_gate",
+      },
+      description:
+        "Local mock approval gate that lets the candidate subtotal become governed.",
+      id: "single-review-approval-gate",
+      label: "Approval Gate",
+      position: { x: 1020, y: 360 },
+    },
+    {
+      catalogId: "protected:protected-result",
+      config: {
+        inputs: "candidate_value, approval_status",
+        outputs: "protected_result",
+        resultName: "Z",
+        runtimeLocked: true,
+        toolId: "protected.protected_result",
+      },
+      description:
+        "Governed final result. If approval is removed, Z becomes draft and needs review.",
+      id: "single-protected-result-z",
+      label: "Protected Result Z",
+      position: { x: 1340, y: 250 },
+    },
+    {
+      catalogId: "output:evidence-pack",
+      config: {
+        inputs:
+          "protected_result, mapped_rows, validation_result, approval_status",
+        outputs: "preview",
+        toolId: "output.evidence_pack_preview",
+      },
+      description:
+        "Human-readable local evidence preview for the final Z result.",
+      id: "single-output-z-evidence-preview",
+      label: "Z Evidence Preview",
+      position: { x: 1660, y: 160 },
+    },
+    {
+      catalogId: "output:canonical-json",
+      config: {
+        inputs: "protected_result, source_trace",
+        outputs: "canonical_json",
+        toolId: "output.canonical_json",
+      },
+      description:
+        "Structured local JSON package for the final Z result and trace.",
+      id: "single-output-z-canonical-json",
+      label: "Z Canonical JSON",
+      position: { x: 1660, y: 380 },
+    },
+  ];
+
+  return specs.map((spec) =>
+    createWorkflowBlockFromCatalog(spec.catalogId, {
+      config: spec.config,
+      createdAt: SAMPLE_CREATED_AT,
+      description: spec.description,
+      id: spec.id,
+      label: spec.label,
+      position: spec.position,
+      sample: true,
+      status: "configured",
+      updatedAt: SAMPLE_CREATED_AT,
+    })
+  );
+}
+
+function getSingleItemPipelineDemoEdges(): WorkflowEdge[] {
+  // biome-ignore lint/nursery/useMaxParams: Compact demo-edge DSL keeps the single-item path readable.
+  const edge = (
+    sourceBlockId: string,
+    targetBlockId: string,
+    relationshipType: WorkflowRelationshipType,
+    reason: string,
+    binding: Pick<
+      WorkflowEdge,
+      "bindingLabel" | "bindingStatus" | "sourceOutputRole" | "targetInputRole"
+    >
+  ) =>
+    createWorkflowEdgeRecord({
+      id: `single-edge-${sourceBlockId}-${targetBlockId}-${binding.sourceOutputRole || "out"}-${binding.targetInputRole || "in"}`,
+      sourceBlockId,
+      targetBlockId,
+      relationshipType,
+      reason,
+      confidence: 1,
+      ...binding,
+      createdAt: SAMPLE_CREATED_AT,
+    });
+
+  return [
+    edge(
+      "single-source-excel-row",
+      "single-logic-keyword-mapper",
+      "provides_data_to",
+      "Keyword Mapper needs data rows.",
+      {
+        bindingLabel: "Rows to classify",
+        bindingStatus: "valid",
+        sourceOutputRole: "rows",
+        targetInputRole: "data_rows",
+      }
+    ),
+    edge(
+      "single-source-mapping-rules",
+      "single-logic-keyword-mapper",
+      "referenced_by",
+      "Keyword Mapper applies this versioned rulebook.",
+      {
+        bindingLabel: "Rules used for classification",
+        bindingStatus: "valid",
+        sourceOutputRole: "keyword_rules",
+        targetInputRole: "keyword_rules",
+      }
+    ),
+    edge(
+      "single-logic-keyword-mapper",
+      "single-logic-section-aggregator",
+      "transforms_into",
+      "Aggregator sums mapped rows by section/subsection.",
+      {
+        bindingLabel: "Mapped rows to aggregate",
+        bindingStatus: "valid",
+        sourceOutputRole: "mapped_rows",
+        targetInputRole: "mapped_rows",
+      }
+    ),
+    edge(
+      "single-logic-keyword-mapper",
+      "single-review-confidence-check",
+      "triggers_validation",
+      "Confidence Check reviews the mapped row confidence.",
+      {
+        bindingLabel: "Mapped rows to validate",
+        bindingStatus: "valid",
+        sourceOutputRole: "mapped_rows",
+        targetInputRole: "checked_items",
+      }
+    ),
+    edge(
+      "single-logic-section-aggregator",
+      "single-review-approval-gate",
+      "triggers_validation",
+      "Approval Gate reviews the candidate subtotal for Z.",
+      {
+        bindingLabel: "Candidate subtotal",
+        bindingStatus: "valid",
+        sourceOutputRole: "subtotal",
+        targetInputRole: "value_to_approve",
+      }
+    ),
+    edge(
+      "single-review-confidence-check",
+      "single-review-approval-gate",
+      "depends_on",
+      "Approval Gate considers the validation result.",
+      {
+        bindingLabel: "Confidence validation",
+        bindingStatus: "valid",
+        sourceOutputRole: "validation_result",
+        targetInputRole: "validation_result",
+      }
+    ),
+    edge(
+      "single-logic-section-aggregator",
+      "single-protected-result-z",
+      "feeds_protected_result",
+      "Subtotal becomes the candidate value for Z.",
+      {
+        bindingLabel: "Candidate Z value",
+        bindingStatus: "valid",
+        sourceOutputRole: "subtotal",
+        targetInputRole: "candidate_value",
+      }
+    ),
+    edge(
+      "single-review-approval-gate",
+      "single-protected-result-z",
+      "approves_for",
+      "Approval Gate determines whether Z can become final.",
+      {
+        bindingLabel: "Approval for Z",
+        bindingStatus: "valid",
+        sourceOutputRole: "approval_status",
+        targetInputRole: "approval_status",
+      }
+    ),
+    edge(
+      "single-protected-result-z",
+      "single-output-z-evidence-preview",
+      "maps_to_output",
+      "Evidence preview displays the final protected result.",
+      {
+        bindingLabel: "Final Z output",
+        bindingStatus: "valid",
+        sourceOutputRole: "protected_result",
+        targetInputRole: "protected_result",
+      }
+    ),
+    edge(
+      "single-logic-keyword-mapper",
+      "single-output-z-evidence-preview",
+      "included_in_output_preview",
+      "Evidence preview lists the mapped row and rule.",
+      {
+        bindingLabel: "Mapped row trace",
+        bindingStatus: "valid",
+        sourceOutputRole: "mapped_rows",
+        targetInputRole: "mapped_rows",
+      }
+    ),
+    edge(
+      "single-review-confidence-check",
+      "single-output-z-evidence-preview",
+      "included_in_output_preview",
+      "Evidence preview includes validation status.",
+      {
+        bindingLabel: "Validation result",
+        bindingStatus: "valid",
+        sourceOutputRole: "validation_result",
+        targetInputRole: "validation_result",
+      }
+    ),
+    edge(
+      "single-review-approval-gate",
+      "single-output-z-evidence-preview",
+      "included_in_output_preview",
+      "Evidence preview includes approval status.",
+      {
+        bindingLabel: "Approval status",
+        bindingStatus: "valid",
+        sourceOutputRole: "approval_status",
+        targetInputRole: "approval_status",
+      }
+    ),
+    edge(
+      "single-protected-result-z",
+      "single-output-z-canonical-json",
+      "maps_to_output",
+      "Canonical JSON includes the final protected Z result.",
+      {
+        bindingLabel: "Final Z JSON",
+        bindingStatus: "valid",
+        sourceOutputRole: "protected_result",
+        targetInputRole: "protected_result",
+      }
+    ),
+    edge(
+      "single-protected-result-z",
+      "single-output-z-canonical-json",
+      "maps_to_output",
+      "Canonical JSON includes the trace carried by Z.",
+      {
+        bindingLabel: "Z source trace",
+        bindingStatus: "valid",
+        sourceOutputRole: "protected_result",
+        targetInputRole: "source_trace",
+      }
+    ),
+  ];
+}
+
+export function createSingleItemPipelineDemoWorkflow(): LocalWorkflowSnapshot {
+  const blocks = createSingleItemPipelineBlocks();
+  const edges = getSingleItemPipelineDemoEdges();
+  const structure = getWorkflowStructure(blocks);
+  const runtimeUiConfig = generateRuntimeUiConfigFromParts({
+    blocks,
+    generatedAt: SAMPLE_CREATED_AT,
+    sourceWorkflowId: LOCAL_WORKFLOW_ID,
+    structure,
+  });
+  const outputMappingPreview = generateOutputMappingPreviewFromParts({
+    blocks,
+    edges,
+    generatedAt: SAMPLE_CREATED_AT,
+    sourceWorkflowId: LOCAL_WORKFLOW_ID,
+  });
+  const mockRuns = getSampleBlockRuns(blocks);
+  const initialSnapshot: WorkflowVersionSnapshot = {
+    id: "version-single-item-pipeline-demo-v1",
+    schemaVersion: LOCAL_WORKFLOW_SCHEMA_VERSION,
+    workflowId: LOCAL_WORKFLOW_ID,
+    workflowName: "Single Item Pipeline Demo",
+    versionNumber: 1,
+    label: "Initial Single Item Pipeline Demo",
+    status: "draft",
+    createdBy: SYSTEM_USER,
+    createdAt: SAMPLE_CREATED_AT,
+    changeSummary:
+      "Tiny executable local demo that carries row-001 through Source, Logic, Review, Protected, and Output.",
+    blockCount: blocks.length,
+    edgeCount: edges.length,
+    blockIds: blocks.map((block) => block.id),
+    edgeIds: edges.map((edge) => edge.id),
+    blocks: cloneJson(blocks),
+    edges: cloneJson(edges),
+    structure: cloneJson(structure),
+    runtimeUiConfig: cloneJson(runtimeUiConfig),
+    outputMappingPreview: cloneJson(outputMappingPreview),
+    aiProposals: [],
+    mockRuns: cloneJson(mockRuns),
+    notes: "Local deterministic single item demo. No external integrations.",
+    validationWarnings: [],
+  };
+
+  return {
+    schemaVersion: LOCAL_WORKFLOW_SCHEMA_VERSION,
+    id: LOCAL_WORKFLOW_ID,
+    name: "Single Item Pipeline Demo",
+    description:
+      "Generic local proof that one Source item can flow through reusable Logic, Review / Validation, Protected governance, and Output artifacts.",
+    status: "draft",
+    metadata: {
+      kind: "generic-fiscal-workflow",
+      sampleWorkflow: {
+        id: "single-item-pipeline-demo",
+        label: "Single Item Pipeline Demo",
+        description:
+          "Generic executable demo. The final protected result is Z.",
+      },
+      tags: ["local", "prototype", "single-item-demo"],
+      createdBy: SYSTEM_USER,
+      createdAt: SAMPLE_CREATED_AT,
+      updatedBy: SYSTEM_USER,
+      updatedAt: new Date().toISOString(),
+      notes:
+        "No live OCR, AI, Taxprep, ONESOURCE, Excel parser, PDF parser, or backend integration is included.",
+    },
+    blocks,
+    edges,
+    structure,
+    runtimeUiConfig,
+    outputMappingPreview,
+    mockRuns,
+    versionSnapshots: [initialSnapshot],
+    aiProposals: [],
+    events: [
+      createWorkflowEvent({
+        type: "reset_sample",
+        message: "Single Item Pipeline Demo initialized locally.",
+        createdAt: SAMPLE_CREATED_AT,
+      }),
+    ],
+  };
+}
+
+function createExpandedMappingPipelineBlocks() {
+  return EXPANDED_MAPPING_PIPELINE_BLOCK_SPECS.map((spec) =>
+    createWorkflowBlockFromCatalog(spec.catalogId, {
+      config: cloneJson(spec.config) as Record<string, unknown>,
+      createdAt: SAMPLE_CREATED_AT,
+      description: spec.description,
+      id: spec.id,
+      label: spec.label,
+      position: spec.position,
+      sample: true,
+      status: "configured",
+      updatedAt: SAMPLE_CREATED_AT,
+    })
+  );
+}
+
+function getExpandedMappingPipelineDemoEdges(): WorkflowEdge[] {
+  return EXPANDED_MAPPING_PIPELINE_EDGE_SPECS.map((spec) =>
+    createWorkflowEdgeRecord({
+      bindingLabel: spec.bindingLabel,
+      bindingStatus: "valid",
+      confidence: 1,
+      createdAt: SAMPLE_CREATED_AT,
+      id: `expanded-edge-${spec.sourceBlockId}-${spec.targetBlockId}-${spec.sourceOutputRole}-${spec.targetInputRole}`,
+      reason: spec.reason,
+      relationshipType: spec.relationshipType as WorkflowRelationshipType,
+      sourceBlockId: spec.sourceBlockId,
+      sourceOutputRole: spec.sourceOutputRole,
+      targetBlockId: spec.targetBlockId,
+      targetInputRole: spec.targetInputRole,
+    })
+  );
+}
+
+export function createExpandedMappingPipelineDemoWorkflow(): LocalWorkflowSnapshot {
+  const blocks = createExpandedMappingPipelineBlocks();
+  const edges = getExpandedMappingPipelineDemoEdges();
+  const structure = getWorkflowStructure(blocks);
+  const runtimeUiConfig = generateRuntimeUiConfigFromParts({
+    blocks,
+    generatedAt: SAMPLE_CREATED_AT,
+    sourceWorkflowId: LOCAL_WORKFLOW_ID,
+    structure,
+  });
+  const outputMappingPreview = generateOutputMappingPreviewFromParts({
+    blocks,
+    edges,
+    generatedAt: SAMPLE_CREATED_AT,
+    sourceWorkflowId: LOCAL_WORKFLOW_ID,
+  });
+  const mockRuns = getSampleBlockRuns(blocks);
+  const initialSnapshot: WorkflowVersionSnapshot = {
+    aiProposals: [],
+    blockCount: blocks.length,
+    blockIds: blocks.map((block) => block.id),
+    blocks: cloneJson(blocks),
+    changeSummary:
+      "Expanded generic local demo that maps 15 rows, aggregates Z and W, validates warnings, and produces protected outputs.",
+    createdAt: SAMPLE_CREATED_AT,
+    createdBy: SYSTEM_USER,
+    edgeCount: edges.length,
+    edgeIds: edges.map((edge) => edge.id),
+    edges: cloneJson(edges),
+    id: "version-expanded-mapping-pipeline-demo-v1",
+    label: "Initial Expanded Mapping Pipeline Demo",
+    mockRuns: cloneJson(mockRuns),
+    notes:
+      "Local deterministic expanded mapping demo. No external integrations.",
+    outputMappingPreview: cloneJson(outputMappingPreview),
+    runtimeUiConfig: cloneJson(runtimeUiConfig),
+    schemaVersion: LOCAL_WORKFLOW_SCHEMA_VERSION,
+    status: "draft",
+    structure: cloneJson(structure),
+    validationWarnings: [],
+    versionNumber: 1,
+    workflowId: LOCAL_WORKFLOW_ID,
+    workflowName: "Expanded Mapping Pipeline Demo",
+  };
+
+  return {
+    aiProposals: [],
+    blocks,
+    description:
+      "Generic local stress-test that maps many Excel-like rows with Source rules, aggregates section results into protected Z and W, and produces local output previews.",
+    edges,
+    events: [
+      createWorkflowEvent({
+        createdAt: SAMPLE_CREATED_AT,
+        message: "Expanded Mapping Pipeline Demo initialized locally.",
+        type: "reset_sample",
+      }),
+    ],
+    id: LOCAL_WORKFLOW_ID,
+    metadata: {
+      createdAt: SAMPLE_CREATED_AT,
+      createdBy: SYSTEM_USER,
+      kind: "generic-fiscal-workflow",
+      notes:
+        "No live OCR, AI, Taxprep, ONESOURCE, Excel parser, PDF parser, or backend integration is included.",
+      sampleWorkflow: {
+        description:
+          "Generic executable stress-test demo. The final protected results are Z and W.",
+        id: "expanded-mapping-pipeline-demo",
+        label: "Expanded Mapping Pipeline Demo",
+      },
+      tags: ["local", "prototype", "expanded-mapping-demo"],
+      updatedAt: new Date().toISOString(),
+      updatedBy: SYSTEM_USER,
+    },
+    mockRuns,
+    name: "Expanded Mapping Pipeline Demo",
+    outputMappingPreview,
+    runtimeUiConfig,
+    schemaVersion: LOCAL_WORKFLOW_SCHEMA_VERSION,
+    status: "draft",
+    structure,
+    versionSnapshots: [initialSnapshot],
+  };
+}
+
+function createWorkingSourceRulesDemoBlocks() {
+  return WORKING_SOURCE_DEMO_BLOCK_SPECS.map((spec) =>
+    createWorkflowBlockFromCatalog(spec.catalogId, {
+      config: cloneJson(spec.config) as Record<string, unknown>,
+      createdAt: SAMPLE_CREATED_AT,
+      description: spec.description,
+      id: spec.id,
+      label: spec.label,
+      position: spec.position,
+      sample: true,
+      status: "configured",
+      updatedAt: SAMPLE_CREATED_AT,
+    })
+  );
+}
+
+function getWorkingSourceRulesDemoEdges(): WorkflowEdge[] {
+  return WORKING_SOURCE_DEMO_EDGE_SPECS.map((spec) =>
+    createWorkflowEdgeRecord({
+      bindingLabel: spec.bindingLabel,
+      bindingStatus: "valid",
+      confidence: 1,
+      createdAt: SAMPLE_CREATED_AT,
+      id: `working-edge-${spec.sourceBlockId}-${spec.targetBlockId}-${spec.sourceOutputRole}-${spec.targetInputRole}`,
+      reason: spec.reason,
+      relationshipType: spec.relationshipType as WorkflowRelationshipType,
+      sourceBlockId: spec.sourceBlockId,
+      sourceOutputRole: spec.sourceOutputRole,
+      targetBlockId: spec.targetBlockId,
+      targetInputRole: spec.targetInputRole,
+    })
+  );
+}
+
+export function createWorkingSourceRulesDemoWorkflow(): LocalWorkflowSnapshot {
+  const blocks = createWorkingSourceRulesDemoBlocks();
+  const edges = getWorkingSourceRulesDemoEdges();
+  const structure = getWorkflowStructure(blocks);
+  const runtimeUiConfig = generateRuntimeUiConfigFromParts({
+    blocks,
+    generatedAt: SAMPLE_CREATED_AT,
+    sourceWorkflowId: LOCAL_WORKFLOW_ID,
+    structure,
+  });
+  const outputMappingPreview = generateOutputMappingPreviewFromParts({
+    blocks,
+    edges,
+    generatedAt: SAMPLE_CREATED_AT,
+    sourceWorkflowId: LOCAL_WORKFLOW_ID,
+  });
+  const mockRuns = getSampleBlockRuns(blocks);
+  const initialSnapshot: WorkflowVersionSnapshot = {
+    aiProposals: [],
+    blockCount: blocks.length,
+    blockIds: blocks.map((block) => block.id),
+    blocks: cloneJson(blocks),
+    changeSummary:
+      "Working local FAPI-style preparation demo with Excel Source rows, imported rulebooks, calculator validation, and protected outputs.",
+    createdAt: SAMPLE_CREATED_AT,
+    createdBy: SYSTEM_USER,
+    edgeCount: edges.length,
+    edgeIds: edges.map((edge) => edge.id),
+    edges: cloneJson(edges),
+    id: "version-working-source-rules-demo-v1",
+    label: "Initial Working FAPI Workbook Preparation Demo",
+    mockRuns: cloneJson(mockRuns),
+    notes:
+      "Local deterministic working demo. Uploaded Excel rows and draft mapping rules stay local.",
+    outputMappingPreview: cloneJson(outputMappingPreview),
+    runtimeUiConfig: cloneJson(runtimeUiConfig),
+    schemaVersion: LOCAL_WORKFLOW_SCHEMA_VERSION,
+    status: "draft",
+    structure: cloneJson(structure),
+    validationWarnings: [],
+    versionNumber: 1,
+    workflowId: LOCAL_WORKFLOW_ID,
+    workflowName: "Working FAPI Workbook Preparation Demo",
+  };
+
+  return {
+    aiProposals: [],
+    blocks,
+    description:
+      "Practical generic local demo for preparing a FAPI-style workflow from an uploaded Excel workbook with editable rulebooks and protected outputs.",
+    edges,
+    events: [
+      createWorkflowEvent({
+        createdAt: SAMPLE_CREATED_AT,
+        message: "Working Excel Source + Rulebooks Demo initialized locally.",
+        type: "reset_sample",
+      }),
+    ],
+    id: LOCAL_WORKFLOW_ID,
+    metadata: {
+      createdAt: SAMPLE_CREATED_AT,
+      createdBy: SYSTEM_USER,
+      kind: "generic-fiscal-workflow",
+      notes:
+        "No live OCR, AI, Taxprep, ONESOURCE, PDF parser, or backend integration is included.",
+      sampleWorkflow: {
+        description:
+          "Generic practical local demo for Excel source rows, editable rulebooks, FAPI-style calculations, and output previews.",
+        id: "working-source-rules-demo",
+        label: "Working FAPI Workbook Preparation Demo",
+      },
+      tags: ["local", "prototype", "working-source-rules-demo"],
+      updatedAt: new Date().toISOString(),
+      updatedBy: SYSTEM_USER,
+    },
+    mockRuns,
+    name: "Working FAPI Workbook Preparation Demo",
+    outputMappingPreview,
+    runtimeUiConfig,
+    schemaVersion: LOCAL_WORKFLOW_SCHEMA_VERSION,
+    status: "draft",
+    structure,
+    versionSnapshots: [initialSnapshot],
+  };
+}
+
 export function createFapiSampleWorkflow(): LocalWorkflowSnapshot {
   const blockSpecs = getFapiSampleBlockSpecs();
   const blocks = blockSpecs.map((spec) =>
@@ -3236,7 +4227,7 @@ export function createFapiSampleWorkflow(): LocalWorkflowSnapshot {
     id: "version-fapi-sample-v1",
     schemaVersion: LOCAL_WORKFLOW_SCHEMA_VERSION,
     workflowId: LOCAL_WORKFLOW_ID,
-    workflowName: "Fiscal Workflow Studio - FAPI Sample",
+    workflowName: "Executable Mapping Demo - FAPI-inspired sample",
     versionNumber: 1,
     label: "Initial FAPI-inspired sample",
     status: "draft",
@@ -3262,7 +4253,7 @@ export function createFapiSampleWorkflow(): LocalWorkflowSnapshot {
   return {
     schemaVersion: LOCAL_WORKFLOW_SCHEMA_VERSION,
     id: LOCAL_WORKFLOW_ID,
-    name: "Fiscal Workflow Studio - FAPI Sample",
+    name: "Executable Mapping Demo - FAPI-inspired sample",
     description:
       "Schema-driven local prototype sample for a generic fiscal workflow studio.",
     status: "draft",
@@ -3648,15 +4639,134 @@ export function loadLocalRunRecords(): LocalRunRecord[] {
   }
 }
 
-export function saveLocalRunRecord(record: LocalRunRecord): LocalRunRecord[] {
-  const records = [record, ...loadLocalRunRecords()].slice(0, 12);
-  if (typeof window !== "undefined") {
+const RUN_RECORD_ARRAY_PREVIEW_LIMIT = 120;
+const RUN_RECORD_OBJECT_KEY_LIMIT = 80;
+const RUN_RECORD_MAX_DEPTH = 7;
+
+export function isLocalRunExecutionId(executionId?: string | null) {
+  return Boolean(
+    executionId?.startsWith("local-tool-") ||
+      executionId?.startsWith("local-run-")
+  );
+}
+
+function compactRunRecordValue(value: unknown, depth = 0): unknown {
+  if (
+    value === null ||
+    value === undefined ||
+    typeof value === "boolean" ||
+    typeof value === "number" ||
+    typeof value === "string"
+  ) {
+    return value;
+  }
+
+  if (depth >= RUN_RECORD_MAX_DEPTH) {
+    return "[truncated depth]";
+  }
+
+  if (Array.isArray(value)) {
+    const preview = value
+      .slice(0, RUN_RECORD_ARRAY_PREVIEW_LIMIT)
+      .map((item) => compactRunRecordValue(item, depth + 1));
+    return value.length > RUN_RECORD_ARRAY_PREVIEW_LIMIT
+      ? [
+          ...preview,
+          {
+            omittedCount: value.length - RUN_RECORD_ARRAY_PREVIEW_LIMIT,
+            truncated: true,
+          },
+        ]
+      : preview;
+  }
+
+  if (typeof value !== "object") {
+    return String(value);
+  }
+
+  const entries = Object.entries(value as Record<string, unknown>);
+  const compacted = Object.fromEntries(
+    entries
+      .slice(0, RUN_RECORD_OBJECT_KEY_LIMIT)
+      .map(([key, item]) => [key, compactRunRecordValue(item, depth + 1)])
+  );
+
+  return entries.length > RUN_RECORD_OBJECT_KEY_LIMIT
+    ? {
+        ...compacted,
+        omittedKeyCount: entries.length - RUN_RECORD_OBJECT_KEY_LIMIT,
+        truncated: true,
+      }
+    : compacted;
+}
+
+function compactLocalRunRecord(record: LocalRunRecord): LocalRunRecord {
+  return {
+    execution: record.execution,
+    logs: record.logs.map((log) => ({
+      ...log,
+      input: compactRunRecordValue(log.input),
+      output: compactRunRecordValue(log.output),
+    })),
+  };
+}
+
+function minimalLocalRunRecord(record: LocalRunRecord): LocalRunRecord {
+  return {
+    execution: record.execution,
+    logs: record.logs.map((log) => ({
+      ...log,
+      input: undefined,
+      output: {
+        compacted: true,
+        message:
+          "Detailed local run payload was too large for browser storage. Re-run the workflow to inspect current results.",
+        status: log.status,
+      },
+    })),
+  };
+}
+
+function persistLocalRunRecords(records: LocalRunRecord[]) {
+  if (typeof window === "undefined") {
+    return true;
+  }
+
+  try {
     window.localStorage.setItem(
       LOCAL_RUNS_STORAGE_KEY,
       JSON.stringify(records, null, 2)
     );
+    return true;
+  } catch (error) {
+    console.warn("Local run history was too large to store.", error);
+    return false;
   }
-  return records;
+}
+
+export function saveLocalRunRecord(record: LocalRunRecord): LocalRunRecord[] {
+  const records = [record, ...loadLocalRunRecords()].slice(0, 12);
+  if (persistLocalRunRecords(records)) {
+    return records;
+  }
+
+  if (persistLocalRunRecords([record])) {
+    return [record];
+  }
+
+  const compactRecords = records.map(compactLocalRunRecord).slice(0, 4);
+  if (persistLocalRunRecords(compactRecords)) {
+    return compactRecords;
+  }
+
+  const compactCurrentRecord = compactLocalRunRecord(record);
+  if (persistLocalRunRecords([compactCurrentRecord])) {
+    return [compactCurrentRecord];
+  }
+
+  const minimalRecords = [minimalLocalRunRecord(record)];
+  persistLocalRunRecords(minimalRecords);
+  return minimalRecords;
 }
 
 export function clearLocalRunRecords() {
@@ -3836,13 +4946,106 @@ function getFapiSampleBlockSpecs(): Array<{
     {
       catalogId: "source:excel-workbook",
       id: "source-trial-balance",
-      label: "Trial balance",
-      description: "Excel / Workbook source for the FAPI sample",
+      label: "Trial Balance Rows",
+      description: "Manual table source for the first sample fiscal workflow",
       position: { x: x.source, y: y(1) },
       config: {
+        manualRows: [
+          {
+            account: "4000",
+            amount: 12_000,
+            label: "Interest income",
+            rowId: "tb-row-interest-income",
+          },
+          {
+            account: "4100",
+            amount: 8000,
+            label: "Rental income",
+            rowId: "tb-row-rental-income",
+          },
+          {
+            account: "5000",
+            amount: -600,
+            label: "Bank charges",
+            rowId: "tb-row-bank-charges",
+          },
+          {
+            account: "5200",
+            amount: -1200,
+            label: "Professional fees",
+            rowId: "tb-row-professional-fees",
+          },
+          {
+            account: "6000",
+            amount: 3000,
+            label: "Other revenue",
+            rowId: "tb-row-other-revenue",
+          },
+        ],
         outputs: "trialBalanceRows",
+        sourceKind: "manual_table",
         sourceLocator: "trial-balance.xlsx#TB!A:K",
         canvasNodeType: "trigger",
+        toolId: "source.manual_table",
+      },
+    },
+    {
+      catalogId: "source:keyword-rules",
+      id: "source-keyword-rules",
+      label: "Keyword Rulebook",
+      description: "Editable keyword rulebook for local keyword mapping",
+      position: { x: x.source, y: y(0) },
+      config: {
+        keywordRules: [
+          {
+            confidence: 0.9,
+            keywords: ["interest income", "interest earned", "bank interest"],
+            lineId: "A",
+            ruleId: "keyword-rule-interest-income",
+            subsectionId: "interest_income",
+            target: "interestIncome",
+          },
+          {
+            confidence: 0.9,
+            keywords: ["rental income", "rent income", "lease income"],
+            lineId: "A",
+            ruleId: "keyword-rule-rents",
+            subsectionId: "rental_income",
+            target: "rents",
+          },
+          {
+            confidence: 0.8,
+            keywords: ["bank charges", "office expenses", "general expenses"],
+            lineId: "EXPENSES",
+            ruleId: "keyword-rule-general-expenses",
+            subsectionId: "general_expenses",
+            target: "generalExpenses",
+          },
+          {
+            confidence: 0.8,
+            keywords: ["professional fees", "accounting fees", "audit fees"],
+            lineId: "EXPENSES",
+            ruleId: "keyword-rule-accounting-expenses",
+            subsectionId: "extra_expenses",
+            target: "accountingExpenses",
+          },
+          {
+            confidence: 0.7,
+            keywords: [
+              "other revenue",
+              "miscellaneous income",
+              "sundry income",
+            ],
+            lineId: "A",
+            ruleId: "keyword-rule-other-fapi-income",
+            subsectionId: "other_fapi_income",
+            target: "otherFapiIncome",
+          },
+        ],
+        outputs: "keywordRules",
+        sourceKind: "keyword_rules",
+        sourceLocator: "manual-source://keyword-rules",
+        toolId: "source.keyword_rules",
       },
     },
     {
@@ -3859,10 +5062,14 @@ function getFapiSampleBlockSpecs(): Array<{
     {
       catalogId: "source:manual-entry",
       id: "source-fx-rate-override",
-      label: "FX rate source or override",
-      description: "Manual Entry source for reviewed FX override",
+      label: "FX Rate",
+      description: "Manual value source for the sample FX rate",
       position: { x: x.source, y: y(3) },
       config: {
+        toolId: "source.manual_value",
+        unit: "CAD/USD",
+        value: 1.35,
+        valueLabel: "FX Rate",
         outputs: "fxRateOverride",
         sourceLocator: "manual-entry://fx-rate-override",
         valuePreview: "1.3500 CAD/USD",
@@ -3875,6 +5082,9 @@ function getFapiSampleBlockSpecs(): Array<{
       description: "Manual Entry source for inclusion rate or constant",
       position: { x: x.source, y: y(4) },
       config: {
+        toolId: "source.manual_value",
+        value: 0.5,
+        valueLabel: "Inclusion Rate",
         outputs: "inclusionRateConstant",
         sourceLocator: "manual-entry://inclusion-rate",
         valuePreview: "50%",
@@ -3884,9 +5094,13 @@ function getFapiSampleBlockSpecs(): Array<{
       catalogId: "source:api-http-request",
       id: "source-fx-rate-api",
       label: "FX rate API source",
-      description: "API / HTTP Request source for FX rates",
+      description: "Mock source value for FX rates; no API call is made",
       position: { x: x.source, y: y(5) },
       config: {
+        toolId: "source.manual_value",
+        unit: "CAD/USD",
+        value: 1.34,
+        valueLabel: "Reference FX Rate",
         outputs: "fxRateApiResponse",
         sourceLocator: "https://rates.example.test/fx/CAD/USD",
       },
@@ -3894,21 +5108,30 @@ function getFapiSampleBlockSpecs(): Array<{
     {
       catalogId: "logic:classification-mapping",
       id: "logic-classify-source-rows",
-      label: "Classify source rows",
-      description: "Classification / Mapping for source trial balance rows",
+      label: "Keyword Mapper",
+      description: "Map trial balance rows using connected keyword Sources",
       position: { x: x.logic, y: y(0) },
       config: {
-        inputs: "trialBalanceRows, financialStatementEvidence",
+        inputs: "trialBalanceRows, keywordRules",
+        lowConfidenceThreshold: 0.75,
         outputs: "classifiedRows",
+        toolId: "logic.keyword_mapper",
       },
     },
     {
       catalogId: "logic:aggregation",
       id: "logic-property-income",
       label: "Property income aggregation",
-      description: "Aggregation of property income rows",
+      description: "Aggregation of mapped income rows",
       position: { x: x.logic, y: y(1) },
-      config: { inputs: "classifiedRows", outputs: "propertyIncome" },
+      config: {
+        aggregationMethod: "sum",
+        amountField: "amount",
+        includeTargets: ["interestIncome", "rents", "otherFapiIncome"],
+        inputs: "classifiedRows",
+        outputs: "propertyIncome",
+        toolId: "logic.aggregation",
+      },
     },
     {
       catalogId: "logic:aggregation",
@@ -3916,7 +5139,13 @@ function getFapiSampleBlockSpecs(): Array<{
       label: "Capital gains / losses aggregation",
       description: "Aggregation of capital gains and losses",
       position: { x: x.logic, y: y(2) },
-      config: { inputs: "classifiedRows", outputs: "capitalGainsLosses" },
+      config: {
+        aggregationMethod: "sum",
+        includeTargets: ["capital_gain"],
+        inputs: "classifiedRows",
+        outputs: "capitalGainsLosses",
+        toolId: "logic.aggregation",
+      },
     },
     {
       catalogId: "logic:aggregation",
@@ -3924,18 +5153,30 @@ function getFapiSampleBlockSpecs(): Array<{
       label: "Expenses and deductions aggregation",
       description: "Aggregation of expense and deduction rows",
       position: { x: x.logic, y: y(3) },
-      config: { inputs: "classifiedRows", outputs: "expensesDeductions" },
+      config: {
+        aggregationMethod: "sum",
+        includeTargets: ["generalExpenses", "accountingExpenses"],
+        inputs: "classifiedRows",
+        outputs: "expensesDeductions",
+        toolId: "logic.aggregation",
+      },
     },
     {
       catalogId: "logic:formula",
       id: "logic-taxable-capital-gains",
-      label: "Taxable capital gains calculation",
-      description: "Formula for taxable capital gains",
+      label: "Apply FX Rate Formula",
+      description: "Safe local formula applying FX rate to mapped income",
       position: { x: x.logic, y: y(4) },
       config: {
-        formula: "capitalGainsLosses * inclusionRateConstant",
-        inputs: "capitalGainsLosses, inclusionRateConstant",
-        outputs: "taxableCapitalGains",
+        formula: "propertyIncome * fxRateOverride",
+        inputs: "propertyIncome, fxRateOverride",
+        operands: [
+          "logic-property-income.subtotal",
+          "source-fx-rate-override.value",
+        ],
+        operation: "multiply",
+        outputs: "sampleFiscalResult",
+        toolId: "logic.formula",
       },
     },
     {
@@ -3978,7 +5219,11 @@ function getFapiSampleBlockSpecs(): Array<{
       label: "FX rate exists",
       description: "Required Input Check for FX rate existence",
       position: { x: x.review, y: y(1) },
-      config: { inputs: "fxRateApiResponse, fxRateOverride" },
+      config: {
+        inputs: "fxRateApiResponse, fxRateOverride",
+        requiredKeys: ["fxRateOverride"],
+        toolId: "review.required_input_check",
+      },
     },
     {
       catalogId: "review:missing-source-check",
@@ -3993,27 +5238,50 @@ function getFapiSampleBlockSpecs(): Array<{
       label: "Low confidence warning",
       description: "Warning for low-confidence classifications",
       position: { x: x.review, y: y(3) },
+      config: {
+        threshold: 0.8,
+        toolId: "review.low_confidence_warning",
+      },
+    },
+    {
+      catalogId: "review:unmatched-rows-check",
+      id: "review-unmatched-rows",
+      label: "Unmatched rows check",
+      description: "Review check for rows not mapped by keyword rules",
+      position: { x: x.review, y: y(4) },
+      config: {
+        toolId: "review.unmatched_rows_check",
+      },
     },
     {
       catalogId: "review:manual-override-review",
       id: "review-manual-override",
       label: "Manual override review",
       description: "Review manual override values",
-      position: { x: x.review, y: y(4) },
+      position: { x: x.review, y: y(5) },
     },
     {
       catalogId: "review:approval-gate",
       id: "review-approval-gate",
       label: "Approval gate",
       description: "Approval Gate before governed outputs",
-      position: { x: x.review, y: y(5) },
+      position: { x: x.review, y: y(6) },
+      config: {
+        approved: true,
+        notes: "Local sample approval for protected result.",
+        reviewer: "Sample Reviewer",
+        toolId: "review.approval_gate",
+      },
     },
     {
       catalogId: "review:output-readiness-check",
       id: "review-output-readiness",
       label: "Output readiness check",
       description: "Output Readiness Check for handoff artifacts",
-      position: { x: x.review, y: y(6) },
+      position: { x: x.review, y: y(7) },
+      config: {
+        toolId: "review.output_readiness_check",
+      },
     },
     ...[
       ["protected-input-fx-rate", "Locked Rate", "FX Rate", "fxRate"],
@@ -4068,7 +5336,10 @@ function getFapiSampleBlockSpecs(): Array<{
       (line, index) => ({
         catalogId: "protected:official-line",
         id: `protected-line-${line.toLowerCase().replace(".", "-")}`,
-        label: `Official Line ${line}`,
+        label:
+          line === "A"
+            ? "Sample Official Fiscal Line A"
+            : `Official Line ${line}`,
         description: `Protected official line ${line}`,
         position: { x: x.official, y: y(index - 1) },
         config: { outputs: `officialLine${line.replace(".", "_")}` },
@@ -4079,7 +5350,11 @@ function getFapiSampleBlockSpecs(): Array<{
       ["protected-summary-deductions", "Deductions", "deductions"],
       ["protected-summary-fapi-brut", "FAPI Brut", "fapiBrut"],
       ["protected-summary-fat-deduction", "FAT Deduction", "fatDeduction"],
-      ["protected-summary-net-fapi", "Net FAPI", "netFapi"],
+      [
+        "protected-summary-net-fapi",
+        "Sample Protected Result",
+        "sampleProtectedResult",
+      ],
       ["protected-summary-fapl-loss", "FAPL / loss result", "faplLossResult"],
     ].map(([id, label, output], index) => ({
       catalogId: "protected:final-reviewed-amount",
@@ -4087,7 +5362,7 @@ function getFapiSampleBlockSpecs(): Array<{
       label,
       description: `Protected summary result: ${label}`,
       position: { x: x.summary, y: y(index + 1) },
-      config: { outputs: output },
+      config: { outputs: output, toolId: "protected.protected_result" },
     })),
     ...[
       ["output-csv-export", "output:csv-export", "CSV Export"],
@@ -4107,7 +5382,13 @@ function getFapiSampleBlockSpecs(): Array<{
       label,
       description: `${label} output artifact`,
       position: { x: x.output, y: y(index) },
-      config: { inputs: "approvedProtectedPacket" },
+      config: {
+        inputs: "approvedProtectedPacket",
+        toolId:
+          catalogId === "output:canonical-json"
+            ? "output.canonical_json"
+            : "output.evidence_pack_preview",
+      },
     })),
   ];
 }
@@ -4119,7 +5400,11 @@ function getFapiSampleEdges(): WorkflowEdge[] {
     targetBlockId: string,
     relationshipType: WorkflowRelationshipType,
     reason: string,
-    confidence = 1
+    confidence = 1,
+    binding?: Pick<
+      WorkflowEdge,
+      "bindingLabel" | "bindingStatus" | "sourceOutputRole" | "targetInputRole"
+    >
   ) =>
     createWorkflowEdgeRecord({
       id: `edge-${sourceBlockId}-${targetBlockId}`,
@@ -4128,6 +5413,7 @@ function getFapiSampleEdges(): WorkflowEdge[] {
       relationshipType,
       reason,
       confidence,
+      ...binding,
       createdAt: SAMPLE_CREATED_AT,
     });
 
@@ -4136,7 +5422,27 @@ function getFapiSampleEdges(): WorkflowEdge[] {
       "source-trial-balance",
       "logic-classify-source-rows",
       "extracted_into",
-      "Trial balance rows are extracted into classification logic."
+      "Trial balance rows are extracted into classification logic.",
+      1,
+      {
+        bindingLabel: "Data rows",
+        bindingStatus: "valid",
+        sourceOutputRole: "rows",
+        targetInputRole: "data_rows",
+      }
+    ),
+    edge(
+      "source-keyword-rules",
+      "logic-classify-source-rows",
+      "referenced_by",
+      "Keyword rule Source is referenced by the Keyword Mapper.",
+      1,
+      {
+        bindingLabel: "Keyword rules",
+        bindingStatus: "valid",
+        sourceOutputRole: "keyword_rules",
+        targetInputRole: "keyword_rules",
+      }
     ),
     edge(
       "source-financial-statements-notes",
@@ -4151,22 +5457,55 @@ function getFapiSampleEdges(): WorkflowEdge[] {
       "Inclusion rate provides data to taxable capital gains formula."
     ),
     edge(
+      "source-fx-rate-override",
+      "logic-taxable-capital-gains",
+      "provides_data_to",
+      "FX rate source provides the rate for the sample formula."
+    ),
+    edge(
       "logic-classify-source-rows",
       "logic-property-income",
       "aggregates_into",
-      "Classified rows aggregate into property income."
+      "Classified rows aggregate into property income.",
+      1,
+      {
+        bindingLabel: "Mapped rows",
+        bindingStatus: "valid",
+        sourceOutputRole: "mapped_rows",
+        targetInputRole: "mapped_rows",
+      }
+    ),
+    edge(
+      "logic-property-income",
+      "logic-taxable-capital-gains",
+      "transforms_into",
+      "Mapped income aggregation feeds the sample formula."
     ),
     edge(
       "logic-classify-source-rows",
       "logic-capital-gains-losses",
       "aggregates_into",
-      "Classified rows aggregate into capital gains and losses."
+      "Classified rows aggregate into capital gains and losses.",
+      1,
+      {
+        bindingLabel: "Mapped rows",
+        bindingStatus: "valid",
+        sourceOutputRole: "mapped_rows",
+        targetInputRole: "mapped_rows",
+      }
     ),
     edge(
       "logic-classify-source-rows",
       "logic-expenses-deductions",
       "aggregates_into",
-      "Classified rows aggregate into expenses and deductions."
+      "Classified rows aggregate into expenses and deductions.",
+      1,
+      {
+        bindingLabel: "Mapped rows",
+        bindingStatus: "valid",
+        sourceOutputRole: "mapped_rows",
+        targetInputRole: "mapped_rows",
+      }
     ),
     edge(
       "logic-capital-gains-losses",
@@ -4201,8 +5540,28 @@ function getFapiSampleEdges(): WorkflowEdge[] {
     edge(
       "logic-classify-source-rows",
       "review-low-confidence",
-      "requires_review_by",
-      "Classification confidence requires low-confidence review."
+      "triggers_validation",
+      "Classification confidence requires low-confidence review.",
+      1,
+      {
+        bindingLabel: "Low-confidence rows",
+        bindingStatus: "valid",
+        sourceOutputRole: "low_confidence_rows",
+        targetInputRole: "checked_items",
+      }
+    ),
+    edge(
+      "logic-classify-source-rows",
+      "review-unmatched-rows",
+      "triggers_validation",
+      "Unmatched mapped rows require review before governed output.",
+      1,
+      {
+        bindingLabel: "Unmatched rows",
+        bindingStatus: "valid",
+        sourceOutputRole: "unmatched_rows",
+        targetInputRole: "checked_items",
+      }
     ),
     edge(
       "logic-missing-source-routing",
@@ -4358,6 +5717,7 @@ function getFapiSampleEdges(): WorkflowEdge[] {
     ["protected-summary-fapi-brut", "output-pdf-review-pack"],
     ["protected-summary-fat-deduction", "output-evidence-pack"],
     ["protected-summary-net-fapi", "output-canonical-json"],
+    ["protected-summary-net-fapi", "output-evidence-pack"],
     ["protected-summary-net-fapi", "output-taxprep-handoff"],
     ["protected-summary-fapl-loss", "output-onesource-handoff"],
   ]) {

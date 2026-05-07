@@ -24,6 +24,8 @@ import { CodeEditor } from "@/components/ui/code-editor";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EdgeInspector } from "@/components/workflow/edge-inspector";
+import { CalculationEngineModeSection } from "@/components/workflow/logic-viewers/calculation-engine-panel";
+import { HierarchyAggregatorPanel } from "@/components/workflow/logic-viewers/hierarchy-aggregator-panel";
 import { api } from "@/lib/api-client";
 import { integrationsAtom } from "@/lib/integrations-store";
 import {
@@ -40,9 +42,17 @@ import {
   getUnsupportedWorkflowRelationshipMessage,
   getWorkflowEdgeDefaults,
   isLocalWorkflowId,
+  type LocalRunRecord,
+  loadLocalRunRecords,
+  saveLocalRunRecord,
   saveLocalWorkflowSnapshot,
   type WorkflowBlock,
 } from "@/lib/local-fiscal-workflow";
+import { getToolForBlock } from "@/lib/local-tool-registry";
+import {
+  type LocalEdgeRunStatus,
+  runLocalWorkflowTools,
+} from "@/lib/local-tool-runner";
 import type { IntegrationType } from "@/lib/types/integration";
 import { generateWorkflowCode } from "@/lib/workflow-codegen";
 import {
@@ -54,6 +64,7 @@ import {
   deleteEdgeAtom,
   deleteNodeAtom,
   edgesAtom,
+  executionLogsAtom,
   hasUnsavedChangesAtom,
   insertBlockBetweenEdgeAtom,
   isGeneratingAtom,
@@ -62,17 +73,40 @@ import {
   nodesAtom,
   propertiesPanelActiveTabAtom,
   selectedEdgeAtom,
+  selectedExecutionIdAtom,
   selectedNodeAtom,
   updateEdgeDataAtom,
   updateNodeDataAtom,
+  type WorkflowEdge,
+  type WorkflowNode,
 } from "@/lib/workflow-store";
 import { findActionById } from "@/plugins";
+import { isInspectorTab } from "@/src/domain/workflow/inspector-rules";
+import { hasExcelSourceEvidence } from "@/src/domain/workflow/source-rules";
 import { ActionConfig } from "../workflow/config/action-config";
 import { ActionGrid } from "../workflow/config/action-grid";
 import { FiscalBlockConfig } from "../workflow/config/fiscal-block-config";
 import { TriggerConfig } from "../workflow/config/trigger-config";
+import { generateBlockCodePreview } from "../workflow/inspector/code-preview/generate-code-preview";
+import { SourceSetupPanel } from "../workflow/inspector/source-setup-panel";
+import { ExcelWorkbookViewer } from "../workflow/source-viewers/excel-workbook-viewer";
+import {
+  KeywordMapperRulesPanel,
+  NEW_AGGREGATION_RULE_NODE_ID,
+  NEW_CALCULATION_RULE_ID,
+  NEW_KEYWORD_RULE_ID,
+  NEW_ROLLUP_RULE_ID,
+  RuleSourceViewer,
+} from "../workflow/source-viewers/rule-source-editor";
 import { generateNodeCode } from "../workflow/utils/code-generators";
 import { WorkflowRuns } from "../workflow/workflow-runs";
+import { BlockDataFlowColumn } from "../workflow/workspace/block-data-flow-pane";
+import { getLatestLocalRunForBlock } from "../workflow/workspace/latest-local-run";
+import {
+  getWorkspaceGridColumns,
+  useWorkspacePaneSizing,
+  WorkspaceResizeHandle,
+} from "../workflow/workspace/workspace-pane-sizing";
 import type { OverlayComponentProps } from "./types";
 
 // System actions that need integrations (not in plugin registry)
@@ -83,6 +117,143 @@ const SYSTEM_ACTION_INTEGRATIONS: Record<string, IntegrationType> = {
 // Regex constants
 const NON_ALPHANUMERIC_REGEX = /[^a-zA-Z0-9\s]/g;
 const WORD_SPLIT_REGEX = /\s+/;
+
+function createExecutionLogsMap(logs: LocalRunRecord["logs"]) {
+  return Object.fromEntries(
+    logs.map((log) => [
+      log.nodeId,
+      {
+        nodeId: log.nodeId,
+        nodeName: log.nodeName,
+        nodeType: log.nodeType,
+        output: log.output,
+        status: log.status,
+      },
+    ])
+  );
+}
+
+function applyEdgeRunStatuses({
+  edgeStatuses,
+  edges,
+  runId,
+}: {
+  edgeStatuses: Record<string, LocalEdgeRunStatus>;
+  edges: WorkflowEdge[];
+  runId: string;
+}) {
+  return edges.map((edge) => ({
+    ...edge,
+    data: {
+      ...edge.data,
+      runStatus: edgeStatuses[edge.id] || "idle",
+      runStatusRunId: runId,
+    },
+  }));
+}
+
+function isExcelWorkbookSource(block?: WorkflowBlock | null) {
+  const sourceKind = String(block?.config.sourceKind || "").toLowerCase();
+  return (
+    block?.family === "Source" &&
+    (block.subtype === "Excel / Workbook" ||
+      sourceKind.includes("excel") ||
+      sourceKind.includes("workbook"))
+  );
+}
+
+function isRuleKnowledgeSource(block?: WorkflowBlock | null) {
+  const sourceKind = String(block?.config.sourceKind || "").toLowerCase();
+  return (
+    block?.family === "Source" &&
+    (block.subtype === "Keyword Rules" ||
+      block.subtype === "Aggregation Rules" ||
+      block.subtype === "Rollup Rules" ||
+      block.subtype === "Calculation Rules" ||
+      sourceKind.includes("keyword_rules") ||
+      sourceKind.includes("aggregation_rules") ||
+      sourceKind.includes("rollup_rules") ||
+      sourceKind.includes("calculation_rules") ||
+      sourceKind.includes("rule_knowledge"))
+  );
+}
+
+function isAggregationRuleKnowledgeSource(block?: WorkflowBlock | null) {
+  const sourceKind = String(block?.config.sourceKind || "").toLowerCase();
+  return (
+    block?.family === "Source" &&
+    (block.subtype === "Aggregation Rules" ||
+      block.subtype === "Rollup Rules" ||
+      block.subtype === "Calculation Rules" ||
+      sourceKind.includes("aggregation_rules") ||
+      sourceKind.includes("rollup_rules"))
+  );
+}
+
+function isCalculationRuleKnowledgeSource(block?: WorkflowBlock | null) {
+  const sourceKind = String(block?.config.sourceKind || "").toLowerCase();
+  return (
+    block?.family === "Source" &&
+    (block.subtype === "Calculation Rules" ||
+      sourceKind.includes("calculation_rules"))
+  );
+}
+
+function isKeywordMapperBlock(block?: WorkflowBlock | null) {
+  return (
+    block?.config.toolId === "logic.keyword_mapper" ||
+    block?.subtype === "Classification / Mapping"
+  );
+}
+
+function isHierarchyAggregatorBlock(block?: WorkflowBlock | null) {
+  return (
+    block?.config.toolId === "logic.hierarchy_aggregator" ||
+    block?.subtype === "Hierarchy Aggregator"
+  );
+}
+
+function isCategoryRollupAggregatorBlock(block?: WorkflowBlock | null) {
+  return (
+    block?.config.toolId === "logic.category_rollup_aggregator" ||
+    block?.subtype === "Category Rollup Aggregator"
+  );
+}
+
+function isCalculationEngineBlock(block?: WorkflowBlock | null) {
+  return (
+    block?.config.toolId === "logic.calculation_engine" ||
+    block?.subtype === "Calculation Engine"
+  );
+}
+
+function usesFocusedLogicWorkspace(block?: WorkflowBlock | null) {
+  return (
+    isKeywordMapperBlock(block) ||
+    isCategoryRollupAggregatorBlock(block) ||
+    isCalculationEngineBlock(block) ||
+    isHierarchyAggregatorBlock(block)
+  );
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function getRunOutputsByBlockId(record?: LocalRunRecord) {
+  return Object.fromEntries(
+    (record?.logs || []).map((log) => {
+      const output = asRecord(log.output);
+      const nestedOutput = asRecord(output.output);
+      return [
+        log.nodeId,
+        Object.keys(nestedOutput).length > 0 ? nestedOutput : output,
+      ];
+    })
+  );
+}
 
 // Helper to generate code filename based on node type
 function getCodeFilename(node: {
@@ -107,17 +278,118 @@ function getCodeFilename(node: {
     .replace(/[^a-z0-9-]/g, "")}-step.ts`;
 }
 
+function getBlockInputBindingsForCode({
+  block,
+  edges,
+  nodes,
+}: {
+  block: WorkflowBlock;
+  edges: WorkflowEdge[];
+  nodes: WorkflowNode[];
+}) {
+  return edges
+    .filter((edge) => edge.target === block.id)
+    .map((edge) => ({
+      label: edge.data?.workflowEdge?.targetInputRole || "input",
+      value: `${nodes.find((node) => node.id === edge.source)?.data.block?.label || edge.source}.${edge.data?.workflowEdge?.sourceOutputRole || "output"}`,
+    }));
+}
+
+function BlockGeneratedCodeTab({
+  block,
+  edges,
+  nodes,
+}: {
+  block: WorkflowBlock;
+  edges: WorkflowEdge[];
+  nodes: WorkflowNode[];
+}) {
+  const preview = generateBlockCodePreview({
+    block,
+    config: block.config || {},
+    inputBindings: getBlockInputBindingsForCode({ block, edges, nodes }),
+    tool: getToolForBlock(block),
+  });
+  const copyCode = () => {
+    navigator.clipboard.writeText(preview.code);
+    toast.success("Generated preview copied");
+  };
+
+  return (
+    <div className="flex h-[400px] flex-col">
+      <div className="flex shrink-0 items-start justify-between gap-3 border-b bg-muted/30 px-3 py-2">
+        <div>
+          <div className="font-medium text-sm">{preview.title}</div>
+          <p className="mt-1 text-muted-foreground text-xs">
+            {preview.explanation}
+          </p>
+        </div>
+        <Button
+          className="shrink-0 text-muted-foreground"
+          onClick={copyCode}
+          size="sm"
+          variant="ghost"
+        >
+          <Copy className="mr-2 size-4" />
+          Copy
+        </Button>
+      </div>
+      <pre className="min-h-0 flex-1 overflow-auto bg-background p-4 text-xs">
+        {preview.code}
+      </pre>
+    </div>
+  );
+}
+
+function getPatchBaseConfig(node: WorkflowNode) {
+  return node.data.block?.config || node.data.config || {};
+}
+
+function getPatchedWorkflowBlock({
+  block,
+  nextConfig,
+}: {
+  block?: WorkflowBlock;
+  nextConfig: Record<string, unknown>;
+}) {
+  if (!block) {
+    return;
+  }
+
+  const source = block.source
+    ? {
+        ...block.source,
+        locator: String(nextConfig.sourceLocator || block.source.locator),
+        valuePreview:
+          typeof nextConfig.valuePreview === "string"
+            ? nextConfig.valuePreview
+            : block.source.valuePreview,
+      }
+    : block.source;
+
+  return {
+    ...block,
+    config: nextConfig,
+    source,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 type ConfigurationOverlayProps = OverlayComponentProps;
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex UI logic with multiple conditions
 export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
   const { push, closeAll } = useOverlay();
-  const [selectedNodeId] = useAtom(selectedNodeAtom);
+  const [selectedNodeId, setSelectedNodeId] = useAtom(selectedNodeAtom);
   const [selectedEdgeId] = useAtom(selectedEdgeAtom);
   const [nodes] = useAtom(nodesAtom);
   const [edges, setEdges] = useAtom(edgesAtom);
   const [isGenerating] = useAtom(isGeneratingAtom);
   const [currentWorkflowId] = useAtom(currentWorkflowIdAtom);
+  const [selectedExecutionId, setSelectedExecutionId] = useAtom(
+    selectedExecutionIdAtom
+  );
+  const [executionLogs, setExecutionLogs] = useAtom(executionLogsAtom);
   const [currentWorkflowName, setCurrentWorkflowName] = useAtom(
     currentWorkflowNameAtom
   );
@@ -136,6 +408,18 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
   );
   const [activeTab, setActiveTab] = useAtom(propertiesPanelActiveTabAtom);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [calculationInsertRequest, setCalculationInsertRequest] = useState<{
+    id: string;
+    key: string;
+  } | null>(null);
+  const [calculationTermCreateRequest, setCalculationTermCreateRequest] =
+    useState(0);
+  const [selectedCalculationTermId, setSelectedCalculationTermId] = useState<
+    string | null
+  >(null);
+  const [selectedRulebookItemId, setSelectedRulebookItemId] = useState("");
+  const { handleWorkspaceResizeStart, workspaceGridRef, workspacePaneWidths } =
+    useWorkspacePaneSizing();
   const refreshRunsRef = useRef<(() => Promise<void>) | null>(null);
 
   const selectedNode = nodes.find((node) => node.id === selectedNodeId);
@@ -146,6 +430,13 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
   const selectedEdgeTargetNode = selectedEdge
     ? nodes.find((node) => node.id === selectedEdge.target)
     : undefined;
+
+  useEffect(() => {
+    setSelectedRulebookItemId(selectedNodeId ? "" : "");
+    setCalculationInsertRequest(null);
+    setCalculationTermCreateRequest(0);
+    setSelectedCalculationTermId(null);
+  }, [selectedNodeId]);
 
   // Auto-fix invalid integration references
   const globalIntegrations = useAtomValue(integrationsAtom);
@@ -207,6 +498,34 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
       });
     },
     [selectedNode, updateNodeData]
+  );
+
+  const handlePatchSelectedBlockConfig = useCallback(
+    (patch: Record<string, unknown>) => {
+      if (!selectedNode) {
+        return;
+      }
+
+      const currentConfig = getPatchBaseConfig(selectedNode);
+      const nextConfig = { ...currentConfig, ...patch };
+      const nextBlock = getPatchedWorkflowBlock({
+        block: selectedNode.data.block,
+        nextConfig,
+      });
+
+      updateNodeData({
+        id: selectedNode.id,
+        data: {
+          block: nextBlock,
+          config: nextConfig,
+          description: nextBlock?.description ?? selectedNode.data.description,
+          label: nextBlock?.label ?? selectedNode.data.label,
+        },
+      });
+      setHasUnsavedChanges(true);
+      triggerAutosave({ immediate: true });
+    },
+    [selectedNode, setHasUnsavedChanges, triggerAutosave, updateNodeData]
   );
 
   const handleApplyVisualPreset = useCallback(
@@ -296,8 +615,12 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
 
       const workflowEdge = createWorkflowEdgeRecord({
         id: nanoid(),
+        bindingLabel: edgeDefaults.bindingLabel,
+        bindingStatus: edgeDefaults.bindingStatus,
         sourceBlockId: pendingConnection.sourceBlockId,
+        sourceOutputRole: edgeDefaults.sourceOutputRole,
         targetBlockId: pendingConnection.targetBlockId,
+        targetInputRole: edgeDefaults.targetInputRole,
         relationshipType: edgeDefaults.relationshipType,
         reason: edgeDefaults.reason,
       });
@@ -494,10 +817,11 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
   // Determine which tabs to show (only for node view)
   const showCodeTab = Boolean(
     selectedNode &&
-      (selectedNode.data.type !== "trigger" ||
-        (selectedNode.data.config?.triggerType as string) !== "Manual" ||
-        selectedNode.data.config?.fiscalStage) &&
-      selectedNode.data.config?.actionType !== "Condition"
+      (selectedNode.data.block?.family === "Logic" ||
+        ((selectedNode.data.type !== "trigger" ||
+          (selectedNode.data.config?.triggerType as string) !== "Manual" ||
+          selectedNode.data.config?.fiscalStage) &&
+          selectedNode.data.config?.actionType !== "Condition"))
   );
 
   // Get current tab title
@@ -505,9 +829,7 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
     if (!selectedNode) {
       // For workflow view, validate the tab
       const validTab =
-        activeTab === "properties" ||
-        activeTab === "code" ||
-        (activeTab === "runs" && isOwner)
+        isInspectorTab(activeTab) && (activeTab !== "runs" || isOwner)
           ? activeTab
           : "properties";
       switch (validTab) {
@@ -671,6 +993,51 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
     }
     toast.warning(result.message);
   };
+
+  const selectedBlock = selectedNode?.data.block;
+  const handleExecuteSelectedStep = useCallback(() => {
+    if (!(selectedNode && selectedBlock)) {
+      return;
+    }
+
+    const localRun = runLocalWorkflowTools({
+      edges,
+      mode: "selected",
+      nodes,
+      selectedBlockId: selectedBlock.id,
+      workflowName: currentWorkflowName,
+    });
+    saveLocalRunRecord(localRun.record);
+    setSelectedExecutionId(localRun.record.execution.id);
+    setExecutionLogs(createExecutionLogsMap(localRun.record.logs));
+    for (const [nodeId, status] of Object.entries(localRun.blockStatuses)) {
+      updateNodeData({ id: nodeId, data: { status } });
+    }
+    setEdges(
+      applyEdgeRunStatuses({
+        edgeStatuses: localRun.edgeStatuses,
+        edges,
+        runId: localRun.record.execution.id,
+      })
+    );
+    if (localRun.result.status === "success") {
+      toast.success("Local step run completed");
+    } else {
+      toast.warning(
+        `Local step run completed with ${localRun.result.warnings.length} warning${localRun.result.warnings.length === 1 ? "" : "s"}`
+      );
+    }
+  }, [
+    currentWorkflowName,
+    edges,
+    nodes,
+    selectedBlock,
+    selectedNode,
+    setEdges,
+    setExecutionLogs,
+    setSelectedExecutionId,
+    updateNodeData,
+  ]);
 
   // If an edge is selected, show edge properties
   if (selectedEdge && !selectedNode) {
@@ -867,9 +1234,25 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
     );
   }
 
+  const selectedBlockIsExcelSource = isExcelWorkbookSource(selectedBlock);
+  const selectedBlockIsRuleSource = isRuleKnowledgeSource(selectedBlock);
+  const selectedBlockIsAggregationRuleSource =
+    isAggregationRuleKnowledgeSource(selectedBlock);
+  const selectedBlockIsCalculationRuleSource =
+    isCalculationRuleKnowledgeSource(selectedBlock);
+  const selectedExcelSourceHasEvidence = Boolean(
+    selectedBlockIsExcelSource &&
+      selectedBlock &&
+      hasExcelSourceEvidence(selectedBlock.config || {})
+  );
+  const emptyDraftExcelSource = Boolean(
+    selectedBlockIsExcelSource && !selectedExcelSourceHasEvidence
+  );
   const sourceEvidenceLocked = Boolean(
     selectedNode.data.block?.source?.treatedAsEvidence &&
-      selectedNode.data.block.source.immutable
+      selectedNode.data.block.source.immutable &&
+      !isRuleKnowledgeSource(selectedNode.data.block) &&
+      !emptyDraftExcelSource
   );
   const protectedNeedsUnlock = Boolean(
     selectedNode.data.block?.governance?.requiresUnlockToEdit &&
@@ -877,224 +1260,468 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
   );
   const identityFieldsDisabled =
     isGenerating || !isOwner || sourceEvidenceLocked || protectedNeedsUnlock;
+  const showDataFlowWorkspace = Boolean(
+    selectedBlock && !selectedNode.data.config?.blockCandidate
+  );
+  const latestSelectedBlockRun = selectedBlock
+    ? getLatestLocalRunForBlock({
+        blockId: selectedBlock.id,
+        executionLogs,
+        selectedExecutionId,
+        storedRecords: loadLocalRunRecords(),
+        workflowId: currentWorkflowId,
+      })
+    : undefined;
+  const latestRunOutputsByBlockId = getRunOutputsByBlockId(
+    latestSelectedBlockRun
+  );
+  const sourceVersionCreatedAt = selectedBlock?.config.sourceVersionCreatedAt
+    ? Date.parse(String(selectedBlock.config.sourceVersionCreatedAt))
+    : Date.parse(String(selectedBlock?.createdAt || ""));
+  const latestSourceRunAt = latestSelectedBlockRun?.execution.startedAt
+    ? new Date(latestSelectedBlockRun.execution.startedAt).getTime()
+    : 0;
+  const sourceHasLockableEvidence = Boolean(
+    !selectedBlockIsExcelSource || selectedExcelSourceHasEvidence
+  );
+  const sourceUsedInRun = Boolean(
+    selectedBlock?.family === "Source" &&
+      latestSelectedBlockRun &&
+      latestSourceRunAt >=
+        (Number.isNaN(sourceVersionCreatedAt) ? 0 : sourceVersionCreatedAt) &&
+      sourceHasLockableEvidence
+  );
+  const sourceVersion = Number(selectedBlock?.config.sourceVersion || 1);
+  const sourceLocked = Boolean(
+    selectedBlock?.family === "Source" &&
+      (selectedBlock.config.sourceStatus === "published" ||
+        (!selectedBlockIsRuleSource &&
+          sourceHasLockableEvidence &&
+          (sourceUsedInRun || selectedBlock.config.sourceUsedInRun === true)))
+  );
+  const handleCreateRulebookItem = () => {
+    if (selectedBlockIsCalculationRuleSource) {
+      setSelectedRulebookItemId(NEW_CALCULATION_RULE_ID);
+      return;
+    }
+    const sourceKind = String(
+      selectedBlock?.config.sourceKind || ""
+    ).toLowerCase();
+    if (
+      selectedBlock?.subtype === "Rollup Rules" ||
+      sourceKind.includes("rollup_rules")
+    ) {
+      setSelectedRulebookItemId(NEW_ROLLUP_RULE_ID);
+      return;
+    }
+    if (selectedBlockIsAggregationRuleSource) {
+      setSelectedRulebookItemId(NEW_AGGREGATION_RULE_NODE_ID);
+      return;
+    }
+    // Keyword rules
+    setSelectedRulebookItemId(NEW_KEYWORD_RULE_ID);
+  };
+  const handleCreateSourceVersion = () => {
+    if (!selectedBlock || selectedBlock.family !== "Source") {
+      return;
+    }
+    handlePatchSelectedBlockConfig({
+      previousSourceVersion: sourceVersion,
+      sourceStatus: "draft",
+      sourceUsedInRun: false,
+      sourceVersion: sourceVersion + 1,
+      sourceVersionCreatedAt: new Date().toISOString(),
+    });
+    toast.success("New draft Source version created");
+  };
+  const leftWorkspacePane = (() => {
+    if (!(showDataFlowWorkspace && selectedBlock)) {
+      return null;
+    }
+
+    if (selectedBlockIsExcelSource) {
+      return (
+        <ExcelWorkbookViewer
+          config={selectedBlock.config || {}}
+          disabled={isGenerating || !isOwner || sourceLocked}
+          onConfigPatch={handlePatchSelectedBlockConfig}
+        />
+      );
+    }
+
+    if (selectedBlockIsRuleSource) {
+      return (
+        <RuleSourceViewer
+          config={selectedBlock.config || {}}
+          disabled={isGenerating || !isOwner || sourceLocked}
+          onCreateItem={isOwner && !sourceLocked ? handleCreateRulebookItem : undefined}
+          onSelectItem={setSelectedRulebookItemId}
+          selectedItemId={selectedRulebookItemId}
+        />
+      );
+    }
+
+    return (
+      <BlockDataFlowColumn
+        block={selectedBlock}
+        calculationInsertDisabled={isGenerating || !isOwner}
+        calculationInsertRequest={(key) =>
+          setCalculationInsertRequest({ id: nanoid(), key })
+        }
+        calculationTermCreateRequest={() =>
+          setCalculationTermCreateRequest((current) => current + 1)
+        }
+        calculationTermSelectRequest={setSelectedCalculationTermId}
+        edges={edges}
+        lastRun={latestSelectedBlockRun}
+        nodes={nodes}
+        selectedCalculationTermId={selectedCalculationTermId}
+        side="inputs"
+      />
+    );
+  })();
 
   return (
-    <div className="flex h-full max-h-[80vh] flex-col">
+    <div className="flex h-full max-h-[86vh] flex-col">
       {/* Header with current tab name */}
-      <SmartOverlayHeader overlayId={overlayId} title={getTabTitle()} />
+      <SmartOverlayHeader
+        overlayId={overlayId}
+        title={showDataFlowWorkspace ? "Block workspace" : getTabTitle()}
+      />
 
       {/* Content based on active tab */}
-      <div className="flex-1 overflow-y-auto">
-        {activeTab === "properties" && (
-          <div className="space-y-4 px-6 pt-4 pb-6">
-            {/* Action selection */}
-            {selectedNode.data.type === "action" &&
-              !selectedNode.data.config?.actionType &&
-              !selectedNode.data.visualLevel &&
-              isOwner && (
-                <ActionGrid
-                  disabled={isGenerating}
-                  isNewlyCreated={selectedNode?.id === newlyCreatedNodeId}
-                  onSelectAction={(actionType) => {
-                    if (actionType.startsWith("preset:")) {
-                      handleApplyVisualPreset(actionType);
+      <div
+        className={
+          showDataFlowWorkspace
+            ? "grid min-h-0 flex-1"
+            : "flex-1 overflow-y-auto"
+        }
+        ref={showDataFlowWorkspace ? workspaceGridRef : undefined}
+        style={
+          showDataFlowWorkspace
+            ? {
+                gridTemplateColumns:
+                  getWorkspaceGridColumns(workspacePaneWidths),
+              }
+            : undefined
+        }
+      >
+        {leftWorkspacePane}
+        {showDataFlowWorkspace && selectedBlock && (
+          <WorkspaceResizeHandle
+            label="Resize Inputs and Logic panes"
+            onPointerDown={(event) =>
+              handleWorkspaceResizeStart("input-center", event)
+            }
+          />
+        )}
+        <div
+          className={
+            showDataFlowWorkspace
+              ? "min-h-0 overflow-y-auto border-border/30 border-x"
+              : undefined
+          }
+        >
+          {activeTab === "properties" && (
+            <div className="space-y-4 px-6 pt-4 pb-6">
+              {/* Action selection */}
+              {selectedNode.data.type === "action" &&
+                !selectedNode.data.config?.actionType &&
+                !selectedNode.data.visualLevel &&
+                isOwner && (
+                  <ActionGrid
+                    disabled={isGenerating}
+                    isNewlyCreated={selectedNode?.id === newlyCreatedNodeId}
+                    onSelectAction={(actionType) => {
+                      if (actionType.startsWith("preset:")) {
+                        handleApplyVisualPreset(actionType);
+                        if (selectedNode?.id === newlyCreatedNodeId) {
+                          setNewlyCreatedNodeId(null);
+                        }
+                        return;
+                      }
+
+                      if (getBlockCatalogItem(actionType)) {
+                        handleApplyBlockCatalogItem(actionType);
+                        if (selectedNode?.id === newlyCreatedNodeId) {
+                          setNewlyCreatedNodeId(null);
+                        }
+                        return;
+                      }
+
+                      handleUpdateConfig("actionType", actionType);
                       if (selectedNode?.id === newlyCreatedNodeId) {
                         setNewlyCreatedNodeId(null);
                       }
-                      return;
-                    }
+                    }}
+                  />
+                )}
 
-                    if (getBlockCatalogItem(actionType)) {
-                      handleApplyBlockCatalogItem(actionType);
-                      if (selectedNode?.id === newlyCreatedNodeId) {
-                        setNewlyCreatedNodeId(null);
-                      }
-                      return;
-                    }
+              {selectedNode.data.type === "trigger" && (
+                <TriggerConfig
+                  config={selectedNode.data.config || {}}
+                  disabled={isGenerating || !isOwner}
+                  onUpdateConfig={handleUpdateConfig}
+                  workflowId={currentWorkflowId ?? undefined}
+                />
+              )}
 
-                    handleUpdateConfig("actionType", actionType);
-                    if (selectedNode?.id === newlyCreatedNodeId) {
-                      setNewlyCreatedNodeId(null);
-                    }
+              {selectedBlock?.family === "Source" && (
+                <SourceSetupPanel
+                  block={selectedBlock}
+                  config={
+                    selectedBlock.config || selectedNode.data.config || {}
+                  }
+                  disabled={isGenerating || !isOwner}
+                  onConfigPatch={handlePatchSelectedBlockConfig}
+                  onCreateSourceVersion={handleCreateSourceVersion}
+                  onSelectedRulebookItemChange={setSelectedRulebookItemId}
+                  selectedRulebookItemId={selectedRulebookItemId}
+                  showRulebookOverview={!selectedBlockIsRuleSource}
+                  sourceLocked={sourceLocked}
+                  sourceUsedInRun={sourceUsedInRun}
+                  sourceVersion={sourceVersion}
+                />
+              )}
+
+              {selectedBlock && isKeywordMapperBlock(selectedBlock) && (
+                <KeywordMapperRulesPanel
+                  block={selectedBlock}
+                  edges={edges}
+                  nodes={nodes}
+                  onOpenRuleSource={(nodeId) => {
+                    setSelectedNodeId(nodeId);
+                    setActiveTab("properties");
                   }}
                 />
               )}
 
-            {selectedNode.data.type === "trigger" && (
-              <TriggerConfig
-                config={selectedNode.data.config || {}}
-                disabled={isGenerating || !isOwner}
-                onUpdateConfig={handleUpdateConfig}
-                workflowId={currentWorkflowId ?? undefined}
-              />
-            )}
-
-            {selectedNode.data.type === "action" &&
-              selectedNode.data.config?.actionType !== undefined && (
-                <ActionConfig
-                  config={selectedNode.data.config || {}}
-                  disabled={isGenerating || !isOwner}
-                  isOwner={isOwner}
-                  onUpdateConfig={handleUpdateConfig}
+              {selectedBlock && isHierarchyAggregatorBlock(selectedBlock) && (
+                <HierarchyAggregatorPanel
+                  block={selectedBlock}
+                  edges={edges}
+                  lastRun={latestSelectedBlockRun}
+                  nodes={nodes}
+                  onOpenRuleSource={(nodeId) => {
+                    setSelectedNodeId(nodeId);
+                    setActiveTab("properties");
+                  }}
                 />
               )}
 
-            {(selectedNode.data.config?.fiscalStage ||
-              (!selectedNode.data.config?.actionType &&
-                selectedNode.data.visualRole)) && (
-              <FiscalBlockConfig
-                config={selectedNode.data.config || {}}
-                disabled={isGenerating || !isOwner}
-                onUpdateConfig={handleUpdateConfig}
-                onUpdateStage={handleUpdateFiscalStage}
-                visualRole={selectedNode.data.visualRole}
-              />
-            )}
+              {selectedBlock && isCalculationEngineBlock(selectedBlock) && (
+                <CalculationEngineModeSection
+                  block={selectedBlock}
+                  createTermRequest={calculationTermCreateRequest}
+                  disabled={isGenerating || !isOwner}
+                  edges={edges}
+                  insertRequest={calculationInsertRequest}
+                  lastRunOutput={latestRunOutputsByBlockId}
+                  nodes={nodes}
+                  onSelectedTermIdChange={setSelectedCalculationTermId}
+                  onUpdateConfig={(key, value) =>
+                    handlePatchSelectedBlockConfig({ [key]: value })
+                  }
+                  selectedTermId={selectedCalculationTermId}
+                />
+              )}
 
-            {/* Label & Description */}
-            {(selectedNode.data.type !== "action" ||
-              selectedNode.data.config?.actionType !== undefined ||
-              selectedNode.data.visualLevel) && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="label">Label</Label>
-                  <Input
-                    disabled={identityFieldsDisabled}
-                    id="label"
-                    onChange={(e) => handleUpdateLabel(e.target.value)}
-                    value={selectedNode.data.label as string}
+              {selectedNode.data.type === "action" &&
+                selectedNode.data.config?.actionType !== undefined && (
+                  <ActionConfig
+                    config={selectedNode.data.config || {}}
+                    disabled={isGenerating || !isOwner}
+                    isOwner={isOwner}
+                    onUpdateConfig={handleUpdateConfig}
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Input
-                    disabled={identityFieldsDisabled}
-                    id="description"
-                    onChange={(e) => handleUpdateDescription(e.target.value)}
-                    placeholder="Optional description"
-                    value={(selectedNode.data.description as string) || ""}
-                  />
-                </div>
-              </>
-            )}
+                )}
 
-            {/* Actions */}
-            {isOwner && (
-              <div className="flex items-center gap-2 pt-2">
-                {selectedNode.data.type === "action" && (
+              {(selectedNode.data.config?.fiscalStage ||
+                (!selectedNode.data.config?.actionType &&
+                  selectedNode.data.visualRole)) &&
+                !usesFocusedLogicWorkspace(selectedBlock) && (
+                  <FiscalBlockConfig
+                    config={selectedNode.data.config || {}}
+                    disabled={isGenerating || !isOwner}
+                    onUpdateConfig={handleUpdateConfig}
+                    onUpdateStage={handleUpdateFiscalStage}
+                    visualRole={selectedNode.data.visualRole}
+                  />
+                )}
+
+              {/* Label & Description */}
+              {(selectedNode.data.type !== "action" ||
+                selectedNode.data.config?.actionType !== undefined ||
+                selectedNode.data.visualLevel) && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="label">Label</Label>
+                    <Input
+                      disabled={identityFieldsDisabled}
+                      id="label"
+                      onChange={(e) => handleUpdateLabel(e.target.value)}
+                      value={selectedNode.data.label as string}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Input
+                      disabled={identityFieldsDisabled}
+                      id="description"
+                      onChange={(e) => handleUpdateDescription(e.target.value)}
+                      placeholder="Optional description"
+                      value={(selectedNode.data.description as string) || ""}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Actions */}
+              {isOwner && (
+                <div className="flex items-center gap-2 pt-2">
+                  {selectedNode.data.type === "action" && (
+                    <Button
+                      className="text-muted-foreground"
+                      onClick={handleToggleEnabled}
+                      size="sm"
+                      variant="ghost"
+                    >
+                      {selectedNode.data.enabled === false ? (
+                        <>
+                          <EyeOff className="mr-2 size-4" />
+                          Disabled
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="mr-2 size-4" />
+                          Enabled
+                        </>
+                      )}
+                    </Button>
+                  )}
                   <Button
                     className="text-muted-foreground"
-                    onClick={handleToggleEnabled}
+                    onClick={handleDeleteNode}
                     size="sm"
                     variant="ghost"
                   >
-                    {selectedNode.data.enabled === false ? (
-                      <>
-                        <EyeOff className="mr-2 size-4" />
-                        Disabled
-                      </>
-                    ) : (
-                      <>
-                        <Eye className="mr-2 size-4" />
-                        Enabled
-                      </>
-                    )}
+                    <Trash2 className="mr-2 size-4" />
+                    Delete
                   </Button>
-                )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Preload Code tab - always render but hide when not active */}
+          {showCodeTab && (
+            <div
+              className={`flex flex-col ${activeTab === "code" ? "" : "-z-10 invisible absolute"}`}
+            >
+              {showDataFlowWorkspace && selectedBlock ? (
+                <BlockGeneratedCodeTab
+                  block={selectedBlock}
+                  edges={edges}
+                  nodes={nodes}
+                />
+              ) : (
+                <>
+                  <div className="flex shrink-0 items-center justify-between border-b bg-muted/30 px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <FileCode className="size-3.5 text-muted-foreground" />
+                      <code className="text-muted-foreground text-xs">
+                        {getCodeFilename(selectedNode)}
+                      </code>
+                    </div>
+                    <Button
+                      className="text-muted-foreground"
+                      onClick={handleCopyCode}
+                      size="sm"
+                      variant="ghost"
+                    >
+                      <Copy className="mr-2 size-4" />
+                      Copy
+                    </Button>
+                  </div>
+                  <div className="h-[400px]">
+                    <CodeEditor
+                      height="100%"
+                      language={
+                        selectedNode.data.type === "trigger" &&
+                        (selectedNode.data.config?.triggerType as string) ===
+                          "Schedule"
+                          ? "json"
+                          : "typescript"
+                      }
+                      options={{
+                        readOnly: true,
+                        minimap: { enabled: false },
+                        scrollBeyondLastLine: false,
+                        fontSize: 13,
+                        lineNumbers: "on",
+                        folding: false,
+                        wordWrap: "off",
+                        padding: { top: 16, bottom: 16 },
+                      }}
+                      value={generateNodeCode(selectedNode)}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {activeTab === "runs" && isOwner && (
+            <div className="flex h-full flex-col">
+              <div className="flex shrink-0 items-center gap-2 border-b px-4 py-2">
                 <Button
                   className="text-muted-foreground"
-                  onClick={handleDeleteNode}
+                  disabled={isRefreshing}
+                  onClick={handleRefreshRuns}
                   size="sm"
                   variant="ghost"
                 >
-                  <Trash2 className="mr-2 size-4" />
-                  Delete
+                  <RefreshCw
+                    className={`mr-2 size-4 ${isRefreshing ? "animate-spin" : ""}`}
+                  />
+                  Refresh
+                </Button>
+                <Button
+                  className="text-muted-foreground"
+                  onClick={handleDeleteAllRuns}
+                  size="sm"
+                  variant="ghost"
+                >
+                  <Eraser className="mr-2 size-4" />
+                  Clear All
                 </Button>
               </div>
-            )}
-          </div>
-        )}
-
-        {/* Preload Code tab - always render but hide when not active */}
-        {showCodeTab && (
-          <div
-            className={`flex flex-col ${activeTab === "code" ? "" : "-z-10 invisible absolute"}`}
-          >
-            <div className="flex shrink-0 items-center justify-between border-b bg-muted/30 px-3 py-2">
-              <div className="flex items-center gap-2">
-                <FileCode className="size-3.5 text-muted-foreground" />
-                <code className="text-muted-foreground text-xs">
-                  {getCodeFilename(selectedNode)}
-                </code>
-              </div>
-              <Button
-                className="text-muted-foreground"
-                onClick={handleCopyCode}
-                size="sm"
-                variant="ghost"
-              >
-                <Copy className="mr-2 size-4" />
-                Copy
-              </Button>
-            </div>
-            <div className="h-[400px]">
-              <CodeEditor
-                height="100%"
-                language={
-                  selectedNode.data.type === "trigger" &&
-                  (selectedNode.data.config?.triggerType as string) ===
-                    "Schedule"
-                    ? "json"
-                    : "typescript"
-                }
-                options={{
-                  readOnly: true,
-                  minimap: { enabled: false },
-                  scrollBeyondLastLine: false,
-                  fontSize: 13,
-                  lineNumbers: "on",
-                  folding: false,
-                  wordWrap: "off",
-                  padding: { top: 16, bottom: 16 },
-                }}
-                value={generateNodeCode(selectedNode)}
-              />
-            </div>
-          </div>
-        )}
-
-        {activeTab === "runs" && isOwner && (
-          <div className="flex h-full flex-col">
-            <div className="flex shrink-0 items-center gap-2 border-b px-4 py-2">
-              <Button
-                className="text-muted-foreground"
-                disabled={isRefreshing}
-                onClick={handleRefreshRuns}
-                size="sm"
-                variant="ghost"
-              >
-                <RefreshCw
-                  className={`mr-2 size-4 ${isRefreshing ? "animate-spin" : ""}`}
+              <div className="flex-1 overflow-y-auto p-4">
+                <WorkflowRuns
+                  isActive={activeTab === "runs"}
+                  onRefreshRef={refreshRunsRef}
                 />
-                Refresh
-              </Button>
-              <Button
-                className="text-muted-foreground"
-                onClick={handleDeleteAllRuns}
-                size="sm"
-                variant="ghost"
-              >
-                <Eraser className="mr-2 size-4" />
-                Clear All
-              </Button>
+              </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-4">
-              <WorkflowRuns
-                isActive={activeTab === "runs"}
-                onRefreshRef={refreshRunsRef}
-              />
-            </div>
-          </div>
+          )}
+        </div>
+        {showDataFlowWorkspace && selectedBlock && (
+          <WorkspaceResizeHandle
+            label="Resize Logic and Outputs panes"
+            onPointerDown={(event) =>
+              handleWorkspaceResizeStart("center-output", event)
+            }
+          />
+        )}
+        {showDataFlowWorkspace && selectedBlock && (
+          <BlockDataFlowColumn
+            block={selectedBlock}
+            edges={edges}
+            lastRun={latestSelectedBlockRun}
+            nodes={nodes}
+            onExecuteStep={handleExecuteSelectedStep}
+            side="outputs"
+          />
         )}
       </div>
 

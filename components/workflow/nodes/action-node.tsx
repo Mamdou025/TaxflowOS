@@ -258,6 +258,9 @@ type ActionNodeProps = NodeProps & {
   id: string;
 };
 
+const CANVAS_BLOCK_TITLE_CLASS =
+  "max-w-full truncate text-sm font-semibold leading-tight text-zinc-100";
+
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex UI logic with multiple conditions including disabled state
 export const ActionNode = memo(({ data, selected, id }: ActionNodeProps) => {
   const { open: openOverlay } = useOverlay();
@@ -309,13 +312,13 @@ export const ActionNode = memo(({ data, selected, id }: ActionNodeProps) => {
       setSelectedNode(id);
       setSelectedEdge(null);
       setActiveTab("properties");
-      openOverlay(ConfigurationOverlay, {});
+      openOverlay(ConfigurationOverlay, {}, { size: "wide" });
     };
 
     return (
       <Node
         className={cn(
-          "relative flex flex-col items-center justify-center shadow-none transition-all duration-150 ease-out",
+          "relative flex flex-col items-center justify-center filter-[drop-shadow(0_4px_14px_rgba(0,0,0,0.45))] transition-all duration-150 ease-out",
           nodeStyle.nodeClassName,
           selected &&
             "ring-2 ring-primary/70 ring-offset-2 ring-offset-background",
@@ -363,7 +366,7 @@ export const ActionNode = memo(({ data, selected, id }: ActionNodeProps) => {
               nodeStyle.captionClassName
             )}
           >
-            <NodeTitle className="max-w-full truncate text-sm leading-tight">
+            <NodeTitle className={CANVAS_BLOCK_TITLE_CLASS}>
               {displayTitle}
             </NodeTitle>
             {displayDescription && (
@@ -456,7 +459,7 @@ export const ActionNode = memo(({ data, selected, id }: ActionNodeProps) => {
   return (
     <Node
       className={cn(
-        "relative flex flex-col items-center justify-center shadow-none transition-all duration-150 ease-out",
+        "relative flex flex-col items-center justify-center filter-[drop-shadow(0_4px_14px_rgba(0,0,0,0.45))] transition-all duration-150 ease-out",
         nodeStyle.nodeClassName,
         selected &&
           "ring-2 ring-primary/70 ring-offset-2 ring-offset-background",
@@ -510,7 +513,7 @@ export const ActionNode = memo(({ data, selected, id }: ActionNodeProps) => {
             nodeStyle.captionClassName
           )}
         >
-          <NodeTitle className="max-w-full truncate text-sm leading-tight">
+          <NodeTitle className={CANVAS_BLOCK_TITLE_CLASS}>
             {displayTitle}
           </NodeTitle>
           {displayDescription && (

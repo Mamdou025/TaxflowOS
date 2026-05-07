@@ -15,6 +15,7 @@ import {
   integrationsLoadedAtom,
   integrationsVersionAtom,
 } from "@/lib/integrations-store";
+import { isLocalRunExecutionId } from "@/lib/local-fiscal-workflow";
 import type { IntegrationType } from "@/lib/types/integration";
 import {
   currentWorkflowIdAtom,
@@ -612,6 +613,10 @@ const WorkflowEditor = ({ params }: WorkflowPageProps) => {
       return;
     }
 
+    if (isLocalRunExecutionId(selectedExecutionId)) {
+      return;
+    }
+
     // Start polling for the selected execution
     const pollSelectedExecution = async () => {
       try {
@@ -689,6 +694,7 @@ const WorkflowEditor = ({ params }: WorkflowPageProps) => {
             setPanelCollapsed(false);
             setTimeout(() => setIsPanelAnimating(false), 350);
           }}
+          title="Open AI panel"
           type="button"
         >
           <ChevronLeft className="size-4" />
@@ -730,6 +736,7 @@ const WorkflowEditor = ({ params }: WorkflowPageProps) => {
                   setTimeout(() => setIsPanelAnimating(false), 350);
                 }}
                 onMouseDown={(e) => e.stopPropagation()}
+                title="Collapse AI panel"
                 type="button"
               >
                 <ChevronRight className="size-4" />

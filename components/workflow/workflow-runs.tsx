@@ -17,6 +17,7 @@ import type { JSX } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api-client";
 import {
+  isLocalRunExecutionId,
   isLocalWorkflowId,
   type LocalRunRecord,
   loadLocalRunRecords,
@@ -493,7 +494,7 @@ function ExecutionLogEntry({
         </button>
 
         {isExpanded && (
-          <div className="mt-2 mb-2 space-y-3 px-3">
+          <div className="mt-2 mb-2 max-h-72 overflow-y-auto space-y-3 px-3">
             {log.input !== null && log.input !== undefined && (
               <CollapsibleSection copyData={log.input} title="Input">
                 <pre className="overflow-auto rounded-lg border bg-muted/50 p-3 font-mono text-xs leading-relaxed">
@@ -563,7 +564,10 @@ export function WorkflowRuns({
           setLoading(true);
         }
 
-        if (isLocalWorkflowId(currentWorkflowId)) {
+        if (
+          isLocalWorkflowId(currentWorkflowId) ||
+          isLocalRunExecutionId(selectedExecutionId)
+        ) {
           const local = mapLocalRunRecords(loadLocalRunRecords());
           setExecutions(local.executions);
           setLogs(local.logs);
@@ -582,7 +586,7 @@ export function WorkflowRuns({
         }
       }
     },
-    [currentWorkflowId]
+    [currentWorkflowId, selectedExecutionId]
   );
 
   // Expose refresh function via ref
@@ -636,7 +640,10 @@ export function WorkflowRuns({
   const loadExecutionLogs = useCallback(
     async (executionId: string) => {
       try {
-        if (isLocalWorkflowId(currentWorkflowId)) {
+        if (
+          isLocalWorkflowId(currentWorkflowId) ||
+          isLocalRunExecutionId(executionId)
+        ) {
           const record = loadLocalRunRecords().find(
             (item) => item.execution.id === executionId
           );
@@ -710,7 +717,10 @@ export function WorkflowRuns({
   const refreshExecutionLogs = useCallback(
     async (executionId: string) => {
       try {
-        if (isLocalWorkflowId(currentWorkflowId)) {
+        if (
+          isLocalWorkflowId(currentWorkflowId) ||
+          isLocalRunExecutionId(executionId)
+        ) {
           const record = loadLocalRunRecords().find(
             (item) => item.execution.id === executionId
           );
@@ -750,7 +760,8 @@ export function WorkflowRuns({
   useEffect(() => {
     if (
       !(isActive && currentWorkflowId) ||
-      isLocalWorkflowId(currentWorkflowId)
+      isLocalWorkflowId(currentWorkflowId) ||
+      isLocalRunExecutionId(selectedExecutionId)
     ) {
       return;
     }
@@ -771,7 +782,13 @@ export function WorkflowRuns({
 
     const interval = setInterval(pollExecutions, 2000);
     return () => clearInterval(interval);
-  }, [isActive, currentWorkflowId, expandedRuns, refreshExecutionLogs]);
+  }, [
+    isActive,
+    currentWorkflowId,
+    expandedRuns,
+    refreshExecutionLogs,
+    selectedExecutionId,
+  ]);
 
   const toggleRun = async (executionId: string) => {
     const newExpanded = new Set(expandedRuns);

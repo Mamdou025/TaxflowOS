@@ -39,6 +39,7 @@ import { BLOCK_CATALOG, isLocalWorkflowId } from "@/lib/local-fiscal-workflow";
 import { cn } from "@/lib/utils";
 import { currentWorkflowIdAtom } from "@/lib/workflow-store";
 import { getAllActions } from "@/plugins";
+import { PUBLIC_BLOCK_FAMILIES } from "@/src/domain/workflow/block-types";
 
 type ActionType = {
   id: string;
@@ -46,13 +47,67 @@ type ActionType = {
   description: string;
   category: string;
   integration?: string;
+  searchText?: string;
+  sourceKind?: string;
+  subtype?: string;
 };
+
+function getConfigString(
+  config: Record<string, unknown>,
+  key: string
+): string | undefined {
+  const value = config[key];
+  return typeof value === "string" ? value : undefined;
+}
+
+function getLocalActionSearchText(item: (typeof BLOCK_CATALOG)[number]) {
+  const sourceKind = getConfigString(item.defaultConfig, "sourceKind");
+  const toolId = getConfigString(item.defaultConfig, "toolId");
+  const outputs = getConfigString(item.defaultConfig, "outputs");
+  let rulebookAliases = "";
+  if (item.id === "source:keyword-rules") {
+    rulebookAliases =
+      "keyword rules keyword rulebook rule knowledge source category mapping";
+  }
+  if (item.id === "source:aggregation-rules") {
+    rulebookAliases =
+      "aggregation rules calculation rules aggregation rulebook rollup rulebook formula rulebook rule knowledge source";
+  }
+
+  return [
+    item.id,
+    item.subtype,
+    item.label,
+    item.description,
+    item.family,
+    getLocalActionCategory(item),
+    sourceKind,
+    toolId,
+    outputs,
+    rulebookAliases,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function getLocalActionCategory(item: (typeof BLOCK_CATALOG)[number]) {
+  if (
+    item.id === "source:keyword-rules" ||
+    item.id === "source:aggregation-rules"
+  ) {
+    return "Review / Validation";
+  }
+  return item.family;
+}
 
 const LOCAL_BLOCK_ACTIONS: ActionType[] = BLOCK_CATALOG.map((item) => ({
   id: item.id,
   label: item.label,
   description: item.description,
-  category: item.family,
+  category: getLocalActionCategory(item),
+  searchText: getLocalActionSearchText(item),
+  sourceKind: getConfigString(item.defaultConfig, "sourceKind"),
+  subtype: item.subtype,
 }));
 
 // System actions that don't have plugins
@@ -77,24 +132,17 @@ const SYSTEM_ACTIONS: ActionType[] = [
   },
 ];
 
-const BLOCK_CATEGORY_ORDER = [
-  "Source",
-  "Logic",
-  "Review / Validation",
-  "Protected",
-  "Output",
-  "AI / Agent",
-];
-
 function getActionCategoryRank(category: string): number {
-  const blockIndex = BLOCK_CATEGORY_ORDER.indexOf(category);
+  const blockIndex = (PUBLIC_BLOCK_FAMILIES as readonly string[]).indexOf(
+    category
+  );
   if (blockIndex !== -1) {
     return blockIndex;
   }
   if (category === "System") {
-    return BLOCK_CATEGORY_ORDER.length;
+    return PUBLIC_BLOCK_FAMILIES.length;
   }
-  return BLOCK_CATEGORY_ORDER.length + 1;
+  return PUBLIC_BLOCK_FAMILIES.length + 1;
 }
 
 function compareActionCategories(a: string, b: string): number {
@@ -303,7 +351,11 @@ export function ActionGrid({
     return (
       action.label.toLowerCase().includes(searchTerm) ||
       action.description.toLowerCase().includes(searchTerm) ||
-      action.category.toLowerCase().includes(searchTerm)
+      action.category.toLowerCase().includes(searchTerm) ||
+      action.id.toLowerCase().includes(searchTerm) ||
+      (action.subtype?.toLowerCase().includes(searchTerm) ?? false) ||
+      (action.sourceKind?.toLowerCase().includes(searchTerm) ?? false) ||
+      (action.searchText?.toLowerCase().includes(searchTerm) ?? false)
     );
   });
 
@@ -329,11 +381,14 @@ export function ActionGrid({
 
   // Filter groups based on hidden state
   const visibleGroups = useMemo(() => {
+    if (filter.trim().length > 0) {
+      return groupedActions;
+    }
     if (showHidden) {
       return groupedActions;
     }
     return groupedActions.filter((g) => !hiddenGroups.has(g.category));
-  }, [groupedActions, hiddenGroups, showHidden]);
+  }, [filter, groupedActions, hiddenGroups, showHidden]);
 
   const hiddenCount = hiddenGroups.size;
 
@@ -426,7 +481,10 @@ export function ActionGrid({
           >
             {filteredActions
               .filter(
-                (action) => showHidden || !hiddenGroups.has(action.category)
+                (action) =>
+                  filter.trim().length > 0 ||
+                  showHidden ||
+                  !hiddenGroups.has(action.category)
               )
               .map((action) => (
                 <button
@@ -522,6 +580,12 @@ export function ActionGrid({
                       <ActionIcon action={action} className="size-4 shrink-0" />
                       <span className="min-w-0 flex-1 truncate">
                         <span className="font-medium">{action.label}</span>
+                        {action.subtype &&
+                          action.category !== action.subtype && (
+                            <span className="ml-2 rounded border px-1.5 py-0.5 text-[10px] text-muted-foreground uppercase">
+                              {action.subtype}
+                            </span>
+                          )}
                         {action.description && (
                           <span className="text-muted-foreground text-xs">
                             {" "}

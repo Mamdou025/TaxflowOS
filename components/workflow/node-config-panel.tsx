@@ -11,6 +11,8 @@ import {
 import { nanoid } from "nanoid";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { ConfigurationOverlay } from "@/components/overlays/configuration-overlay";
+import { useOverlay } from "@/components/overlays/overlay-provider";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,6 +58,10 @@ import {
   saveLocalWorkflowSnapshot,
   type WorkflowBlock,
 } from "@/lib/local-fiscal-workflow";
+import {
+  type LocalEdgeRunStatus,
+  runLocalWorkflowTools,
+} from "@/lib/local-tool-runner";
 import type { IntegrationType } from "@/lib/types/integration";
 import { generateWorkflowCode } from "@/lib/workflow-codegen";
 import {
@@ -88,6 +94,11 @@ import {
   type WorkflowNodeData,
 } from "@/lib/workflow-store";
 import { findActionById } from "@/plugins";
+import {
+  getDefaultInspectorTabForFamily,
+  getDefaultInspectorTabForSelection,
+} from "@/src/domain/workflow/inspector-rules";
+import { hasExcelSourceEvidence } from "@/src/domain/workflow/source-rules";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { ActionConfig } from "./config/action-config";
 import { ActionGrid } from "./config/action-grid";
@@ -96,9 +107,9 @@ import { TriggerConfig } from "./config/trigger-config";
 import { BlockInspector } from "./inspector/block-inspector";
 import { InspectorApplyDiscard } from "./inspector/inspector-apply-discard";
 import { LocalAiPanel } from "./inspector/local-ai-panel";
-import { createInspectorLocalRunRecord } from "./inspector/mock-runs";
 import { generateNodeCode } from "./utils/code-generators";
 import { WorkflowRuns } from "./workflow-runs";
+import { getLatestLocalRunForBlock } from "./workspace/latest-local-run";
 
 // Regex constants
 const NON_ALPHANUMERIC_REGEX = /[^a-zA-Z0-9\s]/g;
@@ -115,6 +126,26 @@ const VISUAL_LEVEL_LABELS: Record<(typeof VISUAL_LEVELS)[number], string> = {
   L2: "Workflow block",
   L3: "Source evidence",
 };
+
+function applyEdgeRunStatuses({
+  edges,
+  edgeStatuses,
+  runId,
+}: {
+  edges: WorkflowEdge[];
+  edgeStatuses: Record<string, LocalEdgeRunStatus>;
+  runId: string;
+}) {
+  return edges.map((edge) => ({
+    ...edge,
+    data: {
+      ...edge.data,
+      runStatus: edgeStatuses[edge.id] || "idle",
+      runStatusRunId: runId,
+    },
+  }));
+}
+
 const VISUAL_ROLES = [
   "stage",
   "step",
@@ -127,6 +158,16 @@ const VISUAL_ROLES = [
   "protected",
   "output",
 ] as const;
+
+function isExcelWorkbookSource(block?: WorkflowBlock | null) {
+  const sourceKind = String(block?.config.sourceKind || "").toLowerCase();
+  return (
+    block?.family === "Source" &&
+    (block.subtype === "Excel / Workbook" ||
+      sourceKind.includes("excel") ||
+      sourceKind.includes("workbook"))
+  );
+}
 
 function cloneWorkflowNodeData(data: WorkflowNodeData): WorkflowNodeData {
   return JSON.parse(JSON.stringify(data)) as WorkflowNodeData;
@@ -272,13 +313,14 @@ export const PanelInner = () => {
   const addNode = useSetAtom(addNodeAtom);
   const triggerAutosave = useSetAtom(autosaveAtom);
   const setHasUnsavedChanges = useSetAtom(hasUnsavedChangesAtom);
-  const setExecutionLogs = useSetAtom(executionLogsAtom);
-  const setSelectedExecutionId = useSetAtom(selectedExecutionIdAtom);
+  const [executionLogs, setExecutionLogs] = useAtom(executionLogsAtom);
+  const [selectedExecutionId, setSelectedExecutionId] = useAtom(
+    selectedExecutionIdAtom
+  );
   const [draftNodeData, setDraftNodeData] = useState<WorkflowNodeData | null>(
     null
   );
   const [draftEdge, setDraftEdge] = useState<SchemaWorkflowEdge | null>(null);
-  const [localRunVersion, setLocalRunVersion] = useState(0);
   const selectedObjectKey = getSelectedObjectKey({
     selectedEdgeId: selectedEdge?.id ?? null,
     selectedNodeId: selectedNode?.id ?? null,
@@ -297,7 +339,12 @@ export const PanelInner = () => {
     previousSelectedObjectKeyRef.current = selectedObjectKey;
 
     if (selectedEdge) {
-      setActiveTab("properties");
+      setActiveTab(
+        getDefaultInspectorTabForSelection({
+          family: null,
+          selectionKind: "edge",
+        })
+      );
       setDraftEdge(
         selectedEdge.data?.workflowEdge ||
           createWorkflowEdgeRecord({
@@ -313,7 +360,7 @@ export const PanelInner = () => {
 
     if (selectedNode) {
       setActiveTab(
-        selectedNode.data.block?.family === "Logic" ? "code" : "properties"
+        getDefaultInspectorTabForFamily(selectedNode.data.block?.family)
       );
       setDraftNodeData(cloneWorkflowNodeData(selectedNode.data));
       setDraftEdge(null);
@@ -328,6 +375,10 @@ export const PanelInner = () => {
   // Switch to Properties tab if Code tab is hidden for the selected node
   useEffect(() => {
     if (!selectedNode || activeTab !== "code") {
+      return;
+    }
+
+    if (selectedNode.data.block) {
       return;
     }
 
@@ -696,8 +747,12 @@ export const PanelInner = () => {
 
     const workflowEdge = createWorkflowEdgeRecord({
       id: nanoid(),
+      bindingLabel: edgeDefaults.bindingLabel,
+      bindingStatus: edgeDefaults.bindingStatus,
       sourceBlockId: pendingConnection.sourceBlockId,
+      sourceOutputRole: edgeDefaults.sourceOutputRole,
       targetBlockId: pendingConnection.targetBlockId,
+      targetInputRole: edgeDefaults.targetInputRole,
       relationshipType: edgeDefaults.relationshipType,
       reason: edgeDefaults.reason,
     });
@@ -850,11 +905,12 @@ export const PanelInner = () => {
   };
 
   const latestSelectedBlockRun = selectedNode?.data.block
-    ? loadLocalRunRecords().find((record) => {
-        if (localRunVersion < 0) {
-          return false;
-        }
-        return record.logs.some((log) => log.nodeId === selectedNode.id);
+    ? getLatestLocalRunForBlock({
+        blockId: selectedNode.data.block.id,
+        executionLogs,
+        selectedExecutionId,
+        storedRecords: loadLocalRunRecords(),
+        workflowId: currentWorkflowId,
       })
     : undefined;
 
@@ -899,11 +955,15 @@ export const PanelInner = () => {
     updateEdgeData({
       id: selectedEdge.id,
       updates: {
+        bindingLabel: draftEdge.bindingLabel,
+        bindingStatus: draftEdge.bindingStatus,
         confidence: draftEdge.confidence,
         notes: draftEdge.notes,
         reason: draftEdge.reason,
         relationshipType: draftEdge.relationshipType,
+        sourceOutputRole: draftEdge.sourceOutputRole,
         status: draftEdge.status,
+        targetInputRole: draftEdge.targetInputRole,
       },
     });
     toast.success("Relationship changes applied");
@@ -925,21 +985,39 @@ export const PanelInner = () => {
     toast.message("Pending relationship edits discarded");
   };
 
-  const handleRunSelectedBlockMock = () => {
+  const handleRunSelectedBlockMock = (
+    mode: "downstream" | "selected" = "selected"
+  ) => {
     if (!(selectedNode && draftNodeData)) {
       return;
     }
 
-    const record = createInspectorLocalRunRecord({
-      data: draftNodeData,
+    const runNodes = nodes.map((node) =>
+      node.id === selectedNode.id
+        ? {
+            ...node,
+            data: draftNodeData,
+          }
+        : node
+    );
+    setEdges((currentEdges) =>
+      currentEdges.map((edge) => ({
+        ...edge,
+        data: { ...edge.data, runStatus: "running" },
+      }))
+    );
+    const localRun = runLocalWorkflowTools({
       edges,
-      node: selectedNode,
+      mode,
+      nodes: runNodes,
+      selectedBlockId: selectedNode.id,
+      workflowName: currentWorkflowName,
     });
-    saveLocalRunRecord(record);
-    setSelectedExecutionId(record.execution.id);
+    saveLocalRunRecord(localRun.record);
+    setSelectedExecutionId(localRun.record.execution.id);
     setExecutionLogs(
       Object.fromEntries(
-        record.logs.map((log) => [
+        localRun.record.logs.map((log) => [
           log.nodeId,
           {
             nodeId: log.nodeId,
@@ -951,9 +1029,25 @@ export const PanelInner = () => {
         ])
       )
     );
-    updateNodeData({ id: selectedNode.id, data: { status: "success" } });
-    setLocalRunVersion((version) => version + 1);
-    toast.success("Local mock run recorded");
+    for (const [nodeId, status] of Object.entries(localRun.blockStatuses)) {
+      updateNodeData({ id: nodeId, data: { status } });
+    }
+    setEdges((currentEdges) =>
+      applyEdgeRunStatuses({
+        edgeStatuses: localRun.edgeStatuses,
+        edges: currentEdges,
+        runId: localRun.record.execution.id,
+      })
+    );
+    if (localRun.result.status === "success") {
+      toast.success("Local tool run recorded");
+    } else {
+      toast.warning("Local tool run recorded with warnings");
+    }
+  };
+
+  const handleRunSelectedBlockDownstream = () => {
+    handleRunSelectedBlockMock("downstream");
   };
 
   const handleCreateSourceLogic = (
@@ -1002,10 +1096,14 @@ export const PanelInner = () => {
     if (edgeDefaults) {
       const workflowEdge = createWorkflowEdgeRecord({
         id: nanoid(),
+        bindingLabel: edgeDefaults.bindingLabel,
+        bindingStatus: edgeDefaults.bindingStatus,
         reason: edgeDefaults.reason,
         relationshipType: edgeDefaults.relationshipType,
         sourceBlockId: sourceBlock.id,
+        sourceOutputRole: edgeDefaults.sourceOutputRole,
         targetBlockId: logicBlock.id,
+        targetInputRole: edgeDefaults.targetInputRole,
       });
       setEdges((currentEdges) => [
         ...currentEdges.map((edge) => ({ ...edge, selected: false })),
@@ -1016,6 +1114,128 @@ export const PanelInner = () => {
     }
 
     toast.success(`${logicBlock.label} created downstream`);
+  };
+
+  const handleCreateSourceForInput = (inputRoleId: string) => {
+    if (!(selectedNode?.data.block && draftNodeData?.block)) {
+      return;
+    }
+
+    const targetBlock = draftNodeData.block;
+    const catalogId =
+      inputRoleId === "keyword_rules"
+        ? "source:keyword-rules"
+        : "source:excel-workbook";
+    const sourceBlock = createWorkflowBlockFromCatalog(catalogId, {
+      id: nanoid(),
+      label:
+        inputRoleId === "keyword_rules"
+          ? "Keyword Rules"
+          : `Source for ${targetBlock.label}`,
+      position: {
+        x: selectedNode.position.x - 320,
+        y: selectedNode.position.y + (inputRoleId === "keyword_rules" ? 80 : 0),
+      },
+      config: {
+        outputs: inputRoleId === "keyword_rules" ? "keywordRules" : "dataRows",
+        sourceKind:
+          inputRoleId === "keyword_rules" ? "keyword_rules" : "manual_table",
+      },
+    });
+    const edgeDefaults = getWorkflowEdgeDefaults({
+      sourceBlock,
+      targetBlock,
+    });
+
+    addNode(createWorkflowNodeFromBlock(sourceBlock, { selected: true }));
+
+    if (edgeDefaults) {
+      const workflowEdge = createWorkflowEdgeRecord({
+        id: nanoid(),
+        bindingLabel: edgeDefaults.bindingLabel,
+        bindingStatus: "valid",
+        reason: edgeDefaults.reason,
+        relationshipType: edgeDefaults.relationshipType,
+        sourceBlockId: sourceBlock.id,
+        sourceOutputRole: edgeDefaults.sourceOutputRole,
+        targetBlockId: targetBlock.id,
+        targetInputRole: inputRoleId,
+      });
+      setEdges((currentEdges) => [
+        ...currentEdges.map((edge) => ({ ...edge, selected: false })),
+        createCanvasEdgeFromWorkflowEdge(workflowEdge),
+      ]);
+    }
+
+    setHasUnsavedChanges(true);
+    triggerAutosave({ immediate: true });
+    toast.success(`${sourceBlock.label} created and bound`);
+  };
+
+  const handleCreateSourceVersion = () => {
+    if (!(selectedNode?.data.block && draftNodeData?.block)) {
+      return;
+    }
+
+    const sourceBlock = draftNodeData.block;
+    if (sourceBlock.family !== "Source") {
+      return;
+    }
+
+    const nextVersion = Number(sourceBlock.config.sourceVersion || 1) + 1;
+    const versionedBlock = createWorkflowBlockFromCatalog(
+      sourceBlock.catalogId || "source:excel-workbook",
+      {
+        id: nanoid(),
+        label: `${sourceBlock.label} v${nextVersion}`,
+        description: sourceBlock.description,
+        position: {
+          x: selectedNode.position.x,
+          y: selectedNode.position.y + 140,
+        },
+        config: {
+          ...sourceBlock.config,
+          previousSourceBlockId: sourceBlock.id,
+          sourceUsedInRun: false,
+          sourceVersion: nextVersion,
+          sourceVersionCreatedAt: new Date().toISOString(),
+        },
+      }
+    );
+    const outgoingEdges = edges.filter(
+      (edge) => edge.source === sourceBlock.id
+    );
+    const replacementEdges = outgoingEdges.map((edge) => {
+      const workflowEdge = edge.data?.workflowEdge;
+      return createCanvasEdgeFromWorkflowEdge(
+        createWorkflowEdgeRecord({
+          id: `${edge.id}-v${nextVersion}`,
+          bindingLabel: workflowEdge?.bindingLabel,
+          bindingStatus: workflowEdge?.bindingStatus || "valid",
+          confidence: workflowEdge?.confidence ?? 1,
+          notes: workflowEdge?.notes || "",
+          reason:
+            workflowEdge?.reason ||
+            `Source version ${nextVersion} feeds the existing draft connection.`,
+          relationshipType: workflowEdge?.relationshipType,
+          sourceBlockId: versionedBlock.id,
+          sourceOutputRole: workflowEdge?.sourceOutputRole,
+          targetBlockId: edge.target,
+          targetInputRole: workflowEdge?.targetInputRole,
+        })
+      );
+    });
+
+    addNode(createWorkflowNodeFromBlock(versionedBlock, { selected: true }));
+    setEdges((currentEdges) => [
+      ...currentEdges.filter((edge) => edge.source !== sourceBlock.id),
+      ...replacementEdges,
+    ]);
+    setHasUnsavedChanges(true);
+    triggerAutosave({ immediate: true });
+    toast.success(
+      "New Source version created and current draft connections updated"
+    );
   };
 
   // If multiple items are selected, show multi-selection properties
@@ -1039,6 +1259,10 @@ export const PanelInner = () => {
             confidence: draftEdge.confidence,
             relationshipType: draftEdge.relationshipType,
             status: draftEdge.status,
+            sourceOutputRole: draftEdge.sourceOutputRole,
+            targetInputRole: draftEdge.targetInputRole,
+            bindingLabel: draftEdge.bindingLabel,
+            bindingStatus: draftEdge.bindingStatus,
             workflowEdge: draftEdge,
           },
         }
@@ -1395,111 +1619,47 @@ export const PanelInner = () => {
   ) {
     return (
       <>
-        <Tabs
-          className="size-full"
-          data-testid="properties-panel"
-          onValueChange={setActiveTab}
-          value={activeTab}
-        >
-          <TabsList className="h-14 w-full shrink-0 rounded-none border-b bg-transparent px-4 py-2.5">
-            <TabsTrigger
-              className="bg-transparent text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none"
-              value="properties"
-            >
-              Properties
-            </TabsTrigger>
-            <TabsTrigger
-              className="bg-transparent text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none"
-              value="code"
-            >
-              Code
-            </TabsTrigger>
+        <div className="flex size-full flex-col" data-testid="properties-panel">
+          <div className="flex h-14 w-full shrink-0 items-center justify-between border-b bg-transparent px-4">
+            <div>
+              <div className="font-semibold text-foreground text-sm leading-tight">
+                {draftNodeData.block?.subtype || "Block"}
+              </div>
+              <div className="text-muted-foreground text-xs">
+                {draftNodeData.block?.family}
+              </div>
+            </div>
             {isOwner && (
-              <TabsTrigger
-                className="bg-transparent text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none"
-                value="runs"
+              <Button
+                className="text-muted-foreground"
+                onClick={() => setShowDeleteNodeAlert(true)}
+                size="sm"
+                variant="ghost"
               >
-                Runs
-              </TabsTrigger>
+                <Trash2 className="size-3.5" />
+              </Button>
             )}
-            {isLocalWorkflow && (
-              <TabsTrigger
-                className="bg-transparent text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none"
-                value="ai"
-              >
-                AI
-              </TabsTrigger>
-            )}
-          </TabsList>
+          </div>
           <InspectorApplyDiscard
             dirty={nodeDraftDirty}
             disabled={isGenerating || !isOwner}
             onApply={handleApplyNodeDraft}
             onDiscard={handleDiscardNodeDraft}
           />
-          <TabsContent
-            className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden"
-            value="properties"
-          >
-            <BlockInspector
-              disabled={isGenerating || !isOwner}
-              draftData={draftNodeData}
-              edges={edges}
-              lastRun={latestSelectedBlockRun}
-              nodes={nodes}
-              onCreateSourceLogic={handleCreateSourceLogic}
-              onRunMockTest={handleRunSelectedBlockMock}
-              setDraftData={setDraftNodeData}
-              tab="properties"
-            />
-          </TabsContent>
-          <TabsContent
-            className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:hidden"
-            forceMount
-            value="code"
-          >
-            <BlockInspector
-              disabled={isGenerating || !isOwner}
-              draftData={draftNodeData}
-              edges={edges}
-              lastRun={latestSelectedBlockRun}
-              nodes={nodes}
-              onCreateSourceLogic={handleCreateSourceLogic}
-              onRunMockTest={handleRunSelectedBlockMock}
-              setDraftData={setDraftNodeData}
-              tab="code"
-            />
-          </TabsContent>
-          {isOwner && (
-            <TabsContent
-              className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden"
-              value="runs"
-            >
-              <BlockInspector
-                disabled={isGenerating || !isOwner}
-                draftData={draftNodeData}
-                edges={edges}
-                lastRun={latestSelectedBlockRun}
-                nodes={nodes}
-                onCreateSourceLogic={handleCreateSourceLogic}
-                onRunMockTest={handleRunSelectedBlockMock}
-                setDraftData={setDraftNodeData}
-                tab="runs"
-              />
-            </TabsContent>
-          )}
-          {isLocalWorkflow && (
-            <TabsContent
-              className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden"
-              value="ai"
-            >
-              <LocalAiPanel
-                disabled={isGenerating || !isOwner}
-                workflowName={currentWorkflowName}
-              />
-            </TabsContent>
-          )}
-        </Tabs>
+          <BlockInspector
+            disabled={isGenerating || !isOwner}
+            draftData={draftNodeData}
+            edges={edges}
+            lastRun={latestSelectedBlockRun}
+            nodes={nodes}
+            onCreateSourceForInput={handleCreateSourceForInput}
+            onCreateSourceLogic={handleCreateSourceLogic}
+            onCreateSourceVersion={handleCreateSourceVersion}
+            onRunDownstreamTest={handleRunSelectedBlockDownstream}
+            onRunMockTest={handleRunSelectedBlockMock}
+            setDraftData={setDraftNodeData}
+          />
+        </div>
 
         <AlertDialog
           onOpenChange={setShowDeleteNodeAlert}
@@ -1529,9 +1689,17 @@ export const PanelInner = () => {
     selectedNode.data.config?.fiscalStage ||
       (!selectedNode.data.config?.actionType && selectedNode.data.visualRole)
   );
+  const selectedExcelSourceHasEvidence = Boolean(
+    isExcelWorkbookSource(selectedNode.data.block) &&
+      hasExcelSourceEvidence(selectedNode.data.block?.config || {})
+  );
   const sourceEvidenceLocked = Boolean(
     selectedNode.data.block?.source?.treatedAsEvidence &&
-      selectedNode.data.block.source.immutable
+      selectedNode.data.block.source.immutable &&
+      !(
+        isExcelWorkbookSource(selectedNode.data.block) &&
+        !selectedExcelSourceHasEvidence
+      )
   );
   const protectedNeedsUnlock = Boolean(
     selectedNode.data.block?.governance?.requiresUnlockToEdit &&
@@ -1948,8 +2116,110 @@ export const PanelInner = () => {
     </>
   );
 };
+
+function RightAiContextPanel() {
+  const [currentWorkflowId] = useAtom(currentWorkflowIdAtom);
+  const [currentWorkflowName] = useAtom(currentWorkflowNameAtom);
+  const [selectedNodeId] = useAtom(selectedNodeAtom);
+  const [selectedEdgeId] = useAtom(selectedEdgeAtom);
+  const [nodes] = useAtom(nodesAtom);
+  const edges = useAtomValue(edgesAtom);
+  const [isGenerating] = useAtom(isGeneratingAtom);
+  const isOwner = useAtomValue(isWorkflowOwnerAtom);
+  const { open: openOverlay } = useOverlay();
+  const isLocalWorkflow = isLocalWorkflowId(currentWorkflowId);
+  const selectedNode = nodes.find((node) => node.id === selectedNodeId);
+  const selectedEdge = edges.find((edge) => edge.id === selectedEdgeId);
+
+  return (
+    <Tabs
+      className="size-full"
+      defaultValue={isLocalWorkflow ? "ai" : "context"}
+    >
+      <TabsList className="h-14 w-full shrink-0 rounded-none border-b bg-transparent px-4 py-2.5">
+        {isLocalWorkflow && (
+          <TabsTrigger
+            className="bg-transparent text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none"
+            value="ai"
+          >
+            AI
+          </TabsTrigger>
+        )}
+        <TabsTrigger
+          className="bg-transparent text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none"
+          value="context"
+        >
+          Context
+        </TabsTrigger>
+      </TabsList>
+      {isLocalWorkflow && (
+        <TabsContent className="mt-0 flex min-h-0 flex-1 flex-col" value="ai">
+          <LocalAiPanel
+            disabled={isGenerating || !isOwner}
+            workflowName={currentWorkflowName}
+          />
+        </TabsContent>
+      )}
+      <TabsContent
+        className="mt-0 flex min-h-0 flex-1 flex-col"
+        value="context"
+      >
+        <div className="flex-1 space-y-4 overflow-y-auto p-4">
+          <div className="rounded-md border bg-muted/20 p-3">
+            <div className="font-semibold text-sm">Workspace panel</div>
+            <p className="mt-1 text-muted-foreground text-xs">
+              Block and relationship editing now lives in the modal workspace so
+              the canvas can focus on the graph and this side panel can stay
+              available for AI assistance.
+            </p>
+          </div>
+          <div className="rounded-md border bg-muted/20 p-3">
+            <div className="font-medium text-sm">Current selection</div>
+            <div className="mt-2 space-y-1 text-sm">
+              {selectedNode?.data.block && (
+                <>
+                  <div>{selectedNode.data.block.label}</div>
+                  <div className="text-muted-foreground text-xs">
+                    {selectedNode.data.block.family} /{" "}
+                    {selectedNode.data.block.subtype}
+                  </div>
+                </>
+              )}
+              {!selectedNode?.data.block && selectedEdge && (
+                <>
+                  <div>Relationship selected</div>
+                  <div className="text-muted-foreground text-xs">
+                    {selectedEdge.source} to {selectedEdge.target}
+                  </div>
+                </>
+              )}
+              {!(selectedNode?.data.block || selectedEdge) && (
+                <div className="text-muted-foreground text-xs">
+                  Select a block or edge to open its modal workspace.
+                </div>
+              )}
+            </div>
+            {(selectedNode || selectedEdge) && (
+              <Button
+                className="mt-3"
+                onClick={() =>
+                  openOverlay(ConfigurationOverlay, {}, { size: "wide" })
+                }
+                size="sm"
+                variant="secondary"
+              >
+                Open workspace modal
+              </Button>
+            )}
+          </div>
+        </div>
+      </TabsContent>
+    </Tabs>
+  );
+}
+
 export const NodeConfigPanel = () => (
   <div className="hidden size-full flex-col bg-background md:flex">
-    <PanelInner />
+    <RightAiContextPanel />
   </div>
 );

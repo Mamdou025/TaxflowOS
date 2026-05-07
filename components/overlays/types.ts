@@ -38,6 +38,8 @@ export type OverlayOptions = {
   closeOnEscape?: boolean;
   /** Callback when overlay is closed */
   onClose?: () => void;
+  /** Width preset for desktop overlays */
+  size?: "default" | "wide";
 };
 
 /**

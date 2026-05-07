@@ -219,7 +219,7 @@ function DesktopOverlayContainer() {
             {/* Backdrop - standalone clickable div */}
             <motion.div
               animate={{ opacity: 1 }}
-              className="fixed inset-0 z-50 bg-black/60"
+              className="fixed inset-0 z-50 bg-neutral-950/35"
               exit={{ opacity: 0 }}
               initial={{ opacity: 0 }}
               onClick={handleBackdropClick}
@@ -229,18 +229,25 @@ function DesktopOverlayContainer() {
             {/* Dialog container */}
             <motion.div
               animate="visible"
-              className="-translate-x-1/2 -translate-y-1/2 fixed top-1/2 left-1/2 z-50 w-full max-w-lg px-4"
+              className={cn(
+                "-translate-x-1/2 -translate-y-1/2 fixed top-1/2 left-1/2 z-50 w-full px-4",
+                currentItem?.options.size === "wide"
+                  ? "w-[min(96vw,1800px)] max-w-[min(96vw,1800px)]"
+                  : "max-w-lg"
+              )}
               exit="exit"
               initial="hidden"
               variants={containerVariants}
             >
               <LayoutGroup>
                 <motion.div
-                  className="relative overflow-hidden rounded-xl border bg-background shadow-2xl ring-1 ring-black/5"
+                  className="workflow-studio-overlay relative overflow-hidden rounded-xl border bg-background shadow-2xl ring-1 ring-black/5 dark:ring-white/8"
                   layout={isOpen}
                   style={{ minHeight: minHeight > 0 ? minHeight : "auto" }}
                   transition={iosSpring}
                 >
+                  {/* Accent stripe */}
+                  <div className="h-[3px] bg-linear-to-r from-sky-500/70 via-indigo-500/40 to-transparent" />
                   {/* Content area - all items rendered persistently to preserve state */}
                   <div className="relative" ref={contentRef}>
                     {renderStack.map((item, index) => {
@@ -373,13 +380,13 @@ function MobileOverlayContainer() {
     >
       <DrawerPrimitive.Portal>
         {/* Backdrop - let Vaul handle animations */}
-        <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/60" />
+        <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-neutral-950/35" />
 
         {/* Drawer container - let Vaul handle open/close animations */}
         <DrawerPrimitive.Content
           className={cn(
             "fixed inset-x-0 bottom-0 z-50 flex max-h-[90vh] flex-col",
-            "rounded-t-2xl border-t bg-background shadow-2xl"
+            "workflow-studio-overlay rounded-t-2xl border-t bg-background shadow-2xl"
           )}
         >
           {/* Accessible title for screen readers */}

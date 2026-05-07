@@ -9,7 +9,7 @@ import { NodeConfigPanel } from "@/components/workflow/node-config-panel";
 import { WorkflowStudioShell } from "@/components/workflow/workflow-studio-shell";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
-  createFapiSampleWorkflow,
+  createWorkingSourceRulesDemoWorkflow,
   LOCAL_WORKFLOW_ID,
   loadLocalWorkflowSnapshotResult,
   saveWorkflowDefinitionSnapshot,
@@ -63,10 +63,11 @@ const Home = () => {
     const loadResult = loadLocalWorkflowSnapshotResult();
     if (loadResult.warning) {
       toast.warning(
-        "Saved local workflow could not be loaded. Restored the sample workflow."
+        "Saved local workflow could not be loaded. Restored the working Excel workflow."
       );
     }
-    const snapshot = loadResult.snapshot || createFapiSampleWorkflow();
+    const snapshot =
+      loadResult.snapshot || createWorkingSourceRulesDemoWorkflow();
     const canvas = workflowDefinitionToCanvas(snapshot);
     const selectedNode =
       canvas.nodes.find((node) => node.selected) || canvas.nodes[0];
@@ -148,7 +149,7 @@ const Home = () => {
           className="-translate-y-1/2 pointer-events-auto absolute top-1/2 right-0 z-20 h-12 w-7 rounded-r-none rounded-l-full border-r-0 bg-background shadow-sm hover:bg-muted"
           onClick={() => togglePanel(false)}
           size="icon"
-          title="Open properties"
+          title="Open AI panel"
           variant="secondary"
         >
           <ChevronLeft className="size-4" />
@@ -170,7 +171,7 @@ const Home = () => {
             className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-0 z-10 h-12 w-7 rounded-r-none rounded-l-full bg-background opacity-70 shadow-sm hover:bg-muted hover:opacity-100"
             onClick={() => togglePanel(true)}
             size="icon"
-            title="Collapse properties"
+            title="Collapse AI panel"
             variant="secondary"
           >
             <ChevronRight className="size-4" />

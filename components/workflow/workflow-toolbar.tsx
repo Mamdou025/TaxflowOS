@@ -38,10 +38,16 @@ import { authClient, useSession } from "@/lib/auth-client";
 import { integrationsAtom } from "@/lib/integrations-store";
 import {
   createDefaultWorkflowBlockCandidate,
+  createExpandedMappingPipelineDemoWorkflow,
   createFapiSampleWorkflow,
-  createLocalRunRecord,
+  createSingleItemPipelineDemoWorkflow,
+  createWorkflowBlockFromCatalog,
   createWorkflowEvent,
+  createWorkflowNodeFromBlock,
+  createWorkingSourceRulesDemoWorkflow,
   isLocalWorkflowId,
+  LOCAL_WORKFLOW_ID,
+  type LocalRunRecord,
   loadLocalWorkflowSnapshot,
   parseLocalWorkflowJson,
   publishLocalWorkflowSnapshot,
@@ -50,6 +56,10 @@ import {
   saveWorkflowDefinitionSnapshot,
   workflowDefinitionToCanvas,
 } from "@/lib/local-fiscal-workflow";
+import {
+  type LocalEdgeRunStatus,
+  runLocalWorkflowTools,
+} from "@/lib/local-tool-runner";
 import type { IntegrationType } from "@/lib/types/integration";
 import {
   addNodeAtom,
@@ -87,6 +97,12 @@ import {
   flattenConfigFields,
   getIntegrationLabels,
 } from "@/plugins";
+import { appendWorkflowChangeEvent } from "@/src/audit/change-log";
+import {
+  createWorkflowAuditEvent,
+  summarizeWorkflowForAudit,
+  type WorkflowAuditEventType,
+} from "@/src/audit/workflow-events";
 import { Panel } from "../ai-elements/panel";
 import { DeployButton } from "../deploy-button";
 import { GitHubStarsButton } from "../github-stars-button";
@@ -98,6 +114,10 @@ import { useOverlay } from "../overlays/overlay-provider";
 import { WorkflowIssuesOverlay } from "../overlays/workflow-issues-overlay";
 import { WorkflowIcon } from "../ui/workflow-icon";
 import { UserMenu } from "../workflows/user-menu";
+import {
+  buildFapiWorkbookImportPatch,
+  parseExcelWorkbookFile,
+} from "./source-viewers/excel-utils";
 
 type WorkflowToolbarProps = {
   workflowId?: string;
@@ -121,9 +141,18 @@ function updateNodesStatus(
   }
 }
 
-function createExecutionLogsMap(
-  logs: ReturnType<typeof createLocalRunRecord>["logs"]
-) {
+function isLocalToolWorkflow(nodes: WorkflowNode[]) {
+  return nodes.some((node) => {
+    const toolId = String(
+      node.data.block?.config?.toolId || node.data.config?.toolId || ""
+    );
+    return ["source.", "logic.", "review.", "protected.", "output."].some(
+      (prefix) => toolId.startsWith(prefix)
+    );
+  });
+}
+
+function createExecutionLogsMap(logs: LocalRunRecord["logs"]) {
   return Object.fromEntries(
     logs.map((log) => [
       log.nodeId,
@@ -136,6 +165,25 @@ function createExecutionLogsMap(
       },
     ])
   );
+}
+
+function applyEdgeRunStatuses({
+  edges,
+  edgeStatuses,
+  runId,
+}: {
+  edges: WorkflowEdge[];
+  edgeStatuses: Record<string, LocalEdgeRunStatus>;
+  runId: string;
+}) {
+  return edges.map((edge) => ({
+    ...edge,
+    data: {
+      ...edge.data,
+      runStatus: edgeStatuses[edge.id] || "idle",
+      runStatusRunId: runId,
+    },
+  }));
 }
 
 type MissingIntegrationInfo = {
@@ -349,6 +397,201 @@ function getMissingRequiredFields(
     .filter((result): result is MissingRequiredFieldInfo => result !== null);
 }
 
+function isExcelSourceNode(node: WorkflowNode) {
+  const block = node.data.block;
+  const sourceKind = String(block?.config.sourceKind || "").toLowerCase();
+  return (
+    block?.family === "Source" &&
+    (block.subtype === "Excel / Workbook" ||
+      sourceKind.includes("excel") ||
+      sourceKind.includes("workbook") ||
+      block.catalogId === "source:excel-workbook")
+  );
+}
+
+function isWorkflowNodeCatalog(node: WorkflowNode, catalogId: string) {
+  return node.data.block?.catalogId === catalogId;
+}
+
+function isFapiInputsSourceNode(node: WorkflowNode) {
+  return node.data.block?.config.sourceKind === "fapi_inputs";
+}
+
+function getFapiInputsPatchForWorkbookImport(
+  fapiInputs: Record<string, unknown>
+) {
+  return Object.fromEntries(
+    Object.entries(fapiInputs).filter(
+      ([key]) => !["exchangeRate", "fxRate", "overrideRate"].includes(key)
+    )
+  );
+}
+
+function getFxRatePatchForWorkbookImport(fapiInputs: Record<string, unknown>) {
+  const overrideRate =
+    fapiInputs.overrideRate || fapiInputs.fxRate || fapiInputs.exchangeRate;
+  return {
+    documentCurrency: fapiInputs.documentCurrency,
+    fapiYear: fapiInputs.fapiYear,
+    overrideRate,
+    reportingCurrency: fapiInputs.reportingCurrency,
+  };
+}
+
+function applyWorkbookImportPatchToFapiNode({
+  node,
+  workbook,
+  workbookImport,
+}: {
+  node: WorkflowNode;
+  workbook: { fileName: string; workbookId: string };
+  workbookImport: ReturnType<typeof buildFapiWorkbookImportPatch>;
+}): WorkflowNode | null {
+  if (
+    isFapiInputsSourceNode(node) &&
+    (workbookImport.importedSheets.fapiInputs ||
+      Object.keys(workbookImport.expectedResults).length > 0)
+  ) {
+    return {
+      ...applyConfigPatchToNode(node, {
+        ...getFapiInputsPatchForWorkbookImport(workbookImport.fapiInputs),
+        importedFromWorkbook: workbook.fileName,
+        sourceLocator: `local-excel://${workbook.workbookId}/${encodeURIComponent(
+          workbookImport.importedSheets.fapiInputs || "FAPI Inputs"
+        )}`,
+        sourceStatus: "draft",
+      }),
+      selected: false,
+    };
+  }
+
+  if (
+    isWorkflowNodeCatalog(node, "source:currency-rate") &&
+    workbookImport.importedSheets.fapiInputs
+  ) {
+    return {
+      ...applyConfigPatchToNode(node, {
+        ...getFxRatePatchForWorkbookImport(workbookImport.fapiInputs),
+        importedFromWorkbook: workbook.fileName,
+        sourceLocator: `bank-of-canada://annual-average/${String(
+          workbookImport.fapiInputs.documentCurrency || "USD"
+        )}-${String(workbookImport.fapiInputs.reportingCurrency || "CAD")}/${String(
+          workbookImport.fapiInputs.fapiYear || "current"
+        )}`,
+        sourceStatus: "draft",
+      }),
+      selected: false,
+    };
+  }
+
+  return null;
+}
+
+function applyConfigPatchToNode(
+  node: WorkflowNode,
+  patch: Record<string, unknown>
+): WorkflowNode {
+  const block = node.data.block;
+  if (!block) {
+    return node;
+  }
+  const nextConfig = { ...block.config, ...patch };
+  const nextBlock = {
+    ...block,
+    config: nextConfig,
+    label:
+      typeof patch.workbookName === "string"
+        ? "Uploaded Workbook"
+        : block.label,
+    runtime: {
+      ...block.runtime,
+      outputKey: "selected_rows",
+    },
+    source: block.source
+      ? {
+          ...block.source,
+          locator: String(nextConfig.sourceLocator || block.source.locator),
+          valuePreview: `${String(nextConfig.selectedRowsCount || 0)} selected rows`,
+        }
+      : block.source,
+    updatedAt: new Date().toISOString(),
+    updatedBy: "workflow-studio",
+  };
+
+  return {
+    ...node,
+    data: {
+      ...node.data,
+      block: nextBlock,
+      config: nextConfig,
+      label: nextBlock.label,
+    },
+  };
+}
+
+function applyWorkbookImportPatchToNode({
+  excelPatch,
+  node,
+  targetNodeId,
+  workbook,
+  workbookImport,
+}: {
+  excelPatch: Record<string, unknown>;
+  node: WorkflowNode;
+  targetNodeId: string;
+  workbook: { fileName: string; workbookId: string };
+  workbookImport: ReturnType<typeof buildFapiWorkbookImportPatch>;
+}): WorkflowNode {
+  if (node.id === targetNodeId) {
+    return { ...applyConfigPatchToNode(node, excelPatch), selected: true };
+  }
+
+  if (
+    isWorkflowNodeCatalog(node, "source:keyword-rules") &&
+    workbookImport.keywordRules.length > 0
+  ) {
+    return {
+      ...applyConfigPatchToNode(node, {
+        importedFromWorkbook: workbook.fileName,
+        keywordRules: workbookImport.keywordRules,
+        sourceLocator: `local-excel://${workbook.workbookId}/${encodeURIComponent(
+          workbookImport.importedSheets.keywordRules || "Keyword Rules"
+        )}`,
+        sourceStatus: "draft",
+      }),
+      selected: false,
+    };
+  }
+
+  if (
+    isWorkflowNodeCatalog(node, "source:aggregation-rules") &&
+    workbookImport.aggregationRules.length > 0
+  ) {
+    return {
+      ...applyConfigPatchToNode(node, {
+        aggregationRules: workbookImport.aggregationRules,
+        importedFromWorkbook: workbook.fileName,
+        sourceLocator: `local-excel://${workbook.workbookId}/${encodeURIComponent(
+          workbookImport.importedSheets.aggregationRules || "Aggregation Rules"
+        )}`,
+        sourceStatus: "draft",
+      }),
+      selected: false,
+    };
+  }
+
+  const fapiPatchedNode = applyWorkbookImportPatchToFapiNode({
+    node,
+    workbook,
+    workbookImport,
+  });
+  if (fapiPatchedNode) {
+    return fapiPatchedNode;
+  }
+
+  return { ...node, selected: false };
+}
+
 // Get missing integrations for workflow nodes
 // Uses the plugin registry to determine which integrations are required
 // Also handles built-in actions that aren't in the plugin registry
@@ -427,6 +670,64 @@ type ExecuteTestWorkflowParams = {
   setIsExecuting: (value: boolean) => void;
   setSelectedExecutionId: (value: string | null) => void;
 };
+
+type ExecuteLocalToolWorkflowParams = {
+  edges: WorkflowEdge[];
+  nodes: WorkflowNode[];
+  setEdges: (edges: WorkflowEdge[]) => void;
+  setExecutionLogs: WorkflowHandlerParams["setExecutionLogs"];
+  setIsExecuting: (value: boolean) => void;
+  setSelectedExecutionId: (value: string | null) => void;
+  updateNodeData: WorkflowHandlerParams["updateNodeData"];
+  workflowName: string;
+};
+
+function executeLocalToolWorkflow({
+  edges,
+  nodes,
+  setEdges,
+  setExecutionLogs,
+  setIsExecuting,
+  setSelectedExecutionId,
+  updateNodeData,
+  workflowName,
+}: ExecuteLocalToolWorkflowParams) {
+  try {
+    const localRun = runLocalWorkflowTools({
+      edges,
+      nodes,
+      workflowName,
+    });
+    saveLocalRunRecord(localRun.record);
+    for (const [nodeId, status] of Object.entries(localRun.blockStatuses)) {
+      updateNodeData({ id: nodeId, data: { status } });
+    }
+    setEdges(
+      applyEdgeRunStatuses({
+        edgeStatuses: localRun.edgeStatuses,
+        edges: edges.map((edge) => ({ ...edge, selected: false })),
+        runId: localRun.record.execution.id,
+      })
+    );
+    setSelectedExecutionId(localRun.record.execution.id);
+    setExecutionLogs(createExecutionLogsMap(localRun.record.logs));
+    if (localRun.result.status === "success") {
+      toast.success("Local tool workflow run completed");
+    } else {
+      toast.warning(
+        `Local tool run completed with ${localRun.result.warnings.length} warning${localRun.result.warnings.length === 1 ? "" : "s"}`
+      );
+    }
+  } catch (error) {
+    console.error("Local tool workflow run failed:", error);
+    updateNodesStatus(nodes, updateNodeData, "error");
+    toast.error(
+      error instanceof Error ? error.message : "Local tool workflow run failed"
+    );
+  } finally {
+    setIsExecuting(false);
+  }
+}
 
 async function executeTestWorkflow({
   workflowId,
@@ -620,22 +921,36 @@ function useWorkflowHandlers({
 
     // Switch to Runs tab when starting a test run
     setActiveTab("runs");
+    const useLocalToolRunner =
+      isLocalWorkflowId(currentWorkflowId) || isLocalToolWorkflow(nodes);
 
     // Deselect all nodes and edges
     setNodes(nodes.map((node) => ({ ...node, selected: false })));
-    setEdges(edges.map((edge) => ({ ...edge, selected: false })));
+    setEdges(
+      edges.map((edge) => ({
+        ...edge,
+        data: {
+          ...edge.data,
+          ...(useLocalToolRunner ? { runStatus: "running" as const } : {}),
+        },
+        selected: false,
+      }))
+    );
     setSelectedNodeId(null);
 
     setIsExecuting(true);
 
-    if (isLocalWorkflowId(currentWorkflowId)) {
-      const runRecord = createLocalRunRecord(nodes, edges);
-      saveLocalRunRecord(runRecord);
-      updateNodesStatus(nodes, updateNodeData, "success");
-      setSelectedExecutionId(runRecord.execution.id);
-      setExecutionLogs(createExecutionLogsMap(runRecord.logs));
-      setIsExecuting(false);
-      toast.success("Mock fiscal run completed");
+    if (useLocalToolRunner) {
+      executeLocalToolWorkflow({
+        edges,
+        nodes,
+        setEdges,
+        setExecutionLogs,
+        setIsExecuting,
+        setSelectedExecutionId,
+        updateNodeData,
+        workflowName,
+      });
       return;
     }
 
@@ -867,6 +1182,42 @@ function useWorkflowActions(state: ReturnType<typeof useWorkflowState>) {
     userIntegrations,
   });
 
+  const recordWorkflowAuditEvent = ({
+    after,
+    metadata,
+    reason,
+    type,
+  }: {
+    after?: {
+      edgeCount: number;
+      name?: string;
+      nodeCount: number;
+      status?: string;
+    };
+    metadata?: Record<string, unknown>;
+    reason?: string;
+    type: WorkflowAuditEventType;
+  }) => {
+    appendWorkflowChangeEvent(
+      createWorkflowAuditEvent({
+        actor: "workflow-toolbar",
+        after: summarizeWorkflowForAudit(
+          after || {
+            edgeCount: edges.length,
+            name: workflowName,
+            nodeCount: nodes.length,
+          }
+        ),
+        metadata,
+        reason,
+        targetObjectId: currentWorkflowId || LOCAL_WORKFLOW_ID,
+        targetObjectType: "workflow",
+        type,
+        workflowId: currentWorkflowId || LOCAL_WORKFLOW_ID,
+      })
+    );
+  };
+
   // Listen for execute trigger from keyboard shortcut
   useEffect(() => {
     if (triggerExecute) {
@@ -980,7 +1331,13 @@ function useWorkflowActions(state: ReturnType<typeof useWorkflowState>) {
     const safeName =
       snapshot.name.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "workflow";
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    downloadBlob(blob, `workflow-studio-${safeName}-${timestamp}.json`);
+    const fileName = `workflow-studio-${safeName}-${timestamp}.json`;
+    downloadBlob(blob, fileName);
+    recordWorkflowAuditEvent({
+      metadata: { fileName, format: "json" },
+      reason: "Workflow JSON exported from the local toolbar.",
+      type: "workflow_exported",
+    });
     toast.success("Workflow JSON exported");
   };
 
@@ -1004,10 +1361,13 @@ function useWorkflowActions(state: ReturnType<typeof useWorkflowState>) {
     }
 
     const blob = await zip.generateAsync({ type: "blob" });
-    downloadBlob(
-      blob,
-      `${workflowName.toLowerCase().replace(/[^a-z0-9]/g, "-")}-workflow.zip`
-    );
+    const fileName = `${workflowName.toLowerCase().replace(/[^a-z0-9]/g, "-")}-workflow.zip`;
+    downloadBlob(blob, fileName);
+    recordWorkflowAuditEvent({
+      metadata: { fileName, format: "zip", workflowId },
+      reason: "Workflow code package exported from the toolbar.",
+      type: "workflow_exported",
+    });
     toast.success("Workflow downloaded successfully!");
   };
 
@@ -1148,9 +1508,187 @@ function useWorkflowActions(state: ReturnType<typeof useWorkflowState>) {
       setSelectedExecutionId(null);
       setExecutionLogs({});
       saveWorkflowDefinitionSnapshot(snapshot);
+      recordWorkflowAuditEvent({
+        after: {
+          edgeCount: snapshot.edges.length,
+          name: snapshot.name,
+          nodeCount: snapshot.blocks.length,
+          status: snapshot.status,
+        },
+        metadata: { fileName: file.name },
+        reason: "Workflow JSON imported into the local draft.",
+        type: "workflow_imported",
+      });
       setHasUnsavedChanges(false);
       toast.success("Workflow JSON imported");
       return snapshot;
+    },
+    handleUploadExcelSource: async (file: File) => {
+      const workbook = await parseExcelWorkbookFile(file);
+      let nextNodes = nodes;
+      let nextEdges = edges;
+      let targetNode = nextNodes.find(isExcelSourceNode);
+      let nextWorkflowName = workflowName;
+
+      if (!targetNode) {
+        const demo = {
+          ...createWorkingSourceRulesDemoWorkflow(),
+          events: [
+            createWorkflowEvent({
+              message:
+                "Local studio opened the Working Excel Source + Rulebooks Demo for workbook upload.",
+              type: "reset_sample",
+            }),
+          ],
+        };
+        const canvas = workflowDefinitionToCanvas(demo);
+        nextNodes = canvas.nodes;
+        nextEdges = canvas.edges;
+        targetNode = nextNodes.find(isExcelSourceNode);
+        nextWorkflowName = demo.name;
+      }
+
+      if (!targetNode) {
+        throw new Error("No Excel Source block is available for upload.");
+      }
+
+      const workbookImport = buildFapiWorkbookImportPatch(
+        workbook,
+        targetNode.data.block?.config || {}
+      );
+      const patch = workbookImport.excelSourcePatch;
+      nextNodes = nextNodes.map((node) =>
+        applyWorkbookImportPatchToNode({
+          excelPatch: patch,
+          node,
+          targetNodeId: targetNode.id,
+          workbook,
+          workbookImport,
+        })
+      );
+      setNodes(nextNodes);
+      setEdges(nextEdges);
+      setCurrentWorkflowName(nextWorkflowName);
+      setSelectedNodeId(targetNode.id);
+      setSelectedExecutionId(null);
+      setExecutionLogs({});
+      setHasUnsavedChanges(true);
+      setActiveTab("properties");
+      saveLocalWorkflowSnapshot({
+        edges: nextEdges,
+        event: createWorkflowEvent({
+          message: `Uploaded Excel workbook ${file.name}.`,
+          type: "save_draft",
+        }),
+        name: nextWorkflowName,
+        nodes: nextNodes,
+        status: "draft",
+      });
+      openOverlay(ConfigurationOverlay, {}, { size: "wide" });
+      const importedParts = [
+        workbookImport.keywordRules.length > 0 ? "keyword rules" : "",
+        workbookImport.aggregationRules.length > 0 ? "aggregation rules" : "",
+        Object.keys(workbookImport.expectedResults).length > 0
+          ? "expected results"
+          : "",
+      ].filter(Boolean);
+      toast.success(
+        importedParts.length > 0
+          ? `Excel workbook loaded with ${importedParts.join(", ")}`
+          : "Excel workbook loaded into Source"
+      );
+    },
+    handleLoadSingleItemDemo: () => {
+      openOverlay(ConfirmOverlay, {
+        title: "Load Z Demo",
+        message:
+          "Load the Single Item Pipeline Demo? Current local nodes and connections will be replaced.",
+        confirmLabel: "Load Demo",
+        confirmVariant: "default" as const,
+        onConfirm: () => {
+          const demo = {
+            ...createSingleItemPipelineDemoWorkflow(),
+            events: [
+              createWorkflowEvent({
+                type: "reset_sample",
+                message: "Local studio loaded the Single Item Pipeline Demo.",
+              }),
+            ],
+          };
+          const canvas = workflowDefinitionToCanvas(demo);
+          setNodes(canvas.nodes);
+          setEdges(canvas.edges);
+          setCurrentWorkflowName(demo.name);
+          setSelectedNodeId(canvas.nodes[0]?.id ?? null);
+          setSelectedExecutionId(null);
+          setExecutionLogs({});
+          saveWorkflowDefinitionSnapshot(demo);
+          setHasUnsavedChanges(false);
+          toast.success("Single Item Pipeline Demo loaded");
+        },
+      });
+    },
+    handleLoadExpandedDemo: () => {
+      openOverlay(ConfirmOverlay, {
+        confirmLabel: "Load Expanded Demo",
+        confirmVariant: "default" as const,
+        message:
+          "Load the Expanded Mapping Pipeline Demo? Current local nodes and connections will be replaced.",
+        onConfirm: () => {
+          const demo = {
+            ...createExpandedMappingPipelineDemoWorkflow(),
+            events: [
+              createWorkflowEvent({
+                message:
+                  "Local studio loaded the Expanded Mapping Pipeline Demo.",
+                type: "reset_sample",
+              }),
+            ],
+          };
+          const canvas = workflowDefinitionToCanvas(demo);
+          setNodes(canvas.nodes);
+          setEdges(canvas.edges);
+          setCurrentWorkflowName(demo.name);
+          setSelectedNodeId(canvas.nodes[0]?.id ?? null);
+          setSelectedExecutionId(null);
+          setExecutionLogs({});
+          saveWorkflowDefinitionSnapshot(demo);
+          setHasUnsavedChanges(false);
+          toast.success("Expanded Mapping Pipeline Demo loaded");
+        },
+        title: "Load Expanded Demo",
+      });
+    },
+    handleLoadWorkingSourceDemo: () => {
+      openOverlay(ConfirmOverlay, {
+        confirmLabel: "Open Working Excel Source + Rulebooks Demo",
+        confirmVariant: "default" as const,
+        message:
+          "Open the Working Excel Source + Rulebooks Demo? Current local nodes and connections will be replaced.",
+        onConfirm: () => {
+          const demo = {
+            ...createWorkingSourceRulesDemoWorkflow(),
+            events: [
+              createWorkflowEvent({
+                message:
+                  "Local studio loaded the Working Excel Source + Rulebooks Demo.",
+                type: "reset_sample",
+              }),
+            ],
+          };
+          const canvas = workflowDefinitionToCanvas(demo);
+          setNodes(canvas.nodes);
+          setEdges(canvas.edges);
+          setCurrentWorkflowName(demo.name);
+          setSelectedNodeId(canvas.nodes[0]?.id ?? null);
+          setSelectedExecutionId(null);
+          setExecutionLogs({});
+          saveWorkflowDefinitionSnapshot(demo);
+          setHasUnsavedChanges(false);
+          toast.success("Working Excel Source + Rulebooks Demo loaded");
+        },
+        title: "Open Working Excel Source + Rulebooks Demo",
+      });
     },
     handleResetSample: () => {
       openOverlay(ConfirmOverlay, {
@@ -1292,6 +1830,7 @@ function ToolbarActions({
     state.addNode(newNode);
     state.setSelectedNodeId(newNode.id);
     state.setActiveTab("properties");
+    openOverlay(ConfigurationOverlay, {}, { size: "wide" });
   };
 
   return (
@@ -1314,7 +1853,9 @@ function ToolbarActions({
       <ButtonGroup className="flex lg:hidden" orientation="vertical">
         <Button
           className="border hover:bg-black/5 dark:hover:bg-white/5"
-          onClick={() => openOverlay(ConfigurationOverlay, {})}
+          onClick={() =>
+            openOverlay(ConfigurationOverlay, {}, { size: "wide" })
+          }
           size="icon"
           title="Configuration"
           variant="secondary"
@@ -1762,9 +2303,11 @@ function LocalStudioTopBar({
   state: ReturnType<typeof useWorkflowState>;
   actions: ReturnType<typeof useWorkflowActions>;
 }) {
+  const { open: openOverlay } = useOverlay();
   const { screenToFlowPosition } = useReactFlow();
   const rightPanelWidth = useAtomValue(rightPanelWidthAtom);
   const inputRef = useRef<HTMLInputElement>(null);
+  const excelInputRef = useRef<HTMLInputElement>(null);
   const [publishStatus, setPublishStatus] = useState<LocalPublishStatus>(() => {
     if (typeof window === "undefined") {
       return "draft";
@@ -1812,10 +2355,10 @@ function LocalStudioTopBar({
     setLatestPublishedVersion(snapshot.publishedVersion?.versionNumber ?? null);
   }, [state.hasUnsavedChanges]);
 
-  const handleAddStep = () => {
+  const getCanvasCenterPosition = () => {
     const flowWrapper = document.querySelector(".react-flow");
     if (!flowWrapper) {
-      return;
+      return null;
     }
 
     const rect = flowWrapper.getBoundingClientRect();
@@ -1825,15 +2368,92 @@ function LocalStudioTopBar({
     });
     position.x -= 96;
     position.y -= 96;
+    return position;
+  };
 
-    const newNode = createDefaultWorkflowBlockCandidate({
+  const handleAddCatalogSource = (catalogId: string) => {
+    if (
+      catalogId === "source:keyword-rules" ||
+      catalogId === "source:aggregation-rules"
+    ) {
+      const existingRulebook = state.nodes.find(
+        (node) => node.data.block?.catalogId === catalogId
+      );
+      if (existingRulebook) {
+        state.setSelectedNodeId(existingRulebook.id);
+        state.setActiveTab("properties");
+        openOverlay(ConfigurationOverlay, {}, { size: "wide" });
+        return;
+      }
+    }
+
+    const position = getCanvasCenterPosition();
+    if (!position) {
+      return;
+    }
+    const sourceDefaults: Record<
+      string,
+      { config: Record<string, unknown>; label: string }
+    > = {
+      "source:aggregation-rules": {
+        config: {
+          outputs: "aggregation_rules",
+          sourceKind: "aggregation_rules",
+          sourceStatus: "draft",
+          sourceVersion: 1,
+          toolId: "source.aggregation_rules",
+        },
+        label: "Aggregation Rulebook",
+      },
+      "source:currency-rate": {
+        config: {
+          documentCurrency: "USD",
+          fapiYear: 2025,
+          outputs: "exchange_rate, rate_metadata",
+          overrideRate: 1.35,
+          rateProvider: "bank_of_canada",
+          rateType: "annual_average",
+          reportingCurrency: "CAD",
+          sourceKind: "currency_rate",
+          sourceStatus: "draft",
+          sourceVersion: 1,
+          toolId: "source.currency_rate",
+        },
+        label: "Bank of Canada FX Rate",
+      },
+      "source:excel-workbook": {
+        config: {
+          outputs: "selected_rows",
+          sourceKind: "excel_workbook",
+          sourceStatus: "draft",
+          sourceVersion: 1,
+          toolId: "source.manual_table",
+        },
+        label: "Uploaded Workbook",
+      },
+      "source:keyword-rules": {
+        config: {
+          outputs: "keyword_rules",
+          sourceKind: "keyword_rules",
+          sourceStatus: "draft",
+          sourceVersion: 1,
+          toolId: "source.keyword_rules",
+        },
+        label: "Keyword Rulebook",
+      },
+    };
+    const sourceDefault =
+      sourceDefaults[catalogId] || sourceDefaults["source:excel-workbook"];
+    const block = createWorkflowBlockFromCatalog(catalogId, {
       id: nanoid(),
+      label: sourceDefault.label,
       position,
+      config: sourceDefault.config,
     });
-
-    state.addNode(newNode);
-    state.setSelectedNodeId(newNode.id);
+    state.addNode(createWorkflowNodeFromBlock(block, { selected: true }));
+    state.setSelectedNodeId(block.id);
     state.setActiveTab("properties");
+    openOverlay(ConfigurationOverlay, {}, { size: "wide" });
   };
 
   const handlePublish = () => {
@@ -1848,6 +2468,26 @@ function LocalStudioTopBar({
       state.setEdges(workflowDefinitionToCanvas(result.workflow).edges);
       state.setHasUnsavedChanges(false);
       setLatestPublishedVersion(result.snapshot.versionNumber);
+      appendWorkflowChangeEvent(
+        createWorkflowAuditEvent({
+          actor: "workflow-toolbar",
+          after: summarizeWorkflowForAudit({
+            edgeCount: result.workflow.edges.length,
+            name: result.workflow.name,
+            nodeCount: result.workflow.blocks.length,
+            status: "published",
+          }),
+          metadata: {
+            versionNumber: result.snapshot.versionNumber,
+            warningCount: result.warnings.length,
+          },
+          reason: "Workflow published from the local toolbar.",
+          targetObjectId: state.currentWorkflowId || LOCAL_WORKFLOW_ID,
+          targetObjectType: "workflow",
+          type: "workflow_published",
+          workflowId: state.currentWorkflowId || LOCAL_WORKFLOW_ID,
+        })
+      );
       if (result.warnings.length > 0) {
         toast.warning(
           `Published locally with ${result.warnings.length} warning${result.warnings.length === 1 ? "" : "s"}`
@@ -1900,13 +2540,93 @@ function LocalStudioTopBar({
         <div className="flex shrink-0 items-center gap-2">
           <Button
             disabled={state.isGenerating}
-            onClick={handleAddStep}
+            onClick={actions.handleClearWorkflow}
             size="sm"
             variant="secondary"
           >
-            <Plus className="mr-2 size-4" />
-            Add Block
+            New Workflow
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                disabled={state.isGenerating}
+                size="sm"
+                variant="secondary"
+              >
+                <Plus className="mr-2 size-4" />
+                Add Source
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => handleAddCatalogSource("source:excel-workbook")}
+              >
+                Uploaded Workbook
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => handleAddCatalogSource("source:currency-rate")}
+              >
+                Bank of Canada FX Rate
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button
+            disabled={state.isGenerating}
+            onClick={() => excelInputRef.current?.click()}
+            size="sm"
+            variant="secondary"
+          >
+            <Upload className="mr-2 size-4" />
+            Upload Excel
+          </Button>
+          <input
+            accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) {
+                actions.handleUploadExcelSource(file).catch((error) => {
+                  toast.error(
+                    error instanceof Error
+                      ? error.message
+                      : "Failed to upload Excel workbook"
+                  );
+                });
+                updatePublishStatus("draft");
+                setLatestPublishedVersion(null);
+              }
+              event.target.value = "";
+            }}
+            ref={excelInputRef}
+            type="file"
+          />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                disabled={state.isGenerating}
+                size="sm"
+                variant="secondary"
+              >
+                <Plus className="mr-2 size-4" />
+                Add Rulebook
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => handleAddCatalogSource("source:keyword-rules")}
+              >
+                Keyword Rulebook
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  handleAddCatalogSource("source:aggregation-rules")
+                }
+              >
+                Aggregation Rulebook
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
             disabled={
               !state.currentWorkflowId || state.isGenerating || state.isSaving
@@ -1920,7 +2640,7 @@ function LocalStudioTopBar({
             ) : (
               <Save className="mr-2 size-4" />
             )}
-            Save Draft
+            Save
           </Button>
           <Button
             disabled={
@@ -1988,15 +2708,15 @@ function LocalStudioTopBar({
           <Button
             disabled={state.isGenerating}
             onClick={() => {
-              actions.handleResetSample();
+              actions.handleLoadWorkingSourceDemo();
               updatePublishStatus("draft");
               setLatestPublishedVersion(null);
             }}
             size="sm"
             variant="secondary"
           >
-            <RotateCcw className="mr-2 size-4" />
-            Reset Sample
+            <Upload className="mr-2 size-4" />
+            Open Working Excel Source + Rulebooks Demo
           </Button>
           <Button
             disabled={
@@ -2015,6 +2735,44 @@ function LocalStudioTopBar({
             )}
             Run
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button disabled={state.isGenerating} size="sm" variant="ghost">
+                <Settings2 className="mr-2 size-4" />
+                Dev
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => {
+                  actions.handleLoadSingleItemDemo();
+                  updatePublishStatus("draft");
+                  setLatestPublishedVersion(null);
+                }}
+              >
+                Load Z Demo
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  actions.handleLoadExpandedDemo();
+                  updatePublishStatus("draft");
+                  setLatestPublishedVersion(null);
+                }}
+              >
+                Load Expanded Demo
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  actions.handleResetSample();
+                  updatePublishStatus("draft");
+                  setLatestPublishedVersion(null);
+                }}
+              >
+                Reset FAPI Sample
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </div>

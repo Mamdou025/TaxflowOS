@@ -18,26 +18,25 @@ import { Canvas } from "@/components/ai-elements/canvas";
 import { Connection } from "@/components/ai-elements/connection";
 import { Controls } from "@/components/ai-elements/controls";
 import { AIPrompt } from "@/components/ai-elements/prompt";
+import { ConfigurationOverlay } from "@/components/overlays/configuration-overlay";
+import { useOverlay } from "@/components/overlays/overlay-provider";
 import { WorkflowToolbar } from "@/components/workflow/workflow-toolbar";
 import "@xyflow/react/dist/style.css";
 
 import { nanoid } from "nanoid";
 import { toast } from "sonner";
 import {
-  createCanvasEdgeFromWorkflowEdge,
   createDefaultWorkflowBlockCandidate,
   createPendingWorkflowConnection,
-  createWorkflowEdgeRecord,
   getUnsupportedWorkflowRelationshipMessage,
   getWorkflowEdgeDefaults,
   isLocalWorkflowId,
 } from "@/lib/local-fiscal-workflow";
 import {
   addNodeAtom,
-  autosaveAtom,
+  connectBlocksAtom,
   currentWorkflowIdAtom,
   edgesAtom,
-  hasUnsavedChangesAtom,
   isGeneratingAtom,
   isPanelAnimatingAtom,
   isSidebarCollapsedAtom,
@@ -53,6 +52,10 @@ import {
   updateNodeDataAtom,
   type WorkflowNode,
 } from "@/lib/workflow-store";
+import {
+  getDefaultInspectorTabForFamily,
+  getDefaultInspectorTabForSelection,
+} from "@/src/domain/workflow/inspector-rules";
 import { Edge } from "../ai-elements/edge";
 import { Panel } from "../ai-elements/panel";
 import { ActionNode } from "./nodes/action-node";
@@ -113,10 +116,10 @@ export function WorkflowCanvas() {
   const setSelectedEdge = useSetAtom(selectedEdgeAtom);
   const setSidebarCollapsed = useSetAtom(isSidebarCollapsedAtom);
   const addNode = useSetAtom(addNodeAtom);
-  const setHasUnsavedChanges = useSetAtom(hasUnsavedChangesAtom);
-  const triggerAutosave = useSetAtom(autosaveAtom);
+  const connectBlocks = useSetAtom(connectBlocksAtom);
   const setActiveTab = useSetAtom(propertiesPanelActiveTabAtom);
   const updateNodeData = useSetAtom(updateNodeDataAtom);
+  const { open: openOverlay } = useOverlay();
   const { screenToFlowPosition, fitView, getViewport, setViewport } =
     useReactFlow();
 
@@ -337,31 +340,14 @@ export function WorkflowCanvas() {
         return;
       }
 
-      const workflowEdge = createWorkflowEdgeRecord({
-        id: nanoid(),
-        sourceBlockId: connection.source,
-        targetBlockId: connection.target,
-        relationshipType: edgeDefaults.relationshipType,
-        reason: edgeDefaults.reason,
-      });
-      const newEdge = {
-        ...createCanvasEdgeFromWorkflowEdge(workflowEdge),
+      connectBlocks({
+        source: connection.source,
         sourceHandle: connection.sourceHandle,
+        target: connection.target,
         targetHandle: connection.targetHandle,
-      };
-      setEdges([...edges, newEdge]);
-      setHasUnsavedChanges(true);
-      // Trigger immediate autosave when nodes are connected
-      triggerAutosave({ immediate: true });
+      });
     },
-    [
-      edges,
-      nodes,
-      setEdges,
-      setHasUnsavedChanges,
-      triggerAutosave,
-      updateNodeData,
-    ]
+    [connectBlocks, nodes, updateNodeData]
   );
 
   const onNodeClick: NodeMouseHandler = useCallback(
@@ -370,18 +356,30 @@ export function WorkflowCanvas() {
       setSelectedNode(node.id);
       setSelectedEdge(null);
       setActiveTab(
-        workflowNode.data.block?.family === "Logic" ? "code" : "properties"
+        getDefaultInspectorTabForFamily(workflowNode.data.block?.family)
       );
       setSidebarCollapsed(false);
+      openOverlay(ConfigurationOverlay, {}, { size: "wide" });
     },
-    [setActiveTab, setSelectedEdge, setSelectedNode, setSidebarCollapsed]
+    [
+      openOverlay,
+      setActiveTab,
+      setSelectedEdge,
+      setSelectedNode,
+      setSidebarCollapsed,
+    ]
   );
 
   const onEdgeClick: EdgeMouseHandler = useCallback(
     (_event, edge) => {
       setSelectedEdge(edge.id);
       setSelectedNode(null);
-      setActiveTab("properties");
+      setActiveTab(
+        getDefaultInspectorTabForSelection({
+          family: null,
+          selectionKind: "edge",
+        })
+      );
       setSidebarCollapsed(false);
       setEdges((currentEdges) =>
         currentEdges.map((currentEdge) => ({
@@ -395,8 +393,10 @@ export function WorkflowCanvas() {
           selected: false,
         }))
       );
+      openOverlay(ConfigurationOverlay, {}, { size: "wide" });
     },
     [
+      openOverlay,
       setActiveTab,
       setEdges,
       setNodes,
@@ -512,6 +512,7 @@ export function WorkflowCanvas() {
       addNode(newNode);
       setSelectedNode(newNode.id);
       setActiveTab("properties");
+      openOverlay(ConfigurationOverlay, {}, { size: "wide" });
 
       // Deselect all other nodes and select only the new node
       // Need to do this after a delay because panOnDrag will clear selection
@@ -539,6 +540,7 @@ export function WorkflowCanvas() {
       setNodes,
       setSelectedNode,
       setActiveTab,
+      openOverlay,
     ]
   );
 
@@ -677,7 +679,13 @@ export function WorkflowCanvas() {
           <Controls />
         </Panel>
         {showMinimap && (
-          <MiniMap bgColor="var(--sidebar)" nodeStrokeColor="var(--border)" />
+          <MiniMap
+            bgColor="var(--card)"
+            maskColor="rgba(0,0,0,0.25)"
+            nodeColor="var(--muted-foreground)"
+            nodeStrokeColor="var(--border)"
+            nodeStrokeWidth={1}
+          />
         )}
       </Canvas>
 

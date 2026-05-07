@@ -49,9 +49,10 @@ const RootLayout = ({ children }: RootLayoutProps) => (
     <body className={cn(sans.variable, mono.variable, "antialiased")}>
       <ThemeProvider
         attribute="class"
-        defaultTheme="system"
+        defaultTheme="light"
         disableTransitionOnChange
-        enableSystem
+        enableSystem={false}
+        forcedTheme="light"
       >
         <Provider>
           <AuthProvider>

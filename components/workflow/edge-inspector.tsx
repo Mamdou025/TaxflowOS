@@ -14,7 +14,9 @@ import {
 } from "@/components/ui/select";
 import {
   BLOCK_CATALOG,
+  EDGE_BINDING_STATUS_VALUES,
   EDGE_STATUS_VALUES,
+  type EdgeBindingStatus,
   type EdgeStatus,
   getAllowedWorkflowRelationshipTypes,
   type WorkflowEdge as SchemaWorkflowEdge,
@@ -22,6 +24,7 @@ import {
   type WorkflowBlock,
   type WorkflowRelationshipType,
 } from "@/lib/local-fiscal-workflow";
+import { getToolForBlock } from "@/lib/local-tool-registry";
 import type { WorkflowEdge } from "@/lib/workflow-store";
 import { formatRelationshipType } from "./utils/edge-relationships";
 
@@ -34,7 +37,15 @@ type EdgeInspectorProps = {
     updates: Partial<
       Pick<
         SchemaWorkflowEdge,
-        "confidence" | "notes" | "reason" | "relationshipType" | "status"
+        | "bindingLabel"
+        | "bindingStatus"
+        | "confidence"
+        | "notes"
+        | "reason"
+        | "relationshipType"
+        | "sourceOutputRole"
+        | "status"
+        | "targetInputRole"
       >
     >
   ) => void;
@@ -44,6 +55,14 @@ type EdgeInspectorProps = {
 
 function getWorkflowEdge(edge: WorkflowEdge): SchemaWorkflowEdge | undefined {
   return edge.data?.workflowEdge;
+}
+
+function getOutputRoleOptions(block?: WorkflowBlock) {
+  return block ? getToolForBlock(block)?.outputRoles || [] : [];
+}
+
+function getInputRoleOptions(block?: WorkflowBlock) {
+  return block ? getToolForBlock(block)?.inputRoles || [] : [];
 }
 
 function getRelationshipOptions({
@@ -94,6 +113,8 @@ export function EdgeInspector({
     sourceBlock,
     targetBlock,
   });
+  const sourceOutputRoles = getOutputRoleOptions(sourceBlock);
+  const targetInputRoles = getInputRoleOptions(targetBlock);
 
   return (
     <div className="space-y-4">
@@ -149,6 +170,101 @@ export function EdgeInspector({
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="space-y-3 rounded-md border bg-muted/20 p-3">
+        <div>
+          <div className="font-medium text-sm">Input/output binding</div>
+          <p className="text-muted-foreground text-xs">
+            Binding metadata says which named tool output feeds which named tool
+            input. Relationship metadata remains separate.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="edge-source-output-role">Source output role</Label>
+            <Select
+              disabled={disabled || sourceOutputRoles.length === 0}
+              onValueChange={(value) =>
+                onUpdate({
+                  sourceOutputRole: value,
+                  bindingStatus: "valid",
+                })
+              }
+              value={workflowEdge?.sourceOutputRole}
+            >
+              <SelectTrigger id="edge-source-output-role">
+                <SelectValue placeholder="Choose output role" />
+              </SelectTrigger>
+              <SelectContent>
+                {sourceOutputRoles.map((role) => (
+                  <SelectItem key={role.id} value={role.id}>
+                    {role.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edge-target-input-role">Target input role</Label>
+            <Select
+              disabled={disabled || targetInputRoles.length === 0}
+              onValueChange={(value) =>
+                onUpdate({
+                  bindingStatus: "valid",
+                  targetInputRole: value,
+                })
+              }
+              value={workflowEdge?.targetInputRole}
+            >
+              <SelectTrigger id="edge-target-input-role">
+                <SelectValue placeholder="Choose input role" />
+              </SelectTrigger>
+              <SelectContent>
+                {targetInputRoles.map((role) => (
+                  <SelectItem key={role.id} value={role.id}>
+                    {role.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="edge-binding-label">Binding label</Label>
+            <Input
+              disabled={disabled}
+              id="edge-binding-label"
+              onChange={(event) =>
+                onUpdate({ bindingLabel: event.target.value })
+              }
+              placeholder="Readable binding label"
+              value={workflowEdge?.bindingLabel || ""}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="edge-binding-status">Binding status</Label>
+            <Select
+              disabled={disabled}
+              onValueChange={(value) =>
+                onUpdate({ bindingStatus: value as EdgeBindingStatus })
+              }
+              value={workflowEdge?.bindingStatus || "missing"}
+            >
+              <SelectTrigger id="edge-binding-status">
+                <SelectValue placeholder="Binding status" />
+              </SelectTrigger>
+              <SelectContent>
+                {EDGE_BINDING_STATUS_VALUES.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {status}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-2">

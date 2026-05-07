@@ -102,19 +102,6 @@ export function FiscalBlockConfig({
         </Select>
       </div>
 
-      {isSourceEvidence && (
-        <div className="rounded-md border border-sky-500/30 bg-sky-500/10 p-3 text-sm">
-          <div className="font-medium text-sky-700 dark:text-sky-300">
-            Immutable source evidence
-          </div>
-          <p className="mt-1 text-muted-foreground">
-            Source labels, locators, raw text, extracted evidence, and values
-            are locked. Corrections, annotations, overrides, and transformations
-            belong in downstream Logic blocks.
-          </p>
-        </div>
-      )}
-
       {isProtectedBlock && (
         <div className="rounded-md border border-violet-500/30 bg-violet-500/10 p-3 text-sm">
           <div className="font-medium text-violet-700 dark:text-violet-300">

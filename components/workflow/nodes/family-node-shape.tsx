@@ -14,6 +14,7 @@ import {
   FileText,
   GitBranch,
   Globe,
+  ListFilter,
   LockKeyhole,
   type LucideIcon,
   PencilLine,
@@ -57,42 +58,42 @@ const TRAILING_TYPE_WORDS: Partial<Record<BlockSubtype, string[]>> = {
 
 const FAMILY_NODE_STYLES: Record<BlockFamily, FamilyNodeStyle> = {
   "AI / Agent": {
-    badgeClassName: "top-1 border-fuchsia-400/70 bg-[#211f28] text-fuchsia-200",
+    badgeClassName: "top-1 border-fuchsia-400/70 bg-(--node-badge-bg) text-fuchsia-200",
     captionClassName: "w-44",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
       "size-28 overflow-visible rounded-full border-0 bg-transparent p-0 shadow-none",
   },
   Logic: {
-    badgeClassName: "top-1 border-emerald-400/70 bg-[#211f28] text-emerald-200",
+    badgeClassName: "top-1 border-emerald-400/70 bg-(--node-badge-bg) text-emerald-200",
     captionClassName: "w-44",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
       "size-24 overflow-visible rounded-sm border-0 bg-transparent p-0 shadow-none",
   },
   Output: {
-    badgeClassName: "top-1 border-indigo-400/70 bg-[#211f28] text-indigo-200",
+    badgeClassName: "top-1 border-indigo-400/70 bg-(--node-badge-bg) text-indigo-200",
     captionClassName: "w-48",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
       "h-28 w-24 overflow-visible rounded-md border-0 bg-transparent p-0 shadow-none",
   },
   Protected: {
-    badgeClassName: "top-1 border-violet-400/70 bg-[#211f28] text-violet-200",
+    badgeClassName: "top-1 border-violet-400/70 bg-(--node-badge-bg) text-violet-200",
     captionClassName: "w-64",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
       "h-24 w-56 overflow-visible rounded-sm border-0 bg-transparent p-0 shadow-none",
   },
   "Review / Validation": {
-    badgeClassName: "top-1 border-amber-400/70 bg-[#211f28] text-amber-200",
+    badgeClassName: "top-1 border-amber-400/70 bg-(--node-badge-bg) text-amber-200",
     captionClassName: "w-48",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
-      "size-28 overflow-visible rounded-none border-0 bg-transparent p-0 shadow-none",
+      "size-24 overflow-visible rounded-none border-0 bg-transparent p-0 shadow-none",
   },
   Source: {
-    badgeClassName: "top-1 border-sky-400/70 bg-[#211f28] text-sky-200",
+    badgeClassName: "top-1 border-sky-400/70 bg-(--node-badge-bg) text-sky-200",
     captionClassName: "w-48",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
@@ -119,8 +120,20 @@ function getFamilyFromRole(role: WorkflowNodeData["visualRole"]): CanvasFamily {
   return "Generic";
 }
 
+function isRulebookSubtype(subtype?: BlockSubtype) {
+  return (
+    subtype === "Keyword Rules" ||
+    subtype === "Aggregation Rules" ||
+    subtype === "Rollup Rules" ||
+    subtype === "Calculation Rules"
+  );
+}
+
 export function resolveCanvasFamily(data: WorkflowNodeData): CanvasFamily {
   const configFamily = data.config?.blockFamily as BlockFamily | undefined;
+  if (isRulebookSubtype(data.block?.subtype)) {
+    return "Review / Validation";
+  }
   return (
     data.block?.family || configFamily || getFamilyFromRole(data.visualRole)
   );
@@ -201,6 +214,7 @@ function getSubtypeIcon(subtype: BlockSubtype | undefined): LucideIcon {
     case "PDF Report":
       return FileText;
     case "API / HTTP Request":
+    case "Currency Rate":
       return Braces;
     case "Database Query":
       return Database;
@@ -209,22 +223,41 @@ function getSubtypeIcon(subtype: BlockSubtype | undefined): LucideIcon {
     case "AI Search Result":
     case "AI Search":
       return Search;
+    case "Keyword Rules":
+    case "Aggregation Rules":
+    case "Rollup Rules":
+    case "Calculation Rules":
+      return GitBranch;
     case "Formula":
       return Calculator;
     case "Aggregation":
+    case "Category Rollup Aggregator":
+    case "Hierarchy Aggregator":
       return Sigma;
+    case "Calculation Engine":
+      return Calculator;
     case "Transformation":
       return Shuffle;
+    case "Excel Table Reader":
+      return FileSpreadsheet;
+    case "PDF Text Parser":
+    case "PDF Table Parser":
+      return FileText;
+    case "OCR Extractor":
+      return Search;
+    case "API Response Parser":
+      return Braces;
     case "Condition":
       return GitBranch;
     case "Script":
       return Code2;
     case "Classification / Mapping":
-      return GitBranch;
+      return ListFilter;
     case "Required Input Check":
     case "Output Readiness Check":
       return CheckCircle2;
     case "Missing Source Check":
+    case "Unmatched Rows Check":
     case "Low Confidence Warning":
       return TriangleAlert;
     case "Manual Override Review":
@@ -279,14 +312,14 @@ export function FamilyNodeShape({
   if (family === "Source") {
     return (
       <div
-        className="pointer-events-none relative flex h-24 w-28 items-center justify-center border-2 border-sky-300/55 bg-[#252b2e] text-cyan-200 shadow-[0_0_0_1px_rgba(34,211,238,0.14),0_18px_40px_-24px_rgba(34,211,238,0.85)]"
+        className="pointer-events-none relative flex h-24 w-28 items-center justify-center border-2 border-sky-300/55 bg-(--node-source-bg) text-cyan-200 shadow-[0_0_0_1px_rgba(34,211,238,0.14),0_12px_24px_-16px_rgba(34,211,238,0.70)]"
         style={{ borderRadius: "3rem 0.85rem 0.85rem 3rem" }}
       >
         <div
           className="absolute inset-2 border border-cyan-200/5"
           style={{ borderRadius: "2.5rem 0.55rem 0.55rem 2.5rem" }}
         />
-        <div className="-translate-y-1/2 absolute top-1/2 right-[-0.65rem] h-5 w-3 rounded-r-full border-2 border-cyan-200/40 border-l-0 bg-[#252b2e]" />
+        <div className="-translate-y-1/2 absolute top-1/2 right-[-0.65rem] h-5 w-3 rounded-r-full border-2 border-cyan-200/40 border-l-0 bg-(--node-source-bg)" />
         <div className="relative z-10">{icon}</div>
       </div>
     );
@@ -294,7 +327,7 @@ export function FamilyNodeShape({
 
   if (family === "Logic") {
     return (
-      <div className="pointer-events-none relative flex size-24 items-center justify-center rounded-sm border-2 border-emerald-400/75 bg-[#1f2825] text-emerald-200 shadow-[0_0_0_1px_rgba(52,211,153,0.18),0_18px_40px_-24px_rgba(16,185,129,0.9)]">
+      <div className="pointer-events-none relative flex size-24 items-center justify-center rounded-sm border-2 border-emerald-400/75 bg-(--node-logic-bg) text-emerald-200 shadow-[0_0_0_1px_rgba(52,211,153,0.18),0_12px_24px_-16px_rgba(16,185,129,0.75)]">
         <div className="-translate-x-1/2 absolute top-0 left-1/2 h-1 w-16 rounded-full bg-emerald-300/85" />
         <div className="absolute inset-3 rounded-[3px] border border-emerald-300/15" />
         <div className="relative z-10">{icon}</div>
@@ -304,9 +337,21 @@ export function FamilyNodeShape({
 
   if (family === "Review / Validation") {
     return (
-      <div className="pointer-events-none relative flex size-28 items-center justify-center">
-        <div className="absolute size-20 rotate-45 rounded-sm border-2 border-amber-400/80 bg-[#2b251c] shadow-[0_0_0_1px_rgba(251,191,36,0.18),0_18px_40px_-24px_rgba(245,158,11,0.9)]" />
-        <div className="absolute size-12 rotate-45 border border-amber-300/20" />
+      <div
+        className="pointer-events-none relative flex size-24 items-center justify-center"
+        style={{
+          filter:
+            "drop-shadow(0 0 6px rgba(251,191,36,0.35)) drop-shadow(0 6px 14px rgba(245,158,11,0.50))",
+        }}
+      >
+        <div
+          className="absolute inset-0 border-2 border-amber-400/80 bg-(--node-review-bg)"
+          style={{ clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" }}
+        />
+        <div
+          className="absolute inset-[22%] border border-amber-300/20"
+          style={{ clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" }}
+        />
         <div className="relative z-10 text-amber-200">{icon}</div>
       </div>
     );
@@ -314,7 +359,7 @@ export function FamilyNodeShape({
 
   if (family === "Protected") {
     return (
-      <div className="pointer-events-none relative flex h-16 w-52 items-center justify-center rounded-sm border-2 border-violet-400/75 bg-[#241f2e] text-violet-200 shadow-[0_0_0_1px_rgba(167,139,250,0.18),0_18px_40px_-24px_rgba(139,92,246,0.9)]">
+      <div className="pointer-events-none relative flex h-16 w-52 items-center justify-center rounded-sm border-2 border-violet-400/75 bg-(--node-protected-bg) text-violet-200 shadow-[0_0_0_1px_rgba(167,139,250,0.18),0_12px_24px_-16px_rgba(139,92,246,0.75)]">
         <div className="absolute inset-y-0 left-0 flex w-9 items-center justify-center border-violet-300/30 border-r bg-violet-300/10">
           <LockKeyhole className="size-4" />
         </div>
@@ -328,7 +373,7 @@ export function FamilyNodeShape({
 
   if (family === "Output") {
     return (
-      <div className="pointer-events-none relative flex h-24 w-20 items-center justify-center rounded-md border-2 border-indigo-400/75 bg-[#202235] text-indigo-200 shadow-[0_0_0_1px_rgba(129,140,248,0.18),0_18px_40px_-24px_rgba(99,102,241,0.9)]">
+      <div className="pointer-events-none relative flex h-24 w-20 items-center justify-center rounded-md border-2 border-indigo-400/75 bg-(--node-output-bg) text-indigo-200 shadow-[0_0_0_1px_rgba(129,140,248,0.18),0_12px_24px_-16px_rgba(99,102,241,0.75)]">
         <div className="absolute top-0 right-0 size-7 rounded-bl-md border-indigo-300/35 border-b border-l bg-indigo-300/15 [clip-path:polygon(0_0,100%_0,100%_100%)]" />
         <div className="absolute right-2 bottom-3 left-2 h-1 rounded-full bg-indigo-300/30" />
         <div className="relative z-10">{icon}</div>
@@ -338,7 +383,7 @@ export function FamilyNodeShape({
 
   if (family === "AI / Agent") {
     return (
-      <div className="pointer-events-none relative flex size-24 items-center justify-center rounded-full border-2 border-fuchsia-400/80 bg-[#291f2e] text-fuchsia-200 shadow-[0_0_0_1px_rgba(217,70,239,0.18),0_18px_40px_-24px_rgba(192,38,211,0.9)]">
+      <div className="pointer-events-none relative flex size-24 items-center justify-center rounded-full border-2 border-fuchsia-400/80 bg-(--node-ai-bg) text-fuchsia-200 shadow-[0_0_0_1px_rgba(217,70,239,0.18),0_12px_24px_-16px_rgba(192,38,211,0.75)]">
         <div className="absolute inset-3 rounded-full border border-fuchsia-300/35 border-dashed" />
         <div className="absolute top-3 right-5 size-2 rounded-full bg-fuchsia-300/80" />
         <div className="relative z-10">{icon}</div>

@@ -76,26 +76,33 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --node-source-bg: oklch(0.17 0.016 195);
+  --node-logic-bg: oklch(0.15 0.016 150);
+  --node-review-bg: oklch(0.16 0.020 75);
+  --node-protected-bg: oklch(0.14 0.020 280);
+  --node-output-bg: oklch(0.14 0.022 245);
+  --node-ai-bg: oklch(0.15 0.022 305);
+  --node-badge-bg: oklch(0.12 0.012 275);
 }
 
 .dark {
   --background: oklch(0 0 0);
   --foreground: oklch(0.98 0 0);
-  --card: oklch(0.04 0 0);
+  --card: oklch(0.08 0.006 250);
   --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.04 0 0);
+  --popover: oklch(0.09 0.006 250);
   --popover-foreground: oklch(0.98 0 0);
   --primary: oklch(0.98 0 0);
   --primary-foreground: oklch(0.09 0 0);
-  --secondary: oklch(0.1 0 0);
+  --secondary: oklch(0.12 0.006 250);
   --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.15 0 0);
+  --muted: oklch(0.15 0.008 245);
   --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.15 0 0);
+  --accent: oklch(0.16 0.008 245);
   --accent-foreground: oklch(0.98 0 0);
   --destructive: oklch(0.65 0.25 29);
-  --border: oklch(0.27 0 0);
-  --input: oklch(0.27 0 0);
+  --border: oklch(0.25 0.008 240);
+  --input: oklch(0.25 0.008 240);
   --ring: oklch(0.8 0 0);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
@@ -110,6 +117,12 @@
   --sidebar-accent-foreground: oklch(0.98 0 0);
   --sidebar-border: oklch(0.18 0 0);
   --sidebar-ring: oklch(0.8 0 0);
+  --node-source-bg: oklch(0.17 0.016 195);
+  --node-logic-bg: oklch(0.15 0.016 150);
+  --node-review-bg: oklch(0.16 0.020 75);
+  --node-protected-bg: oklch(0.14 0.020 280);
+  --node-output-bg: oklch(0.14 0.022 245);
+  --node-ai-bg: oklch(0.15 0.022 305);
 }
 
 @layer base {
@@ -178,6 +191,50 @@
   color: rgba(255, 255, 255, 0.5) !important;
 }
 
+.workflow-studio-overlay {
+  --background: oklch(0.985 0 0);
+  --foreground: oklch(0.19 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.19 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.19 0 0);
+  --primary: oklch(0.25 0 0);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.94 0 0);
+  --secondary-foreground: oklch(0.22 0 0);
+  --muted: oklch(0.94 0 0);
+  --muted-foreground: oklch(0.48 0 0);
+  --accent: oklch(0.91 0 0);
+  --accent-foreground: oklch(0.2 0 0);
+  --border: oklch(0.88 0 0);
+  --input: oklch(0.88 0 0);
+  --ring: oklch(0.58 0 0);
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.dark .workflow-studio-overlay {
+  --background: oklch(0.11 0.008 250);
+  --foreground: oklch(0.95 0 0);
+  --card: oklch(0.14 0.008 248);
+  --card-foreground: oklch(0.95 0 0);
+  --popover: oklch(0.14 0.008 248);
+  --popover-foreground: oklch(0.95 0 0);
+  --primary: oklch(0.92 0 0);
+  --primary-foreground: oklch(0.11 0 0);
+  --secondary: oklch(0.18 0.008 245);
+  --secondary-foreground: oklch(0.92 0 0);
+  --muted: oklch(0.18 0.008 245);
+  --muted-foreground: oklch(0.60 0 0);
+  --accent: oklch(0.20 0.008 245);
+  --accent-foreground: oklch(0.92 0 0);
+  --border: oklch(0.28 0.008 240);
+  --input: oklch(0.28 0.008 240);
+  --ring: oklch(0.72 0 0);
+  background: var(--background);
+  color: var(--foreground);
+}
+
 /* React Flow pane cursor */
 .react-flow__pane {
   cursor: grab !important;
@@ -206,6 +263,7 @@
   width: 12px !important;
   height: 12px !important;
   border: 2px solid var(--border) !important;
+  border-radius: 50% !important;
   background: var(--primary) !important;
   cursor: crosshair !important;
   z-index: 20 !important;

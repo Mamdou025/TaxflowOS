@@ -3,14 +3,11 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   AlertTriangle,
-  Blocks,
   Bot,
   Calculator,
   CheckCircle2,
   ChevronDown,
-  ChevronLeft,
   ChevronRight,
-  Clock,
   Download,
   Eye,
   EyeOff,
@@ -19,359 +16,67 @@ import {
   ListTree,
   LockKeyhole,
   Plus,
-  Search,
   ShieldCheck,
-  Star,
   Trash2,
-  Upload,
 } from "lucide-react";
 import { nanoid } from "nanoid";
 import { type ReactNode, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ConfigurationOverlay } from "@/components/overlays/configuration-overlay";
+import { useOverlay } from "@/components/overlays/overlay-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DataPreviewCard } from "@/components/workflow/inspector/data-preview-card";
 import {
-  BLOCK_CATALOG,
-  type BlockCatalogItem,
-  type BlockFamily,
   type BlockRun,
-  createCanvasEdgeFromWorkflowEdge,
   createWorkflowBlockFromCatalog,
   createWorkflowDefinitionFromCanvas,
-  createWorkflowEdgeRecord,
   createWorkflowNodeFromBlock,
-  getWorkflowEdgeDefaults,
   isCandidateOutputRelationshipType,
   isGovernedOutputRelationshipType,
   isOutputMappingRelationshipType,
-  LOCAL_SAMPLE_DATASET,
   LOGIC_OUTPUT_GOVERNANCE_WARNING,
   loadLocalRunRecords,
   loadLocalWorkflowSnapshot,
-  type WorkflowEdge as SchemaWorkflowEdge,
   type WorkflowBlock,
   type WorkflowDefinition,
 } from "@/lib/local-fiscal-workflow";
+import {
+  getToolForBlock,
+  LOCAL_TOOL_REGISTRY,
+} from "@/lib/local-tool-registry";
 import { cn } from "@/lib/utils";
 import {
   addNodeAtom,
-  autosaveAtom,
+  connectBlocksAtom,
   currentWorkflowNameAtom,
   deleteNodeAtom,
   edgesAtom,
   executionLogsAtom,
-  hasUnsavedChangesAtom,
   localWorkflowRevisionAtom,
   nodesAtom,
   propertiesPanelActiveTabAtom,
   selectedEdgeAtom,
   selectedNodeAtom,
   updateNodeDataAtom,
-  type WorkflowNode,
 } from "@/lib/workflow-store";
+import {
+  canEditStructureRow,
+  collectStructureSourceTraces,
+  generateStructureView,
+  getSelectedStructureBlock,
+  getStructureUpstreamBlocks,
+  type StructureSourceTrace,
+  type StructureViewRow,
+  sortStructureBlocksForWorksheet,
+} from "@/src/runtime/generate-structure-view";
 import { formatRelationshipType } from "./utils/edge-relationships";
 
 type WorkflowStudioShellProps = {
   isMobile: boolean;
   rightPanelCollapsed: boolean;
   rightPanelWidthPercent: number;
-};
-
-type PaletteTemplate = {
-  id: string;
-  label: string;
-  description: string;
-  family: BlockFamily;
-  category: string;
-  icon: typeof FileText;
-};
-
-function getPaletteCategory(family: BlockFamily) {
-  if (family === "Output") {
-    return "Outputs";
-  }
-
-  if (family === "Source") {
-    return "Sources";
-  }
-
-  return family;
-}
-
-function getPaletteIcon(family: BlockFamily) {
-  if (family === "Source") {
-    return FileText;
-  }
-
-  if (family === "Logic") {
-    return Calculator;
-  }
-
-  if (family === "Review / Validation") {
-    return ShieldCheck;
-  }
-
-  if (family === "Protected") {
-    return LockKeyhole;
-  }
-
-  if (family === "AI / Agent") {
-    return Bot;
-  }
-
-  return Upload;
-}
-
-const CORE_BLOCK_TEMPLATES: PaletteTemplate[] = BLOCK_CATALOG.map(
-  (item: BlockCatalogItem) => ({
-    id: item.id,
-    label: item.label,
-    description: item.description,
-    family: item.family,
-    category: getPaletteCategory(item.family),
-    icon: getPaletteIcon(item.family),
-  })
-);
-
-const FAVORITE_TEMPLATE_IDS = new Set([
-  "source:excel-workbook",
-  "logic:classification-mapping",
-  "review:approval-gate",
-]);
-const PALETTE_CATEGORIES = [
-  "Favorites",
-  "Recent",
-  "Sources",
-  "Logic",
-  "Review / Validation",
-  "Protected",
-  "Outputs",
-  "AI / Agent",
-];
-
-const DEFAULT_NODE_POSITION = { x: -120, y: 180 };
-
-function getTemplatesForCategory({
-  allTemplates,
-  category,
-  recentIds,
-}: {
-  allTemplates: PaletteTemplate[];
-  category: string;
-  recentIds: string[];
-}) {
-  if (category === "Favorites") {
-    return allTemplates.filter((template) =>
-      FAVORITE_TEMPLATE_IDS.has(template.id)
-    );
-  }
-
-  if (category === "Recent") {
-    return recentIds
-      .map((id) => allTemplates.find((template) => template.id === id))
-      .filter((template): template is PaletteTemplate => Boolean(template));
-  }
-
-  return allTemplates.filter((template) => template.category === category);
-}
-
-function buildNodeFromTemplate(
-  template: PaletteTemplate,
-  index: number
-): WorkflowNode {
-  const position = {
-    x: DEFAULT_NODE_POSITION.x + index * 28,
-    y: DEFAULT_NODE_POSITION.y + index * 28,
-  };
-  const block = createWorkflowBlockFromCatalog(template.id, {
-    id: nanoid(),
-    position,
-  });
-
-  return createWorkflowNodeFromBlock(block, { selected: true });
-}
-
-function LeftRail({
-  paletteOpen,
-  setPaletteOpen,
-}: {
-  paletteOpen: boolean;
-  setPaletteOpen: (open: boolean) => void;
-}) {
-  const railItems = [
-    { label: "Palette", icon: Blocks, active: paletteOpen },
-    { label: "Structure", icon: ListTree },
-    { label: "Favorites", icon: Star },
-    { label: "Recent", icon: Clock },
-    { label: "Search", icon: Search },
-  ];
-
-  return (
-    <div className="pointer-events-auto absolute top-16 bottom-4 left-3 z-20 flex w-12 flex-col items-center gap-2 rounded-md border bg-background/95 p-1.5 shadow-sm backdrop-blur">
-      {railItems.map((item) => {
-        const Icon = item.icon;
-        return (
-          <Button
-            className={cn(item.active && "bg-muted")}
-            key={item.label}
-            onClick={() => {
-              if (item.label === "Palette") {
-                setPaletteOpen(!paletteOpen);
-              } else {
-                setPaletteOpen(true);
-              }
-            }}
-            size="icon"
-            title={item.label}
-            variant="ghost"
-          >
-            <Icon className="size-4" />
-          </Button>
-        );
-      })}
-    </div>
-  );
-}
-
-function PalettePanel({
-  open,
-  recentIds,
-  search,
-  setOpen,
-  setRecentIds,
-  setSearch,
-}: {
-  open: boolean;
-  recentIds: string[];
-  search: string;
-  setOpen: (open: boolean) => void;
-  setRecentIds: (ids: string[]) => void;
-  setSearch: (value: string) => void;
-}) {
-  const addNode = useSetAtom(addNodeAtom);
-  const setSelectedNode = useSetAtom(selectedNodeAtom);
-  const setActiveTab = useSetAtom(propertiesPanelActiveTabAtom);
-  const nodes = useAtomValue(nodesAtom);
-  const allTemplates = useMemo(() => CORE_BLOCK_TEMPLATES, []);
-  const searchTerm = search.trim().toLowerCase();
-
-  const templatesByCategory = PALETTE_CATEGORIES.map((category) => {
-    let templates = getTemplatesForCategory({
-      allTemplates,
-      category,
-      recentIds,
-    });
-
-    if (searchTerm) {
-      templates = templates.filter(
-        (template) =>
-          template.label.toLowerCase().includes(searchTerm) ||
-          template.description.toLowerCase().includes(searchTerm) ||
-          template.category.toLowerCase().includes(searchTerm)
-      );
-    }
-
-    return { category, templates };
-  }).filter((group) => group.templates.length > 0);
-
-  const handleAddTemplate = (template: PaletteTemplate) => {
-    const newNode = buildNodeFromTemplate(template, nodes.length);
-    addNode(newNode);
-    setSelectedNode(newNode.id);
-    setActiveTab("properties");
-    setRecentIds(
-      [
-        template.id,
-        ...recentIds.filter((recentId) => recentId !== template.id),
-      ].slice(0, 5)
-    );
-  };
-
-  return (
-    <aside
-      aria-hidden={!open}
-      className={cn(
-        "pointer-events-auto absolute top-16 bottom-4 left-[4.5rem] z-20 flex w-64 flex-col rounded-md border bg-background/95 shadow-sm backdrop-blur transition-[transform,opacity] duration-300 ease-out will-change-transform",
-        open
-          ? "translate-x-0 opacity-100"
-          : "-translate-x-[calc(100%+1rem)] pointer-events-none opacity-0"
-      )}
-    >
-      <Button
-        className="-translate-y-1/2 absolute top-1/2 right-0 z-20 h-12 w-7 translate-x-1/2 rounded-r-full rounded-l-none border bg-background shadow-sm hover:bg-muted"
-        onClick={() => setOpen(false)}
-        size="icon"
-        title="Collapse palette"
-        variant="secondary"
-      >
-        <ChevronLeft className="size-4" />
-      </Button>
-      <div className="flex h-11 shrink-0 items-center justify-between border-b px-3">
-        <div className="flex items-center gap-2">
-          <Blocks className="size-4 text-muted-foreground" />
-          <h2 className="font-semibold text-sm">Block Palette</h2>
-        </div>
-      </div>
-      <div className="shrink-0 border-b p-3">
-        <div className="relative">
-          <Search className="-translate-y-1/2 absolute top-1/2 left-2.5 size-4 text-muted-foreground" />
-          <Input
-            className="h-9 pl-8"
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search blocks"
-            value={search}
-          />
-        </div>
-      </div>
-      <div className="min-h-0 flex-1 overflow-y-auto p-2">
-        {templatesByCategory.map((group) => (
-          <div className="mb-3" key={group.category}>
-            <div className="mb-1 flex items-center gap-2 px-2 py-1 font-medium text-muted-foreground text-xs uppercase">
-              <ChevronDown className="size-3" />
-              {group.category}
-            </div>
-            <div className="space-y-1">
-              {group.templates.map((template) => {
-                const Icon = template.icon;
-                return (
-                  <button
-                    className="flex w-full items-start gap-2 rounded-md px-2 py-2 text-left transition-colors hover:bg-muted"
-                    key={`${group.category}-${template.id}`}
-                    onClick={() => handleAddTemplate(template)}
-                    type="button"
-                  >
-                    <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                    <span className="min-w-0">
-                      <span className="block truncate font-medium text-sm">
-                        {template.label}
-                      </span>
-                      <span className="line-clamp-2 text-muted-foreground text-xs">
-                        {template.description}
-                      </span>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-    </aside>
-  );
-}
-
-type StructureTreeRow = {
-  block: WorkflowBlock;
-  children: StructureTreeRow[];
-  edge?: SchemaWorkflowEdge;
-  inferred?: boolean;
-};
-
-type SourceTrace = {
-  edges: SchemaWorkflowEdge[];
-  source: WorkflowBlock;
-  path: WorkflowBlock[];
 };
 
 type BottomPanelActions = {
@@ -385,187 +90,6 @@ type BottomPanelActions = {
   selectBlock: (blockId: string) => void;
   toggleRuntimeVisibility: (blockId: string) => void;
 };
-
-const FAMILY_ORDER: BlockFamily[] = [
-  "Output",
-  "Protected",
-  "Review / Validation",
-  "Logic",
-  "AI / Agent",
-  "Source",
-];
-
-function getBlockMap(definition: WorkflowDefinition) {
-  return new Map(definition.blocks.map((block) => [block.id, block]));
-}
-
-function getIncomingEdges(definition: WorkflowDefinition) {
-  const incoming = new Map<string, SchemaWorkflowEdge[]>();
-  for (const edge of definition.edges) {
-    const current = incoming.get(edge.targetBlockId) || [];
-    current.push(edge);
-    incoming.set(edge.targetBlockId, current);
-  }
-  return incoming;
-}
-
-function sortBlocksForWorksheet(blocks: WorkflowBlock[]) {
-  return [...blocks].sort((a, b) => {
-    const familyDelta =
-      FAMILY_ORDER.indexOf(a.family) - FAMILY_ORDER.indexOf(b.family);
-    if (familyDelta !== 0) {
-      return familyDelta;
-    }
-    return a.position.y - b.position.y || a.position.x - b.position.x;
-  });
-}
-
-function buildUpstreamRows({
-  block,
-  blockMap,
-  depth = 0,
-  incoming,
-  visited,
-}: {
-  block: WorkflowBlock;
-  blockMap: Map<string, WorkflowBlock>;
-  depth?: number;
-  incoming: Map<string, SchemaWorkflowEdge[]>;
-  visited: Set<string>;
-}): StructureTreeRow[] {
-  if (depth > 7 || visited.has(block.id)) {
-    return [];
-  }
-
-  const nextVisited = new Set(visited).add(block.id);
-  const upstream = incoming
-    .get(block.id)
-    ?.map((edge) => ({
-      edge,
-      block: blockMap.get(edge.sourceBlockId),
-    }))
-    .filter(
-      (item): item is { block: WorkflowBlock; edge: SchemaWorkflowEdge } =>
-        Boolean(item.block)
-    );
-
-  return sortBlocksForWorksheet(upstream?.map((item) => item.block) || []).map(
-    (childBlock) => {
-      const edge = upstream?.find(
-        (item) => item.block.id === childBlock.id
-      )?.edge;
-      return {
-        block: childBlock,
-        edge,
-        children:
-          childBlock.family === "Source"
-            ? []
-            : buildUpstreamRows({
-                block: childBlock,
-                blockMap,
-                depth: depth + 1,
-                incoming,
-                visited: nextVisited,
-              }),
-      };
-    }
-  );
-}
-
-function buildStructureTree(
-  definition: WorkflowDefinition
-): StructureTreeRow[] {
-  const blockMap = getBlockMap(definition);
-  const incoming = getIncomingEdges(definition);
-  const outputs = sortBlocksForWorksheet(
-    definition.blocks.filter((block) => block.family === "Output")
-  );
-  const protectedSummary = sortBlocksForWorksheet(
-    definition.blocks.filter(
-      (block) =>
-        block.family === "Protected" &&
-        (block.subtype === "Final Reviewed Amount" ||
-          block.subtype === "Protected Result")
-    )
-  );
-  let roots = outputs;
-  if (roots.length === 0) {
-    roots =
-      protectedSummary.length > 0
-        ? protectedSummary
-        : sortBlocksForWorksheet(
-            definition.blocks.filter((block) => block.family !== "Source")
-          );
-  }
-
-  return roots.map((root) => {
-    const upstreamRows = buildUpstreamRows({
-      block: root,
-      blockMap,
-      incoming,
-      visited: new Set(),
-    });
-    const protectedChildren =
-      root.family === "Output"
-        ? protectedSummary.map((block) => ({
-            block,
-            children: buildUpstreamRows({
-              block,
-              blockMap,
-              incoming,
-              visited: new Set([root.id]),
-            }),
-            inferred: true,
-          }))
-        : [];
-
-    return {
-      block: root,
-      children: [...protectedChildren, ...upstreamRows],
-    };
-  });
-}
-
-function collectSourceTraces(
-  definition: WorkflowDefinition,
-  block: WorkflowBlock
-): SourceTrace[] {
-  const blockMap = getBlockMap(definition);
-  const incoming = getIncomingEdges(definition);
-  const traces: SourceTrace[] = [];
-
-  function visit(
-    current: WorkflowBlock,
-    path: WorkflowBlock[],
-    edgePath: SchemaWorkflowEdge[]
-  ) {
-    if (current.family === "Source") {
-      traces.push({ edges: edgePath, source: current, path });
-      return;
-    }
-
-    for (const edge of incoming.get(current.id) || []) {
-      const source = blockMap.get(edge.sourceBlockId);
-      if (source && !path.some((item) => item.id === source.id)) {
-        visit(source, [...path, source], [...edgePath, edge]);
-      }
-    }
-  }
-
-  visit(block, [block], []);
-  return traces;
-}
-
-function getSelectedBlock(
-  definition: WorkflowDefinition,
-  selectedBlockId: string | null
-): WorkflowBlock | null {
-  return (
-    definition.blocks.find((block) => block.id === selectedBlockId) ||
-    definition.blocks[0] ||
-    null
-  );
-}
 
 function getBlockIcon(block: WorkflowBlock) {
   if (block.family === "Source") {
@@ -587,7 +111,7 @@ function getBlockIcon(block: WorkflowBlock) {
 }
 
 function getProtectedBlocks(definition: WorkflowDefinition) {
-  return sortBlocksForWorksheet(
+  return sortStructureBlocksForWorksheet(
     definition.blocks.filter((block) => block.family === "Protected")
   );
 }
@@ -602,12 +126,52 @@ function getBlockRuns(
   return definition.mockRuns.filter((run) => run.blockId === blockId);
 }
 
+function getSourceVersion(block: WorkflowBlock) {
+  return Number(block.config.sourceVersion || 1);
+}
+
+function wasSourceUsedInRun(blockId: string) {
+  return loadLocalRunRecords().some((record) =>
+    record.logs.some((log) => log.nodeId === blockId)
+  );
+}
+
+function getToolCountsByGroup() {
+  const uniqueTools = [
+    ...new Map(
+      Object.values(LOCAL_TOOL_REGISTRY).map((tool) => [tool.toolId, tool])
+    ).values(),
+  ];
+  const counts: Record<string, number> = {};
+  for (const tool of uniqueTools) {
+    counts[tool.toolGroup] = (counts[tool.toolGroup] || 0) + 1;
+  }
+  return counts;
+}
+
 function CompactJson({ value }: { value: unknown }) {
   return (
     <pre className="max-h-32 overflow-auto rounded border bg-background/70 p-2 text-[11px]">
       {JSON.stringify(value, null, 2)}
     </pre>
   );
+}
+
+function getConfiguredSourcePreview(block: WorkflowBlock) {
+  if (block.config.sourceKind === "keyword_rules") {
+    return block.config.keywordRules || block.config.rules || [];
+  }
+  return (
+    block.config.rows ||
+    block.config.manualRows ||
+    block.config.tableRows ||
+    block.config.sampleRows ||
+    block.source?.valuePreview
+  );
+}
+
+function getSourceOutputType(block: WorkflowBlock) {
+  return block.config.sourceKind === "keyword_rules" ? "keyword_rules" : "rows";
 }
 
 function StatusPill({
@@ -644,14 +208,14 @@ function StructureRow({
 }: {
   actions: BottomPanelActions;
   depth: number;
-  row: StructureTreeRow;
+  row: StructureViewRow;
   selectedBlockId: string | null;
 }) {
   const [open, setOpen] = useState(depth < 2);
   const Icon = getBlockIcon(row.block);
   const isSelected = selectedBlockId === row.block.id;
   const isSource = row.block.family === "Source";
-  const editable = !isSource;
+  const editable = canEditStructureRow(row);
 
   return (
     <div className={cn(depth > 0 && "border-border/60 border-l pl-3")}>
@@ -695,6 +259,18 @@ function StructureRow({
                   {formatRelationshipType(row.edge.relationshipType)}
                 </span>
               )}
+              {row.edge?.targetInputRole && (
+                <StatusPill
+                  tone={
+                    row.edge.bindingStatus === "valid" ? "success" : "warning"
+                  }
+                >
+                  {row.edge.targetInputRole}
+                </StatusPill>
+              )}
+              {isSource && (
+                <StatusPill>v{getSourceVersion(row.block)}</StatusPill>
+              )}
               {row.block.governance?.protected && (
                 <StatusPill tone="warning">governed</StatusPill>
               )}
@@ -713,6 +289,9 @@ function StructureRow({
                 <span>runtime locked</span>
               )}
               {isSource && <span>read-only evidence</span>}
+              {isSource && wasSourceUsedInRun(row.block.id) && (
+                <span>used in run</span>
+              )}
               {row.edge?.reason && <span>{row.edge.reason}</span>}
             </span>
           </button>
@@ -863,9 +442,10 @@ function StructurePreview({
   definition: WorkflowDefinition;
   selectedBlockId: string | null;
 }) {
-  const tree = useMemo(() => buildStructureTree(definition), [definition]);
+  const tree = useMemo(() => generateStructureView(definition), [definition]);
 
-  // TODO: Add drag reorder once structure parent/child semantics stabilize.
+  // Structure renders generated runtime hierarchy. Formula and code editing stay
+  // in inspector tabs; this panel only edits hierarchy for non-Source rows.
   return (
     <div className="space-y-3">
       <div className="flex items-start justify-between gap-3">
@@ -903,16 +483,28 @@ function StructurePreview({
 function SourceEvidenceCard({
   actions,
   block,
+  definition,
 }: {
   actions: BottomPanelActions;
   block: WorkflowBlock;
+  definition: WorkflowDefinition;
 }) {
+  const consumers = definition.edges
+    .filter((edge) => edge.sourceBlockId === block.id)
+    .map((edge) =>
+      definition.blocks.find((candidate) => candidate.id === edge.targetBlockId)
+    )
+    .filter((candidate): candidate is WorkflowBlock => Boolean(candidate));
+
   return (
     <div className="grid gap-3 lg:grid-cols-[1fr_1.2fr]">
       <div className="rounded-md border bg-muted/20 p-3">
         <div className="mb-2 flex items-center justify-between gap-2">
           <h3 className="font-semibold text-sm">{block.label}</h3>
-          <StatusPill>read-only</StatusPill>
+          <div className="flex gap-1">
+            <StatusPill>v{getSourceVersion(block)}</StatusPill>
+            <StatusPill>read-only</StatusPill>
+          </div>
         </div>
         <div className="mb-2 text-muted-foreground text-xs">
           Runtime config marks Source evidence as read-only.
@@ -924,6 +516,15 @@ function SourceEvidenceCard({
           </div>
           <div className="text-muted-foreground">
             Preview: {block.source?.valuePreview || block.runtime.outputKey}
+          </div>
+          <div className="text-muted-foreground">
+            Used in run: {wasSourceUsedInRun(block.id) ? "yes" : "no"}
+          </div>
+          <div className="text-muted-foreground">
+            Consumed by:{" "}
+            {consumers.length > 0
+              ? consumers.map((consumer) => consumer.label).join(", ")
+              : "none"}
           </div>
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
@@ -951,24 +552,27 @@ function SourceEvidenceCard({
         </div>
       </div>
       <div className="rounded-md border bg-muted/20 p-3">
-        <h3 className="mb-2 font-semibold text-sm">Mock Extracted Data</h3>
-        <CompactJson
-          value={{
-            extractionLogs: [
-              "Source captured locally",
-              "Locator locked as evidence",
-              "No OCR or external extraction in v1",
-            ],
-            rows: LOCAL_SAMPLE_DATASET.rows,
-            sourceDocuments: LOCAL_SAMPLE_DATASET.sourceDocuments,
-          }}
+        <DataPreviewCard
+          connectedBlockLabel={block.label}
+          direction="output"
+          fallbackPreview={getConfiguredSourcePreview(block)}
+          outputType={getSourceOutputType(block)}
+          roleId={getSourceOutputType(block)}
+          roleLabel={
+            block.config.sourceKind === "keyword_rules"
+              ? "Rule / Knowledge Source"
+              : "Evidence Source rows"
+          }
+          status={wasSourceUsedInRun(block.id) ? "ready" : "warning"}
+          statusLabel={wasSourceUsedInRun(block.id) ? "read-only" : "setup"}
+          value={getConfiguredSourcePreview(block)}
         />
       </div>
     </div>
   );
 }
 
-function TraceList({ traces }: { traces: SourceTrace[] }) {
+function TraceList({ traces }: { traces: StructureSourceTrace[] }) {
   if (traces.length === 0) {
     return (
       <div className="rounded-md border bg-muted/20 p-3 text-muted-foreground text-sm">
@@ -1028,7 +632,7 @@ function SourcesPreview({
   selectedBlock: WorkflowBlock | null;
 }) {
   if (!selectedBlock) {
-    const sources = sortBlocksForWorksheet(
+    const sources = sortStructureBlocksForWorksheet(
       definition.blocks.filter((block) => block.family === "Source")
     );
 
@@ -1043,26 +647,38 @@ function SourcesPreview({
           >
             <div className="mb-1 flex items-center justify-between gap-2">
               <span className="font-medium">{block.label}</span>
-              <StatusPill>read-only</StatusPill>
+              <div className="flex gap-1">
+                <StatusPill>v{getSourceVersion(block)}</StatusPill>
+                <StatusPill>
+                  {wasSourceUsedInRun(block.id) ? "used" : "setup"}
+                </StatusPill>
+              </div>
             </div>
             <div className="truncate text-muted-foreground text-xs">
               {block.source?.locator || block.runtime.outputKey}
             </div>
+            {block.config.sourceKind === "keyword_rules" && (
+              <div className="mt-1 text-muted-foreground text-xs">
+                Keyword rules reference evidence
+              </div>
+            )}
           </button>
         ))}
       </div>
     );
   }
 
-  const traces = collectSourceTraces(definition, selectedBlock);
-  const incoming = getIncomingEdges(definition);
-  const blockMap = getBlockMap(definition);
-  const checkedBlocks = (incoming.get(selectedBlock.id) || [])
-    .map((edge) => blockMap.get(edge.sourceBlockId))
-    .filter((block): block is WorkflowBlock => Boolean(block));
+  const traces = collectStructureSourceTraces(definition, selectedBlock);
+  const checkedBlocks = getStructureUpstreamBlocks(definition, selectedBlock);
 
   if (selectedBlock.family === "Source") {
-    return <SourceEvidenceCard actions={actions} block={selectedBlock} />;
+    return (
+      <SourceEvidenceCard
+        actions={actions}
+        block={selectedBlock}
+        definition={definition}
+      />
+    );
   }
 
   if (selectedBlock.family === "Review / Validation") {
@@ -1191,6 +807,184 @@ function SourcesPreview({
   );
 }
 
+function OutputReadinessPill({
+  outputFinality,
+  statusReady,
+}: {
+  outputFinality: string;
+  statusReady: boolean;
+}) {
+  if (outputFinality === "draft_not_final") {
+    return (
+      <span className="inline-flex items-center gap-1">
+        <AlertTriangle className="size-3" />
+        draft
+      </span>
+    );
+  }
+
+  if (statusReady) {
+    return (
+      <span className="inline-flex items-center gap-1">
+        <CheckCircle2 className="size-3" />
+        ready
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1">
+      <AlertTriangle className="size-3" />
+      missing
+    </span>
+  );
+}
+
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Output cards combine readiness, mappings, latest run payload, and local data preview.
+function OutputPreviewCard({
+  block,
+  definition,
+  outputPreviewById,
+  protectedBlocks,
+  selectedBlock,
+}: {
+  block: WorkflowBlock;
+  definition: WorkflowDefinition;
+  outputPreviewById: Map<
+    string,
+    WorkflowDefinition["outputMappingPreview"]["outputs"][number]
+  >;
+  protectedBlocks: WorkflowBlock[];
+  selectedBlock: WorkflowBlock | null;
+}) {
+  const latestOutputLog = loadLocalRunRecords()
+    .flatMap((record) => record.logs)
+    .find((log) => log.nodeId === block.id);
+  const latestOutput =
+    typeof latestOutputLog?.output === "object" &&
+    latestOutputLog.output !== null
+      ? (latestOutputLog.output as Record<string, unknown>)
+      : null;
+  const latestPayload =
+    typeof latestOutput?.output === "object" && latestOutput.output !== null
+      ? (latestOutput.output as Record<string, unknown>)
+      : null;
+  const outputFinality = String(latestPayload?.outputFinality || "");
+  const outputValue =
+    latestPayload?.canonicalJson ||
+    latestPayload?.preview ||
+    latestPayload?.protectedResult ||
+    latestPayload;
+  const preview = outputPreviewById.get(block.id);
+  const mappedEdges = definition.edges.filter(
+    (edge) =>
+      edge.targetBlockId === block.id &&
+      isOutputMappingRelationshipType(edge.relationshipType)
+  );
+  const mappedProtectedBlocks = mappedEdges
+    .filter((edge) => isGovernedOutputRelationshipType(edge.relationshipType))
+    .map((edge) =>
+      protectedBlocks.find(
+        (protectedBlock) => protectedBlock.id === edge.sourceBlockId
+      )
+    )
+    .filter((item): item is WorkflowBlock => Boolean(item));
+  const candidateLogicBlocks = mappedEdges
+    .filter((edge) => isCandidateOutputRelationshipType(edge.relationshipType))
+    .map((edge) =>
+      definition.blocks.find((item) => item.id === edge.sourceBlockId)
+    )
+    .filter((item): item is WorkflowBlock => item?.family === "Logic");
+  const missing = [
+    mappedEdges.length === 0 ? "No output mapping relationship" : "",
+    mappedProtectedBlocks.length === 0 ? "No protected values mapped" : "",
+  ].filter(Boolean);
+  const ready = missing.length === 0;
+  const statusReady = preview ? preview.readinessStatus === "ready" : ready;
+
+  return (
+    <div
+      className={cn(
+        "rounded-md border bg-muted/20 p-3",
+        selectedBlock?.id === block.id && "border-primary/40 bg-primary/5"
+      )}
+    >
+      <div className="mb-2 flex items-start justify-between gap-2">
+        <div>
+          <div className="font-medium text-sm">{block.label}</div>
+          <div className="text-muted-foreground text-xs">{block.subtype}</div>
+        </div>
+        <StatusPill tone={statusReady ? "success" : "warning"}>
+          <OutputReadinessPill
+            outputFinality={outputFinality}
+            statusReady={statusReady}
+          />
+        </StatusPill>
+      </div>
+      <div className="space-y-1 text-xs">
+        <div>Mapped protected values: {mappedProtectedBlocks.length}</div>
+        {preview && (
+          <div>
+            Published/draft preview: {preview.readinessStatus} (
+            {preview.mappedProtectedValues.length} governed,{" "}
+            {preview.candidateLogicMappings.length} candidate)
+          </div>
+        )}
+        {outputFinality === "draft_not_final" && (
+          <div className="text-amber-700 dark:text-amber-300">
+            Output preview includes results that still need review.
+          </div>
+        )}
+        {candidateLogicBlocks.length > 0 && (
+          <div>Candidate logic inputs: {candidateLogicBlocks.length}</div>
+        )}
+        <div className="line-clamp-2 text-muted-foreground">
+          {mappedProtectedBlocks
+            .slice(0, 5)
+            .map((protectedBlock) => protectedBlock.label)
+            .join(", ")}
+        </div>
+        {mappedEdges.slice(0, 3).map((edge) => (
+          <div className="text-muted-foreground" key={edge.id}>
+            {formatRelationshipType(edge.relationshipType)}: {edge.reason}
+          </div>
+        ))}
+        {preview?.governanceWarnings.map((warning) => (
+          <div className="text-amber-700 dark:text-amber-300" key={warning}>
+            {warning}
+          </div>
+        ))}
+        <div>Mock export readiness: local JSON only</div>
+        {preview?.mockPayloadPreview && (
+          <CompactJson value={preview.mockPayloadPreview} />
+        )}
+        <DataPreviewCard
+          contextData={latestPayload || undefined}
+          direction="output"
+          fallbackPreview={preview?.mockPayloadPreview}
+          outputType={
+            block.subtype === "Canonical JSON"
+              ? "canonical_json"
+              : "evidence_preview"
+          }
+          roleId={
+            block.subtype === "Canonical JSON" ? "canonical_json" : "preview"
+          }
+          roleLabel={`${block.label} latest output`}
+          status={latestPayload ? "ready" : "warning"}
+          statusLabel={latestPayload ? "latest run" : "mock preview"}
+          value={outputValue}
+        />
+        {missing.length > 0 && (
+          <div className="text-amber-700 dark:text-amber-300">
+            {missing.join(", ")}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function OutputsPreview({
   definition,
   selectedBlock,
@@ -1198,7 +992,7 @@ function OutputsPreview({
   definition: WorkflowDefinition;
   selectedBlock: WorkflowBlock | null;
 }) {
-  const outputBlocks = sortBlocksForWorksheet(
+  const outputBlocks = sortStructureBlocksForWorksheet(
     definition.blocks.filter((block) => block.family === "Output")
   );
   const protectedBlocks = getProtectedBlocks(definition);
@@ -1220,115 +1014,16 @@ function OutputsPreview({
 
   return (
     <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-      {outputBlocks.map((block) => {
-        const preview = outputPreviewById.get(block.id);
-        const mappedEdges = definition.edges.filter(
-          (edge) =>
-            edge.targetBlockId === block.id &&
-            isOutputMappingRelationshipType(edge.relationshipType)
-        );
-        const mappedProtectedBlocks = mappedEdges
-          .filter((edge) =>
-            isGovernedOutputRelationshipType(edge.relationshipType)
-          )
-          .map((edge) =>
-            protectedBlocks.find(
-              (protectedBlock) => protectedBlock.id === edge.sourceBlockId
-            )
-          )
-          .filter((item): item is WorkflowBlock => Boolean(item));
-        const candidateLogicBlocks = mappedEdges
-          .filter((edge) =>
-            isCandidateOutputRelationshipType(edge.relationshipType)
-          )
-          .map((edge) =>
-            definition.blocks.find((item) => item.id === edge.sourceBlockId)
-          )
-          .filter((item): item is WorkflowBlock => item?.family === "Logic");
-        const missing = [
-          mappedEdges.length === 0 ? "No output mapping relationship" : "",
-          mappedProtectedBlocks.length === 0
-            ? "No protected values mapped"
-            : "",
-        ].filter(Boolean);
-        const ready = missing.length === 0;
-        const statusReady = preview
-          ? preview.readinessStatus === "ready"
-          : ready;
-
-        return (
-          <div
-            className={cn(
-              "rounded-md border bg-muted/20 p-3",
-              selectedBlock?.id === block.id && "border-primary/40 bg-primary/5"
-            )}
-            key={block.id}
-          >
-            <div className="mb-2 flex items-start justify-between gap-2">
-              <div>
-                <div className="font-medium text-sm">{block.label}</div>
-                <div className="text-muted-foreground text-xs">
-                  {block.subtype}
-                </div>
-              </div>
-              <StatusPill tone={statusReady ? "success" : "warning"}>
-                {statusReady ? (
-                  <span className="inline-flex items-center gap-1">
-                    <CheckCircle2 className="size-3" />
-                    ready
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1">
-                    <AlertTriangle className="size-3" />
-                    missing
-                  </span>
-                )}
-              </StatusPill>
-            </div>
-            <div className="space-y-1 text-xs">
-              <div>Mapped protected values: {mappedProtectedBlocks.length}</div>
-              {preview && (
-                <div>
-                  Published/draft preview: {preview.readinessStatus} (
-                  {preview.mappedProtectedValues.length} governed,{" "}
-                  {preview.candidateLogicMappings.length} candidate)
-                </div>
-              )}
-              {candidateLogicBlocks.length > 0 && (
-                <div>Candidate logic inputs: {candidateLogicBlocks.length}</div>
-              )}
-              <div className="line-clamp-2 text-muted-foreground">
-                {mappedProtectedBlocks
-                  .slice(0, 5)
-                  .map((protectedBlock) => protectedBlock.label)
-                  .join(", ")}
-              </div>
-              {mappedEdges.slice(0, 3).map((edge) => (
-                <div className="text-muted-foreground" key={edge.id}>
-                  {formatRelationshipType(edge.relationshipType)}: {edge.reason}
-                </div>
-              ))}
-              {preview?.governanceWarnings.map((warning) => (
-                <div
-                  className="text-amber-700 dark:text-amber-300"
-                  key={warning}
-                >
-                  {warning}
-                </div>
-              ))}
-              <div>Mock export readiness: local JSON only</div>
-              {preview?.mockPayloadPreview && (
-                <CompactJson value={preview.mockPayloadPreview} />
-              )}
-              {missing.length > 0 && (
-                <div className="text-amber-700 dark:text-amber-300">
-                  {missing.join(", ")}
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })}
+      {outputBlocks.map((block) => (
+        <OutputPreviewCard
+          block={block}
+          definition={definition}
+          key={block.id}
+          outputPreviewById={outputPreviewById}
+          protectedBlocks={protectedBlocks}
+          selectedBlock={selectedBlock}
+        />
+      ))}
     </div>
   );
 }
@@ -1444,6 +1139,12 @@ function RunsPreview({
               },
               sampleOutput: selectedLog?.output || lastRecord?.execution,
               relationshipNotes: selectedBlockEdges.map((edge) => ({
+                binding: {
+                  label: edge.bindingLabel,
+                  sourceOutputRole: edge.sourceOutputRole,
+                  status: edge.bindingStatus,
+                  targetInputRole: edge.targetInputRole,
+                },
                 relationship: formatRelationshipType(edge.relationshipType),
                 reason: edge.reason,
                 notes: edge.notes,
@@ -1481,15 +1182,28 @@ function DebugPreview({
   const selectedEdge = definition.edges.find(
     (edge) => edge.id === selectedEdgeId
   );
+  const selectedBlock = definition.blocks.find(
+    (block) => block.id === selectedBlockId
+  );
+  const selectedTool = selectedBlock ? getToolForBlock(selectedBlock) : null;
+  const latestRun = loadLocalRunRecords()[0];
 
   return (
     <CompactJson
       value={{
         aiProposalCount: definition.aiProposals.length,
         countsByFamily,
+        edgeBindingMetadata: definition.edges.map((edge) => ({
+          bindingLabel: edge.bindingLabel,
+          bindingStatus: edge.bindingStatus,
+          id: edge.id,
+          sourceOutputRole: edge.sourceOutputRole,
+          targetInputRole: edge.targetInputRole,
+        })),
         edgeCount: definition.edges.length,
         edgeCountByStatus,
         latestPublishedVersionId: definition.latestPublishedVersionId,
+        latestWorkflowRunStatus: latestRun?.execution.status,
         mockRunCount: definition.mockRuns.length,
         outputMappingPreviewCount:
           definition.outputMappingPreview.outputs.length,
@@ -1501,14 +1215,27 @@ function DebugPreview({
         runtimeConfigId: definition.runtimeUiConfig.runtimeConfigId,
         schemaVersion: definition.schemaVersion,
         selectedBlockId,
+        selectedBlockRoles: selectedTool
+          ? {
+              inputRoles: selectedTool.inputRoles,
+              outputRoles: selectedTool.outputRoles,
+              toolGroup: selectedTool.toolGroup,
+              toolId: selectedTool.toolId,
+            }
+          : null,
         selectedEdgeId,
         selectedEdgeRelationship: selectedEdge
           ? {
+              bindingLabel: selectedEdge.bindingLabel,
+              bindingStatus: selectedEdge.bindingStatus,
               reason: selectedEdge.reason,
               relationshipType: selectedEdge.relationshipType,
+              sourceOutputRole: selectedEdge.sourceOutputRole,
               status: selectedEdge.status,
+              targetInputRole: selectedEdge.targetInputRole,
             }
           : null,
+        toolCountByToolGroup: getToolCountsByGroup(),
         workflowId: definition.id,
       }}
     />
@@ -1531,11 +1258,11 @@ function BottomPanel({
   const setSelectedEdgeId = useSetAtom(selectedEdgeAtom);
   const setActiveInspectorTab = useSetAtom(propertiesPanelActiveTabAtom);
   const addNode = useSetAtom(addNodeAtom);
+  const connectBlocks = useSetAtom(connectBlocksAtom);
   const deleteNode = useSetAtom(deleteNodeAtom);
   const updateNodeData = useSetAtom(updateNodeDataAtom);
-  const setHasUnsavedChanges = useSetAtom(hasUnsavedChangesAtom);
-  const triggerAutosave = useSetAtom(autosaveAtom);
   const [expanded, setExpanded] = useState(true);
+  const { open: openOverlay } = useOverlay();
   const leftOffset = paletteOpen && !isMobile ? "21rem" : "4.75rem";
   const rightOffset =
     isMobile || rightPanelCollapsed
@@ -1547,7 +1274,7 @@ function BottomPanel({
     edges,
     existing: loadLocalWorkflowSnapshot(),
   });
-  const selectedBlock = getSelectedBlock(definition, selectedBlockId);
+  const selectedBlock = getSelectedStructureBlock(definition, selectedBlockId);
 
   const selectBlock = (blockId: string) => {
     setSelectedBlockId(blockId);
@@ -1559,50 +1286,7 @@ function BottomPanel({
     setEdges((currentEdges) =>
       currentEdges.map((edge) => ({ ...edge, selected: false }))
     );
-  };
-
-  const addSchemaEdge = ({
-    reason,
-    relationshipType,
-    sourceBlock: sourceBlockOverride,
-    sourceBlockId,
-    targetBlock: targetBlockOverride,
-    targetBlockId,
-  }: Pick<SchemaWorkflowEdge, "sourceBlockId" | "targetBlockId"> &
-    Partial<Pick<SchemaWorkflowEdge, "reason" | "relationshipType">> & {
-      sourceBlock?: WorkflowBlock;
-      targetBlock?: WorkflowBlock;
-    }) => {
-    const sourceBlock =
-      sourceBlockOverride ||
-      nodes.find((node) => node.id === sourceBlockId)?.data.block;
-    const targetBlock =
-      targetBlockOverride ||
-      nodes.find((node) => node.id === targetBlockId)?.data.block;
-    const defaults =
-      sourceBlock && targetBlock
-        ? getWorkflowEdgeDefaults({ sourceBlock, targetBlock })
-        : null;
-    const finalRelationshipType =
-      relationshipType || defaults?.relationshipType;
-
-    if (!finalRelationshipType) {
-      toast.warning("That typed relationship is not supported in Structure.");
-      return;
-    }
-
-    const workflowEdge = createWorkflowEdgeRecord({
-      id: `edge-${sourceBlockId}-${targetBlockId}-${nanoid(6)}`,
-      sourceBlockId,
-      targetBlockId,
-      relationshipType: finalRelationshipType,
-      reason: reason || defaults?.reason || "Structure relationship created.",
-      confidence: 0.95,
-    });
-    const canvasEdge = createCanvasEdgeFromWorkflowEdge(workflowEdge);
-    setEdges((currentEdges) => [...currentEdges, canvasEdge]);
-    setHasUnsavedChanges(true);
-    triggerAutosave({ immediate: true });
+    openOverlay(ConfigurationOverlay, {}, { size: "wide" });
   };
 
   const addChildLogic = (parentId: string) => {
@@ -1634,12 +1318,9 @@ function BottomPanel({
       selected: true,
     });
     addNode(childNode);
-    addSchemaEdge({
-      sourceBlock: childBlock,
-      sourceBlockId: childBlock.id,
-      targetBlock: parentBlock,
-      targetBlockId: parentBlock.id,
-      reason: `${childBlock.label} is a child logic row for ${parentBlock.label}.`,
+    connectBlocks({
+      source: childBlock.id,
+      target: parentBlock.id,
     });
     setActiveInspectorTab("properties");
     toast.success("Child Logic added to Structure.");
@@ -1682,12 +1363,9 @@ function BottomPanel({
       }
     );
     addNode(createWorkflowNodeFromBlock(logicBlock, { selected: true }));
-    addSchemaEdge({
-      sourceBlock,
-      sourceBlockId: sourceBlock.id,
-      targetBlock: logicBlock,
-      targetBlockId: logicBlock.id,
-      reason: `${sourceBlock.label} remains immutable evidence for downstream ${variant} logic.`,
+    connectBlocks({
+      source: sourceBlock.id,
+      target: logicBlock.id,
     });
     setActiveInspectorTab("properties");
     toast.success(`${labelByVariant[variant]} created.`);
@@ -1828,10 +1506,6 @@ export function WorkflowStudioShell({
   rightPanelCollapsed,
   rightPanelWidthPercent,
 }: WorkflowStudioShellProps) {
-  const [paletteOpen, setPaletteOpen] = useState(true);
-  const [search, setSearch] = useState("");
-  const [recentIds, setRecentIds] = useState<string[]>([]);
-
   if (isMobile) {
     return (
       <BottomPanel
@@ -1844,33 +1518,11 @@ export function WorkflowStudioShell({
   }
 
   return (
-    <>
-      <LeftRail paletteOpen={paletteOpen} setPaletteOpen={setPaletteOpen} />
-      {!paletteOpen && (
-        <Button
-          className="-translate-y-1/2 pointer-events-auto absolute top-1/2 left-[4.5rem] z-20 h-12 w-7 rounded-r-full rounded-l-none border border-l-0 bg-background shadow-sm hover:bg-muted"
-          onClick={() => setPaletteOpen(true)}
-          size="icon"
-          title="Open palette"
-          variant="secondary"
-        >
-          <ChevronRight className="size-4" />
-        </Button>
-      )}
-      <PalettePanel
-        open={paletteOpen}
-        recentIds={recentIds}
-        search={search}
-        setOpen={setPaletteOpen}
-        setRecentIds={setRecentIds}
-        setSearch={setSearch}
-      />
-      <BottomPanel
-        isMobile={isMobile}
-        paletteOpen={paletteOpen}
-        rightPanelCollapsed={rightPanelCollapsed}
-        rightPanelWidthPercent={rightPanelWidthPercent}
-      />
-    </>
+    <BottomPanel
+      isMobile={isMobile}
+      paletteOpen={false}
+      rightPanelCollapsed={rightPanelCollapsed}
+      rightPanelWidthPercent={rightPanelWidthPercent}
+    />
   );
 }
