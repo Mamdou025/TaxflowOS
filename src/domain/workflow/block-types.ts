@@ -1,8 +1,9 @@
 export const PUBLIC_BLOCK_FAMILIES = [
+  "Trigger",
   "Source",
   "Logic",
   "Review / Validation",
-  "Protected",
+  "Field",
   "Output",
   "AI / Agent",
 ] as const;
@@ -12,14 +13,18 @@ export type BlockFamily = (typeof PUBLIC_BLOCK_FAMILIES)[number];
 export type WorkflowDefinitionStatus = "draft" | "published";
 
 export type FiscalStage =
+  | "trigger"
   | "source"
   | "logic"
   | "validation"
-  | "protected"
+  | "field"
   | "output"
   | "ai-agent";
 
 export type BlockSubtype =
+  | "Manual / On Demand"
+  | "Schedule / Cron"
+  | "Webhook / API Event"
   | "Manual Entry"
   | "Excel / Workbook"
   | "PDF / Document"
@@ -32,33 +37,11 @@ export type BlockSubtype =
   | "Aggregation Rules"
   | "Rollup Rules"
   | "Calculation Rules"
-  | "Formula"
-  | "Aggregation"
   | "Category Rollup Aggregator"
   | "Calculation Engine"
   | "Hierarchy Aggregator"
-  | "Transformation"
-  | "Condition"
-  | "Script"
   | "Classification / Mapping"
-  | "Excel Table Reader"
-  | "PDF Text Parser"
-  | "PDF Table Parser"
-  | "OCR Extractor"
-  | "API Response Parser"
-  | "Required Input Check"
-  | "Missing Source Check"
-  | "Unmatched Rows Check"
-  | "Low Confidence Warning"
-  | "Manual Override Review"
-  | "Approval Gate"
-  | "Output Readiness Check"
-  | "Formula Consistency Check"
-  | "Protected Input"
-  | "Protected Result"
-  | "Official Line"
-  | "Locked Rate"
-  | "Final Reviewed Amount"
+  | "Field Block"
   | "CSV Export"
   | "Excel Export"
   | "PDF Report"

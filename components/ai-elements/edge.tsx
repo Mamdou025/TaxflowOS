@@ -281,21 +281,6 @@ const Animated = ({
           strokeWidth: selected ? 3 : runVisual ? 2.5 : 2,
         }}
       />
-      {runVisual && (
-        <EdgeLabelRenderer>
-          <div
-            className={`nodrag nopan pointer-events-auto flex items-center gap-1 rounded-full border px-1.5 py-0.5 font-medium text-[10px] shadow-sm backdrop-blur ${runVisual.badgeClassName}`}
-            style={{
-              position: "absolute",
-              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY - 24}px)`,
-            }}
-            title={`Latest run: ${runVisual.label}`}
-          >
-            <RunStatusIcon status={runStatus} />
-            {runVisual.label}
-          </div>
-        </EdgeLabelRenderer>
-      )}
       {showLabel && (
         <EdgeLabelRenderer>
           <div

@@ -10,10 +10,11 @@ export type BlockCatalogItem = {
 };
 
 export const BLOCK_FAMILY_STAGE: Record<BlockFamily, FiscalStage> = {
+  Trigger: "trigger",
   Source: "source",
   Logic: "logic",
   "Review / Validation": "validation",
-  Protected: "protected",
+  Field: "field",
   Output: "output",
   "AI / Agent": "ai-agent",
 };
@@ -25,6 +26,13 @@ export const FISCAL_STAGE_OPTIONS: Array<{
   label: string;
   description: string;
 }> = [
+  {
+    id: "preset:trigger",
+    stage: "trigger",
+    family: "Trigger",
+    label: "Trigger",
+    description: "Initiates the workflow — schedule, webhook, or manual start",
+  },
   {
     id: "preset:source",
     stage: "source",
@@ -47,11 +55,11 @@ export const FISCAL_STAGE_OPTIONS: Array<{
     description: "Check whether the workflow is trustworthy",
   },
   {
-    id: "preset:protected",
-    stage: "protected",
-    family: "Protected",
-    label: "Protected",
-    description: "Governed inputs, official lines, and protected results",
+    id: "preset:field",
+    stage: "field",
+    family: "Field",
+    label: "Field",
+    description: "Display computed values and their category breakdowns in the user-facing UI",
   },
   {
     id: "preset:output",

@@ -1,29 +1,31 @@
-import {
+﻿import {
   Archive,
   BadgeCheck,
   Bot,
   Braces,
   Calculator,
   CheckCircle2,
+  Clock,
   Code2,
   Database,
   Download,
   FileJson,
-  FileLock2,
   FileSpreadsheet,
   FileText,
   GitBranch,
   Globe,
+  LayoutList,
   ListFilter,
-  LockKeyhole,
   type LucideIcon,
   PencilLine,
+  Play,
   Search,
   ShieldCheck,
   Shuffle,
   Sigma,
   Sparkles,
   TriangleAlert,
+  Webhook,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import type {
@@ -57,6 +59,13 @@ const TRAILING_TYPE_WORDS: Partial<Record<BlockSubtype, string[]>> = {
 };
 
 const FAMILY_NODE_STYLES: Record<BlockFamily, FamilyNodeStyle> = {
+  Trigger: {
+    badgeClassName: "top-1 border-orange-400/70 bg-(--node-badge-bg) text-orange-200",
+    captionClassName: "w-44",
+    contentClassName: "h-full w-full p-0",
+    nodeClassName:
+      "size-24 overflow-visible border-0 bg-transparent p-0 shadow-none",
+  },
   "AI / Agent": {
     badgeClassName: "top-1 border-fuchsia-400/70 bg-(--node-badge-bg) text-fuchsia-200",
     captionClassName: "w-44",
@@ -78,12 +87,12 @@ const FAMILY_NODE_STYLES: Record<BlockFamily, FamilyNodeStyle> = {
     nodeClassName:
       "h-28 w-24 overflow-visible rounded-md border-0 bg-transparent p-0 shadow-none",
   },
-  Protected: {
+  Field: {
     badgeClassName: "top-1 border-violet-400/70 bg-(--node-badge-bg) text-violet-200",
     captionClassName: "w-64",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
-      "h-24 w-56 overflow-visible rounded-sm border-0 bg-transparent p-0 shadow-none",
+      "h-20 w-56 overflow-visible rounded-sm border-0 bg-transparent p-0 shadow-none",
   },
   "Review / Validation": {
     badgeClassName: "top-1 border-amber-400/70 bg-(--node-badge-bg) text-amber-200",
@@ -102,6 +111,9 @@ const FAMILY_NODE_STYLES: Record<BlockFamily, FamilyNodeStyle> = {
 };
 
 function getFamilyFromRole(role: WorkflowNodeData["visualRole"]): CanvasFamily {
+  if (role === "trigger") {
+    return "Trigger";
+  }
   if (role === "source" || role === "evidence") {
     return "Source";
   }
@@ -111,8 +123,8 @@ function getFamilyFromRole(role: WorkflowNodeData["visualRole"]): CanvasFamily {
   if (role === "review" || role === "validation") {
     return "Review / Validation";
   }
-  if (role === "protected") {
-    return "Protected";
+  if (role === "protected" || role === "field") {
+    return "Field";
   }
   if (role === "output") {
     return "Output";
@@ -205,6 +217,12 @@ export function getFamilyCanvasTitle(
 
 function getSubtypeIcon(subtype: BlockSubtype | undefined): LucideIcon {
   switch (subtype) {
+    case "Manual / On Demand":
+      return Play;
+    case "Schedule / Cron":
+      return Clock;
+    case "Webhook / API Event":
+      return Webhook;
     case "Manual Entry":
       return PencilLine;
     case "Excel / Workbook":
@@ -253,23 +271,8 @@ function getSubtypeIcon(subtype: BlockSubtype | undefined): LucideIcon {
       return Code2;
     case "Classification / Mapping":
       return ListFilter;
-    case "Required Input Check":
-    case "Output Readiness Check":
-      return CheckCircle2;
-    case "Missing Source Check":
-    case "Unmatched Rows Check":
-    case "Low Confidence Warning":
-      return TriangleAlert;
-    case "Manual Override Review":
-    case "Approval Gate":
-      return ShieldCheck;
-    case "Protected Input":
-    case "Locked Rate":
-      return LockKeyhole;
-    case "Protected Result":
-    case "Official Line":
-    case "Final Reviewed Amount":
-      return FileLock2;
+    case "Field Block":
+      return LayoutList;
     case "CSV Export":
       return Download;
     case "Evidence Pack":
@@ -308,6 +311,29 @@ export function FamilyNodeShape({
 }) {
   const family = resolveCanvasFamily(data);
   const icon = getIconForBlock(data.block, fallback);
+
+  if (family === "Trigger") {
+    return (
+      <div
+        className="pointer-events-none relative flex size-24 items-center justify-center"
+        style={{
+          filter:
+            "drop-shadow(0 0 6px rgba(251,146,60,0.35)) drop-shadow(0 6px 14px rgba(234,88,12,0.55))",
+        }}
+      >
+        <div
+          className="absolute inset-0 border-2 border-orange-400/80 bg-(--node-trigger-bg,oklch(0.22 0.06 45))"
+          style={{ clipPath: "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)" }}
+        />
+        <div
+          className="absolute inset-[18%] border border-orange-300/25"
+          style={{ clipPath: "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)" }}
+        />
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 h-1 w-8 rounded-full bg-orange-300/70" />
+        <div className="relative z-10 text-orange-200">{icon}</div>
+      </div>
+    );
+  }
 
   if (family === "Source") {
     return (
@@ -357,15 +383,15 @@ export function FamilyNodeShape({
     );
   }
 
-  if (family === "Protected") {
+  if (family === "Field") {
     return (
-      <div className="pointer-events-none relative flex h-16 w-52 items-center justify-center rounded-sm border-2 border-violet-400/75 bg-(--node-protected-bg) text-violet-200 shadow-[0_0_0_1px_rgba(167,139,250,0.18),0_12px_24px_-16px_rgba(139,92,246,0.75)]">
-        <div className="absolute inset-y-0 left-0 flex w-9 items-center justify-center border-violet-300/30 border-r bg-violet-300/10">
-          <LockKeyhole className="size-4" />
+      <div className="pointer-events-none relative flex h-20 w-56 items-center justify-center rounded-md border-2 border-violet-400/60 bg-(--node-protected-bg) text-violet-200 shadow-[0_0_0_1px_rgba(167,139,250,0.15),0_12px_24px_-16px_rgba(139,92,246,0.65)]">
+        <div className="absolute inset-y-3 left-3 flex flex-col justify-between">
+          <div className="h-px w-5 rounded-full bg-violet-300/50" />
+          <div className="h-px w-4 rounded-full bg-violet-300/35" />
+          <div className="h-px w-5 rounded-full bg-violet-300/50" />
         </div>
-        <div className="absolute top-2 right-2 rounded-full border border-violet-300/40 px-1.5 py-0.5 font-semibold text-[9px] uppercase">
-          locked
-        </div>
+        <div className="absolute inset-2 rounded border border-violet-300/10" />
         <div className="relative z-10">{icon}</div>
       </div>
     );

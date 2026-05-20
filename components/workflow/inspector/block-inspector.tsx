@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   Bot,
@@ -7,7 +7,7 @@ import {
   FileLock2,
   FileText,
   GitBranch,
-  LockKeyhole,
+  LayoutList,
   Play,
   Plus,
   ShieldCheck,
@@ -545,10 +545,9 @@ function getRunSummaryRows({
       { label: "Warnings", value: Array.isArray(aggregationSummary.warnings) ? aggregationSummary.warnings.length : 0 },
     ];
   }
-  if (block.family === "Protected") {
+  if (block.family === "Field") {
     return [
       { label: "Status", value: result?.status || "not-run" },
-      { label: "Result", value: protectedResult.name ? `${protectedResult.name} = ${protectedResult.value}` : "-" },
     ];
   }
   return [
@@ -1517,40 +1516,27 @@ function ConfigureSection({
     );
   }
 
-  if (block.family === "Protected") {
+  if (block.family === "Field") {
+    const fields = Array.isArray(config.fields) ? (config.fields as { key: string; label: string }[]) : [];
     return (
-      <div className="space-y-3 rounded-md border border-violet-500/30 bg-violet-500/10 p-3">
-        <div className="flex items-center gap-2 font-medium text-sm text-violet-700 dark:text-violet-300">
-          <LockKeyhole className="size-4" />
-          Governed protected field
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 text-sm text-violet-400">
+          <LayoutList className="size-4" />
+          <span className="font-medium">Displayed fields</span>
         </div>
-        <div className="grid gap-2.5 sm:grid-cols-2">
-          <Field disabled label="Runtime locked" value={String(block.governance?.lockedInRuntime ?? true)} />
-          <Field disabled label="Governed field type" value={block.governance?.protectedKind || block.subtype} />
-          <Field
-            disabled={protectedFieldsDisabled}
-            label="Current value / summary"
-            onChange={(value) => setConfigValue("currentValue", value)}
-            value={getString(config.currentValue || block.runtime.outputKey)}
-          />
-        </div>
-        {protectedUnlocked ? (
-          <Field
-            disabled={disabled}
-            label="Unlock / edit intent"
-            onChange={(value) => setGovernanceValue("editIntent", value)}
-            value={getString(config.protectedEditIntent || block.governance?.editIntent)}
-          />
+        {fields.length === 0 ? (
+          <p className="text-muted-foreground text-xs">
+            Connect an upstream block (Calculation Engine, Category Rollup, etc.) to display its computed values here.
+          </p>
         ) : (
-          <Button
-            disabled={disabled}
-            onClick={() => setGovernanceValue("editIntent", `Draft edit unlocked ${new Date().toISOString()}`)}
-            size="sm"
-            type="button"
-            variant="secondary"
-          >
-            Unlock for draft edit
-          </Button>
+          <div className="space-y-1">
+            {fields.map((f) => (
+              <div key={f.key} className="flex items-center justify-between rounded border px-2 py-1.5 text-sm">
+                <span className="font-medium">{f.label || f.key}</span>
+                <span className="text-muted-foreground text-xs">{f.key}</span>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     );
@@ -1634,10 +1620,6 @@ export function BlockInspector({
 
   const config = draftData.config || {};
   const sourceEvidence = Boolean(block.source?.treatedAsEvidence && block.source.immutable);
-  const protectedBlock = block.family === "Protected";
-  const protectedUnlocked = Boolean(config.protectedEditIntent || block.governance?.editIntent);
-  const protectedFieldsDisabled =
-    disabled || (protectedBlock && block.governance?.requiresUnlockToEdit && !protectedUnlocked);
   const upstreamBlocks = edges
     .filter((edge) => edge.target === block.id)
     .map((edge) => nodes.find((node) => node.id === edge.source)?.data.block)
@@ -1710,7 +1692,7 @@ export function BlockInspector({
     "Source": <FileText className="size-3.5" />,
     "Logic": <GitBranch className="size-3.5" />,
     "Review / Validation": <ShieldCheck className="size-3.5" />,
-    "Protected": <LockKeyhole className="size-3.5" />,
+    "Field": <LayoutList className="size-3.5" />,
     "Output": <FileLock2 className="size-3.5" />,
     "AI / Agent": <Bot className="size-3.5" />,
   }[block.family];
@@ -1759,8 +1741,8 @@ export function BlockInspector({
           onCreateSourceForInput={onCreateSourceForInput}
           onCreateSourceLogic={onCreateSourceLogic}
           onCreateSourceVersion={onCreateSourceVersion}
-          protectedFieldsDisabled={protectedFieldsDisabled ?? false}
-          protectedUnlocked={protectedUnlocked}
+          protectedFieldsDisabled={false}
+          protectedUnlocked={false}
           ruleKnowledgeSource={ruleKnowledgeSource}
           selectedToolOutput={selectedToolOutput}
           setConfigValue={setConfigValue}

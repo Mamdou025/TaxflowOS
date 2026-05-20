@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ChevronDown, ChevronRight, Copy, Maximize2, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -191,10 +191,10 @@ function getConfiguredPreviewValue(block: WorkflowBlock, roleId?: string) {
         : config.calculation_rules,
     keyword_rules: () => getConfiguredRules(config),
     raw_rows: () => getConfiguredRawRows(config),
-    rollup_rules: () =>
-      Array.isArray(config.rollupRules)
-        ? config.rollupRules
-        : config.rollup_rules,
+    rollup_rules: () => {
+      const v = config.rollupRules ?? config.rollup_rules;
+      return Array.isArray(v) ? v : getConfiguredAggregationRules(config);
+    },
     rule_metadata: () => getConfiguredRuleMetadata(block, config),
     rule_version: () => getConfiguredRuleVersion(config),
     selected_range: () => getConfiguredSelectedRange(config),
@@ -310,6 +310,7 @@ function getFlowKind({
     { inputs: string; outputs: string }
   > = {
     "AI / Agent": { inputs: "context data", outputs: "proposal" },
+    Field: { inputs: "computed values", outputs: "field values" },
     Logic: { inputs: "data", outputs: "derived data" },
     Output: { inputs: "handoff data", outputs: "deliverable" },
     Protected: { inputs: "approved data", outputs: "governed data" },
@@ -320,7 +321,7 @@ function getFlowKind({
     Source: { inputs: "setup", outputs: "immutable data" },
   };
 
-  return labelsByFamily[block.family][side];
+  return (labelsByFamily[block.family] ?? { inputs: "data", outputs: "data" })[side];
 }
 
 function getLatestToolOutput({
@@ -497,7 +498,7 @@ function getNamedProtectedInputValue({
   value: unknown;
 }) {
   if (
-    block.family !== "Protected" ||
+    block.family !== "Field" ||
     !["approved_value", "candidate_value"].includes(roleId)
   ) {
     return value;
@@ -1088,7 +1089,18 @@ function createInputGroups({
       });
     }
 
-    const value = combineDataFlowValues(values);
+    // When no edge is connected, check if the block self-configures this role via its own config.
+    const configFallbackValue =
+      boundEdges.length === 0
+        ? getConfiguredPreviewValue(block, role.id)
+        : undefined;
+    const hasSelfConfig = Array.isArray(configFallbackValue)
+      ? configFallbackValue.length > 0
+      : hasDataValue(configFallbackValue);
+
+    const value = values.length > 0
+      ? combineDataFlowValues(values)
+      : configFallbackValue;
     const contextData = getCombinedContextData(contextValues);
     const outputType =
       boundEdges.length === 1
@@ -1103,7 +1115,7 @@ function createInputGroups({
       outputType,
       value,
     });
-    const missing = role.required && boundEdges.length === 0;
+    const missing = role.required && boundEdges.length === 0 && !hasSelfConfig;
 
     return {
       acceptedTypes,
@@ -1114,7 +1126,9 @@ function createInputGroups({
       count: summary.count,
       description: missing
         ? `Missing required input. Suggested: ${acceptedTypes.join(", ")}`
-        : role.description,
+        : hasSelfConfig && boundEdges.length === 0
+          ? "Configured directly in this block."
+          : role.description,
       hasData: hasDataValue(value),
       id: `input-${role.id}`,
       outputType,
@@ -1122,10 +1136,12 @@ function createInputGroups({
       roleId: role.id,
       roleLabel: role.label,
       sourceOutputRole: sourceOutputRoles.join(", "),
-      status: missing ? "missing" : status,
+      status: missing ? "missing" : hasSelfConfig && boundEdges.length === 0 ? "ready" : status,
       statusLabel: missing
         ? "missing"
-        : getFlowKind({ block, roleId: role.id, side: "inputs" }),
+        : hasSelfConfig && boundEdges.length === 0
+          ? "inline"
+          : getFlowKind({ block, roleId: role.id, side: "inputs" }),
       value,
       ...(missing && onCreateSourceForInput
         ? { createSourceInputRole: role.id }

@@ -77,9 +77,7 @@ function getEdgeRunStatus({
 
   if (
     sourceResult.status === "error" ||
-    sourceResult.status === "skipped" ||
-    targetResult.status === "error" ||
-    targetResult.status === "skipped"
+    targetResult.status === "error"
   ) {
     return "error";
   }
@@ -87,8 +85,10 @@ function getEdgeRunStatus({
   if (
     sourceResult.status === "needs_review" ||
     sourceResult.status === "warning" ||
+    sourceResult.status === "skipped" ||
     targetResult.status === "needs_review" ||
-    targetResult.status === "warning"
+    targetResult.status === "warning" ||
+    targetResult.status === "skipped"
   ) {
     return "warning";
   }
@@ -427,20 +427,14 @@ export function runLocalWorkflowTools({
         )
       )
       .filter((candidate): candidate is WorkflowBlock => Boolean(candidate));
-    const missingInputs =
-      block.family !== "Source" &&
-      incomingEdges.length > 0 &&
-      upstreamResults.length === 0;
     const resultStartedAt = new Date(
       startedAt.getTime() + index * 80
     ).toISOString();
     const result =
-      !tool || missingInputs
+      !tool
         ? createSkippedResult({
             block,
-            message: tool
-              ? "Required upstream tool results were not available."
-              : `No local deterministic tool is registered for ${block.family} / ${block.subtype}.`,
+            message: `No local deterministic tool is registered for ${block.family} / ${block.subtype}.`,
             runId: executionId,
             startedAt: resultStartedAt,
             toolId,

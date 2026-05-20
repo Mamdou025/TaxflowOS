@@ -8,6 +8,8 @@ import {
   Copy,
   Download,
   Globe,
+  Layers,
+  LayoutTemplate,
   Loader2,
   Lock,
   Play,
@@ -29,7 +31,9 @@ import { ButtonGroup } from "@/components/ui/button-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -40,6 +44,8 @@ import {
   createDefaultWorkflowBlockCandidate,
   createExpandedMappingPipelineDemoWorkflow,
   createFapiSampleWorkflow,
+  createFapiTemplateWorkflow,
+  createRoullementFiscalWorkflow,
   createSingleItemPipelineDemoWorkflow,
   createWorkflowBlockFromCatalog,
   createWorkflowEvent,
@@ -104,6 +110,8 @@ import {
   type WorkflowAuditEventType,
 } from "@/src/audit/workflow-events";
 import { Panel } from "../ai-elements/panel";
+import { WorksheetPageMenu } from "./worksheet-page-menu";
+import { WorksheetPageView } from "./worksheet-page-view";
 import { DeployButton } from "../deploy-button";
 import { GitHubStarsButton } from "../github-stars-button";
 import { ConfigurationOverlay } from "../overlays/configuration-overlay";
@@ -1532,11 +1540,11 @@ function useWorkflowActions(state: ReturnType<typeof useWorkflowState>) {
 
       if (!targetNode) {
         const demo = {
-          ...createWorkingSourceRulesDemoWorkflow(),
+          ...createFapiTemplateWorkflow(),
           events: [
             createWorkflowEvent({
               message:
-                "Local studio opened the Working Excel Source + Rulebooks Demo for workbook upload.",
+                "Local studio loaded the FAPI Calculation Template for workbook upload.",
               type: "reset_sample",
             }),
           ],
@@ -1661,17 +1669,16 @@ function useWorkflowActions(state: ReturnType<typeof useWorkflowState>) {
     },
     handleLoadWorkingSourceDemo: () => {
       openOverlay(ConfirmOverlay, {
-        confirmLabel: "Open Working Excel Source + Rulebooks Demo",
+        confirmLabel: "Open FAPI Calculation Template",
         confirmVariant: "default" as const,
         message:
-          "Open the Working Excel Source + Rulebooks Demo? Current local nodes and connections will be replaced.",
+          "Open the FAPI Calculation Template? Current local nodes and connections will be replaced.",
         onConfirm: () => {
           const demo = {
-            ...createWorkingSourceRulesDemoWorkflow(),
+            ...createFapiTemplateWorkflow(),
             events: [
               createWorkflowEvent({
-                message:
-                  "Local studio loaded the Working Excel Source + Rulebooks Demo.",
+                message: "Local studio loaded the FAPI Calculation Template.",
                 type: "reset_sample",
               }),
             ],
@@ -1685,9 +1692,40 @@ function useWorkflowActions(state: ReturnType<typeof useWorkflowState>) {
           setExecutionLogs({});
           saveWorkflowDefinitionSnapshot(demo);
           setHasUnsavedChanges(false);
-          toast.success("Working Excel Source + Rulebooks Demo loaded");
+          toast.success("FAPI Calculation Template loaded");
         },
-        title: "Open Working Excel Source + Rulebooks Demo",
+        title: "Open FAPI Calculation Template",
+      });
+    },
+    handleLoadRoullementFiscalTemplate: () => {
+      openOverlay(ConfirmOverlay, {
+        confirmLabel: "Ouvrir le gabarit",
+        confirmVariant: "default" as const,
+        message:
+          "Ouvrir le gabarit Roulement fiscal (art. 85 LIR) ? Les nœuds et connexions locaux seront remplacés.",
+        onConfirm: () => {
+          const demo = {
+            ...createRoullementFiscalWorkflow(),
+            events: [
+              createWorkflowEvent({
+                message:
+                  "Studio local — gabarit Roulement fiscal art. 85 chargé.",
+                type: "reset_sample",
+              }),
+            ],
+          };
+          const canvas = workflowDefinitionToCanvas(demo);
+          setNodes(canvas.nodes);
+          setEdges(canvas.edges);
+          setCurrentWorkflowName(demo.name);
+          setSelectedNodeId(canvas.nodes[0]?.id ?? null);
+          setSelectedExecutionId(null);
+          setExecutionLogs({});
+          saveWorkflowDefinitionSnapshot(demo);
+          setHasUnsavedChanges(false);
+          toast.success("Roulement fiscal — art. 85 LIR chargé");
+        },
+        title: "Gabarit Roulement fiscal",
       });
     },
     handleResetSample: () => {
@@ -2308,6 +2346,8 @@ function LocalStudioTopBar({
   const rightPanelWidth = useAtomValue(rightPanelWidthAtom);
   const inputRef = useRef<HTMLInputElement>(null);
   const excelInputRef = useRef<HTMLInputElement>(null);
+  const [pageMenuOpen, setPageMenuOpen] = useState(false);
+  const [pageViewOpen, setPageViewOpen] = useState(false);
   const [publishStatus, setPublishStatus] = useState<LocalPublishStatus>(() => {
     if (typeof window === "undefined") {
       return "draft";
@@ -2507,7 +2547,7 @@ function LocalStudioTopBar({
 
   return (
     <div
-      className="pointer-events-auto absolute top-3 left-[4.75rem] z-30"
+      className="pointer-events-auto absolute top-3 left-[4.75rem] z-30 flex flex-col gap-0"
       style={{
         right: rightPanelWidth ? `calc(${rightPanelWidth} + 1rem)` : "1rem",
       }}
@@ -2705,18 +2745,60 @@ function LocalStudioTopBar({
             <Globe className="mr-2 size-4" />
             Publish
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                disabled={state.isGenerating}
+                size="sm"
+                variant="secondary"
+              >
+                <LayoutTemplate className="mr-2 size-4" />
+                Templates
+                <ChevronDown className="ml-1.5 size-3 opacity-60" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuLabel className="text-xs text-muted-foreground">
+                Starter templates
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem
+                  className="flex flex-col items-start gap-0.5 py-2"
+                  onClick={() => {
+                    actions.handleLoadWorkingSourceDemo();
+                    updatePublishStatus("draft");
+                    setLatestPublishedVersion(null);
+                  }}
+                >
+                  <span className="font-medium text-sm">FAPI Calculation</span>
+                  <span className="text-muted-foreground text-xs">
+                    Trial balance → classify → rollup → compute → display
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="flex flex-col items-start gap-0.5 py-2"
+                  onClick={() => {
+                    actions.handleLoadRoullementFiscalTemplate();
+                    updatePublishStatus("draft");
+                    setLatestPublishedVersion(null);
+                  }}
+                >
+                  <span className="font-medium text-sm">Roulement fiscal</span>
+                  <span className="text-muted-foreground text-xs">
+                    Biens → classification → PBR → élection art. 85 → T2057
+                  </span>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
-            disabled={state.isGenerating}
-            onClick={() => {
-              actions.handleLoadWorkingSourceDemo();
-              updatePublishStatus("draft");
-              setLatestPublishedVersion(null);
-            }}
+            onClick={() => setPageMenuOpen((v) => !v)}
             size="sm"
-            variant="secondary"
+            variant={pageMenuOpen ? "secondary" : "ghost"}
           >
-            <Upload className="mr-2 size-4" />
-            Open Working Excel Source + Rulebooks Demo
+            <Layers className="mr-2 size-4" />
+            Pages
           </Button>
           <Button
             disabled={
@@ -2775,6 +2857,21 @@ function LocalStudioTopBar({
           </DropdownMenu>
         </div>
       </div>
+
+      {/* worksheet page menu — drops below the toolbar */}
+      {pageMenuOpen && (
+        <div className="absolute left-0 top-[calc(100%+0.5rem)] z-40">
+          <WorksheetPageMenu
+            onClose={() => setPageMenuOpen(false)}
+            onOpenPage={() => setPageViewOpen(true)}
+          />
+        </div>
+      )}
+
+      {/* full-screen worksheet page view */}
+      {pageViewOpen && (
+        <WorksheetPageView onClose={() => setPageViewOpen(false)} />
+      )}
     </div>
   );
 }

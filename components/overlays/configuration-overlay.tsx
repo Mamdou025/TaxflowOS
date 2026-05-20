@@ -2,6 +2,8 @@
 
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
+  ChevronDown,
+  ChevronRight,
   Code,
   Copy,
   Eraser,
@@ -25,6 +27,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EdgeInspector } from "@/components/workflow/edge-inspector";
 import { CalculationEngineModeSection } from "@/components/workflow/logic-viewers/calculation-engine-panel";
+import { CalculationEngineEditor } from "@/components/workflow/logic-viewers/calculation-engine-editor";
+import { AggregatorWorkspace } from "@/components/workflow/logic-viewers/aggregator-workspace";
+import { CalculationEngineWorkspace } from "@/components/workflow/logic-viewers/calculation-engine-workspace";
+import { FieldBlockWorkspace } from "@/components/workflow/logic-viewers/field-block-workspace";
+import { KeywordMapperWorkspace } from "@/components/workflow/logic-viewers/keyword-mapper-workspace";
 import { HierarchyAggregatorPanel } from "@/components/workflow/logic-viewers/hierarchy-aggregator-panel";
 import { api } from "@/lib/api-client";
 import { integrationsAtom } from "@/lib/integrations-store";
@@ -90,7 +97,10 @@ import { TriggerConfig } from "../workflow/config/trigger-config";
 import { generateBlockCodePreview } from "../workflow/inspector/code-preview/generate-code-preview";
 import { SourceSetupPanel } from "../workflow/inspector/source-setup-panel";
 import { ExcelWorkbookViewer } from "../workflow/source-viewers/excel-workbook-viewer";
+import { KeywordRulebookEditor } from "../workflow/source-viewers/keyword-rulebook-editor";
+import { RollupRulebookEditor } from "../workflow/source-viewers/rollup-rulebook-editor";
 import {
+  getKeywordRules,
   KeywordMapperRulesPanel,
   NEW_AGGREGATION_RULE_NODE_ID,
   NEW_CALCULATION_RULE_ID,
@@ -190,6 +200,16 @@ function isAggregationRuleKnowledgeSource(block?: WorkflowBlock | null) {
   );
 }
 
+function isRollupRuleKnowledgeSource(block?: WorkflowBlock | null) {
+  const sourceKind = String(block?.config.sourceKind || "").toLowerCase();
+  return (
+    block?.family === "Source" &&
+    (block.subtype === "Rollup Rules" || sourceKind.includes("rollup_rules")) &&
+    block.subtype !== "Aggregation Rules" &&
+    !sourceKind.includes("aggregation_rules")
+  );
+}
+
 function isCalculationRuleKnowledgeSource(block?: WorkflowBlock | null) {
   const sourceKind = String(block?.config.sourceKind || "").toLowerCase();
   return (
@@ -233,6 +253,23 @@ function usesFocusedLogicWorkspace(block?: WorkflowBlock | null) {
     isCategoryRollupAggregatorBlock(block) ||
     isCalculationEngineBlock(block) ||
     isHierarchyAggregatorBlock(block)
+  );
+}
+
+function isAggregatorLogicBlock(block?: WorkflowBlock | null) {
+  return isHierarchyAggregatorBlock(block) || isCategoryRollupAggregatorBlock(block);
+}
+
+function hasConnectedInputRole(
+  block: WorkflowBlock,
+  edges: WorkflowEdge[],
+  role: string
+) {
+  return edges.some(
+    (edge) =>
+      edge.target === block.id &&
+      (edge.data?.targetInputRole === role ||
+        edge.data?.workflowEdge?.targetInputRole === role)
   );
 }
 
@@ -376,6 +413,136 @@ function getPatchedWorkflowBlock({
 }
 
 type ConfigurationOverlayProps = OverlayComponentProps;
+
+function WorkspaceRunsTab({
+  activeTab,
+  isRefreshing,
+  onDeleteAll,
+  onRefresh,
+  refreshRunsRef,
+}: {
+  activeTab: string;
+  isRefreshing: boolean;
+  onDeleteAll: () => void;
+  onRefresh: () => void;
+  refreshRunsRef: React.RefObject<(() => Promise<void>) | null>;
+}) {
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex shrink-0 items-center gap-2 border-b px-4 py-2">
+        <Button
+          className="text-muted-foreground"
+          disabled={isRefreshing}
+          onClick={onRefresh}
+          size="sm"
+          variant="ghost"
+        >
+          <RefreshCw className={`mr-2 size-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          Refresh
+        </Button>
+        <Button
+          className="text-muted-foreground"
+          onClick={onDeleteAll}
+          size="sm"
+          variant="ghost"
+        >
+          <Eraser className="mr-2 size-4" />
+          Clear All
+        </Button>
+      </div>
+      <div className="flex-1 overflow-y-auto p-4">
+        <WorkflowRuns isActive={activeTab === "runs"} onRefreshRef={refreshRunsRef} />
+      </div>
+    </div>
+  );
+}
+
+function CollapsibleDataFlow({
+  block,
+  edges,
+  lastRun,
+  nodes,
+  onExecuteStep,
+}: {
+  block: WorkflowBlock;
+  edges: WorkflowEdge[];
+  lastRun?: LocalRunRecord;
+  nodes: WorkflowNode[];
+  onExecuteStep?: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [panelHeight, setPanelHeight] = useState(260);
+
+  const onResizePointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      const startY = e.clientY;
+      const startHeight = panelHeight;
+      const onMove = (ev: PointerEvent) => {
+        const delta = startY - ev.clientY;
+        setPanelHeight(Math.max(160, Math.min(600, startHeight + delta)));
+      };
+      const onUp = () => {
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+      };
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+    },
+    [panelHeight]
+  );
+
+  return (
+    <div className="shrink-0 border-t bg-background">
+      <button
+        className="flex w-full items-center gap-2 px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"
+        onClick={() => setOpen((v) => !v)}
+        type="button"
+      >
+        {open ? (
+          <ChevronDown className="size-3 shrink-0" />
+        ) : (
+          <ChevronRight className="size-3 shrink-0" />
+        )}
+        <span className="font-medium">Connected I/O</span>
+        <span className="ml-auto text-[10px] opacity-60">
+          {open ? "collapse" : "expand"}
+        </span>
+      </button>
+      {open && (
+        <>
+          {/* Drag handle — drag up to make panel taller */}
+          <div
+            className="h-1.5 w-full cursor-ns-resize bg-border/40 transition-colors hover:bg-primary/30 active:bg-primary/40"
+            onPointerDown={onResizePointerDown}
+            title="Drag to resize"
+          />
+          <div className="flex border-t" style={{ height: panelHeight }}>
+            <div className="flex-1 overflow-y-auto border-r">
+              <BlockDataFlowColumn
+                block={block}
+                edges={edges}
+                lastRun={lastRun}
+                nodes={nodes}
+                side="inputs"
+              />
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <BlockDataFlowColumn
+                block={block}
+                edges={edges}
+                lastRun={lastRun}
+                nodes={nodes}
+                onExecuteStep={onExecuteStep}
+                side="outputs"
+              />
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex UI logic with multiple conditions
 export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
@@ -1042,7 +1209,7 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
   // If an edge is selected, show edge properties
   if (selectedEdge && !selectedNode) {
     return (
-      <div className="flex h-full max-h-[80vh] flex-col">
+      <div className="flex h-[85vh] flex-col">
         <SmartOverlayHeader overlayId={overlayId} title="Relationship" />
 
         <div className="flex-1 space-y-4 overflow-y-auto px-6 pt-4 pb-6">
@@ -1073,7 +1240,7 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
         : "properties";
 
     return (
-      <div className="flex h-full max-h-[80vh] flex-col">
+      <div className="flex h-[85vh] flex-col">
         <SmartOverlayHeader overlayId={overlayId} title={getTabTitle()} />
 
         <div className="flex-1 overflow-y-auto">
@@ -1240,6 +1407,9 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
     isAggregationRuleKnowledgeSource(selectedBlock);
   const selectedBlockIsCalculationRuleSource =
     isCalculationRuleKnowledgeSource(selectedBlock);
+  const selectedBlockIsRollupRuleSource =
+    isRollupRuleKnowledgeSource(selectedBlock);
+
   const selectedExcelSourceHasEvidence = Boolean(
     selectedBlockIsExcelSource &&
       selectedBlock &&
@@ -1382,7 +1552,7 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
   })();
 
   return (
-    <div className="flex h-full max-h-[86vh] flex-col">
+    <div className="flex h-[85vh] flex-col">
       {/* Header with current tab name */}
       <SmartOverlayHeader
         overlayId={overlayId}
@@ -1390,38 +1560,137 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
       />
 
       {/* Content based on active tab */}
-      <div
-        className={
-          showDataFlowWorkspace
-            ? "grid min-h-0 flex-1"
-            : "flex-1 overflow-y-auto"
-        }
-        ref={showDataFlowWorkspace ? workspaceGridRef : undefined}
-        style={
-          showDataFlowWorkspace
-            ? {
-                gridTemplateColumns:
-                  getWorkspaceGridColumns(workspacePaneWidths),
-              }
-            : undefined
-        }
-      >
-        {leftWorkspacePane}
-        {showDataFlowWorkspace && selectedBlock && (
-          <WorkspaceResizeHandle
-            label="Resize Inputs and Logic panes"
-            onPointerDown={(event) =>
-              handleWorkspaceResizeStart("input-center", event)
-            }
+      {selectedBlockIsRuleSource &&
+      !selectedBlockIsAggregationRuleSource &&
+      !selectedBlockIsCalculationRuleSource &&
+      selectedBlock ? (
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          {activeTab === "runs" && isOwner ? (
+            <WorkspaceRunsTab
+              activeTab={activeTab}
+              isRefreshing={isRefreshing}
+              onDeleteAll={handleDeleteAllRuns}
+              onRefresh={handleRefreshRuns}
+              refreshRunsRef={refreshRunsRef}
+            />
+          ) : (
+            <div className="min-h-0 flex-1 overflow-hidden">
+              <KeywordRulebookEditor
+                disabled={isGenerating || !isOwner || sourceLocked}
+                fill
+                onRulesChange={(rules) =>
+                  handlePatchSelectedBlockConfig({ keywordRules: rules })
+                }
+                onSelectedRuleIdChange={setSelectedRulebookItemId}
+                rules={getKeywordRules(selectedBlock.config || {})}
+                selectedRuleId={selectedRulebookItemId}
+                sourceVersion={sourceVersion}
+              />
+            </div>
+          )}
+        </div>
+      ) : selectedBlockIsRollupRuleSource && selectedBlock ? (
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <RollupRulebookEditor
+            config={selectedBlock.config || {}}
+            disabled={isGenerating || !isOwner || sourceLocked}
+            fill
+            onConfigPatch={handlePatchSelectedBlockConfig}
           />
-        )}
-        <div
-          className={
-            showDataFlowWorkspace
-              ? "min-h-0 overflow-y-auto border-border/30 border-x"
-              : undefined
-          }
-        >
+        </div>
+      ) : selectedBlockIsCalculationRuleSource && selectedBlock ? (
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <CalculationEngineEditor
+            block={selectedBlock}
+            createTermRequest={calculationTermCreateRequest}
+            disabled={isGenerating || !isOwner || sourceLocked}
+            edges={edges}
+            fill
+            insertRequest={calculationInsertRequest}
+            lastRunOutput={latestRunOutputsByBlockId}
+            nodes={nodes}
+            onSelectedTermIdChange={setSelectedCalculationTermId}
+            onUpdateConfig={(key, value) =>
+              handlePatchSelectedBlockConfig({ [key]: value })
+            }
+            selectedTermId={selectedCalculationTermId}
+          />
+        </div>
+      ) : selectedBlock && isCalculationEngineBlock(selectedBlock) ? (
+        // Calculation / Formula group
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          {activeTab === "runs" && isOwner ? (
+            <WorkspaceRunsTab
+              activeTab={activeTab}
+              isRefreshing={isRefreshing}
+              onDeleteAll={handleDeleteAllRuns}
+              onRefresh={handleRefreshRuns}
+              refreshRunsRef={refreshRunsRef}
+            />
+          ) : (
+            <CalculationEngineWorkspace
+              block={selectedBlock}
+              createTermRequest={calculationTermCreateRequest}
+              disabled={isGenerating || !isOwner || sourceLocked}
+              edges={edges}
+              insertRequest={calculationInsertRequest}
+              lastRun={latestSelectedBlockRun}
+              lastRunOutput={latestRunOutputsByBlockId}
+              nodes={nodes}
+              onConfigPatch={handlePatchSelectedBlockConfig}
+              onExecuteStep={handleExecuteSelectedStep}
+              onSelectedTermIdChange={setSelectedCalculationTermId}
+              selectedTermId={selectedCalculationTermId}
+            />
+          )}
+        </div>
+      ) : selectedBlock && selectedBlock.family === "Field" ? (
+        <FieldBlockWorkspace
+          block={selectedBlock}
+          edges={edges}
+          lastRun={latestSelectedBlockRun}
+          nodes={nodes}
+          onExecuteStep={handleExecuteSelectedStep}
+        />
+      ) : selectedBlock && (isAggregatorLogicBlock(selectedBlock) || isKeywordMapperBlock(selectedBlock)) ? (
+        // Rollup / Aggregation group — inline rules save to block config; connected rulebook overrides
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          {activeTab === "runs" && isOwner ? (
+            <WorkspaceRunsTab
+              activeTab={activeTab}
+              isRefreshing={isRefreshing}
+              onDeleteAll={handleDeleteAllRuns}
+              onRefresh={handleRefreshRuns}
+              refreshRunsRef={refreshRunsRef}
+            />
+          ) : isKeywordMapperBlock(selectedBlock) ? (
+            <KeywordMapperWorkspace
+              block={selectedBlock}
+              disabled={isGenerating || !isOwner}
+              edges={edges}
+              lastRun={latestSelectedBlockRun}
+              nodes={nodes}
+              onConfigPatch={handlePatchSelectedBlockConfig}
+              onExecuteStep={handleExecuteSelectedStep}
+              onSelectedRuleIdChange={setSelectedRulebookItemId}
+              selectedRuleId={selectedRulebookItemId}
+              sourceVersion={sourceVersion}
+            />
+          ) : (
+            <AggregatorWorkspace
+              block={selectedBlock}
+              disabled={isGenerating || !isOwner || sourceLocked}
+              edges={edges}
+              lastRun={latestSelectedBlockRun}
+              nodes={nodes}
+              onConfigPatch={handlePatchSelectedBlockConfig}
+              onExecuteStep={handleExecuteSelectedStep}
+            />
+          )}
+        </div>
+      ) : (
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-y-auto">
           {activeTab === "properties" && (
             <div className="space-y-4 px-6 pt-4 pb-6">
               {/* Action selection */}
@@ -1704,26 +1973,18 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
               </div>
             </div>
           )}
+          </div>
+          {selectedBlock && (
+            <CollapsibleDataFlow
+              block={selectedBlock}
+              edges={edges}
+              lastRun={latestSelectedBlockRun}
+              nodes={nodes}
+              onExecuteStep={handleExecuteSelectedStep}
+            />
+          )}
         </div>
-        {showDataFlowWorkspace && selectedBlock && (
-          <WorkspaceResizeHandle
-            label="Resize Logic and Outputs panes"
-            onPointerDown={(event) =>
-              handleWorkspaceResizeStart("center-output", event)
-            }
-          />
-        )}
-        {showDataFlowWorkspace && selectedBlock && (
-          <BlockDataFlowColumn
-            block={selectedBlock}
-            edges={edges}
-            lastRun={latestSelectedBlockRun}
-            nodes={nodes}
-            onExecuteStep={handleExecuteSelectedStep}
-            side="outputs"
-          />
-        )}
-      </div>
+      )}
 
       {/* Bottom tab navigation */}
       <div className="flex shrink-0 items-center justify-around border-t bg-background pb-safe">

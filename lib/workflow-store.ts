@@ -29,6 +29,7 @@ export type WorkflowNodeData = {
   config?: Record<string, unknown>;
   visualLevel?: "L1" | "L2" | "L3";
   visualRole?:
+    | "trigger"
     | "stage"
     | "step"
     | "calculation"
@@ -38,6 +39,7 @@ export type WorkflowNodeData = {
     | "evidence"
     | "logic"
     | "protected"
+    | "field"
     | "output";
   status?: "idle" | "running" | "success" | "error";
   block?: WorkflowBlock;

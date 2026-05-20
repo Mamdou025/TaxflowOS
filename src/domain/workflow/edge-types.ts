@@ -32,7 +32,8 @@ export type WorkflowRelationshipType =
   | "proposes"
   | "suggests_mapping"
   | "suggests_formula"
-  | "suggests_workflow_change";
+  | "suggests_workflow_change"
+  | "initiates";
 
 export type WorkflowEdgeHistoryEntry = {
   id: string;
@@ -78,6 +79,7 @@ export const WORKFLOW_RELATIONSHIP_TYPES = [
   "suggests_mapping",
   "suggests_formula",
   "suggests_workflow_change",
+  "initiates",
 ] as const satisfies readonly WorkflowRelationshipType[];
 
 export const EDGE_STATUS_VALUES = [

@@ -35,9 +35,11 @@ function getMappedRows(context: ToolExecutionContext) {
 }
 
 function getRollupRules(context: ToolExecutionContext) {
-  return getRoleInputs(context, "rollup_rules").flatMap((input) =>
+  const fromUpstream = getRoleInputs(context, "rollup_rules").flatMap((input) =>
     collectRollupRulesFromBackendInput(input)
   );
+  if (fromUpstream.length > 0) return fromUpstream;
+  return collectRollupRulesFromBackendInput(context.config);
 }
 
 function sumRows(rows: HierarchyMappedRow[]) {

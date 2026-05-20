@@ -45,9 +45,11 @@ function getRows(context: ToolExecutionContext): ManualTableRow[] {
 }
 
 function getRules(context: ToolExecutionContext): KeywordRule[] {
-  return getRoleInputs(context, "keyword_rules").flatMap((input) =>
+  const fromUpstream = getRoleInputs(context, "keyword_rules").flatMap((input) =>
     collectRulesFromBackendInput(input)
   );
+  if (fromUpstream.length > 0) return fromUpstream;
+  return collectRulesFromBackendInput(context.config);
 }
 
 function normalize(value: string) {

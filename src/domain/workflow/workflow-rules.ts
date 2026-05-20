@@ -15,6 +15,13 @@ export type BlockFamilyRule = {
 };
 
 export const BLOCK_FAMILY_RULES: Record<BlockFamily, BlockFamilyRule> = {
+  Trigger: {
+    family: "Trigger",
+    responsibility:
+      "Initiates the workflow via schedule, webhook, or manual start.",
+    mustNot:
+      "Trigger blocks do not process, transform, or store data — they only fire the workflow.",
+  },
   Source: {
     family: "Source",
     responsibility: "Immutable truth or reference objects.",
@@ -33,11 +40,11 @@ export const BLOCK_FAMILY_RULES: Record<BlockFamily, BlockFamilyRule> = {
     mustNot:
       "Review blocks do not mutate evidence or perform primary calculations.",
   },
-  Protected: {
-    family: "Protected",
-    responsibility: "Represents governed inputs and governed final results.",
+  Field: {
+    family: "Field",
+    responsibility: "Displays computed values and category breakdowns in the user-facing UI.",
     mustNot:
-      "Protected blocks do not discover evidence or silently change without explicit governance metadata.",
+      "Field blocks do not compute or transform data — they only display results from upstream blocks.",
   },
   Output: {
     family: "Output",
@@ -106,6 +113,10 @@ export const RELATIONSHIP_TYPES_BY_FAMILY_PAIR: RelationshipTypesByFamilyPair =
     Source: {
       "AI / Agent": AI_CONTEXT_RELATIONSHIP_TYPES,
       Logic: ["provides_data_to", "extracted_into", "referenced_by"],
+    },
+    Trigger: {
+      Source: ["initiates", "provides_data_to"],
+      Logic: ["initiates", "provides_data_to"],
     },
   };
 

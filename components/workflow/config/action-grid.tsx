@@ -8,10 +8,11 @@ import {
   EyeOff,
   FileText,
   Grid3X3,
+  LayoutList,
   List,
-  LockKeyhole,
   MoreHorizontal,
   PackageCheck,
+  Play,
   Search,
   Settings,
   ShieldCheck,
@@ -200,6 +201,9 @@ function GroupIcon({
   if (group.category === "System") {
     return <Settings className="size-4" />;
   }
+  if (group.category === "Trigger") {
+    return <Play className="size-4" />;
+  }
   if (group.category === "Source") {
     return <FileText className="size-4" />;
   }
@@ -209,8 +213,8 @@ function GroupIcon({
   if (group.category === "Review / Validation") {
     return <ShieldCheck className="size-4" />;
   }
-  if (group.category === "Protected") {
-    return <LockKeyhole className="size-4" />;
+  if (group.category === "Field") {
+    return <LayoutList className="size-4" />;
   }
   if (group.category === "Output") {
     return <Upload className="size-4" />;
@@ -228,6 +232,12 @@ function ActionIcon({
   action: ActionType;
   className?: string;
 }) {
+  if (action.category === "Review / Validation") {
+    return <ShieldCheck className={cn(className, "text-amber-500")} />;
+  }
+  if (action.id.startsWith("trigger:")) {
+    return <Play className={cn(className, "text-orange-500")} />;
+  }
   if (action.id.startsWith("source:")) {
     return <FileText className={cn(className, "text-sky-500")} />;
   }
@@ -237,8 +247,8 @@ function ActionIcon({
   if (action.id.startsWith("review:")) {
     return <ShieldCheck className={cn(className, "text-amber-500")} />;
   }
-  if (action.id.startsWith("protected:")) {
-    return <LockKeyhole className={cn(className, "text-violet-500")} />;
+  if (action.id.startsWith("field:")) {
+    return <LayoutList className={cn(className, "text-violet-500")} />;
   }
   if (action.id.startsWith("output:")) {
     return <Upload className={cn(className, "text-indigo-500")} />;

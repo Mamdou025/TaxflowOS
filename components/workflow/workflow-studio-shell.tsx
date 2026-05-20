@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
@@ -14,7 +14,7 @@ import {
   FileText,
   GitBranch,
   ListTree,
-  LockKeyhole,
+  LayoutList,
   Plus,
   ShieldCheck,
   Trash2,
@@ -101,8 +101,8 @@ function getBlockIcon(block: WorkflowBlock) {
   if (block.family === "Review / Validation") {
     return ShieldCheck;
   }
-  if (block.family === "Protected") {
-    return LockKeyhole;
+  if (block.family === "Field") {
+    return LayoutList;
   }
   if (block.family === "AI / Agent") {
     return Bot;
@@ -112,7 +112,7 @@ function getBlockIcon(block: WorkflowBlock) {
 
 function getProtectedBlocks(definition: WorkflowDefinition) {
   return sortStructureBlocksForWorksheet(
-    definition.blocks.filter((block) => block.family === "Protected")
+    definition.blocks.filter((block) => block.family === "Field")
   );
 }
 
@@ -271,9 +271,6 @@ function StructureRow({
               {isSource && (
                 <StatusPill>v{getSourceVersion(row.block)}</StatusPill>
               )}
-              {row.block.governance?.protected && (
-                <StatusPill tone="warning">governed</StatusPill>
-              )}
               {row.block.runtime.visible ? (
                 <StatusPill tone="success">runtime</StatusPill>
               ) : (
@@ -282,12 +279,6 @@ function StructureRow({
             </span>
             <span className="mt-0.5 flex items-center gap-2 text-muted-foreground text-xs">
               {row.block.family} / {row.block.subtype}
-              {row.block.governance?.requiresUnlockToEdit && (
-                <span>explicit edit intent</span>
-              )}
-              {row.block.governance?.lockedInRuntime && (
-                <span>runtime locked</span>
-              )}
               {isSource && <span>read-only evidence</span>}
               {isSource && wasSourceUsedInRun(row.block.id) && (
                 <span>used in run</span>
@@ -318,26 +309,6 @@ function StructureRow({
               <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-amber-700 text-xs dark:text-amber-300">
                 Source rows are read-only. Create downstream Logic to correct or
                 reinterpret evidence.
-              </div>
-            )}
-            {row.block.governance && (
-              <div className="flex items-center gap-2 rounded-md border bg-background/70 px-2 py-1 text-xs">
-                <LockKeyhole className="size-3.5 text-muted-foreground" />
-                <span>
-                  Draft editable:{" "}
-                  {row.block.governance.requiresUnlockToEdit
-                    ? "unlock intent required"
-                    : "yes"}
-                </span>
-                <span className="text-muted-foreground">
-                  Runtime:{" "}
-                  {row.block.governance.lockedInRuntime ? "locked" : "editable"}
-                </span>
-                {row.block.governance.editIntent && (
-                  <span className="text-muted-foreground">
-                    Intent: {row.block.governance.editIntent}
-                  </span>
-                )}
               </div>
             )}
             <Button
@@ -458,7 +429,7 @@ function StructurePreview({
             Structured from typed blocks and schema edges. Reorder is
             intentionally light in v1.
           </p>
-          <p className="text-muted-foreground text-xs">
+          <p className="text-muted-foreground text-xs" suppressHydrationWarning>
             Runtime config: {definition.runtimeUiConfig.runtimeConfigId} -
             generated {definition.runtimeUiConfig.generatedAt}
           </p>
@@ -748,7 +719,7 @@ function SourcesPreview({
       .map((edge) =>
         definition.blocks.find((block) => block.id === edge.sourceBlockId)
       )
-      .filter((block): block is WorkflowBlock => block?.family === "Protected");
+      .filter((block): block is WorkflowBlock => block?.family === "Field");
     const candidateLogicBlocks = outputRelationshipEdges
       .filter((edge) =>
         isCandidateOutputRelationshipType(edge.relationshipType)

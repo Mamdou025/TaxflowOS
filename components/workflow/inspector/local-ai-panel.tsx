@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
@@ -164,7 +164,7 @@ function applyGeneratedFieldToBlock({
           ...block.config,
           formula: generated.value,
           protectedEditIntent:
-            block.family === "Protected"
+            block.family === "Field"
               ? block.config.protectedEditIntent ||
                 `AI proposal approved ${now}`
               : block.config.protectedEditIntent,

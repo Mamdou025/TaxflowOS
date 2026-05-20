@@ -1,13 +1,13 @@
-"use client";
+﻿"use client";
 
 import {
   FileText,
-  LockKeyhole,
+  LayoutList,
+  Play,
   Scale,
   ShieldCheck,
   Workflow,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -32,14 +32,17 @@ type FiscalBlockConfigProps = {
 };
 
 function StageIcon({ stage }: { stage: FiscalStage }) {
+  if (stage === "trigger") {
+    return <Play className="size-4 text-orange-500" />;
+  }
   if (stage === "source") {
     return <FileText className="size-4 text-sky-500" />;
   }
   if (stage === "logic") {
     return <Workflow className="size-4 text-emerald-500" />;
   }
-  if (stage === "protected") {
-    return <LockKeyhole className="size-4 text-violet-500" />;
+  if (stage === "field") {
+    return <LayoutList className="size-4 text-violet-500" />;
   }
   if (stage === "output") {
     return <Scale className="size-4 text-indigo-500" />;
@@ -61,13 +64,7 @@ export function FiscalBlockConfig({
   const blockFamily = config.blockFamily as string | undefined;
   const isSourceEvidence =
     blockFamily === "Source" || stage === "source" || visualRole === "source";
-  const isProtectedBlock =
-    blockFamily === "Protected" ||
-    stage === "protected" ||
-    visualRole === "protected";
-  const protectedEditIntent = config.protectedEditIntent as string | undefined;
-  const protectedNeedsUnlock = isProtectedBlock && !protectedEditIntent;
-  const fieldsDisabled = disabled || isSourceEvidence || protectedNeedsUnlock;
+  const fieldsDisabled = disabled || isSourceEvidence;
 
   const handleStageChange = (value: string) => {
     const nextStage = value as FiscalStage;
@@ -101,49 +98,6 @@ export function FiscalBlockConfig({
           </SelectContent>
         </Select>
       </div>
-
-      {isProtectedBlock && (
-        <div className="rounded-md border border-violet-500/30 bg-violet-500/10 p-3 text-sm">
-          <div className="font-medium text-violet-700 dark:text-violet-300">
-            Governed protected block
-          </div>
-          <p className="mt-1 text-muted-foreground">
-            Builder drafts can edit protected values after explicit unlock
-            intent. Generated runtime UI remains locked.
-          </p>
-          {protectedNeedsUnlock ? (
-            <Button
-              className="mt-3"
-              disabled={disabled}
-              onClick={() =>
-                onUpdateConfig(
-                  "protectedEditIntent",
-                  `Builder edit intent ${new Date().toISOString()}`
-                )
-              }
-              size="sm"
-              type="button"
-              variant="secondary"
-            >
-              Unlock governed edit
-            </Button>
-          ) : (
-            <div className="mt-3 space-y-2">
-              <Label className="ml-1" htmlFor="protectedEditIntent">
-                Unlock Intent
-              </Label>
-              <Input
-                disabled={disabled}
-                id="protectedEditIntent"
-                onChange={(event) =>
-                  onUpdateConfig("protectedEditIntent", event.target.value)
-                }
-                value={protectedEditIntent || ""}
-              />
-            </div>
-          )}
-        </div>
-      )}
 
       {config.sourceLocator ? (
         <div className="space-y-2">

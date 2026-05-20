@@ -758,7 +758,7 @@ function parseKeywordRules(value: unknown): KeywordRule[] {
 }
 
 function collectKeywordRules(context: ToolExecutionContext): KeywordRule[] {
-  return context.upstreamResults.flatMap((result) => {
+  const fromUpstream = context.upstreamResults.flatMap((result) => {
     if (!Array.isArray(result.output.keywordRules)) {
       return [];
     }
@@ -785,6 +785,14 @@ function collectKeywordRules(context: ToolExecutionContext): KeywordRule[] {
         : result.sourceTrace.filter((trace) => trace.rowId === rule.ruleId),
     }));
   });
+
+  if (fromUpstream.length > 0) return fromUpstream;
+
+  if (Array.isArray(context.config.keywordRules) && context.config.keywordRules.length > 0) {
+    return parseKeywordRules(context.config.keywordRules);
+  }
+
+  return [];
 }
 
 type KeywordMapperConflict = {
@@ -5129,6 +5137,69 @@ const localTools: ToolDefinition[] = [
     toolGroup: "output",
     toolId: "output.evidence_pack_preview",
   },
+  {
+    defaultConfig: {},
+    description: "Displays computed values sourced from upstream logic blocks.",
+    displayName: "Field Block",
+    execute: (context) => {
+      const computedValues: Record<string, unknown> = {};
+      for (const result of context.upstreamResults) {
+        const output = asRecord(result.output) ?? {};
+        const namedValues = asRecord(output.namedValues ?? output.calculatedResults) ?? {};
+        for (const [k, v] of Object.entries(namedValues)) {
+          computedValues[k] = v;
+        }
+      }
+      return completeResult({
+        context,
+        evidenceRefs: collectEvidence(context),
+        logs: [
+          makeLog({
+            blockId: context.block.id,
+            level: "info",
+            message: `Field block displaying ${Object.keys(computedValues).length} computed value(s).`,
+          }),
+        ],
+        output: { computedValues },
+        sourceTrace: collectSourceTrace(context),
+        status: "success",
+        warnings: [],
+      });
+    },
+    family: "Field",
+    inputRoles: [
+      {
+        acceptedFamilies: ["Logic", "Field"],
+        acceptedOutputTypes: [
+          "named_values",
+          "calculated_results",
+          "rollup_totals",
+          "final_totals",
+          "computed_values",
+        ],
+        allowMultiple: true,
+        description: "Computed values produced by an upstream logic block.",
+        id: "computed_values",
+        label: "Computed values",
+        required: false,
+      },
+    ],
+    outputRoles: [
+      {
+        canRouteToFamilies: ["Output"],
+        description: "Computed field values passed downstream.",
+        id: "computed_values",
+        label: "Computed values",
+        outputKey: "computedValues",
+        outputType: "computed_values",
+      },
+    ],
+    outputSchema: getToolOutputSchema([{ key: "computedValues", type: "object" }]),
+    runMode: "local_mock",
+    subtype: "Field Block",
+    toolGroup: "field",
+    toolId: "field.field_block",
+  },
 ];
 
 const BACKEND_ADAPTED_TOOL_IDS = [
@@ -5793,6 +5864,7 @@ function getSourceToolId(block: WorkflowBlock) {
 const TOOL_RESOLVERS_BY_FAMILY: Partial<
   Record<BlockFamily, (block: WorkflowBlock) => string>
 > = {
+  Field: () => "field.field_block",
   Logic: (block) =>
     LOGIC_TOOL_BY_SUBTYPE[block.subtype] || "logic.transformation",
   Output: (block) =>
