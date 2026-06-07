@@ -12,6 +12,8 @@ import {
   LayoutTemplate,
   Loader2,
   Lock,
+  Map,
+  Maximize2,
   Play,
   Plus,
   Redo2,
@@ -35,6 +37,10 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { api } from "@/lib/api-client";
@@ -91,6 +97,7 @@ import {
   selectedEdgeAtom,
   selectedExecutionIdAtom,
   selectedNodeAtom,
+  showMinimapAtom,
   triggerExecuteAtom,
   undoAtom,
   updateNodeDataAtom,
@@ -927,8 +934,6 @@ function useWorkflowHandlers({
       return;
     }
 
-    // Switch to Runs tab when starting a test run
-    setActiveTab("runs");
     const useLocalToolRunner =
       isLocalWorkflowId(currentWorkflowId) || isLocalToolWorkflow(nodes);
 
@@ -2275,7 +2280,7 @@ function WorkflowMenuComponent({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex h-9 max-w-[160px] items-center overflow-hidden rounded-md border bg-secondary text-secondary-foreground sm:max-w-none">
+      <div className="neu-surface flex h-9 max-w-[160px] items-center overflow-hidden rounded-md sm:max-w-none">
         <DropdownMenu onOpenChange={(open) => open && actions.loadWorkflows()}>
           <DropdownMenuTrigger className="flex h-full cursor-pointer items-center gap-2 px-3 font-medium text-sm transition-all hover:bg-black/5 dark:hover:bg-white/5">
             <WorkflowIcon className="size-4 shrink-0" />
@@ -2342,8 +2347,9 @@ function LocalStudioTopBar({
   actions: ReturnType<typeof useWorkflowActions>;
 }) {
   const { open: openOverlay } = useOverlay();
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, fitView } = useReactFlow();
   const rightPanelWidth = useAtomValue(rightPanelWidthAtom);
+  const [showMinimap, setShowMinimap] = useAtom(showMinimapAtom);
   const inputRef = useRef<HTMLInputElement>(null);
   const excelInputRef = useRef<HTMLInputElement>(null);
   const [pageMenuOpen, setPageMenuOpen] = useState(false);
@@ -2362,6 +2368,9 @@ function LocalStudioTopBar({
     number | null
   >(() => loadLocalWorkflowSnapshot()?.publishedVersion?.versionNumber ?? null);
   const graphInitializedRef = useRef(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameInputValue, setNameInputValue] = useState("");
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   const updatePublishStatus = useCallback((status: LocalPublishStatus) => {
     setPublishStatus(status);
@@ -2394,6 +2403,14 @@ function LocalStudioTopBar({
     setPublishStatus(snapshot.status === "published" ? "published" : "draft");
     setLatestPublishedVersion(snapshot.publishedVersion?.versionNumber ?? null);
   }, [state.hasUnsavedChanges]);
+
+  const handleNameCommit = useCallback(() => {
+    const trimmed = nameInputValue.trim();
+    if (trimmed && trimmed !== state.workflowName) {
+      state.setCurrentWorkflowName(trimmed);
+    }
+    setIsEditingName(false);
+  }, [nameInputValue, state]);
 
   const getCanvasCenterPosition = () => {
     const flowWrapper = document.querySelector(".react-flow");
@@ -2547,112 +2564,302 @@ function LocalStudioTopBar({
 
   return (
     <div
-      className="pointer-events-auto absolute top-3 left-[4.75rem] z-30 flex flex-col gap-0"
+      className="pointer-events-auto absolute top-3 left-19 z-30 flex justify-center"
       style={{
         right: rightPanelWidth ? `calc(${rightPanelWidth} + 1rem)` : "1rem",
       }}
     >
-      <div className="flex min-h-12 items-center justify-between gap-3 rounded-md border bg-background/95 px-3 py-2 shadow-sm backdrop-blur">
-        <div className="flex min-w-0 items-center gap-3">
-          <WorkflowIcon className="size-5 shrink-0" />
-          <div className="min-w-0">
-            <div className="truncate font-semibold text-sm">
-              {state.workflowName || "Fiscal Workflow Studio"}
-            </div>
-            <div className="text-muted-foreground text-xs">Workflow Studio</div>
-          </div>
-          <span
-            className={`inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 font-medium text-xs ${
-              isPublished
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
-            }`}
-          >
-            {statusLabel}
-          </span>
-          {latestPublishedVersion && (
-            <span className="hidden shrink-0 rounded-full border px-2 py-0.5 text-muted-foreground text-xs xl:inline-flex">
-              v{latestPublishedVersion}
-            </span>
-          )}
-        </div>
+      {/* hidden file inputs — outside bar so they don't affect layout */}
+      <input
+        accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+        className="hidden"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) {
+            actions.handleUploadExcelSource(file).catch((error) => {
+              toast.error(
+                error instanceof Error
+                  ? error.message
+                  : "Failed to upload Excel workbook"
+              );
+            });
+            updatePublishStatus("draft");
+            setLatestPublishedVersion(null);
+          }
+          event.target.value = "";
+        }}
+        ref={excelInputRef}
+        type="file"
+      />
+      <input
+        accept="application/json,.json"
+        className="hidden"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) {
+            actions
+              .handleImportWorkflow(file)
+              .then((snapshot) => {
+                updatePublishStatus(snapshot.status);
+                setLatestPublishedVersion(
+                  snapshot.publishedVersion?.versionNumber ?? null
+                );
+              })
+              .catch((error) => {
+                toast.error(
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to import workflow JSON"
+                );
+              });
+          }
+          event.target.value = "";
+        }}
+        ref={inputRef}
+        type="file"
+      />
 
-        <div className="flex shrink-0 items-center gap-2">
-          <Button
-            disabled={state.isGenerating}
-            onClick={actions.handleClearWorkflow}
-            size="sm"
-            variant="secondary"
-          >
-            New Workflow
-          </Button>
+      {/* relative wrapper: anchors the page-menu dropdown */}
+      <div className="relative w-[72%] min-w-[620px]">
+
+        {/* ── Floating command bar ── */}
+        <div className="neu-surface flex h-11 w-full items-center gap-0.5 rounded-xl px-2">
+
+          {/* ── Identity ── */}
+          <div className="flex shrink-0 items-center gap-1.5 pr-1">
+            <WorkflowIcon className="size-4 shrink-0 text-(--neu-text) opacity-70" />
+            {isEditingName ? (
+              <input
+                ref={nameInputRef}
+                autoFocus
+                className="w-36 rounded bg-transparent px-1 text-sm font-semibold text-(--neu-text) outline-none ring-1 ring-(--neu-text)/25"
+                maxLength={60}
+                onBlur={handleNameCommit}
+                onChange={(e) => setNameInputValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleNameCommit();
+                  if (e.key === "Escape") setIsEditingName(false);
+                }}
+                value={nameInputValue}
+              />
+            ) : (
+              <button
+                className="max-w-40 truncate rounded px-1 py-0.5 text-left text-sm font-semibold text-(--neu-text) transition-opacity hover:opacity-60"
+                onClick={() => {
+                  setNameInputValue(state.workflowName || "");
+                  setIsEditingName(true);
+                }}
+                title="Click to rename"
+              >
+                {state.workflowName || "Workflow Studio"}
+              </button>
+            )}
+            <button
+              className={`inline-flex shrink-0 cursor-pointer items-center rounded px-1.5 py-0.5 font-medium text-[10px] transition-opacity hover:opacity-75 disabled:cursor-not-allowed disabled:opacity-50 ${
+                isPublished
+                  ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                  : "bg-amber-500/15 text-amber-700 dark:text-amber-300"
+              }`}
+              disabled={state.isGenerating || state.isSaving}
+              onClick={handlePublish}
+              title={isPublished ? "Republish" : "Click to publish"}
+            >
+              {statusLabel}
+            </button>
+          </div>
+
+          <div className="mx-1 h-4 w-px shrink-0 bg-(--neu-text)/15" />
+
+          {/* ── File ── */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
+                className="neu-action gap-1 px-2.5 text-(--neu-text)"
                 disabled={state.isGenerating}
                 size="sm"
-                variant="secondary"
+                variant="ghost"
               >
-                <Plus className="mr-2 size-4" />
-                Add Source
+                File
+                <ChevronDown className="size-3 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => handleAddCatalogSource("source:excel-workbook")}
-              >
-                Uploaded Workbook
+            <DropdownMenuContent align="start" className="w-52">
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="gap-2">
+                  <LayoutTemplate className="size-4" />
+                  New from template
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-60">
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">
+                    Starter templates
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="flex flex-col items-start gap-0.5 py-2"
+                    onClick={() => {
+                      actions.handleLoadWorkingSourceDemo();
+                      updatePublishStatus("draft");
+                      setLatestPublishedVersion(null);
+                    }}
+                  >
+                    <span className="text-sm font-medium">FAPI Calculation</span>
+                    <span className="text-xs text-muted-foreground">
+                      Trial balance → classify → rollup → compute → display
+                    </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="flex flex-col items-start gap-0.5 py-2"
+                    onClick={() => {
+                      actions.handleLoadRoullementFiscalTemplate();
+                      updatePublishStatus("draft");
+                      setLatestPublishedVersion(null);
+                    }}
+                  >
+                    <span className="text-sm font-medium">Roulement fiscal</span>
+                    <span className="text-xs text-muted-foreground">
+                      Biens → classification → PBR → élection art. 85 → T2057
+                    </span>
+                  </DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuItem onClick={actions.handleClearWorkflow}>
+                New blank workflow
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => handleAddCatalogSource("source:currency-rate")}
+                disabled={state.isGenerating}
+                onClick={() => inputRef.current?.click()}
               >
-                Bank of Canada FX Rate
+                <Upload className="size-4" />
+                Import JSON
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={
+                  state.isDownloading ||
+                  state.nodes.length === 0 ||
+                  state.isGenerating ||
+                  !state.currentWorkflowId
+                }
+                onClick={actions.handleDownload}
+              >
+                {state.isDownloading ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Download className="size-4" />
+                )}
+                Export JSON
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                disabled={state.isGenerating || state.isSaving}
+                onClick={handlePublish}
+              >
+                <Globe
+                  className={
+                    isPublished
+                      ? "size-4 text-emerald-600 dark:text-emerald-400"
+                      : "size-4"
+                  }
+                />
+                {isPublished ? "Published" : "Publish"}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                disabled={state.isGenerating}
+                onClick={actions.handleDeleteWorkflow}
+                variant="destructive"
+              >
+                <Trash2 className="size-4" />
+                Delete workflow
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button
-            disabled={state.isGenerating}
-            onClick={() => excelInputRef.current?.click()}
-            size="sm"
-            variant="secondary"
-          >
-            <Upload className="mr-2 size-4" />
-            Upload Excel
-          </Button>
-          <input
-            accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-            className="hidden"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) {
-                actions.handleUploadExcelSource(file).catch((error) => {
-                  toast.error(
-                    error instanceof Error
-                      ? error.message
-                      : "Failed to upload Excel workbook"
-                  );
-                });
-                updatePublishStatus("draft");
-                setLatestPublishedVersion(null);
-              }
-              event.target.value = "";
-            }}
-            ref={excelInputRef}
-            type="file"
-          />
+
+          {/* ── Edit ── */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
+                className="neu-action gap-1 px-2.5 text-(--neu-text)"
                 disabled={state.isGenerating}
                 size="sm"
-                variant="secondary"
+                variant="ghost"
               >
-                <Plus className="mr-2 size-4" />
-                Add Rulebook
+                Edit
+                <ChevronDown className="size-3 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem
+                disabled={!state.canUndo}
+                onClick={() => state.undo()}
+              >
+                <Undo2 className="size-4" />
+                Undo
+                <DropdownMenuShortcut>Ctrl+Z</DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!state.canRedo}
+                onClick={() => state.redo()}
+              >
+                <Redo2 className="size-4" />
+                Redo
+                <DropdownMenuShortcut>Ctrl+Y</DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={actions.handleDuplicate}>
+                <Copy className="size-4" />
+                Duplicate workflow
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={actions.handleClearWorkflow}
+                variant="destructive"
+              >
+                <RotateCcw className="size-4" />
+                Clear canvas
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* ── Add ── */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                className="neu-action gap-1 px-2.5 text-(--neu-text)"
+                disabled={state.isGenerating}
+                size="sm"
+                variant="ghost"
+              >
+                <Plus className="size-3.5" />
+                Add
+                <ChevronDown className="size-3 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-52">
+              <DropdownMenuLabel className="text-xs text-muted-foreground">
+                Sources
+              </DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => handleAddCatalogSource("source:excel-workbook")}
+              >
+                Workbook Source
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleAddCatalogSource("source:currency-rate")}
+              >
+                FX Rate Source
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={state.isGenerating}
+                onClick={() => excelInputRef.current?.click()}
+              >
+                <Upload className="size-4" />
+                Upload Excel file…
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-xs text-muted-foreground">
+                Rulebooks
+              </DropdownMenuLabel>
               <DropdownMenuItem
                 onClick={() => handleAddCatalogSource("source:keyword-rules")}
               >
@@ -2667,164 +2874,54 @@ function LocalStudioTopBar({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* push right-side controls to the end */}
+          <div className="flex-1" />
+
+          {/* ── Pages ── */}
           <Button
-            disabled={
-              !state.currentWorkflowId || state.isGenerating || state.isSaving
-            }
-            onClick={actions.handleSave}
+            className="neu-action px-2 text-(--neu-text)"
+            onClick={() => setPageMenuOpen((v) => !v)}
             size="sm"
-            variant="secondary"
+            title="Pages"
+            variant="ghost"
           >
-            {state.isSaving ? (
-              <Loader2 className="mr-2 size-4 animate-spin" />
-            ) : (
-              <Save className="mr-2 size-4" />
-            )}
-            Save
+            <Layers
+              className={`size-4 transition-opacity ${pageMenuOpen ? "opacity-100" : "opacity-40"}`}
+            />
           </Button>
-          <Button
-            disabled={
-              state.isDownloading ||
-              state.nodes.length === 0 ||
-              state.isGenerating ||
-              !state.currentWorkflowId
-            }
-            onClick={actions.handleDownload}
-            size="sm"
-            variant="secondary"
-          >
-            {state.isDownloading ? (
-              <Loader2 className="mr-2 size-4 animate-spin" />
-            ) : (
-              <Download className="mr-2 size-4" />
-            )}
-            Export JSON
-          </Button>
-          <Button
-            disabled={state.isGenerating}
-            onClick={() => inputRef.current?.click()}
-            size="sm"
-            variant="secondary"
-          >
-            <Upload className="mr-2 size-4" />
-            Import JSON
-          </Button>
-          <input
-            accept="application/json,.json"
-            className="hidden"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) {
-                actions
-                  .handleImportWorkflow(file)
-                  .then((snapshot) => {
-                    updatePublishStatus(snapshot.status);
-                    setLatestPublishedVersion(
-                      snapshot.publishedVersion?.versionNumber ?? null
-                    );
-                  })
-                  .catch((error) => {
-                    toast.error(
-                      error instanceof Error
-                        ? error.message
-                        : "Failed to import workflow JSON"
-                    );
-                  });
-              }
-              event.target.value = "";
-            }}
-            ref={inputRef}
-            type="file"
-          />
-          <Button
-            disabled={state.isGenerating || state.isSaving}
-            onClick={handlePublish}
-            size="sm"
-            variant={isPublished ? "outline" : "default"}
-          >
-            <Globe className="mr-2 size-4" />
-            Publish
-          </Button>
+
+          {/* ── Settings ── */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
+                className="neu-action px-2 text-(--neu-text) opacity-40 hover:opacity-80"
                 disabled={state.isGenerating}
                 size="sm"
-                variant="secondary"
+                title="Settings"
+                variant="ghost"
               >
-                <LayoutTemplate className="mr-2 size-4" />
-                Templates
-                <ChevronDown className="ml-1.5 size-3 opacity-60" />
+                <Settings2 className="size-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64">
+            <DropdownMenuContent align="end" className="w-52">
               <DropdownMenuLabel className="text-xs text-muted-foreground">
-                Starter templates
+                Canvas
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  className="flex flex-col items-start gap-0.5 py-2"
-                  onClick={() => {
-                    actions.handleLoadWorkingSourceDemo();
-                    updatePublishStatus("draft");
-                    setLatestPublishedVersion(null);
-                  }}
-                >
-                  <span className="font-medium text-sm">FAPI Calculation</span>
-                  <span className="text-muted-foreground text-xs">
-                    Trial balance → classify → rollup → compute → display
-                  </span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="flex flex-col items-start gap-0.5 py-2"
-                  onClick={() => {
-                    actions.handleLoadRoullementFiscalTemplate();
-                    updatePublishStatus("draft");
-                    setLatestPublishedVersion(null);
-                  }}
-                >
-                  <span className="font-medium text-sm">Roulement fiscal</span>
-                  <span className="text-muted-foreground text-xs">
-                    Biens → classification → PBR → élection art. 85 → T2057
-                  </span>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button
-            onClick={() => setPageMenuOpen((v) => !v)}
-            size="sm"
-            variant={pageMenuOpen ? "secondary" : "ghost"}
-          >
-            <Layers className="mr-2 size-4" />
-            Pages
-          </Button>
-          <Button
-            disabled={
-              state.isExecuting ||
-              state.nodes.length === 0 ||
-              state.isGenerating
-            }
-            onClick={() => actions.handleExecute()}
-            size="sm"
-            variant="secondary"
-          >
-            {state.isExecuting ? (
-              <Loader2 className="mr-2 size-4 animate-spin" />
-            ) : (
-              <Play className="mr-2 size-4" />
-            )}
-            Run
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button disabled={state.isGenerating} size="sm" variant="ghost">
-                <Settings2 className="mr-2 size-4" />
-                Dev
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setShowMinimap((v) => !v)}>
+                <Map className="size-4" />
+                {showMinimap ? "Hide minimap" : "Show minimap"}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => fitView({ duration: 300 })}>
+                <Maximize2 className="size-4" />
+                Fit to screen
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-xs text-muted-foreground">
+                Dev tools
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => {
                   actions.handleLoadSingleItemDemo();
@@ -2855,20 +2952,67 @@ function LocalStudioTopBar({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <div className="mx-1 h-4 w-px shrink-0 bg-(--neu-text)/15" />
+
+          {/* ── Save ── */}
+          <Button
+            className="neu-action relative gap-1.5 px-2.5 text-(--neu-text)"
+            disabled={
+              !state.currentWorkflowId || state.isGenerating || state.isSaving
+            }
+            onClick={actions.handleSave}
+            size="sm"
+            variant="ghost"
+          >
+            {state.isSaving ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Save className="size-4" />
+            )}
+            Save
+            {state.hasUnsavedChanges && !state.isSaving && (
+              <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-amber-400" />
+            )}
+          </Button>
+
+          {/* ── Run ── */}
+          <Button
+            className="gap-1.5 px-3"
+            disabled={
+              state.isExecuting ||
+              state.nodes.length === 0 ||
+              state.isGenerating
+            }
+            onClick={() => actions.handleExecute()}
+            size="sm"
+            variant="default"
+          >
+            {state.isExecuting ? (
+              <>
+                <Loader2 className="size-3.5 animate-spin" />
+                Running…
+              </>
+            ) : (
+              <>
+                <Play className="size-3.5" />
+                Run
+              </>
+            )}
+          </Button>
         </div>
+
+        {/* worksheet page menu — anchored below the bar */}
+        {pageMenuOpen && (
+          <div className="absolute left-0 top-[calc(100%+0.5rem)] z-40">
+            <WorksheetPageMenu
+              onClose={() => setPageMenuOpen(false)}
+              onOpenPage={() => setPageViewOpen(true)}
+            />
+          </div>
+        )}
       </div>
 
-      {/* worksheet page menu — drops below the toolbar */}
-      {pageMenuOpen && (
-        <div className="absolute left-0 top-[calc(100%+0.5rem)] z-40">
-          <WorksheetPageMenu
-            onClose={() => setPageMenuOpen(false)}
-            onOpenPage={() => setPageViewOpen(true)}
-          />
-        </div>
-      )}
-
-      {/* full-screen worksheet page view */}
       {pageViewOpen && (
         <WorksheetPageView onClose={() => setPageViewOpen(false)} />
       )}

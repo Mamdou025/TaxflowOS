@@ -310,3 +310,71 @@
     bottom: calc(env(safe-area-inset-bottom, 0px) + 5.5rem) !important;
   }
 }
+
+/* Neumorphic design utilities */
+:root {
+  --neu-bg: oklch(0.89 0 0);
+  --neu-shadow-up: -3px -3px 7px rgba(255, 255, 255, 0.75), 3px 3px 7px rgba(163, 177, 198, 0.45);
+  --neu-shadow-menu: -4px -4px 9px rgba(255, 255, 255, 0.7), 4px 4px 9px rgba(163, 177, 198, 0.5);
+  --neu-shadow-press: inset 2px 2px 5px rgba(163, 177, 198, 0.5), inset -2px -2px 5px rgba(255, 255, 255, 0.7);
+  --neu-text: oklch(0.25 0 0);
+  --neu-text-muted: oklch(0.50 0 0);
+}
+
+.dark {
+  --neu-bg: oklch(0.14 0.010 250);
+  --neu-shadow-up: -3px -3px 7px rgba(44, 56, 85, 0.4), 3px 3px 7px rgba(0, 0, 0, 0.55);
+  --neu-shadow-menu: -4px -4px 9px rgba(44, 56, 85, 0.4), 4px 4px 9px rgba(0, 0, 0, 0.6);
+  --neu-shadow-press: inset 2px 2px 5px rgba(0, 0, 0, 0.45), inset -2px -2px 5px rgba(44, 56, 85, 0.35);
+  --neu-text: oklch(0.88 0 0);
+  --neu-text-muted: oklch(0.60 0 0);
+}
+
+.neu-surface {
+  background: var(--neu-bg) !important;
+  box-shadow: var(--neu-shadow-up) !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  color: var(--neu-text);
+}
+
+/* Ghost button inside neu-surface: pressed look on hover / open */
+.neu-action:not(:disabled):hover,
+.neu-action[data-state="open"] {
+  background: oklch(0.85 0 0) !important;
+  box-shadow: var(--neu-shadow-press) !important;
+  border-radius: calc(var(--radius) - 4px);
+}
+.dark .neu-action:not(:disabled):hover,
+.dark .neu-action[data-state="open"] {
+  background: oklch(0.11 0.010 250) !important;
+}
+
+.neu-menu {
+  background: var(--neu-bg) !important;
+  box-shadow: var(--neu-shadow-menu) !important;
+  border: none !important;
+  color: var(--neu-text);
+}
+
+.neu-menu [data-highlighted] {
+  background: oklch(0.85 0 0) !important;
+  box-shadow: var(--neu-shadow-press) !important;
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.dark .neu-menu [data-highlighted] {
+  background: oklch(0.11 0.010 250) !important;
+}
+
+.neu-menu [data-state="open"][data-slot="dropdown-menu-sub-trigger"],
+.neu-menu [data-state="open"][data-slot="context-menu-sub-trigger"] {
+  background: oklch(0.85 0 0) !important;
+  box-shadow: var(--neu-shadow-press) !important;
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.dark .neu-menu [data-state="open"][data-slot="dropdown-menu-sub-trigger"],
+.dark .neu-menu [data-state="open"][data-slot="context-menu-sub-trigger"] {
+  background: oklch(0.11 0.010 250) !important;
+}

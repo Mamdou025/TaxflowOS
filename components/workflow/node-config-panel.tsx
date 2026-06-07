@@ -2134,7 +2134,7 @@ function RightAiContextPanel() {
   return (
     <Tabs
       className="size-full"
-      defaultValue={isLocalWorkflow ? "ai" : "context"}
+      defaultValue="context"
     >
       <TabsList className="h-14 w-full shrink-0 rounded-none border-b bg-transparent px-4 py-2.5">
         {isLocalWorkflow && (

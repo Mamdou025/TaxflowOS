@@ -1,6 +1,6 @@
 # UI Components
 
-*Last updated: 2026-05-17*
+*Last updated: 2026-06-06*
 
 ---
 
@@ -63,6 +63,15 @@ Root Layout (app/layout.tsx)
 - **State consumed:** `hasUnsavedChangesAtom`, `isSavingAtom`, `isExecutingAtom`, `canUndoAtom`, `canRedoAtom`, `currentWorkflowNameAtom`, `currentWorkflowVisibilityAtom`
 - **Triggers:** `triggerExecuteAtom`, `autosaveAtom`, `undoAtom`, `redoAtom`, `showClearDialogAtom`
 - **Also contains:** Export button, minimap toggle (`showMinimapAtom`)
+- **Design:** `neu-surface` neumorphic style applied to `LocalStudioTopBar` panel and `WorkflowMenuComponent` nav pill — soft raised shadow, no border; height reduced to `h-10`
+- **Layout (LocalStudioTopBar):** `[⬡ name• status]` | File▾ · Edit▾ · Add▾ | `flex-1` | Pages · Settings▾ | divider | Save• · Run
+- **Bar:** `h-11 rounded-xl w-[72%] min-w-[620px]` — taller pill, floats centered above canvas
+- **Identity:** workflow icon + inline-editable name (click → `<input>`, Enter/Escape/blur commits) + clickable status badge (click = publish)
+- **Save button:** amber dot `•` appears when `hasUnsavedChanges && !isSaving`
+- **Run button:** shows `<Loader2> Running…` text while `isExecuting`
+- **`.neu-action`:** CSS class for ghost buttons inside `.neu-surface`; hover and `data-state=open` get inset pressed shadow
+- **Settings ▾ menu:** Canvas section (minimap toggle, fit to screen) + Dev tools section (demo loaders)
+- **Auto-open removed:** `setActiveTab("runs")` no longer fires on workflow execution; AI tab no longer defaults open on local workflows
 
 ---
 
@@ -344,6 +353,17 @@ Located in `components/workflow/inspector/`
 - Sidebar width persistence
 - Panel resize support
 - Integration auto-fix handling
+
+---
+
+## Design System Notes
+
+### Neumorphic Theme (`app/globals.css`)
+- CSS variables `--neu-bg` (oklch 0.89 light / 0.14 dark), `--neu-text`, `--neu-text-muted`, `--neu-shadow-up`, `--neu-shadow-menu`, `--neu-shadow-press` defined for light and dark modes — tighter 3–4px offsets, moderate opacity (no glow)
+- `.neu-surface` — raised panel (navbar, nav pill): solid bg + dual soft shadow, no border
+- `.neu-menu` — floating dropdown/context menu: same bg with smaller shadow offsets, no border
+- `[data-highlighted]` inside `.neu-menu` gets an inset pressed shadow for keyboard/pointer focus
+- Applied to: `workflow-toolbar.tsx` panels, `dropdown-menu.tsx`, `context-menu.tsx`
 
 ---
 
