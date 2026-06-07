@@ -22,7 +22,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@tax/*": ["./tax-ui/*"]
     },
     "strictNullChecks": true
   },
