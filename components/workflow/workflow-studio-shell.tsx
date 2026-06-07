@@ -73,12 +73,6 @@ import {
 } from "@/src/runtime/generate-structure-view";
 import { formatRelationshipType } from "./utils/edge-relationships";
 
-type WorkflowStudioShellProps = {
-  isMobile: boolean;
-  rightPanelCollapsed: boolean;
-  rightPanelWidthPercent: number;
-};
-
 type BottomPanelActions = {
   addChildLogic: (parentId: string) => void;
   createSourceLogic: (
@@ -1213,12 +1207,8 @@ function DebugPreview({
   );
 }
 
-function BottomPanel({
-  isMobile,
-  paletteOpen,
-  rightPanelCollapsed,
-  rightPanelWidthPercent,
-}: WorkflowStudioShellProps & { paletteOpen: boolean }) {
+// Exported for use in RightPanelShell — renders the Runtime Preview tabs with no wrapper.
+export function RuntimePreviewContent() {
   const [nodes, setNodes] = useAtom(nodesAtom);
   const [edges, setEdges] = useAtom(edgesAtom);
   const workflowName = useAtomValue(currentWorkflowNameAtom);
@@ -1232,13 +1222,7 @@ function BottomPanel({
   const connectBlocks = useSetAtom(connectBlocksAtom);
   const deleteNode = useSetAtom(deleteNodeAtom);
   const updateNodeData = useSetAtom(updateNodeDataAtom);
-  const [expanded, setExpanded] = useState(true);
   const { open: openOverlay } = useOverlay();
-  const leftOffset = paletteOpen && !isMobile ? "21rem" : "4.75rem";
-  const rightOffset =
-    isMobile || rightPanelCollapsed
-      ? "0.75rem"
-      : `calc(${rightPanelWidthPercent}% + 0.75rem)`;
   const definition = createWorkflowDefinitionFromCanvas({
     name: workflowName || "Fiscal Workflow Studio",
     nodes,
@@ -1394,106 +1378,49 @@ function BottomPanel({
   };
 
   return (
-    <section
-      className="pointer-events-auto absolute z-20 rounded-md border bg-background/95 shadow-sm backdrop-blur"
-      style={{
-        bottom: "0.75rem",
-        left: isMobile ? "0.75rem" : leftOffset,
-        right: isMobile ? "0.75rem" : rightOffset,
-      }}
-    >
-      <div className="flex h-11 items-center justify-between border-b px-3">
-        <div className="flex items-center gap-2">
-          <ListTree className="size-4 text-muted-foreground" />
-          <h2 className="font-semibold text-sm">Runtime Preview</h2>
-        </div>
-        <Button
-          onClick={() => setExpanded(!expanded)}
-          size="icon"
-          title={
-            expanded ? "Collapse runtime preview" : "Expand runtime preview"
-          }
-          variant="ghost"
-        >
-          {expanded ? (
-            <ChevronDown className="size-4" />
-          ) : (
-            <ChevronRight className="size-4" />
-          )}
-        </Button>
+    <Tabs className="flex h-full flex-col gap-0" defaultValue="structure">
+      <TabsList className="h-10 w-full justify-start rounded-none border-b bg-transparent px-3 py-1">
+        <TabsTrigger value="structure">Structure</TabsTrigger>
+        <TabsTrigger value="sources">Sources</TabsTrigger>
+        <TabsTrigger value="outputs">Outputs</TabsTrigger>
+        <TabsTrigger value="runs">Runs / Logs</TabsTrigger>
+        <TabsTrigger value="debug">Debug</TabsTrigger>
+      </TabsList>
+      <div className="min-h-0 flex-1 overflow-y-auto p-3">
+        <TabsContent className="mt-0" value="structure">
+          <StructurePreview
+            actions={actions}
+            definition={definition}
+            selectedBlockId={selectedBlockId}
+          />
+        </TabsContent>
+        <TabsContent className="mt-0" value="sources">
+          <SourcesPreview
+            actions={actions}
+            definition={definition}
+            selectedBlock={selectedBlock}
+          />
+        </TabsContent>
+        <TabsContent className="mt-0" value="outputs">
+          <OutputsPreview
+            definition={definition}
+            selectedBlock={selectedBlock}
+          />
+        </TabsContent>
+        <TabsContent className="mt-0" value="runs">
+          <RunsPreview
+            definition={definition}
+            selectedBlock={selectedBlock}
+          />
+        </TabsContent>
+        <TabsContent className="mt-0" value="debug">
+          <DebugPreview
+            definition={definition}
+            selectedBlockId={selectedBlockId}
+            selectedEdgeId={selectedEdgeId}
+          />
+        </TabsContent>
       </div>
-      {expanded && (
-        <Tabs className="flex h-80 flex-col gap-0" defaultValue="structure">
-          <TabsList className="h-10 w-full justify-start rounded-none border-b bg-transparent px-3 py-1">
-            <TabsTrigger value="structure">Structure</TabsTrigger>
-            <TabsTrigger value="sources">Sources</TabsTrigger>
-            <TabsTrigger value="outputs">Outputs</TabsTrigger>
-            <TabsTrigger value="runs">Runs / Logs</TabsTrigger>
-            <TabsTrigger value="debug">Debug</TabsTrigger>
-          </TabsList>
-          <div className="min-h-0 flex-1 overflow-y-auto p-3">
-            <TabsContent className="mt-0" value="structure">
-              <StructurePreview
-                actions={actions}
-                definition={definition}
-                selectedBlockId={selectedBlockId}
-              />
-            </TabsContent>
-            <TabsContent className="mt-0" value="sources">
-              <SourcesPreview
-                actions={actions}
-                definition={definition}
-                selectedBlock={selectedBlock}
-              />
-            </TabsContent>
-            <TabsContent className="mt-0" value="outputs">
-              <OutputsPreview
-                definition={definition}
-                selectedBlock={selectedBlock}
-              />
-            </TabsContent>
-            <TabsContent className="mt-0" value="runs">
-              <RunsPreview
-                definition={definition}
-                selectedBlock={selectedBlock}
-              />
-            </TabsContent>
-            <TabsContent className="mt-0" value="debug">
-              <DebugPreview
-                definition={definition}
-                selectedBlockId={selectedBlockId}
-                selectedEdgeId={selectedEdgeId}
-              />
-            </TabsContent>
-          </div>
-        </Tabs>
-      )}
-    </section>
-  );
-}
-
-export function WorkflowStudioShell({
-  isMobile,
-  rightPanelCollapsed,
-  rightPanelWidthPercent,
-}: WorkflowStudioShellProps) {
-  if (isMobile) {
-    return (
-      <BottomPanel
-        isMobile={isMobile}
-        paletteOpen={false}
-        rightPanelCollapsed={rightPanelCollapsed}
-        rightPanelWidthPercent={rightPanelWidthPercent}
-      />
-    );
-  }
-
-  return (
-    <BottomPanel
-      isMobile={isMobile}
-      paletteOpen={false}
-      rightPanelCollapsed={rightPanelCollapsed}
-      rightPanelWidthPercent={rightPanelWidthPercent}
-    />
+    </Tabs>
   );
 }

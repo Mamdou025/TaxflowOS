@@ -49,6 +49,7 @@ import {
   selectedEdgeAtom,
   selectedNodeAtom,
   showMinimapAtom,
+  triggerFitViewAtom,
   updateNodeDataAtom,
   type WorkflowNode,
 } from "@/lib/workflow-store";
@@ -119,6 +120,7 @@ export function WorkflowCanvas() {
   const connectBlocks = useSetAtom(connectBlocksAtom);
   const setActiveTab = useSetAtom(propertiesPanelActiveTabAtom);
   const updateNodeData = useSetAtom(updateNodeDataAtom);
+  const [triggerFitView, setTriggerFitView] = useAtom(triggerFitViewAtom);
   const { open: openOverlay } = useOverlay();
   const { screenToFlowPosition, fitView, getViewport, setViewport } =
     useReactFlow();
@@ -144,6 +146,13 @@ export function WorkflowCanvas() {
   // Track if we have real nodes (not just placeholder "add" node)
   const hasRealNodes = nodes.some((n) => n.type !== "add");
   const hadRealNodesRef = useRef(false);
+  useEffect(() => {
+    if (triggerFitView) {
+      fitView({ duration: 300 });
+      setTriggerFitView(false);
+    }
+  }, [triggerFitView, fitView, setTriggerFitView]);
+
   // Pre-shift viewport when transitioning from homepage (before sidebar animates)
   const hasPreShiftedRef = useRef(false);
   useEffect(() => {
@@ -618,7 +627,7 @@ export function WorkflowCanvas() {
 
   return (
     <div
-      className="relative h-full bg-[#1b1b1f]"
+      className="relative h-full bg-transparent"
       data-testid="workflow-canvas"
       style={{
         opacity: isCanvasReady ? 1 : 0,
@@ -634,21 +643,21 @@ export function WorkflowCanvas() {
       </div>
 
       {/* Fiscal workflow vocabulary legend */}
-      <div className="pointer-events-none absolute top-16 right-4 z-20 max-w-[260px] rounded-lg border bg-background/90 px-3 py-2 shadow-sm backdrop-blur">
-        <div className="font-medium text-[10px] text-foreground uppercase">
+      <div className="pointer-events-none absolute top-16 right-4 z-20 max-w-[260px] rounded-lg px-3 py-2 shadow-sm backdrop-blur" style={{ background: 'rgba(26,26,32,0.88)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="font-medium text-[10px] uppercase" style={{ color: 'rgba(255,255,255,0.55)' }}>
           Fiscal Flow
         </div>
-        <div className="text-[10px] text-muted-foreground">
-          Source -&gt; Logic -&gt; Review / Validation
+        <div className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          Source → Logic → Review / Validation
         </div>
-        <div className="text-[10px] text-muted-foreground">
-          Protected -&gt; Output
+        <div className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          Protected → Output
         </div>
       </div>
 
       {/* React Flow Canvas */}
       <Canvas
-        className="bg-[#1b1b1f]"
+        className=""
         connectionLineComponent={Connection}
         connectionMode={ConnectionMode.Strict}
         edges={edges}

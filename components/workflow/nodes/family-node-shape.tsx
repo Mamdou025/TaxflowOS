@@ -1,4 +1,4 @@
-﻿import {
+import {
   Archive,
   BadgeCheck,
   Bot,
@@ -60,55 +60,66 @@ const TRAILING_TYPE_WORDS: Partial<Record<BlockSubtype, string[]>> = {
 
 const FAMILY_NODE_STYLES: Record<BlockFamily, FamilyNodeStyle> = {
   Trigger: {
-    badgeClassName: "top-1 border-orange-400/70 bg-(--node-badge-bg) text-orange-200",
+    badgeClassName: "top-1 border-white/15 bg-(--node-badge-bg) text-orange-300",
     captionClassName: "w-44",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
       "size-24 overflow-visible border-0 bg-transparent p-0 shadow-none",
   },
   "AI / Agent": {
-    badgeClassName: "top-1 border-fuchsia-400/70 bg-(--node-badge-bg) text-fuchsia-200",
+    badgeClassName: "top-1 border-white/15 bg-(--node-badge-bg) text-fuchsia-300",
     captionClassName: "w-44",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
       "size-28 overflow-visible rounded-full border-0 bg-transparent p-0 shadow-none",
   },
   Logic: {
-    badgeClassName: "top-1 border-emerald-400/70 bg-(--node-badge-bg) text-emerald-200",
+    badgeClassName: "top-1 border-white/15 bg-(--node-badge-bg) text-emerald-300",
     captionClassName: "w-44",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
       "size-24 overflow-visible rounded-sm border-0 bg-transparent p-0 shadow-none",
   },
   Output: {
-    badgeClassName: "top-1 border-indigo-400/70 bg-(--node-badge-bg) text-indigo-200",
+    badgeClassName: "top-1 border-white/15 bg-(--node-badge-bg) text-indigo-300",
     captionClassName: "w-48",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
       "h-28 w-24 overflow-visible rounded-md border-0 bg-transparent p-0 shadow-none",
   },
   Field: {
-    badgeClassName: "top-1 border-violet-400/70 bg-(--node-badge-bg) text-violet-200",
+    badgeClassName: "top-1 border-white/15 bg-(--node-badge-bg) text-violet-300",
     captionClassName: "w-64",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
       "h-20 w-56 overflow-visible rounded-sm border-0 bg-transparent p-0 shadow-none",
   },
   "Review / Validation": {
-    badgeClassName: "top-1 border-amber-400/70 bg-(--node-badge-bg) text-amber-200",
+    badgeClassName: "top-1 border-white/15 bg-(--node-badge-bg) text-amber-300",
     captionClassName: "w-48",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
       "size-24 overflow-visible rounded-none border-0 bg-transparent p-0 shadow-none",
   },
   Source: {
-    badgeClassName: "top-1 border-sky-400/70 bg-(--node-badge-bg) text-sky-200",
+    badgeClassName: "top-1 border-white/15 bg-(--node-badge-bg) text-sky-300",
     captionClassName: "w-48",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
       "h-28 w-28 overflow-visible rounded-md border-0 bg-transparent p-0 shadow-none",
   },
 };
+
+// Shared card design tokens — dark card on dark canvas
+const NEU_BG = '#25252f';
+const NEU_BORDER = 'rgba(255,255,255,0.09)';
+const NEU_DECOR = 'rgba(255,255,255,0.07)';
+// Clean elevation shadow — no white glow
+const NEU_BOX_SHADOW =
+  '0 2px 8px rgba(0,0,0,0.42), 0 6px 20px rgba(0,0,0,0.28)';
+// Filter-based elevation for clip-path shapes (hex, diamond)
+const NEU_FILTER =
+  'drop-shadow(0 2px 6px rgba(0,0,0,0.48)) drop-shadow(0 8px 18px rgba(0,0,0,0.30))';
 
 function getFamilyFromRole(role: WorkflowNodeData["visualRole"]): CanvasFamily {
   if (role === "trigger") {
@@ -316,21 +327,31 @@ export function FamilyNodeShape({
     return (
       <div
         className="pointer-events-none relative flex size-24 items-center justify-center"
-        style={{
-          filter:
-            "drop-shadow(0 0 6px rgba(251,146,60,0.35)) drop-shadow(0 6px 14px rgba(234,88,12,0.55))",
-        }}
+        style={{ filter: NEU_FILTER }}
       >
+        {/* Hexagon fill */}
         <div
-          className="absolute inset-0 border-2 border-orange-400/80 bg-(--node-trigger-bg,oklch(0.22 0.06 45))"
-          style={{ clipPath: "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)" }}
+          className="absolute inset-0 border-2"
+          style={{
+            clipPath: "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)",
+            background: NEU_BG,
+            borderColor: NEU_BORDER,
+          }}
         />
+        {/* Inner accent ring */}
         <div
-          className="absolute inset-[18%] border border-orange-300/25"
-          style={{ clipPath: "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)" }}
+          className="absolute inset-[18%]"
+          style={{
+            clipPath: "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)",
+            border: `1px solid ${NEU_DECOR}`,
+          }}
         />
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 h-1 w-8 rounded-full bg-orange-300/70" />
-        <div className="relative z-10 text-orange-200">{icon}</div>
+        {/* Top bar accent */}
+        <div
+          className="absolute top-3 left-1/2 -translate-x-1/2 h-1 w-8 rounded-full"
+          style={{ background: NEU_DECOR }}
+        />
+        <div className="relative z-10 text-orange-400">{icon}</div>
       </div>
     );
   }
@@ -338,14 +359,31 @@ export function FamilyNodeShape({
   if (family === "Source") {
     return (
       <div
-        className="pointer-events-none relative flex h-24 w-28 items-center justify-center border-2 border-sky-300/55 bg-(--node-source-bg) text-cyan-200 shadow-[0_0_0_1px_rgba(34,211,238,0.14),0_12px_24px_-16px_rgba(34,211,238,0.70)]"
-        style={{ borderRadius: "3rem 0.85rem 0.85rem 3rem" }}
+        className="pointer-events-none relative flex h-24 w-28 items-center justify-center border-2 text-sky-400"
+        style={{
+          borderRadius: "3rem 0.85rem 0.85rem 3rem",
+          background: NEU_BG,
+          borderColor: NEU_BORDER,
+          boxShadow: NEU_BOX_SHADOW,
+        }}
       >
+        {/* Inner pill accent */}
         <div
-          className="absolute inset-2 border border-cyan-200/5"
-          style={{ borderRadius: "2.5rem 0.55rem 0.55rem 2.5rem" }}
+          className="absolute inset-2"
+          style={{
+            borderRadius: "2.5rem 0.55rem 0.55rem 2.5rem",
+            border: `1px solid ${NEU_DECOR}`,
+          }}
         />
-        <div className="-translate-y-1/2 absolute top-1/2 right-[-0.65rem] h-5 w-3 rounded-r-full border-2 border-cyan-200/40 border-l-0 bg-(--node-source-bg)" />
+        {/* Right-side handle nub */}
+        <div
+          className="-translate-y-1/2 absolute top-1/2 right-[-0.65rem] h-5 w-3 rounded-r-full"
+          style={{
+            background: NEU_BG,
+            border: `2px solid ${NEU_BORDER}`,
+            borderLeftColor: 'transparent',
+          }}
+        />
         <div className="relative z-10">{icon}</div>
       </div>
     );
@@ -353,9 +391,24 @@ export function FamilyNodeShape({
 
   if (family === "Logic") {
     return (
-      <div className="pointer-events-none relative flex size-24 items-center justify-center rounded-sm border-2 border-emerald-400/75 bg-(--node-logic-bg) text-emerald-200 shadow-[0_0_0_1px_rgba(52,211,153,0.18),0_12px_24px_-16px_rgba(16,185,129,0.75)]">
-        <div className="-translate-x-1/2 absolute top-0 left-1/2 h-1 w-16 rounded-full bg-emerald-300/85" />
-        <div className="absolute inset-3 rounded-[3px] border border-emerald-300/15" />
+      <div
+        className="pointer-events-none relative flex size-24 items-center justify-center rounded-sm border-2 text-emerald-400"
+        style={{
+          background: NEU_BG,
+          borderColor: NEU_BORDER,
+          boxShadow: NEU_BOX_SHADOW,
+        }}
+      >
+        {/* Top bar accent */}
+        <div
+          className="-translate-x-1/2 absolute top-0 left-1/2 h-1 w-16 rounded-full"
+          style={{ background: NEU_DECOR }}
+        />
+        {/* Inner accent border */}
+        <div
+          className="absolute inset-3 rounded-[3px]"
+          style={{ border: `1px solid ${NEU_DECOR}` }}
+        />
         <div className="relative z-10">{icon}</div>
       </div>
     );
@@ -365,33 +418,51 @@ export function FamilyNodeShape({
     return (
       <div
         className="pointer-events-none relative flex size-24 items-center justify-center"
-        style={{
-          filter:
-            "drop-shadow(0 0 6px rgba(251,191,36,0.35)) drop-shadow(0 6px 14px rgba(245,158,11,0.50))",
-        }}
+        style={{ filter: NEU_FILTER }}
       >
+        {/* Diamond fill */}
         <div
-          className="absolute inset-0 border-2 border-amber-400/80 bg-(--node-review-bg)"
-          style={{ clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" }}
+          className="absolute inset-0 border-2"
+          style={{
+            clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
+            background: NEU_BG,
+            borderColor: NEU_BORDER,
+          }}
         />
+        {/* Inner diamond accent */}
         <div
-          className="absolute inset-[22%] border border-amber-300/20"
-          style={{ clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)" }}
+          className="absolute inset-[22%]"
+          style={{
+            clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
+            border: `1px solid ${NEU_DECOR}`,
+          }}
         />
-        <div className="relative z-10 text-amber-200">{icon}</div>
+        <div className="relative z-10 text-amber-400">{icon}</div>
       </div>
     );
   }
 
   if (family === "Field") {
     return (
-      <div className="pointer-events-none relative flex h-20 w-56 items-center justify-center rounded-md border-2 border-violet-400/60 bg-(--node-protected-bg) text-violet-200 shadow-[0_0_0_1px_rgba(167,139,250,0.15),0_12px_24px_-16px_rgba(139,92,246,0.65)]">
+      <div
+        className="pointer-events-none relative flex h-20 w-56 items-center justify-center rounded-md border-2 text-violet-400"
+        style={{
+          background: NEU_BG,
+          borderColor: NEU_BORDER,
+          boxShadow: NEU_BOX_SHADOW,
+        }}
+      >
+        {/* Left-side line accents */}
         <div className="absolute inset-y-3 left-3 flex flex-col justify-between">
-          <div className="h-px w-5 rounded-full bg-violet-300/50" />
-          <div className="h-px w-4 rounded-full bg-violet-300/35" />
-          <div className="h-px w-5 rounded-full bg-violet-300/50" />
+          <div className="h-px w-5 rounded-full" style={{ background: 'rgba(158,158,178,0.32)' }} />
+          <div className="h-px w-4 rounded-full" style={{ background: 'rgba(158,158,178,0.20)' }} />
+          <div className="h-px w-5 rounded-full" style={{ background: 'rgba(158,158,178,0.32)' }} />
         </div>
-        <div className="absolute inset-2 rounded border border-violet-300/10" />
+        {/* Inner accent border */}
+        <div
+          className="absolute inset-2 rounded"
+          style={{ border: `1px solid ${NEU_DECOR}` }}
+        />
         <div className="relative z-10">{icon}</div>
       </div>
     );
@@ -399,9 +470,28 @@ export function FamilyNodeShape({
 
   if (family === "Output") {
     return (
-      <div className="pointer-events-none relative flex h-24 w-20 items-center justify-center rounded-md border-2 border-indigo-400/75 bg-(--node-output-bg) text-indigo-200 shadow-[0_0_0_1px_rgba(129,140,248,0.18),0_12px_24px_-16px_rgba(99,102,241,0.75)]">
-        <div className="absolute top-0 right-0 size-7 rounded-bl-md border-indigo-300/35 border-b border-l bg-indigo-300/15 [clip-path:polygon(0_0,100%_0,100%_100%)]" />
-        <div className="absolute right-2 bottom-3 left-2 h-1 rounded-full bg-indigo-300/30" />
+      <div
+        className="pointer-events-none relative flex h-24 w-20 items-center justify-center rounded-md border-2 text-indigo-400"
+        style={{
+          background: NEU_BG,
+          borderColor: NEU_BORDER,
+          boxShadow: NEU_BOX_SHADOW,
+        }}
+      >
+        {/* Folded corner accent */}
+        <div
+          className="absolute top-0 right-0 size-7 rounded-bl-md [clip-path:polygon(0_0,100%_0,100%_100%)]"
+          style={{
+            background: 'rgba(158,158,178,0.14)',
+            borderBottom: `1px solid ${NEU_BORDER}`,
+            borderLeft: `1px solid ${NEU_BORDER}`,
+          }}
+        />
+        {/* Bottom bar accent */}
+        <div
+          className="absolute right-2 bottom-3 left-2 h-1 rounded-full"
+          style={{ background: NEU_DECOR }}
+        />
         <div className="relative z-10">{icon}</div>
       </div>
     );
@@ -409,9 +499,24 @@ export function FamilyNodeShape({
 
   if (family === "AI / Agent") {
     return (
-      <div className="pointer-events-none relative flex size-24 items-center justify-center rounded-full border-2 border-fuchsia-400/80 bg-(--node-ai-bg) text-fuchsia-200 shadow-[0_0_0_1px_rgba(217,70,239,0.18),0_12px_24px_-16px_rgba(192,38,211,0.75)]">
-        <div className="absolute inset-3 rounded-full border border-fuchsia-300/35 border-dashed" />
-        <div className="absolute top-3 right-5 size-2 rounded-full bg-fuchsia-300/80" />
+      <div
+        className="pointer-events-none relative flex size-24 items-center justify-center rounded-full border-2 text-fuchsia-400"
+        style={{
+          background: NEU_BG,
+          borderColor: NEU_BORDER,
+          boxShadow: NEU_BOX_SHADOW,
+        }}
+      >
+        {/* Inner dashed ring */}
+        <div
+          className="absolute inset-3 rounded-full"
+          style={{ border: `1px dashed rgba(158,158,178,0.30)` }}
+        />
+        {/* Accent dot */}
+        <div
+          className="absolute top-3 right-5 size-2 rounded-full"
+          style={{ background: 'rgba(158,158,178,0.40)' }}
+        />
         <div className="relative z-10">{icon}</div>
       </div>
     );

@@ -87,8 +87,13 @@ export const selectedExecutionIdAtom = atom<string | null>(null);
 export const rightPanelWidthAtom = atom<string | null>(null);
 export const isPanelAnimatingAtom = atom<boolean>(false);
 export const hasSidebarBeenShownAtom = atom<boolean>(false);
-export const isSidebarCollapsedAtom = atom<boolean>(false);
+export const isSidebarCollapsedAtom = atom<boolean>(true);
+export const isBottomPanelExpandedAtom = atom<boolean>(false);
 export const isTransitioningFromHomepageAtom = atom<boolean>(false);
+
+export type ActiveRightPanel = "runtime-preview" | "ai-panel" | "pages" | "settings" | null;
+export const activeRightPanelAtom = atom<ActiveRightPanel>(null);
+export const triggerFitViewAtom = atom<boolean>(false);
 
 // Tracks nodes that are pending integration auto-select check
 // Don't show "missing integration" warning for these nodes

@@ -1,33 +1,27 @@
-﻿// OrbitalStage.tsx — Sinaxe InScope v2.0 — Skeuomorphic edition
+// OrbitalStage.tsx — Sinaxe InScope v2.0 — Skeuomorphic edition
 
 import { useState, useRef, useEffect } from 'react';
-import { useLocation } from 'wouter';
+import { useRouter } from 'next/navigation';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+
 import {
-  Search, X, ChevronDown,
+  ChevronDown,
   // Service line icons
   Globe, Handshake, Receipt, Building, Scale, Lightbulb, Flag,
   // Action icons
   Send, Calculator, ClipboardCheck, FileText, Activity, BookOpen,
   // Sub-action / fallback
-  Lock, Mail, Calendar, TrendingUp, FileSpreadsheet, Database,
-  Layers, Shield, PenLine, DollarSign, Package
+  Lock, Mail, Calendar, TrendingUp, FileSpreadsheet,
+  Layers, Shield, PenLine, DollarSign, Package, Search
 } from 'lucide-react';
 import { cn } from '@tax/lib/utils';
+import { selectedClientAtom, showClientSwitcherAtom, navActionsAtom } from '@/lib/nav-store';
+import { chatPageContextAtom, chatTakeoverAtom } from '@/lib/chat-store';
 
 const PURPLE = '#6B21A8';
 const ORANGE = '#C2410C';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
-const CLIENTS = [
-  'Northstar Inc.',
-  'Meridian Energy Corp.',
-  'Atlas Financial Group',
-  'Cascade Technologies Ltd.',
-  'Vantage Capital Partners',
-  'Solaris Group',
-  'Pinnacle Holdings',
-  'Redwood Industries',
-];
 
 type IconComponent = React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>;
 
@@ -134,7 +128,7 @@ function InScopeLogo({ clientName, level, levelLabel, onClick }: {
   levelLabel: string;
   onClick: () => void;
 }) {
-  const SIZE = 170;  // larger to fit longer client names
+  const SIZE = 170;
   const CX = SIZE / 2;
   const CY = SIZE / 2;
   const OUTER_R = 57;
@@ -160,11 +154,9 @@ function InScopeLogo({ clientName, level, levelLabel, onClick }: {
           padding: 0,
           width: SIZE,
           height: SIZE,
-          // Override global active scale for this button
           transition: 'transform 150ms cubic-bezier(0.34,1.56,0.64,1)',
         }}
       >
-        {/* Flat center disc behind the logo */}
         <div
           style={{
             position: 'absolute',
@@ -175,7 +167,6 @@ function InScopeLogo({ clientName, level, levelLabel, onClick }: {
         />
 
         <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`} style={{ position: 'absolute', inset: 0 }}>
-          {/* Purple outer ring — clockwise, fixed fade spots */}
           <g className="logo-cw">
             {Array.from({ length: outerDots }, (_, i) => {
               const a = (i / outerDots) * Math.PI * 2;
@@ -191,7 +182,6 @@ function InScopeLogo({ clientName, level, levelLabel, onClick }: {
               );
             })}
           </g>
-          {/* Orange inner ring — counter-clockwise, fixed fade spots */}
           <g className="logo-ccw">
             {Array.from({ length: innerDots }, (_, i) => {
               const a = (i / innerDots) * Math.PI * 2;
@@ -209,49 +199,20 @@ function InScopeLogo({ clientName, level, levelLabel, onClick }: {
           </g>
         </svg>
 
-        {/* Center label — context-aware:
-             level 0: client name + "tap to switch"
-             level 1+: context label (service/action) + "← back"
-             Client name at level 1+ is rendered OUTSIDE the ring by the parent.
-        */}
         <div
           className="absolute inset-0 flex flex-col items-center justify-center"
           style={{ pointerEvents: 'none', gap: 2 }}
         >
           {levelLabel ? (
-            // Level 1+: context label fills the orange ring, bold
             <>
-              <span
-                style={{
-                  fontSize: 13,
-                  fontWeight: 800,
-                  color: '#111827',
-                  lineHeight: 1.15,
-                  textAlign: 'center',
-                  maxWidth: INNER_R * 2 - 10,
-                  display: 'block',
-                  wordBreak: 'break-word',
-                }}
-              >
+              <span style={{ fontSize: 13, fontWeight: 800, color: '#111827', lineHeight: 1.15, textAlign: 'center', maxWidth: INNER_R * 2 - 10, display: 'block', wordBreak: 'break-word' }}>
                 {levelLabel}
               </span>
               <span style={{ fontSize: 7, color: '#9CA3AF', marginTop: 4 }}>← back</span>
             </>
           ) : (
-            // Level 0: client name fills the orange ring
             <>
-              <span
-                style={{
-                  fontSize: 13,
-                  fontWeight: 800,
-                  color: '#111827',
-                  lineHeight: 1.15,
-                  textAlign: 'center',
-                  maxWidth: INNER_R * 2 - 10,
-                  display: 'block',
-                  wordBreak: 'break-word',
-                }}
-              >
+              <span style={{ fontSize: 13, fontWeight: 800, color: '#111827', lineHeight: 1.15, textAlign: 'center', maxWidth: INNER_R * 2 - 10, display: 'block', wordBreak: 'break-word' }}>
                 {clientName}
               </span>
               <span style={{ fontSize: 7, color: '#9CA3AF', marginTop: 4 }}>tap to switch</span>
@@ -260,74 +221,6 @@ function InScopeLogo({ clientName, level, levelLabel, onClick }: {
         </div>
       </button>
     </>
-  );
-}
-
-// ─── Client switcher overlay ──────────────────────────────────────────────────
-function ClientSwitcher({
-  currentClient,
-  onSelect,
-  onClose,
-}: {
-  currentClient: string;
-  onSelect: (c: string) => void;
-  onClose: () => void;
-}) {
-  const [query, setQuery] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
-  useEffect(() => { inputRef.current?.focus(); }, []);
-  const filtered = CLIENTS.filter((c) => c.toLowerCase().includes(query.toLowerCase()));
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ backdropFilter: 'blur(14px)', background: 'rgba(244,244,246,0.7)' }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div
-        className="bg-white rounded-2xl w-80 overflow-hidden"
-        style={{
-          boxShadow: '0 20px 56px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.07)',
-          border: '1px solid rgba(0,0,0,0.07)',
-          animation: 'fadeScaleIn 0.16s cubic-bezier(0.23,1,0.32,1)',
-        }}
-      >
-        <style>{`@keyframes fadeScaleIn { from { opacity:0; transform:scale(0.96); } to { opacity:1; transform:scale(1); } }`}</style>
-        <div className="flex items-center gap-2.5 px-4 py-3 border-b border-gray-100">
-          <Search size={13} className="text-gray-400 shrink-0" />
-          <input
-            ref={inputRef}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search clients…"
-            className="flex-1 text-[13px] outline-none bg-transparent text-gray-700 placeholder-gray-400"
-          />
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-            <X size={13} />
-          </button>
-        </div>
-        <div className="max-h-64 overflow-y-auto py-1">
-          {filtered.map((client) => (
-            <button
-              key={client}
-              onClick={() => onSelect(client)}
-              className={cn(
-                'w-full text-left px-4 py-2.5 text-[12.5px] flex items-center gap-2 transition-colors hover:bg-gray-50',
-                client === currentClient ? 'font-600 text-gray-900' : 'font-400 text-gray-600',
-              )}
-            >
-              <span className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 text-[10px] font-600 shrink-0">
-                {client.charAt(0)}
-              </span>
-              {client}
-              {client === currentClient && (
-                <span className="ml-auto text-[10px] text-gray-400">active</span>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -362,7 +255,6 @@ function OrbitalNode({
   const x = Math.cos(angle) * radius;
   const y = Math.sin(angle) * radius;
 
-  // Neumorphic orb style — flat extruded look, same color as background
   const NEU_BG = '#eaeaef';
   const NEU_SHADOW_DARK = 'rgba(158,158,178,0.42)';
   const NEU_SHADOW_LIGHT = 'rgba(255,255,255,0.86)';
@@ -374,63 +266,26 @@ function OrbitalNode({
 
   const orbStyle: React.CSSProperties = isPressed
     ? {
-        width: 110,
-        height: 110,
-        borderRadius: '50%',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 3,
+        width: 110, height: 110, borderRadius: '50%', position: 'relative',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
         background: '#e2e2e9',
-        boxShadow: [
-          `inset 5px 5px 12px ${NEU_SHADOW_DARK}`,
-          `inset -5px -5px 12px ${NEU_SHADOW_LIGHT}`,
-        ].join(', '),
-        border: 'none',
-        transform: 'scale(0.96)',
-        transition,
+        boxShadow: [`inset 5px 5px 12px ${NEU_SHADOW_DARK}`, `inset -5px -5px 12px ${NEU_SHADOW_LIGHT}`].join(', '),
+        border: 'none', transform: 'scale(0.96)', transition,
       }
     : highlighted
     ? {
-        width: 110,
-        height: 110,
-        borderRadius: '50%',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 3,
+        width: 110, height: 110, borderRadius: '50%', position: 'relative',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
         background: NEU_BG,
-        boxShadow: [
-          `11px 11px 24px ${NEU_SHADOW_DARK}`,
-          `-11px -11px 24px ${NEU_SHADOW_LIGHT}`,
-          '0 0 0 2px rgba(168,139,250,0.30)',
-        ].join(', '),
-        border: 'none',
-        transform: 'scale(1.05)',
-        transition,
+        boxShadow: [`11px 11px 24px ${NEU_SHADOW_DARK}`, `-11px -11px 24px ${NEU_SHADOW_LIGHT}`, '0 0 0 2px rgba(168,139,250,0.30)'].join(', '),
+        border: 'none', transform: 'scale(1.05)', transition,
       }
     : {
-        width: 110,
-        height: 110,
-        borderRadius: '50%',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 3,
+        width: 110, height: 110, borderRadius: '50%', position: 'relative',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
         background: NEU_BG,
-        boxShadow: [
-          `8px 8px 18px ${NEU_SHADOW_DARK}`,
-          `-8px -8px 18px ${NEU_SHADOW_LIGHT}`,
-        ].join(', '),
-        border: 'none',
-        transform: 'scale(1)',
-        transition,
+        boxShadow: [`8px 8px 18px ${NEU_SHADOW_DARK}`, `-8px -8px 18px ${NEU_SHADOW_LIGHT}`].join(', '),
+        border: 'none', transform: 'scale(1)', transition,
       };
 
   return (
@@ -458,27 +313,13 @@ function OrbitalNode({
           onMouseLeave={() => { setIsPressed(false); onHover(null); }}
           onMouseDown={() => setIsPressed(true)}
           onMouseUp={() => setIsPressed(false)}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            padding: 0,
-            display: 'block',
-            // Prevent the global button:active scale from stacking
-            transform: 'none',
-          }}
+          style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, display: 'block', transform: 'none' }}
         >
           <div style={orbStyle}>
-            {/* LED indicator dot — small inset circle */}
             <div
               style={{
-                position: 'absolute',
-                top: 14,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
+                position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)',
+                width: 6, height: 6, borderRadius: '50%',
                 background: highlighted
                   ? 'linear-gradient(135deg, #e879f9 0%, #a855f7 100%)'
                   : 'linear-gradient(135deg, #d1d1da 0%, #c4c4cf 100%)',
@@ -489,63 +330,19 @@ function OrbitalNode({
                 transition: 'background 300ms ease-out, box-shadow 300ms ease-out',
               }}
             />
-
-            {/* Lock icon */}
-            <Lock
-              size={17}
-              style={{
-                color: highlighted ? '#9333ea' : '#a0a0b8',
-                transition: 'color 200ms ease-out',
-                marginTop: 8,
-                flexShrink: 0,
-              }}
-            />
-
-            {/* Label */}
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 600,
-                lineHeight: 1.2,
-                textAlign: 'center',
-                padding: '0 8px',
-                color: highlighted ? '#6b21a8' : '#5c5c7a',
-                transition: 'color 200ms ease-out',
-                maxWidth: 94,
-              }}
-            >
+            <Lock size={17} style={{ color: highlighted ? '#9333ea' : '#a0a0b8', transition: 'color 200ms ease-out', marginTop: 8, flexShrink: 0 }} />
+            <span style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.2, textAlign: 'center', padding: '0 8px', color: highlighted ? '#6b21a8' : '#5c5c7a', transition: 'color 200ms ease-out', maxWidth: 94 }}>
               {label}
             </span>
-
-            {/* Subtitle */}
-            <span
-              style={{
-                fontSize: 9,
-                lineHeight: 1.2,
-                textAlign: 'center',
-                padding: '0 8px',
-                color: highlighted ? '#a855f7' : '#9898b2',
-                transition: 'color 200ms ease-out',
-                maxWidth: 94,
-              }}
-            >
+            <span style={{ fontSize: 9, lineHeight: 1.2, textAlign: 'center', padding: '0 8px', color: highlighted ? '#a855f7' : '#9898b2', transition: 'color 200ms ease-out', maxWidth: 94 }}>
               {subtitle}
             </span>
-
-            {hasOverflow && (
-              <ChevronDown
-                size={9}
-                style={{ color: highlighted ? '#a855f7' : '#9898b2', marginTop: -1 }}
-              />
-            )}
+            {hasOverflow && <ChevronDown size={9} style={{ color: highlighted ? '#a855f7' : '#9898b2', marginTop: -1 }} />}
           </div>
         </button>
 
         {hasOverflow && showOverflow && overflowItems && (
-          <div
-            className="absolute top-full mt-2 z-50 bg-white rounded-xl overflow-hidden min-w-35"
-            style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.11)', border: '1px solid rgba(0,0,0,0.06)' }}
-          >
+          <div className="absolute top-full mt-2 z-50 bg-white rounded-xl overflow-hidden min-w-35" style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.11)', border: '1px solid rgba(0,0,0,0.06)' }}>
             {overflowItems.map((item, idx) => (
               <button
                 key={item.id}
@@ -581,111 +378,31 @@ function DottedOrbitRing({ radius }: { radius: number }) {
         const a = (i / dotCount) * Math.PI * 2;
         const large = i % 10 === 0;
         return (
-          <circle
-            key={i}
-            cx={cx + radius * Math.cos(a)}
-            cy={cy + radius * Math.sin(a)}
-            r={large ? 2 : 1.2}
-            fill={large ? '#b8b8c8' : '#d0d0da'}
-            opacity={large ? 0.55 : 0.32}
-          />
+          <circle key={i} cx={cx + radius * Math.cos(a)} cy={cy + radius * Math.sin(a)} r={large ? 2 : 1.2} fill={large ? '#b8b8c8' : '#d0d0da'} opacity={large ? 0.55 : 0.32} />
         );
       })}
     </svg>
   );
 }
 
-// ─── AI Chat Bar ──────────────────────────────────────────────────────────────
-function AIChatBar({ clientName }: { clientName: string }) {
-  const [active, setActive] = useState(false);
-  const [value, setValue] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const handlePillClick = () => {
-    if (!active) {
-      setActive(true);
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
-  };
-
-  const handleBlur = () => { if (!value) setActive(false); };
-
-  const handleSend = () => { if (value.trim()) setValue(''); setActive(false); };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleSend();
-    if (e.key === 'Escape') { setValue(''); setActive(false); }
-  };
-
-  return (
-    <div
-      onClick={handlePillClick}
-      className="flex items-center gap-2.5 w-full rounded-full px-3.5 py-2.5 cursor-text transition-shadow"
-      style={{
-        background: '#eaeaef',
-        border: 'none',
-        boxShadow: active
-          ? 'inset 4px 4px 10px rgba(158,158,178,0.38), inset -4px -4px 10px rgba(255,255,255,0.84)'
-          : '6px 6px 14px rgba(158,158,178,0.38), -6px -6px 14px rgba(255,255,255,0.84)',
-      }}
-    >
-      <svg width="18" height="18" viewBox="0 0 18 18" className="shrink-0">
-        {Array.from({ length: 10 }, (_, i) => {
-          const a = (i / 10) * Math.PI * 2;
-          return <circle key={i} cx={9 + 6.5 * Math.cos(a)} cy={9 + 6.5 * Math.sin(a)} r={1.1} fill={ORANGE} opacity={0.9} />;
-        })}
-      </svg>
-
-      {active ? (
-        <input
-          ref={inputRef}
-          type="text"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-          placeholder={`Ask anything about ${clientName}…`}
-          className="flex-1 text-[12px] text-gray-700 outline-none bg-transparent placeholder:text-gray-300"
-        />
-      ) : (
-        <span className="flex-1 text-[12px] text-gray-400 truncate select-none">
-          Click on an action item or ask me anything about {clientName}
-        </span>
-      )}
-
-      <button
-        onMouseDown={(e) => { e.preventDefault(); handleSend(); }}
-        className="flex items-center justify-center w-7 h-7 rounded-full shrink-0 transition-all"
-        style={{
-          background: active ? '#111827' : '#E5E7EB',
-          opacity: active ? 1 : 0.4,
-          cursor: active ? 'pointer' : 'default',
-          pointerEvents: active ? 'auto' : 'none',
-        }}
-      >
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={active ? 'white' : '#9CA3AF'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="12" y1="19" x2="12" y2="5" />
-          <polyline points="5 12 12 5 19 12" />
-        </svg>
-      </button>
-    </div>
-  );
-}
-
 // ─── Main OrbitalStage ────────────────────────────────────────────────────────
 export default function OrbitalStage() {
-  const [, navigate] = useLocation();
-
+  const router = useRouter();
   const [level, setLevel] = useState(0);
   const [animKey, setAnimKey] = useState(0);
   const [exiting, setExiting] = useState(false);
   const [flyingNode, setFlyingNode] = useState<{ id: string; x: number; y: number; label: string } | null>(null);
-  const [selectedClient, setSelectedClient] = useState('Northstar Inc.');
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
-  const [showClientSwitcher, setShowClientSwitcher] = useState(false);
   const stageRef = useRef<HTMLDivElement>(null);
+
+  // Global atoms
+  const [selectedClient, setSelectedClient] = useAtom(selectedClientAtom);
+  const [, setShowClientSwitcher] = useAtom(showClientSwitcherAtom);
+  const setNavActions = useSetAtom(navActionsAtom);
+  const setChatContext = useSetAtom(chatPageContextAtom);
+  const chatTakeover = useAtomValue(chatTakeoverAtom);
 
   const [stageSize, setStageSize] = useState({ w: window.innerWidth, h: window.innerHeight });
   useEffect(() => {
@@ -693,6 +410,33 @@ export default function OrbitalStage() {
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
+
+  // Register quick-access nav actions for the home page
+  useEffect(() => {
+    setNavActions([
+      { id: 'legacy-builder', label: 'Legacy Builder', href: '/workflows' },
+      { id: 'workflow-builder', label: 'Workflow Builder', href: '/builder' },
+    ]);
+    return () => setNavActions([]);
+  }, [setNavActions]);
+
+  // Keep AI chat context in sync with drill-down state
+  useEffect(() => {
+    const parts: string[] = ['InScope'];
+    if (selectedService) {
+      const sl = SERVICE_LINES.find((s) => s.id === selectedService);
+      if (sl) parts.push(sl.label);
+    }
+    if (selectedAction) {
+      const ac = (ACTIONS[selectedService!] || []).find((a) => a.id === selectedAction);
+      if (ac) parts.push(ac.label);
+    }
+    setChatContext({
+      page: 'home',
+      label: parts.join(' › '),
+      description: `Client: ${selectedClient}`,
+    });
+  }, [selectedService, selectedAction, selectedClient, setChatContext]);
 
   type SimpleNode = { id: string; label: string; subtitle: string; icon?: IconComponent; route?: string; overflow?: boolean };
 
@@ -714,7 +458,7 @@ export default function OrbitalStage() {
   const handleNodeClick = (nodeId: string, nodeX: number, nodeY: number, nodeLabel: string) => {
     if (level === 2) {
       const sub = (SUB_ACTIONS[selectedAction!] || []).find((s) => s.id === nodeId);
-      if (sub?.route) navigate(sub.route);
+      if (sub?.route) router.push(sub.route);
       return;
     }
     setExiting(true);
@@ -739,7 +483,6 @@ export default function OrbitalStage() {
     }, 240);
   };
 
-  // Returns the current drill-down context label shown inside the scope at level 1+
   const getCenterContextLabel = () => {
     if (level === 1) return SERVICE_LINES.find((s) => s.id === selectedService)?.label || '';
     if (level === 2) return (ACTIONS[selectedService!] || []).find((a) => a.id === selectedAction)?.label || '';
@@ -751,52 +494,44 @@ export default function OrbitalStage() {
 
   return (
     <div
-      className="relative w-full h-screen overflow-hidden flex flex-col"
-      style={{ background: '#eaeaef' }}
+      className="relative w-full h-full overflow-hidden flex flex-col"
+      style={{
+        background: '#eaeaef',
+        opacity: chatTakeover ? 0.35 : 1,
+        filter: chatTakeover ? 'blur(3px) saturate(0.6)' : 'blur(0px) saturate(1)',
+        transform: chatTakeover ? 'scale(0.99)' : 'scale(1)',
+        transition: chatTakeover
+          ? 'opacity 480ms ease-out, filter 480ms ease-out, transform 480ms ease-out'
+          : 'opacity 560ms cubic-bezier(0.23,1,0.32,1), filter 560ms cubic-bezier(0.23,1,0.32,1), transform 560ms cubic-bezier(0.23,1,0.32,1)',
+        pointerEvents: chatTakeover ? 'none' : 'auto',
+      }}
     >
-      {/* ── Top bar ── */}
-      <div className="flex flex-col px-8 pt-5 pb-2 z-20 shrink-0">
-        <div className="flex justify-center mb-3">
-          <div className="flex items-baseline gap-1 select-none">
-            <span style={{ fontSize: 22, fontWeight: 700, color: '#1F2937', letterSpacing: '-0.01em' }}>Sinaxe</span>
-            <span style={{ fontSize: 11, color: '#9CA3AF', verticalAlign: 'super' }}>™</span>
-            <span style={{ fontSize: 22, fontWeight: 400, color: '#6B7280', marginLeft: 2, letterSpacing: '-0.01em' }}>InScope</span>
+      <style>{`
+        @keyframes nodeEnter { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
+        @keyframes nodeExit  { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.6); } }
+        @keyframes flyToCenter {
+          from { transform: translate(-50%, -50%) translate(0, 0); opacity: 1; }
+          to   { transform: translate(-50%, -50%) translate(var(--fly-dx), var(--fly-dy)); opacity: 0; }
+        }
+        @keyframes ledPulse { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
+        @keyframes fadeIn   { from { opacity: 0; } to { opacity: 1; } }
+      `}</style>
+
+      {/* ── Greeting — level 0 only ── */}
+      {level === 0 && (
+        <div className="shrink-0 px-8 pt-5 pb-0 z-20">
+          <div style={{ fontSize: 28, fontWeight: 700, color: '#1F2937', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
+            {greeting}, Sophia
+          </div>
+          <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 3 }}>
+            What is in scope today?
           </div>
         </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col">
-            <span style={{ fontSize: 32, fontWeight: 700, color: '#1F2937', lineHeight: 1.1, letterSpacing: '-0.02em' }}>{greeting}, Sophia</span>
-            <span style={{ fontSize: 13, color: '#9CA3AF', marginTop: 4 }}>What is in scope today?</span>
-          </div>
-
-          <button
-            onClick={() => navigate('/builder')}
-            className="flex flex-col items-center gap-1.5 cursor-pointer shrink-0"
-            style={{
-              background: 'transparent',
-              border: '1px solid #E5E7EB',
-              borderRadius: 10,
-              padding: '8px 14px',
-              color: '#6B7280',
-            }}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="4" r="2.2" />
-              <circle cx="4.5" cy="18" r="2.2" />
-              <circle cx="19.5" cy="18" r="2.2" />
-              <line x1="12" y1="6.2" x2="5.5" y2="15.8" />
-              <line x1="12" y1="6.2" x2="18.5" y2="15.8" />
-              <line x1="6.7" y1="18" x2="17.3" y2="18" />
-            </svg>
-            <span style={{ fontSize: 11, fontWeight: 500 }}>Workflow Builder</span>
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* ── Breadcrumb nav — shown when drilling into level 1 or 2 ── */}
       {level > 0 && (
-        <div className="flex items-center gap-1.5 px-8 pb-1 z-20 shrink-0" style={{ fontSize: 12 }}>
+        <div className="flex items-center gap-1.5 px-8 pt-3 pb-1 z-20 shrink-0" style={{ fontSize: 12 }}>
           <button
             onClick={() => { setLevel(0); setSelectedService(null); setSelectedAction(null); setAnimKey(k => k + 1); }}
             className="text-gray-400 hover:text-gray-700 transition-colors"
@@ -837,25 +572,9 @@ export default function OrbitalStage() {
             levelLabel={getCenterContextLabel()}
             onClick={handleCenterClick}
           />
-          {/* Client name outside the ring — visible at level 1+ */}
           {level > 0 && (
-            <div
-              style={{
-                marginTop: 6,
-                animation: 'fadeIn 220ms ease-out both',
-                pointerEvents: 'none',
-                textAlign: 'center',
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 13,
-                  fontWeight: 800,
-                  color: '#374151',
-                  lineHeight: 1.2,
-                  letterSpacing: '-0.01em',
-                }}
-              >
+            <div style={{ marginTop: 6, animation: 'fadeIn 220ms ease-out both', pointerEvents: 'none', textAlign: 'center' }}>
+              <span style={{ fontSize: 13, fontWeight: 800, color: '#374151', lineHeight: 1.2, letterSpacing: '-0.01em' }}>
                 {selectedClient}
               </span>
             </div>
@@ -863,13 +582,7 @@ export default function OrbitalStage() {
         </div>
 
         {/* Orbital nodes */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            pointerEvents: exiting ? 'none' : 'auto',
-          }}
-        >
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: exiting ? 'none' : 'auto' }}>
           {currentNodes.map((node, i) => {
             const angle = (i / nodeCount) * Math.PI * 2 - Math.PI / 2;
             const nx = Math.cos(angle) * RADIUS;
@@ -911,7 +624,7 @@ export default function OrbitalStage() {
           })()}
         </div>
 
-        {/* Flying node ghost — skeuomorphic purple orb */}
+        {/* Flying node ghost */}
         {flyingNode && (
           <div
             style={{
@@ -928,21 +641,10 @@ export default function OrbitalStage() {
           >
             <div
               style={{
-                width: 94,
-                height: 94,
-                borderRadius: '50%',
+                width: 94, height: 94, borderRadius: '50%',
                 background: '#eaeaef',
-                boxShadow: [
-                  '10px 10px 22px rgba(158,158,178,0.44)',
-                  '-10px -10px 22px rgba(255,255,255,0.88)',
-                  '0 0 0 2.5px rgba(168,85,247,0.32)',
-                ].join(', '),
-                border: 'none',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 4,
+                boxShadow: ['10px 10px 22px rgba(158,158,178,0.44)', '-10px -10px 22px rgba(255,255,255,0.88)', '0 0 0 2.5px rgba(168,85,247,0.32)'].join(', '),
+                border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
               }}
             >
               <Lock size={15} style={{ color: '#9333ea' }} />
@@ -953,24 +655,6 @@ export default function OrbitalStage() {
           </div>
         )}
       </div>
-
-      {/* ── AI chat bar ── */}
-      <div className="shrink-0 flex justify-center px-6 pb-6 pt-1">
-        <div className="w-full max-w-md">
-          <AIChatBar clientName={selectedClient} />
-        </div>
-      </div>
-
-      {/* ── Client switcher overlay ── */}
-      {showClientSwitcher && (
-        <ClientSwitcher
-          currentClient={selectedClient}
-          onSelect={(c) => { setSelectedClient(c); setShowClientSwitcher(false); }}
-          onClose={() => setShowClientSwitcher(false)}
-        />
-      )}
     </div>
   );
 }
-
-

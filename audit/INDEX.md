@@ -1,7 +1,7 @@
 # Workflow Builder — Audit Index
 
 *Entry point for the living audit. All other files are linked below.*
-*Last updated: 2026-05-18*
+*Last updated: 2026-06-07*
 
 ---
 
@@ -41,6 +41,27 @@ Four layers: **Canvas** (React Flow UI) → **Domain** (typed workflow schema) �
 - **[PARTIAL]:** Excel upload (UI done, parsing WIP), Rollup/Calculation rule editors, workflow versioning types (no save logic), output mapping preview, publish flow
 - **[STUB]:** PDF, API, DB, Web, AI Search source blocks, all Output block subtypes, Review/Validation blocks, AI gateway, integrations
 - **[PLANNED]:** Full Review/Validation family, Field block live binding, Output handoff generation, version history UI
+
+### Navigation architecture (2026-06-07)
+- **Homepage:** `/` → `OrbitalStage` (neumorphic orbs + AI chat)
+- **Builder:** `/builder` → `WorkflowStudioShell` + `NodeConfigPanel` overlaid on `PersistentCanvas`
+- **Legacy:** `/workflows` + `/workflows/[id]` → DB-backed workflow pages
+- **ReactFlowProvider** moved from layout root → inside `PersistentCanvas` only; soft navigation (router.push) now works from all pages
+- **CSS View Transitions** enabled via `@view-transition { navigation: auto }` — 180ms crossfade in Chrome/Safari
+
+### Global App Shell (updated 2026-06-07)
+- **`AppShell`** (`components/app-shell.tsx`) wraps every route via `layout.tsx`; now includes `ChatCenterOverlay`
+- **`GlobalTopNav`** (`components/global-top-nav.tsx`) — 52px `#eaeaef` top bar persists across all pages; logo click navigates home; on non-canvas pages shows client selector + nav actions; on canvas pages shows workflow toolbar slot (portaled)
+- **`ChatDrawer`** (`components/chat-drawer.tsx`) — always-visible floating pill at bottom center (real input, no side drawer); sending a message sets `chatTakeoverAtom = true`
+- **`ChatCenterOverlay`** (`components/chat-center-overlay.tsx`) — center-screen takeover panel; fades in when `chatTakeoverAtom = true`, X to dismiss
+- **`OrbitalStage`** dissolves on `chatTakeoverAtom` (blur + saturate + scale + opacity, 480ms); restores on dismiss
+- **`PersistentCanvas`** fades on `chatTakeoverAtom` (opacity 0.35, 480ms); restores on dismiss; bg transitions `#eaeaef` → `#18181c` (900ms) at z-0
+- **`CanvasEnterOverlay`** (inline in `app-shell.tsx`) — `fixed inset-0 z-[15]` overlay; renders `#eaeaef` → transparent (900ms) on every canvas page entry, covering the z-10 content layer so the transition is always visible to the user
+- **Workflow canvas background:** dark `#18181c` with subtle white line grid (`BackgroundVariant.Lines`); fades from `#eaeaef` on mount; `AmbientOrbs` removed
+- **Node design:** all 7 family shapes use dark `#25252f` cards on `#18181c` canvas — unified `rgba(255,255,255,0.09)` border, elevation shadow only (no white glow); only icon color unique per family (-400 shade Tailwind)
+- **`GlobalClientSwitcher`** (`components/global-client-switcher.tsx`) — global overlay replacing OrbitalStage-local ClientSwitcher
+- **`WorkflowToolbar` / `LocalStudioTopBar`** — content portaled into `GlobalTopNav` slot via `createPortal`
+- **New stores:** `lib/nav-store.ts` (client + nav actions) · `lib/chat-store.ts` (chat state, `chatTakeoverAtom`, page context)
 
 ### Active development areas (branch: Sampledata)
 Based on modified files in current branch:

@@ -1,6 +1,6 @@
 # UI Components
 
-*Last updated: 2026-06-06*
+*Last updated: 2026-06-07*
 
 ---
 
@@ -24,6 +24,61 @@ Root Layout (app/layout.tsx)
             │   └── source-viewers/ & logic-viewers/
             └── edge-inspector.tsx              ← right panel (edge selected)
 ```
+
+---
+
+## Global App Shell [LIVE — 2026-06-07]
+
+The following components form the persistent shell that wraps every page in the app.
+
+### `components/app-shell.tsx` [LIVE]
+- **Role:** Root layout wrapper — renders on every route via `app/layout.tsx`
+- **Contains:** `GlobalTopNav` (top bar) · `PersistentCanvas` (fixed canvas layer) · `ChatDrawer` + bottom pill · `GlobalClientSwitcher` overlay
+- **Pointer-events:** Content area gets `pointer-events-none` on `/builder` and `/workflows/*` (canvas is interactive beneath)
+- **Height:** `100dvh` split as `52px nav + flex-1 content`
+
+### `components/global-top-nav.tsx` [LIVE]
+- **Role:** Persistent top bar visible on every page — single unified bar (no per-page second nav)
+- **Left:** Sinaxe InScope™ logo (links to `/`)
+- **Center (non-canvas pages):** Client selector pill (opens `GlobalClientSwitcher`) + page nav actions from `navActionsAtom`
+- **Center (canvas pages):** `<div id="global-nav-workflow-slot">` — empty slot that `WorkflowToolbar` portals its content into
+- **Height:** 52px · neumorphic `#eaeaef` background matching OrbitalStage
+- **Canvas detection:** `usePathname()` — slot mode activates on `/builder` and `/workflows/*`
+- **Note:** AI chat toggle button removed (2026-06-07) — chat entry point is the always-visible bottom pill
+
+### `components/chat-drawer.tsx` [LIVE]
+- **Role:** Always-visible floating chat pill at bottom center — the single entry point for AI chat
+- **Pill:** Fixed bottom-center, 480px max width, neumorphic raised surface; contains a real input at all times
+- **On send:** Sets `chatTakeoverAtom = true`, adds message to `chatMessagesAtom`, triggers center overlay; AI stub responds after 700ms
+- **Note:** Right-side drawer removed (2026-06-07) — replaced by `ChatCenterOverlay`
+
+### `components/chat-center-overlay.tsx` [LIVE]
+- **Role:** Center-screen takeover that appears when the user sends a chat message
+- **Trigger:** `chatTakeoverAtom = true` (set by `ChatDrawer` on send)
+- **Animation:** Fades in with scale + translate (380ms, 80ms delay after orbs start dissolving); fades out on dismiss (260ms)
+- **Content:** Conversation thread (user right-aligned dark, AI left-aligned white card) + header with context label
+- **Dismiss:** X button sets `chatTakeoverAtom = false` — orbs/canvas fade back in
+- **Position:** Fixed, below nav (52px), above pill (80px bottom clearance), centered, max-width 672px
+
+### `components/global-client-switcher.tsx` [LIVE]
+- **Role:** Global client selection overlay (previously local to OrbitalStage)
+- **Trigger:** `showClientSwitcherAtom = true` — called from nav bar or orbital center tap
+- **Reads/writes:** `selectedClientAtom`, `showClientSwitcherAtom`
+- **Client list:** Defined in `lib/nav-store.ts` (`CLIENTS` constant)
+
+---
+
+## State Atoms for Shell
+
+| Atom | File | Drives |
+|---|---|---|
+| `selectedClientAtom` | `lib/nav-store.ts` | Client pill in top nav + orbital logo center |
+| `showClientSwitcherAtom` | `lib/nav-store.ts` | GlobalClientSwitcher overlay |
+| `navActionsAtom` | `lib/nav-store.ts` | Right-side page action buttons in top nav (non-canvas pages only) |
+| `chatOpenAtom` | `lib/chat-store.ts` | Legacy (unused by new pill design — kept for backward compat) |
+| `chatTakeoverAtom` | `lib/chat-store.ts` | Center overlay shown/hidden; triggers orb/canvas dissolve |
+| `chatMessagesAtom` | `lib/chat-store.ts` | Conversation thread |
+| `chatPageContextAtom` | `lib/chat-store.ts` | Context label in overlay header + AI prompt |
 
 ---
 
@@ -58,20 +113,27 @@ Root Layout (app/layout.tsx)
 
 ### `workflow-toolbar.tsx`
 - **Location:** `components/workflow/workflow-toolbar.tsx`
-- **Buttons:** Run · Save · Undo · Redo · Clear · Settings
-- **Controls:** Workflow name (inline edit) · Visibility selector (private/public)
-- **State consumed:** `hasUnsavedChangesAtom`, `isSavingAtom`, `isExecutingAtom`, `canUndoAtom`, `canRedoAtom`, `currentWorkflowNameAtom`, `currentWorkflowVisibilityAtom`
-- **Triggers:** `triggerExecuteAtom`, `autosaveAtom`, `undoAtom`, `redoAtom`, `showClearDialogAtom`
-- **Also contains:** Export button, minimap toggle (`showMinimapAtom`)
-- **Design:** `neu-surface` neumorphic style applied to `LocalStudioTopBar` panel and `WorkflowMenuComponent` nav pill — soft raised shadow, no border; height reduced to `h-10`
-- **Layout (LocalStudioTopBar):** `[⬡ name• status]` | File▾ · Edit▾ · Add▾ | `flex-1` | Pages · Settings▾ | divider | Save• · Run
-- **Bar:** `h-11 rounded-xl w-[72%] min-w-[620px]` — taller pill, floats centered above canvas
-- **Identity:** workflow icon + inline-editable name (click → `<input>`, Enter/Escape/blur commits) + clickable status badge (click = publish)
+- **Rendering:** `LocalStudioTopBar` uses `createPortal` to inject its content into `#global-nav-workflow-slot` inside `GlobalTopNav` — **no separate floating pill bar**
+- **Layout (fused into GlobalTopNav):** `[⬡ name• status]` | File▾ · Edit▾ · Add▾ | `flex-1` | Runtime Preview · AI Panel · Pages · Settings · Dev▾ | divider | Save• · Run
+- **Identity:** workflow icon + inline-editable name + clickable status badge (click = publish). Home button removed (logo in GlobalTopNav handles navigation)
+- **Hidden inputs:** Excel and JSON file inputs stay in the React component tree (not portaled); refs still work despite `pointer-events-none` parent
+- **Panel toggles:** All 4 right-side buttons (ListTree, PanelRight, Layers, Settings2) toggle `activeRightPanelAtom`; same panel = close, different = switch; all default closed
+- **Dev Tools ▾:** Small `ChevronDown` dropdown with demo loaders (Load Z Demo, Load Expanded Demo, Reset FAPI Sample)
 - **Save button:** amber dot `•` appears when `hasUnsavedChanges && !isSaving`
 - **Run button:** shows `<Loader2> Running…` text while `isExecuting`
-- **`.neu-action`:** CSS class for ghost buttons inside `.neu-surface`; hover and `data-state=open` get inset pressed shadow
-- **Settings ▾ menu:** Canvas section (minimap toggle, fit to screen) + Dev tools section (demo loaders)
-- **Auto-open removed:** `setActiveTab("runs")` no longer fires on workflow execution; AI tab no longer defaults open on local workflows
+- **`.neu-action`:** CSS class for ghost buttons; renders flat inside nav bar (no `neu-surface` wrapper needed)
+- **Mount guard:** Portal fires only after client-side mount (`useState(false)` + `useEffect`) to avoid SSR mismatch
+
+---
+
+### `right-panel-shell.tsx` [LIVE]
+- **Location:** `components/workflow/right-panel-shell.tsx`
+- **Role:** Unified right-side slide drawer; one panel open at a time; opening any closes the previous
+- **Panels routed:** `ai-panel` → `<NodeConfigPanel />`; `runtime-preview` → `<RuntimePreviewContent />`; `pages` → inline field-block include/exclude list + "Preview Worksheet" button; `settings` → minimap toggle + fit canvas
+- **State:** reads/writes `activeRightPanelAtom`; syncs `rightPanelWidthAtom` (34% when open, null when closed) and `isPanelAnimatingAtom` via `useEffect`
+- **Transition:** `translateX(0/100%)` CSS transition 300ms ease-out
+- **WorksheetPageView:** rendered as full-screen overlay (`fixed inset-0 z-50`) when "Preview Worksheet" clicked; closed by back button
+- **`isMobile` prop:** panel is suppressed on mobile (`isOpen = false`)
 
 ---
 
@@ -80,6 +142,10 @@ Root Layout (app/layout.tsx)
 ### `workflow-canvas.tsx`
 - **Location:** `components/ai-elements/canvas.tsx` (initialized here) + `components/workflow/` (usage)
 - **Technology:** `@xyflow/react` v12
+- **Background:** `bg-transparent` — background is owned by `PersistentCanvas` wrapper
+- **Grid:** `BackgroundVariant.Lines`, `color: rgba(255,255,255,0.055)`, gap 28px, lineWidth 0.5 — subtle white lines on dark canvas
+- **No AmbientOrbs:** removed (2026-06-07) — rotating orb circles removed from canvas background
+- **Legend box:** Dark styling (`rgba(26,26,32,0.88)` bg, `rgba(255,255,255,0.08)` border, white/55 + white/35 text)
 - **Features:**
   - Drag/drop block placement
   - Handle-based connection drawing
@@ -92,8 +158,11 @@ Root Layout (app/layout.tsx)
   - Animated edge transitions
 
 ### `persistent-canvas.tsx`
-- **Location:** `components/workflow/` area
-- **Role:** Saves and restores canvas viewport (zoom + pan position) to localStorage on each change
+- **Location:** `components/workflow/persistent-canvas.tsx`
+- **Role:** Fixed full-viewport canvas layer behind all page content; handles background color transition
+- **Mount transition:** Background starts `#eaeaef` (matching homepage), fades to `#18181c` over 900ms after 60ms delay — seamless navigation from homepage to builder
+- **Chat dissolve:** On `chatTakeoverAtom = true`, opacity fades to 0 (480ms ease-out); restores 560ms cubic-bezier
+- **Only active on:** `/builder` and `/workflows/*` — renders `null` on all other routes
 
 ---
 
@@ -101,9 +170,21 @@ Root Layout (app/layout.tsx)
 
 ### `family-node-shape.tsx`
 - **Location:** `components/workflow/nodes/family-node-shape.tsx`
-- **Role:** Visual shell for fiscal domain blocks — handles color coding, icons, and shape per family
-- **Families styled:** Source · Logic · Review/Validation · Field · Output · AI/Agent
-- **Features:** Status indicator overlay, governance badge, run status color
+- **Role:** Visual shell for fiscal domain blocks — handles shape, neumorphic surface, icon per family
+- **Design (2026-06-07):** Option B — all nodes use `#eaeaef` neumorphic raised card on dark `#18181c` canvas
+  - **Unified border:** `rgba(158,158,178,0.28)` for all families (no family-specific border colors)
+  - **Unified background:** `#eaeaef` for all families (matches homepage orb surface)
+  - **Neumorphic shadow (rectangular nodes):** `8px 8px 18px rgba(158,158,178,0.42), -8px -8px 18px rgba(255,255,255,0.86), 0 16px 32px rgba(0,0,0,0.50)`
+  - **Neumorphic filter (clip-path nodes):** `drop-shadow` approximating the raised look
+  - **Icon colors (only unique per family):** orange-600 · sky-600 · emerald-600 · amber-600 · violet-600 · indigo-600 · fuchsia-600
+  - **Badge:** unified `border-white/15 bg-(--node-badge-bg)` with family text color for identification
+- **Shapes:** Hexagon (Trigger) · Pill (Source) · Square (Logic) · Diamond (Review/Val) · Wide rect (Field) · Tall rect (Output) · Circle (AI/Agent)
+
+### `visual-level.tsx`
+- **Location:** `components/workflow/nodes/visual-level.tsx`
+- **Role:** Style config and icon for visual-level nodes (L1 stage · L2 logic · L3 source)
+- **Design (2026-06-07):** Updated to neumorphic `#eaeaef` bg + `border-neutral-400/30` + same box-shadow as family nodes
+- **Icon colors:** orange-600 (L1) · emerald-600 (L2) · sky-600 (L3) — dark on light bg
 
 ### `action-node.tsx`
 - **Location:** (root `components/workflow/nodes/` or `components/ai-elements/`)
@@ -308,6 +389,12 @@ Located in `components/ai-elements/`
 
 ### `canvas.tsx`
 - **Role:** React Flow canvas initialization and global config
+- **Background:** `#eaeaef` neumorphic surface with 24px dot grid (transparent ReactFlow layer over parent div); `AmbientOrbs` rendered behind ReactFlow at 9% opacity
+
+### `ambient-orbs.tsx` [LIVE]
+- **Location:** `components/ambient-orbs.tsx`
+- **Role:** Faint animated orbital dot rings (purple outer, orange inner) rendered as ambient texture behind the workflow canvas
+- **Opacity:** 0.09 — non-interactive, purely decorative
 
 ### `connection.tsx`
 - **Role:** Custom connection line rendering (during edge drag)
@@ -376,8 +463,9 @@ Located in `components/workflow/inspector/`
 | `propertiesPanelActiveTabAtom` | Active inspector tab |
 | `showMinimapAtom` | Minimap visibility |
 | `rightPanelWidthAtom` | Inspector panel width |
+| `activeRightPanelAtom` | Which right panel is open (null = closed) |
 | `isSidebarCollapsedAtom` | Left sidebar state |
-| `isPanelAnimatingAtom` | Panel slide animation |
+| `isPanelAnimatingAtom` | Panel slide animation (managed by RightPanelShell) |
 | `isExecutingAtom` | Run button loading state |
 | `isGeneratingAtom` | AI prompt loading state |
 | `hasUnsavedChangesAtom` | Save button state |

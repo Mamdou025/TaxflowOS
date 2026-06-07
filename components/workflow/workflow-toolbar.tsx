@@ -10,10 +10,12 @@ import {
   Globe,
   Layers,
   LayoutTemplate,
+  ListTree,
   Loader2,
   Lock,
   Map,
   Maximize2,
+  PanelRight,
   Play,
   Plus,
   Redo2,
@@ -26,6 +28,7 @@ import {
 } from "lucide-react";
 import { nanoid } from "nanoid";
 import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -74,6 +77,7 @@ import {
 } from "@/lib/local-tool-runner";
 import type { IntegrationType } from "@/lib/types/integration";
 import {
+  activeRightPanelAtom,
   addNodeAtom,
   canRedoAtom,
   canUndoAtom,
@@ -93,11 +97,9 @@ import {
   nodesAtom,
   propertiesPanelActiveTabAtom,
   redoAtom,
-  rightPanelWidthAtom,
   selectedEdgeAtom,
   selectedExecutionIdAtom,
   selectedNodeAtom,
-  showMinimapAtom,
   triggerExecuteAtom,
   undoAtom,
   updateNodeDataAtom,
@@ -117,8 +119,6 @@ import {
   type WorkflowAuditEventType,
 } from "@/src/audit/workflow-events";
 import { Panel } from "../ai-elements/panel";
-import { WorksheetPageMenu } from "./worksheet-page-menu";
-import { WorksheetPageView } from "./worksheet-page-view";
 import { DeployButton } from "../deploy-button";
 import { GitHubStarsButton } from "../github-stars-button";
 import { ConfigurationOverlay } from "../overlays/configuration-overlay";
@@ -2348,12 +2348,14 @@ function LocalStudioTopBar({
 }) {
   const { open: openOverlay } = useOverlay();
   const { screenToFlowPosition, fitView } = useReactFlow();
-  const rightPanelWidth = useAtomValue(rightPanelWidthAtom);
-  const [showMinimap, setShowMinimap] = useAtom(showMinimapAtom);
+  const [mounted, setMounted] = useState(false);
+  const [activeRightPanel, setActiveRightPanel] = useAtom(activeRightPanelAtom);
+
+  const togglePanel = (panel: "runtime-preview" | "ai-panel" | "pages" | "settings") => {
+    setActiveRightPanel((current) => (current === panel ? null : panel));
+  };
   const inputRef = useRef<HTMLInputElement>(null);
   const excelInputRef = useRef<HTMLInputElement>(null);
-  const [pageMenuOpen, setPageMenuOpen] = useState(false);
-  const [pageViewOpen, setPageViewOpen] = useState(false);
   const [publishStatus, setPublishStatus] = useState<LocalPublishStatus>(() => {
     if (typeof window === "undefined") {
       return "draft";
@@ -2403,6 +2405,8 @@ function LocalStudioTopBar({
     setPublishStatus(snapshot.status === "published" ? "published" : "draft");
     setLatestPublishedVersion(snapshot.publishedVersion?.versionNumber ?? null);
   }, [state.hasUnsavedChanges]);
+
+  useEffect(() => { setMounted(true); }, []);
 
   const handleNameCommit = useCallback(() => {
     const trimmed = nameInputValue.trim();
@@ -2563,13 +2567,8 @@ function LocalStudioTopBar({
   const isPublished = statusLabel === "Published";
 
   return (
-    <div
-      className="pointer-events-auto absolute top-3 left-19 z-30 flex justify-center"
-      style={{
-        right: rightPanelWidth ? `calc(${rightPanelWidth} + 1rem)` : "1rem",
-      }}
-    >
-      {/* hidden file inputs — outside bar so they don't affect layout */}
+    <>
+      {/* Hidden file inputs — kept in component tree so refs work (pointer-events-none on parent is CSS-only) */}
       <input
         accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
         className="hidden"
@@ -2619,14 +2618,11 @@ function LocalStudioTopBar({
         type="file"
       />
 
-      {/* relative wrapper: anchors the page-menu dropdown */}
-      <div className="relative w-[72%] min-w-[620px]">
-
-        {/* ── Floating command bar ── */}
-        <div className="neu-surface flex h-11 w-full items-center gap-0.5 rounded-xl px-2">
-
-          {/* ── Identity ── */}
-          <div className="flex shrink-0 items-center gap-1.5 pr-1">
+      {/* Toolbar content portaled into the global nav slot — appears as part of the unified top bar */}
+      {mounted && createPortal(
+        <>
+          {/* ── Identity (no home button — global nav logo handles it) ── */}
+          <div className="flex shrink-0 items-center gap-1.5 px-1">
             <WorkflowIcon className="size-4 shrink-0 text-(--neu-text) opacity-70" />
             {isEditingName ? (
               <input
@@ -2878,46 +2874,71 @@ function LocalStudioTopBar({
           {/* push right-side controls to the end */}
           <div className="flex-1" />
 
-          {/* ── Pages ── */}
+          {/* ── Runtime Preview toggle ── */}
           <Button
             className="neu-action px-2 text-(--neu-text)"
-            onClick={() => setPageMenuOpen((v) => !v)}
+            onClick={() => togglePanel("runtime-preview")}
             size="sm"
-            title="Pages"
+            title={activeRightPanel === "runtime-preview" ? "Close runtime preview" : "Open runtime preview"}
             variant="ghost"
           >
-            <Layers
-              className={`size-4 transition-opacity ${pageMenuOpen ? "opacity-100" : "opacity-40"}`}
+            <ListTree
+              className={`size-4 transition-opacity ${activeRightPanel === "runtime-preview" ? "opacity-100" : "opacity-40"}`}
             />
           </Button>
 
-          {/* ── Settings ── */}
+          {/* ── AI Panel toggle ── */}
+          <Button
+            className="neu-action px-2 text-(--neu-text)"
+            onClick={() => togglePanel("ai-panel")}
+            size="sm"
+            title={activeRightPanel === "ai-panel" ? "Close AI panel" : "Open AI panel"}
+            variant="ghost"
+          >
+            <PanelRight
+              className={`size-4 transition-opacity ${activeRightPanel === "ai-panel" ? "opacity-100" : "opacity-40"}`}
+            />
+          </Button>
+
+          {/* ── Pages toggle ── */}
+          <Button
+            className="neu-action px-2 text-(--neu-text)"
+            onClick={() => togglePanel("pages")}
+            size="sm"
+            title={activeRightPanel === "pages" ? "Close pages" : "Open pages"}
+            variant="ghost"
+          >
+            <Layers
+              className={`size-4 transition-opacity ${activeRightPanel === "pages" ? "opacity-100" : "opacity-40"}`}
+            />
+          </Button>
+
+          {/* ── Settings toggle + Dev Tools dropdown ── */}
+          <Button
+            className="neu-action px-2 text-(--neu-text)"
+            disabled={state.isGenerating}
+            onClick={() => togglePanel("settings")}
+            size="sm"
+            title={activeRightPanel === "settings" ? "Close settings" : "Open settings"}
+            variant="ghost"
+          >
+            <Settings2
+              className={`size-4 transition-opacity ${activeRightPanel === "settings" ? "opacity-100" : "opacity-40"}`}
+            />
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                className="neu-action px-2 text-(--neu-text) opacity-40 hover:opacity-80"
+                className="neu-action px-1.5 text-(--neu-text) opacity-40 hover:opacity-80"
                 disabled={state.isGenerating}
                 size="sm"
-                title="Settings"
+                title="Dev tools"
                 variant="ghost"
               >
-                <Settings2 className="size-4" />
+                <ChevronDown className="size-3" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuLabel className="text-xs text-muted-foreground">
-                Canvas
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setShowMinimap((v) => !v)}>
-                <Map className="size-4" />
-                {showMinimap ? "Hide minimap" : "Show minimap"}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => fitView({ duration: 300 })}>
-                <Maximize2 className="size-4" />
-                Fit to screen
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
               <DropdownMenuLabel className="text-xs text-muted-foreground">
                 Dev tools
               </DropdownMenuLabel>
@@ -3000,23 +3021,10 @@ function LocalStudioTopBar({
               </>
             )}
           </Button>
-        </div>
-
-        {/* worksheet page menu — anchored below the bar */}
-        {pageMenuOpen && (
-          <div className="absolute left-0 top-[calc(100%+0.5rem)] z-40">
-            <WorksheetPageMenu
-              onClose={() => setPageMenuOpen(false)}
-              onOpenPage={() => setPageViewOpen(true)}
-            />
-          </div>
-        )}
-      </div>
-
-      {pageViewOpen && (
-        <WorksheetPageView onClose={() => setPageViewOpen(false)} />
+        </>,
+        document.getElementById('global-nav-workflow-slot') ?? document.body
       )}
-    </div>
+    </>
   );
 }
 

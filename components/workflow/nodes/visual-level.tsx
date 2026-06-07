@@ -24,15 +24,17 @@ type VisualLevelStyle = {
   placeholderDescription: string;
 };
 
+const CARD_SHADOW = '0 2px 8px rgba(0,0,0,0.42), 0 6px 20px rgba(0,0,0,0.28)';
+
 const DEFAULT_STYLE: VisualLevelStyle = {
   Icon: Zap,
-  badgeClassName: "top-1 border-zinc-500/60 bg-[#211f28] text-zinc-200",
+  badgeClassName: "top-1 border-white/15 bg-[#1a1a20] text-zinc-300",
   captionClassName: "w-40",
   contentClassName: "h-full w-full p-0",
   defaultRole: "step",
-  iconClassName: "text-zinc-200",
+  iconClassName: "text-zinc-400",
   iconShellClassName:
-    "size-24 rounded-lg border-2 border-zinc-500/70 bg-[#211f28] shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_18px_35px_-26px_rgba(0,0,0,0.95)]",
+    "size-24 rounded-lg border-2 border-white/10 bg-[#25252f]",
   nodeClassName:
     "size-24 overflow-visible rounded-lg border-0 bg-transparent p-0 shadow-none",
   placeholderDescription: "Select an action",
@@ -41,39 +43,39 @@ const DEFAULT_STYLE: VisualLevelStyle = {
 const VISUAL_LEVEL_STYLES: Record<VisualLevel, VisualLevelStyle> = {
   L1: {
     Icon: Layers,
-    badgeClassName: "top-2 border-orange-400/70 bg-[#211f28] text-orange-200",
+    badgeClassName: "top-2 border-white/15 bg-[#1a1a20] text-orange-300",
     captionClassName: "w-64",
     contentClassName: "h-full w-full p-0",
     defaultRole: "stage",
-    iconClassName: "text-orange-300",
+    iconClassName: "text-orange-400",
     iconShellClassName:
-      "h-24 w-64 rounded-xl border-2 border-orange-400/75 bg-[#211f28] shadow-[0_0_0_1px_rgba(251,146,60,0.18),0_18px_40px_-24px_rgba(249,115,22,0.9)]",
+      "h-24 w-64 rounded-xl border-2 border-white/10 bg-[#25252f]",
     nodeClassName:
       "h-24 w-64 overflow-visible rounded-xl border-0 bg-transparent p-0 shadow-none",
     placeholderDescription: "Workflow stage",
   },
   L2: {
     Icon: Calculator,
-    badgeClassName: "top-1 border-emerald-400/70 bg-[#211f28] text-emerald-200",
+    badgeClassName: "top-1 border-white/15 bg-[#1a1a20] text-emerald-300",
     captionClassName: "w-40",
     contentClassName: "h-full w-full p-0",
     defaultRole: "logic",
-    iconClassName: "text-emerald-300",
+    iconClassName: "text-emerald-400",
     iconShellClassName:
-      "size-24 rounded-lg border-2 border-emerald-400/75 bg-[#211f28] shadow-[0_0_0_1px_rgba(52,211,153,0.18),0_18px_40px_-24px_rgba(16,185,129,0.9)]",
+      "size-24 rounded-lg border-2 border-white/10 bg-[#25252f]",
     nodeClassName:
       "size-24 overflow-visible rounded-lg border-0 bg-transparent p-0 shadow-none",
     placeholderDescription: "Workflow block",
   },
   L3: {
     Icon: FileText,
-    badgeClassName: "top-1 border-sky-400/70 bg-[#211f28] text-sky-200",
+    badgeClassName: "top-1 border-white/15 bg-[#1a1a20] text-sky-300",
     captionClassName: "w-40",
     contentClassName: "h-full w-full p-0",
     defaultRole: "source",
-    iconClassName: "text-sky-300",
+    iconClassName: "text-sky-400",
     iconShellClassName:
-      "size-24 rounded-l-3xl rounded-r-lg border-2 border-dashed border-sky-400/75 bg-[#211f28] shadow-[0_0_0_1px_rgba(56,189,248,0.18),0_18px_40px_-24px_rgba(14,165,233,0.9)]",
+      "size-24 rounded-l-3xl rounded-r-lg border-2 border-white/10 bg-[#25252f]",
     nodeClassName:
       "size-24 overflow-visible rounded-l-3xl rounded-r-lg border-0 bg-transparent p-0 shadow-none",
     placeholderDescription: "Source evidence",
@@ -156,6 +158,7 @@ export function VisualLevelIcon({
         visualStyle.iconShellClassName,
         className
       )}
+      style={{ boxShadow: CARD_SHADOW }}
     >
       {children ?? (
         <Icon
@@ -175,23 +178,23 @@ export function VisualLevelDecor({
   if (visualLevel === "L1") {
     return (
       <>
-        <div className="pointer-events-none absolute top-4 left-4 h-16 w-px bg-orange-300/25" />
-        <div className="pointer-events-none absolute top-4 right-4 h-16 w-px bg-orange-300/25" />
+        <div className="pointer-events-none absolute top-4 left-4 h-16 w-px bg-neutral-400/20" />
+        <div className="pointer-events-none absolute top-4 right-4 h-16 w-px bg-neutral-400/20" />
       </>
     );
   }
 
   if (visualLevel === "L2") {
     return (
-      <div className="-translate-x-1/2 pointer-events-none absolute top-0 left-1/2 h-1 w-16 rounded-full bg-emerald-300/80" />
+      <div className="-translate-x-1/2 pointer-events-none absolute top-0 left-1/2 h-1 w-16 rounded-full bg-neutral-400/25" />
     );
   }
 
   if (visualLevel === "L3") {
     return (
       <>
-        <div className="pointer-events-none absolute top-0 right-4 size-6 rounded-bl-xl border-sky-300/30 border-b border-l bg-sky-300/10" />
-        <div className="pointer-events-none absolute top-4 left-4 h-16 w-1 rounded-r-full bg-sky-300/70" />
+        <div className="pointer-events-none absolute top-0 right-4 size-6 rounded-bl-xl border-b border-l border-neutral-400/20" />
+        <div className="pointer-events-none absolute top-4 left-4 h-16 w-1 rounded-r-full bg-neutral-400/25" />
       </>
     );
   }
