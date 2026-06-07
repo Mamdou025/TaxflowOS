@@ -5,161 +5,35 @@
 // Part II = frozen-left scrollable grid, 20 FA columns, all CRA sections.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { Link } from 'wouter';
+import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
-  ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
+  ChevronDown, ChevronUp,
   Download, Upload, FileText, Mail, Eye, PenLine,
   Users, ClipboardCheck, X,
-  Link2, Info, Plus, Check, Building2, Globe,
-  Sparkles, MapPin, Package,
+  Link2, Info, Check, Building2, Globe,
+  Sparkles, Package,
 } from 'lucide-react';
-import { cn } from '@tax/lib/utils';
 import {
   FOREIGN_AFFILIATES, COUNTRY_GROUPS, PART_I_SUMMARY, SOPHIA_IRL_QUESTIONS,
   type ForeignAffiliate, type YesNo,
 } from '@tax/lib/t1134Data';
 
-// ─── Brand colours (matching FAPI/OrbitalStage exactly) ─────────────────────
+// ─── Brand colour ─────────────────────────────────────────────────────────────
 const PURPLE = '#6B21A8';
-const ORANGE = '#C2410C';
 
 // ─── Milestone definitions ────────────────────────────────────────────────────
 type MilestoneId = 'ai-assistant' | 'client-context' | 'upload' | 'irl' | 'validate' | 'review' | 'signoff' | 'file';
 const MILESTONES: { id: MilestoneId; label: string; icon: React.ReactElement; done: boolean }[] = [
-  { id: 'ai-assistant',    label: 'AI Assistant',         icon: <Sparkles size={14} />,       done: false },
-  { id: 'client-context', label: 'Client Context', icon: <FileText size={14} />,       done: true  },
-  { id: 'upload',         label: 'Upload',          icon: <Upload size={14} />,          done: true  },
-  { id: 'irl',            label: 'IRL',             icon: <Mail size={14} />,            done: false },
-  { id: 'validate',       label: 'Validate',        icon: <ClipboardCheck size={14} />,  done: false },
-  { id: 'review',         label: 'Review',          icon: <Eye size={14} />,             done: false },
-  { id: 'signoff',        label: 'Sign-off',        icon: <PenLine size={14} />,         done: false },
-  { id: 'file',           label: 'File',            icon: <Package size={14} />,         done: false },
+  { id: 'ai-assistant',   label: 'AI Assistant',  icon: <Sparkles size={16} />,      done: false },
+  { id: 'client-context', label: 'Client Context',icon: <FileText size={16} />,      done: true  },
+  { id: 'upload',         label: 'Upload',         icon: <Upload size={16} />,        done: true  },
+  { id: 'irl',            label: 'IRL',            icon: <Mail size={16} />,          done: false },
+  { id: 'validate',       label: 'Validate',       icon: <ClipboardCheck size={16} />,done: false },
+  { id: 'review',         label: 'Review',         icon: <Eye size={16} />,           done: false },
+  { id: 'signoff',        label: 'Sign-off',       icon: <PenLine size={16} />,       done: false },
+  { id: 'file',           label: 'File',           icon: <Package size={16} />,       done: false },
 ];
-
-// ─── Animated InScope Logo ────────────────────────────────────────────────────
-function MiniDotRing({ size = 120, onClick }: { size?: number; onClick?: () => void }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const rafRef = useRef<number>(0);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    const c = ctx;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-    c.scale(dpr, dpr);
-    const cx = size / 2, cy = size / 2;
-    const OUTER_R = size * 0.42, INNER_R = size * 0.32;
-    const OUTER_N = 52, INNER_N = 36;
-    const FADE = 8;
-    let t = 0;
-    function drawRing(
-      r: number, n: number, maxDot: number, color: string,
-      offset: number, direction: 1 | -1, gapFrac: number
-    ) {
-      const gapDots = Math.round(n * gapFrac);
-      for (let i = 0; i < n; i++) {
-        const angle = ((i / n) * Math.PI * 2) + offset * direction;
-        const posInArc = i < n - gapDots ? i : -1;
-        if (posInArc < 0) continue;
-        const arcLen = n - gapDots;
-        let scale = 1;
-        if (posInArc < FADE) scale = Math.pow(posInArc / FADE, 0.5);
-        else if (posInArc > arcLen - 1 - FADE) scale = Math.pow((arcLen - 1 - posInArc) / FADE, 0.5);
-        const dotR = maxDot * scale;
-        const opacity = 0.25 + 0.7 * scale;
-        const x = cx + Math.cos(angle) * r;
-        const y = cy + Math.sin(angle) * r;
-        c.beginPath();
-        c.arc(x, y, dotR, 0, Math.PI * 2);
-        c.fillStyle = color + Math.round(opacity * 255).toString(16).padStart(2, '0');
-        c.fill();
-      }
-    }
-    function frame() {
-      c.clearRect(0, 0, size, size);
-      drawRing(OUTER_R, OUTER_N, 1.4, PURPLE, t, 1, 0.18);
-      drawRing(INNER_R, INNER_N, 1.2, ORANGE, t * 1.4, -1, 0.22);
-      t += 0.012;
-      rafRef.current = requestAnimationFrame(frame);
-    }
-    frame();
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [size]);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{ width: size, height: size, cursor: 'pointer' }}
-      onClick={onClick}
-    />
-  );
-}
-
-// ─── Orbital Milestone Menu ───────────────────────────────────────────────────
-function OrbitalMilestoneMenu({
-  open, active, onSelect, onClose,
-}: {
-  open: boolean;
-  active: MilestoneId | null;
-  onSelect: (id: MilestoneId) => void;
-  onClose: () => void;
-}) {
-  if (!open) return null;
-  const RADIUS = 175;
-  const count = MILESTONES.length;
-  return (
-    <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-50" style={{ width: 1, height: 1 }}>
-      {MILESTONES.map((m, i) => {
-        // Spread from -160° to -20° (upward arc, left to right)
-        const startAngle = -160 * (Math.PI / 180);
-        const endAngle = -20 * (Math.PI / 180);
-        const angle = startAngle + (i / (count - 1)) * (endAngle - startAngle);
-        const x = Math.cos(angle) * RADIUS;
-        const y = Math.sin(angle) * RADIUS;
-        const isActive = active === m.id;
-        return (
-          <button
-            key={m.id}
-            onClick={() => { onSelect(m.id); onClose(); }}
-            className="absolute flex flex-col items-center gap-1 group transition-all duration-200 hover:scale-110"
-            style={{ left: x, top: y, transform: 'translate(-50%, -50%)' }}
-          >
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-200 relative"
-              style={isActive
-                ? { background: `linear-gradient(135deg, ${PURPLE}, ${ORANGE})`, borderColor: 'transparent', color: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }
-                : m.done
-                ? { background: '#fff', borderColor: '#4ade80', color: '#16a34a' }
-                : { background: '#fff', borderColor: '#d1d5db', color: '#6b7280' }
-              }
-            >
-              {m.icon}
-              {m.done && !isActive && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
-                  <Check size={9} className="text-white" strokeWidth={3} />
-                </span>
-              )}
-            </div>
-            <span className="text-[9px] font-500 whitespace-nowrap" style={{ color: isActive ? '#1f2937' : '#6b7280' }}>
-              {m.label}
-            </span>
-          </button>
-        );
-      })}
-      <button
-        onClick={onClose}
-        className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-gray-400 hover:text-gray-600 text-xs flex items-center gap-1"
-      >
-        <X size={12} /> close
-      </button>
-    </div>
-  );
-}
 
 // ─── Yes/No Toggle ────────────────────────────────────────────────────────────
 function YesNoToggle({ value, onChange, disabled }: { value: YesNo; onChange?: (v: YesNo) => void; disabled?: boolean }) {
@@ -828,15 +702,99 @@ function PartIIGrid() {
   );
 }
 
+// ─── T1134 Toolbar — portals into GlobalTopNav's nav slot ────────────────────
+const NEU_PRESS = 'inset 3px 3px 7px rgba(158,158,178,0.38), inset -3px -3px 7px rgba(255,255,255,0.84)';
+
+function T1134Toolbar({
+  activePanel,
+  onSelect,
+}: {
+  activePanel: MilestoneId | null;
+  onSelect: (id: MilestoneId) => void;
+}) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  if (!mounted) return null;
+  const slot = document.getElementById('global-nav-workflow-slot');
+  if (!slot) return null;
+
+  return createPortal(
+    <>
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-1 shrink-0" style={{ fontSize: 12 }}>
+        <span style={{ color: 'var(--neu-text-muted)' }}>Northstar Inc.</span>
+        <span style={{ color: 'rgba(0,0,0,0.2)' }}>›</span>
+        <span style={{ color: 'var(--neu-text-muted)' }}>ICT</span>
+        <span style={{ color: 'rgba(0,0,0,0.2)' }}>›</span>
+        <span style={{ color: 'var(--neu-text-muted)' }}>Comply</span>
+        <span style={{ color: 'rgba(0,0,0,0.2)' }}>›</span>
+        <span style={{ color: 'var(--neu-text)', fontWeight: 600 }}>T1134</span>
+      </div>
+
+      {/* Spacer */}
+      <div style={{ flex: 1 }} />
+
+      {/* Separator */}
+      <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.10)', flexShrink: 0 }} />
+
+      {/* Milestone action buttons — same sizing tokens as workflow builder Button size="sm" */}
+      {MILESTONES.map((m) => {
+        const isActive = activePanel === m.id;
+        return (
+          <button
+            key={m.id}
+            onClick={() => onSelect(m.id)}
+            className="neu-action inline-flex items-center gap-1.5 rounded-md text-sm font-medium transition-all shrink-0"
+            style={{
+              height: 32,
+              paddingInline: 10,
+              border: 'none',
+              cursor: 'pointer',
+              background: isActive ? '#d8d8e2' : 'transparent',
+              boxShadow: isActive ? NEU_PRESS : undefined,
+              color: isActive ? PURPLE : 'var(--neu-text)',
+            }}
+          >
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', flexShrink: 0,
+              opacity: isActive ? 1 : m.done ? 0.85 : 0.4,
+              transition: 'opacity 150ms',
+            }}>
+              {m.icon}
+            </span>
+            {m.label}
+          </button>
+        );
+      })}
+
+      {/* Separator + milestone progress */}
+      <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.10)', flexShrink: 0 }} />
+      <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex gap-0.5">
+          {MILESTONES.map((m) => (
+            <div key={m.id} style={{
+              width: 14, height: 3, borderRadius: 9999,
+              background: m.done ? 'var(--neu-text)' : 'rgba(0,0,0,0.12)',
+              opacity: m.done ? 0.55 : 1,
+            }} />
+          ))}
+        </div>
+        <span style={{ fontSize: 10, color: 'var(--neu-text-muted)', fontWeight: 500 }}>
+          {MILESTONES.filter(m => m.done).length}/{MILESTONES.length}
+        </span>
+      </div>
+    </>,
+    slot,
+  );
+}
+
 // ─── Main T1134Worksheet Component ───────────────────────────────────────────
 export default function T1134Worksheet() {
   const [activeTab, setActiveTab] = useState<'part1' | 'part2' | 'client'>('part2');
   const [activePanel, setActivePanel] = useState<MilestoneId | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleMilestoneSelect = useCallback((id: MilestoneId) => {
     setActivePanel(prev => prev === id ? null : id);
-    setMenuOpen(false);
   }, []);
 
   const handleClosePanel = useCallback(() => {
@@ -845,52 +803,12 @@ export default function T1134Worksheet() {
 
   const panelOpen = activePanel !== null;
 
-  // Logo position: bottom-center when no panel, anchored to right edge of left area when panel open
-  const logoStyle: React.CSSProperties = {
-    position: 'fixed',
-    bottom: 24,
-    transition: 'left 0.35s cubic-bezier(0.23,1,0.32,1), right 0.35s cubic-bezier(0.23,1,0.32,1), transform 0.35s cubic-bezier(0.23,1,0.32,1)',
-    zIndex: 50,
-    ...(panelOpen
-      ? { right: '38%', left: 'auto', transform: 'translateX(50%)' }
-      : { left: '50%', right: 'auto', transform: 'translateX(-50%)' }),
-  };
-
   return (
     <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
-      {/* ── Row 1: logo · breadcrumb · milestones (matches FAPI exactly) ──── */}
-      <div className="flex items-center gap-3 px-4 py-2.5 bg-white border-b border-gray-100 z-20 shrink-0">
-        {/* InScope logo — same weight as FAPI */}
-        <button onClick={() => window.location.href = '/'} className="flex items-center gap-1.5 select-none hover:opacity-80 transition-opacity" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-          <span className="text-sm font-700 tracking-tight text-gray-900">Sinaxe</span>
-          <span className="text-[10px] text-gray-300 font-400">™</span>
-          <span className="text-sm font-700 tracking-tight" style={{ color: PURPLE }}>InScope</span>
-        </button>
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-1 text-xs text-gray-400">
-          <span className="text-gray-300">·</span>
-          <button onClick={() => window.location.href = '/'} className="hover:text-gray-600 transition-colors" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 12, color: '#9ca3af' }}>Northstar Inc.</button>
-          <span className="text-gray-300">›</span>
-          <button onClick={() => window.location.href = '/'} className="hover:text-gray-600 transition-colors" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 12, color: '#9ca3af' }}>ICT</button>
-          <span className="text-gray-300">›</span>
-          <button onClick={() => window.location.href = '/'} className="hover:text-gray-600 transition-colors" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 12, color: '#9ca3af' }}>Comply</button>
-          <span className="text-gray-300">›</span>
-          <span className="text-xs font-500 text-gray-600">T1134</span>
-        </div>
-        {/* Milestone progress — same as FAPI */}
-        <div className="ml-auto flex items-center gap-2">
-          <div className="flex items-center gap-1.5">
-            <div className="flex gap-0.5">
-              {MILESTONES.map((m) => (
-                <div key={m.id} className="w-4 h-1 rounded-full transition-all" style={{ background: m.done ? '#22c55e' : '#e5e7eb' }} />
-              ))}
-            </div>
-            <span className="text-[10px] text-gray-400 font-500">{MILESTONES.filter(m => m.done).length}/{MILESTONES.length} milestones</span>
-          </div>
-        </div>
-      </div>
+      {/* Portals breadcrumb + milestone buttons into GlobalTopNav */}
+      <T1134Toolbar activePanel={activePanel} onSelect={handleMilestoneSelect} />
 
-      {/* ── Row 2: worksheet title ─────────────────────────────────────────── */}
+      {/* ── Row 1: worksheet title ─────────────────────────────────────────── */}
       <div className="px-4 pt-3 pb-1 bg-white">
         <div className="text-[10px] font-700 text-gray-400 uppercase tracking-widest mb-0.5">T1134 WORKPAPER</div>
         <div className="text-base font-600 text-gray-900 leading-tight">Information Return Relating to Controlled and Non-Controlled Foreign Affiliates</div>
@@ -974,7 +892,7 @@ export default function T1134Worksheet() {
         <div style={{
           flex: 1, overflowY: 'auto', overflowX: activeTab === 'part2' ? 'auto' : 'hidden',
           transition: 'flex-basis 0.3s ease-out',
-          paddingBottom: 120,
+          paddingBottom: 24,
         }}>
           {activeTab === 'part1' && <PartISummary />}
           {activeTab === 'part2' && <PartIIGrid />}
@@ -1022,33 +940,6 @@ export default function T1134Worksheet() {
         </div>
       </div>
 
-      {/* ── Animated InScope logo (bottom, position-aware) ─────────────────── */}
-      <div style={logoStyle}>
-        <div style={{ position: 'relative' }}>
-          <MiniDotRing size={100} onClick={() => setMenuOpen(o => !o)} />
-          {/* Center label */}
-          <div style={{
-            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-            textAlign: 'center', pointerEvents: 'none',
-          }}>
-            <div style={{ fontSize: 9, fontWeight: 800, color: '#111827', lineHeight: 1.2 }}>T1134</div>
-            <div style={{ fontSize: 8, color: '#9ca3af', marginTop: 1 }}>
-              {FOREIGN_AFFILIATES.filter(fa => fa.completionPct >= 90).length}/{FOREIGN_AFFILIATES.length} done
-            </div>
-          </div>
-          {/* Milestone menu */}
-          {menuOpen && (
-            <div style={{ position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)', marginBottom: 8 }}>
-              <OrbitalMilestoneMenu
-open={menuOpen}
-          active={activePanel}
-          onSelect={handleMilestoneSelect}
-          onClose={() => setMenuOpen(false)}
-              />
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

@@ -55,9 +55,11 @@ export function ChatCenterOverlay() {
           top: NAV_HEIGHT,
           bottom: 80,
           pointerEvents: takeover ? 'auto' : 'none',
-          background: takeover ? 'rgba(0,0,0,0.38)' : 'transparent',
-          backdropFilter: takeover ? 'blur(6px)' : 'none',
-          transition: 'background 480ms ease-out, backdrop-filter 480ms ease-out',
+          background: takeover ? 'rgba(0,0,0,0.12)' : 'transparent',
+          backdropFilter: takeover ? 'blur(3px)' : 'none',
+          transition: takeover
+            ? 'background 360ms ease-out 80ms, backdrop-filter 360ms ease-out 80ms'
+            : 'background 200ms ease-in, backdrop-filter 200ms ease-in',
         }}
       >
         <div
@@ -69,10 +71,11 @@ export function ChatCenterOverlay() {
               ? '0 4px 24px rgba(0,0,0,0.30), 0 24px 60px rgba(0,0,0,0.18)'
               : 'none',
             opacity: takeover ? 1 : 0,
-            transform: takeover ? 'scale(1) translateY(0)' : 'scale(0.97) translateY(10px)',
+            transform: takeover ? 'scale(1) translateY(0)' : 'scale(0.72) translateY(72px)',
+            transformOrigin: '50% 100%',
             transition: takeover
-              ? 'opacity 380ms cubic-bezier(0.23,1,0.32,1) 80ms, transform 380ms cubic-bezier(0.23,1,0.32,1) 80ms, box-shadow 380ms ease-out 80ms'
-              : 'opacity 260ms ease-in, transform 260ms ease-in, box-shadow 260ms ease-in',
+              ? 'opacity 240ms ease-out, transform 480ms cubic-bezier(0.34,1.56,0.64,1), box-shadow 360ms ease-out'
+              : 'opacity 160ms ease-in, transform 200ms cubic-bezier(0.4,0,1,1), box-shadow 160ms ease-in',
           }}
         >
           {/* Header */}

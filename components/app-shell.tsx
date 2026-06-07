@@ -4,10 +4,9 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { GlobalTopNav } from '@/components/global-top-nav';
-import { ChatDrawer } from '@/components/chat-drawer';
-import { ChatCenterOverlay } from '@/components/chat-center-overlay';
 import { GlobalClientSwitcher } from '@/components/global-client-switcher';
 import { PersistentCanvas } from '@/components/workflow/persistent-canvas';
+import { ActionOrb } from '@/components/action-orb';
 
 // Fades from #eaeaef → transparent each time the canvas page is entered,
 // revealing the dark canvas beneath. Lives at z-[15] so it covers the z-10
@@ -70,11 +69,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Light → transparent overlay that plays on every canvas page entry */}
       {isCanvasPage && <CanvasEnterOverlay key={enterKey} />}
 
-      {/* Chat center takeover — fades in over the content area when a message is sent */}
-      <ChatCenterOverlay />
+      {/* ActionOrb — bottom nav + chat morph */}
+      <ActionOrb />
 
       {/* Floating layers — rendered outside the stacking context so they layer over everything */}
-      <ChatDrawer />
       <GlobalClientSwitcher />
     </>
   );

@@ -37,7 +37,7 @@ export function PersistentCanvas() {
       className="fixed inset-0 z-0"
       style={{
         background: bgDark ? '#18181c' : '#eaeaef',
-        opacity: chatTakeover ? 0.35 : 1,
+        opacity: chatTakeover ? 0.6 : 1,
         pointerEvents: chatTakeover ? 'none' : 'auto',
         transition: [
           'background 900ms cubic-bezier(0.23,1,0.32,1)',

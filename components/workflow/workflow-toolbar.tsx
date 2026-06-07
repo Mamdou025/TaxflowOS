@@ -2876,7 +2876,7 @@ function LocalStudioTopBar({
 
           {/* ── Runtime Preview toggle ── */}
           <Button
-            className="neu-action px-2 text-(--neu-text)"
+            className="neu-action gap-1.5 px-2.5 text-(--neu-text)"
             onClick={() => togglePanel("runtime-preview")}
             size="sm"
             title={activeRightPanel === "runtime-preview" ? "Close runtime preview" : "Open runtime preview"}
@@ -2885,11 +2885,12 @@ function LocalStudioTopBar({
             <ListTree
               className={`size-4 transition-opacity ${activeRightPanel === "runtime-preview" ? "opacity-100" : "opacity-40"}`}
             />
+            Preview
           </Button>
 
           {/* ── AI Panel toggle ── */}
           <Button
-            className="neu-action px-2 text-(--neu-text)"
+            className="neu-action gap-1.5 px-2.5 text-(--neu-text)"
             onClick={() => togglePanel("ai-panel")}
             size="sm"
             title={activeRightPanel === "ai-panel" ? "Close AI panel" : "Open AI panel"}
@@ -2898,11 +2899,12 @@ function LocalStudioTopBar({
             <PanelRight
               className={`size-4 transition-opacity ${activeRightPanel === "ai-panel" ? "opacity-100" : "opacity-40"}`}
             />
+            AI
           </Button>
 
           {/* ── Pages toggle ── */}
           <Button
-            className="neu-action px-2 text-(--neu-text)"
+            className="neu-action gap-1.5 px-2.5 text-(--neu-text)"
             onClick={() => togglePanel("pages")}
             size="sm"
             title={activeRightPanel === "pages" ? "Close pages" : "Open pages"}
@@ -2911,11 +2913,12 @@ function LocalStudioTopBar({
             <Layers
               className={`size-4 transition-opacity ${activeRightPanel === "pages" ? "opacity-100" : "opacity-40"}`}
             />
+            Pages
           </Button>
 
           {/* ── Settings toggle + Dev Tools dropdown ── */}
           <Button
-            className="neu-action px-2 text-(--neu-text)"
+            className="neu-action gap-1.5 px-2.5 text-(--neu-text)"
             disabled={state.isGenerating}
             onClick={() => togglePanel("settings")}
             size="sm"
@@ -2925,6 +2928,7 @@ function LocalStudioTopBar({
             <Settings2
               className={`size-4 transition-opacity ${activeRightPanel === "settings" ? "opacity-100" : "opacity-40"}`}
             />
+            Settings
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

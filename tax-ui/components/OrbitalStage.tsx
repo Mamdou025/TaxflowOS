@@ -411,12 +411,9 @@ export default function OrbitalStage() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  // Register quick-access nav actions for the home page
+  // Nav actions cleared — builder access is via the GlobalOrb radial menu
   useEffect(() => {
-    setNavActions([
-      { id: 'legacy-builder', label: 'Legacy Builder', href: '/workflows' },
-      { id: 'workflow-builder', label: 'Workflow Builder', href: '/builder' },
-    ]);
+    setNavActions([]);
     return () => setNavActions([]);
   }, [setNavActions]);
 
@@ -497,8 +494,8 @@ export default function OrbitalStage() {
       className="relative w-full h-full overflow-hidden flex flex-col"
       style={{
         background: '#eaeaef',
-        opacity: chatTakeover ? 0.35 : 1,
-        filter: chatTakeover ? 'blur(3px) saturate(0.6)' : 'blur(0px) saturate(1)',
+        opacity: chatTakeover ? 0.6 : 1,
+        filter: chatTakeover ? 'blur(2px) saturate(0.75)' : 'blur(0px) saturate(1)',
         transform: chatTakeover ? 'scale(0.99)' : 'scale(1)',
         transition: chatTakeover
           ? 'opacity 480ms ease-out, filter 480ms ease-out, transform 480ms ease-out'
@@ -561,99 +558,110 @@ export default function OrbitalStage() {
       )}
 
       {/* ── Orbital stage ── */}
-      <div ref={stageRef} className="flex-1 relative flex items-center justify-center">
+      <div ref={stageRef} className="flex-1 relative">
+        {/*
+          Inner container shrunk at the bottom by the GlobalOrb's footprint
+          (BOTTOM_GAP 20 + MINI_SIZE 64 + breathing room 40 = 124px).
+          Because BOTH the flex-centering (InScopeLogo) and the absolutely-
+          positioned nodes use THIS div as their containing block, they shift
+          up together — the previous paddingBottom approach only moved the logo.
+        */}
+        <div
+          className="absolute flex items-center justify-center"
+          style={{ inset: '0 0 124px 0' }}
+        >
+          <DottedOrbitRing radius={RADIUS} />
 
-        <DottedOrbitRing radius={RADIUS} />
+          <div className="relative flex flex-col items-center" style={{ zIndex: 10 }}>
+            <InScopeLogo
+              clientName={selectedClient}
+              level={level}
+              levelLabel={getCenterContextLabel()}
+              onClick={handleCenterClick}
+            />
+            {level > 0 && (
+              <div style={{ marginTop: 6, animation: 'fadeIn 220ms ease-out both', pointerEvents: 'none', textAlign: 'center' }}>
+                <span style={{ fontSize: 13, fontWeight: 800, color: '#374151', lineHeight: 1.2, letterSpacing: '-0.01em' }}>
+                  {selectedClient}
+                </span>
+              </div>
+            )}
+          </div>
 
-        <div className="relative flex flex-col items-center" style={{ zIndex: 10 }}>
-          <InScopeLogo
-            clientName={selectedClient}
-            level={level}
-            levelLabel={getCenterContextLabel()}
-            onClick={handleCenterClick}
-          />
-          {level > 0 && (
-            <div style={{ marginTop: 6, animation: 'fadeIn 220ms ease-out both', pointerEvents: 'none', textAlign: 'center' }}>
-              <span style={{ fontSize: 13, fontWeight: 800, color: '#374151', lineHeight: 1.2, letterSpacing: '-0.01em' }}>
-                {selectedClient}
-              </span>
+          {/* Orbital nodes — inset:0 is now relative to the inner container */}
+          <div style={{ position: 'absolute', inset: 0, pointerEvents: exiting ? 'none' : 'auto' }}>
+            {currentNodes.map((node, i) => {
+              const angle = (i / nodeCount) * Math.PI * 2 - Math.PI / 2;
+              const nx = Math.cos(angle) * RADIUS;
+              const ny = Math.sin(angle) * RADIUS;
+              return (
+                <OrbitalNode
+                  key={`${animKey}-${node.id}`}
+                  label={node.label}
+                  subtitle={node.subtitle}
+                  angle={angle}
+                  radius={RADIUS}
+                  onClick={() => handleNodeClick(node.id, nx, ny, node.label)}
+                  highlighted={hoveredNode === node.label}
+                  onHover={setHoveredNode}
+                  staggerIndex={i}
+                  exiting={exiting}
+                />
+              );
+            })}
+
+            {overflowItems.length > 0 && (() => {
+              const angle = (currentNodes.length / nodeCount) * Math.PI * 2 - Math.PI / 2;
+              return (
+                <OrbitalNode
+                  key={`${animKey}-overflow`}
+                  label="More"
+                  subtitle="Additional tools"
+                  angle={angle}
+                  radius={RADIUS}
+                  onClick={() => {}}
+                  highlighted={hoveredNode === 'More'}
+                  onHover={setHoveredNode}
+                  hasOverflow
+                  overflowItems={overflowItems}
+                  staggerIndex={currentNodes.length}
+                  exiting={exiting}
+                />
+              );
+            })()}
+          </div>
+
+          {/* Flying node ghost */}
+          {flyingNode && (
+            <div
+              style={{
+                position: 'absolute',
+                left: `calc(50% + ${flyingNode.x}px)`,
+                top: `calc(50% + ${flyingNode.y}px)`,
+                transform: 'translate(-50%, -50%)',
+                '--fly-dx': `${-flyingNode.x}px`,
+                '--fly-dy': `${-flyingNode.y}px`,
+                animation: 'flyToCenter 340ms cubic-bezier(0.4,0,0.2,1) both',
+                pointerEvents: 'none',
+                zIndex: 50,
+              } as React.CSSProperties}
+            >
+              <div
+                style={{
+                  width: 94, height: 94, borderRadius: '50%',
+                  background: '#eaeaef',
+                  boxShadow: ['10px 10px 22px rgba(158,158,178,0.44)', '-10px -10px 22px rgba(255,255,255,0.88)', '0 0 0 2.5px rgba(168,85,247,0.32)'].join(', '),
+                  border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
+                }}
+              >
+                <Lock size={15} style={{ color: '#9333ea' }} />
+                <span style={{ fontSize: 10, fontWeight: 600, color: '#6b21a8', textAlign: 'center', maxWidth: 78, padding: '0 8px' }}>
+                  {flyingNode.label}
+                </span>
+              </div>
             </div>
           )}
         </div>
-
-        {/* Orbital nodes */}
-        <div style={{ position: 'absolute', inset: 0, pointerEvents: exiting ? 'none' : 'auto' }}>
-          {currentNodes.map((node, i) => {
-            const angle = (i / nodeCount) * Math.PI * 2 - Math.PI / 2;
-            const nx = Math.cos(angle) * RADIUS;
-            const ny = Math.sin(angle) * RADIUS;
-            return (
-              <OrbitalNode
-                key={`${animKey}-${node.id}`}
-                label={node.label}
-                subtitle={node.subtitle}
-                angle={angle}
-                radius={RADIUS}
-                onClick={() => handleNodeClick(node.id, nx, ny, node.label)}
-                highlighted={hoveredNode === node.label}
-                onHover={setHoveredNode}
-                staggerIndex={i}
-                exiting={exiting}
-              />
-            );
-          })}
-
-          {overflowItems.length > 0 && (() => {
-            const angle = (currentNodes.length / nodeCount) * Math.PI * 2 - Math.PI / 2;
-            return (
-              <OrbitalNode
-                key={`${animKey}-overflow`}
-                label="More"
-                subtitle="Additional tools"
-                angle={angle}
-                radius={RADIUS}
-                onClick={() => {}}
-                highlighted={hoveredNode === 'More'}
-                onHover={setHoveredNode}
-                hasOverflow
-                overflowItems={overflowItems}
-                staggerIndex={currentNodes.length}
-                exiting={exiting}
-              />
-            );
-          })()}
-        </div>
-
-        {/* Flying node ghost */}
-        {flyingNode && (
-          <div
-            style={{
-              position: 'absolute',
-              left: `calc(50% + ${flyingNode.x}px)`,
-              top: `calc(50% + ${flyingNode.y}px)`,
-              transform: 'translate(-50%, -50%)',
-              '--fly-dx': `${-flyingNode.x}px`,
-              '--fly-dy': `${-flyingNode.y}px`,
-              animation: 'flyToCenter 340ms cubic-bezier(0.4,0,0.2,1) both',
-              pointerEvents: 'none',
-              zIndex: 50,
-            } as React.CSSProperties}
-          >
-            <div
-              style={{
-                width: 94, height: 94, borderRadius: '50%',
-                background: '#eaeaef',
-                boxShadow: ['10px 10px 22px rgba(158,158,178,0.44)', '-10px -10px 22px rgba(255,255,255,0.88)', '0 0 0 2.5px rgba(168,85,247,0.32)'].join(', '),
-                border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
-              }}
-            >
-              <Lock size={15} style={{ color: '#9333ea' }} />
-              <span style={{ fontSize: 10, fontWeight: 600, color: '#6b21a8', textAlign: 'center', maxWidth: 78, padding: '0 8px' }}>
-                {flyingNode.label}
-              </span>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
