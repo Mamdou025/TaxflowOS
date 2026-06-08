@@ -3,15 +3,16 @@
 // actionable signals: at-risk, awaiting sign-off, under review, completed, exceptions.
 // Layout: 6 KPI tiles → Client Portfolio (full-width) → My Work Items → Review Queue + Deadlines → Activity
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'wouter';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   AlertTriangle, CheckCircle2, Clock, Users, FileText,
   Activity, Sparkles, ChevronRight, ArrowUpRight,
-  Calendar, Shield, RefreshCw, Building2, Workflow, MessageSquare,
-  Upload, Star
+  Calendar, Shield, Building2, Workflow, MessageSquare,
+  Upload, Star, Layers, LayoutDashboard, BarChart3, Settings, HelpCircle
 } from 'lucide-react';
-import AppShell from '@tax/components/AppShell';
 import StatusBadge, { TeamBadge, AvatarInitials } from '@tax/components/StatusBadge';
 import { CLIENTS, DASHBOARD_STATS, RECENT_ACTIVITY, TAX_TEAMS, NORTHSTAR_WORKFLOWS } from '@tax/lib/data';
 import { cn } from '@tax/lib/utils';
@@ -255,6 +256,81 @@ function ActivityItem({ item, index }: { item: typeof RECENT_ACTIVITY[0]; index:
   );
 }
 
+// ─── Dashboard Toolbar (portals sidebar nav into GlobalTopNav slot) ────────────
+function DashboardToolbar() {
+  const [mounted, setMounted] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => { setMounted(true); }, []);
+
+  if (!mounted) return null;
+  const slot = document.getElementById('global-nav-workflow-slot');
+  if (!slot) return null;
+
+  const isActive = (href: string) =>
+    href === '/dashboard' ? pathname === '/dashboard' : pathname?.startsWith(href) ?? false;
+
+  const mainItems = [
+    { label: 'Tax Overview', href: '/bu-overview',       Icon: Layers         },
+    { label: 'Dashboard',    href: '/dashboard',          Icon: LayoutDashboard },
+    { label: 'Clients',      href: '/client/northstar',  Icon: Building2,      badge: 8,  badgeColor: 'amber' as const },
+    { label: 'Workflows',    href: '/workflow/fapi',      Icon: FileText,       badge: 2,  badgeColor: 'red'   as const },
+    { label: 'Builder',      href: '/builder',            Icon: Workflow        },
+  ];
+
+  const utilItems = [
+    { label: 'Analytics', Icon: BarChart3  },
+    { label: 'Settings',  Icon: Settings   },
+    { label: 'Help',      Icon: HelpCircle },
+  ];
+
+  const navBtnStyle = (active: boolean): React.CSSProperties => ({
+    display: 'flex', alignItems: 'center', gap: 4,
+    padding: '4px 9px', borderRadius: 6,
+    fontSize: 12, fontWeight: active ? 600 : 500,
+    color: active ? '#0F2044' : '#6B7280',
+    background: active ? 'rgba(15,32,68,0.09)' : 'transparent',
+    cursor: 'pointer', border: 'none', whiteSpace: 'nowrap',
+    transition: 'background 0.15s, color 0.15s',
+  });
+
+  return createPortal(
+    <div style={{ display: 'flex', alignItems: 'center', gap: 1, height: '100%', width: '100%' }}>
+      {mainItems.map(({ label, href, Icon, badge, badgeColor }) => (
+        <button key={href} onClick={() => router.push(href)} style={navBtnStyle(isActive(href))}>
+          <Icon size={13} />
+          <span>{label}</span>
+          {badge != null && (
+            <span style={{
+              fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 10,
+              background: badgeColor === 'amber' ? '#FEF3C7' : '#FEE2E2',
+              color: badgeColor === 'amber' ? '#B45309' : '#DC2626',
+            }}>
+              {badge}
+            </span>
+          )}
+        </button>
+      ))}
+
+      <div style={{ flex: 1 }} />
+      <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.1)', flexShrink: 0, margin: '0 4px' }} />
+
+      {utilItems.map(({ label, Icon }) => (
+        <button
+          key={label}
+          onClick={() => toast.info('Feature coming soon')}
+          style={{ ...navBtnStyle(false), color: '#9CA3AF' }}
+        >
+          <Icon size={13} />
+          <span>{label}</span>
+        </button>
+      ))}
+    </div>,
+    slot
+  );
+}
+
 // ─── Practitioner Dashboard ────────────────────────────────────────────────────
 export default function Dashboard() {
   const [activeFilter, setActiveFilter] = useState<'all' | 'at-risk' | 'review'>('all');
@@ -270,21 +346,9 @@ export default function Dashboard() {
   );
 
   return (
-    <AppShell
-      breadcrumbs={[
-        { label: 'InScope', href: '/' },
-        { label: 'My Engagements' }
-      ]}
-      actions={
-        <button
-          onClick={() => toast.info('Data refreshed')}
-          className="p-2 rounded hover:bg-slate-100 transition-colors"
-          title="Refresh"
-        >
-          <RefreshCw size={14} className="text-slate-400" />
-        </button>
-      }
-    >
+    <>
+      <DashboardToolbar />
+      <div className="h-full overflow-auto">
       <div className="p-5 space-y-5 max-w-[1200px]">
 
         {/* ── Page header ──────────────────────────────────────────────────── */}
@@ -516,7 +580,8 @@ export default function Dashboard() {
         </div>
 
       </div>
-    </AppShell>
+      </div>
+    </>
   );
 }
 

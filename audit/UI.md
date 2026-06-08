@@ -41,9 +41,9 @@ The following components form the persistent shell that wraps every page in the 
 - **Role:** Persistent top bar visible on every page — single unified bar (no per-page second nav)
 - **Left:** Sinaxe InScope™ logo (links to `/`)
 - **Center (non-canvas pages):** Client selector pill (opens `GlobalClientSwitcher`) + page nav actions from `navActionsAtom`
-- **Center (canvas pages):** `<div id="global-nav-workflow-slot">` — empty slot that `WorkflowToolbar` portals its content into
+- **Center (canvas/slot pages):** `<div id="global-nav-workflow-slot">` — empty slot that pages portal their toolbar content into
 - **Height:** 52px · neumorphic `#eaeaef` background matching OrbitalStage
-- **Canvas detection:** `usePathname()` — slot mode activates on `/builder` and `/workflows/*`
+- **Canvas/slot detection:** `usePathname()` — slot mode activates on `/builder`, `/workflows/*`, `/t1134`, and `/dashboard`
 - **Note:** AI chat toggle button removed (2026-06-07) — chat entry point is the always-visible bottom pill
 
 ### `components/chat-drawer.tsx` [LIVE]
@@ -426,6 +426,16 @@ Located in `components/workflow/inspector/`
 ---
 
 ## Page Components
+
+### `app/dashboard/page.tsx` + `tax-ui/pages/Dashboard.tsx` [LIVE — 2026-06-07]
+- **Role:** Practitioner Dashboard — KPI tiles, client portfolio, work items, review queue, activity feed
+- **Shell:** No sidebar — sidebar removed 2026-06-07; content fills full width inside the root `AppShell`
+- **Toolbar:** `DashboardToolbar` (inside `Dashboard.tsx`) portals horizontal nav tabs into `#global-nav-workflow-slot` via `createPortal`
+  - Main tabs: Tax Overview · Dashboard (active) · Clients (badge 8) · Workflows (badge 2) · Builder
+  - Util items (right-aligned): Analytics · Settings · Help (all `toast.info('coming soon')`)
+  - Active item: highlighted with `rgba(15,32,68,0.09)` background + `#0F2044` text
+- **Scroll:** Root div `h-full overflow-auto` — fills the content area and scrolls internally
+- **Removed:** `tax-ui/components/AppShell.tsx` sidebar/layout wrapper is no longer rendered on `/dashboard`
 
 ### `app/page.tsx` (Home)
 - Loads local workflow from localStorage or initializes demo

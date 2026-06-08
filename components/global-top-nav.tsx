@@ -10,7 +10,7 @@ const NAV_H = 52;
 export function GlobalTopNav() {
   const router = useRouter();
   const pathname = usePathname();
-  const isCanvasPage = pathname === '/builder' || pathname.startsWith('/workflows/') || pathname === '/t1134';
+  const isCanvasPage = pathname === '/builder' || pathname.startsWith('/workflows/') || pathname === '/t1134' || pathname === '/dashboard';
   const [client] = useAtom(selectedClientAtom);
   const setShowClientSwitcher = useSetAtom(showClientSwitcherAtom);
   const navActions = useAtomValue(navActionsAtom);
