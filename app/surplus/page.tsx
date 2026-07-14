@@ -1,5 +1,6 @@
 'use client';
-import SurplusWorksheet from '@tax/pages/SurplusWorksheet';
+import dynamic from 'next/dynamic';
+const SurplusWorksheet = dynamic(() => import('@tax/pages/SurplusWorksheet'), { ssr: false });
 export default function SurplusPage() {
   return <SurplusWorksheet />;
 }

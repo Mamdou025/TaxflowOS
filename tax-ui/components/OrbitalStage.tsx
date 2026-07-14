@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 
 import {
   ChevronDown,
@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@tax/lib/utils';
 import { selectedClientAtom, showClientSwitcherAtom, navActionsAtom } from '@/lib/nav-store';
-import { chatPageContextAtom, chatTakeoverAtom } from '@/lib/chat-store';
+import { chatPageContextAtom } from '@/lib/chat-store';
 
 const PURPLE = '#6B21A8';
 const ORANGE = '#C2410C';
@@ -402,7 +402,6 @@ export default function OrbitalStage() {
   const [, setShowClientSwitcher] = useAtom(showClientSwitcherAtom);
   const setNavActions = useSetAtom(navActionsAtom);
   const setChatContext = useSetAtom(chatPageContextAtom);
-  const chatTakeover = useAtomValue(chatTakeoverAtom);
 
   const [stageSize, setStageSize] = useState({ w: window.innerWidth, h: window.innerHeight });
   useEffect(() => {
@@ -492,16 +491,7 @@ export default function OrbitalStage() {
   return (
     <div
       className="relative w-full h-full overflow-hidden flex flex-col"
-      style={{
-        background: '#eaeaef',
-        opacity: chatTakeover ? 0.6 : 1,
-        filter: chatTakeover ? 'blur(2px) saturate(0.75)' : 'blur(0px) saturate(1)',
-        transform: chatTakeover ? 'scale(0.99)' : 'scale(1)',
-        transition: chatTakeover
-          ? 'opacity 480ms ease-out, filter 480ms ease-out, transform 480ms ease-out'
-          : 'opacity 560ms cubic-bezier(0.23,1,0.32,1), filter 560ms cubic-bezier(0.23,1,0.32,1), transform 560ms cubic-bezier(0.23,1,0.32,1)',
-        pointerEvents: chatTakeover ? 'none' : 'auto',
-      }}
+      style={{ background: '#eaeaef' }}
     >
       <style>{`
         @keyframes nodeEnter { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }

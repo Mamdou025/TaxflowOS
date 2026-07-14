@@ -25,10 +25,23 @@ export function runCurrencyRateSource(
   const rateYear = getRateYear(config.fapiYear);
   const sameCurrency = documentCurrency === reportingCurrency;
   const overrideRate = config.overrideRate;
+  const liveRate = config.liveRate;
+  const hasLiveRate =
+    !sameCurrency && typeof liveRate === "number" && Number.isFinite(liveRate);
   const warnings: string[] = [];
-  let rate = sameCurrency ? 1 : overrideRate;
-  let rateSource = sameCurrency ? "same_currency" : "override";
-  let rateType = sameCurrency ? "same_currency" : "user_override";
+  // Prefer the live Bank of Canada Valet rate when one has been fetched;
+  // otherwise fall back to the workbook-provided override.
+  let rate = sameCurrency ? 1 : hasLiveRate ? liveRate : overrideRate;
+  let rateSource = sameCurrency
+    ? "same_currency"
+    : hasLiveRate
+      ? "bank_of_canada_valet"
+      : "override";
+  let rateType = sameCurrency
+    ? "same_currency"
+    : hasLiveRate
+      ? config.rateType || "annual_average"
+      : "user_override";
   if (!(typeof rate === "number" && Number.isFinite(rate))) {
     warnings.push(
       "No FX override was supplied. The Bank of Canada lookup path is available for later integration, but local deterministic runs require an override."
@@ -61,7 +74,9 @@ export function runCurrencyRateSource(
   const sourceTrace = [createSourceTraceRef({ evidenceRef })];
   const rateMetadata = {
     fetcher: fetchAnnualAverageExchangeRate.name,
+    live: hasLiveRate,
     provider: config.rateProvider || "bank_of_canada",
+    rate_source: rateSource,
     sourceId: context.block.id,
     sourceKind: "currency_rate",
     sourceName: context.block.label,

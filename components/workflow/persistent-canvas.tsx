@@ -1,17 +1,14 @@
 "use client";
 
 import { ReactFlowProvider } from "@xyflow/react";
-import { useAtomValue } from "jotai";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { chatTakeoverAtom } from "@/lib/chat-store";
 import { WorkflowCanvas } from "./workflow-canvas";
 
 export function PersistentCanvas() {
   const pathname = usePathname();
   const [isMounted, setIsMounted] = useState(false);
   const [bgDark, setBgDark] = useState(false);
-  const chatTakeover = useAtomValue(chatTakeoverAtom);
 
   useEffect(() => {
     setIsMounted(true);
@@ -37,14 +34,7 @@ export function PersistentCanvas() {
       className="fixed inset-0 z-0"
       style={{
         background: bgDark ? '#18181c' : '#eaeaef',
-        opacity: chatTakeover ? 0.6 : 1,
-        pointerEvents: chatTakeover ? 'none' : 'auto',
-        transition: [
-          'background 900ms cubic-bezier(0.23,1,0.32,1)',
-          chatTakeover
-            ? 'opacity 480ms ease-out'
-            : 'opacity 560ms cubic-bezier(0.23,1,0.32,1)',
-        ].join(', '),
+        transition: 'background 900ms cubic-bezier(0.23,1,0.32,1)',
       }}
     >
       <ReactFlowProvider>

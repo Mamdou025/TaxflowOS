@@ -1,11 +1,8 @@
 import { atom } from 'jotai';
 
-export type ChatMessage = {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: number;
-};
+// The conversation itself is now owned by CopilotKit (see CopilotWorkspacePanel).
+// These two atoms are all that remains: the panel's open state and a small
+// page-context label that pages set (e.g. the OrbitalStage breadcrumb).
 
 export type ChatPageContext = {
   page: string;
@@ -13,10 +10,10 @@ export type ChatPageContext = {
   description?: string;
 };
 
-export const chatOpenAtom = atom(false);
-export const chatMessagesAtom = atom<ChatMessage[]>([]);
 export const chatPageContextAtom = atom<ChatPageContext>({
   page: 'home',
   label: 'InScope',
 });
-export const chatTakeoverAtom = atom(false);
+
+/** Drives the chat workspace panel (open/closed). */
+export const chatWorkspaceOpenAtom = atom(false);

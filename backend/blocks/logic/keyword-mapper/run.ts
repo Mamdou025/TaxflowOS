@@ -26,9 +26,11 @@ type RuleMatch = {
   matchedKeyword: string;
 };
 
+type KeywordMatchMode = "contains" | "exact" | "starts_with" | "all_words";
+
 type KeywordCandidate = {
   keyword: string;
-  mode: "contains" | "exact" | "starts_with";
+  mode: KeywordMatchMode;
 };
 
 const DIACRITIC_REGEX = /[\u0300-\u036f]/g;
@@ -72,6 +74,32 @@ function getFieldValues(
     .map(normalize);
 }
 
+// A keyword token matches a field word if equal, or differs only by a trailing
+// plural "s"/"es" (gain↔gains, dividend↔dividends) — whole-word, so "gain" never
+// matches "again". Deliberately light: no aggressive stemming.
+function wordEquivalent(token: string, word: string) {
+  if (token === word) {
+    return true;
+  }
+  const [shortWord, longWord] =
+    token.length <= word.length ? [token, word] : [word, token];
+  return longWord === `${shortWord}s` || longWord === `${shortWord}es`;
+}
+
+// all_words: every token of the (multi-word) keyword must appear as a word in the
+// field value, in ANY order. This is what makes "interest income" match the GL
+// label "Investment Income - Interest" that plain substring matching misses.
+function matchesAllWords(fieldValue: string, normalizedKeyword: string) {
+  const keywordTokens = normalizedKeyword.split(" ").filter(Boolean);
+  if (keywordTokens.length === 0) {
+    return false;
+  }
+  const fieldWords = fieldValue.split(" ").filter(Boolean);
+  return keywordTokens.every((token) =>
+    fieldWords.some((word) => wordEquivalent(token, word))
+  );
+}
+
 function keywordMatches({
   fieldValues,
   keyword,
@@ -79,7 +107,7 @@ function keywordMatches({
 }: {
   fieldValues: string[];
   keyword: string;
-  mode: "contains" | "exact" | "starts_with";
+  mode: KeywordMatchMode;
 }) {
   const normalizedKeyword = normalize(keyword);
 
@@ -89,6 +117,12 @@ function keywordMatches({
 
   if (mode === "starts_with") {
     return fieldValues.some((value) => value.startsWith(normalizedKeyword));
+  }
+
+  if (mode === "all_words") {
+    return fieldValues.some((value) =>
+      matchesAllWords(value, normalizedKeyword)
+    );
   }
 
   return fieldValues.some((value) => value.includes(normalizedKeyword));

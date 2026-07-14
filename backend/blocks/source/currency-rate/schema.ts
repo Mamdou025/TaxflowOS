@@ -6,6 +6,8 @@ export type CurrencyRateConfig = {
   overrideReason?: string;
   rateProvider?: string;
   rateType?: string;
+  /** Live rate fetched from the Bank of Canada Valet API, when available. */
+  liveRate?: number;
 };
 
 function optionalString(value: unknown) {
@@ -38,6 +40,10 @@ export function parseCurrencyRateConfig(
       optionalString(source.sourceCurrency) ||
       "USD",
     fapiYear: parseNumber(source.fapiYear),
+    liveRate:
+      parseNumber(source.liveRate) ||
+      parseNumber(source.fetchedRate) ||
+      parseNumber(source.valetRate),
     overrideReason: optionalString(source.overrideReason),
     overrideRate:
       parseNumber(source.overrideRate) ||

@@ -6,7 +6,9 @@
 // Greyscale UI, Sinaxe Purple (#5E2E93) + Orange (#DA5E2C) for logo/accents only
 
 import { useState } from 'react';
+import { useAtom } from 'jotai';
 import { useLocation } from 'wouter';
+import { fieldValuesAtom, isEditableField } from '@/lib/resource-registry';
 import {
   ChevronRight, ChevronDown,
   Plus, Download, Upload, X, Check, FileText,
@@ -587,6 +589,7 @@ function FapiCalculator({
   onYearChange: (v: string) => void;
 }) {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set(['a']));
+  const [fapiValues, setFapiValues] = useAtom(fieldValuesAtom);
 
   const toggleRow = (id: string) => {
     setExpandedRows((prev) => {
@@ -605,12 +608,13 @@ function FapiCalculator({
       <div key={row.id}>
         {/* Section header — no colored bar */}
         {row.isSection ? (
-          <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 border-b border-gray-100">
+          <div data-anchor={`fapi:${row.id}`} className="flex items-center gap-2 px-4 py-2 bg-gray-50 border-b border-gray-100">
             <span className="text-[10px] font-700 text-gray-500 uppercase tracking-widest">{row.label}</span>
           </div>
         ) : (
           /* Data row */
           <div
+            data-anchor={`fapi:${row.id}`}
             className={cn(
               'flex items-center border-b border-gray-50 hover:bg-gray-50/50 transition-colors group',
               depth > 0 ? 'pl-8' : '',
@@ -668,16 +672,28 @@ function FapiCalculator({
               )}
             </div>
 
-            {/* Amount */}
+            {/* Amount — editable fields bind to the shared atom (same data the
+                chat's inline field editor writes to) */}
             <div className="flex items-center gap-2 pr-4 shrink-0">
-              <span
-                className={cn(
-                  'text-[12px] tabular-nums',
-                  hasChildren ? 'font-600 text-gray-800' : 'text-gray-700',
-                )}
-              >
-                {row.amount}
-              </span>
+              {isEditableField(row.id) ? (
+                <input
+                  value={fapiValues[row.id] ?? row.amount}
+                  onChange={(e) => setFapiValues((prev) => ({ ...prev, [row.id]: e.target.value }))}
+                  onFocus={(e) => e.currentTarget.select()}
+                  inputMode="decimal"
+                  className="text-[12px] tabular-nums text-right text-gray-800"
+                  style={{ width: 84, border: '1px solid #d1d5db', borderRadius: 6, padding: '2px 6px', outline: 'none' }}
+                />
+              ) : (
+                <span
+                  className={cn(
+                    'text-[12px] tabular-nums',
+                    hasChildren ? 'font-600 text-gray-800' : 'text-gray-700',
+                  )}
+                >
+                  {row.amount}
+                </span>
+              )}
               {row.ccy && (
                 <span className="text-[10px] text-gray-400 font-400 w-10">{row.ccy}</span>
               )}

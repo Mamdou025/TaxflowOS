@@ -50,6 +50,7 @@ import {
   selectedNodeAtom,
   showMinimapAtom,
   triggerFitViewAtom,
+  focusNodeIdAtom,
   updateNodeDataAtom,
   type WorkflowNode,
 } from "@/lib/workflow-store";
@@ -121,6 +122,7 @@ export function WorkflowCanvas() {
   const setActiveTab = useSetAtom(propertiesPanelActiveTabAtom);
   const updateNodeData = useSetAtom(updateNodeDataAtom);
   const [triggerFitView, setTriggerFitView] = useAtom(triggerFitViewAtom);
+  const [focusNodeId, setFocusNodeId] = useAtom(focusNodeIdAtom);
   const { open: openOverlay } = useOverlay();
   const { screenToFlowPosition, fitView, getViewport, setViewport } =
     useReactFlow();
@@ -152,6 +154,17 @@ export function WorkflowCanvas() {
       setTriggerFitView(false);
     }
   }, [triggerFitView, fitView, setTriggerFitView]);
+
+  // Scroll to + center a specific node (chat → builder deep-link).
+  useEffect(() => {
+    if (!focusNodeId) return;
+    if (!nodes.some((n) => n.id === focusNodeId)) return; // wait until the node exists
+    const t = window.setTimeout(() => {
+      fitView({ nodes: [{ id: focusNodeId }], maxZoom: 1.25, minZoom: 0.6, padding: 0.6, duration: 600 });
+      setFocusNodeId(null);
+    }, 260);
+    return () => window.clearTimeout(t);
+  }, [focusNodeId, nodes, fitView, setFocusNodeId]);
 
   // Pre-shift viewport when transitioning from homepage (before sidebar animates)
   const hasPreShiftedRef = useRef(false);

@@ -95,6 +95,13 @@ export type ActiveRightPanel = "runtime-preview" | "ai-panel" | "pages" | "setti
 export const activeRightPanelAtom = atom<ActiveRightPanel>(null);
 export const triggerFitViewAtom = atom<boolean>(false);
 
+// ── Builder focus (chat → builder deep-link) ──────────────────────────────────
+/** Set before navigating to /builder to load a specific workflow template and
+ *  focus one block. Read + cleared by the builder page on mount. */
+export const builderFocusTargetAtom = atom<{ workflowId: string; blockId: string } | null>(null);
+/** When set, the canvas scrolls to + centers on this node id, then clears. */
+export const focusNodeIdAtom = atom<string | null>(null);
+
 // Tracks nodes that are pending integration auto-select check
 // Don't show "missing integration" warning for these nodes
 export const pendingIntegrationNodesAtom = atom<Set<string>>(new Set<string>());

@@ -1,6 +1,6 @@
 # UI Components
 
-*Last updated: 2026-06-07*
+*Last updated: 2026-07-10*
 
 ---
 
@@ -33,7 +33,7 @@ The following components form the persistent shell that wraps every page in the 
 
 ### `components/app-shell.tsx` [LIVE]
 - **Role:** Root layout wrapper — renders on every route via `app/layout.tsx`
-- **Contains:** `GlobalTopNav` (top bar) · `PersistentCanvas` (fixed canvas layer) · `ChatDrawer` + bottom pill · `GlobalClientSwitcher` overlay
+- **Contains:** `GlobalTopNav` (top bar) · `PersistentCanvas` (fixed canvas layer) · `ChatWorkspacePanel` (the single chat surface) · `ActionOrb` (launcher orb + radial nav; its "AI Chat" item opens the panel) · `GlobalClientSwitcher` overlay
 - **Pointer-events:** Content area gets `pointer-events-none` on `/builder` and `/workflows/*` (canvas is interactive beneath)
 - **Height:** `100dvh` split as `52px nav + flex-1 content`
 
@@ -46,19 +46,48 @@ The following components form the persistent shell that wraps every page in the 
 - **Canvas/slot detection:** `usePathname()` — slot mode activates on `/builder`, `/workflows/*`, `/t1134`, and `/dashboard`
 - **Note:** AI chat toggle button removed (2026-06-07) — chat entry point is the always-visible bottom pill
 
-### `components/chat-drawer.tsx` [LIVE]
-- **Role:** Always-visible floating chat pill at bottom center — the single entry point for AI chat
-- **Pill:** Fixed bottom-center, 480px max width, neumorphic raised surface; contains a real input at all times
-- **On send:** Sets `chatTakeoverAtom = true`, adds message to `chatMessagesAtom`, triggers center overlay; AI stub responds after 700ms
-- **Note:** Right-side drawer removed (2026-06-07) — replaced by `ChatCenterOverlay`
+### Chat surface consolidation [2026-07-10]
+The old two-part chat path — `components/chat-drawer.tsx` (bottom pill) + `components/chat-center-overlay.tsx` (center takeover, driven by `chatTakeoverAtom`) — was **removed**. Neither was rendered by `app-shell.tsx` anymore; they were dead code left over from the pre-workspace design. The **single** chat surface is now `components/workspace/chat-workspace-panel.tsx`, opened via the `ActionOrb` "AI Chat" item (`chatWorkspaceOpenAtom`). The `chatTakeoverAtom` and `chatOpenAtom` atoms were deleted; the dead dissolve/blur branches that read `chatTakeoverAtom` in `persistent-canvas.tsx` and `OrbitalStage.tsx` were collapsed to their resting state.
 
-### `components/chat-center-overlay.tsx` [LIVE]
-- **Role:** Center-screen takeover that appears when the user sends a chat message
-- **Trigger:** `chatTakeoverAtom = true` (set by `ChatDrawer` on send)
-- **Animation:** Fades in with scale + translate (380ms, 80ms delay after orbs start dissolving); fades out on dismiss (260ms)
-- **Content:** Conversation thread (user right-aligned dark, AI left-aligned white card) + header with context label
-- **Dismiss:** X button sets `chatTakeoverAtom = false` — orbs/canvas fade back in
-- **Position:** Fixed, below nav (52px), above pill (80px bottom clearance), centered, max-width 672px
+### `components/workspace/copilot-workspace-panel.tsx` [LIVE — 2026-07-13]
+- **Role:** The current chat panel — **CopilotKit-powered**. Renders `<CopilotChat>` (streaming, conversational-first) themed monochrome/Attio-style via CopilotKit CSS vars (`--copilot-kit-primary-color: #18181b`, hairline separators, no purple/orange), plus our pages-in-tabs around it. Opened via `chatWorkspaceOpenAtom` (ActionOrb → AI Chat).
+- **Tools (`useCopilotAction`):** openPage · focusAnchor · editField · closePage · closeAll · openWorkflowBuilder · runFapiWorkflow — wired to the workspace-store atoms + resource registry. `useCopilotReadable` exposes open pages. Focus-anchor uses a `cwp-focus-anchor` window event → rAF scroll + flash.
+- **Requires** the CopilotKit provider (in `app-shell.tsx`) + `OPENAI_API_KEY`.
+- **Generative UI (`components/workspace/fapi-run-flow.tsx`):**
+  - `runFapiWorkflow` uses **`renderAndWaitForResponse`** → `<FapiRunFlow>`: a Claude-Code-style **step timeline** (Collect docs → Classify → Compute → Approve, dotted connector + status dots) with the current **intervention** rendered inline — upload (file input + "use sample"), categorize (row + category buttons), approve (preview + button). Resolving a step re-runs the real `runFapiLoop` engine; on completion it calls `respond()` to resume the LLM. The run does NOT open the worksheet.
+  - `editField` uses **`render`** → `<InlineFieldCard>`: brings the editable field INTO the chat (bound to `fieldValuesAtom`, syncs to the worksheet) instead of opening the page.
+- **FAPI Worksheet (`components/worksheet/fapi-worksheet.tsx`) [2026-07-13, Phase 2 of the worksheet redo]:** the FAPI worksheet, rebuilt in the **main Next app** (replaces the static `tax-ui/pages/FapiWorksheet.tsx` for the `/fapi` route AND the chat's `fapi` page tab, via `resource-registry.tsx`). Platform's line structure — sections **Currency conversion (FX) · Property income (A) · Deductible expenses (EXP) · Component B · Canadian 95(2) · Other income components (A.1/A.2/C) · Advanced deductions (D–H) · FAT** — plus a dual-currency (source + CAD) **Results summary** (Gross · Deductions · FAPI brut · FAT deduction · Net FAPI). Design is our monochrome tokens (hairlines, soft elevation) with **toned dots as the only colour** — **small (6px), no glow, pastel/discreet**: source (soft sky, FX) · engine (soft green, A/EXP/B + summary totals) · manual (soft amber, 95(2), A.1–H, FAT inputs) · AI-mapped (soft violet, the classified sub-rows). **Wired to the real engine** — `runTemplateCore(FAPI_CONFIG, { rows, inputs })` over the **shared `uploadedRowsAtom`** so it matches chat + builder; manual lines are **inline-editable** (A.1 back-solves `debtForgiveness = value/2`), A/EXP/B **expand** to their AI-mapped source rows (matched keyword + confidence) with P-coefficient / inclusion-rate assumptions inline, and every line has a **"trace"** affordance opening `/builder` focused on its block (`builderFocusTargetAtom`). **Import** parses a workbook via the shared `parseUploadToRows` and writes the shared store.
+- **Docked Sources file-viewer (Phase 3, 2026-07-13):** the **Sources** toolbar toggle opens a right-docked, sticky **`SourcesPanel`** (worksheet reflows to make room). It lists the raw trial-balance rows (account / description / amount) with a per-row provenance dot (AI-mapped vs unclassified); selecting a row shows **where it went** — classified category, matched keyword, confidence, amount — or a "not matched by any rule" note, plus **"See the mapper in the builder."** Row-level provenance (our data unit) rather than Platform's per-cell grid. The run timeline's dots were softened to the same pastel/no-glow language.
+- **Run timeline (`components/workspace/workflow-run-flow.tsx`) [2026-07-13]:** the live run is a **Claude-style vertical timeline** — a connecting rail with a status dot per step. Design is monochrome *except the dots*, which are **toned by what the step means** (`stepMeta` → `TONES`): Source (sky) · AI suggestion (violet) · Engine calculation (emerald) · Checkpoint (amber) · Step (neutral). Dot state: filled+check (done, with a soft halo ring) · ring+spinner (active) · hollow (pending); the rail is solid for completed segments, dashed ahead. Each step carries a small monochrome **kind chip** (e.g. `AI SUGGESTION`) and a right-aligned Review/Hide affordance; expanding a step reveals `StageDetail`. Card uses refined hairline borders + a soft elevation shadow. Header status shows a single toned dot (running=amber, complete=emerald) with muted text — no colored text anywhere. **Non-blocking review banner [2026-07-14]:** when the mapper leaves rows unclassified (FAPI `defaultRouteUnmatched`), an amber "N rows were left out of the calculation" notice renders above the approval/result with a **Review N** button that opens the classify step (`setExpanded(1)`) — the run no longer stops per unmatched row.
+- **Done since (previously deferred):** run-step → builder inspection (inline `WhereFrom`/`BlockPeek` peek + "Open in builder"); real document parsing (chat upload parses the real workbook via the shared parser and the run computes on those rows). Still deferred: workflow-list menu.
+
+### `components/workspace/chat-workspace-panel.tsx` [SUPERSEDED — 2026-07-13, retained for Phase-3 reference]
+- **Role:** The large **agentic chat workspace** — one panel that unifies the conversation, the pages opened inside it, and scripted agent runs. Core of the "bring all pages into the chatbot" direction. Replaces the small orb chat bar and the earlier `chat-workspace-overlay.tsx`.
+- **Trigger:** `chatWorkspaceOpenAtom` (set by the `ActionOrb` "AI Chat" radial item). **De-modalized:** light dim (`rgba(15,17,26,0.20)` + 2px blur) at `z-44`, **no click-outside-to-close** — only the header × minimizes it, so the conversation is never lost. Centered white panel (max-width 1180).
+- **Structure:** Header (dots + context + Trail + minimize) · **tab strip** · body · input bar (always present).
+- **Tabs:** A permanent **Chat** tab plus one tab per open page window. Closing a page tab returns you to the **Chat** tab (never closes the panel).
+- **Rich thread items** (`ChatMessage` variants): text bubbles (with entity chips), `pageEvent` cards (clickable, re-open the page), **`run` timelines** (agent runs), and **`result` cards** (inline generative UI, dismissible).
+- **Entity chips (`EntityText` + `lib/resource-registry.tsx`):** tokens like `EMAIL` (integration), `WORKFLOW-BUILDER` (tool), `FAPI-WORKFLOW` (workflow), `GROSS FAPI` (value), `SOPHIA` (agent) render as clickable colored chips. A resource's `open` facet drives the click: `{as:'page'}` pulls a page into a tab; `{as:'route'}` navigates (e.g. `WORKFLOW-BUILDER` → `/builder`, which can't embed because its canvas is a fixed layer — see below).
+- **Inline activity trail (`ActivityTrail`):** the event trail lives **in the conversation** as a vertical Claude-Code-style timeline (connecting rail + colored dots), pinned at the end of the thread, live-updating. Dots are colored by **semantic tone** (`TrailTone`): approval (amber) · suggestion (violet) · calculation (green) · navigation (gray) · info (cyan). Header "Trail" button toggles it. Replaces the old dropdown popover.
+- **Deep-link + focus into a screen (addressability):** the chat can bring a *specific piece* of a page forward, not just the whole page. `resolveTarget()` (`lib/resource-registry.tsx`) maps free text ("show me the FX rate", "component B") → `{ pageKey, anchor }` from a resource's `anchors[]`; `openPage(pageKey, { focusAnchor })` opens the tab and a rAF-polled effect scrolls to `[data-anchor="…"]` and flashes it (`.cwp-anchor-flash`). Anchors are **data-derived**: pages emit `data-anchor="<pageKey>:<rowId>"` in their render loop, so every row is addressable without hand-naming. Wired on **FAPI, Dashboard, Surplus, T1134, Executive Overview**.
+- **Inline field fragment (edit without opening the page) — `field-editor.tsx`:** a *slice* of a page rendered in the chat thread as an **editable field**, bound to the page's **shared data atom** (not a portal). "edit the FX rate", "set the dividend to 5000" → `resolveFieldEdit` (`lib/resource-registry.tsx`) → a `field` message renders `FieldEditor` (which reads its label/tag/hint via `getFieldContext`). Editing writes to `fieldValuesAtom` (persisted via `atomWithStorage`, key `inscope.fapi.values`); the **real FAPI worksheet reads the same atom**, so page and fragment stay in perfect sync both ways. "Open in FAPI worksheet" expands to the full page (focused on the field). Editable fields today: FAPI `fx`, `a-div` (any anchor can carry a `field` facet). A *governed* value would route the write through the approval checkpoint instead of committing directly.
+- **Run → resolve → resume loop (`BlockerCard` + `runFapiLoop`):** replaces the old scripted `RunTimeline`. The agent runs the **real** FAPI workflow; on each blocker it renders a card and pauses — **upload** (needs the trial balance → "Use sample workbook"), **categorize** (a row matched no keyword rule → the user picks a category, which is injected as a keyword rule and the workflow re-runs), **approval** (final sign-off showing the computed preview). Resolving accumulates into `FapiLoopState` (a ref) and calls `advanceFapiLoop()` which re-runs `runFapiLoop` until `done`, then appends the result card + an inline editable FX field. Triggered by the "Run FAPI-WORKFLOW" starter, the `runFapiDemo` agent tool, or "run gross fapi".
+- **Inline generative UI (`ResultView`):** found-email card and GROSS FAPI result (value + breakdown + sources + Open action) render in the thread; each has an × to dismiss (collapses to a one-line stub) and re-expand — conversation continues around them.
+- **Starters (empty state):** FAPI agent demo · Workflow Builder (route) · Dashboard / T1134 (in-chat pages).
+- **Input (LLM-first):** `send()` posts the message + `buildAgentCatalog()` + recent history to `app/api/chat-workspace/route.ts` (`lib/chat-agent.ts`); the model replies with text and/or **tool-calls** (`openPage`/`focusAnchor`/`editField`/`closePage`/`closeAll`/`openWorkflowBuilder`/`runFapiDemo`) which `executeAgent()` runs against the workspace atoms. On failure (no key / offline / signed-out) it falls back to `runDeterministic()` — the `resolveFieldEdit → resolveTarget → resolveIntent` keyword cascade from `lib/resource-registry.tsx`.
+- **Portal host:** renders its own `#global-nav-workflow-slot` in the tab strip only when the route isn't a canvas route.
+- **Read-only:** navigation + a *scripted* run — no real workflow/evidence mutation yet. The approval checkpoint is where governed mutations will gate later.
+- **Known rough edges:** worksheet pages that `createPortal` panels to `document.body` may render outside the panel; flow-layout pages embed cleanly.
+
+### `lib/resource-registry.tsx` — the unified spine [LIVE — 2026-07-10]
+- **Role:** The **single registry** behind the whole chat workspace. One `Resource` per named thing (integration/tool/workflow/value/agent/worksheet); each carries every facet it has: `token`/`mentions` (chip rendering), `open` (`{as:'page'}` or `{as:'route'}`), `page` (lazy component + title/subtitle/icon), `anchors[]` (deep-link targets), and per-anchor `field` (inline-editable, e.g. FAPI `fx`). Replaces the four former registries (`chat-entities`, `workspace-registry`, `workspace-targets`, `fapi-model`).
+- **Resolvers (all deterministic/offline):** `splitMentions` (text → chip segments), `resolveIntent` (open/close/closeAll/none), `resolveTarget` (free text → a page anchor to focus), `resolveFieldEdit` (edit-intent → `{pageKey, anchor, fieldId, preset?}`). Helpers: `getPage`, `listPages`, `getFieldContext`, `isEditableField`.
+- **Shared value store:** `fieldValuesAtom` (`atomWithStorage`, key `inscope.fapi.values`) — the FAPI worksheet rows and the inline `FieldEditor` bind to the same atom, so edits sync both ways and persist.
+- **Registered pages:** `dashboard`, `bu-overview`, `fapi`, `surplus`, `t1134`, `client`. The `fapi` resource is a single entry that is simultaneously the `FAPI-WORKFLOW` chip, the FAPI page, and the FAPI anchors/fields — the concrete payoff of the merge.
+- **LLM swap path:** expose the `Resource` ids + anchors as a tool-call enum; the render/open/edit plumbing stays.
+
+### `components/workspace/entity-text.tsx` [LIVE — 2026-07-10]
+- **Role:** Renders conversation text with recognized resources as inline clickable chips colored by kind. Uses `splitMentions()` + `KIND_COLOR` from `lib/resource-registry.tsx`. `onEntity(resource)` drives open behavior in the panel.
 
 ### `components/global-client-switcher.tsx` [LIVE]
 - **Role:** Global client selection overlay (previously local to OrbitalStage)
@@ -75,10 +104,12 @@ The following components form the persistent shell that wraps every page in the 
 | `selectedClientAtom` | `lib/nav-store.ts` | Client pill in top nav + orbital logo center |
 | `showClientSwitcherAtom` | `lib/nav-store.ts` | GlobalClientSwitcher overlay |
 | `navActionsAtom` | `lib/nav-store.ts` | Right-side page action buttons in top nav (non-canvas pages only) |
-| `chatOpenAtom` | `lib/chat-store.ts` | Legacy (unused by new pill design — kept for backward compat) |
-| `chatTakeoverAtom` | `lib/chat-store.ts` | Center overlay shown/hidden; triggers orb/canvas dissolve |
+| `chatWorkspaceOpenAtom` | `lib/chat-store.ts` | Opens/closes the single chat surface (`ChatWorkspacePanel`) |
 | `chatMessagesAtom` | `lib/chat-store.ts` | Conversation thread |
 | `chatPageContextAtom` | `lib/chat-store.ts` | Context label in overlay header + AI prompt |
+| `workspaceWindowsAtom` | `lib/workspace-store.ts` | Open in-chat page windows (tabs) |
+| `activeWindowIdAtom` | `lib/workspace-store.ts` | Currently focused in-chat window |
+| `workspaceTrailAtom` | `lib/workspace-store.ts` | Event trail (open/close/focus) shown in the Trail dropdown |
 
 ---
 
@@ -161,7 +192,6 @@ The following components form the persistent shell that wraps every page in the 
 - **Location:** `components/workflow/persistent-canvas.tsx`
 - **Role:** Fixed full-viewport canvas layer behind all page content; handles background color transition
 - **Mount transition:** Background starts `#eaeaef` (matching homepage), fades to `#18181c` over 900ms after 60ms delay — seamless navigation from homepage to builder
-- **Chat dissolve:** On `chatTakeoverAtom = true`, opacity fades to 0 (480ms ease-out); restores 560ms cubic-bezier
 - **Only active on:** `/builder` and `/workflows/*` — renders `null` on all other routes
 
 ---

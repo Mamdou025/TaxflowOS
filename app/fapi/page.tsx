@@ -1,5 +1,5 @@
-'use client';
-import FapiWorksheet from '@tax/pages/FapiWorksheet';
+import FapiWorksheet from '@/components/worksheet/fapi-worksheet';
+
 export default function FapiPage() {
   return <FapiWorksheet />;
 }

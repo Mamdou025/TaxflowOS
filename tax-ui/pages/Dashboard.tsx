@@ -46,6 +46,7 @@ function ClientRow({ client, index }: { client: typeof CLIENTS[0]; index: number
   return (
     <Link href={client.id === 'northstar' ? '/client/northstar' : '#'}>
       <div
+        data-anchor={`dashboard:client:${client.id}`}
         className={cn(
           'flex items-center gap-3 px-4 py-3.5 border-b border-slate-100',
           'hover:bg-slate-50 transition-colors cursor-pointer animate-fade-slide-up',
@@ -376,7 +377,7 @@ export default function Dashboard() {
         </div>
 
         {/* ── AI Summary ───────────────────────────────────────────────────── */}
-        <div className="bg-slate-50 border border-slate-200 rounded-lg p-3.5 flex gap-3">
+        <div data-anchor="dashboard:ai-summary" className="bg-slate-50 border border-slate-200 rounded-lg p-3.5 flex gap-3">
           <div className="w-7 h-7 rounded bg-[#0F2044]/8 border border-[#0F2044]/12 flex items-center justify-center shrink-0">
             <Sparkles size={13} className="text-[#1B5FD4]" />
           </div>
@@ -397,7 +398,7 @@ export default function Dashboard() {
         </div>
 
         {/* ── 6 KPI Tiles ──────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div data-anchor="dashboard:kpis" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <KPITile
             label="Total Clients"
             value={DASHBOARD_STATS.totalClients}
@@ -443,7 +444,7 @@ export default function Dashboard() {
         </div>
 
         {/* ── Client Portfolio — full width ─────────────────────────────────── */}
-        <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+        <div data-anchor="dashboard:portfolio" className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
             <div className="flex items-center gap-2">
               <Building2 size={14} className="text-slate-400" />
@@ -490,7 +491,7 @@ export default function Dashboard() {
         </div>
 
         {/* ── My Work Items ─────────────────────────────────────────────────── */}
-        <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+        <div data-anchor="dashboard:work-items" className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-200">
             <Star size={13} className="text-amber-500" />
             <span className="text-sm font-600 text-[#0F2044]">My Work Items</span>
@@ -510,7 +511,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
           {/* Review Queue */}
-          <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+          <div data-anchor="dashboard:review-queue" className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
               <div className="flex items-center gap-2">
                 <Shield size={13} className="text-amber-500" />
@@ -529,7 +530,7 @@ export default function Dashboard() {
           </div>
 
           {/* Upcoming Deadlines */}
-          <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+          <div data-anchor="dashboard:deadlines" className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-200">
               <Clock size={13} className="text-slate-400" />
               <span className="text-sm font-600 text-[#0F2044]">Upcoming Deadlines</span>
@@ -567,7 +568,7 @@ export default function Dashboard() {
         </div>
 
         {/* ── Recent Activity ───────────────────────────────────────────────── */}
-        <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+        <div data-anchor="dashboard:activity" className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-200">
             <Activity size={13} className="text-slate-400" />
             <span className="text-sm font-600 text-[#0F2044]">Recent Activity</span>

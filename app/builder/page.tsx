@@ -1,11 +1,13 @@
 "use client";
 
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { RightPanelShell } from "@/components/workflow/right-panel-shell";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
+  createFapiTemplateWorkflow,
+  createRoullementFiscalWorkflow,
   createWorkingSourceRulesDemoWorkflow,
   LOCAL_WORKFLOW_ID,
   loadLocalWorkflowSnapshotResult,
@@ -25,7 +27,10 @@ import {
   selectedExecutionIdAtom,
   selectedNodeAtom,
   workflowNotFoundAtom,
+  builderFocusTargetAtom,
+  focusNodeIdAtom,
 } from "@/lib/workflow-store";
+import { uploadedRowsAtom } from "@/lib/workspace-store";
 
 const BuilderPage = () => {
   const isMobile = useIsMobile();
@@ -41,16 +46,51 @@ const BuilderPage = () => {
   const setSelectedNode = useSetAtom(selectedNodeAtom);
   const setSelectedEdge = useSetAtom(selectedEdgeAtom);
   const setSelectedExecutionId = useSetAtom(selectedExecutionIdAtom);
-  const initializedRef = useRef(false);
+  // Captured once at mount — the chat sets this before navigating here.
+  const focusRef = useRef(useAtomValue(builderFocusTargetAtom));
+  const uploadedRef = useRef(useAtomValue(uploadedRowsAtom));
+  const setBuilderFocus = useSetAtom(builderFocusTargetAtom);
+  const setFocusNodeId = useSetAtom(focusNodeIdAtom);
 
   useEffect(() => {
-    const loadResult = loadLocalWorkflowSnapshotResult();
-    if (loadResult.warning) {
-      toast.warning("Saved local workflow could not be loaded. Restored the working Excel workflow.");
+    const focus = focusRef.current;
+
+    // Chat deep-link → load that workflow's template and focus a block. Otherwise
+    // load the user's saved local workflow as usual.
+    let snapshot;
+    if (focus) {
+      snapshot = focus.workflowId === "roulement" ? createRoullementFiscalWorkflow() : createFapiTemplateWorkflow();
+      // Same shared upload the chat used → show the exact same rows on the canvas.
+      const stored = uploadedRef.current[focus.workflowId];
+      if (stored?.rows?.length) {
+        const src = snapshot.blocks.find(
+          (b) => b.config?.sourceKind === "excel_workbook" || b.config?.sourceKind === "manual_table"
+        );
+        if (src) {
+          src.config = {
+            ...src.config,
+            rows: stored.rows,
+            requireUpload: false,
+            selectedRowsCount: stored.rows.length,
+            sourceStatus: "ready",
+            workbookName: stored.fileName,
+            fileName: stored.fileName,
+          };
+        }
+      }
+    } else {
+      const loadResult = loadLocalWorkflowSnapshotResult();
+      if (loadResult.warning) {
+        toast.warning("Saved local workflow could not be loaded. Restored the working Excel workflow.");
+      }
+      snapshot = loadResult.snapshot || createWorkingSourceRulesDemoWorkflow();
     }
-    const snapshot = loadResult.snapshot || createWorkingSourceRulesDemoWorkflow();
+
     const canvas = workflowDefinitionToCanvas(snapshot);
-    const selectedNode = canvas.nodes.find((node) => node.selected) || canvas.nodes[0];
+    const selectedNode =
+      (focus && canvas.nodes.find((n) => n.id === focus.blockId)) ||
+      canvas.nodes.find((node) => node.selected) ||
+      canvas.nodes[0];
     const nodesWithSelection = canvas.nodes.map((node) => ({
       ...node,
       selected: selectedNode ? node.id === selectedNode.id : false,
@@ -69,13 +109,26 @@ const BuilderPage = () => {
     setSelectedNode(selectedNode?.id ?? null);
     setSelectedEdge(null);
     setSelectedExecutionId(null);
-    saveWorkflowDefinitionSnapshot(snapshot);
-    initializedRef.current = true;
+    if (focus) {
+      // Transient inspection view — don't persist over the user's saved workflow.
+      setFocusNodeId(focus.blockId);
+    } else {
+      saveWorkflowDefinitionSnapshot(snapshot);
+    }
   }, [
     setCurrentWorkflowId, setCurrentWorkflowName, setCurrentWorkflowVisibility,
     setEdges, setHasSidebarBeenShown, setHasUnsavedChanges, setIsWorkflowOwner,
     setNodes, setSelectedEdge, setSelectedExecutionId, setSelectedNode, setWorkflowNotFound,
+    setFocusNodeId,
   ]);
+
+  // Clear the deep-link target shortly after mount — late enough to survive a
+  // StrictMode dev double-mount, so a later plain visit loads normally.
+  useEffect(() => {
+    if (!focusRef.current) return;
+    const t = window.setTimeout(() => setBuilderFocus(null), 1200);
+    return () => window.clearTimeout(t);
+  }, [setBuilderFocus]);
 
   useEffect(() => {
     document.title = `${workflowName || "Fiscal Workflow Studio"} - Workflow Studio`;

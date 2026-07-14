@@ -1,7 +1,4 @@
-import {
-  WORKING_SOURCE_DEMO_RULES,
-  WORKING_SOURCE_DEMO_ROLLUP_RULES,
-} from "./working-source-rules-demo";
+import { WORKING_SOURCE_DEMO_RULES } from "./working-source-rules-demo";
 
 // ── Calculation rules ─────────────────────────────────────────────────────────
 
@@ -9,11 +6,30 @@ import {
 export const FAPI_LINES_CALC_RULES = [
   {
     calculationId: "A",
-    description: "A = max(income_bucket - expense_bucket, 0)",
+    description: "A = P × (income_bucket − expense_bucket) + 95(2)",
+    formulaExpression:
+      "pCoefficient * (income_bucket - expense_bucket) + canadianRules95_4",
     label: "A",
     operands: ["income_bucket", "expense_bucket"],
     operation: "max_subtract_zero",
     resultKey: "A",
+  },
+  {
+    calculationId: "EXPENSES",
+    description: "Expenses = P × expense_bucket",
+    formulaExpression: "pCoefficient * expense_bucket",
+    label: "Expenses",
+    operands: ["expense_bucket"],
+    operation: "pass_through",
+    resultKey: "EXPENSES",
+  },
+  {
+    calculationId: "COMPUTATION_95_4",
+    description: "95(2) = Canadian 95(2) rules amount (flows into A)",
+    label: "95(2)",
+    operands: ["canadianRules95_4"],
+    operation: "pass_through",
+    resultKey: "COMPUTATION_95_4",
   },
   {
     calculationId: "A1",
@@ -126,6 +142,42 @@ export const FAPI_SUMMARY_CALC_RULES = [
     operation: "pass_through",
     resultKey: "FX_RATE",
   },
+  // CAD column — every result line scaled by the annual-average FX rate. Because
+  // the FAPI formulas are linear, scaling each line equals recomputing in CAD
+  // (matches Platform's convertMoneyLinesToCad + recompute). The parcours shows
+  // all five result lines in both source currency and CAD.
+  {
+    calculationId: "GROSS_CAD",
+    description: "Gross CAD = GROSS × FX_RATE",
+    label: "Gross CAD",
+    operands: ["GROSS", "FX_RATE"],
+    operation: "multiply",
+    resultKey: "GROSS_CAD",
+  },
+  {
+    calculationId: "DEDUCTIONS_CAD",
+    description: "Deductions CAD = DEDUCTIONS × FX_RATE",
+    label: "Deductions CAD",
+    operands: ["DEDUCTIONS", "FX_RATE"],
+    operation: "multiply",
+    resultKey: "DEDUCTIONS_CAD",
+  },
+  {
+    calculationId: "FAPI_BRUT_CAD",
+    description: "FAPI Brut CAD = FAPI_BRUT × FX_RATE",
+    label: "FAPI Brut CAD",
+    operands: ["FAPI_BRUT", "FX_RATE"],
+    operation: "multiply",
+    resultKey: "FAPI_BRUT_CAD",
+  },
+  {
+    calculationId: "FAT_DEDUCTION_CAD",
+    description: "FAT Deduction CAD = FAT_DEDUCTION × FX_RATE",
+    label: "FAT Deduction CAD",
+    operands: ["FAT_DEDUCTION", "FX_RATE"],
+    operation: "multiply",
+    resultKey: "FAT_DEDUCTION_CAD",
+  },
   {
     calculationId: "NET_FAPI_CAD",
     description: "Net FAPI CAD = NET_FAPI × FX_RATE",
@@ -133,6 +185,56 @@ export const FAPI_SUMMARY_CALC_RULES = [
     operands: ["NET_FAPI", "FX_RATE"],
     operation: "multiply",
     resultKey: "NET_FAPI_CAD",
+  },
+];
+
+// ── Rollup rules ──────────────────────────────────────────────────────────────
+// Income/expense buckets feed line A; the two sum_abs deduction rules turn the
+// (negative) classified loss rows into positive named values for lines D and E.
+// Other classified categories (capGains, cfaIncome, debtForgiveness) reach the
+// lines engine automatically as per-category named values.
+export const FAPI_ROLLUP_RULES = [
+  {
+    description: "Adds income mapped categories (line A property income).",
+    includeCategoryIds: ["interestIncome", "rents", "royalties", "dividends", "otherFapiIncome"],
+    label: "Income Bucket",
+    operation: "sum",
+    rollupId: "income_bucket",
+  },
+  {
+    description: "Adds FAPI-allowable expenses using absolute values (subtracted in line A).",
+    includeCategoryIds: ["generalExpenses", "legalExpenses", "accountingExpenses"],
+    label: "Expense Bucket",
+    operation: "sum_abs",
+    rollupId: "expense_bucket",
+  },
+  {
+    description: "Line C — controlled foreign affiliate income (classified rows).",
+    includeCategoryIds: ["cfaIncome"],
+    label: "CFA Income (C)",
+    operation: "sum",
+    rollupId: "cfaIncome",
+  },
+  {
+    description: "Line A1 driver — debt forgiveness income (A1 = 2 × this).",
+    includeCategoryIds: ["debtForgiveness"],
+    label: "Debt Forgiveness (A1)",
+    operation: "sum",
+    rollupId: "debtForgiveness",
+  },
+  {
+    description: "Line D — business investment losses as a positive deduction.",
+    includeCategoryIds: ["businessLosses"],
+    label: "Business Losses (D)",
+    operation: "sum_abs",
+    rollupId: "businessLosses",
+  },
+  {
+    description: "Line E — foreign accrual capital losses as a positive deduction.",
+    includeCategoryIds: ["faclCarryforward"],
+    label: "FACL Carryforward (E)",
+    operation: "sum_abs",
+    rollupId: "faclCarryforward",
   },
 ];
 
@@ -180,13 +282,27 @@ export const FAPI_TEMPLATE_BLOCK_SPECS = [
       outputs: "fapi_inputs, input_metadata",
       reportingCurrency: "CAD",
       rtf: 1.9,
+      // Line-driving workbook assumptions (feed A2/F–H and the 95(2) line).
+      // NOTE: cfaIncome (C), debtForgiveness (A1), businessLosses (D) and
+      // faclCarryforward (E) are intentionally NOT defaulted here — they come from
+      // classifying trial-balance rows (the rollup produces them as named values).
+      // Defaulting them to 0 here would clobber the classified value (fapi_inputs
+      // wins over rollup in the calc engine). A user can still override via the
+      // run's editable inputs.
+      pCoefficient: 1,
+      canadianRules95_4: 0,
+      priorYearG: 0,
+      prescribedAmount: 0,
+      prescribedAmountF1: 0,
+      dividendDeductions: 0,
+      partnershipDividends: 0,
       sourceKind: "fapi_inputs",
       sourceLocator: "manual-source://fapi-inputs",
       sourceStatus: "draft",
       sourceVersion: 1,
       toolId: "source.fapi_inputs",
     },
-    description: "Inclusion rate, RTF, FAT paid, and other FAPI workbook assumptions.",
+    description: "Inclusion rate, RTF, FAT paid, P-coefficient, 95(2) amount, and the A1/A2/C–H line assumptions.",
     id: "fapi-source-inputs",
     label: "FAPI Inputs",
     position: { x: -220, y: 360 },
@@ -208,10 +324,36 @@ export const FAPI_TEMPLATE_BLOCK_SPECS = [
       sourceVersion: 1,
       toolId: "source.currency_rate",
     },
-    description: "Bank of Canada annual average USD→CAD FX rate for the FAPI year.",
+    description: "Bank of Canada annual average USD→CAD FX rate for the FAPI year. Consumes the live Valet API rate when available, otherwise the workbook override.",
     id: "fapi-source-fx-rate",
     label: "Bank of Canada FX Rate",
     position: { x: -220, y: 640 },
+  },
+  {
+    catalogId: "source:api-http-request",
+    config: {
+      apiName: "Bank of Canada Valet",
+      documentCurrency: "USD",
+      endpoint: "https://www.bankofcanada.ca/valet/observations/FXUSDCAD/json",
+      fapiYear: 2025,
+      inputs: "HTTP GET request",
+      outputs: "apiReference, exchange_rate",
+      rateProvider: "bank_of_canada",
+      rateType: "annual_average",
+      reportingCurrency: "CAD",
+      seriesName: "FXUSDCAD",
+      sourceKind: "api_reference",
+      sourceLocator:
+        "https://www.bankofcanada.ca/valet/observations/FXUSDCAD/json?start_date=2025-01-01&end_date=2025-12-31",
+      sourceStatus: "draft",
+      sourceVersion: 1,
+      toolId: "source.manual_value",
+    },
+    description:
+      "Live Bank of Canada Valet API — annual-average USD→CAD observations for the FAPI year. This is the real source of the FX rate.",
+    id: "fapi-api-boc-fx",
+    label: "Bank of Canada Valet API",
+    position: { x: -520, y: 640 },
   },
 
   // ── Logic ─────────────────────────────────────────────────────────────────
@@ -240,7 +382,7 @@ export const FAPI_TEMPLATE_BLOCK_SPECS = [
       inputs: "mapped_rows, rollup_rules",
       operation: "sum",
       outputs: "category_totals, rollup_totals, named_values, rollup_summary",
-      rollupRules: WORKING_SOURCE_DEMO_ROLLUP_RULES,
+      rollupRules: FAPI_ROLLUP_RULES,
       toolId: "logic.category_rollup_aggregator",
     },
     description:
@@ -381,6 +523,16 @@ export const FAPI_TEMPLATE_EDGE_SPECS = [
     sourceOutputRole: "calculated_results",
     targetBlockId: "fapi-logic-summary-engine",
     targetInputRole: "named_values",
+  },
+  {
+    bindingLabel: "Live FX observations feed the rate",
+    reason:
+      "Currency Rate block consumes the Bank of Canada Valet API's annual-average USD→CAD rate, falling back to the workbook override if the API is unavailable.",
+    relationshipType: "provides_data_to",
+    sourceBlockId: "fapi-api-boc-fx",
+    sourceOutputRole: "apiReference",
+    targetBlockId: "fapi-source-fx-rate",
+    targetInputRole: "request",
   },
   {
     bindingLabel: "FX rate for CAD conversion",

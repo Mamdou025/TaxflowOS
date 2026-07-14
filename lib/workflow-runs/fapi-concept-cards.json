@@ -1,0 +1,605 @@
+[
+  {
+    "fieldName": "interestIncome",
+    "lineId": "A",
+    "subsectionId": "interest_income",
+    "label": "Interest income",
+    "shortDefinition": "Interest earned or receivable on deposits, loans, bonds, or other investment assets.",
+    "businessMeaning": "Represents income from lending, deposits, or investment balances rather than costs of borrowing or balance-sheet liabilities.",
+    "fapiTreatmentHint": "Treat as property income component A when the account reflects incoming interest, earned interest, or interest receivable tied to investment assets.",
+    "accountingFamilies": ["revenue"],
+    "positiveIndicators": [
+      "interest income",
+      "interest earned",
+      "bank interest",
+      "bond interest",
+      "interest receivable",
+      "investment interest income"
+    ],
+    "negativeIndicators": [
+      "interest expense",
+      "interest payable",
+      "accrued interest liability",
+      "financing costs",
+      "borrowing costs",
+      "loan interest"
+    ],
+    "frenchPositiveIndicators": [
+      "revenu d'intérêts",
+      "intérêts créditeurs",
+      "produits d'intérêts",
+      "intérêt gagné",
+      "intérêts sur placements"
+    ],
+    "frenchNegativeIndicators": [
+      "charge d'intérêts",
+      "intérêts à payer",
+      "passif d'intérêts courus",
+      "frais de financement",
+      "intérêts sur emprunt"
+    ],
+    "positiveExamples": [
+      "Interest earned on term deposits",
+      "Bank interest on surplus cash",
+      "Coupon interest from bonds"
+    ],
+    "negativeExamples": [
+      "Interest payable on shareholder loan",
+      "Accrued interest liability at year-end",
+      "Financing costs on bank borrowing"
+    ],
+    "ambiguityWarnings": [
+      "The word 'interest' alone is unsafe because it can describe income, expense, receivable, or payable.",
+      "Accrued or receivable balances need confirmation that the item belongs to property income rather than a balance-sheet accrual."
+    ],
+    "reviewQuestions": [
+      "Is the amount earned on cash, deposits, bonds, loans, or other investment assets rather than paid on borrowings?",
+      "Does the source label indicate income, earned, received, or receivable instead of expense, payable, or accrued liability?"
+    ],
+    "routingNotes": "Routes to line A / subsection interest_income. Use this card only for property-income interest, not for financing costs or balance-sheet interest liabilities.",
+    "riskLevel": "medium"
+  },
+  {
+    "fieldName": "dividends",
+    "lineId": "A",
+    "subsectionId": "dividends",
+    "label": "Dividend income",
+    "shortDefinition": "Distributions received because the entity owns shares or similar equity interests.",
+    "businessMeaning": "Represents income from share ownership, not operating reimbursements, office costs, repairs, or liabilities for dividends payable.",
+    "fapiTreatmentHint": "Treat as property income component A only when the source clearly reflects dividends received or receivable from an equity investment.",
+    "accountingFamilies": ["revenue"],
+    "positiveIndicators": [
+      "dividend income",
+      "dividends received",
+      "cash dividends",
+      "share dividends",
+      "portfolio dividends",
+      "equity dividends"
+    ],
+    "negativeIndicators": [
+      "office expenses",
+      "repairs and maintenance",
+      "professional fees",
+      "return of capital",
+      "distribution payable",
+      "management fees"
+    ],
+    "frenchPositiveIndicators": [
+      "revenu de dividendes",
+      "dividendes reçus",
+      "dividendes",
+      "produit de dividendes"
+    ],
+    "frenchNegativeIndicators": [
+      "frais de bureau",
+      "réparation & entretien local",
+      "réparations et entretien",
+      "honoraires professionnels",
+      "dividendes à payer"
+    ],
+    "positiveExamples": [
+      "Dividends received from portfolio shares",
+      "Cash dividends from foreign affiliate shares",
+      "Preferred share dividends received"
+    ],
+    "negativeExamples": [
+      "Frais de bureau",
+      "Réparation & entretien local",
+      "Dividends payable to shareholders"
+    ],
+    "ambiguityWarnings": [
+      "Distributions can represent dividends, returns of capital, partnership allocations, or intercompany settlements; text alone may be insufficient.",
+      "Known bad historical exact matches show some French expense labels can be mistaken for dividends."
+    ],
+    "reviewQuestions": [
+      "Is the amount a distribution received because the entity owns shares, rather than an operating expense or reimbursement?",
+      "Could the label refer to a payable, a return of capital, or a partnership distribution instead of dividend income?"
+    ],
+    "routingNotes": "Routes to line A / subsection dividends. Explicitly exclude office/admin and repair labels even if legacy keyword mappings still contain bad dividend matches.",
+    "riskLevel": "high"
+  },
+  {
+    "fieldName": "rents",
+    "lineId": "A",
+    "subsectionId": "rental_income",
+    "label": "Rental income",
+    "shortDefinition": "Income earned from renting or leasing property or assets to another party.",
+    "businessMeaning": "Represents incoming rent or lease revenue, not occupancy costs, lease liabilities, or prepaid rent balances.",
+    "fapiTreatmentHint": "Treat as property income component A when the source reflects rent received, rent receivable, or lease income earned.",
+    "accountingFamilies": ["revenue"],
+    "positiveIndicators": [
+      "rental income",
+      "rent income",
+      "lease income",
+      "rent receivable",
+      "property rent",
+      "tenant rent"
+    ],
+    "negativeIndicators": [
+      "rent expense",
+      "lease liability",
+      "prepaid rent",
+      "rent payable",
+      "property maintenance",
+      "property tax"
+    ],
+    "frenchPositiveIndicators": [
+      "revenus locatifs",
+      "loyers reçus",
+      "revenus de location",
+      "produits de location",
+      "loyers"
+    ],
+    "frenchNegativeIndicators": [
+      "loyer payé",
+      "loyer à payer",
+      "passif locatif",
+      "charges locatives",
+      "taxes foncières"
+    ],
+    "positiveExamples": [
+      "Rental income from third-party tenants",
+      "Lease income from investment property",
+      "Monthly rent billed to tenant"
+    ],
+    "negativeExamples": [
+      "Office rent expense",
+      "Lease liability for office premises",
+      "Prepaid rent asset"
+    ],
+    "ambiguityWarnings": [
+      "The words 'rent' or 'lease' can describe either income or occupancy costs.",
+      "Property-related labels may bundle rent with taxes or repairs and need review."
+    ],
+    "reviewQuestions": [
+      "Is the entity receiving rent from letting property or assets to others?",
+      "Does the label point to rent receivable or income rather than rent paid or lease obligations?"
+    ],
+    "routingNotes": "Routes to line A / subsection rental_income. Use only for gross rental-type income, not occupancy costs or lease liabilities.",
+    "riskLevel": "medium"
+  },
+  {
+    "fieldName": "royalties",
+    "lineId": "A",
+    "subsectionId": "royalties",
+    "label": "Royalty income",
+    "shortDefinition": "Income earned when another party pays to use intellectual property, rights, or similar intangible assets.",
+    "businessMeaning": "Represents incoming royalty or licensing income, not software license expense, royalty payable, or bundled service revenue.",
+    "fapiTreatmentHint": "Treat as property income component A when the source reflects royalties received for the use of IP, rights, or know-how.",
+    "accountingFamilies": ["revenue"],
+    "positiveIndicators": [
+      "royalty income",
+      "royalties",
+      "licensing income",
+      "license fee income",
+      "patent royalty",
+      "trademark royalty"
+    ],
+    "negativeIndicators": [
+      "royalty expense",
+      "license expense",
+      "software subscription",
+      "service fee revenue",
+      "management fee",
+      "royalty payable"
+    ],
+    "frenchPositiveIndicators": [
+      "redevances",
+      "revenus de redevances",
+      "redevances de licence",
+      "redevances de brevet",
+      "redevances de marque"
+    ],
+    "frenchNegativeIndicators": [
+      "frais de licence",
+      "redevances à payer",
+      "abonnement logiciel",
+      "honoraires de gestion",
+      "revenus de services"
+    ],
+    "positiveExamples": [
+      "Trademark royalty income from licensees",
+      "Patent royalty receipts",
+      "License fee income for intellectual property"
+    ],
+    "negativeExamples": [
+      "Software license expense",
+      "Royalty payable to third-party licensor",
+      "Service revenue under licensing contract"
+    ],
+    "ambiguityWarnings": [
+      "License-related wording can refer to outgoing software costs, service revenue, or true royalty income.",
+      "Intercompany IP arrangements often require contract context to separate royalties from service charges."
+    ],
+    "reviewQuestions": [
+      "Is the amount consideration for another party's use of IP, rights, or know-how?",
+      "Could the label instead describe a software or license expense, a payable, or bundled service revenue?"
+    ],
+    "routingNotes": "Routes to line A / subsection royalties. Prefer this only when the source clearly reflects incoming royalty or licensing income.",
+    "riskLevel": "high"
+  },
+  {
+    "fieldName": "otherFapiIncome",
+    "lineId": "A",
+    "subsectionId": "other_fapi_income",
+    "label": "Other FAPI income",
+    "shortDefinition": "Residual FAPI-relevant income that does not clearly belong to interest, dividends, rents, or royalties.",
+    "businessMeaning": "Acts as a catch-all income bucket for property-income-like items after the named categories have been ruled out.",
+    "fapiTreatmentHint": "Use as component A only after excluding the more specific property-income concepts and confirming the amount is still income rather than a reimbursement or clearing item.",
+    "accountingFamilies": ["revenue", "unknown"],
+    "positiveIndicators": [
+      "other income",
+      "miscellaneous income",
+      "other revenue",
+      "sundry income",
+      "incidental income",
+      "misc income"
+    ],
+    "negativeIndicators": [
+      "sales revenue",
+      "service revenue",
+      "dividend income",
+      "interest income",
+      "rental income",
+      "royalty income"
+    ],
+    "frenchPositiveIndicators": [
+      "autres revenus",
+      "revenus divers",
+      "produits divers",
+      "autres produits",
+      "revenus accessoires"
+    ],
+    "frenchNegativeIndicators": [
+      "ventes",
+      "revenus de services",
+      "dividendes",
+      "revenu d'intérêts",
+      "loyers",
+      "redevances"
+    ],
+    "positiveExamples": [
+      "Sundry income related to investment activities",
+      "Miscellaneous property income",
+      "Other revenue not captured in named property income buckets"
+    ],
+    "negativeExamples": [
+      "Sales revenue from product inventory",
+      "Service revenue from consulting contract",
+      "Dividend income from shares held"
+    ],
+    "ambiguityWarnings": [
+      "'Miscellaneous income' and 'other revenue' are catch-all labels that are rarely safe from text alone.",
+      "Intercompany charges, rebates, and recoveries may look like other income but belong elsewhere after context review."
+    ],
+    "reviewQuestions": [
+      "After ruling out interest, dividends, rents, royalties, and capital gains, does this still look like FAPI-relevant income?",
+      "Is the amount truly income rather than a reimbursement, balance-sheet clearing item, or operating revenue outside this workflow?"
+    ],
+    "routingNotes": "Routes to line A / subsection other_fapi_income. Treat as a residual income bucket only after excluding the named property-income categories.",
+    "riskLevel": "high"
+  },
+  {
+    "fieldName": "capGains",
+    "lineId": "CAP_GAINS",
+    "subsectionId": null,
+    "label": "Capital gains",
+    "shortDefinition": "Realized gains from the disposition of capital property or other non-excluded property.",
+    "businessMeaning": "Represents realized disposition gains rather than ordinary revenue, unrealized revaluations, or capital losses.",
+    "fapiTreatmentHint": "Use this direct capital-gains line only when the source indicates a realized gain on disposition and not an operating or unrealized gain.",
+    "accountingFamilies": ["capital"],
+    "positiveIndicators": [
+      "capital gain",
+      "capital gains",
+      "gain on sale",
+      "gain on disposition",
+      "realized gain",
+      "investment gains"
+    ],
+    "negativeIndicators": [
+      "capital loss",
+      "unrealized gain",
+      "depreciation",
+      "dividend income",
+      "gain on foreign exchange",
+      "loss on sale"
+    ],
+    "frenchPositiveIndicators": [
+      "gain en capital",
+      "gains en capital",
+      "gain sur disposition",
+      "gain sur vente",
+      "gain réalisé sur placement"
+    ],
+    "frenchNegativeIndicators": [
+      "perte en capital",
+      "perte sur disposition",
+      "gain non réalisé",
+      "amortissement",
+      "dividendes"
+    ],
+    "positiveExamples": [
+      "Gain on sale of marketable securities",
+      "Realized gain on disposition of shares",
+      "Gain on sale of non-excluded property"
+    ],
+    "negativeExamples": [
+      "Capital loss on disposed shares",
+      "Unrealized gain on investment revaluation",
+      "Dividend income from portfolio holdings"
+    ],
+    "ambiguityWarnings": [
+      "'Gain' alone is unsafe because it can describe capital, FX, operating, or unrealized movements.",
+      "Disposition labels may still need confirmation that the asset is non-excluded property for this runtime line."
+    ],
+    "reviewQuestions": [
+      "Was there a realized disposition event creating a capital gain rather than ordinary revenue?",
+      "Does the record indicate a gain, not a loss, and is it appropriate for the capital gains line rather than another component?"
+    ],
+    "routingNotes": "Routes to top-level line CAP_GAINS with no subsection. This is a direct capital-gains line, not a general other-income fallback.",
+    "riskLevel": "high"
+  },
+  {
+    "fieldName": "fatPaid",
+    "lineId": "FAT_PAID",
+    "subsectionId": null,
+    "label": "Foreign tax paid / FAT paid",
+    "shortDefinition": "Foreign taxes paid or withheld on relevant income streams for FAT review purposes.",
+    "businessMeaning": "Represents foreign tax already paid or withheld, not a domestic sales tax, tax provision, or simple tax payable balance.",
+    "fapiTreatmentHint": "Use this line when the source clearly reflects foreign tax paid or withheld on income relevant to FAPI review.",
+    "accountingFamilies": ["tax"],
+    "positiveIndicators": [
+      "foreign tax paid",
+      "foreign withholding tax",
+      "tax withheld abroad",
+      "withholding tax on income",
+      "foreign tax withheld",
+      "non-resident withholding"
+    ],
+    "negativeIndicators": [
+      "tax payable",
+      "income tax expense",
+      "sales tax",
+      "gst",
+      "vat",
+      "tax provision"
+    ],
+    "frenchPositiveIndicators": [
+      "impôt étranger payé",
+      "retenue d'impôt étranger",
+      "impôt retenu à la source",
+      "impôt payé à l'étranger",
+      "retenue étrangère"
+    ],
+    "frenchNegativeIndicators": [
+      "impôt à payer",
+      "provision pour impôts",
+      "TPS",
+      "TVQ",
+      "taxe de vente",
+      "charge d'impôt"
+    ],
+    "positiveExamples": [
+      "Foreign withholding tax on dividends received",
+      "Tax withheld abroad on royalty income",
+      "Foreign tax paid on investment income"
+    ],
+    "negativeExamples": [
+      "Foreign tax payable at year-end",
+      "Provision for income taxes",
+      "GST collected on sales"
+    ],
+    "ambiguityWarnings": [
+      "Tax labels often fail to distinguish tax paid, tax payable, tax expense, and sales taxes.",
+      "Withholding may attach to different income streams, so confirm the tax is foreign and relevant to FAPI review."
+    ],
+    "reviewQuestions": [
+      "Is the amount a foreign tax already paid or withheld, rather than a payable or provision?",
+      "Does the tax relate to the income being reviewed for FAPI or FAT purposes rather than domestic sales or payroll taxes?"
+    ],
+    "routingNotes": "Routes to top-level line FAT_PAID with no subsection. Use for foreign tax paid or withheld amounts, not generic tax expense or liabilities.",
+    "riskLevel": "medium"
+  },
+  {
+    "fieldName": "generalExpenses",
+    "lineId": "EXPENSES",
+    "subsectionId": "general_expenses",
+    "label": "General / office / administrative expenses",
+    "shortDefinition": "Ordinary general, office, and administrative costs that support the business but are not legal, accounting, tax, or financing items.",
+    "businessMeaning": "Represents the current catch-all expense bucket for office-type and other general operating costs, including some repair or maintenance labels when no narrower route exists.",
+    "fapiTreatmentHint": "Use this expense bucket for office/admin-style costs after excluding legal, accounting, foreign tax, and interest-specific items.",
+    "accountingFamilies": ["expense"],
+    "positiveIndicators": [
+      "general expenses",
+      "administrative expenses",
+      "office expenses",
+      "office supplies",
+      "bank charges",
+      "repairs and maintenance"
+    ],
+    "negativeIndicators": [
+      "legal fees",
+      "accounting fees",
+      "interest expense",
+      "foreign tax paid",
+      "dividend income",
+      "capital gain"
+    ],
+    "frenchPositiveIndicators": [
+      "frais généraux",
+      "dépenses administratives",
+      "frais de bureau",
+      "fournitures de bureau",
+      "réparation & entretien local",
+      "frais bancaires"
+    ],
+    "frenchNegativeIndicators": [
+      "honoraires d'avocat",
+      "honoraires comptables",
+      "charge d'intérêts",
+      "impôt étranger payé",
+      "dividendes",
+      "gain en capital"
+    ],
+    "positiveExamples": [
+      "Office supplies for affiliate administration",
+      "Frais de bureau du siège étranger",
+      "Réparation & entretien local du bureau"
+    ],
+    "negativeExamples": [
+      "Legal fees for external counsel",
+      "Accounting fees for year-end audit",
+      "Foreign withholding tax paid"
+    ],
+    "ambiguityWarnings": [
+      "General and admin labels are broad and may hide legal, accounting, tax, or financing items that deserve a narrower field.",
+      "Management fees and intercompany charges should not default here without context on the underlying service."
+    ],
+    "reviewQuestions": [
+      "Does the label describe ordinary general or administrative costs rather than legal, accounting, tax, or interest items?",
+      "Is there any contract or intercompany context suggesting the amount is actually a service charge or reimbursement instead of a general expense?"
+    ],
+    "routingNotes": "Routes to line EXPENSES / subsection general_expenses. This is the current catch-all for office/admin-type expenses because no narrower office-only runtime route exists.",
+    "riskLevel": "high"
+  },
+  {
+    "fieldName": "legalExpenses",
+    "lineId": "EXPENSES",
+    "subsectionId": "extra_expenses",
+    "label": "Legal expenses",
+    "shortDefinition": "Fees for lawyers, legal counsel, litigation, notarial work, or other clearly legal services.",
+    "businessMeaning": "Represents legal service costs rather than accounting, audit, bookkeeping, or routine office administration.",
+    "fapiTreatmentHint": "Use this expense concept only when the source clearly points to legal service providers or legal work performed.",
+    "accountingFamilies": ["expense"],
+    "positiveIndicators": [
+      "legal expenses",
+      "legal fees",
+      "attorney fees",
+      "counsel fees",
+      "litigation costs",
+      "notary fees"
+    ],
+    "negativeIndicators": [
+      "accounting fees",
+      "audit fees",
+      "bookkeeping",
+      "tax preparation",
+      "management consulting",
+      "general office expense"
+    ],
+    "frenchPositiveIndicators": [
+      "frais juridiques",
+      "honoraires d'avocat",
+      "honoraires juridiques",
+      "frais de notaire",
+      "contentieux"
+    ],
+    "frenchNegativeIndicators": [
+      "honoraires comptables",
+      "frais d'audit",
+      "tenue de livres",
+      "consultation en gestion",
+      "frais de bureau"
+    ],
+    "positiveExamples": [
+      "Legal fees for contract review",
+      "External counsel fees for dispute settlement",
+      "Notary fees on legal documentation"
+    ],
+    "negativeExamples": [
+      "External audit fees",
+      "Bookkeeping charges from CPA firm",
+      "Office administration supplies"
+    ],
+    "ambiguityWarnings": [
+      "'Professional fees' is not safe on its own because it can mean legal, accounting, audit, or consulting services.",
+      "Some advisors issue blended invoices, so supporting documents may be needed to separate legal from accounting work."
+    ],
+    "reviewQuestions": [
+      "Does the label point to lawyers, counsel, litigation, contracts, compliance, or notarial services?",
+      "Is the amount better characterized as accounting or audit fees instead of legal work?"
+    ],
+    "routingNotes": "Routes to line EXPENSES / subsection extra_expenses. Runtime currently collapses legal and accounting into the same subsection, so this card preserves the distinction only at the concept layer.",
+    "riskLevel": "high"
+  },
+  {
+    "fieldName": "accountingExpenses",
+    "lineId": "EXPENSES",
+    "subsectionId": "extra_expenses",
+    "label": "Accounting / audit / professional fees",
+    "shortDefinition": "Fees for accounting, audit, bookkeeping, tax compliance, or similar professional finance work.",
+    "businessMeaning": "Represents accounting and audit support rather than legal counsel, management advisory, or general office spending.",
+    "fapiTreatmentHint": "Use this expense concept when the label indicates accounting, bookkeeping, audit, or tax-return preparation services.",
+    "accountingFamilies": ["expense"],
+    "positiveIndicators": [
+      "accounting expenses",
+      "accounting fees",
+      "audit fees",
+      "bookkeeping",
+      "tax preparation fees",
+      "cpa fees"
+    ],
+    "negativeIndicators": [
+      "legal fees",
+      "attorney fees",
+      "litigation",
+      "general office expense",
+      "management fees",
+      "interest expense"
+    ],
+    "frenchPositiveIndicators": [
+      "honoraires comptables",
+      "frais de comptabilité",
+      "frais d'audit",
+      "tenue de livres",
+      "préparation fiscale"
+    ],
+    "frenchNegativeIndicators": [
+      "honoraires d'avocat",
+      "contentieux",
+      "frais de bureau",
+      "honoraires de gestion",
+      "charge d'intérêts"
+    ],
+    "positiveExamples": [
+      "External audit fees",
+      "Bookkeeping and accounting fees",
+      "Tax preparation fees for affiliate returns"
+    ],
+    "negativeExamples": [
+      "Legal fees for contract dispute",
+      "Office supplies expense",
+      "Interest on shareholder loan"
+    ],
+    "ambiguityWarnings": [
+      "'Professional fees' may belong here, to legal, or to another service category; text alone is often insufficient.",
+      "Management or advisory fees can resemble accounting support but may reflect a different business relationship."
+    ],
+    "reviewQuestions": [
+      "Does the label refer to accounting, bookkeeping, audit, compliance, or tax return preparation work?",
+      "Could this instead be legal counsel, management advisory, or a broader intercompany service charge?"
+    ],
+    "routingNotes": "Routes to line EXPENSES / subsection extra_expenses. Like legalExpenses, this currently collapses at Level 2, but keeping a separate concept card supports future AI suggestions.",
+    "riskLevel": "high"
+  }
+]

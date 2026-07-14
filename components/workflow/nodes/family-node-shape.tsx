@@ -6,6 +6,7 @@ import {
   Calculator,
   CheckCircle2,
   Clock,
+  Cloud,
   Code2,
   Database,
   Download,
@@ -243,6 +244,7 @@ function getSubtypeIcon(subtype: BlockSubtype | undefined): LucideIcon {
     case "PDF Report":
       return FileText;
     case "API / HTTP Request":
+      return Cloud;
     case "Currency Rate":
       return Braces;
     case "Database Query":

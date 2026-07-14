@@ -2,7 +2,11 @@ import type { EvidenceRef, SourceTraceRef } from "../../../runtime/types";
 
 const KEYWORD_LIST_DELIMITER_REGEX = /[,;\n|]/;
 
-export type KeywordRuleMatchMode = "contains" | "exact" | "starts_with";
+export type KeywordRuleMatchMode =
+  | "contains"
+  | "exact"
+  | "starts_with"
+  | "all_words";
 
 export type KeywordRule = {
   ruleId: string;
@@ -70,12 +74,16 @@ function parseNumber(value: unknown): number | undefined {
 }
 
 function parseMatchMode(value: unknown): KeywordRuleMatchMode {
-  if (value === "exact" || value === "starts_with") {
+  if (value === "exact" || value === "starts_with" || value === "all_words") {
     return value;
   }
 
   if (value === "starts with") {
     return "starts_with";
+  }
+
+  if (value === "all words") {
+    return "all_words";
   }
 
   return "contains";
@@ -111,6 +119,17 @@ function getKeywordBuckets(record: Record<string, unknown>) {
     return {
       containsKeywords: [],
       exactKeywords: legacyKeywords,
+      excludeKeywords,
+      keywords: legacyKeywords,
+    };
+  }
+
+  // all_words: keep the phrases in `keywords` (no exact/contains bucket) so the
+  // mapper's candidate list carries the rule's matchMode ("all_words").
+  if (record.matchMode === "all_words") {
+    return {
+      containsKeywords: [],
+      exactKeywords: [],
       excludeKeywords,
       keywords: legacyKeywords,
     };

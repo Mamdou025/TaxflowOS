@@ -4,7 +4,8 @@
       "PowerShell(taskkill /IM node.exe /F)",
       "Read(//mnt/c/Users/Mamad/Sinaxe/**)",
       "Bash(pnpm type-check *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Read(//c/Users/Mamad/AppData/Local/Temp/claude/c--Users-Mamad-Sinaxe-TaxflowOS/e89fe10b-5dcc-4442-9cf5-ced6390b810b/scratchpad/**)"
     ]
   }
 }

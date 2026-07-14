@@ -408,7 +408,7 @@ export default function ExecutiveOverview() {
         </div>
 
         {/* ── Executive KPIs — only 3 top-level metrics ────────────────────── */}
-        <div className="grid grid-cols-3 gap-4">
+        <div data-anchor="bu:kpis" className="grid grid-cols-3 gap-4">
           {[
             {
               label: 'Total Clients',
@@ -445,7 +445,7 @@ export default function ExecutiveOverview() {
         </div>
 
         {/* ── Revenue attainment bar ───────────────────────────────────────── */}
-        <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+        <div data-anchor="bu:revenue" className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <span className="text-[11px] font-600 text-slate-400 uppercase tracking-wider">Revenue Attainment by LOS</span>
             <span className="tabular-nums text-sm font-600 text-slate-500">{attainmentPct}% of target</span>
@@ -474,7 +474,7 @@ export default function ExecutiveOverview() {
         </div>
 
         {/* ── Control Tower — LOS org chart ───────────────────────────────── */}
-        <div>
+        <div data-anchor="bu:lines-of-service">
           <div className="flex items-center gap-2 mb-1">
             <h2 className="text-sm font-700 text-[#0F2044]">Lines of Service</h2>
             <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">

@@ -272,6 +272,63 @@ sourceBlockId, sourceLabel, evidenceRefId?, relationshipPath[], rowId?, valuePre
 | `/workflows` | `app/workflows/page.tsx` | Redirects to most recent |
 | `/workflows/[workflowId]` | `app/workflows/[workflowId]/page.tsx` | Full workflow editor (750 lines) |
 
+**AI API routes:**
+| Route | File | Purpose |
+|---|---|---|
+| `POST /api/ai/generate` | `app/api/ai/generate/route.ts` | Builder: NL → workflow (JSONL op stream) |
+| `POST /api/copilotkit` | `app/api/copilotkit/route.ts` | **CopilotKit runtime** (CopilotRuntime + OpenAIAdapter) — powers the chat panel. Uses `OPENAI_API_KEY` |
+| `POST /api/chat-workspace` | `app/api/chat-workspace/route.ts` | Legacy custom agent (superseded by CopilotKit; still present) |
+| `GET /api/fx-rate` | `app/api/fx-rate/route.ts` | **Live Bank of Canada Valet FX fetch** (`?from=USD&to=CAD&year=2025` → `fetchAnnualAverageExchangeRate`). Real source behind the FAPI `fapi-api-boc-fx` API block; server-side (avoids CORS); `ok:false` + reason on failure so callers fall back to the override rate |
+
+---
+
+## Chat Workspace Agent (server-side LLM tool-calling)
+
+The first real server compute in the chat path. Flow:
+
+```
+Panel send() (client)
+   → callChatAgent({ message, context, history, catalog }) [lib/chat-agent.ts]
+     catalog = buildAgentCatalog() from the resource registry (pages/anchors/fields/routes)
+   → POST /api/chat-workspace  (better-auth session required)
+     → generateText({ model: 'openai/gpt-5.1-instant', system, messages, tools, toolChoice:'auto' })
+       tools built from the catalog; NO execute → model emits tool-calls as data and stops
+   → { text, toolCalls[] } back to client
+   → executeAgent() runs each tool-call against the workspace atoms
+     openPage · focusAnchor · editField · closePage · closeAll · openWorkflowBuilder · runFapiDemo
+   → on any failure (no key / signed-out / offline): runDeterministic() keyword fallback
+```
+
+Model resolution (`resolveModel()` in the route): `OPENAI_API_KEY` → `@ai-sdk/openai` provider directly (`OPENAI_CHAT_MODEL`, default `gpt-4o`); else `AI_GATEWAY_API_KEY` → the gateway string model (`openai/gpt-5.1-instant`, same as `/api/ai/generate`); else 500 → client falls back to the deterministic resolvers. Keys live in `.env.local` (gitignored). The registry is the single source of truth for the tool enums, so the model can never target a page/anchor/field that doesn't exist.
+
+**Run → resolve → resume loop (`lib/fapi-run.ts` `runFapiLoop`).** The FAPI run is interactive. `runFapiLoop(state: FapiLoopState)` runs the real engine against the accumulated resolutions and returns the next blocker (or `done`):
+
+```
+runFapiLoop(state):
+  !state.uploaded            → blocker 'upload'      (needs the trial balance)
+  run with rows + overrides  → mapper unmatchedRows  → blocker 'categorize' (assign a category → injected as a keyword rule, re-run)
+  all classified, !approved  → blocker 'approval'    (final sign-off, with the computed preview)
+  else                       → { done: true, result }
+```
+
+The panel accumulates each resolution into `FapiLoopState` (uploaded / overrides / approved) and re-runs until done. The `categorize` resolution appends a keyword rule to the mapper's `config.keywordRules`; verified that resolving the ambiguous row lifts GROSS 25,000 → 29,500. Approval is currently a UI gate (Step 2 will route it through `GovernanceMetadata.approvalState`).
+
+**Real FAPI computation (`runFapiCore`).** Underneath the loop, each run is the actual engine, entirely client-side and without touching the user's saved workflow:
+
+```
+createFapiTemplateWorkflow()                    // fresh FAPI template snapshot
+  → inject SAMPLE_TRIAL_BALANCE into the trial-balance source (template is upload-first)
+  → workflowDefinitionToCanvas(snapshot)        // domain → canvas nodes/edges
+  → runLocalWorkflowTools({ nodes, edges })     // the same deterministic runner the studio uses
+  → read result.results[].output.calculatedResults
+      lines engine  (fapi-logic-lines-engine)   → A, EXPENSES, 95(2), A1, A2, B, C, D, E, F, F1, G, H
+      summary engine(fapi-logic-summary-engine) → GROSS, DEDUCTIONS, FAPI_BRUT, FAT_DEDUCTION, NET_FAPI, FX_RATE, NET_FAPI_CAD
+```
+
+The pipeline is Excel source → keyword mapper → category rollup → two-stage calculation engine. Verified end-to-end: GROSS 25,000 USD → Net FAPI 24,810 USD → 33,493.50 CAD at 1.35 FX. The injected trial balance stands in for the parsed email attachment; wiring a real Gmail/Drive attachment is the remaining `[PLANNED]` piece.
+
+**Full FAPI line set (2026-07-13):** the lines engine now computes the whole Platform skeleton — `A = P × (income_bucket − expense_bucket) + 95(2)`, plus display lines `EXPENSES` (`P × expense_bucket`) and `COMPUTATION_95_4` (the 95(2) amount, which also flows into A), and `A1 (=2×debtForgiveness), A2, B, C, D, E, F, F1, G, H`. The A1/A2/C–H amounts, the **P-coefficient**, and the **95(2)** amount are workbook assumptions fed by the extended **FAPI Inputs** block (`fapi-source-inputs`, `source.fapi_inputs`) and exposed as **editable inputs** in the run. No new engine operation was needed — line A uses the calc engine's `formulaExpression` grammar (`+ − * /`, parens, `max/min/…`), and `getNamedValues` already merges `fapi_inputs` keys as operands. RTF is snapped to `{1.9, 4}` in the inputs block. This keeps ONE engine (`runLocalWorkflowTools`) as the single source of truth — the FAPI worksheet (Phase 2) will read these lines directly, so worksheet/chat/canvas stay identical. `lib/fapi/calculation-engine.ts` (the parity port) is deliberately **not** wired, to avoid a second calc path.
+
 **Root layout** (`app/layout.tsx`) wraps everything in:
 - Auth provider (better-auth)
 - Overlay provider (modal stack)
@@ -313,3 +370,5 @@ Default dataset loaded on demo/new workflow:
 - AI block code execution (stubbed)
 - External API calls from blocks (stubbed)
 - Real integration execution (stubbed)
+
+**Now server-side:** the chat workspace agent (`/api/chat-workspace`) — LLM tool-selection runs on the server; tool *execution* stays on the client (against Jotai atoms).

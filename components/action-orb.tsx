@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAtom } from 'jotai';
-import { Home, Workflow, Sparkles, LayoutDashboard, X, ArrowUp } from 'lucide-react';
-import { chatMessagesAtom, type ChatMessage } from '@/lib/chat-store';
+import { useSetAtom } from 'jotai';
+import { Home, Workflow, Sparkles, LayoutDashboard } from 'lucide-react';
+import { chatWorkspaceOpenAtom } from '@/lib/chat-store';
 
 const PURPLE = '#6B21A8';
 const ORANGE  = '#C2410C';
@@ -14,7 +14,6 @@ const MINI_SIZE   = 52;
 const MINI_RADIUS = MINI_SIZE / 2;
 const BOTTOM_GAP  = 20;
 const ARC_RADIUS  = 95;
-const CHAT_W      = 440;
 
 const ORB_ANCHOR_BOTTOM = BOTTOM_GAP + MINI_RADIUS; // 52 px
 
@@ -50,10 +49,6 @@ function OrbDots({ size }: { size: number }) {
         @keyframes gorb-ccw { to { transform: rotate(-360deg); } }
         .gorb-cw  { animation: gorb-cw  9s linear infinite; transform-origin: ${cx}px ${cy}px; }
         .gorb-ccw { animation: gorb-ccw 6s linear infinite; transform-origin: ${cx}px ${cy}px; }
-        @keyframes orb-bounce {
-          0%, 80%, 100% { transform: scaleY(1); opacity: 0.4; }
-          40%            { transform: scaleY(1.4); opacity: 1; }
-        }
       `}</style>
       <svg
         width={size} height={size} viewBox={`0 0 ${size} ${size}`}
@@ -94,302 +89,64 @@ function OrbDots({ size }: { size: number }) {
   );
 }
 
-// ─── Typing indicator ─────────────────────────────────────────────────────────
-function TypingDots() {
-  return (
-    <div style={{ display: 'flex', gap: 4, alignItems: 'center', padding: '2px 0' }}>
-      {[0, 1, 2].map(i => (
-        <span
-          key={i}
-          style={{
-            display: 'inline-block',
-            width: 6, height: 6, borderRadius: '50%',
-            background: '#9CA3AF',
-            animation: `orb-bounce 1.2s ease-in-out ${i * 0.18}s infinite`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
 // ─── Main export ──────────────────────────────────────────────────────────────
+// Launcher orb + radial nav. The "AI Chat" item opens the large takeover chat
+// workspace panel (see components/workspace/chat-workspace-panel.tsx).
 export function ActionOrb() {
   const pathname = usePathname();
   const router   = useRouter();
+  const openChat = useSetAtom(chatWorkspaceOpenAtom);
 
-  const [messages,  setMessages]  = useAtom(chatMessagesAtom);
-  const [mounted,   setMounted]   = useState(false);
-  const [menuOpen,  setMenuOpen]  = useState(false);
-  const [chatOpen,  setChatOpen]  = useState(false);
-  const [message,   setMessage]   = useState('');
-  const [isTyping,  setIsTyping]  = useState(false);
-
-  const inputRef   = useRef<HTMLInputElement>(null);
-  const bottomRef  = useRef<HTMLDivElement>(null);
+  const [mounted,  setMounted]  = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
-
-  useEffect(() => {
-    setMenuOpen(false);
-    setChatOpen(false);
-    setMessage('');
-    setIsTyping(false);
-  }, [pathname]);
-
-  // Focus input after the morph animation finishes
-  useEffect(() => {
-    if (!chatOpen) return;
-    const t = setTimeout(() => inputRef.current?.focus(), 380);
-    return () => clearTimeout(t);
-  }, [chatOpen]);
-
-  // Auto-scroll to newest message
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]);
+  useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   if (!mounted) return null;
-
-  const handleSend = () => {
-    const text = message.trim();
-    if (!text || isTyping) return;
-
-    const userMsg: ChatMessage = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: text,
-      timestamp: Date.now(),
-    };
-    setMessages(prev => [...prev, userMsg]);
-    setMessage('');
-    setIsTyping(true);
-
-    // Placeholder — swap this setTimeout for a real API call
-    setTimeout(() => {
-      setIsTyping(false);
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `I'm reviewing your InScope context. This is a placeholder — wire up an AI API to get real responses.`,
-        timestamp: Date.now(),
-      }]);
-    }, 900);
-  };
 
   const handleItemClick = (item: NavItem) => {
     setMenuOpen(false);
     if (item.action === 'chat') {
-      setChatOpen(true);
+      openChat(true);
     } else if (item.href) {
       router.push(item.href);
     }
   };
 
-  const closeChat = () => { setChatOpen(false); setMessage(''); };
-
-  const hasText = message.trim().length > 0;
-
   return (
     <>
-      {/* ── Message panel — floats above the chat bar ─────────────────────── */}
-      <AnimatePresence>
-        {chatOpen && (messages.length > 0 || isTyping) && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 12 }}
-            transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-            style={{
-              position: 'fixed',
-              bottom: BOTTOM_GAP + MINI_SIZE + 10,
-              left: '50%',
-              x: '-50%',
-              width: CHAT_W,
-              maxHeight: 340,
-              zIndex: 50,
-              borderRadius: 20,
-              background: '#eaeaef',
-              boxShadow: '8px 8px 22px rgba(158,158,178,0.38), -8px -8px 22px rgba(255,255,255,0.84)',
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden',
-            }}
-          >
-            <div
-              style={{
-                flex: 1,
-                overflowY: 'auto',
-                padding: 16,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 10,
-                scrollbarWidth: 'none',
-              }}
-            >
-              <AnimatePresence initial={false}>
-                {messages.map(msg => (
-                  <motion.div
-                    key={msg.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
-                    style={{
-                      alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                      maxWidth: '82%',
-                      padding: '9px 13px',
-                      borderRadius: msg.role === 'user'
-                        ? '16px 16px 4px 16px'
-                        : '16px 16px 16px 4px',
-                      fontSize: 13,
-                      lineHeight: 1.5,
-                      background: msg.role === 'user'
-                        ? PURPLE
-                        : 'rgba(0,0,0,0.055)',
-                      color: msg.role === 'user' ? '#fff' : '#374151',
-                      boxShadow: msg.role === 'user'
-                        ? '0 2px 8px rgba(107,33,168,0.25)'
-                        : 'none',
-                    }}
-                  >
-                    {msg.content}
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-
-              {/* Typing indicator */}
-              <AnimatePresence>
-                {isTyping && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    style={{
-                      alignSelf: 'flex-start',
-                      padding: '10px 14px',
-                      borderRadius: '16px 16px 16px 4px',
-                      background: 'rgba(0,0,0,0.055)',
-                    }}
-                  >
-                    <TypingDots />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <div ref={bottomRef} />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Morphing orb / chat bar ───────────────────────────────────────── */}
-      <motion.div
-        animate={{ width: chatOpen ? CHAT_W : MINI_SIZE }}
-        transition={{ duration: 0.45, ease: [0.23, 1, 0.32, 1] }}
+      {/* ── Orb button ─────────────────────────────────────────────────────── */}
+      <div
         style={{
           position: 'fixed',
           bottom: BOTTOM_GAP,
           left: '50%',
-          x: '-50%',
+          transform: 'translateX(-50%)',
+          width: MINI_SIZE,
           height: MINI_SIZE,
           borderRadius: MINI_RADIUS,
           background: '#eaeaef',
           overflow: 'hidden',
           zIndex: 50,
-          boxShadow: menuOpen && !chatOpen
+          boxShadow: menuOpen
             ? 'inset 3px 3px 8px rgba(158,158,178,0.42), inset -3px -3px 8px rgba(255,255,255,0.86)'
             : '5px 5px 12px rgba(158,158,178,0.42), -5px -5px 12px rgba(255,255,255,0.86)',
           transition: 'box-shadow 200ms ease-out',
         }}
       >
-        {/* Orb button — fades out as chat opens */}
-        <motion.button
-          animate={{ opacity: chatOpen ? 0 : 1, scale: chatOpen ? 0.6 : 1 }}
-          transition={{ duration: 0.18 }}
-          onClick={() => setMenuOpen(o => !o)}
-          style={{
-            position: 'absolute', left: 0, top: 0,
-            width: MINI_SIZE, height: MINI_SIZE,
-            border: 'none', background: 'transparent', padding: 0,
-            cursor: chatOpen ? 'default' : 'pointer',
-            pointerEvents: chatOpen ? 'none' : 'auto',
-          }}
+        <button
+          onClick={() => setMenuOpen((o) => !o)}
+          style={{ position: 'absolute', inset: 0, border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }}
         >
           <OrbDots size={MINI_SIZE} />
-        </motion.button>
+        </button>
+      </div>
 
-        {/* Chat input row — fades in after morph */}
-        <motion.div
-          animate={{ opacity: chatOpen ? 1 : 0 }}
-          transition={{ duration: 0.2, delay: chatOpen ? 0.3 : 0 }}
-          style={{
-            position: 'absolute', inset: 0,
-            display: 'flex', alignItems: 'center',
-            paddingInline: 16, gap: 8,
-            pointerEvents: chatOpen ? 'auto' : 'none',
-          }}
-        >
-          <Sparkles size={15} style={{ color: PURPLE, flexShrink: 0, opacity: 0.75 }} />
-
-          <input
-            ref={inputRef}
-            value={message}
-            onChange={e => setMessage(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter') handleSend();
-              if (e.key === 'Escape') closeChat();
-            }}
-            placeholder="Ask AI anything…"
-            style={{
-              flex: 1, background: 'none', border: 'none', outline: 'none',
-              fontSize: 14, color: 'var(--neu-text)', letterSpacing: '-0.01em',
-            }}
-          />
-
-          {/* Send button */}
-          <button
-            onClick={handleSend}
-            disabled={!hasText || isTyping}
-            style={{
-              width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-              background: hasText && !isTyping ? PURPLE : 'rgba(0,0,0,0.06)',
-              border: 'none', cursor: hasText && !isTyping ? 'pointer' : 'default',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'background 200ms ease',
-            }}
-          >
-            <ArrowUp size={13} style={{ color: hasText && !isTyping ? '#fff' : '#9CA3AF' }} />
-          </button>
-
-          {/* Close */}
-          <button
-            onClick={closeChat}
-            style={{
-              width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
-              background: 'none', border: 'none', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              opacity: 0.4,
-            }}
-          >
-            <X size={12} style={{ color: '#374151' }} />
-          </button>
-        </motion.div>
-      </motion.div>
-
-      {/* ── Arc items anchor ──────────────────────────────────────────────── */}
-      <div
-        style={{
-          position: 'fixed',
-          bottom: ORB_ANCHOR_BOTTOM,
-          left: '50%',
-          width: 0, height: 0,
-          overflow: 'visible',
-          zIndex: 51,
-        }}
-      >
+      {/* ── Arc items ──────────────────────────────────────────────────────── */}
+      <div style={{ position: 'fixed', bottom: ORB_ANCHOR_BOTTOM, left: '50%', width: 0, height: 0, overflow: 'visible', zIndex: 51 }}>
         <AnimatePresence>
-          {menuOpen && !chatOpen && NAV_ITEMS.map((item, i) => {
+          {menuOpen && NAV_ITEMS.map((item, i) => {
             const angle = START_ANGLE + (i / (NAV_ITEMS.length - 1)) * (END_ANGLE - START_ANGLE);
             const ax    = Math.cos(angle) * ARC_RADIUS;
             const ay    = Math.sin(angle) * ARC_RADIUS;
@@ -419,11 +176,7 @@ export function ActionOrb() {
                 }}>
                   <Icon size={17} style={{ color: '#374151', opacity: 0.75 }} />
                 </div>
-                <span style={{
-                  fontSize: 10, fontWeight: 600, color: '#374151',
-                  whiteSpace: 'nowrap',
-                  textShadow: '0 1px 3px rgba(255,255,255,0.9)',
-                }}>
+                <span style={{ fontSize: 10, fontWeight: 600, color: '#374151', whiteSpace: 'nowrap', textShadow: '0 1px 3px rgba(255,255,255,0.9)' }}>
                   {item.label}
                 </span>
               </motion.button>
@@ -432,15 +185,15 @@ export function ActionOrb() {
         </AnimatePresence>
       </div>
 
-      {/* ── Backdrop ──────────────────────────────────────────────────────── */}
+      {/* ── Backdrop (closes the radial menu) ──────────────────────────────── */}
       <AnimatePresence>
-        {(menuOpen || chatOpen) && (
+        {menuOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             style={{ position: 'fixed', inset: 0, zIndex: 49 }}
-            onClick={() => { setMenuOpen(false); closeChat(); }}
+            onClick={() => setMenuOpen(false)}
           />
         )}
       </AnimatePresence>
