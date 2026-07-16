@@ -1,0 +1,104 @@
+{
+  "case_id": "fapi-case-001",
+  "workflow": "fapi",
+  "status": "active_baseline",
+  "baseline_source": "correction_round_03.md",
+  "original_reviewed_rows": 38,
+  "atomic_expectations": 44,
+  "normalization_note": "Grouped meals and amortization rows were expanded into atomic source-level expectations. Missing identity and FA_3 coverage requirements are represented explicitly.",
+  "reference_workpaper_role": "benchmark_only",
+  "primary_source_role": "trial_balances",
+  "target_period": 2024,
+  "affiliates": [
+    {
+      "alias": "FA_1 SAS",
+      "primary_file": "fa-01_trial_balance.xlsx",
+      "source_name_contains": "Client A SAS",
+      "currency": "EUR",
+      "primary_source_available": true
+    },
+    {
+      "alias": "FA_2 Corp",
+      "primary_file": "fa-02_trial_balance.xlsx",
+      "source_name_contains": "Client A Corp",
+      "currency": null,
+      "primary_source_available": true,
+      "currency_note": "Currency is not explicit in the source preview and should not be inferred."
+    },
+    {
+      "alias": "FA_3 GmbH",
+      "primary_file": null,
+      "source_name_contains": null,
+      "currency": null,
+      "primary_source_available": false,
+      "benchmark_sheet": "FA_3 GmbH 2024"
+    }
+  ],
+  "files": {
+    "expected_mapping": "expected_mapping.csv",
+    "rules": "../../../../../Tax rules/Fapi rules/FAPI_Final_Mapping_Rules.md",
+    "reference_workpaper": "reference_fapi_workpaper.xlsx",
+    "correction_rounds": [
+      "correction_round_01.md",
+      "correction_round_02.md",
+      "correction_round_03.md"
+    ]
+  },
+  "controlled_treatments": [
+    "benchmark_only",
+    "client_question",
+    "context_only",
+    "deductible_expense_candidate",
+    "do_not_map",
+    "manual_input_required",
+    "manual_review_required",
+    "map_to_engine",
+    "overhead_allocation_candidate",
+    "schedule_1_adjustment_candidate"
+  ],
+  "controlled_review_requirements": [
+    "not_required",
+    "candidate_review",
+    "question_required"
+  ],
+  "counts_by_affiliate": {
+    "FA_1 SAS": 22,
+    "FA_2 Corp": 21,
+    "FA_3 GmbH": 1
+  },
+  "counts_by_treatment": {
+    "context_only": 6,
+    "do_not_map": 5,
+    "map_to_engine": 2,
+    "manual_review_required": 3,
+    "overhead_allocation_candidate": 7,
+    "deductible_expense_candidate": 1,
+    "schedule_1_adjustment_candidate": 13,
+    "manual_input_required": 3,
+    "client_question": 3,
+    "benchmark_only": 1
+  },
+  "hard_fail_conditions": [
+    "The agent uses historical workpaper summary values as primary engine inputs.",
+    "The agent leaks facts between affiliates.",
+    "The agent invents a primary source for FA_3 GmbH.",
+    "The agent maps a target field not allowed by the active workflow schema.",
+    "The agent omits source citations for a proposed mapping."
+  ],
+  "scoring": {
+    "required_keys": [
+      "affiliate_alias",
+      "source_fact_label",
+      "expected_treatment",
+      "expected_engine_field",
+      "source_file",
+      "source_sheet",
+      "source_label_cell"
+    ],
+    "primary_match": "affiliate_alias + normalized source_fact_label or exact source location",
+    "treatment_match": "exact",
+    "engine_field_match": "exact when expected_engine_field is populated",
+    "review_match": "exact controlled review requirement",
+    "citation_match": "source file, sheet, and cell must resolve when source_required is true"
+  }
+}
