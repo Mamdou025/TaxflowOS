@@ -1,0 +1,333 @@
+{
+  "affiliateAliases": [
+    {
+      "alias": "FA_1 SAS",
+      "sourceNamePattern": "Client A SAS"
+    },
+    {
+      "alias": "FA_2 Corp",
+      "sourceNamePattern": "Client A Corp"
+    }
+  ],
+  "allowedEngineFields": [
+    "additions",
+    "additions or deductions",
+    "generalExpenses",
+    "otherFapiIncome",
+    "realized_fx_candidate",
+    "tax_depreciation_manual_input"
+  ],
+  "benchmarkExpectations": [
+    {
+      "affiliateAlias": "FA_2 Corp",
+      "engineField": "tax_depreciation_manual_input",
+      "label": "Tax depreciation / CCA",
+      "rationale": "Primary source support is absent. Historical workpaper evidence identifies a required manual tax-depreciation or CCA input.",
+      "reviewRequirement": "question_required",
+      "rowType": "mapping",
+      "ruleId": "fapi.tax-depreciation-benchmark",
+      "sheetName": "FA_2 Corp - Info + Sch 1",
+      "sourceFile": "reference_fapi_workpaper.xlsx",
+      "treatment": "manual_input_required"
+    },
+    {
+      "affiliateAlias": "FA_3 GmbH",
+      "label": "Historical FAPI insights with missing primary source",
+      "rationale": "Primary source is missing. Surface historical-workpaper insights as benchmark-only evidence and require reviewer follow-up; never invent or borrow primary facts.",
+      "reviewRequirement": "question_required",
+      "rowType": "coverage",
+      "ruleId": "fapi.fa3-source-missing",
+      "sheetName": "FA_3 GmbH 2024",
+      "sourceFile": "reference_fapi_workpaper.xlsx",
+      "treatment": "benchmark_only"
+    }
+  ],
+  "identity": {
+    "confidence": 1,
+    "preferredSheetPattern": "^(P&L|ProfitandLoss)$",
+    "rationale": "Confirm the source legal name and affiliate alias before numeric mapping."
+  },
+  "mappingRules": [
+    {
+      "confidence": 1,
+      "id": "fapi.total-income-context",
+      "labelPattern": "^Total\\s*-?\\s*(Sales|Income)$",
+      "rationale": "Total income is context for reconciliation and allocation, not a direct engine input.",
+      "reviewRequirement": "not_required",
+      "sheetPattern": "^(P&L|ProfitandLoss)$",
+      "treatment": "context_only"
+    },
+    {
+      "confidence": 1,
+      "id": "fapi.third-party-sales",
+      "labelPattern": "^42100\\s*-\\s*Ventes$",
+      "rationale": "Accepted baseline treatment excludes ordinary third-party sales from direct FAPI mapping.",
+      "reviewRequirement": "not_required",
+      "sheetPattern": "^(P&L|ProfitandLoss)$",
+      "treatment": "do_not_map"
+    },
+    {
+      "affiliatePattern": "^FA_1\\b",
+      "confidence": 1,
+      "id": "fapi.europe-services",
+      "labelPattern": "^42110\\s*-\\s*Prestations de services - Europe$",
+      "rationale": "Accepted baseline treatment excludes this active-business service revenue from direct FAPI mapping.",
+      "reviewRequirement": "not_required",
+      "sheetPattern": "^(P&L|ProfitandLoss)$",
+      "treatment": "do_not_map"
+    },
+    {
+      "confidence": 1,
+      "engineField": "otherFapiIncome",
+      "id": "fapi.intercompany-revenue",
+      "labelPattern": "^42200\\s*-\\s*Revenus - intercos$",
+      "rationale": "Accepted historical treatment maps intercompany revenue to other FAPI income.",
+      "reviewRequirement": "not_required",
+      "sheetPattern": "^(P&L|ProfitandLoss)$",
+      "treatment": "map_to_engine"
+    },
+    {
+      "confidence": 1,
+      "id": "fapi.wip-context",
+      "labelPattern": "^43100\\s*-\\s*Variation TEC/RR$",
+      "rationale": "The WIP or unearned-revenue movement is retained as reconciliation context.",
+      "reviewRequirement": "not_required",
+      "sheetPattern": "^(P&L|ProfitandLoss)$",
+      "treatment": "context_only"
+    },
+    {
+      "confidence": 0.7,
+      "engineField": "otherFapiIncome",
+      "id": "fapi.other-revenue-review",
+      "labelPattern": "^44220\\s*-\\s*Autres revenus$",
+      "rationale": "The nature of other revenue is unclear and requires support before mapping to other FAPI income.",
+      "reviewRequirement": "question_required",
+      "sheetPattern": "^(P&L|ProfitandLoss)$",
+      "treatment": "manual_review_required"
+    },
+    {
+      "affiliatePattern": "^FA_1\\b",
+      "confidence": 0.85,
+      "engineField": "generalExpenses",
+      "id": "fapi.fa1-cost-of-sales-allocation",
+      "labelPattern": "^Total - 50000 - COST OF SALES$",
+      "rationale": "Cost of sales is an overhead allocation candidate between FAPI and non-FAPI activities.",
+      "reviewRequirement": "candidate_review",
+      "sheetPattern": "^ProfitandLoss$",
+      "treatment": "overhead_allocation_candidate"
+    },
+    {
+      "affiliatePattern": "^FA_2\\b",
+      "confidence": 0.85,
+      "engineField": "generalExpenses",
+      "id": "fapi.fa2-cost-of-sales-allocation",
+      "labelPattern": "^Total - Cost Of Sales$",
+      "rationale": "Cost of sales is an overhead allocation candidate between FAPI and non-FAPI activities.",
+      "reviewRequirement": "candidate_review",
+      "sheetPattern": "^P&L$",
+      "treatment": "overhead_allocation_candidate"
+    },
+    {
+      "affiliatePattern": "^FA_1\\b",
+      "confidence": 0.85,
+      "engineField": "generalExpenses",
+      "id": "fapi.intercompany-subcontractors",
+      "labelPattern": "^52200\\s*-\\s*Sous-traitants - intercos$",
+      "rationale": "Intercompany subcontractor costs are candidates for deduction when directly connected to FAPI income.",
+      "reviewRequirement": "candidate_review",
+      "sheetPattern": "^ProfitandLoss$",
+      "treatment": "deductible_expense_candidate"
+    },
+    {
+      "confidence": 0.85,
+      "engineField": "generalExpenses",
+      "id": "fapi.admin-salaries-allocation",
+      "labelPattern": "^Total - 60000 - ADMINISTRATIVE SALARIES AND SOCIAL CHARGES$",
+      "rationale": "Administrative salaries and social charges require allocation between FAPI and non-FAPI activities.",
+      "reviewRequirement": "candidate_review",
+      "sheetPattern": "^(P&L|ProfitandLoss)$",
+      "treatment": "overhead_allocation_candidate"
+    },
+    {
+      "confidence": 0.85,
+      "engineField": "generalExpenses",
+      "id": "fapi.selling-admin-allocation",
+      "labelPattern": "^Total - 61000 - SELLING AND ADMINISTRATIVE EXPENSES$",
+      "rationale": "Selling and administrative expenses require allocation between FAPI and non-FAPI activities.",
+      "reviewRequirement": "candidate_review",
+      "sheetPattern": "^(P&L|ProfitandLoss)$",
+      "treatment": "overhead_allocation_candidate"
+    },
+    {
+      "affiliatePattern": "^FA_2\\b",
+      "confidence": 0.85,
+      "engineField": "generalExpenses",
+      "id": "fapi.facility-allocation",
+      "labelPattern": "^Total - 68000 - FACILITY EXPENSES$",
+      "rationale": "Facility expenses require allocation between FAPI and non-FAPI activities.",
+      "reviewRequirement": "candidate_review",
+      "sheetPattern": "^P&L$",
+      "treatment": "overhead_allocation_candidate"
+    },
+    {
+      "confidence": 0.82,
+      "discrepancyExpected": true,
+      "engineField": "additions",
+      "id": "fapi.meals-project",
+      "labelPattern": "^53100\\s*-\\s*Repas Projets$",
+      "rationale": "French and English meals labels must be included in the partial-addback review bridge.",
+      "reviewRequirement": "candidate_review",
+      "sheetPattern": "^(P&L|ProfitandLoss)$",
+      "treatment": "schedule_1_adjustment_candidate"
+    },
+    {
+      "affiliatePattern": "^FA_1\\b",
+      "confidence": 0.75,
+      "discrepancyExpected": true,
+      "engineField": "additions",
+      "id": "fapi.travel-project-meals",
+      "labelPattern": "^53150\\s*-\\s*Frais de voyage et déplacement Projets$",
+      "rationale": "Project travel must be reviewed with meals and entertainment accounts for a potentially partial addback.",
+      "reviewRequirement": "candidate_review",
+      "sheetPattern": "^ProfitandLoss$",
+      "treatment": "schedule_1_adjustment_candidate"
+    },
+    {
+      "confidence": 0.82,
+      "discrepancyExpected": true,
+      "engineField": "additions",
+      "id": "fapi.meals-total",
+      "labelPattern": "^Total - 64000 - MEALS$",
+      "rationale": "The meals total is a partial-addback candidate and must be included in the reconciliation bridge.",
+      "reviewRequirement": "candidate_review",
+      "sheetPattern": "^(P&L|ProfitandLoss)$",
+      "treatment": "schedule_1_adjustment_candidate"
+    },
+    {
+      "confidence": 0.82,
+      "discrepancyExpected": true,
+      "engineField": "additions",
+      "id": "fapi.groceries-meals",
+      "labelPattern": "^68170\\s*-\\s*[ÉE]picerie$",
+      "rationale": "The French grocery label must be included in the meals and entertainment partial-addback review.",
+      "reviewRequirement": "candidate_review",
+      "sheetPattern": "^(P&L|ProfitandLoss)$",
+      "treatment": "schedule_1_adjustment_candidate"
+    },
+    {
+      "confidence": 0.9,
+      "engineField": "additions",
+      "id": "fapi.accounting-depreciation",
+      "labelPattern": "^82100\\s*-\\s*Amortissement immob\\. Corporelles$",
+      "rationale": "Accounting depreciation is a Schedule 1 addback candidate.",
+      "reviewRequirement": "candidate_review",
+      "sheetPattern": "^(P&L|ProfitandLoss)$",
+      "treatment": "schedule_1_adjustment_candidate"
+    },
+    {
+      "affiliatePattern": "^FA_2\\b",
+      "confidence": 0.9,
+      "engineField": "additions",
+      "id": "fapi.accounting-amortization",
+      "labelPattern": "^82150\\s*-\\s*Amortissement immob\\. Incorporelles$",
+      "rationale": "Accounting amortization is a Schedule 1 addback candidate.",
+      "reviewRequirement": "candidate_review",
+      "sheetPattern": "^P&L$",
+      "treatment": "schedule_1_adjustment_candidate"
+    },
+    {
+      "confidence": 0.82,
+      "engineField": "additions",
+      "id": "fapi.accounting-tax-expense",
+      "labelPattern": "^(90010\\s*-\\s*Impôts exigibles|90100\\s*-\\s*Impôts U\\.S\\.)$",
+      "rationale": "Accounting tax expense is an addback candidate, may require FAPI/non-FAPI proration, and is not foreign accrual tax without separate support.",
+      "reviewRequirement": "candidate_review",
+      "sheetPattern": "^(P&L|ProfitandLoss)$",
+      "treatment": "schedule_1_adjustment_candidate"
+    },
+    {
+      "affiliatePattern": "^FA_1\\b",
+      "confidence": 0.82,
+      "engineField": "additions",
+      "id": "fapi.interest-penalties",
+      "labelPattern": "^83200\\s*-\\s*Intérêts et pénalités$",
+      "rationale": "Interest and penalties are Schedule 1 addback candidates subject to review.",
+      "reviewRequirement": "candidate_review",
+      "sheetPattern": "^ProfitandLoss$",
+      "treatment": "schedule_1_adjustment_candidate"
+    },
+    {
+      "confidence": 0.65,
+      "engineField": "realized_fx_candidate",
+      "id": "fapi.realized-fx-review",
+      "labelPattern": "^85500\\s*-\\s*[ÉE]change devises réalisé$",
+      "rationale": "Realized FX requires review of the underlying current, capital, or income account before FAPI treatment.",
+      "reviewRequirement": "question_required",
+      "sheetPattern": "^(P&L|ProfitandLoss)$",
+      "treatment": "manual_review_required"
+    },
+    {
+      "affiliatePattern": "^FA_1\\b",
+      "confidence": 1,
+      "id": "fapi.unrealized-fx",
+      "labelPattern": "^85660\\s*-\\s*Unrealized Gain/Loss$",
+      "rationale": "Accepted baseline treatment excludes unrealized FX from direct engine mapping.",
+      "reviewRequirement": "not_required",
+      "sheetPattern": "^ProfitandLoss$",
+      "treatment": "do_not_map"
+    },
+    {
+      "affiliatePattern": "^FA_2\\b",
+      "confidence": 1,
+      "id": "fapi.rounding-fx",
+      "labelPattern": "^85550\\s*-\\s*Rounding Gain/Loss$",
+      "rationale": "The immaterial rounding gain or loss is excluded from engine mapping.",
+      "reviewRequirement": "not_required",
+      "sheetPattern": "^P&L$",
+      "treatment": "do_not_map"
+    },
+    {
+      "confidence": 0.6,
+      "engineField": "additions or deductions",
+      "id": "fapi.prepaid-movement",
+      "labelPattern": "^15100\\s*-\\s*Frais payés d'avance$",
+      "rationale": "The prepaid balance alone is insufficient; prior- and current-year movement support is required for an addition or deduction.",
+      "reviewRequirement": "question_required",
+      "sheetPattern": "^BalanceSheet$",
+      "treatment": "manual_input_required"
+    },
+    {
+      "affiliatePattern": "^FA_1\\b",
+      "confidence": 0.6,
+      "id": "fapi.intercompany-advance-question",
+      "labelPattern": "^27200\\s*-\\s*Avance de .+$",
+      "rationale": "Ask for the counterparty, terms, interest, and FX details of the intercompany advance.",
+      "reviewRequirement": "question_required",
+      "sheetPattern": "^BalanceSheet$",
+      "treatment": "client_question"
+    },
+    {
+      "affiliatePattern": "^FA_2\\b",
+      "confidence": 0.6,
+      "id": "fapi.intercompany-receivable-question",
+      "labelPattern": "^12200\\s*-\\s*Comptes clients - intercos$",
+      "rationale": "Ask for the counterparty, terms, interest, and FX details of the intercompany receivable.",
+      "reviewRequirement": "question_required",
+      "sheetPattern": "^BalanceSheet$",
+      "treatment": "client_question"
+    },
+    {
+      "affiliatePattern": "^FA_2\\b",
+      "confidence": 0.6,
+      "id": "fapi.intercompany-payable-question",
+      "labelPattern": "^21020\\s*-\\s*Comptes fournisseurs - intercos$",
+      "rationale": "Ask for the counterparty, terms, interest, and FX details of the intercompany payable.",
+      "reviewRequirement": "question_required",
+      "sheetPattern": "^BalanceSheet$",
+      "treatment": "client_question"
+    }
+  ],
+  "ruleSource": "Tax rules/Fapi rules/FAPI_Final_Mapping_Rules.md",
+  "version": "1.0.0",
+  "workflow": "fapi"
+}
