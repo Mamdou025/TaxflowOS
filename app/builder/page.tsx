@@ -4,16 +4,17 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { RightPanelShell } from "@/components/workflow/right-panel-shell";
+import { BuilderCopilot } from "@/components/assistant/builder-copilot";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   createFapiTemplateWorkflow,
-  createRoullementFiscalWorkflow,
   createWorkingSourceRulesDemoWorkflow,
   LOCAL_WORKFLOW_ID,
   loadLocalWorkflowSnapshotResult,
   saveWorkflowDefinitionSnapshot,
   workflowDefinitionToCanvas,
 } from "@/lib/local-fiscal-workflow";
+import { getWorkflowConfig } from "@/lib/workflow-runs";
 import {
   currentWorkflowIdAtom,
   currentWorkflowNameAtom,
@@ -59,7 +60,10 @@ const BuilderPage = () => {
     // load the user's saved local workflow as usual.
     let snapshot;
     if (focus) {
-      snapshot = focus.workflowId === "roulement" ? createRoullementFiscalWorkflow() : createFapiTemplateWorkflow();
+      // Resolve ANY registered workflow to its canvas via the run-config registry
+      // (fapi · roulement · expense · campaign · …). Falls back to FAPI if unknown.
+      const cfg = getWorkflowConfig(focus.workflowId);
+      snapshot = cfg ? (cfg.buildSnapshot() as ReturnType<typeof createFapiTemplateWorkflow>) : createFapiTemplateWorkflow();
       // Same shared upload the chat used → show the exact same rows on the canvas.
       const stored = uploadedRef.current[focus.workflowId];
       if (stored?.rows?.length) {
@@ -136,6 +140,9 @@ const BuilderPage = () => {
 
   return (
     <div className="flex h-dvh w-full flex-col overflow-hidden">
+      {/* Teaches the ambient assistant about this canvas: the workflow, the
+          selected block, and actions to focus/edit blocks. Renders nothing. */}
+      <BuilderCopilot />
       <RightPanelShell isMobile={isMobile} />
     </div>
   );

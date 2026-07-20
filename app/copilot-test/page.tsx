@@ -13,8 +13,12 @@ function Inner() {
   useCopilotAction({
     name: 'setNote',
     description: 'Set the scratch note to a value',
+    followUp: false,
     parameters: [{ name: 'text', type: 'string', description: 'the new note', required: true }],
-    handler: async ({ text }: { text: string }) => setNote(text),
+    handler: async ({ text }: { text: string }) => {
+      setNote(text);
+      return `Set the note to "${text}".`;
+    },
   });
   return (
     <div style={{ display: 'flex', gap: 24, padding: 24, height: '100dvh', boxSizing: 'border-box' }}>

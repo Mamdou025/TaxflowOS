@@ -59,15 +59,39 @@ export const FAPI_CONFIG: TemplateConfig = {
     { key: 'inclusionRate', label: 'Inclusion rate', default: 0.5, step: 0.05, hint: 'Taxable portion of capital gains', block: { blockId: 'fapi-source-inputs', configKey: 'inclusionRate' } },
     { key: 'pCoefficient', label: 'P-coefficient', default: 1, step: 0.05, hint: 'Participating % applied to property income & expenses (line A)', block: { blockId: 'fapi-source-inputs', configKey: 'pCoefficient' } },
     { key: 'canadianRules95_4', label: '95(2) amount', default: 0, step: 100, hint: 'Canadian 95(2) rules amount (flows into line A)', block: { blockId: 'fapi-source-inputs', configKey: 'canadianRules95_4' } },
-    { key: 'debtForgiveness', label: 'Line A.1 · Debt forgiveness', default: 0, step: 100, hint: 'A1 = 2 × debt forgiveness', block: { blockId: 'fapi-source-inputs', configKey: 'debtForgiveness' } },
+    // Lines A.1 / C / D / E are produced by CLASSIFYING trial-balance rows (the
+    // rollup emits them as named values). They're editable overrides, but must
+    // stay `classificationFed` so leaving them at 0 doesn't clobber the classified
+    // figure — otherwise the worksheet (which seeds every input) and the chat run
+    // (which seeds none) disagree. See engine.ts injection guard.
+    { key: 'debtForgiveness', label: 'Line A.1 · Debt forgiveness', default: 0, step: 100, hint: 'A1 = 2 × debt forgiveness', classificationFed: true, block: { blockId: 'fapi-source-inputs', configKey: 'debtForgiveness' } },
     { key: 'priorYearG', label: 'Line A.2 · Prior-year G', default: 0, step: 100, hint: 'Prior-year G carried forward', block: { blockId: 'fapi-source-inputs', configKey: 'priorYearG' } },
-    { key: 'cfaIncome', label: 'Line C · CFA income', default: 0, step: 100, hint: 'Controlled foreign affiliate income', block: { blockId: 'fapi-source-inputs', configKey: 'cfaIncome' } },
-    { key: 'businessLosses', label: 'Line D · Business losses', default: 0, step: 100, hint: 'Deductible business losses', block: { blockId: 'fapi-source-inputs', configKey: 'businessLosses' } },
-    { key: 'faclCarryforward', label: 'Line E · FACL carryforward', default: 0, step: 100, hint: 'Foreign accrual capital loss carryforward', block: { blockId: 'fapi-source-inputs', configKey: 'faclCarryforward' } },
+    { key: 'cfaIncome', label: 'Line C · CFA income', default: 0, step: 100, hint: 'Controlled foreign affiliate income', classificationFed: true, block: { blockId: 'fapi-source-inputs', configKey: 'cfaIncome' } },
+    { key: 'businessLosses', label: 'Line D · Business losses', default: 0, step: 100, hint: 'Deductible business losses', classificationFed: true, block: { blockId: 'fapi-source-inputs', configKey: 'businessLosses' } },
+    { key: 'faclCarryforward', label: 'Line E · FACL carryforward', default: 0, step: 100, hint: 'Foreign accrual capital loss carryforward', classificationFed: true, block: { blockId: 'fapi-source-inputs', configKey: 'faclCarryforward' } },
     { key: 'prescribedAmount', label: 'Line F · Prescribed amount', default: 0, step: 100, hint: 'Prescribed deductible amount', block: { blockId: 'fapi-source-inputs', configKey: 'prescribedAmount' } },
     { key: 'prescribedAmountF1', label: 'Line F.1 · Prescribed amount', default: 0, step: 100, hint: 'Prescribed deductible amount (F.1)', block: { blockId: 'fapi-source-inputs', configKey: 'prescribedAmountF1' } },
     { key: 'dividendDeductions', label: 'Line G · Dividend deductions', default: 0, step: 100, hint: 'Deductions for dividends', block: { blockId: 'fapi-source-inputs', configKey: 'dividendDeductions' } },
     { key: 'partnershipDividends', label: 'Line H · Partnership dividends', default: 0, step: 100, hint: 'Partnership dividend deductions', block: { blockId: 'fapi-source-inputs', configKey: 'partnershipDividends' } },
     { key: 'fatPaid', label: 'FAT · Foreign accrual tax paid', default: 100, step: 50, hint: 'Feeds FAT deduction = min(FAT × RTF, FAPI brut)', block: { blockId: 'fapi-source-inputs', configKey: 'fatPaid' } },
   ],
+  // The three bucket-backed lines carry per-row provenance from the keyword mapper.
+  // Mirrors the worksheet's subRows() filter so "what rows feed line A" matches the UI.
+  worksheetProvenance: ({ lineKey, core }) => {
+    const kind = lineKey === 'A' ? 'income' : lineKey === 'EXPENSES' ? 'expense' : lineKey === 'B' ? 'capgains' : null;
+    if (!kind) return [];
+    const isCap = (c: string) => /cap|gain/i.test(c);
+    const rows = kind === 'income'
+      ? core.detail.mapped.filter((r) => r.amount > 0 && !isCap(r.category))
+      : kind === 'expense'
+        ? core.detail.mapped.filter((r) => r.amount < 0)
+        : core.detail.mapped.filter((r) => isCap(r.category));
+    return rows.map((r) => ({
+      label: r.label,
+      amount: Number(r.amount.toFixed(2)),
+      category: r.category,
+      keyword: r.keyword || null,
+      confidence: Math.round((r.confidence || 0) * 100),
+    }));
+  },
 };

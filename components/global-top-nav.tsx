@@ -2,100 +2,152 @@
 
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { usePathname, useRouter } from 'next/navigation';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, LayoutDashboard, GitFork, MessageCircle, Files } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { selectedClientAtom, showClientSwitcherAtom, navActionsAtom } from '@/lib/nav-store';
+import { assistantOpenAtom } from '@/lib/chat-store';
+import { viewTransitionNav } from '@/lib/view-transition';
+import { ScopeKeystone } from '@/components/scope-orb';
 
-const NAV_H = 52;
+const NAV_H = 52;          // solid bar height (/t1134 slot page)
+const CROWN_NAV_H = 84;    // taller floating row so the Scope keystone can rise above the bar
+
+// Sub-navigation only — Scope itself is the raised crown orb (below), not a pill,
+// because Scope encompasses these. Main page (/) is Scope, the assistant.
+const NAV_LINKS: { label: string; href: string; Icon: LucideIcon }[] = [
+  { label: 'Dashboard', href: '/dashboard', Icon: LayoutDashboard },
+  { label: 'Builder', href: '/builder', Icon: GitFork },
+  { label: 'Documents', href: '/viewer', Icon: Files },
+];
+
+// Neumorphic segmented control — inset track, raised active pill with accent.
+function NavPill() {
+  const router = useRouter();
+  const pathname = usePathname();
+  return (
+    <div
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 3, padding: 4, borderRadius: 999,
+        background: '#e6e7ec',
+        boxShadow: 'inset 2px 2px 5px rgba(158,158,178,0.42), inset -2px -2px 5px rgba(255,255,255,0.86)',
+      }}
+    >
+      {NAV_LINKS.map(({ label, href, Icon }) => {
+        const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
+        return (
+          <button
+            key={href}
+            onClick={() => viewTransitionNav(() => router.push(href))}
+            className="transition-all"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 15px', borderRadius: 999,
+              border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 600, whiteSpace: 'nowrap',
+              color: active ? '#6B21A8' : '#6B7280',
+              background: active ? '#f4f5f8' : 'transparent',
+              boxShadow: active ? '3px 3px 7px rgba(158,158,178,0.34), -3px -3px 7px rgba(255,255,255,0.92)' : 'none',
+            }}
+          >
+            <Icon size={14} style={{ opacity: active ? 1 : 0.75 }} />
+            {label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 export function GlobalTopNav() {
   const router = useRouter();
   const pathname = usePathname();
-  const isCanvasPage = pathname === '/builder' || pathname.startsWith('/workflows/') || pathname === '/t1134' || pathname === '/dashboard';
+  const isCanvasPage = pathname === '/t1134';
+  const onScope = pathname === '/';
   const [client] = useAtom(selectedClientAtom);
   const setShowClientSwitcher = useSetAtom(showClientSwitcherAtom);
+  const setAssistantOpen = useSetAtom(assistantOpenAtom);
   const navActions = useAtomValue(navActionsAtom);
 
-  return (
-    <div
-      className="shrink-0 flex items-center px-5 gap-3 z-20 pointer-events-auto"
-      style={{
-        height: NAV_H,
-        background: '#eaeaef',
-        borderBottom: '1px solid rgba(0,0,0,0.07)',
-        boxShadow: '0 1px 0 rgba(255,255,255,0.82), 0 2px 6px rgba(158,158,178,0.10)',
-      }}
+  const ClientPill = (
+    <button
+      onClick={() => setShowClientSwitcher(true)}
+      className="flex items-center gap-1.5 rounded-full px-2 py-1 transition-all hover:bg-black/5 shrink-0"
+      style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}
     >
-      {/* Logo */}
-      <button
-        onClick={() => router.push('/')}
-        className="flex items-baseline gap-0.5 select-none shrink-0"
-        style={{ background: 'transparent', border: 'none', padding: 0 }}
+      <span className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0" style={{ background: 'rgba(107,33,168,0.12)', color: '#6B21A8' }}>
+        {client.charAt(0)}
+      </span>
+      <span className="max-w-[120px] truncate">{client}</span>
+      <ChevronDown size={10} className="text-gray-400" />
+    </button>
+  );
+
+  const Logo = (
+    <button onClick={() => router.push('/')} className="flex items-baseline gap-0.5 select-none shrink-0" style={{ background: 'transparent', border: 'none', padding: 0 }}>
+      <span style={{ fontSize: 14.5, fontWeight: 700, color: '#1F2937', letterSpacing: '-0.01em' }}>Sinaxe</span>
+      <span style={{ fontSize: 7, color: '#9CA3AF', verticalAlign: 'super' }}>™</span>
+      <span style={{ fontSize: 14.5, fontWeight: 400, color: '#6B7280', marginLeft: 2, letterSpacing: '-0.01em' }}>InScope</span>
+    </button>
+  );
+
+  // Canvas worksheet (/t1134) keeps a full-width bar for its portaled toolbar.
+  if (isCanvasPage) {
+    return (
+      <div className="shrink-0 flex items-center px-5 gap-3 z-20 pointer-events-auto" style={{ height: NAV_H, background: '#eaeaef', borderBottom: '1px solid rgba(0,0,0,0.07)' }}>
+        {Logo}
+        <div style={{ width: 1, height: 18, background: 'rgba(0,0,0,0.1)', flexShrink: 0 }} />
+        <div id="global-nav-workflow-slot" className="flex-1 flex items-center h-full min-w-0 overflow-visible gap-0.5 pointer-events-auto" />
+      </div>
+    );
+  }
+
+  // A short floating bar with the Scope crown raised above its center. The bar
+  // holds the sub-nav (left) + client/context (right); Scope presides over both.
+  return (
+    <div className="shrink-0 flex items-end justify-center z-20 pointer-events-none" style={{ height: CROWN_NAV_H }}>
+      <div
+        className="relative flex items-center justify-between pointer-events-auto"
+        style={{
+          height: 40, width: 'min(860px, 95vw)', marginBottom: 4, padding: '0 8px', borderRadius: 999,
+          background: '#eaeaef',
+          boxShadow: '0 3px 12px rgba(158,158,178,0.30), 0 1px 0 rgba(255,255,255,0.8), inset 0 1px 0 rgba(255,255,255,0.7)',
+          border: '1px solid rgba(0,0,0,0.04)',
+          overflow: 'visible',
+        }}
       >
-        <span style={{ fontSize: 15, fontWeight: 700, color: '#1F2937', letterSpacing: '-0.01em' }}>
-          Sinaxe
-        </span>
-        <span style={{ fontSize: 7, color: '#9CA3AF', verticalAlign: 'super' }}>™</span>
-        <span style={{ fontSize: 15, fontWeight: 400, color: '#6B7280', marginLeft: 2, letterSpacing: '-0.01em' }}>
-          InScope
-        </span>
-      </button>
+        {/* Left — logo + sub-navigation */}
+        <div className="flex items-center gap-3 min-w-0">
+          {Logo}
+          <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.1)', flexShrink: 0 }} />
+          <NavPill />
+        </div>
 
-      {/* Separator */}
-      <div style={{ width: 1, height: 18, background: 'rgba(0,0,0,0.1)', flexShrink: 0 }} />
+        {/* Center — the raised Scope keystone: the bar bulges up into it. Anchored
+            2px above the bar's bottom so its lower half overlaps the bar (same
+            colour → one silhouette) and the pedestal rises above the center. */}
+        <div style={{ position: 'absolute', left: '50%', bottom: 2, transform: 'translateX(-50%)', zIndex: 30 }}>
+          <ScopeKeystone active={onScope} onClick={() => { if (!onScope) viewTransitionNav(() => router.push('/')); }} />
+        </div>
 
-      {isCanvasPage ? (
-        /* On canvas pages: slot div that WorkflowToolbar portals its content into */
-        <div
-          id="global-nav-workflow-slot"
-          className="flex-1 flex items-center h-full min-w-0 overflow-visible gap-0.5 pointer-events-auto"
-        />
-      ) : (
-        <>
-          {/* Client selector */}
-          <button
-            onClick={() => setShowClientSwitcher(true)}
-            className="flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-all hover:bg-black/5"
-            style={{
-              background: 'rgba(0,0,0,0.04)',
-              border: '1px solid rgba(0,0,0,0.08)',
-              fontSize: 12,
-              fontWeight: 600,
-              color: '#374151',
-            }}
-          >
-            <span
-              className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0"
-              style={{ background: 'rgba(107,33,168,0.12)', color: '#6B21A8' }}
-            >
-              {client.charAt(0)}
-            </span>
-            <span className="max-w-[140px] truncate">{client}</span>
-            <ChevronDown size={10} className="text-gray-400" />
-          </button>
-
-          {/* Spacer */}
-          <div className="flex-1" />
-
-          {/* Page-specific nav actions registered by current page */}
-          {navActions.map((action) => (
+        {/* Right — quick "ask here" + client/context */}
+        <div className="flex items-center gap-1.5">
+          {!onScope && (
             <button
-              key={action.id}
-              onClick={() => router.push(action.href)}
-              className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition-colors hover:bg-black/5"
-              style={{
-                background: 'transparent',
-                border: '1px solid rgba(0,0,0,0.08)',
-                fontSize: 11.5,
-                fontWeight: 500,
-                color: '#6B7280',
-              }}
+              onClick={() => setAssistantOpen((v) => !v)}
+              title="Ask Scope on this page"
+              aria-label="Ask Scope on this page"
+              className="flex items-center justify-center rounded-full transition-all hover:bg-black/5 shrink-0"
+              style={{ width: 30, height: 30, color: '#6B7280' }}
             >
+              <MessageCircle size={16} />
+            </button>
+          )}
+          {ClientPill}
+          {navActions.map((action) => (
+            <button key={action.id} onClick={() => router.push(action.href)} className="flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-colors hover:bg-black/5 shrink-0" style={{ fontSize: 11.5, fontWeight: 500, color: '#6B7280' }}>
               {action.label}
             </button>
           ))}
-        </>
-      )}
-
+        </div>
+      </div>
     </div>
   );
 }

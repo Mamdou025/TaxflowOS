@@ -8,7 +8,6 @@ import { WorkflowCanvas } from "./workflow-canvas";
 export function PersistentCanvas() {
   const pathname = usePathname();
   const [isMounted, setIsMounted] = useState(false);
-  const [bgDark, setBgDark] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -16,27 +15,14 @@ export function PersistentCanvas() {
 
   const showCanvas = pathname === "/builder" || pathname.startsWith("/workflows/");
 
-  // Reset to light then fade dark each time the canvas becomes visible
-  useEffect(() => {
-    if (showCanvas) {
-      setBgDark(false);
-      const t = setTimeout(() => setBgDark(true), 60);
-      return () => clearTimeout(t);
-    }
-  }, [showCanvas]);
-
   if (!(isMounted && showCanvas)) {
     return null;
   }
 
+  // The whole app is dark-grid now, so the canvas starts dark immediately — no
+  // light→dark fade (that wash was the main "slow" feeling on entry).
   return (
-    <div
-      className="fixed inset-0 z-0"
-      style={{
-        background: bgDark ? '#18181c' : '#eaeaef',
-        transition: 'background 900ms cubic-bezier(0.23,1,0.32,1)',
-      }}
-    >
+    <div className="fixed inset-0 z-0" style={{ background: '#18181c' }}>
       <ReactFlowProvider>
         <WorkflowCanvas />
       </ReactFlowProvider>

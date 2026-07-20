@@ -91,7 +91,7 @@ export const isSidebarCollapsedAtom = atom<boolean>(true);
 export const isBottomPanelExpandedAtom = atom<boolean>(false);
 export const isTransitioningFromHomepageAtom = atom<boolean>(false);
 
-export type ActiveRightPanel = "runtime-preview" | "ai-panel" | "pages" | "settings" | null;
+export type ActiveRightPanel = "runtime-preview" | "ai-panel" | "workflows" | "pages" | "settings" | null;
 export const activeRightPanelAtom = atom<ActiveRightPanel>(null);
 export const triggerFitViewAtom = atom<boolean>(false);
 

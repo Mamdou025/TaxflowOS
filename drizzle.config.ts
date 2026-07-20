@@ -1,7 +1,10 @@
 import { config } from "dotenv";
 import type { Config } from "drizzle-kit";
 
-config();
+// Load .env.local FIRST (where this project keeps DATABASE_URL and secrets), then
+// fall back to .env. First file wins for duplicate keys. Without this, drizzle-kit
+// only reads .env and never sees a DATABASE_URL set in .env.local.
+config({ path: [".env.local", ".env"] });
 
 export default {
   schema: "./lib/db/schema.ts",

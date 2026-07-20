@@ -18,6 +18,7 @@ import type {
   WorkflowNode,
   WorkflowNodeData,
 } from "@/lib/workflow-store";
+import { isGovernedValueBlock } from "@/src/domain/workflow/protected-rules";
 import {
   createWorkflowAuditEvent,
   summarizeBlockForAudit,
@@ -789,7 +790,7 @@ export function runWorkflowCommand(
             state,
             targetObjectId: nodeToDelete.id,
             targetObjectType:
-              nodeToDelete.data.block?.family === "Protected"
+              isGovernedValueBlock(nodeToDelete.data.block)
                 ? "protected_block"
                 : "block",
             type: "block_deleted",
@@ -877,7 +878,7 @@ export function runWorkflowCommand(
                   state,
                   targetObjectId: node.id,
                   targetObjectType:
-                    node.data.block?.family === "Protected"
+                    isGovernedValueBlock(node.data.block)
                       ? "protected_block"
                       : "block",
                   type: "block_deleted",
@@ -979,12 +980,13 @@ export function runWorkflowCommand(
       });
       const blockFamily = oldNode.data.block?.family;
       const updatedNode = nextNodes.find((node) => node.id === command.id);
+      const isGoverned = isGovernedValueBlock(oldNode.data.block);
       const wasProtectedUnlock =
-        blockFamily === "Protected" &&
+        isGoverned &&
         !oldNode.data.config?.protectedEditIntent &&
         Boolean(updatedNode?.data.config?.protectedEditIntent);
       let updateAuditType: WorkflowAuditEventType = "block_updated";
-      if (blockFamily === "Protected") {
+      if (isGoverned) {
         updateAuditType = wasProtectedUnlock
           ? "protected_block_unlocked"
           : "protected_block_updated";
@@ -1010,7 +1012,7 @@ export function runWorkflowCommand(
                 state,
                 targetObjectId: command.id,
                 targetObjectType:
-                  blockFamily === "Protected" ? "protected_block" : "block",
+                  isGoverned ? "protected_block" : "block",
                 type: updateAuditType,
               }),
             ];

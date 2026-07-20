@@ -41,6 +41,26 @@ export const AGENTS: Agent[] = [
     live: true,
   },
   {
+    id: 'mira',
+    name: 'Mira',
+    role: 'Expense reimbursement',
+    tagline: 'Classifies an expense report, applies the per-diem cap and reimbursement policy, and computes the net payable to the employee.',
+    accent: '#1e3a5f',
+    initials: 'Mi',
+    workflow: 'expense',
+    live: true,
+  },
+  {
+    id: 'nova',
+    name: 'Nova',
+    role: 'Marketing budget planner',
+    tagline: 'Classifies channel spend requests, then pauses for you to elect the approved budget between the committed floor and the cap.',
+    accent: '#4a2f5f',
+    initials: 'No',
+    workflow: 'campaign',
+    live: true,
+  },
+  {
     id: 'remy',
     name: 'Rémy',
     role: 'Surplus & T1134',
@@ -70,5 +90,7 @@ export type WorkflowSuggestion = {
 export const WORKFLOWS: WorkflowSuggestion[] = [
   { id: 'fapi', name: 'Calculate FAPI', sub: 'Foreign accrual property income', agentId: 'sofi', ready: true },
   { id: 'roulement', name: 'Roulement fiscal (art. 85)', sub: 'Rollover election → T2057', agentId: 'theo', ready: true },
+  { id: 'expense', name: 'Expense reimbursement', sub: 'Receipts → policy caps → net payable', agentId: 'mira', ready: true },
+  { id: 'campaign', name: 'Campaign budget allocation', sub: 'Requests → elect budget → projection', agentId: 'nova', ready: true },
   { id: 'surplus', name: 'Surplus continuity', sub: 'Exempt / taxable surplus', ready: false },
 ];

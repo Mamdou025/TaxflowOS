@@ -16,6 +16,7 @@ export type ToolGroup =
   | "calculation"
   | "data_extraction"
   | "data_preparation"
+  | "field"
   | "mapping"
   | "output"
   | "protected"

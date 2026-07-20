@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { boolean, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import type { IntegrationType } from "../types/integration";
 import { generateId } from "../utils/id";
 
@@ -163,6 +163,30 @@ export const apiKeys = pgTable("api_keys", {
   lastUsedAt: timestamp("last_used_at"),
 });
 
+// Assistant memory — durable facts/preferences the AI chat is told to remember.
+// Tenant boundary is user_id (enforced server-side). client_id / fiscal_year /
+// workflow_id are optional SCOPE filters (null = applies globally for the user).
+export type AssistantMemoryKind = "preference" | "fact" | "scope";
+export type AssistantMemorySource = "user" | "assistant";
+
+export const assistantMemories = pgTable("assistant_memories", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => generateId()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id),
+  clientId: text("client_id"), // scope filter (null = global to the user)
+  fiscalYear: integer("fiscal_year"), // scope filter (null = any year)
+  workflowId: text("workflow_id"), // scope filter (null = any workflow)
+  kind: text("kind").notNull().default("fact").$type<AssistantMemoryKind>(),
+  subject: text("subject"), // short label, e.g. "FX rate", "reporting currency"
+  content: text("content").notNull(), // the remembered fact/preference
+  source: text("source").notNull().default("user").$type<AssistantMemorySource>(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // Relations
 export const workflowExecutionsRelations = relations(
   workflowExecutions,
@@ -186,3 +210,5 @@ export type WorkflowExecutionLog = typeof workflowExecutionLogs.$inferSelect;
 export type NewWorkflowExecutionLog = typeof workflowExecutionLogs.$inferInsert;
 export type ApiKey = typeof apiKeys.$inferSelect;
 export type NewApiKey = typeof apiKeys.$inferInsert;
+export type AssistantMemory = typeof assistantMemories.$inferSelect;
+export type NewAssistantMemory = typeof assistantMemories.$inferInsert;

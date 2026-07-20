@@ -17,6 +17,7 @@ import {
   type WorkflowEdge,
   type WorkflowRelationshipType,
 } from "./local-fiscal-workflow";
+import { isGovernedValueBlock } from "../src/domain/workflow/protected-rules";
 
 const MOCK_AI_USER = "mock-ai-panel";
 const SOURCE_EDIT_INTENT_REGEX = /\b(edit|correct|override|annotate)\b/;
@@ -227,7 +228,7 @@ function describeEdge(
   }
 
   if (
-    source?.family === "Protected" &&
+    isGovernedValueBlock(source) &&
     target?.family === "Output" &&
     isGovernedOutputRelationshipType(edge.relationshipType)
   ) {
@@ -367,7 +368,7 @@ function answerLogicFeedsProtected(context: AskContext) {
     context.selectedBlockId
   );
   const protectedBlocks =
-    selectedBlock?.family === "Protected"
+    isGovernedValueBlock(selectedBlock)
       ? [selectedBlock]
       : getBlocksByFamily(context.definition, "Protected");
   const blockMap = getBlockMap(context.definition);
@@ -402,7 +403,7 @@ function answerOutputsForProtected(context: AskContext) {
     context.selectedBlockId
   );
   const protectedBlocks =
-    selectedBlock?.family === "Protected"
+    isGovernedValueBlock(selectedBlock)
       ? [selectedBlock]
       : getBlocksByFamily(context.definition, "Protected");
   const blockMap = getBlockMap(context.definition);
@@ -634,7 +635,7 @@ function isDirectSourceToGovernedTarget(
 ) {
   return (
     sourceBlock?.family === "Source" &&
-    (targetBlock?.family === "Protected" || targetBlock?.family === "Output")
+    (isGovernedValueBlock(targetBlock) || targetBlock?.family === "Output")
   );
 }
 
@@ -1152,7 +1153,7 @@ function createMissingSourceSupportProposal(context: ProposalContext) {
         sourceBlock: logicBlock,
         targetBlock: selectedBlock,
         relationshipType:
-          selectedBlock.family === "Protected"
+          isGovernedValueBlock(selectedBlock)
             ? getProtectedRelationship(selectedBlock)
             : undefined,
         reason:
@@ -1274,7 +1275,7 @@ function createInsertLogicBetweenSourceAndTargetProposal(
       sourceBlock: logicBlock,
       targetBlock,
       relationshipType:
-        targetBlock.family === "Protected"
+        isGovernedValueBlock(targetBlock)
           ? getProtectedRelationship(targetBlock)
           : "maps_to_output_candidate",
       reason: `${logicBlock.label} feeds the downstream ${targetBlock.family} block.`,
@@ -1417,7 +1418,7 @@ export function inferMockAiActionId({
     return "logic_to_ai_context";
   }
   if (normalizedPrompt.includes("protected")) {
-    return selectedBlock?.family === "Protected"
+    return isGovernedValueBlock(selectedBlock)
       ? "protected_formula_config"
       : "logic_to_protected_mapping";
   }
@@ -1425,14 +1426,14 @@ export function inferMockAiActionId({
     normalizedPrompt.includes("output") ||
     normalizedPrompt.includes("handoff")
   ) {
-    return selectedBlock?.family === "Protected"
+    return isGovernedValueBlock(selectedBlock)
       ? "protected_to_output_mapping"
       : "logic_to_output_candidate";
   }
   if (selectedBlock?.family === "Source") {
     return "source_to_logic_mapping";
   }
-  if (selectedBlock?.family === "Protected") {
+  if (isGovernedValueBlock(selectedBlock)) {
     return "protected_to_output_mapping";
   }
   if (selectedBlock?.family === "Output") {

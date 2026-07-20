@@ -10,6 +10,8 @@ import {
   Layers,
   FileText,
   Building2,
+  Receipt,
+  Files,
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -51,6 +53,13 @@ export type ResourceField = {
   default: string;
   hint?: string;
   editKeywords: string[]; // phrases that trigger *edit* intent (need an edit verb)
+  /** Optional bridge to a workflow engine input. When set, this field READS and
+   *  WRITES `runEditsAtom[workflowId].inputs[inputKey]` — the SAME value the
+   *  worksheet, the chat run, and the engine use — instead of the standalone
+   *  `fieldValuesAtom`. So editing the field inline in the chat actually changes
+   *  the computation, and the value the assistant reports, the sheet renders, and
+   *  the run computes are ONE number (no parallel stores that silently disagree). */
+  binding?: { workflowId: string; inputKey: string };
 };
 
 /** A named, requestable piece of a page — matches a [data-anchor] on screen. */
@@ -135,6 +144,21 @@ export const RESOURCES: Resource[] = [
     open: { as: 'route', href: '/builder' },
   },
   {
+    id: 'viewer',
+    kind: 'tool',
+    token: 'DOCUMENTS',
+    mentions: ['documents', 'document viewer', 'the viewer'],
+    keywords: ['open pdf', 'open excel', 'open word', 'view document', 'view file', 'read pdf', 'read document', 'documents', 'viewer'],
+    note: 'Open & view PDF / Excel / Word files',
+    open: { as: 'page', pageKey: 'viewer' },
+    page: {
+      title: 'Documents',
+      subtitle: 'Open PDF, Excel & Word files',
+      icon: Files,
+      Component: lazyPage(() => import('@/components/workspace/document-viewer')),
+    },
+  },
+  {
     id: 'gross-fapi',
     kind: 'value',
     token: 'GROSS FAPI',
@@ -173,9 +197,11 @@ export const RESOURCES: Resource[] = [
         label: 'Annual Average FX Rate',
         keywords: ['fx rate', 'exchange rate', 'annual average', 'currency conversion', 'fx'],
         field: {
-          id: 'fx', tag: 'FX', ccy: 'RATE', default: '1.000000',
-          hint: 'EUR/CAD annual average',
+          id: 'fx', tag: 'FX', ccy: 'RATE', default: '1.35',
+          hint: 'USD → CAD annual average',
           editKeywords: ['fx rate', 'exchange rate', 'fx', 'annual average'],
+          // Bridge to the FAPI engine's fxRate input — one value across chat, sheet, run.
+          binding: { workflowId: 'fapi', inputKey: 'fxRate' },
         },
       },
       { anchor: 'fapi:a', label: 'Property Income (A)', keywords: ['property income', 'dividend', 'component a', 'line a'] },
@@ -195,6 +221,24 @@ export const RESOURCES: Resource[] = [
       { anchor: 'fapi:a1', label: 'Debt Forgiveness (A.1)', keywords: ['debt forgiveness', 'a.1', 'a1'] },
       { anchor: 'fapi:a2', label: 'Prior Year G (A.2)', keywords: ['prior year', 'a.2', 'a2'] },
     ],
+  },
+
+  // ── Expense Reimbursement — a non-fiscal workflow that HAS its own worksheet.
+  //    A chip (EXPENSE-WORKFLOW), a page (expense), and the run's result surface.
+  {
+    id: 'expense',
+    kind: 'workflow',
+    token: 'EXPENSE-WORKFLOW',
+    mentions: ['expense-workflow', 'expense workflow', 'reimbursement workflow'],
+    keywords: ['expense', 'reimbursement', 'expense report', 'receipts', 'per diem', 'per-diem'],
+    note: 'Employee expense reimbursement workflow',
+    open: { as: 'page', pageKey: 'expense' },
+    page: {
+      title: 'Expense Reimbursement',
+      subtitle: 'Receipts · policy caps · net payable',
+      icon: Receipt,
+      Component: lazyPage(() => import('@/components/worksheet/expense-worksheet')),
+    },
   },
 
   // ── Other registered pages ─────────────────────────────────────────────────
@@ -429,6 +473,32 @@ export function getFieldContext(fieldId: string): FieldContext | null {
   const hit = BY_FIELD_ID.get(fieldId);
   if (!hit) return null;
   return { pageKey: hit.pageKey, anchor: hit.anchor.anchor, field: hit.field, label: hit.anchor.label };
+}
+
+/** Resolve a loose field reference from the model to a real field id. The LLM
+ *  often guesses ids ("FX_RATE", "fx rate", the worksheet's line key) instead of
+ *  copying the exact registry id ("fx"); this maps those to the real one so an
+ *  edit lands instead of failing. Tries, in order: exact id, case-insensitive id,
+ *  normalized id / tag / bound input-key, exact label, label/keyword contains. */
+export function resolveFieldId(query: string): string | null {
+  if (!query) return null;
+  const q = query.trim().toLowerCase();
+  if (!q) return null;
+  const strip = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const qs = strip(query);
+  if (BY_FIELD_ID.has(query)) return query;
+  for (const [id] of BY_FIELD_ID) if (id.toLowerCase() === q) return id;
+  for (const [id, ctx] of BY_FIELD_ID) {
+    if (strip(id) === qs) return id;
+    if (strip(ctx.field.tag) === qs) return id;
+    if (ctx.field.binding && strip(ctx.field.binding.inputKey) === qs) return id;
+    if (ctx.anchor.label.toLowerCase() === q) return id;
+  }
+  for (const [id, ctx] of BY_FIELD_ID) {
+    if (ctx.anchor.label.toLowerCase().includes(q)) return id;
+    if (ctx.field.editKeywords.some((k) => q.includes(k) || k.includes(q))) return id;
+  }
+  return null;
 }
 
 /** True when a page row id maps to an inline-editable field. */

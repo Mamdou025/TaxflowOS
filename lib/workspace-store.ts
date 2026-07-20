@@ -1,6 +1,7 @@
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import type { SourceRow } from './workflow-runs/engine';
+import type { ActorKind, Coworker } from './coworkers';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Chat Workspace store
@@ -25,12 +26,17 @@ export type TrailEventKind = 'open' | 'close' | 'focus' | 'note';
 /** Semantic category → drives the colored dot in the inline activity trail. */
 export type TrailTone = 'approval' | 'suggestion' | 'calculation' | 'navigation' | 'info';
 
+/** Who performed a trail event — so the activity trail can distinguish
+ *  Human / Agent / Workflow / Tool / System (see lib/coworkers.ts). */
+export type TrailActor = { kind: ActorKind; id?: string; name?: string };
+
 export type TrailEvent = {
   id: string;
   kind: TrailEventKind;
   tone: TrailTone;
   text: string;
   timestamp: number;
+  actor?: TrailActor;
 };
 
 let seq = 0;
@@ -54,8 +60,39 @@ export type ActiveRunInfo = {
   phase: 'upload' | 'categorize' | 'elect' | 'approve' | 'done';
   awaiting: string; // human description of what the run is waiting for
   headline?: { label: string; value: number; currency: string };
+  /** The run's live figures — published once a source is loaded — so the assistant
+   *  can answer questions and generate UI from the ACTUAL numbers (not just the
+   *  step/phase). Capped/compact; the worksheet-intel actions remain the deep path. */
+  data?: {
+    fileName?: string;
+    currency: string;
+    sourceRowCount: number;
+    categories: { category: string; amount: number; rowCount: number }[]; // classified buckets
+    lines: { key: string; label: string; value: number }[];               // computed lines
+    summary: { key: string; label: string; value: number }[];             // result summary
+    unmatchedCount: number;
+    topRows: { label: string; amount: number; category: string }[];       // largest classified rows (capped)
+  };
 };
 export const activeRunAtom = atom<ActiveRunInfo | null>(null);
+
+/** The coworker currently working — the live "who's doing what" signal that powers
+ *  the presence indicator in the chat. Set by the run flow (the owning specialist
+ *  while awaiting a decision; the Workflow Engine while computing) and available for
+ *  the assistant/tools to light up too. `null` = nobody is actively working. */
+export type ActiveCoworker = { coworker: Coworker; status: string; since: number };
+export const activeCoworkerAtom = atom<ActiveCoworker | null>(null);
+
+/** Set (or clear, with null) who is working right now + a short status line. */
+export const setActiveCoworkerAtom = atom(
+  null,
+  (_get, set, payload: { coworker: Coworker; status: string } | null) => {
+    set(
+      activeCoworkerAtom,
+      payload ? { coworker: payload.coworker, status: payload.status, since: Date.now() } : null
+    );
+  }
+);
 
 /** Shared, persisted uploaded source rows — keyed by workflow id ('fapi', 'roulement').
  *  ONE source of truth for the trial balance a run works on: the chat upload writes
@@ -65,6 +102,66 @@ export type UploadedSource = { fileName: string; rows: SourceRow[]; at: number }
 export const uploadedRowsAtom = atomWithStorage<Record<string, UploadedSource>>(
   'taxflow:uploaded-source-rows',
   {}
+);
+
+/** Documents the user attached in the chat (PDF / plain-text) with their extracted
+ *  text — the readable context that lets the assistant actually ANSWER questions
+ *  about an attached file instead of only seeing its name. Companion to
+ *  uploadedRowsAtom: workbooks become rows there; documents become text here.
+ *  In-memory (not persisted) — the text can be large, and it's session-scoped by
+ *  design. Keyed by a stable id so re-attaching the same file replaces it. */
+export type AttachedDoc = {
+  id: string;
+  fileName: string;
+  kind: 'pdf' | 'text' | 'word' | 'excel';
+  text: string;
+  chars: number;
+  pages?: number;
+  truncated: boolean;
+  at: number;
+};
+export const attachedDocsAtom = atom<AttachedDoc[]>([]);
+
+/** Shared, persisted run *edits* — keyed by workflow id ('fapi', 'roulement').
+ *  The companion to uploadedRowsAtom: rows share via that atom, and the run's two
+ *  OTHER decision surfaces share via this one — edited inputs (rates/assumptions,
+ *  keyed by editable-input key) and category overrides (rowId → categoryId). The
+ *  chat run and the worksheet both read + write it, so a rate change, live-fetched
+ *  FX, or re-categorization made in the run flows to the worksheet (and back), and
+ *  the two always show identical final figures. Empty maps = template defaults. */
+export type RunEdits = { inputs: Record<string, number>; overrides: Record<string, string> };
+export const EMPTY_RUN_EDITS: RunEdits = { inputs: {}, overrides: {} };
+export const runEditsAtom = atomWithStorage<Record<string, RunEdits>>('taxflow:run-edits', {});
+
+/** Set one edited input for a workflow (merges into its inputs map). */
+export const setRunInputAtom = atom(
+  null,
+  (get, set, { id, key, value }: { id: string; key: string; value: number }) => {
+    set(runEditsAtom, (prev) => {
+      const cur = prev[id] ?? EMPTY_RUN_EDITS;
+      return { ...prev, [id]: { ...cur, inputs: { ...cur.inputs, [key]: value } } };
+    });
+  }
+);
+
+/** Set one row's category override for a workflow (merges into its overrides map). */
+export const setRunOverrideAtom = atom(
+  null,
+  (get, set, { id, rowId, categoryId }: { id: string; rowId: string; categoryId: string }) => {
+    set(runEditsAtom, (prev) => {
+      const cur = prev[id] ?? EMPTY_RUN_EDITS;
+      return { ...prev, [id]: { ...cur, overrides: { ...cur.overrides, [rowId]: categoryId } } };
+    });
+  }
+);
+
+/** Replace a workflow's whole edits object (used when the run reducer produces a
+ *  fully-resolved inputs/overrides pair, e.g. resolving a choice/elect blocker). */
+export const setRunEditsAtom = atom(
+  null,
+  (get, set, { id, edits }: { id: string; edits: RunEdits }) => {
+    set(runEditsAtom, (prev) => ({ ...prev, [id]: edits }));
+  }
 );
 
 // Derived: the currently focused window (or the last opened as a fallback).
@@ -78,19 +175,26 @@ export const activeWorkspaceWindowAtom = atom((get) => {
 // Append an entry to the trail. Loosely typed so Jotai's setter generics don't
 // leak into every call site.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function record(set: any, kind: TrailEventKind, text: string, tone: TrailTone = 'navigation') {
+function record(
+  set: any,
+  kind: TrailEventKind,
+  text: string,
+  tone: TrailTone = 'navigation',
+  actor?: TrailActor
+) {
   set(workspaceTrailAtom, (prev: TrailEvent[]) => [
     ...prev,
-    { id: nextId(), kind, tone, text, timestamp: Date.now() },
+    { id: nextId(), kind, tone, text, timestamp: Date.now(), actor },
   ]);
 }
 
 /** Push a semantically-toned event onto the trail (used by the chat panel for
- *  approvals, suggestions, and deterministic calculations). */
+ *  approvals, suggestions, and deterministic calculations). Pass `actor` to attribute
+ *  it to a coworker (Human / Agent / Workflow / Tool / System). */
 export const pushTrailAtom = atom(
   null,
-  (_get, set, payload: { text: string; tone: TrailTone; kind?: TrailEventKind }) => {
-    record(set, payload.kind ?? 'note', payload.text, payload.tone);
+  (_get, set, payload: { text: string; tone: TrailTone; kind?: TrailEventKind; actor?: TrailActor }) => {
+    record(set, payload.kind ?? 'note', payload.text, payload.tone, payload.actor);
   }
 );
 

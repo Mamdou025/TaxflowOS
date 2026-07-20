@@ -1,589 +1,187 @@
-﻿// Practitioner Dashboard — Screen 1
-// Design: Grayscale + deep navy (#0F2044). Status colors (red/amber/green) ONLY for
-// actionable signals: at-risk, awaiting sign-off, under review, completed, exceptions.
-// Layout: 6 KPI tiles → Client Portfolio (full-width) → My Work Items → Review Queue + Deadlines → Activity
+'use client';
 
-import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { Link } from 'wouter';
+// Company workspace — grid background, centered content, neumorphic sidebar.
+// Content is intentionally light/inspirational for now (company overview +
+// generated worksheets + at-a-glance) — meant to be reshaped later.
+
 import { usePathname, useRouter } from 'next/navigation';
+import { useAtomValue } from 'jotai';
 import {
-  AlertTriangle, CheckCircle2, Clock, Users, FileText,
-  Activity, Sparkles, ChevronRight, ArrowUpRight,
-  Calendar, Shield, Building2, Workflow, MessageSquare,
-  Upload, Star, Layers, LayoutDashboard, BarChart3, Settings, HelpCircle
+  Building2, FileText, Layers, BarChart3, Calculator, Workflow, Calendar,
+  AlertTriangle, CheckCircle2, Sparkles, ChevronRight,
+  LayoutDashboard, Settings, HelpCircle,
 } from 'lucide-react';
-import StatusBadge, { TeamBadge, AvatarInitials } from '@tax/components/StatusBadge';
-import { CLIENTS, DASHBOARD_STATS, RECENT_ACTIVITY, TAX_TEAMS, NORTHSTAR_WORKFLOWS } from '@tax/lib/data';
-import { cn } from '@tax/lib/utils';
 import { toast } from 'sonner';
+import { NeumorphicSidebar, NeuSidebarHeader, NeuSectionLabel, NeuRow, NEU } from '@/components/neumorphic-sidebar';
+import { selectedClientAtom } from '@/lib/nav-store';
+import { useInlinePage } from '@/lib/inline-page-context';
 
-// ─── KPI Tile ─────────────────────────────────────────────────────────────────
-// Grayscale base; only the value/icon carries a status color when actionable.
-function KPITile({ label, value, sub, icon, valueColor }: {
-  label: string;
-  value: string | number;
-  sub?: string;
-  icon: React.ReactNode;
-  valueColor?: string; // only set when the number itself is a status signal
-}) {
-  return (
-    <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm animate-fade-slide-up">
-      <div className="flex items-center justify-between mb-3">
-        <div className="p-1.5 rounded bg-slate-100">
-          {icon}
-        </div>
-      </div>
-      <div className={cn('tabular-nums text-2xl font-700 mb-0.5', valueColor ?? 'text-[#0F2044]')}>{value}</div>
-      <div className="text-xs font-500 text-slate-700 mb-0.5">{label}</div>
-      {sub && <div className="text-[11px] text-slate-400">{sub}</div>}
-    </div>
-  );
-}
-
-// ─── Client Row ───────────────────────────────────────────────────────────────
-function ClientRow({ client, index }: { client: typeof CLIENTS[0]; index: number }) {
-  return (
-    <Link href={client.id === 'northstar' ? '/client/northstar' : '#'}>
-      <div
-        data-anchor={`dashboard:client:${client.id}`}
-        className={cn(
-          'flex items-center gap-3 px-4 py-3.5 border-b border-slate-100',
-          'hover:bg-slate-50 transition-colors cursor-pointer animate-fade-slide-up',
-          `stagger-${Math.min(index + 1, 6)}`
-        )}
-        onClick={client.id !== 'northstar' ? (e) => { e.preventDefault(); toast.info('Client workspace — coming soon'); } : undefined}
-      >
-        {/* Avatar */}
-        <div className="w-8 h-8 rounded-full bg-[#0F2044] flex items-center justify-center text-white text-[11px] font-700 shrink-0">
-          {client.name.split(' ').map(w => w[0]).slice(0, 2).join('')}
-        </div>
-
-        {/* Client name + tier */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-sm font-600 text-slate-800 truncate">{client.name}</span>
-            <span className={cn(
-              'text-[9px] font-600 px-1.5 py-0.5 rounded-full border',
-              client.tier === 'Platinum'
-                ? 'bg-slate-100 border-slate-300 text-slate-600'
-                : client.tier === 'Strategic'
-                ? 'bg-slate-100 border-slate-200 text-slate-500'
-                : 'bg-slate-50 border-slate-200 text-slate-400'
-            )}>
-              {client.tier}
-            </span>
-          </div>
-          <div className="text-[11px] text-slate-400">
-            Lead: {client.leadPartner} · {client.workflows.length} workflow{client.workflows.length !== 1 ? 's' : ''}
-          </div>
-        </div>
-
-        {/* Teams */}
-        <div className="hidden lg:flex items-center gap-1 shrink-0">
-          {client.teams.slice(0, 3).map(team => {
-            const t = TAX_TEAMS.find(t => t.name === team);
-            return t ? (
-              <span
-                key={t.id}
-                className="text-[9px] font-600 px-1.5 py-0.5 rounded bg-[#0F2044] text-white"
-              >
-                {t.abbreviation}
-              </span>
-            ) : null;
-          })}
-          {client.teams.length > 3 && (
-            <span className="text-[10px] text-slate-400">+{client.teams.length - 3}</span>
-          )}
-        </div>
-
-        {/* Stats — status colors only on actionable numbers */}
-        <div className="hidden md:flex items-center gap-5 shrink-0">
-          <div className="text-center">
-            <div className={cn(
-              'tabular-nums text-sm font-600',
-              client.openReviewItems > 0 ? 'text-amber-600' : 'text-slate-400'
-            )}>
-              {client.openReviewItems}
-            </div>
-            <div className="text-[10px] text-slate-400">Reviews</div>
-          </div>
-          <div className="text-center">
-            <div className={cn(
-              'tabular-nums text-sm font-600',
-              client.atRiskDeliverables > 0 ? 'text-red-500' : 'text-slate-400'
-            )}>
-              {client.atRiskDeliverables > 0 ? client.atRiskDeliverables : '—'}
-            </div>
-            <div className="text-[10px] text-slate-400">At Risk</div>
-          </div>
-          <div className="text-center">
-            <div className={cn(
-              'tabular-nums text-sm font-600',
-              client.upcomingDeadlines > 0 ? 'text-slate-700' : 'text-slate-400'
-            )}>
-              {client.upcomingDeadlines}
-            </div>
-            <div className="text-[10px] text-slate-400">Deadlines</div>
-          </div>
-        </div>
-
-        {/* Last activity */}
-        <div className="hidden xl:block text-[11px] text-slate-400 shrink-0 w-24 text-right">
-          {client.lastActivity}
-        </div>
-
-        <ChevronRight size={14} className="text-slate-300 shrink-0" />
-      </div>
-    </Link>
-  );
-}
-
-// ─── My Work Item ──────────────────────────────────────────────────────────────
-// Action label uses status colors: red = urgent, amber = needs attention, green = completed
-const MY_WORK_ITEMS = [
-  { id: 'w1', name: 'FAPI Workpaper 2025', client: 'Northstar Holdings', role: 'Partner', action: 'Awaiting your sign-off', actionType: 'urgent' as const, href: '/workflow/fapi' },
-  { id: 'w2', name: 'T1134 Foreign Affiliate 2024', client: 'Northstar Holdings', role: 'Partner', action: '1 open exception', actionType: 'warning' as const, href: '#' },
-  { id: 'w3', name: 'M&A Memo — Project Maple', client: 'Northstar Holdings', role: 'Partner', action: 'Under review — Sr. Manager stage', actionType: 'info' as const, href: '#' },
-  { id: 'w4', name: 'Pillar 2 GloBE Assessment', client: 'Northstar Holdings', role: 'Partner', action: '4 exceptions — immediate attention', actionType: 'urgent' as const, href: '#' },
-];
-
-const ACTION_STYLES = {
-  urgent: 'bg-red-50 text-red-600 border border-red-200',
-  warning: 'bg-amber-50 text-amber-700 border border-amber-200',
-  info: 'bg-slate-100 text-slate-600 border border-slate-200',
-} as const;
-
-function WorkItem({ item, index }: { item: typeof MY_WORK_ITEMS[0]; index: number }) {
-  return (
-    <Link href={item.href}>
-      <div
-        className={cn(
-          'flex items-center gap-3 px-4 py-3 border-b border-slate-100',
-          'hover:bg-slate-50 transition-colors cursor-pointer animate-fade-slide-up',
-          `stagger-${Math.min(index + 1, 4)}`
-        )}
-        onClick={item.href === '#' ? (e) => { e.preventDefault(); toast.info('Workflow execution — coming soon'); } : undefined}
-      >
-        {/* Urgency dot */}
-        <div className={cn(
-          'w-2 h-2 rounded-full shrink-0',
-          item.actionType === 'urgent' ? 'bg-red-500' :
-          item.actionType === 'warning' ? 'bg-amber-500' :
-            'bg-slate-300'
-        )} />
-
-        {/* Name + client */}
-        <div className="flex-1 min-w-0">
-          <div className="text-[13px] font-500 text-slate-800 truncate">{item.name}</div>
-          <div className="text-[11px] text-slate-400">{item.client} · {item.role}</div>
-        </div>
-
-        {/* Action label — status color */}
-        <div className={cn(
-          'text-[11px] font-500 px-2 py-0.5 rounded shrink-0',
-          ACTION_STYLES[item.actionType]
-        )}>
-          {item.action}
-        </div>
-
-        <ChevronRight size={13} className="text-slate-300 shrink-0" />
-      </div>
-    </Link>
-  );
-}
-
-// ─── Review Queue Item ─────────────────────────────────────────────────────────
-function ReviewQueueItem({ wf, index }: { wf: typeof NORTHSTAR_WORKFLOWS[0]; index: number }) {
-  const statusStyle =
-    wf.status === 'At Risk' ? 'bg-red-50 text-red-600 border border-red-200' :
-    wf.status === 'Under Review' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-    wf.status === 'Complete' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-    'bg-slate-100 text-slate-500 border border-slate-200';
-
-  return (
-    <Link href={wf.id === 'wf-fapi' ? '/workflow/fapi' : '#'}>
-      <div
-        className={cn(
-          'flex items-center gap-3 px-4 py-2.5 border-b border-slate-100',
-          'hover:bg-slate-50 transition-colors cursor-pointer animate-fade-slide-up',
-          `stagger-${Math.min(index + 1, 6)}`
-        )}
-        onClick={wf.id !== 'wf-fapi' ? (e) => { e.preventDefault(); toast.info('Workflow execution — coming soon'); } : undefined}
-      >
-        <div className="flex-1 min-w-0">
-          <div className="text-[12px] font-500 text-slate-800 truncate">{wf.name}</div>
-          <div className="text-[11px] text-slate-400">Northstar · {wf.reviewStage} stage</div>
-        </div>
-        <span className={cn('text-[10px] font-500 px-1.5 py-0.5 rounded shrink-0', statusStyle)}>
-          {wf.status}
-        </span>
-        <div className="text-[11px] text-slate-400 shrink-0">{wf.dueDate}</div>
-        {wf.exceptions && wf.exceptions > 0 ? (
-          <span className="text-[10px] bg-red-50 text-red-600 border border-red-200 px-1.5 py-0.5 rounded shrink-0">
-            {wf.exceptions} exc.
-          </span>
-        ) : null}
-      </div>
-    </Link>
-  );
-}
-
-// ─── Activity Feed Item ────────────────────────────────────────────────────────
-// Icon colors are status signals — kept as-is
-function ActivityItem({ item, index }: { item: typeof RECENT_ACTIVITY[0]; index: number }) {
-  const iconMap: Record<string, React.ReactNode> = {
-    review:    <MessageSquare size={11} className="text-amber-500" />,
-    upload:    <Upload size={11} className="text-[#1B5FD4]" />,
-    ai:        <Sparkles size={11} className="text-[#1B5FD4]" />,
-    approval:  <CheckCircle2 size={11} className="text-emerald-500" />,
-    exception: <AlertTriangle size={11} className="text-red-500" />,
-    complete:  <CheckCircle2 size={11} className="text-emerald-500" />,
-  };
-
-  return (
-    <div className={cn(
-      'flex gap-3 px-4 py-2.5 border-b border-slate-100 animate-fade-slide-up',
-      `stagger-${Math.min(index + 1, 6)}`
-    )}>
-      <div className="w-5 h-5 rounded bg-slate-100 flex items-center justify-center shrink-0 mt-0.5">
-        {iconMap[item.type] || <Activity size={11} className="text-slate-400" />}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-[11px] text-slate-700 leading-relaxed">{item.text}</div>
-        <div className="text-[10px] text-slate-400 mt-0.5">{item.time}</div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Dashboard Toolbar (portals sidebar nav into GlobalTopNav slot) ────────────
-function DashboardToolbar() {
-  const [mounted, setMounted] = useState(false);
+// ─── Dashboard sidebar (per-page neumorphic rail) ─────────────────────────────
+function DashboardSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-
-  useEffect(() => { setMounted(true); }, []);
-
-  if (!mounted) return null;
-  const slot = document.getElementById('global-nav-workflow-slot');
-  if (!slot) return null;
-
   const isActive = (href: string) =>
     href === '/dashboard' ? pathname === '/dashboard' : pathname?.startsWith(href) ?? false;
 
   const mainItems = [
-    { label: 'Tax Overview', href: '/bu-overview',       Icon: Layers         },
+    { label: 'Tax Overview', href: '/bu-overview',       Icon: Layers          },
     { label: 'Dashboard',    href: '/dashboard',          Icon: LayoutDashboard },
     { label: 'Clients',      href: '/client/northstar',  Icon: Building2,      badge: 8,  badgeColor: 'amber' as const },
     { label: 'Workflows',    href: '/workflow/fapi',      Icon: FileText,       badge: 2,  badgeColor: 'red'   as const },
-    { label: 'Builder',      href: '/builder',            Icon: Workflow        },
   ];
-
   const utilItems = [
     { label: 'Analytics', Icon: BarChart3  },
     { label: 'Settings',  Icon: Settings   },
     { label: 'Help',      Icon: HelpCircle },
   ];
-
-  const navBtnStyle = (active: boolean): React.CSSProperties => ({
-    display: 'flex', alignItems: 'center', gap: 4,
-    padding: '4px 9px', borderRadius: 6,
-    fontSize: 12, fontWeight: active ? 600 : 500,
-    color: active ? '#0F2044' : '#6B7280',
-    background: active ? 'rgba(15,32,68,0.09)' : 'transparent',
-    cursor: 'pointer', border: 'none', whiteSpace: 'nowrap',
-    transition: 'background 0.15s, color 0.15s',
-  });
-
-  return createPortal(
-    <div style={{ display: 'flex', alignItems: 'center', gap: 1, height: '100%', width: '100%' }}>
-      {mainItems.map(({ label, href, Icon, badge, badgeColor }) => (
-        <button key={href} onClick={() => router.push(href)} style={navBtnStyle(isActive(href))}>
-          <Icon size={13} />
-          <span>{label}</span>
-          {badge != null && (
-            <span style={{
-              fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 10,
-              background: badgeColor === 'amber' ? '#FEF3C7' : '#FEE2E2',
-              color: badgeColor === 'amber' ? '#B45309' : '#DC2626',
-            }}>
-              {badge}
-            </span>
-          )}
-        </button>
-      ))}
-
-      <div style={{ flex: 1 }} />
-      <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.1)', flexShrink: 0, margin: '0 4px' }} />
-
-      {utilItems.map(({ label, Icon }) => (
-        <button
-          key={label}
-          onClick={() => toast.info('Feature coming soon')}
-          style={{ ...navBtnStyle(false), color: '#9CA3AF' }}
-        >
-          <Icon size={13} />
-          <span>{label}</span>
-        </button>
-      ))}
-    </div>,
-    slot
-  );
-}
-
-// ─── Practitioner Dashboard ────────────────────────────────────────────────────
-export default function Dashboard() {
-  const [activeFilter, setActiveFilter] = useState<'all' | 'at-risk' | 'review'>('all');
-
-  const filteredClients = activeFilter === 'at-risk'
-    ? CLIENTS.filter(c => c.atRiskDeliverables > 0)
-    : activeFilter === 'review'
-    ? CLIENTS.filter(c => c.openReviewItems > 0)
-    : CLIENTS;
-
-  const reviewQueue = NORTHSTAR_WORKFLOWS.filter(w =>
-    w.status === 'Under Review' || w.status === 'At Risk'
-  );
+  const badgeEl = (badge?: number, color?: 'amber' | 'red') =>
+    badge == null ? undefined : (
+      <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 10, background: color === 'amber' ? '#FEF3C7' : '#FEE2E2', color: color === 'amber' ? '#B45309' : '#DC2626' }}>{badge}</span>
+    );
 
   return (
-    <>
-      <DashboardToolbar />
-      <div className="h-full overflow-auto">
-      <div className="p-5 space-y-5 max-w-[1200px]">
-
-        {/* ── Page header ──────────────────────────────────────────────────── */}
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-xl font-700 text-[#0F2044]">My Engagements</h1>
-            <p className="text-sm text-slate-400 mt-0.5">
-              Margaret Chen, Partner · Fiscal Year 2024–2025 · As of May 18, 2025
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/">
-              <div className="flex items-center gap-1.5 text-xs text-[#1B5FD4] hover:underline cursor-pointer">
-                <span>Tax BU Overview</span>
-                <ArrowUpRight size={12} />
-              </div>
-            </Link>
-            <button
-              onClick={() => toast.info('Export dashboard — coming soon')}
-              className="text-xs px-3 py-1.5 rounded border border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 transition-colors"
-            >
-              Export
-            </button>
-          </div>
-        </div>
-
-        {/* ── AI Summary ───────────────────────────────────────────────────── */}
-        <div data-anchor="dashboard:ai-summary" className="bg-slate-50 border border-slate-200 rounded-lg p-3.5 flex gap-3">
-          <div className="w-7 h-7 rounded bg-[#0F2044]/8 border border-[#0F2044]/12 flex items-center justify-center shrink-0">
-            <Sparkles size={13} className="text-[#1B5FD4]" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-[11px] font-600 text-[#1B5FD4] mb-1 uppercase tracking-wider">AI Workspace Summary</div>
-            <div className="text-[12px] text-slate-600 leading-relaxed">
-              <strong className="text-slate-800">3 deliverables are at risk</strong> of missing their deadlines. Pillar 2 GloBE Assessment has 4 unresolved exceptions and is due May 31.
-              M&A Transaction Memo — Project Cedar (Vantage Capital) is overdue for consultant first pass.
-              FAPI Workpaper 2025 is awaiting manager sign-off on 2 open items.
-              <span
-                className="text-[#1B5FD4] cursor-pointer hover:underline ml-1"
-                onClick={() => toast.info('AI detail view — coming soon')}
-              >
-                View full analysis →
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* ── 6 KPI Tiles ──────────────────────────────────────────────────── */}
-        <div data-anchor="dashboard:kpis" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <KPITile
-            label="Total Clients"
-            value={DASHBOARD_STATS.totalClients}
-            icon={<Users size={15} className="text-slate-400" />}
-          />
-          <KPITile
-            label="Active Workflows"
-            value={DASHBOARD_STATS.activeWorkflows}
-            sub="+2 this week"
-            icon={<Workflow size={15} className="text-slate-400" />}
-          />
-          {/* Pending Reviews — amber because it requires action */}
-          <KPITile
-            label="Pending Reviews"
-            value={DASHBOARD_STATS.pendingReviews}
-            sub="Across all clients"
-            icon={<Shield size={15} className="text-amber-500" />}
-            valueColor="text-amber-600"
-          />
-          {/* Upcoming Deadlines — slate, informational */}
-          <KPITile
-            label="Upcoming Deadlines"
-            value={DASHBOARD_STATS.upcomingDeadlines}
-            sub="Next 30 days"
-            icon={<Calendar size={15} className="text-slate-400" />}
-          />
-          {/* At Risk — red because it demands attention */}
-          <KPITile
-            label="At-Risk Deliverables"
-            value={DASHBOARD_STATS.atRiskDeliverables}
-            sub="Immediate attention"
-            icon={<AlertTriangle size={15} className="text-red-500" />}
-            valueColor="text-red-500"
-          />
-          {/* Completed — green because it's a positive signal */}
-          <KPITile
-            label="Completed (MTD)"
-            value={DASHBOARD_STATS.completedThisMonth}
-            sub="On track"
-            icon={<CheckCircle2 size={15} className="text-emerald-500" />}
-            valueColor="text-emerald-600"
-          />
-        </div>
-
-        {/* ── Client Portfolio — full width ─────────────────────────────────── */}
-        <div data-anchor="dashboard:portfolio" className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
-            <div className="flex items-center gap-2">
-              <Building2 size={14} className="text-slate-400" />
-              <span className="text-sm font-600 text-[#0F2044]">Client Portfolio</span>
-              <span className="text-[10px] font-600 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
-                {CLIENTS.length} clients
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
-              {(['all', 'at-risk', 'review'] as const).map(f => (
-                <button
-                  key={f}
-                  onClick={() => setActiveFilter(f)}
-                  className={cn(
-                    'text-[11px] px-2.5 py-1 rounded transition-colors',
-                    activeFilter === f
-                      ? 'bg-[#0F2044] text-white'
-                      : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
-                  )}
-                >
-                  {f === 'at-risk' ? 'At Risk' : f === 'review' ? 'In Review' : 'All'}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Column headers */}
-          <div className="flex items-center gap-3 px-4 py-2 border-b border-slate-100 bg-slate-50">
-            <div className="w-8 shrink-0" />
-            <div className="flex-1 text-[10px] font-600 text-slate-400 uppercase tracking-wider">Client</div>
-            <div className="hidden lg:block text-[10px] font-600 text-slate-400 uppercase tracking-wider w-28">Teams</div>
-            <div className="hidden md:flex gap-5">
-              <div className="text-[10px] font-600 text-slate-400 uppercase tracking-wider w-14 text-center">Reviews</div>
-              <div className="text-[10px] font-600 text-slate-400 uppercase tracking-wider w-14 text-center">At Risk</div>
-              <div className="text-[10px] font-600 text-slate-400 uppercase tracking-wider w-14 text-center">Deadlines</div>
-            </div>
-            <div className="hidden xl:block text-[10px] font-600 text-slate-400 uppercase tracking-wider w-24 text-right">Activity</div>
-            <div className="w-4 shrink-0" />
-          </div>
-
-          {filteredClients.map((client, i) => (
-            <ClientRow key={client.id} client={client} index={i} />
-          ))}
-        </div>
-
-        {/* ── My Work Items ─────────────────────────────────────────────────── */}
-        <div data-anchor="dashboard:work-items" className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-200">
-            <Star size={13} className="text-amber-500" />
-            <span className="text-sm font-600 text-[#0F2044]">My Work Items</span>
-            <span className="text-[10px] font-600 px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
-              {MY_WORK_ITEMS.length}
-            </span>
-            <span className="text-[11px] text-slate-400 ml-1">— Margaret Chen, Partner</span>
-          </div>
-          <div>
-            {MY_WORK_ITEMS.map((item, i) => (
-              <WorkItem key={item.id} item={item} index={i} />
-            ))}
-          </div>
-        </div>
-
-        {/* ── Review Queue + Deadlines — side by side ───────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-          {/* Review Queue */}
-          <div data-anchor="dashboard:review-queue" className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
-              <div className="flex items-center gap-2">
-                <Shield size={13} className="text-amber-500" />
-                <span className="text-sm font-600 text-[#0F2044]">Review Queue</span>
-                <span className="text-[10px] font-600 px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
-                  {reviewQueue.length}
-                </span>
-              </div>
-              <Link href="/client/northstar">
-                <span className="text-[11px] text-[#1B5FD4] hover:underline cursor-pointer">View all</span>
-              </Link>
-            </div>
-            {reviewQueue.map((wf, i) => (
-              <ReviewQueueItem key={wf.id} wf={wf} index={i} />
-            ))}
-          </div>
-
-          {/* Upcoming Deadlines */}
-          <div data-anchor="dashboard:deadlines" className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-200">
-              <Clock size={13} className="text-slate-400" />
-              <span className="text-sm font-600 text-[#0F2044]">Upcoming Deadlines</span>
-            </div>
-            {[
-              { name: 'M&A Memo — Project Cedar', client: 'Vantage Capital', date: 'May 25', urgent: true },
-              { name: 'M&A Memo — Project Maple',  client: 'Northstar',       date: 'May 28', urgent: true },
-              { name: 'Pillar 2 GloBE Assessment', client: 'Northstar',       date: 'May 31', urgent: true },
-              { name: 'T2 Corporate Return 2024',  client: 'Northstar',       date: 'Jun 15', urgent: false },
-              { name: 'T2 Corporate Return 2024',  client: 'Meridian Energy', date: 'Jun 15', urgent: false },
-            ].map((d, i) => (
-              <div
-                key={i}
-                className={cn(
-                  'flex items-center justify-between px-4 py-2.5 border-b border-slate-100 animate-fade-slide-up',
-                  `stagger-${Math.min(i + 1, 5)}`
-                )}
-              >
-                <div className="min-w-0">
-                  <div className="text-[12px] font-500 text-slate-700 truncate">{d.name}</div>
-                  <div className="text-[10px] text-slate-400">{d.client}</div>
-                </div>
-                {/* Date badge — red if urgent, slate if not */}
-                <span className={cn(
-                  'text-[10px] font-600 px-1.5 py-0.5 rounded shrink-0 ml-2',
-                  d.urgent
-                    ? 'bg-red-50 text-red-600 border border-red-200'
-                    : 'bg-slate-100 text-slate-500 border border-slate-200'
-                )}>
-                  {d.date}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Recent Activity ───────────────────────────────────────────────── */}
-        <div data-anchor="dashboard:activity" className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-200">
-            <Activity size={13} className="text-slate-400" />
-            <span className="text-sm font-600 text-[#0F2044]">Recent Activity</span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {RECENT_ACTIVITY.map((item, i) => (
-              <ActivityItem key={item.id} item={item} index={i} />
-            ))}
-          </div>
-        </div>
-
-      </div>
-      </div>
-    </>
+    <NeumorphicSidebar header={<NeuSidebarHeader title="Practice" subtitle="Margaret Chen · Partner" />}>
+      {mainItems.map(({ label, href, Icon, badge, badgeColor }) => (
+        <NeuRow key={href} icon={<Icon size={14} />} label={label} active={isActive(href)} onClick={() => router.push(href)} badge={badgeEl(badge, badgeColor)} />
+      ))}
+      <NeuSectionLabel>Tools</NeuSectionLabel>
+      {utilItems.map(({ label, Icon }) => (
+        <NeuRow key={label} icon={<Icon size={14} />} label={label} onClick={() => toast.info('Feature coming soon')} />
+      ))}
+    </NeumorphicSidebar>
   );
 }
 
+// ─── Content styling (light cards on the dark grid) ───────────────────────────
+const NAVY = '#0F2044';
+const CARD: React.CSSProperties = { background: '#ffffff', borderRadius: 16, border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 14px 34px rgba(0,0,0,0.30)' };
+const SECTION_LABEL: React.CSSProperties = { fontSize: 11, fontWeight: 650, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: 12 };
 
+const STATUS = {
+  ready:  { label: 'Ready',     bg: 'rgba(63,185,80,0.12)',  fg: '#2E7D32', Dot: CheckCircle2 },
+  review: { label: 'In review', bg: 'rgba(217,119,6,0.12)',  fg: '#B45309', Dot: AlertTriangle },
+  draft:  { label: 'Draft',     bg: 'rgba(15,32,68,0.08)',   fg: '#475569', Dot: FileText },
+} as const;
+
+type Ws = {
+  title: string; sub: string; href: string; Icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }>;
+  status: keyof typeof STATUS; updated: string; figures: [string, string][];
+};
+
+const WORKSHEETS: Ws[] = [
+  { title: 'FAPI Workpaper 2025', sub: 'Foreign accrual property income', href: '/fapi', Icon: Calculator, status: 'ready', updated: '2 hours ago', figures: [['Gross FAPI', '1,284,500'], ['FAT deduction', '(412,100)'], ['Net FAPI', '872,400']] },
+  { title: 'T1134 Workpaper', sub: 'Foreign affiliate reporting', href: '/t1134', Icon: FileText, status: 'review', updated: '1 day ago', figures: [['Affiliates', '6'], ['Reporting entities', '4'], ['Open exceptions', '2']] },
+  { title: 'Surplus Continuity', sub: 'Exempt / taxable surplus', href: '/surplus', Icon: Layers, status: 'draft', updated: '3 days ago', figures: [['Exempt surplus', '2,140,000'], ['Taxable surplus', '560,000'], ['Pre-1972 CSOH', '—']] },
+  { title: 'Executive Overview', sub: 'Business-unit tax overview', href: '/bu-overview', Icon: BarChart3, status: 'ready', updated: '5 hours ago', figures: [['Business units', '5'], ['Effective rate', '24.1%'], ['At-risk items', '3']] },
+];
+
+const STATS = [
+  { label: 'Active workflows', value: '12', sub: '+2 this week', Icon: Workflow },
+  { label: 'Open reviews', value: '8', sub: 'across engagements', Icon: FileText },
+  { label: 'Upcoming deadlines', value: '9', sub: 'next 30 days', Icon: Calendar },
+  { label: 'At-risk items', value: '3', sub: 'need attention', Icon: AlertTriangle },
+];
+
+// ─── Company workspace ─────────────────────────────────────────────────────────
+export default function Dashboard() {
+  const router = useRouter();
+  const client = useAtomValue(selectedClientAtom);
+  const initial = client?.charAt(0) ?? 'N';
+  // Inline in the Scope panel: drop the in-body sidebar (its nav lives in Scope's
+  // left sidebar) so the dashboard content isn't cramped next to the chat.
+  const embedded = useInlinePage();
+
+  return (
+    <div className="h-full flex">
+      {!embedded && <DashboardSidebar />}
+
+      <div className="flex-1 min-w-0 overflow-auto">
+        <div className="mx-auto" style={{ maxWidth: 1060, padding: '30px 28px 52px' }}>
+
+          {/* ── Company overview ── */}
+          <div style={{ ...CARD, padding: '22px 24px', marginBottom: 22 }}>
+            <div className="flex items-start gap-4">
+              <div style={{ width: 56, height: 56, borderRadius: 16, flexShrink: 0, background: 'linear-gradient(135deg,#6B21A8,#8B3FD0)', color: '#fff', display: 'grid', placeItems: 'center', fontSize: 22, fontWeight: 700, boxShadow: '0 6px 16px rgba(107,33,168,0.35)' }}>{initial}</div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 style={{ fontSize: 22, fontWeight: 700, color: NAVY, letterSpacing: '-0.02em' }}>{client}</h1>
+                  <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.03em', textTransform: 'uppercase', color: '#6B21A8', background: 'rgba(107,33,168,0.10)', border: '1px solid rgba(107,33,168,0.22)', borderRadius: 999, padding: '2px 9px' }}>Platinum</span>
+                </div>
+                <div style={{ fontSize: 13, color: '#64748B', marginTop: 3 }}>Lead: Margaret Chen · Partner · Fiscal Year 2024–2025</div>
+                <div className="flex items-center gap-1.5 mt-3">
+                  {['TC', 'ICT', 'M&A', 'TP'].map((t) => (
+                    <span key={t} style={{ fontSize: 10, fontWeight: 700, color: '#334155', background: '#F1F5F9', border: '1px solid rgba(0,0,0,0.06)', borderRadius: 6, padding: '2px 7px' }}>{t}</span>
+                  ))}
+                </div>
+              </div>
+              <button onClick={() => router.push('/')} className="flex items-center gap-1.5 shrink-0 transition-colors hover:bg-purple-50" style={{ fontSize: 12.5, fontWeight: 600, color: '#6B21A8', background: 'rgba(107,33,168,0.06)', border: '1px solid rgba(107,33,168,0.18)', borderRadius: 10, padding: '8px 13px' }}>
+                <Sparkles size={14} /> Ask the assistant
+              </button>
+            </div>
+          </div>
+
+          {/* ── Stat tiles ── */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 28 }}>
+            {STATS.map(({ label, value, sub, Icon }) => (
+              <div key={label} style={{ ...CARD, padding: '15px 17px' }}>
+                <div className="flex items-center justify-between">
+                  <span style={{ width: 30, height: 30, borderRadius: 9, background: '#F1F5F9', display: 'grid', placeItems: 'center', color: '#64748B' }}><Icon size={15} /></span>
+                </div>
+                <div style={{ fontSize: 26, fontWeight: 700, color: NAVY, marginTop: 10, letterSpacing: '-0.02em' }}>{value}</div>
+                <div style={{ fontSize: 12, color: NAVY, marginTop: 2, fontWeight: 550 }}>{label}</div>
+                <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 1 }}>{sub}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* ── Generated worksheets ── */}
+          <div style={SECTION_LABEL}>Generated worksheets</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
+            {WORKSHEETS.map((w) => {
+              const s = STATUS[w.status];
+              return (
+                <button key={w.title} onClick={() => router.push(w.href)} className="text-left transition-transform hover:-translate-y-0.5" style={{ ...CARD, padding: 0, overflow: 'hidden', cursor: 'pointer' }}>
+                  <div className="flex items-center gap-3" style={{ padding: '14px 16px', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+                    <span style={{ width: 36, height: 36, borderRadius: 10, background: '#F1F5F9', display: 'grid', placeItems: 'center', color: NAVY, flexShrink: 0 }}><w.Icon size={17} /></span>
+                    <span className="flex-1 min-w-0">
+                      <span style={{ display: 'block', fontSize: 13.5, fontWeight: 650, color: NAVY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{w.title}</span>
+                      <span style={{ display: 'block', fontSize: 11.5, color: '#94A3B8' }}>{w.sub}</span>
+                    </span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 650, color: s.fg, background: s.bg, borderRadius: 999, padding: '3px 8px', flexShrink: 0 }}>
+                      <s.Dot size={11} /> {s.label}
+                    </span>
+                  </div>
+                  <div style={{ padding: '10px 16px 12px' }}>
+                    {w.figures.map(([k, v]) => (
+                      <div key={k} className="flex items-center justify-between" style={{ padding: '3px 0' }}>
+                        <span style={{ fontSize: 12, color: '#64748B' }}>{k}</span>
+                        <span style={{ fontSize: 12.5, fontWeight: 650, color: NAVY, fontVariantNumeric: 'tabular-nums' }}>{v}</span>
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-between" style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+                      <span style={{ fontSize: 11, color: '#94A3B8' }}>Updated {w.updated}</span>
+                      <span className="flex items-center gap-0.5" style={{ fontSize: 11.5, fontWeight: 600, color: '#6B21A8' }}>Open <ChevronRight size={13} /></span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ── At a glance ── */}
+          <div style={{ ...SECTION_LABEL, marginTop: 30 }}>At a glance</div>
+          <div style={{ ...CARD, padding: '16px 20px' }}>
+            <div className="flex items-start gap-3">
+              <span style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(107,33,168,0.10)', border: '1px solid rgba(107,33,168,0.16)', display: 'grid', placeItems: 'center', color: '#6B21A8', flexShrink: 0 }}><Sparkles size={15} /></span>
+              <div style={{ fontSize: 12.5, color: '#475569', lineHeight: 1.6 }}>
+                <b style={{ color: NAVY }}>3 deliverables are at risk</b> for {client}. The FAPI Workpaper 2025 is ready for manager sign-off; the T1134 has 2 open exceptions; Surplus Continuity is still in draft.
+                <button onClick={() => router.push('/')} className="ml-1 hover:underline" style={{ color: '#6B21A8', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Ask for a full review →</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}

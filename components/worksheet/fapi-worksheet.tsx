@@ -11,14 +11,17 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useMemo, useRef, useState } from 'react';
-import { useAtom, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useRouter } from 'next/navigation';
 import { ChevronRight, Upload, GitBranch, Sparkles, FileSpreadsheet, Loader2, Download, X } from 'lucide-react';
-import { runTemplateCore, type SourceRow, type MappedRow } from '@/lib/workflow-runs';
+import { runTemplateCore, buildOverrideRules, type SourceRow, type MappedRow } from '@/lib/workflow-runs';
 import { FAPI_CONFIG } from '@/lib/workflow-runs/fapi';
 import { parseUploadToRows } from '@/lib/workflow-runs/parse-upload';
-import { uploadedRowsAtom } from '@/lib/workspace-store';
+import { uploadedRowsAtom, runEditsAtom, setRunInputAtom, EMPTY_RUN_EDITS } from '@/lib/workspace-store';
 import { builderFocusTargetAtom } from '@/lib/workflow-store';
+import { useInlinePage } from '@/lib/inline-page-context';
+import { usePageMenu } from '@/lib/page-menu-store';
+import { WorksheetCopilot } from '@/components/assistant/worksheet-copilot';
 
 const INK = '#18181b', MUTED = '#71717a', FAINT = '#a1a1aa';
 const LINE = 'rgba(24,24,27,0.10)', HAIRLINE = 'rgba(24,24,27,0.07)';
@@ -107,22 +110,48 @@ export default function FapiWorksheet() {
   const stored = uploaded[FAPI_CONFIG.id];
   const rows: SourceRow[] = stored?.rows?.length ? stored.rows : FAPI_CONFIG.sampleRows;
 
-  const [inputs, setInputs] = useState<Record<string, number>>(() =>
-    Object.fromEntries((FAPI_CONFIG.editableInputs ?? []).map((i) => [i.key, i.default]))
+  // Inputs + category overrides are SHARED with the chat run via runEditsAtom, so a
+  // rate change, live-fetched FX, or re-categorization made during the run shows up
+  // here too — and edits here flow back to the run. Rows already share via
+  // uploadedRowsAtom; these are the run's other two decision surfaces.
+  //
+  // Only inputs that are SAFE to default are seeded. Classification-fed inputs
+  // (lines A.1 / C / D / E) are produced by the rollup — seeding their default here
+  // would inject it into the block config and clobber the classified value. They
+  // enter `inputs` only once the user actually edits that line (via the shared
+  // edits); until then the line shows the classified figure via `val()`, and
+  // runTemplateCore's guard still protects it if it lands at its default.
+  const edits = useAtomValue(runEditsAtom)[FAPI_CONFIG.id] ?? EMPTY_RUN_EDITS;
+  const setRunInput = useSetAtom(setRunInputAtom);
+  const defaults = useMemo(
+    () => Object.fromEntries((FAPI_CONFIG.editableInputs ?? []).filter((i) => !i.classificationFed).map((i) => [i.key, i.default])),
+    []
   );
+  const inputs = useMemo(() => ({ ...defaults, ...edits.inputs }), [defaults, edits.inputs]);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [sourcesOpen, setSourcesOpen] = useState(false);
 
   const core = useMemo(() => {
-    try { return runTemplateCore(FAPI_CONFIG, { rows, overrides: [], inputs }); } catch { return null; }
-  }, [rows, inputs]);
+    try { return runTemplateCore(FAPI_CONFIG, { rows, overrides: buildOverrideRules(FAPI_CONFIG, rows, edits.overrides), inputs }); } catch { return null; }
+  }, [rows, inputs, edits.overrides]);
 
   const cur = FAPI_CONFIG.currency;
   const fx = core?.summaryValues.FX_RATE ?? inputs.fxRate ?? 1;
   const val = (key: string) => core ? (core.lineValues[key] ?? core.summaryValues[key] ?? 0) : 0;
-  const setInput = (key: string, v: number) => setInputs((s) => ({ ...s, [key]: v }));
+  const setInput = (key: string, v: number) => setRunInput({ id: FAPI_CONFIG.id, key, value: v });
 
   const openBuilder = (blockId: string) => { setBuilderFocus({ workflowId: FAPI_CONFIG.id, blockId }); router.push('/builder'); };
+
+  // Inline in the Scope panel → publish the toolbar into the shared header instead
+  // of drawing it in the worksheet body (which shares width with the chat).
+  const embedded = useInlinePage();
+  usePageMenu('fapi', embedded ? {
+    right: [
+      { kind: 'button', id: 'import', label: parsing ? 'Parsing…' : 'Import', icon: <Upload size={14} />, onClick: () => fileInput.current?.click(), disabled: parsing },
+      { kind: 'button', id: 'sources', label: 'Sources', icon: <FileSpreadsheet size={14} />, active: sourcesOpen, onClick: () => setSourcesOpen((o) => !o) },
+      { kind: 'button', id: 'builder', label: 'Builder', icon: <GitBranch size={14} />, onClick: () => openBuilder(LINES) },
+    ],
+  } : {}, [embedded, parsing, sourcesOpen]);
 
   const onImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]; if (e.target) e.target.value = '';
@@ -157,6 +186,9 @@ export default function FapiWorksheet() {
 
   return (
     <div style={{ minHeight: '100%', background: '#f7f7f8', padding: '28px 20px 80px' }}>
+      {/* Headless: publishes the live worksheet to the assistant (generic — any
+          template worksheet mounts this). Retrieval actions live in use-assistant. */}
+      <WorksheetCopilot config={FAPI_CONFIG} rows={rows} inputs={inputs} overrides={edits.overrides} />
       <style>{`@keyframes wsspin{to{transform:rotate(360deg)}} .ws-spin{animation:wsspin .9s linear infinite} .ws-row:hover{background:rgba(24,24,27,0.022)} .ws-row:hover .ws-trace{opacity:1}`}</style>
       <div style={{ maxWidth: sourcesOpen ? 1400 : 960, margin: '0 auto', display: 'flex', gap: 16, alignItems: 'flex-start', transition: 'max-width 220ms' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -170,13 +202,18 @@ export default function FapiWorksheet() {
             <span style={chipStyle}><span style={{ color: FAINT, fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Affiliate</span> SAS Paris</span>
             <span style={chipStyle}><span style={{ color: FAINT, fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>FAPI year</span> 2025</span>
             <span style={{ flex: 1 }} />
-            <label style={{ ...toolBtn, background: parsing ? MUTED : '#18181b', color: '#fff', border: 'none' }}>
-              {parsing ? <Loader2 size={13} className="ws-spin" /> : <Upload size={13} />} {parsing ? 'Parsing…' : 'Import'}
-              <input ref={fileInput} type="file" accept=".xlsx,.xls" style={{ display: 'none' }} onChange={onImport} disabled={parsing} />
-            </label>
-            <button style={toolBtn} onClick={() => openBuilder(LINES)}><GitBranch size={13} /> Builder</button>
-            <button style={sourcesOpen ? { ...toolBtn, background: '#18181b', color: '#fff', border: 'none' } : toolBtn} onClick={() => setSourcesOpen((o) => !o)}><FileSpreadsheet size={13} /> Sources</button>
-            <button style={{ ...toolBtn, color: FAINT, cursor: 'not-allowed' }} title="Assistant — coming soon" disabled><Sparkles size={13} /> Assistant</button>
+            {/* Hidden file input — used by both the in-body button and the header menu's Import. */}
+            <input ref={fileInput} type="file" accept=".xlsx,.xls" style={{ display: 'none' }} onChange={onImport} disabled={parsing} />
+            {!embedded && (
+              <>
+                <button style={{ ...toolBtn, background: parsing ? MUTED : '#18181b', color: '#fff', border: 'none' }} onClick={() => fileInput.current?.click()} disabled={parsing}>
+                  {parsing ? <Loader2 size={13} className="ws-spin" /> : <Upload size={13} />} {parsing ? 'Parsing…' : 'Import'}
+                </button>
+                <button style={toolBtn} onClick={() => openBuilder(LINES)}><GitBranch size={13} /> Builder</button>
+                <button style={sourcesOpen ? { ...toolBtn, background: '#18181b', color: '#fff', border: 'none' } : toolBtn} onClick={() => setSourcesOpen((o) => !o)}><FileSpreadsheet size={13} /> Sources</button>
+                <button style={{ ...toolBtn, color: FAINT, cursor: 'not-allowed' }} title="Assistant — coming soon" disabled><Sparkles size={13} /> Assistant</button>
+              </>
+            )}
           </div>
           <div style={{ fontSize: 11, color: FAINT, marginTop: 9 }}>
             {stored?.rows?.length ? <>Source: <b style={{ color: MUTED, fontWeight: 600 }}>{stored.fileName}</b> · {stored.rows.length} rows</> : <>Source: sample trial balance ({FAPI_CONFIG.sampleRows.length} rows) — Import a workbook to use your own.</>}

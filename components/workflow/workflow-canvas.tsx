@@ -21,6 +21,7 @@ import { AIPrompt } from "@/components/ai-elements/prompt";
 import { ConfigurationOverlay } from "@/components/overlays/configuration-overlay";
 import { useOverlay } from "@/components/overlays/overlay-provider";
 import { WorkflowToolbar } from "@/components/workflow/workflow-toolbar";
+import { sidebarCollapsedAtom } from "@/components/neumorphic-sidebar";
 import "@xyflow/react/dist/style.css";
 
 import { nanoid } from "nanoid";
@@ -102,6 +103,7 @@ function getNeutralNodeForPendingConnection({
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: React Flow canvas requires complex setup
 export function WorkflowCanvas() {
+  const sidebarCollapsed = useAtomValue(sidebarCollapsedAtom);
   const [nodes, setNodes] = useAtom(nodesAtom);
   const [edges, setEdges] = useAtom(edgesAtom);
   const [isGenerating] = useAtom(isGeneratingAtom);
@@ -697,6 +699,7 @@ export function WorkflowCanvas() {
         <Panel
           className="workflow-controls-panel border-none bg-transparent p-0"
           position="bottom-left"
+          style={{ marginLeft: sidebarCollapsed ? 66 : 264, transition: 'margin-left 220ms cubic-bezier(0.23,1,0.32,1)' }}
         >
           <Controls />
         </Panel>

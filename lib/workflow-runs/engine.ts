@@ -25,6 +25,14 @@ export type ElectConfig = {
   minKey: string;       // summary/line key holding the floor
   maxKey: string;       // summary/line key holding the ceiling
   label: string;        // human label for the elected amount
+  // Optional wording for the choice card. Defaults reproduce the fiscal rollover
+  // (Roulement) verbatim, so a generic election reads naturally without changing it.
+  ceilingWord?: string; // word before "ceiling" in the prompt (default "JVM")
+  floorLabel?: string;  // prefix on the floor option (default "Floor")
+  ceilingLabel?: string;// prefix on the ceiling option (default "JVM")
+  floorNote?: string;   // suffix on the floor option (default " · defer all gain")
+  ceilingNote?: string; // suffix on the ceiling option (default " · realize gain")
+  promptSuffix?: string;// trailing sentence (default " This sets how much gain is deferred.")
 };
 
 export type StepDef = { label: string; sub: string };
@@ -80,6 +88,20 @@ export type TemplateConfig = {
   };
   /** Inputs the user can edit inside the run; changing one re-runs the engine. */
   editableInputs?: EditableInput[];
+  /**
+   * Optional, for the worksheet-intel retrieval layer only: given a line key +
+   * the computed run, return the classified source rows that fed that line (so
+   * the chat can answer "what rows are behind line A"). Opt-in — templates whose
+   * lines aren't row-classified simply omit it (explainLine still returns the
+   * formula + operand values). See lib/worksheet-intel/template-adapter.ts.
+   */
+  worksheetProvenance?: (args: { lineKey: string; core: CoreResult }) => Array<{
+    label: string;
+    amount: number;
+    category: string;
+    keyword: string | null;
+    confidence: number;
+  }>;
 };
 
 export type EditableInput = {
@@ -91,6 +113,15 @@ export type EditableInput = {
   /** Inject into a template block's config (e.g. FAPI FX rate). If omitted, the
    *  value overrides `computeExtra`'s params under `key` (e.g. Roulement JVM). */
   block?: { blockId: string; configKey: string };
+  /**
+   * The line this input feeds is normally produced by classification (the rollup
+   * emits it as a named value). Injecting the DEFAULT into the block config would
+   * clobber that classified value (block config wins over rollup), so we only
+   * inject when the user has moved it OFF the default. This keeps the worksheet
+   * and the chat run identical: an untouched classification-fed input never
+   * overrides the classified figure. See FAPI lines C / A.1 / D / E.
+   */
+  classificationFed?: boolean;
 };
 
 export type DerivedRow = { key: string; label: string; value: number; formula: string };
@@ -125,7 +156,31 @@ function asNumberRecord(value: unknown): Record<string, number> {
   return out;
 }
 
-type OverrideRule = { rowLabel: string; categoryId: string; categoryLabel: string };
+export type OverrideRule = { rowLabel: string; categoryId: string; categoryLabel: string };
+
+/**
+ * Convert the run's per-row override map (rowId → categoryId, as stored in
+ * RunState.overrides and the shared runEditsAtom) into the OverrideRule[] the
+ * core runner consumes. `__skip__` rows are dropped (they stay unmatched/out of
+ * the calc). Shared by runTemplateLoop AND the worksheet — which calls
+ * runTemplateCore directly — so a re-categorization made in the chat run and a
+ * worksheet computed from the same shared overrides land on identical figures.
+ */
+export function buildOverrideRules(
+  config: TemplateConfig,
+  rows: SourceRow[],
+  overrides: Record<string, string>
+): OverrideRule[] {
+  const rules: OverrideRule[] = [];
+  for (const row of rows) {
+    const cat = overrides[row.rowId];
+    if (cat && cat !== '__skip__') {
+      const opt = config.categoryOptions.find((o) => o.id === cat);
+      rules.push({ rowLabel: row.label, categoryId: cat, categoryLabel: opt?.label ?? cat });
+    }
+  }
+  return rules;
+}
 
 /** Run the template once with the given inputs and extract figures + detail. */
 export function runTemplateCore(
@@ -149,6 +204,9 @@ export function runTemplateCore(
   const paramOverrides: Record<string, number> = {};
   for (const inp of config.editableInputs ?? []) {
     if (!(inp.key in inputVals)) continue;
+    // Classification-fed inputs left at their default must NOT be injected — the
+    // block config would win over the rollup's classified value and zero the line.
+    if (inp.classificationFed && inputVals[inp.key] === inp.default) continue;
     if (inp.block) {
       const b = snapshot.blocks.find((x) => x.id === inp.block!.blockId);
       if (b) b.config = { ...b.config, [inp.block.configKey]: inputVals[inp.key] };
@@ -243,14 +301,7 @@ export function runTemplateLoop(config: TemplateConfig, state: RunState): RunOut
   // Real uploaded rows (shared with the builder) when present; else the sample.
   const rows = state.rows && state.rows.length > 0 ? state.rows : config.sampleRows;
 
-  const overrideRules: OverrideRule[] = [];
-  for (const row of rows) {
-    const cat = state.overrides[row.rowId];
-    if (cat && cat !== '__skip__') {
-      const opt = config.categoryOptions.find((o) => o.id === cat);
-      overrideRules.push({ rowLabel: row.label, categoryId: cat, categoryLabel: opt?.label ?? cat });
-    }
-  }
+  const overrideRules = buildOverrideRules(config, rows, state.overrides);
   const core = runTemplateCore(config, { rows, overrides: overrideRules, elected: state.elected ?? undefined, inputs: state.inputs });
 
   // Rows the mapper couldn't classify (and the user hasn't decided on).
@@ -270,20 +321,28 @@ export function runTemplateLoop(config: TemplateConfig, state: RunState): RunOut
     ? { count: unresolved.length, rows: unresolved.map((u) => ({ rowId: u.rowId, label: u.label, amount: u.amount })) }
     : undefined;
 
-  // Optional election (roulement): choose the elected amount within bounds.
+  // Optional election (roulement, campaign budget…): choose the elected amount
+  // within bounds. The wording is config-driven; defaults reproduce the rollover.
   if (config.elect && state.elected == null) {
     const lo = core.bounds?.min ?? core.lineValues[config.elect.minKey] ?? 0;
     const hi = core.bounds?.max ?? core.lineValues[config.elect.maxKey] ?? 0;
     const mid = Math.round((lo + hi) / 2);
+    const e = config.elect;
+    const ceilingWord = e.ceilingWord ?? 'JVM';
+    const floorLabel = e.floorLabel ?? 'Floor';
+    const ceilingLabel = e.ceilingLabel ?? 'JVM';
+    const floorNote = e.floorNote ?? ' · defer all gain';
+    const ceilingNote = e.ceilingNote ?? ' · realize gain';
+    const promptSuffix = e.promptSuffix ?? ' This sets how much gain is deferred.';
     return {
       detail: core.detail, done: false, activeStage: 3, needsReview,
       blocker: {
         kind: 'choice', choiceId: ELECT_CHOICE,
-        message: `Choose the ${config.elect.label} — anywhere between the floor (${lo.toLocaleString()}) and JVM ceiling (${hi.toLocaleString()}). This sets how much gain is deferred.`,
+        message: `Choose the ${e.label} — anywhere between the floor (${lo.toLocaleString()}) and ${ceilingWord} ceiling (${hi.toLocaleString()}).${promptSuffix}`,
         options: [
-          { id: String(lo), label: `Floor ${lo.toLocaleString()} · defer all gain` },
+          { id: String(lo), label: `${floorLabel} ${lo.toLocaleString()}${floorNote}` },
           { id: String(mid), label: `Midpoint ${mid.toLocaleString()}` },
-          { id: String(hi), label: `JVM ${hi.toLocaleString()} · realize gain` },
+          { id: String(hi), label: `${ceilingLabel} ${hi.toLocaleString()}${ceilingNote}` },
         ],
       },
     };

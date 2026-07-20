@@ -128,6 +128,7 @@ export const WORKFLOW_RELATIONSHIP_LABELS: Record<
   feeds_output_input: "Feeds output input",
   feeds_protected_input: "Feeds protected input",
   feeds_protected_result: "Feeds protected result",
+  initiates: "Initiates",
   included_in_output_preview: "Included in output preview",
   included_in_handoff: "Included in handoff",
   maps_to_output: "Maps to output",

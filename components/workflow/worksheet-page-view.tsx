@@ -41,7 +41,12 @@ function SectionContent({
   edges: WorkflowEdge[];
   lastRun: ReturnType<typeof loadLocalRunRecords>[number] | undefined;
   activePanel: PagePanelState | null;
-  onSetPanel: (p: PagePanelState | null) => void;
+  onSetPanel: (
+    p:
+      | PagePanelState
+      | null
+      | ((prev: PagePanelState | null) => PagePanelState | null)
+  ) => void;
 }) {
   const block = fieldNode.data.block as WorkflowBlock;
 

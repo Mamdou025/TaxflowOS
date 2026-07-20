@@ -1,4 +1,5 @@
 import type { WorkflowEdge, WorkflowNode } from "@/lib/workflow-store";
+import { isGovernedValueBlock } from "../domain/workflow/protected-rules";
 
 export const WORKFLOW_AUDIT_EVENT_TYPES = [
   "ai_proposal_approved",
@@ -93,7 +94,7 @@ export function summarizeBlockForAudit(
     id: node.id,
     immutableSource: block?.source?.immutable || undefined,
     label: node.data.label,
-    protected: block?.family === "Protected" || undefined,
+    protected: isGovernedValueBlock(block) || undefined,
     status: block?.status,
     subtype: block?.subtype,
     x: Math.round(node.position.x),

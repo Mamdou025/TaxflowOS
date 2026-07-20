@@ -176,6 +176,21 @@ function roundMoney(value: number) {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
+// A RATE result (an FX / conversion factor) must NOT be rounded to money cents:
+// 2dp rounding destroys its precision (1.3978 → 1.40) and then corrupts every
+// amount multiplied by it — e.g. the *_CAD conversions FX_RATE feeds. Rates flow
+// through at FULL precision here; only money amounts round to 2dp, and the final
+// DISPLAY rounding happens at the surface (worksheet / snapshot formatting). The
+// key heuristic matches the worksheet-intel `isRateKey` convention (_RATE suffix
+// or FX prefix), so no money line is ever mistaken for a rate.
+const RATE_RESULT_KEY = /_RATE$|^FX/i;
+function roundResult(value: number, resultKey: string) {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return RATE_RESULT_KEY.test(resultKey) ? value : roundMoney(value);
+}
+
 function isDigit(character: string) {
   return character >= "0" && character <= "9";
 }
@@ -585,10 +600,12 @@ function createFormulaParser({
 function evaluateFormulaExpression({
   expression,
   namedValues,
+  resultKey,
   ruleId,
 }: {
   expression: string;
   namedValues: Record<string, number>;
+  resultKey: string;
   ruleId: string;
 }) {
   const tokenized = tokenizeFormulaExpression(expression);
@@ -598,11 +615,12 @@ function evaluateFormulaExpression({
     tokens: tokenized.tokens,
   }).parse();
   const warnings = [...new Set([...tokenized.warnings, ...parsed.warnings])];
+  const result = roundResult(parsed.value, resultKey);
 
   return {
-    expression: `${parsed.display} = ${roundMoney(parsed.value)}`,
+    expression: `${parsed.display} = ${result}`,
     resolvedOperands: parsed.resolvedOperands,
-    result: roundMoney(parsed.value),
+    result,
     warnings,
   };
 }
@@ -669,6 +687,7 @@ function evaluateRule({
     return evaluateFormulaExpression({
       expression: formulaExpression,
       namedValues,
+      resultKey: rule.resultKey,
       ruleId: rule.calculationId,
     });
   }
@@ -691,7 +710,7 @@ function evaluateRule({
         rule,
         resolvedOperands.map((operand) => operand.value)
       );
-  const result = Number.isFinite(rawResult) ? roundMoney(rawResult) : 0;
+  const result = roundResult(rawResult, rule.resultKey);
 
   return {
     resolvedOperands,

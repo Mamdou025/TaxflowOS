@@ -8,6 +8,7 @@ import {
   FileText,
   GitBranch,
   LayoutList,
+  Lock,
   Play,
   Plus,
   ShieldCheck,
@@ -1689,12 +1690,14 @@ export function BlockInspector({
   const showImmutableMessage = () => toast.warning(SOURCE_IMMUTABLE_MESSAGE);
 
   const familyIcon = {
+    "Trigger": <Play className="size-3.5" />,
     "Source": <FileText className="size-3.5" />,
     "Logic": <GitBranch className="size-3.5" />,
     "Review / Validation": <ShieldCheck className="size-3.5" />,
     "Field": <LayoutList className="size-3.5" />,
     "Output": <FileLock2 className="size-3.5" />,
     "AI / Agent": <Bot className="size-3.5" />,
+    "Protected": <Lock className="size-3.5" />,
   }[block.family];
 
   return (

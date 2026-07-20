@@ -13,6 +13,7 @@ import {
   type WorkflowBlock,
   type WorkflowDefinition,
 } from "./local-fiscal-workflow";
+import { isGovernedValueBlock } from "../src/domain/workflow/protected-rules";
 
 export type ToolRunStatus =
   | "error"
@@ -127,6 +128,7 @@ export type ToolGroup =
   | "calculation"
   | "data_extraction"
   | "data_preparation"
+  | "field"
   | "mapping"
   | "output"
   | "protected"
@@ -4502,7 +4504,7 @@ const localTools: ToolDefinition[] = [
     displayName: "Output Readiness Check",
     execute: (context) => {
       const protectedBlocks = context.workflow.blocks.filter(
-        (block) => block.family === "Protected"
+        (block) => isGovernedValueBlock(block)
       );
       const outputBlocks = context.workflow.blocks.filter(
         (block) => block.family === "Output"
@@ -4766,7 +4768,7 @@ const localTools: ToolDefinition[] = [
           const block = context.workflow.blocks.find(
             (item) => item.id === result.blockId
           );
-          return block?.family === "Protected";
+          return isGovernedValueBlock(block);
         })
         .map((result) => ({
           blockId: result.blockId,
@@ -4971,7 +4973,7 @@ const localTools: ToolDefinition[] = [
           const block = context.workflow.blocks.find(
             (item) => item.id === result.blockId
           );
-          return block?.family === "Protected";
+          return isGovernedValueBlock(block);
         })
         .map((result) => ({
           blockId: result.blockId,
@@ -5184,6 +5186,7 @@ const localTools: ToolDefinition[] = [
         required: false,
       },
     ],
+    inputSchema: getToolInputSchema([{ key: "computedValues", type: "object" }]),
     outputRoles: [
       {
         canRouteToFamilies: ["Output"],
