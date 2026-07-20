@@ -214,7 +214,11 @@ export default function DocumentViewer() {
   return (
     <div
       className="flex flex-col h-full min-h-[560px]"
-      style={{ background: '#f4f5f8' }}
+      // No background here: the empty-state region stays transparent so the host
+      // panel's own ground (the dark portal grid in Scope's chat, the neumorphic
+      // surface on /viewer) shows through. Chrome (header/tabs/action bar) and the
+      // document renderers paint their own backgrounds, so only the empty area is
+      // affected.
       onDragOver={(e) => { e.preventDefault(); if (!dragOver) setDragOver(true); }}
       onDragLeave={(e) => { if (e.currentTarget === e.target) setDragOver(false); }}
       onDrop={onDrop}
@@ -403,7 +407,9 @@ function ExcelRender({ file }: { file: File }) {
   const name = state.names[active];
 
   return (
-    <div className="h-full flex flex-col">
+    // Keeps the light ground the sheet sits on (the root no longer paints it), so
+    // the grid padding doesn't fall through to the host background.
+    <div className="h-full flex flex-col" style={{ background: '#f4f5f8' }}>
       <style>{`
         .xls-grid table { border-collapse: collapse; font-size: 12.5px; color: #1F2937; background: #fff; }
         .xls-grid td { border: 1px solid #E5E7EB; padding: 4px 9px; white-space: nowrap; }
@@ -479,7 +485,9 @@ function TextRender({ file }: { file: File }) {
 
 function UnsupportedRender({ doc }: { doc: OpenDoc }) {
   return (
-    <div className="h-full flex items-center justify-center" style={{ padding: 24 }}>
+    // Light ground (the root no longer paints it) keeps this dark-text message
+    // readable when the host panel behind is the dark portal grid.
+    <div className="h-full flex items-center justify-center" style={{ padding: 24, background: '#f4f5f8' }}>
       <div style={{ textAlign: 'center', maxWidth: 380 }}>
         <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#f3f4f6', display: 'grid', placeItems: 'center', color: '#9CA3AF', margin: '0 auto 14px' }}>
           <FileIcon size={24} />

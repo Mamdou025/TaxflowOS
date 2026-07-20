@@ -1,7 +1,7 @@
 'use client';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AssistantThread — the presentational chat column (LibreChat dark). Shared by
+// AssistantThread — the presentational chat column (light neumorphic). Shared by
 // the Scope focus mode (ChatWorkspace) and the docked AssistantPanel. Renders the
 // live-run pill, the empty → conversation transition, the pinned inline cards, and
 // CopilotChat with the Aside (LibreChat) render slots. Logic/state come in via the
@@ -26,6 +26,7 @@ import { getWorkflowConfig } from '@/lib/workflow-runs';
 import { getAgent } from '@/lib/agents';
 import { buildAgentCatalog } from '@/lib/resource-registry';
 import { LC } from '@/lib/librechat-theme';
+import { ScopeMark } from '@/components/scope-orb';
 import { CoworkerActivity } from './coworker-activity';
 import { WorkMenu, WorkMenuStyles } from './work-menu';
 import { AgentRoster } from './agent-roster';
@@ -33,7 +34,7 @@ import { workIdFor, type WorkItem } from '@/lib/work-store';
 import { ThreadMessages, PinnedThreadContext } from './thread-messages';
 import { RunWorkflowRender, type Assistant } from './use-assistant';
 
-// ── Dark LibreChat theme for the CopilotKit chat ───────────────────────────────
+// ── Light neumorphic theme for the CopilotKit chat ─────────────────────────────
 export const CHAT_THEME: CSSProperties = {
   ['--copilot-kit-primary-color' as string]: LC.text,
   ['--copilot-kit-contrast-color' as string]: LC.bg,
@@ -141,7 +142,7 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
             <div className="flex-1">
               <RunWorkflowRender config={cfg} agent={agent} onOpenPage={(pk) => launchOpenPage(pk)} onOpenBuilder={(blockId) => { setBuilderFocus({ workflowId: cfg.id, blockId }); router.push('/builder'); }} />
             </div>
-            <button onClick={() => setPinnedRuns((p) => p.filter((x) => x !== wid))} className="rounded hover:bg-white/10" style={{ width: 22, height: 22, color: LC.muted, border: 'none', background: 'none', cursor: 'pointer', marginTop: 4 }} title="Remove"><X size={13} /></button>
+            <button onClick={() => setPinnedRuns((p) => p.filter((x) => x !== wid))} className="rounded hover:bg-black/5" style={{ width: 22, height: 22, color: LC.muted, border: 'none', background: 'none', cursor: 'pointer', marginTop: 4 }} title="Remove"><X size={13} /></button>
           </div>
         );
       })}
@@ -151,29 +152,38 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
         return (
           <div key={`${el.workflowId}:${el.element}`} className="flex items-start gap-2">
             <div className="flex-1"><WorkflowElementCard config={cfg} element={el.element} onOpenPage={(pk) => launchOpenPage(pk)} onOpenBuilder={(blockId) => { setBuilderFocus({ workflowId: cfg.id, blockId }); router.push('/builder'); }} /></div>
-            <button onClick={() => setPinnedElements((p) => p.filter((x) => !(x.workflowId === el.workflowId && x.element === el.element)))} className="rounded hover:bg-white/10" style={{ width: 22, height: 22, color: LC.muted, border: 'none', background: 'none', cursor: 'pointer', marginTop: 4 }} title="Remove"><X size={13} /></button>
+            <button onClick={() => setPinnedElements((p) => p.filter((x) => !(x.workflowId === el.workflowId && x.element === el.element)))} className="rounded hover:bg-black/5" style={{ width: 22, height: 22, color: LC.muted, border: 'none', background: 'none', cursor: 'pointer', marginTop: 4 }} title="Remove"><X size={13} /></button>
           </div>
         );
       })}
       {pinnedFields.map((fid) => (
         <div key={fid} className="flex items-start gap-2">
           <div className="flex-1"><InlineFieldCard fieldId={fid} /></div>
-          <button onClick={() => setPinnedFields((p) => p.filter((x) => x !== fid))} className="rounded hover:bg-white/10" style={{ width: 22, height: 22, color: LC.muted, border: 'none', background: 'none', cursor: 'pointer', marginTop: 4 }} title="Remove"><X size={13} /></button>
+          <button onClick={() => setPinnedFields((p) => p.filter((x) => x !== fid))} className="rounded hover:bg-black/5" style={{ width: 22, height: 22, color: LC.muted, border: 'none', background: 'none', cursor: 'pointer', marginTop: 4 }} title="Remove"><X size={13} /></button>
         </div>
       ))}
     </div>
   ) : null;
 
   return (
-    <div className="h-full flex flex-col" style={{ ...CHAT_THEME, background: LC.bg }}>
+    <div className="h-full flex flex-col" style={{ ...CHAT_THEME, background: '#E9EDF4' /* logo light-grey */ }}>
       <AsideThreadStyles />
       <AssistantThreadStyles />
       <WorkMenuStyles />
 
-      {/* Persistent thread header — the agent roster (assign work / @-mention) on the
-          left, the Work menu (records + reopens everything) on the right. */}
-      <div className="shrink-0 flex items-center justify-between gap-3" style={{ height: 40, padding: '0 12px', borderBottom: `1px solid ${LC.borderSubtle}` }}>
-        <AgentRoster onAssign={launchStartAgent} />
+      {/* Persistent thread header — the InScope logo centered, the Work menu
+          (records + reopens) on the right. The agent roster moved down into the
+          composer's options strip (see AsideComposerContext `agents`). */}
+      <div className="shrink-0 relative flex items-center justify-between gap-3" style={{ height: docked ? 44 : 62, padding: '0 12px', borderBottom: `1px solid ${LC.borderSubtle}` }}>
+        <span aria-hidden />
+        {!docked && (
+          <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', display: 'flex', alignItems: 'center', gap: 11, pointerEvents: 'none', userSelect: 'none' }}>
+            <ScopeMark size={42} animate="always" />
+            <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.015em' }}>
+              <span style={{ color: '#7C3AED' }}>In</span><span style={{ color: LC.title }}>Scope</span>
+            </span>
+          </div>
+        )}
         <WorkMenu onOpen={onOpenWork} />
       </div>
 
@@ -183,7 +193,7 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
       <CoworkerActivity onJump={scrollToRun} />
 
       <div className="flex-1 min-h-0 flex flex-col">
-        <AsideComposerContext.Provider value={{ search: composerSearch, tools: composerTools, commands: composerCommands, onAttach }}>
+        <AsideComposerContext.Provider value={{ search: composerSearch, tools: composerTools, commands: composerCommands, onAttach, agents: <AgentRoster onAssign={launchStartAgent} /> }}>
           <AnimatePresence mode="wait" initial={false}>
             {showHero ? (
               <motion.div
@@ -203,8 +213,8 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
                         <button
                           key={s}
                           onClick={() => say(s)}
-                          className="hover:brightness-110"
-                          style={{ background: LC.surface, border: `1px solid ${LC.border}`, borderRadius: 999, padding: '8px 15px', fontSize: 13, color: LC.body, cursor: 'pointer', fontWeight: 450 }}
+                          className="hover:brightness-[0.98]"
+                          style={{ background: LC.surface, border: 'none', boxShadow: LC.shadowSm, borderRadius: 999, padding: '8px 15px', fontSize: 13, color: LC.body, cursor: 'pointer', fontWeight: 500 }}
                         >{s}</button>
                       ))}
                     </div>

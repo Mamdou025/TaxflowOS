@@ -24,19 +24,19 @@ function Dropdown({ item }: { item: MenuDropdown }) {
       <button
         onClick={() => setOpen((o) => !o)}
         title={item.title}
-        className="hover:bg-white/10"
+        className="hover:bg-black/5"
         style={{ display: 'inline-flex', alignItems: 'center', gap: 5, height: 28, padding: item.label ? '0 8px' : '0 6px', borderRadius: 7, border: 'none', background: open ? LC.surface : 'transparent', color: LC.body, cursor: 'pointer', fontSize: 12.5, fontWeight: 500 }}
       >
         {item.icon}{item.label}<ChevronDown size={12} style={{ opacity: 0.55 }} />
       </button>
       {open && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, minWidth: 168, zIndex: 40, background: LC.surface, border: `1px solid ${LC.border}`, borderRadius: 10, boxShadow: '0 16px 40px rgba(0,0,0,0.5)', overflow: 'hidden', padding: 4 }}>
+        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, minWidth: 168, zIndex: 40, background: LC.surface, border: `1px solid ${LC.border}`, borderRadius: 10, boxShadow: LC.shadowOut, overflow: 'hidden', padding: 4 }}>
           {item.items.map((it) => (
             <button
               key={it.id}
               onClick={() => { if (!it.disabled) { it.onClick(); setOpen(false); } }}
               disabled={it.disabled}
-              className="hover:bg-white/10"
+              className="hover:bg-black/5"
               style={{ display: 'flex', alignItems: 'center', width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 7, border: 'none', background: 'transparent', color: it.danger ? '#f87171' : it.disabled ? LC.faint : LC.body, cursor: it.disabled ? 'default' : 'pointer', fontSize: 13, opacity: it.disabled ? 0.6 : 1 }}
             >
               {it.label}
@@ -58,7 +58,7 @@ function Item({ item }: { item: PageMenuItem }) {
       onClick={item.onClick}
       disabled={item.disabled}
       title={item.title ?? item.label}
-      className={primary ? '' : 'hover:bg-white/10'}
+      className={primary ? '' : 'hover:bg-black/5'}
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 6, height: 28, padding: item.label ? '0 11px' : '0 7px',
         borderRadius: 7, border: primary ? 'none' : (item.active ? `1px solid ${LC.border}` : 'none'),

@@ -69,7 +69,7 @@ export function WorkMenu({ onOpen }: { onOpen: (item: WorkItem) => void }) {
       <button
         data-testid="work-menu"
         onClick={() => setOpen((o) => !o)}
-        className="hover:bg-white/10"
+        className="hover:bg-black/5"
         title="Work — everything the assistant has done"
         style={{
           display: 'inline-flex', alignItems: 'center', gap: 7, height: 28, padding: '0 10px',
@@ -96,7 +96,7 @@ export function WorkMenu({ onOpen }: { onOpen: (item: WorkItem) => void }) {
             style={{
               position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 41, width: 360, maxHeight: 440,
               overflowY: 'auto', background: LC.surface, border: `1px solid ${LC.border}`, borderRadius: 14,
-              boxShadow: '0 18px 44px rgba(0,0,0,0.55)',
+              boxShadow: LC.shadowOut,
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px 6px' }}>
@@ -170,8 +170,8 @@ function WorkRow({ item, onOpen, onJump }: { item: WorkItem; onOpen: () => void;
       </div>
 
       <div className="lc-workrow-actions" style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
-        <button onClick={onJump} className="hover:bg-white/10" title="Jump to where it appeared" style={rowBtn}><CornerUpLeft size={14} /></button>
-        <button onClick={onOpen} className="hover:bg-white/10" title="Open current state" style={rowBtn}><ExternalLink size={14} /></button>
+        <button onClick={onJump} className="hover:bg-black/5" title="Jump to where it appeared" style={rowBtn}><CornerUpLeft size={14} /></button>
+        <button onClick={onOpen} className="hover:bg-black/5" title="Open current state" style={rowBtn}><ExternalLink size={14} /></button>
       </div>
     </div>
   );
@@ -188,7 +188,7 @@ export function WorkMenuStyles() {
       .lc-workrow:hover { background: ${LC.surfaceHover}; }
       /* Jump-to-origin highlight — also defined by the workspace, redeclared here so
          it works in the docked panel (where ChatWorkspace isn't mounted). */
-      @keyframes cwp-anchor-flash { 0% { background: rgba(255,255,255,0.10);} 100% { background: transparent;} }
+      @keyframes cwp-anchor-flash { 0% { background: rgba(107,33,168,0.12);} 100% { background: transparent;} }
       .cwp-anchor-flash { animation: cwp-anchor-flash 1.7s ease-out; border-radius: 8px; }
     `}</style>
   );

@@ -15,6 +15,7 @@ export default function WorksheetsHub() {
 
   return (
     <WorksheetsGallery
+      dark
       subtitle="Open a worksheet to review, modify, and work on it."
       onOpen={(ws) => {
         const key = ws.href.replace(/^\//, ''); // "/fapi" → "fapi"
