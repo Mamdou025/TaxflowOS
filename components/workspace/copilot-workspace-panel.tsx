@@ -13,7 +13,7 @@
 import { useEffect, useRef, useState, type ReactNode, type CSSProperties } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-import { X, Plus, GitFork, Bot, LayoutDashboard, Workflow, PanelRightClose, Maximize2, Minimize2, MessageSquare, Files, LayoutGrid, ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { X, Plus, GitFork, Bot, LayoutDashboard, Workflow, PanelRightClose, Maximize2, Minimize2, Files, LayoutGrid, ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { chatPanelModeAtom } from '@/lib/chat-store';
 import {
   workspaceWindowsAtom,
@@ -28,7 +28,7 @@ import { useAssistant } from '@/components/assistant/use-assistant';
 import { AssistantThread } from '@/components/assistant/assistant-thread';
 import { InlineBuilder } from '@/components/workflow/inline-builder';
 import { AgentBuilder } from '@/components/assistant/agent-builder';
-import { ScopeMark } from '@/components/scope-orb';
+import { InScopeNeuMark } from '@/components/inscope-neu-mark';
 import { ClientFolders } from '@/components/workspace/client-folders';
 import { LC } from '@/lib/librechat-theme';
 import { NEU } from '@/components/neumorphic-sidebar';
@@ -231,8 +231,8 @@ export function ChatWorkspace() {
   }, [focus, active]);
 
   return (
-    // Exterior ground — a cooler/darker tone than the chat (logo-grey #E9EDF4) +
-    // sidebar panels, so they read as their own lighter surfaces.
+    // Exterior ground — a cooler/darker tone than the chat + sidebar panels (both
+    // #F4F5F8 / NEU.bg), so those read as one continuous lighter surface on it.
     <div className="h-full flex" style={{ background: '#DAE0EA' }}>
       <style>{`
         @keyframes cwp-anchor-flash { 0% { background: rgba(107,33,168,0.16);} 100% { background: transparent;} }
@@ -249,13 +249,17 @@ export function ChatWorkspace() {
       <div style={{ width: collapsed ? 66 : 258, flexShrink: 0, margin: 10, borderRadius: 12, background: NEU.bg, boxShadow: NEU.shadowOut, display: 'flex', flexDirection: 'column', padding: collapsed ? '12px 8px' : '12px 10px', overflowY: 'auto', overflowX: 'hidden', scrollbarWidth: 'thin', transition: 'width 240ms cubic-bezier(0.23,1,0.32,1)' }}>
         {collapsed ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '2px 0 10px' }}>
-            <ScopeMark size={26} />
+            <button onClick={() => setMode('split')} title="Open chat" aria-label="Open chat" style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'grid', placeItems: 'center' }} className="hover:brightness-105">
+              <InScopeNeuMark size={32} />
+            </button>
             <button onClick={() => setCollapsed(false)} title="Expand sidebar" aria-label="Expand sidebar" style={foldBtn}><PanelLeftOpen size={15} /></button>
           </div>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 6px 12px' }}>
-            <ScopeMark size={24} />
-            <span style={{ fontSize: 14, fontWeight: 700, color: NEU.text, letterSpacing: '-0.01em' }}>Scope</span>
+            <button onClick={() => setMode('split')} title="Open chat" aria-label="Open chat" style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'transparent', border: 'none', padding: 0, cursor: 'pointer' }} className="hover:brightness-105">
+              <InScopeNeuMark size={26} />
+              <span style={{ fontSize: 14, fontWeight: 700, color: NEU.text, letterSpacing: '-0.01em' }}>Scope</span>
+            </button>
             <button onClick={() => setCollapsed(true)} title="Collapse sidebar" aria-label="Collapse sidebar" style={{ ...foldBtn, marginLeft: 'auto' }}><PanelLeftClose size={15} /></button>
           </div>
         )}
@@ -346,22 +350,25 @@ export function ChatWorkspace() {
         {/* Chat — permanent, on the RIGHT when a page is open; fills otherwise.
             Fold ('collapsed') or take over ('expanded') via the header controls. */}
         <div
-          className="min-w-0 flex flex-col cwp-card"
+          className="relative min-w-0 flex flex-col cwp-card"
           style={{
             flex: chatFull ? '1 1 0px' : mode === 'collapsed' ? '0 0 0px' : '0 0 clamp(360px, 38%, 520px)',
             overflow: 'hidden',
             margin: mode === 'collapsed' ? 0 : 10,
             marginLeft: hasPages && showPage ? 0 : 10,
             borderRadius: mode === 'collapsed' ? 0 : (hasPages && showPage ? '0 3px 3px 0' : 12),
-            background: '#E9EDF4',
+            background: NEU.bg,
             // No dark shadow cast onto the page panel on its left — only the chat's
             // own soft neumorphic elevation (and none while docked flush to a page).
             boxShadow: mode === 'collapsed' ? 'none' : (hasPages && showPage ? 'none' : NEU.shadowOut),
             zIndex: 1,
           }}
         >
+          {/* Fold / expand controls — floated over the thread header's empty left
+              slot (absolute, so they DON'T add a row that changes the thread's
+              height when a page opens or closes; the chat stays a constant size). */}
           {hasPages && showChat && (
-            <div className="shrink-0 flex items-center justify-end gap-1 px-2" style={{ height: 34, borderBottom: `1px solid ${LC.borderSubtle}` }}>
+            <div className="absolute flex items-center gap-1" style={{ top: 17, left: 12, zIndex: 5 }}>
               <button onClick={() => setMode('collapsed')} title="Fold chat away" className="hover:bg-black/5" style={{ display: 'grid', placeItems: 'center', width: 28, height: 28, borderRadius: 7, border: 'none', background: 'transparent', color: LC.muted, cursor: 'pointer' }}>
                 <PanelRightClose size={16} />
               </button>
@@ -383,7 +390,7 @@ export function ChatWorkspace() {
             style={{ position: 'absolute', right: 14, bottom: 18, zIndex: 30, display: 'flex', alignItems: 'center', gap: 7, height: 38, padding: '0 14px', borderRadius: 999, background: LC.surface, border: 'none', color: LC.text, cursor: 'pointer', fontSize: 13, fontWeight: 600, boxShadow: LC.shadowOut }}
             className="hover:brightness-[0.98]"
           >
-            <MessageSquare size={15} /> Chat
+            <InScopeNeuMark size={22} /> Chat
           </button>
         )}
       </div>

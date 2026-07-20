@@ -136,10 +136,45 @@ test("agent roster is present in the thread header and @-mentions include agents
   // Roster: the "Agents" label + agent avatar buttons (initials) in the header.
   await expect(page.getByText("Agents", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "So", exact: true })).toBeVisible(); // Sofi's roster chip
-  // @-palette lists agents: typing "@sofi" surfaces Sofi as an assign command.
+  // @-palette lists agents: typing "@sofi" surfaces Sofi as a "talk to" command
+  // (clicking an agent now addresses them to type instructions, not auto-run).
   const composer = page.locator(COMPOSER).first();
   await composer.click();
   await composer.fill("@sofi");
-  await expect(page.getByText(/Assign — FAPI specialist/i).first()).toBeVisible({ timeout: 8_000 });
+  await expect(page.getByText(/Talk to Sofi — FAPI specialist/i).first()).toBeVisible({ timeout: 8_000 });
   await page.screenshot({ path: "test-results/roster-mention.png", fullPage: false });
+});
+
+test("clicking an agent greets + addresses them (no auto-run)", async ({ page }) => {
+  await gotoChat(page);
+  // Click Sofi's roster chip → she greets in the thread and the composer is addressed
+  // to her (a "To Sofi" chip), instead of immediately pinning a run/proposal card.
+  await page.getByRole("button", { name: "So", exact: true }).first().click();
+  await expect(page.getByText(/I’m Sofi|I'm Sofi/i).first()).toBeVisible({ timeout: 8_000 });
+  await expect(page.getByText(/To Sofi/i).first()).toBeVisible({ timeout: 8_000 });
+  // No run proposal appears until the user actually sends an instruction.
+  await expect(page.getByRole("button", { name: /Start .* run/i })).toHaveCount(0);
+  await page.screenshot({ path: "test-results/agent-greet.png", fullPage: false });
+});
+
+test("sending to an addressed agent plays scripted 'thinking' then a real reply", async ({ page }) => {
+  await gotoChat(page);
+  await page.getByRole("button", { name: "So", exact: true }).first().click();
+  await expect(page.getByText(/I’m Sofi|I'm Sofi/i).first()).toBeVisible({ timeout: 8_000 });
+
+  const composer = page.locator(COMPOSER).first();
+  await composer.click();
+  await composer.fill("In one short sentence, what can you help me with?");
+  await composer.press("Enter");
+
+  // The scripted narration row appears while the real reply streams (its first line
+  // is one of Sofi's thinking lines) — this is the "agent is thinking" pre-roll.
+  const thinking = page.locator("[data-agent-thinking]");
+  await expect(thinking).toBeVisible({ timeout: 30_000 });
+  await page.screenshot({ path: "test-results/agent-thinking.png", fullPage: false });
+
+  // It resolves into a real reply and the narration clears (no lingering thinking row).
+  await page.getByRole("button", { name: "Stop" }).waitFor({ state: "hidden", timeout: 90_000 }).catch(() => {});
+  await expect(thinking).toHaveCount(0, { timeout: 15_000 });
+  expect(await page.locator(".lc-avatar").count()).toBeGreaterThanOrEqual(1);
 });

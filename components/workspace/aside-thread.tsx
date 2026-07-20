@@ -13,20 +13,21 @@
 
 import { useState, useRef, useEffect, createContext, useContext, type ReactNode } from 'react';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { Paperclip, Plus, FileText, ChevronDown, X, ArrowUp, Square, Play, Sparkles, ArrowRight, ExternalLink } from 'lucide-react';
+import { Plus, ChevronDown, X, Square, Play, Sparkles, ArrowRight, ArrowUp, ExternalLink, Search, Paperclip, Command, Workflow, Table2 } from 'lucide-react';
 import { LC } from '@/lib/librechat-theme';
 import { ScopeMark } from '@/components/scope-orb';
 import { CoworkerAvatar } from '@/components/assistant/coworker-avatar';
 import { coworkerForMessage, coworkerForWorkflow, WORKSPACE_ASSISTANT, type Coworker } from '@/lib/coworkers';
 import { MessageSpecialistContext } from '@/components/assistant/message-specialists';
 import { detectComposerIntent } from '@/lib/composer-intent';
-import { selectedClientAtom, showClientSwitcherAtom } from '@/lib/nav-store';
+import { thinkingCoworkerAtom, setThinkingCoworkerAtom } from '@/lib/workspace-store';
+import type { Agent } from '@/lib/agents';
 
-// Accent gradient + cool focus edge for the console (the chat's one accent flourish).
+// Accent + the reference's soft focus ring (rgba of --is-accent-ring). The composer
+// bar mirrors the tax-workspace-UI reference: a plain raised pill that lifts a soft
+// lilac ring on focus (no animated aura).
 const ACCENT = '#6B21A8';
-const ACCENT_2 = '#7C3AED';
-const EDGE = '#6366F1';
-const SEND_GRADIENT = `linear-gradient(140deg, ${ACCENT_2}, ${ACCENT})`;
+const FOCUS_RING = 'rgba(124,110,174,0.28)';
 
 // ── Composer command palette ──────────────────────────────────────────────────
 export type ComposerSuggestion = { key: string; title: string; sub: string; kind: string; dim?: boolean; icon?: ReactNode; run: () => void };
@@ -36,9 +37,17 @@ export const AsideComposerContext = createContext<{
   commands?: ComposerSuggestion[]; // pickable "build functions" — shown when the text starts with "@"
   onAttach?: (files: File[]) => Promise<string>;
   agents?: ReactNode; // agent roster, rendered in the composer's lower options strip
+  addressedAgent?: Agent | null; // the agent you're "talking to" (click → greet → type → send)
+  onClearAddress?: () => void; // dismiss the addressed agent (back to the general assistant)
+  onAddressedSend?: () => void; // fired on send while addressed — kicks off the agent's scripted narration
 } | null>(null);
 
 type ComposerMode = 'ask' | 'search';
+
+// Minimum on-screen time for an addressed agent's scripted "thinking" narration
+// before the real reply is revealed — so the answer lands with a human beat instead
+// of instantly. Kept short enough to stay snappy, long enough to read as deliberate.
+const AGENT_THINK_MIN_MS = 2200;
 
 function md(text: string): ReactNode {
   return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
@@ -81,6 +90,24 @@ export function AsideAssistantMessage(props: {
   const specialist = msgId ? specialistMap[msgId] : undefined;
   const coworker: Coworker = specialist && own.id === WORKSPACE_ASSISTANT.id ? specialist : own;
 
+  // Scripted agent narration (set on send while an agent is addressed). The narration
+  // row itself is rendered once at the bottom of the thread by ThreadMessages; here we
+  // (a) HIDE this in-flight reply while the narration plays, so the answer doesn't pop
+  // in instantly, and (b) clear the narration once the reply has arrived AND the
+  // narration has had its minimum on-screen time — revealing the reply with a beat.
+  const thinking = useAtomValue(thinkingCoworkerAtom);
+  const setThinking = useSetAtom(setThinkingCoworkerAtom);
+  const arrived = !!content || !!props.subComponent;
+  useEffect(() => {
+    if (!thinking || !arrived) return;
+    const wait = Math.max(0, AGENT_THINK_MIN_MS - (Date.now() - thinking.since));
+    const id = setTimeout(() => setThinking(null), wait);
+    return () => clearTimeout(id);
+  }, [arrived, thinking, setThinking]);
+
+  // Hold the current reply behind the narration until it clears (past messages stay).
+  if (thinking && props.isCurrentMessage) return null;
+
   if (props.isLoading && !content && !props.subComponent) {
     return (
       <div className="lc-row">
@@ -114,6 +141,7 @@ export function AsideInput(props: {
   const [active, setActive] = useState(-1);
   const [mode, setMode] = useState<ComposerMode>('ask');
   const [showTools, setShowTools] = useState(false);
+  const [openSection, setOpenSection] = useState<'workflows' | 'worksheets' | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [attaching, setAttaching] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -121,10 +149,6 @@ export function AsideInput(props: {
   const fileRef = useRef<HTMLInputElement>(null);
   const busy = !!props.inProgress;
   const ready = (!!text.trim() || files.length > 0) && !busy && !attaching;
-
-  // Client whose worksheets/documents Scope reads (the context chip).
-  const client = useAtomValue(selectedClientAtom);
-  const openClientSwitcher = useSetAtom(showClientSwitcherAtom);
 
   // Live PREVIEW of what Scope will do (advisory — see lib/composer-intent). Only
   // in Ask mode and never for the "@" command palette or Search mode.
@@ -146,11 +170,16 @@ export function AsideInput(props: {
   const palette = commandMode ? commands : suggestions;
   const showPalette = palette.length > 0;
 
+  const addressedAgent = ctx?.addressedAgent ?? null;
+
   const send = async () => {
     if (!ready) return;
     const t = text.trim();
     const pending = files;
     setText(''); setActive(-1); setFiles([]);
+    // Talking to an agent → play their scripted "thinking" narration while the real
+    // reply streams, so the answer/run arrives with human timing (not an instant card).
+    if (addressedAgent) ctx?.onAddressedSend?.();
     let note = '';
     if (pending.length && ctx?.onAttach) {
       setAttaching(true);
@@ -185,8 +214,14 @@ export function AsideInput(props: {
     el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
   }, [text]);
   useEffect(() => { setActive(-1); }, [text]);
+  // Focus the composer when an agent is addressed (click Sofi → start typing).
+  useEffect(() => {
+    const onFocus = () => { setMode('ask'); ref.current?.focus(); };
+    window.addEventListener('cwp-focus-composer', onFocus);
+    return () => window.removeEventListener('cwp-focus-composer', onFocus);
+  }, []);
 
-  const ctrlBtn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 8, border: 'none', background: 'transparent', color: LC.muted, cursor: 'pointer', flexShrink: 0 };
+  const sqBtn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 10, border: `1px solid ${LC.borderSubtle}`, background: 'transparent', color: LC.muted, cursor: 'pointer', flexShrink: 0, transition: 'background 140ms, color 140ms' };
   const suggList = (items: ComposerSuggestion[], withActive: boolean) => items.map((s, i) => (
     <button
       key={s.key}
@@ -215,44 +250,77 @@ export function AsideInput(props: {
             {suggList(palette, true)}
           </div>
         )}
-        {/* "+" add menu — attach a file · workflows · agents */}
-        {showTools && !showPalette && (
-          <>
-            <div onMouseDown={() => setShowTools(false)} style={{ position: 'fixed', inset: 0, zIndex: 19 }} />
-            <div style={{ position: 'absolute', left: 0, right: 0, bottom: 'calc(100% + 8px)', zIndex: 20, background: LC.surface, border: `1px solid ${LC.border}`, borderRadius: 14, boxShadow: LC.shadowOut, overflow: 'hidden', maxHeight: 360, overflowY: 'auto' }}>
-              <button onMouseDown={(e) => { e.preventDefault(); fileRef.current?.click(); setShowTools(false); }} className="w-full flex items-center gap-2.5 text-left hover:bg-black/5" style={{ padding: '11px 14px', border: 'none', background: 'transparent', cursor: 'pointer' }}>
-                <span style={{ color: LC.muted, flexShrink: 0, display: 'flex' }}><Paperclip size={16} /></span>
-                <span style={{ fontSize: 13, fontWeight: 550, color: LC.title }}>Attach a file</span>
-              </button>
-              {(ctx?.tools?.length ?? 0) > 0 && (
-                <>
-                  <div style={{ height: 1, background: LC.borderSubtle, margin: '2px 0' }} />
-                  <div style={{ padding: '9px 14px 4px', fontSize: 10, fontWeight: 650, letterSpacing: '0.05em', textTransform: 'uppercase', color: LC.muted }}>Workflows &amp; Agents</div>
-                  {suggList(ctx!.tools!, false)}
-                </>
-              )}
-            </div>
-          </>
-        )}
+        {/* "+" menu — Search · Attach files · Workflows · Worksheets. Workflows and
+            Worksheets expand inline to pick a specific one to start/open. */}
+        {showTools && !showPalette && (() => {
+          const workflows = (ctx?.tools ?? []).filter((t) => t.kind === 'workflow');
+          const worksheets = (ctx?.commands ?? []).filter((c) => c.kind === 'open' && c.key !== 'cmd:open-builder');
+          const closeMenu = () => { setShowTools(false); setOpenSection(null); };
+          const runItem = (s: ComposerSuggestion) => { if (s.dim) return; s.run(); closeMenu(); };
+          const renderSection = (id: 'workflows' | 'worksheets', icon: ReactNode, title: string, sub: string, items: ComposerSuggestion[]) => {
+            const open = openSection === id;
+            return (
+              <div key={id}>
+                <button onMouseDown={(e) => { e.preventDefault(); setOpenSection(open ? null : id); }} className="w-full flex items-center gap-2.5 text-left hover:bg-black/5" style={{ padding: '11px 14px', border: 'none', cursor: 'pointer', background: open ? LC.surfaceHover : 'transparent' }}>
+                  <span style={{ color: LC.muted, flexShrink: 0, display: 'flex' }}>{icon}</span>
+                  <span className="flex-1 min-w-0">
+                    <span style={{ display: 'block', fontSize: 13, fontWeight: 550, color: LC.title }}>{title}</span>
+                    <span style={{ display: 'block', fontSize: 11.5, color: LC.muted }}>{sub}</span>
+                  </span>
+                  <ChevronDown size={14} style={{ color: LC.muted, flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 160ms' }} />
+                </button>
+                {open && items.map((s) => (
+                  <button key={s.key} onMouseDown={(e) => { e.preventDefault(); runItem(s); }} className="w-full flex items-center gap-2.5 text-left hover:bg-black/5" style={{ padding: '8px 14px 8px 40px', border: 'none', background: 'transparent', cursor: s.dim ? 'default' : 'pointer', opacity: s.dim ? 0.5 : 1 }}>
+                    <span style={{ color: LC.muted, flexShrink: 0, display: 'flex' }}>{s.icon}</span>
+                    <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, fontWeight: 500, color: LC.title, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.title}{s.dim && <span style={{ color: LC.muted, fontWeight: 400 }}> · soon</span>}</span>
+                  </button>
+                ))}
+                {open && items.length === 0 && <div style={{ padding: '8px 14px 8px 40px', fontSize: 12, color: LC.muted }}>None available</div>}
+              </div>
+            );
+          };
+          return (
+            <>
+              <div onMouseDown={closeMenu} style={{ position: 'fixed', inset: 0, zIndex: 19 }} />
+              <div style={{ position: 'absolute', left: 0, right: 0, bottom: 'calc(100% + 8px)', zIndex: 20, background: LC.surface, border: `1px solid ${LC.border}`, borderRadius: 14, boxShadow: LC.shadowOut, overflow: 'hidden', maxHeight: 380, overflowY: 'auto' }}>
+                {/* Search — toggles ask ⇄ search */}
+                <button onMouseDown={(e) => { e.preventDefault(); setMode((m) => (m === 'search' ? 'ask' : 'search')); closeMenu(); ref.current?.focus(); }} className="w-full flex items-center gap-2.5 text-left hover:bg-black/5" style={{ padding: '11px 14px', border: 'none', cursor: 'pointer', background: mode === 'search' ? LC.surfaceHover : 'transparent' }}>
+                  <span style={{ color: mode === 'search' ? ACCENT : LC.muted, flexShrink: 0, display: 'flex' }}><Search size={16} /></span>
+                  <span className="flex-1 min-w-0">
+                    <span style={{ display: 'block', fontSize: 13, fontWeight: 550, color: LC.title }}>{mode === 'search' ? 'Stop searching' : 'Search'}</span>
+                    <span style={{ display: 'block', fontSize: 11.5, color: LC.muted }}>{mode === 'search' ? 'Back to asking Scope' : 'Search worksheets, workflows & agents'}</span>
+                  </span>
+                </button>
+                {/* Attach files */}
+                <button onMouseDown={(e) => { e.preventDefault(); fileRef.current?.click(); closeMenu(); }} className="w-full flex items-center gap-2.5 text-left hover:bg-black/5" style={{ padding: '11px 14px', border: 'none', cursor: 'pointer', background: 'transparent' }}>
+                  <span style={{ color: LC.muted, flexShrink: 0, display: 'flex' }}><Paperclip size={16} /></span>
+                  <span className="flex-1 min-w-0">
+                    <span style={{ display: 'block', fontSize: 13, fontWeight: 550, color: LC.title }}>Attach files</span>
+                    <span style={{ display: 'block', fontSize: 11.5, color: LC.muted }}>Add a document or workbook Scope can read</span>
+                  </span>
+                </button>
+                <div style={{ height: 1, background: LC.borderSubtle, margin: '2px 0' }} />
+                {renderSection('workflows', <Workflow size={16} />, 'Workflows', 'Start a workflow run', workflows)}
+                {renderSection('worksheets', <Table2 size={16} />, 'Worksheets', 'Open a worksheet', worksheets)}
+              </div>
+            </>
+          );
+        })()}
 
-        {/* ── The Scope Console — a SHORT single-row pill ───────────────────────
-            Fused orb (client switcher) · prompt · [+ add-menu] · [Ask/Search] ·
-            send. The intent ribbon rises ABOVE it; the client + documents live in
-            a lower strip below it. Pill height ≈ the orb's diameter. */}
+        {/* ── The Scope Console — the tax-workspace-UI composer bar ─────────────
+            A raised neumorphic pill: [+ add-menu] · a hairline divider · the prompt
+            · a dark square send button. The Scope orb (client switcher) now lives in
+            the thread header; the intent ribbon rises ABOVE the pill; client +
+            documents live in a lower strip below it. */}
         <style>{`
-          .lc-aura { opacity: 0; transition: opacity 300ms ease; animation: lc-shimmer 5s linear infinite; }
-          .lc-console-shell[data-focused="true"] .lc-aura { opacity: 1; }
-          @keyframes lc-shimmer { to { background-position: 220% 0; } }
-          .lc-console { transition: box-shadow 240ms ease; }
-          .lc-console-shell[data-focused="true"] .lc-console { box-shadow: 0 10px 26px rgba(107,33,168,0.16) !important; }
           .lc-ribbon { animation: lc-rise 240ms cubic-bezier(0.23,1,0.32,1) both; }
           @keyframes lc-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-          @media (prefers-reduced-motion: reduce) { .lc-aura, .lc-ribbon { animation: none; } }
+          @media (prefers-reduced-motion: reduce) { .lc-ribbon { animation: none; } }
         `}</style>
 
         {/* Intent ribbon — rises ABOVE the pill when an action is detected */}
         {isAction && intent && (
-          <div className="lc-ribbon" style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 8px 12px 88px', padding: '9px 13px', background: LC.surface, boxShadow: LC.shadowSm, borderRadius: 14 }}>
+          <div className="lc-ribbon" style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '0 8px 12px', padding: '9px 13px', background: LC.surface, boxShadow: LC.shadowSm, borderRadius: 14 }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: ACCENT, flexShrink: 0 }}>
               <VerbIcon size={15} /> {intent.verb}
             </span>
@@ -274,110 +342,74 @@ export function AsideInput(props: {
           </div>
         )}
 
-        {/* Short pill — the orb is ~1.5× the pill's height and BULGES out (absolute,
-            vertically centred); the left padding reserves its column. */}
-        <div className="lc-console-shell" data-focused={focused ? 'true' : undefined} style={{ position: 'relative' }}>
-          <div className="lc-aura" aria-hidden style={{ position: 'absolute', inset: -2, borderRadius: 999, zIndex: 0, background: `linear-gradient(115deg, ${EDGE}, ${ACCENT_2}, ${ACCENT}, ${EDGE})`, backgroundSize: '220% 100%' }} />
-          <div className="lc-console" style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 10, minHeight: 52, background: LC.surface, borderRadius: 999, boxShadow: LC.shadowOut, padding: '6px 8px 6px 88px' }}>
-            <input ref={fileRef} type="file" multiple style={{ display: 'none' }} onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
+        {/* The composer — a larger BLOCK: the prompt on top, then a control row with
+            squared icon buttons ([+] add-menu · [📎] attach · [⌘] commands) on the left
+            and the dark send button on the right. Lifts a soft lilac focus ring. */}
+        <div
+          className="lc-console"
+          onFocus={() => setFocused(true)}
+          onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setFocused(false); }}
+          style={{
+            position: 'relative', display: 'flex', flexDirection: 'column', gap: 10,
+            background: LC.surface, borderRadius: 24, border: `1px solid ${LC.border}`,
+            boxShadow: focused ? `${LC.shadowOut}, 0 0 0 2px ${FOCUS_RING}` : LC.shadowOut,
+            padding: '15px 16px 12px', transition: 'box-shadow 200ms cubic-bezier(0.23,1,0.32,1)',
+          }}
+        >
+          <input ref={fileRef} type="file" multiple style={{ display: 'none' }} onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
 
-            {/* Fused orb — client switcher. Bigger than the pill so it bulges out. */}
-            <button
-              onClick={() => openClientSwitcher(true)}
-              className="lc-orb-select"
-              title="Choose client — Scope reads their worksheets & documents"
-              style={{ position: 'absolute', left: -4, top: '50%', transform: 'translateY(-50%)', zIndex: 2, border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, borderRadius: '50%', lineHeight: 0 }}
-            >
-              <ScopeMark size={78} />
-            </button>
-
-            <textarea
-              ref={ref}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={onKeyDown}
-              onFocus={() => setFocused(true)}
-              onBlur={() => setFocused(false)}
-              rows={1}
-              placeholder={mode === 'search' ? 'Search worksheets, workflows, agents…' : 'Ask Scope, or describe a task…'}
-              className="lc-textarea"
-              style={{ flex: 1, minWidth: 0, display: 'block', resize: 'none', fontSize: 15.5, color: LC.text, background: 'transparent', outline: 'none', border: 'none', lineHeight: 1.5, maxHeight: 120, overflowY: 'auto', fontFamily: 'inherit', fontWeight: 400, padding: '2px 0' }}
-            />
-
-            {/* + add menu (attach · workflows · agents) */}
-            <button onClick={() => setShowTools((o) => !o)} style={{ ...ctrlBtn, width: 36, height: 36, borderRadius: '50%', background: showTools ? LC.surfaceHover : 'transparent', color: showTools ? LC.title : LC.muted }} className="hover:bg-black/5" title="Add — attach a file, workflows, agents" aria-label="Add"><Plus size={19} /></button>
-
-            {/* Ask / Search selector */}
-            <button
-              onClick={() => setMode((m) => (m === 'ask' ? 'search' : 'ask'))}
-              className="hover:bg-black/5"
-              title={mode === 'ask' ? 'Ask mode — Enter sends to Scope. Click to search the workspace instead.' : 'Search mode — Enter searches the workspace. Click to ask Scope instead.'}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 2, height: 34, padding: '0 8px 0 11px', borderRadius: 999, border: 'none', background: mode === 'search' ? LC.surfaceHover : 'transparent', color: mode === 'search' ? LC.title : LC.muted, cursor: 'pointer', fontSize: 12.5, fontWeight: 600, flexShrink: 0 }}
-            >
-              {mode === 'ask' ? 'Ask' : 'Search'}<ChevronDown size={13} style={{ opacity: 0.6 }} />
-            </button>
-
-            {/* Send */}
-            {showAction && intent ? (
-              <button
-                onClick={send}
-                aria-label={intent.sendLabel}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 40, borderRadius: 999, padding: '0 18px 0 15px', border: 'none', cursor: 'pointer', background: SEND_GRADIENT, color: '#fff', fontSize: 13, fontWeight: 650, boxShadow: '0 4px 12px rgba(107,33,168,0.32)', flexShrink: 0 }}
-              >
-                <VerbIcon size={15} /> {intent.sendLabel}
-              </button>
-            ) : (
-              <button
-                onClick={busy && props.onStop ? props.onStop : send}
-                disabled={!busy && !ready}
-                aria-label={busy ? 'Stop' : 'Send'}
-                style={{ width: 40, height: 40, borderRadius: '50%', flexShrink: 0, background: ready || busy ? LC.text : LC.surfaceHover, border: 'none', cursor: ready || (busy && props.onStop) ? 'pointer' : 'default', display: 'grid', placeItems: 'center', transition: 'all 140ms ease', color: ready || busy ? LC.bg : LC.muted }}
-              >
-                {busy && props.onStop ? <Square size={13} fill="currentColor" /> : <ArrowUp size={18} strokeWidth={2.4} />}
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Lower section — client + documents/sources (indented to clear the orb column) */}
-        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, padding: '10px 6px 0 88px' }}>
-          <button
-            onClick={() => openClientSwitcher(true)}
-            className="hover:bg-black/5"
-            title="Choose client — Scope reads their worksheets & documents"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 10px 5px 6px', borderRadius: 999, border: 'none', background: 'transparent', cursor: 'pointer' }}
-          >
-            <span style={{ width: 18, height: 18, borderRadius: '50%', display: 'grid', placeItems: 'center', background: 'rgba(139,92,246,0.16)', color: '#7C3AED', fontSize: 9, fontWeight: 800 }}>{client.charAt(0)}</span>
-            <span style={{ fontSize: 12.5, fontWeight: 600, color: LC.body, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.replace(/\.$/, '')}</span>
-            <ChevronDown size={12} style={{ opacity: 0.55, color: LC.muted, flexShrink: 0 }} />
-          </button>
-
-          <span style={{ width: 1, height: 15, background: LC.borderSubtle, flexShrink: 0 }} />
-
-          <button
-            onClick={() => fileRef.current?.click()}
-            className="hover:bg-black/5"
-            title="Add a document or source Scope can read"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 11px', borderRadius: 999, border: 'none', background: 'transparent', color: LC.muted, cursor: 'pointer', fontSize: 12.5, fontWeight: 550 }}
-          >
-            <FileText size={15} /> Documents
-          </button>
-
-          {/* Agent roster — moved here from the thread header (assign work / @-mention) */}
-          {ctx?.agents && (
-            <>
-              <span style={{ width: 1, height: 15, background: LC.borderSubtle, flexShrink: 0 }} />
-              {ctx.agents}
-            </>
-          )}
+          <textarea
+            ref={ref}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={onKeyDown}
+            rows={1}
+            placeholder={mode === 'search' ? 'Search worksheets, workflows, agents…' : addressedAgent ? `Message ${addressedAgent.name}, your ${addressedAgent.role.toLowerCase()}…` : 'Ask Scope, or describe a task…'}
+            className="lc-textarea"
+            style={{ width: '100%', minWidth: 0, display: 'block', resize: 'none', fontSize: 16, color: LC.text, background: 'transparent', outline: 'none', border: 'none', lineHeight: 1.5, minHeight: 30, maxHeight: 200, overflowY: 'auto', fontFamily: 'inherit', fontWeight: 400, padding: '2px 2px' }}
+          />
 
           {/* attached file chips */}
-          {files.map((f, i) => (
-            <span key={`${f.name}-${i}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: LC.surfaceHover, border: `1px solid ${LC.border}`, borderRadius: 999, padding: '4px 7px 4px 11px', fontSize: 11.5, color: LC.text, maxWidth: 200 }}>
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
-              <button onClick={() => setFiles((p) => p.filter((_, j) => j !== i))} style={{ display: 'flex', border: 'none', background: 'none', color: LC.muted, cursor: 'pointer', padding: 0 }} aria-label="Remove attachment"><X size={13} /></button>
-            </span>
-          ))}
+          {files.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {files.map((f, i) => (
+                <span key={`${f.name}-${i}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: LC.surfaceHover, border: `1px solid ${LC.border}`, borderRadius: 999, padding: '4px 7px 4px 11px', fontSize: 11.5, color: LC.text, maxWidth: 220 }}>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
+                  <button onClick={() => setFiles((p) => p.filter((_, j) => j !== i))} style={{ display: 'flex', border: 'none', background: 'none', color: LC.muted, cursor: 'pointer', padding: 0 }} aria-label="Remove attachment"><X size={13} /></button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Control row — squared icon buttons on the left, dark send on the right. */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            {/* + add-menu — Search · Attach · Workflows · Worksheets */}
+            <button onClick={() => { setShowTools((o) => !o); setOpenSection(null); }} style={{ ...sqBtn, background: showTools ? LC.surfaceHover : 'transparent', color: mode === 'search' ? ACCENT : showTools ? LC.title : LC.muted }} className="hover:bg-black/5" title={mode === 'search' ? 'Search mode on — Enter searches the workspace. Click for options.' : 'Add — search, attach files, run a workflow, open a worksheet'} aria-label="Add — search, attach, workflows, worksheets"><Plus size={18} /></button>
+            {/* attach */}
+            <button onClick={() => fileRef.current?.click()} style={sqBtn} className="hover:bg-black/5" title="Attach a document or workbook Scope can read" aria-label="Attach files"><Paperclip size={16} /></button>
+            {/* commands (⌘) — pick a workflow / worksheet / function (the "@" palette) */}
+            <button onClick={() => { if (!text.startsWith('@')) setText('@'); setShowTools(false); ref.current?.focus(); }} style={{ ...sqBtn, background: text.startsWith('@') ? LC.surfaceHover : 'transparent', color: text.startsWith('@') ? LC.title : LC.muted }} className="hover:bg-black/5" title="Commands — pick a workflow, worksheet or function" aria-label="Commands"><Command size={16} /></button>
+
+            <span style={{ flex: 1 }} />
+
+            {/* Send — dark rounded-square (its icon hints the detected action) */}
+            <button
+              onClick={busy && props.onStop ? props.onStop : send}
+              disabled={!busy && !ready}
+              aria-label={busy ? 'Stop' : showAction && intent ? intent.sendLabel : 'Send'}
+              title={busy ? 'Stop' : showAction && intent ? intent.sendLabel : 'Send'}
+              style={{
+                width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+                background: ready || busy ? LC.text : LC.surfaceHover,
+                boxShadow: ready || busy ? '0 4px 14px rgba(32,39,53,0.22)' : LC.shadowIn,
+                border: 'none', cursor: ready || (busy && props.onStop) ? 'pointer' : 'default',
+                display: 'grid', placeItems: 'center', transition: 'all 160ms cubic-bezier(0.23,1,0.32,1)',
+                color: ready || busy ? '#fff' : LC.faint,
+              }}
+            >
+              {busy && props.onStop ? <Square size={14} fill="currentColor" /> : showAction ? <VerbIcon size={16} /> : <ArrowUp size={17} />}
+            </button>
+          </div>
         </div>
       </div>
     </div>

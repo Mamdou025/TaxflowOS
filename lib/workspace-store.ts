@@ -94,6 +94,23 @@ export const setActiveCoworkerAtom = atom(
   }
 );
 
+/** The coworker whose SCRIPTED "thinking" narration should play in place of the plain
+ *  typing dots while a reply streams — set the instant the user sends an instruction to
+ *  an addressed agent (click Sofi → type → send), cleared once the real reply arrives.
+ *  This is what makes a handoff read as the agent working THROUGH steps, with human
+ *  timing, instead of an instant proposal card. `lines` are the narration steps. */
+export type ThinkingCoworker = { coworker: Coworker; lines: string[]; since: number };
+export const thinkingCoworkerAtom = atom<ThinkingCoworker | null>(null);
+export const setThinkingCoworkerAtom = atom(
+  null,
+  (_get, set, payload: { coworker: Coworker; lines: string[] } | null) => {
+    set(
+      thinkingCoworkerAtom,
+      payload ? { coworker: payload.coworker, lines: payload.lines, since: Date.now() } : null
+    );
+  }
+);
+
 /** Shared, persisted uploaded source rows — keyed by workflow id ('fapi', 'roulement').
  *  ONE source of truth for the trial balance a run works on: the chat upload writes
  *  it, the chat run reads it, and the builder hydrates its source block from it — so

@@ -17,7 +17,21 @@ export type Agent = {
   /** The workflow id this agent owns, if any. */
   workflow?: string;
   live: boolean;
+  /** One-line opener shown when the user clicks the agent (before typing). */
+  greeting?: string;
+  /** Scripted "thinking" lines revealed one-by-one while the real reply streams,
+   *  so a handoff reads as the agent working THROUGH steps, not an instant menu. */
+  thinking?: string[];
 };
+
+/** Generic fallbacks so any agent (even one without bespoke copy) still greets +
+ *  narrates. Named agents override these with domain-flavored lines below. */
+export function agentGreeting(agent: Agent): string {
+  return agent.greeting ?? `Hi — I'm ${agent.name}, your ${agent.role.toLowerCase()}. Tell me what you'd like and I'll get to work.`;
+}
+export function agentThinking(agent: Agent): string[] {
+  return agent.thinking?.length ? agent.thinking : ['Got it — let me take a look.', 'Reviewing what you’ve shared…', 'Lining up the steps…'];
+}
 
 export const AGENTS: Agent[] = [
   {
@@ -29,6 +43,8 @@ export const AGENTS: Agent[] = [
     initials: 'So',
     workflow: 'fapi',
     live: true,
+    greeting: 'Hi — I’m Sofi, your FAPI specialist. Tell me what you’d like to work on and I’ll take it from there.',
+    thinking: ['Got it — let me take a look.', 'Reviewing what you’ve shared…', 'Lining up the FAPI steps…'],
   },
   {
     id: 'theo',
@@ -39,6 +55,8 @@ export const AGENTS: Agent[] = [
     initials: 'Th',
     workflow: 'roulement',
     live: true,
+    greeting: 'Bonjour — I’m Théo, I handle the art. 85 rollover. What would you like me to work on?',
+    thinking: ['On it — let me take a look.', 'Checking the property to transfer…', 'Setting up the election steps…'],
   },
   {
     id: 'mira',
@@ -49,6 +67,8 @@ export const AGENTS: Agent[] = [
     initials: 'Mi',
     workflow: 'expense',
     live: true,
+    greeting: 'Hi — I’m Mira, I handle expense reimbursements. Tell me what you need and I’ll get started.',
+    thinking: ['Sure — let me take a look.', 'Going through the receipts…', 'Applying the policy caps…'],
   },
   {
     id: 'nova',
@@ -59,6 +79,8 @@ export const AGENTS: Agent[] = [
     initials: 'No',
     workflow: 'campaign',
     live: true,
+    greeting: 'Hey — I’m Nova, your marketing budget planner. What should I work on?',
+    thinking: ['Got it — let me take a look.', 'Reviewing the channel requests…', 'Framing the budget options…'],
   },
   {
     id: 'remy',

@@ -10,7 +10,8 @@
 
 import type { CSSProperties } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { X, ChevronDown, Calendar } from 'lucide-react';
 import { CopilotChat } from '@copilotkit/react-ui';
 import '@copilotkit/react-ui/styles.css';
 import {
@@ -26,10 +27,11 @@ import { getWorkflowConfig } from '@/lib/workflow-runs';
 import { getAgent } from '@/lib/agents';
 import { buildAgentCatalog } from '@/lib/resource-registry';
 import { LC } from '@/lib/librechat-theme';
-import { ScopeMark } from '@/components/scope-orb';
-import { CoworkerActivity } from './coworker-activity';
+import { selectedClientAtom, showClientSwitcherAtom, scopeYearAtom } from '@/lib/nav-store';
+import { InScopeNeuMark } from '@/components/inscope-neu-mark';
 import { WorkMenu, WorkMenuStyles } from './work-menu';
 import { AgentRoster } from './agent-roster';
+import { AgentGreeting } from './agent-greeting';
 import { workIdFor, type WorkItem } from '@/lib/work-store';
 import { ThreadMessages, PinnedThreadContext } from './thread-messages';
 import { RunWorkflowRender, type Assistant } from './use-assistant';
@@ -111,14 +113,98 @@ export function AssistantThreadStyles() {
   );
 }
 
+// The Scope orb as a shared-element (framer `layoutId`) so it can FLY between the
+// homepage hero (centred, in the "InScope" lockup) and the header cluster (top-left)
+// when a chat starts/stops. Pass the SAME layoutId in both places; framer tweens the
+// position + size. `label=''` renders the bare orb (docked); 'Scope' engraves the word.
+function ScopeOrbButton({ size, layoutId, onClick, label = 'Scope' }: { size: number; layoutId?: string; onClick?: () => void; label?: string }) {
+  return (
+    <motion.button
+      layoutId={layoutId}
+      onClick={onClick}
+      aria-label="Choose client — Scope reads their worksheets & documents"
+      title="Choose client — Scope reads their worksheets & documents"
+      whileHover={{ scale: 1.05 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      style={{ position: 'relative', zIndex: 2, flexShrink: 0, display: 'grid', placeItems: 'center', width: size, height: size, borderRadius: '50%', padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}
+    >
+      <InScopeNeuMark size={size} animate label={label} />
+    </motion.button>
+  );
+}
+
+// The header SCOPE CLUSTER — a big Scope orb on the LEFT that visually CONTROLS a
+// raised tray of scope tags beside it: the company (client), the year, and the current
+// workflow. The orb + the company tag open the client switcher; the workflow tag opens
+// the work switcher. Reads as: [ ORB ]→[ Northstar Inc · 2025 · FAPI · Needs you ].
+// The tray tucks under the orb (negative margin) so the orb looks plugged into it.
+function ScopeCluster({ compact = false, onOpenWork }: { compact?: boolean; onOpenWork: (item: WorkItem) => void }) {
+  const client = useAtomValue(selectedClientAtom);
+  const year = useAtomValue(scopeYearAtom);
+  const openClientSwitcher = useSetAtom(showClientSwitcherAtom);
+  const orbSize = compact ? 32 : 96;
+  const divider = <span style={{ width: 1, height: compact ? 16 : 22, background: LC.borderSubtle, flexShrink: 0 }} />;
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', minWidth: 0, maxWidth: '100%' }}>
+      {/* The orb — the control. Opens the client switcher. Shares layoutId with the
+          homepage hero orb so it FLIES between the two on chat start/stop (focus only). */}
+      <ScopeOrbButton size={orbSize} layoutId={compact ? undefined : 'scope-orb'} onClick={() => openClientSwitcher(true)} label={compact ? '' : 'Scope'} />
+
+      {/* The scope tray — the tags the orb controls (company · year · current workflow).
+          It "pulls out" of the orb on reveal: a clip-path wipe from the orb's edge. */}
+      <motion.div
+        initial={compact ? false : { clipPath: 'inset(0 100% 0 0)', opacity: 0 }}
+        animate={{ clipPath: 'inset(0 0% 0 0)', opacity: 1 }}
+        transition={{ delay: 0.14, duration: 0.42, ease: [0.23, 1, 0.32, 1] }}
+        style={{
+          display: 'flex', alignItems: 'center', gap: compact ? 6 : 3, minWidth: 0,
+          marginLeft: compact ? 6 : -16, paddingLeft: compact ? 0 : 28, paddingRight: compact ? 0 : 10,
+          height: compact ? undefined : 56, borderRadius: compact ? 0 : '0 16px 16px 0',
+          background: compact ? 'transparent' : LC.surface, boxShadow: compact ? 'none' : LC.shadowSm,
+        }}
+      >
+        {/* Company */}
+        <button
+          onClick={() => openClientSwitcher(true)}
+          className="hover:bg-black/5"
+          title="Choose client — Scope reads their worksheets & documents"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 7, minWidth: 0, maxWidth: compact ? 150 : 210, height: 32, padding: '0 8px', borderRadius: 9, border: 'none', background: 'transparent', cursor: 'pointer' }}
+        >
+          <span style={{ width: 20, height: 20, flexShrink: 0, borderRadius: '50%', display: 'grid', placeItems: 'center', background: 'rgba(139,92,246,0.16)', color: '#7C3AED', fontSize: 9.5, fontWeight: 800 }}>{client.charAt(0)}</span>
+          <span style={{ minWidth: 0, fontSize: 13, fontWeight: 650, color: LC.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.replace(/\.$/, '')}</span>
+          <ChevronDown size={12} style={{ color: LC.muted, opacity: 0.6, flexShrink: 0 }} />
+        </button>
+
+        {/* Year — a placeholder scope param for now (see scopeYearAtom). */}
+        {!compact && (
+          <>
+            {divider}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, padding: '0 9px', color: LC.body, flexShrink: 0 }} title="Fiscal year in scope">
+              <Calendar size={13} style={{ color: LC.muted }} />
+              <span style={{ fontSize: 13, fontWeight: 600 }}>{year}</span>
+            </span>
+          </>
+        )}
+
+        {divider}
+        {/* Current workflow — the stateful work switcher, embedded bare in the tray. */}
+        <WorkMenu onOpen={onOpenWork} compact={compact} bare align="left" />
+      </motion.div>
+    </div>
+  );
+}
+
 export function AssistantThread({ assistant, variant = 'focus' }: { assistant: Assistant; variant?: 'focus' | 'docked' }) {
   const {
-    say, showHero, scrollToRun,
+    say, showHero,
     pinnedFields, pinnedElements, setPinnedFields, setPinnedElements,
     pinnedRuns, setPinnedRuns,
-    composerSearch, composerTools, composerCommands, onAttach, launchOpenPage, launchStartWorkflow, launchStartAgent, setBuilderFocus, router,
+    composerSearch, composerTools, composerCommands, onAttach, launchOpenPage, launchStartWorkflow, setBuilderFocus, router,
+    addressedAgent, addressAgent, clearAddressedAgent, beginAgentThinking,
   } = assistant;
   const docked = variant === 'docked';
+  const openClientSwitcher = useSetAtom(showClientSwitcherAtom);
 
   // "Open current state" from the Work menu: reopen each item where it lives.
   const onOpenWork = (item: WorkItem) => {
@@ -127,12 +213,14 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
     else if (item.open.kind === 'genui') say(`Generate this view: ${item.open.prompt}`);
   };
 
-  // Pinned work (deterministically-launched runs + summoned elements/fields). Rendered
-  // INSIDE the message scroll by ThreadMessages, so a launched run is part of ONE
-  // scrollable conversation (composer stays fixed at the bottom) — not a separate pane.
-  const hasPinned = pinnedRuns.length > 0 || pinnedElements.length > 0 || pinnedFields.length > 0;
+  // Pinned work (the addressed-agent greeting + deterministically-launched runs +
+  // summoned elements/fields). Rendered INSIDE the message scroll by ThreadMessages,
+  // so it's part of ONE scrollable conversation (composer fixed at the bottom). The
+  // greeting sits first — it's the conversation's opener (click agent → greet → type).
+  const hasPinned = !!addressedAgent || pinnedRuns.length > 0 || pinnedElements.length > 0 || pinnedFields.length > 0;
   const pinnedNode = hasPinned ? (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+      {addressedAgent && <AgentGreeting agent={addressedAgent} />}
       {pinnedRuns.map((wid) => {
         const cfg = getWorkflowConfig(wid);
         if (!cfg) return null;
@@ -166,59 +254,66 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
   ) : null;
 
   return (
-    <div className="h-full flex flex-col" style={{ ...CHAT_THEME, background: '#E9EDF4' /* logo light-grey */ }}>
+    <div className="h-full flex flex-col" style={{ ...CHAT_THEME, background: LC.bg /* match the sidebar surface (#F4F5F8) */ }}>
       <AsideThreadStyles />
       <AssistantThreadStyles />
       <WorkMenuStyles />
 
-      {/* Persistent thread header — the InScope logo centered, the Work menu
-          (records + reopens) on the right. The agent roster moved down into the
-          composer's options strip (see AsideComposerContext `agents`). */}
-      <div className="shrink-0 relative flex items-center justify-between gap-3" style={{ height: docked ? 44 : 62, padding: '0 12px', borderBottom: `1px solid ${LC.borderSubtle}` }}>
-        <span aria-hidden />
-        {!docked && (
-          <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', display: 'flex', alignItems: 'center', gap: 11, pointerEvents: 'none', userSelect: 'none' }}>
-            <ScopeMark size={42} animate="always" />
-            <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.015em' }}>
-              <span style={{ color: '#7C3AED' }}>In</span><span style={{ color: LC.title }}>Scope</span>
-            </span>
-          </div>
-        )}
-        <WorkMenu onOpen={onOpenWork} />
-      </div>
-
-      {/* Live coworker-activity indicator — names the coworker currently working
-          (Sofi · FAPI Specialist / Workflow Engine · Deterministic / …), their
-          status + a working pulse. Self-hides when nobody is active. */}
-      <CoworkerActivity onJump={scrollToRun} />
+      {/* Header = the SCOPE CLUSTER (big orb + scope tags). Shown once a chat is under
+          way; on the FOCUS homepage it's hidden and the orb lives centred in the hero
+          below as the "InScope" lockup — the orb then FLIES up here (shared-element
+          layoutId="scope-orb") and the tag tray pulls out of it when the chat starts.
+          Docked always shows the compact cluster. */}
+      {(docked || !showHero) && (
+        <div className="shrink-0 relative flex items-center gap-3" style={{ height: docked ? 44 : 104, padding: '0 12px', borderBottom: `1px solid ${LC.borderSubtle}` }}>
+          <ScopeCluster compact={docked} onOpenWork={onOpenWork} />
+          <span style={{ flex: 1 }} />
+        </div>
+      )}
 
       <div className="flex-1 min-h-0 flex flex-col">
-        <AsideComposerContext.Provider value={{ search: composerSearch, tools: composerTools, commands: composerCommands, onAttach, agents: <AgentRoster onAssign={launchStartAgent} /> }}>
+        <AsideComposerContext.Provider value={{ search: composerSearch, tools: composerTools, commands: composerCommands, onAttach, agents: <AgentRoster onAssign={addressAgent} />, addressedAgent, onClearAddress: clearAddressedAgent, onAddressedSend: beginAgentThinking }}>
           <AnimatePresence mode="wait" initial={false}>
             {showHero ? (
               <motion.div
                 key="hero"
-                className="flex-1 min-h-0 flex items-center justify-center"
+                className="flex-1 min-h-0 flex flex-col"
                 style={{ padding: docked ? '10px' : '20px' }}
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: 24 }} transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
               >
-                <div style={{ width: '100%', maxWidth: docked ? 'none' : 720 }}>
-                  <div style={{ textAlign: 'center', marginBottom: docked ? 10 : 20 }}>
-                    <div style={{ fontSize: docked ? 20 : 30, fontWeight: 600, color: LC.title, letterSpacing: '-0.02em' }}>How can I help, Sophia?</div>
+                {/* "InScope" lockup — the orb (carrying "Scope") preceded by "In", pinned
+                    TOP CENTRE. On chat start the orb flies to the header (shared
+                    layoutId="scope-orb") and the "In" is left behind (fades). Focus only. */}
+                {!docked && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, paddingTop: 12, flexShrink: 0 }}>
+                    <motion.span
+                      initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }}
+                      transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                      style={{ fontSize: 48, fontWeight: 600, color: LC.title, letterSpacing: '-0.03em' }}
+                    >In</motion.span>
+                    <ScopeOrbButton size={116} layoutId="scope-orb" onClick={() => openClientSwitcher(true)} label="Scope" />
                   </div>
-                  <AsideInput onSend={(t) => say(String(t))} />
-                  {!docked && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 6, padding: '0 16px' }}>
-                      {HERO_SUGGESTIONS.map((s) => (
-                        <button
-                          key={s}
-                          onClick={() => say(s)}
-                          className="hover:brightness-[0.98]"
-                          style={{ background: LC.surface, border: 'none', boxShadow: LC.shadowSm, borderRadius: 999, padding: '8px 15px', fontSize: 13, color: LC.body, cursor: 'pointer', fontWeight: 500 }}
-                        >{s}</button>
-                      ))}
+                )}
+                {/* Greeting + composer + suggestions — centred in the space below the orb. */}
+                <div className="flex-1 min-h-0 flex items-center justify-center">
+                  <div style={{ width: '100%', maxWidth: docked ? 'none' : 720 }}>
+                    <div style={{ textAlign: 'center', marginBottom: docked ? 10 : 20 }}>
+                      <div style={{ fontSize: docked ? 20 : 26, fontWeight: 600, color: LC.title, letterSpacing: '-0.02em' }}>How can I help, Sophia?</div>
                     </div>
-                  )}
+                    <AsideInput onSend={(t) => say(String(t))} />
+                    {!docked && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 6, padding: '0 16px' }}>
+                        {HERO_SUGGESTIONS.map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => say(s)}
+                            className="hover:brightness-[0.98]"
+                            style={{ background: LC.surface, border: 'none', boxShadow: LC.shadowSm, borderRadius: 999, padding: '8px 15px', fontSize: 13, color: LC.body, cursor: 'pointer', fontWeight: 500 }}
+                          >{s}</button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             ) : (

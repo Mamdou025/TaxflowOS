@@ -1,10 +1,11 @@
 'use client';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AgentRoster — a compact avatar row of the persona agents, shown in the thread
-// header so you can see who's available and click one to ASSIGN work (deterministically
-// pins their run into the conversation). Live agents are solid; not-yet-live (Rémy) is
-// dimmed. The same agents are @-mentionable in the composer (composerCommands).
+// AgentRoster — a compact avatar row of the persona agents, shown in the composer's
+// options strip so you can see who's available and click one to TALK TO them: the
+// agent greets in the thread and the composer is addressed to them, so you can type
+// instructions before sending (the run, if any, comes from their reply). Live agents
+// are solid; not-yet-live (Rémy) is dimmed. Also @-mentionable (composerCommands).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { AGENTS } from '@/lib/agents';
@@ -23,7 +24,7 @@ export function AgentRoster({ onAssign }: { onAssign: (agentId: string) => void 
           key={a.id}
           onClick={() => { if (a.live) onAssign(a.id); }}
           disabled={!a.live}
-          title={a.live ? `${a.name} · ${a.role} — click to assign work (or @${a.name} in the composer)` : `${a.name} · ${a.role} — coming soon`}
+          title={a.live ? `${a.name} · ${a.role} — click to talk to them (or @${a.name} in the composer)` : `${a.name} · ${a.role} — coming soon`}
           className={a.live ? 'hover:brightness-110' : undefined}
           style={{ display: 'inline-flex', padding: 0, border: 'none', background: 'none', cursor: a.live ? 'pointer' : 'default', borderRadius: '50%', transition: 'transform 120ms ease' }}
         >

@@ -32,6 +32,7 @@ import {
   attachedDocsAtom,
   type AttachedDoc,
   runEditsAtom,
+  setThinkingCoworkerAtom,
 } from '@/lib/workspace-store';
 import { pageChatSurfacesAtom } from '@/lib/page-chat-store';
 import { SurfaceEmbed } from './surface-embed';
@@ -42,7 +43,7 @@ import { InlineFieldCard } from '@/components/workspace/inline-field-card';
 import { WorkflowRunFlow, WorkflowElementCard, RunProposalCard } from '@/components/workspace/workflow-run-flow';
 import type { ComposerSuggestion } from '@/components/workspace/aside-thread';
 import { getWorkflowConfig, WORKFLOW_CONFIGS, type TemplateConfig } from '@/lib/workflow-runs';
-import { AGENTS, WORKFLOWS, getAgent, type Agent } from '@/lib/agents';
+import { AGENTS, WORKFLOWS, getAgent, agentThinking, type Agent } from '@/lib/agents';
 import { worksheetIntelRegistryAtom, pickIntel, listIntel, createTemplateIntel } from '@/lib/worksheet-intel';
 import { GenUIRender } from './genui-render';
 import { recordWorkItemAtom, workIdFor, workKeyFromText, type WorkItemType } from '@/lib/work-store';
@@ -129,10 +130,12 @@ export function RunWorkflowRender({ config, agent, onOpenPage, onOpenBuilder }: 
       {!started ? (
         <motion.div
           key="proposal"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          // Rise in a beat AFTER the agent's reply — so the run card reads as the
+          // agent presenting a plan, not an instant menu popping onto the screen.
+          initial={reduce ? { opacity: 0 } : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
           exit={reduce ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.985 }}
-          transition={{ duration: reduce ? 0 : 0.22, ease }}
+          transition={{ duration: reduce ? 0 : 0.32, ease, delay: reduce ? 0 : 0.25 }}
         >
           <RunProposalCard config={config} agent={agent} onStart={() => setStarted(true)} />
         </motion.div>
@@ -641,15 +644,17 @@ export function useAssistant() {
 
   // ── Conversation-launch state ────────────────────────────────────────────────
   const { appendMessage, visibleMessages, reset } = useCopilotChat();
+  const setThinkingCoworker = useSetAtom(setThinkingCoworkerAtom);
   const [sent, setSent] = useState(false); // flips the hero → conversation the instant you send
   const [pinnedFields, setPinnedFields] = useState<string[]>([]); // fields brought in via search
   const [pinnedElements, setPinnedElements] = useState<PinnedElement[]>([]); // workflow source/output summoned in
   const [pinnedRuns, setPinnedRuns] = useState<string[]>([]); // workflow ids launched deterministically (no LLM routing)
+  const [addressedAgent, setAddressedAgent] = useState<Agent | null>(null); // the agent you're "talking to" (click → greet → type → send)
 
   const say = (content: string) => { appendMessage(new TextMessage({ content, role: Role.User })); setSent(true); };
   const threadEmpty = (visibleMessages?.length ?? 0) === 0;
   const showHero = threadEmpty && !sent; // centered composer until the first message
-  const newChat = () => { reset(); setSent(false); };
+  const newChat = () => { reset(); setSent(false); setAddressedAgent(null); setThinkingCoworker(null); };
 
   // ── Launcher handlers ────────────────────────────────────────────────────────
   const launchOpenPage = (pageKey: string) => {
@@ -671,6 +676,40 @@ export function useAssistant() {
     setPinnedRuns((prev) => (prev.includes(config.id) ? prev : [...prev, config.id]));
   };
   const launchStartAgent = (agentId: string) => { const a = getAgent(agentId); if (a?.live && a.workflow) launchStartWorkflow(a.workflow); };
+
+  // Clicking an agent no longer starts their workflow — it ADDRESSES them: the agent
+  // greets in the thread, the composer is addressed to them, and you type instructions
+  // before sending. (The run, if any, comes from the agent's real reply once you send.)
+  const addressAgent = (agentId: string) => {
+    const a = getAgent(agentId);
+    if (!a?.live) return;
+    setAddressedAgent(a);
+    setSent(true); // leave the hero → show the thread with the greeting + composer
+    setThinkingCoworker(null); // drop any stale narration from a prior agent
+    // Focus the composer so you can start typing right away.
+    if (typeof window !== 'undefined') requestAnimationFrame(() => window.dispatchEvent(new CustomEvent('cwp-focus-composer')));
+  };
+  const clearAddressedAgent = () => setAddressedAgent(null);
+  // Fired on send while an agent is addressed: play that agent's SCRIPTED "thinking"
+  // narration (revealed line-by-line) while the real reply streams — the run/answer
+  // then arrives with human timing instead of an instant proposal card. Auto-clears
+  // as a safety if the reply stalls (the reply itself clears it on arrival).
+  const beginAgentThinking = () => {
+    if (!addressedAgent) return;
+    setThinkingCoworker({ coworker: coworkerForAgent(addressedAgent), lines: agentThinking(addressedAgent) });
+    if (typeof window !== 'undefined') window.setTimeout(() => setThinkingCoworker(null), 15000);
+  };
+
+  // Tell the model who the user is talking to right now (they clicked this agent),
+  // so it replies in that persona's voice and offers THEIR workflow — without us
+  // mangling the user's message. Complements the server-side specialist injection.
+  useCopilotReadable({
+    description:
+      'The specialist the user has addressed in the chat right now (they clicked this agent to talk to them). Reply in this persona\'s voice, stay in their domain, and if the user asks to run/compute something, offer THIS specialist\'s workflow (runWorkflow with the workflow id below). When null, you are the general coordinating assistant.',
+    value: addressedAgent
+      ? { name: addressedAgent.name, role: addressedAgent.role, workflow: addressedAgent.workflow ?? null }
+      : 'No specific agent addressed — general assistant.',
+  });
 
   // Scroll the thread to the live run when the status chip is clicked.
   const scrollToRun = () => {
@@ -707,15 +746,15 @@ export function useAssistant() {
     { key: 'cmd:gen-table', title: 'Generate a data table', sub: 'Foreign affiliates with columns', kind: 'genui', icon: <Sparkles size={14} />, run: () => genui('A table of 4 foreign affiliates with columns Name, Jurisdiction, Ownership %, Surplus balance.') },
     { key: 'cmd:gen-form', title: 'Generate an input form', sub: 'FX rate + dividend amount', kind: 'genui', icon: <Sparkles size={14} />, run: () => genui('A short form to enter an FX rate and a dividend amount, with a submit button.') },
     { key: 'cmd:gen-pie', title: 'Generate a pie chart + callout', sub: 'Income by category', kind: 'genui', icon: <Sparkles size={14} />, run: () => genui('A pie chart breaking down income by category, and a callout summarizing the largest slice.') },
-    // Assign work to an agent (@-mention): deterministically pins their run card.
+    // Talk to an agent (@-mention): greet + address them so you can type instructions.
     ...AGENTS.map((a) => ({
       key: `cmd:agent-${a.id}`,
       title: a.name,
-      sub: a.live ? `Assign — ${a.role}` : `${a.role} · soon`,
+      sub: a.live ? `Talk to ${a.name} — ${a.role}` : `${a.role} · soon`,
       kind: 'agent',
       dim: !a.live,
       icon: <CoworkerAvatar coworker={coworkerForAgent(a)} size={18} dim={!a.live} />,
-      run: () => launchStartAgent(a.id),
+      run: () => addressAgent(a.id),
     })),
   ];
 
@@ -732,7 +771,7 @@ export function useAssistant() {
           else if (h.kind === 'field') launchPinField(h.id);
           else if (h.kind === 'workflow') launchStartWorkflow(h.id);
           else if (h.kind === 'element') launchPinElement(h.workflowId, h.element);
-          else launchStartAgent(h.id);
+          else addressAgent(h.id);
         },
       };
     });
@@ -745,7 +784,7 @@ export function useAssistant() {
     })),
     ...AGENTS.map((a) => ({
       key: `ag:${a.id}`, title: a.name, sub: a.role, kind: 'agent', dim: !a.live, icon: <Bot size={14} />,
-      run: () => { if (a.live) launchStartAgent(a.id); },
+      run: () => { if (a.live) addressAgent(a.id); },
     })),
   ];
 
@@ -813,6 +852,8 @@ export function useAssistant() {
     activeRun, scrollToRun,
     // launcher
     launchOpenPage, launchPinField, launchPinElement, launchStartWorkflow, launchStartAgent,
+    // agent addressing (click agent → greet → type → send; scripted thinking on send)
+    addressedAgent, addressAgent, clearAddressedAgent, beginAgentThinking,
     // navigation helpers (for inline card "open in builder")
     setBuilderFocus, router,
   };
