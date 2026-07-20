@@ -12,7 +12,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { X, Plus, GitFork, Bot, LayoutDashboard, FileSpreadsheet, FileText, Layers, BarChart3, Workflow, PanelRightClose, Maximize2, Minimize2, MessageSquare, Files } from 'lucide-react';
+import { X, Plus, GitFork, Bot, LayoutDashboard, Workflow, PanelRightClose, Maximize2, Minimize2, MessageSquare, Files, LayoutGrid } from 'lucide-react';
 import { chatPageContextAtom, chatPanelModeAtom } from '@/lib/chat-store';
 import {
   workspaceWindowsAtom,
@@ -37,16 +37,11 @@ const WORKSPACE_ITEMS: { key: string; title: string; Icon: typeof GitFork }[] = 
   { key: 'agent-builder', title: 'Agent Builder', Icon: Bot },
   { key: 'dashboard', title: 'Dashboard', Icon: LayoutDashboard },
   { key: 'viewer', title: 'Documents', Icon: Files },
-];
-const WORKSHEET_ITEMS: { key: string; title: string; Icon: typeof GitFork }[] = [
-  { key: 'fapi', title: 'FAPI worksheet', Icon: FileSpreadsheet },
-  { key: 't1134', title: 'T1134', Icon: FileText },
-  { key: 'surplus', title: 'Surplus', Icon: Layers },
-  { key: 'bu-overview', title: 'Executive Overview', Icon: BarChart3 },
+  { key: 'worksheets', title: 'Worksheets', Icon: LayoutGrid },
 ];
 
 function titleFor(key: string): string {
-  const local = [...WORKSPACE_ITEMS, ...WORKSHEET_ITEMS].find((i) => i.key === key);
+  const local = WORKSPACE_ITEMS.find((i) => i.key === key);
   return getPage(key)?.title ?? local?.title ?? key;
 }
 
@@ -172,8 +167,10 @@ export function ChatWorkspace() {
 
         <SideLabel>Workspace</SideLabel>
         {WORKSPACE_ITEMS.map((it) => <SideRow key={it.key} icon={<it.Icon size={15} />} label={it.title} onClick={() => open(it.key)} />)}
-        <SideLabel>Worksheets</SideLabel>
-        {WORKSHEET_ITEMS.map((it) => <SideRow key={it.key} icon={<it.Icon size={15} />} label={it.title} onClick={() => open(it.key)} />)}
+        <SideLabel>Chat history</SideLabel>
+        <div style={{ padding: '6px 12px 2px', fontSize: 12, color: LC.faint, lineHeight: 1.5 }}>
+          Your past chats will appear here.
+        </div>
         <SideLabel>Run</SideLabel>
         {WORKFLOWS.map((w) => (
           <SideRow

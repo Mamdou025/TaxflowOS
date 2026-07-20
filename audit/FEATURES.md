@@ -280,6 +280,7 @@ A first-class platform page for opening and reading documents in-app, alongside 
 | Collapsible sidebar | `[LIVE]` | `isSidebarCollapsedAtom` |
 | Panel animation | `[LIVE]` | `isPanelAnimatingAtom` |
 | Two-panel tool shell | `[LIVE]` | `two-panel-tool-shell.tsx` — resizable left/right |
+| Worksheets hub + menu | `[LIVE]` [2026-07-19] | A "Worksheets" destination reachable from the **Scope sidebar WORKSPACE section** (→ inline hub page, picks open worksheets inline) **and** the `GlobalTopNav` pill (→ `/worksheets` route). Both render the shared `WorksheetsGallery` (`components/worksheet/worksheets-gallery.tsx`) of cards (FAPI · T1134 · Surplus · Executive Overview). Inline hub `components/workspace/worksheets-hub.tsx` = resource `worksheets`; catalog exported as `WORKSHEETS` from `worksheet-shell.tsx`. The old per-worksheet quick-link section was removed; a scaffolded **Chat history** section (empty state, no persistence yet) took its place |
 | Worksheet page view | `[PARTIAL]` | `worksheet-page-view.tsx` exists |
 | Worksheet page menu | `[PARTIAL]` | `worksheet-page-menu.tsx` exists |
 | Dark/light theme | `[LIVE]` | Theme provider in root layout |

@@ -2,7 +2,7 @@
 
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { usePathname, useRouter } from 'next/navigation';
-import { ChevronDown, LayoutDashboard, GitFork, MessageCircle, Files } from 'lucide-react';
+import { ChevronDown, LayoutDashboard, GitFork, MessageCircle, Files, Table2 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { selectedClientAtom, showClientSwitcherAtom, navActionsAtom } from '@/lib/nav-store';
 import { assistantOpenAtom } from '@/lib/chat-store';
@@ -16,6 +16,7 @@ const CROWN_NAV_H = 84;    // taller floating row so the Scope keystone can rise
 // because Scope encompasses these. Main page (/) is Scope, the assistant.
 const NAV_LINKS: { label: string; href: string; Icon: LucideIcon }[] = [
   { label: 'Dashboard', href: '/dashboard', Icon: LayoutDashboard },
+  { label: 'Worksheets', href: '/worksheets', Icon: Table2 },
   { label: 'Builder', href: '/builder', Icon: GitFork },
   { label: 'Documents', href: '/viewer', Icon: Files },
 ];

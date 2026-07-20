@@ -12,6 +12,7 @@ import {
   Building2,
   Receipt,
   Files,
+  LayoutGrid,
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -156,6 +157,21 @@ export const RESOURCES: Resource[] = [
       subtitle: 'Open PDF, Excel & Word files',
       icon: Files,
       Component: lazyPage(() => import('@/components/workspace/document-viewer')),
+    },
+  },
+  {
+    id: 'worksheets',
+    kind: 'tool',
+    token: 'WORKSHEETS',
+    mentions: ['worksheets', 'the worksheets', 'all worksheets'],
+    keywords: ['worksheets', 'all worksheets', 'open worksheet', 'worksheet list'],
+    note: 'All worksheets — pick one to open',
+    open: { as: 'page', pageKey: 'worksheets' },
+    page: {
+      title: 'Worksheets',
+      subtitle: 'FAPI · T1134 · Surplus · Executive Overview',
+      icon: LayoutGrid,
+      Component: lazyPage(() => import('@/components/workspace/worksheets-hub')),
     },
   },
   {

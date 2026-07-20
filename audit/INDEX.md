@@ -47,6 +47,7 @@ Four layers: **Canvas** (React Flow UI) → **Domain** (typed workflow schema) �
 
 ### Navigation architecture (2026-06-07)
 - **Homepage:** `/` → `OrbitalStage` (neumorphic orbs + AI chat)
+- **Worksheets hub:** a gallery of worksheet cards (FAPI · T1134 · Surplus · Executive Overview) reachable from the **Scope sidebar** ("All worksheets" → inline hub, opens worksheets inline) and the `GlobalTopNav` pill (→ `/worksheets` route). Shared `WorksheetsGallery`; inline hub = resource `worksheets` (added 2026-07-19). See UI.md → "Worksheets hub + menu".
 - **Builder:** `/builder` → `WorkflowStudioShell` + `NodeConfigPanel` overlaid on `PersistentCanvas`
 - **Legacy:** `/workflows` + `/workflows/[id]` → DB-backed workflow pages
 - **ReactFlowProvider** moved from layout root → inside `PersistentCanvas` only; soft navigation (router.push) now works from all pages

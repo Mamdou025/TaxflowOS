@@ -18,7 +18,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isScope = pathname === '/';
   const isGridPage =
     pathname === '/dashboard' ||
-    ['/fapi', '/t1134', '/surplus', '/bu-overview'].includes(pathname) ||
+    ['/fapi', '/t1134', '/surplus', '/bu-overview', '/worksheets'].includes(pathname) ||
     pathname.startsWith('/client');
   // Light neumorphic pages paint a full-viewport light bg so the floating navbar
   // sits on the page colour (no white strip behind the transparent nav row).
