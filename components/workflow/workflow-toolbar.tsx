@@ -13,7 +13,6 @@ import {
   ListTree,
   Loader2,
   Lock,
-  Map,
   Maximize2,
   PanelRight,
   Play,
@@ -28,11 +27,12 @@ import {
 } from "lucide-react";
 import { nanoid } from "nanoid";
 import { useRouter } from "next/navigation";
-import { createPortal } from "react-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { builderBridgeAtom, builderEmbeddedAtom } from "@/lib/builder-bridge";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
+import { NeumorphicSidebar } from "@/components/neumorphic-sidebar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -2618,9 +2618,11 @@ function LocalStudioTopBar({
         type="file"
       />
 
-      {/* Toolbar content portaled into the global nav slot — appears as part of the unified top bar */}
-      {mounted && createPortal(
-        <>
+      {/* Toolbar controls as a left neumorphic sidebar over the canvas (Step 3) —
+          the same control groups, reflowed vertically (buttons made full-width via
+          arbitrary variants, horizontal dividers). */}
+      {mounted && (
+        <NeumorphicSidebar floating collapseHideLabels contentClassName="items-stretch gap-1.5 [&_.neu-action]:w-full [&_.neu-action]:justify-start [&_.h-4.w-px]:my-1.5 [&_.h-4.w-px]:mx-0 [&_.h-4.w-px]:h-px [&_.h-4.w-px]:w-full">
           {/* ── Identity (no home button — global nav logo handles it) ── */}
           <div className="flex shrink-0 items-center gap-1.5 px-1">
             <WorkflowIcon className="size-4 shrink-0 text-(--neu-text) opacity-70" />
@@ -3025,8 +3027,7 @@ function LocalStudioTopBar({
               </>
             )}
           </Button>
-        </>,
-        document.getElementById('global-nav-workflow-slot') ?? document.body
+        </NeumorphicSidebar>
       )}
     </>
   );
@@ -3035,8 +3036,37 @@ function LocalStudioTopBar({
 export const WorkflowToolbar = ({ workflowId }: WorkflowToolbarProps) => {
   const state = useWorkflowState();
   const actions = useWorkflowActions(state);
+  const setBridge = useSetAtom(builderBridgeAtom);
+  const embedded = useAtomValue(builderEmbeddedAtom);
+
+  // Keep the latest handlers/state in a ref so the published (stable) bridge
+  // functions never close over stale nodes/edges.
+  const latest = useRef({ state, actions });
+  latest.current = { state, actions };
+
+  // Publish local-builder actions for the inline page-menu header. Flags come from
+  // the deps snapshot; functions read `latest.current`.
+  useEffect(() => {
+    if (!state.isLocal) return;
+    setBridge({
+      save: () => latest.current.actions.handleSave(),
+      run: () => latest.current.actions.handleExecute(),
+      undo: () => latest.current.state.undo(),
+      redo: () => latest.current.state.redo(),
+      canUndo: state.canUndo,
+      canRedo: state.canRedo,
+      isExecuting: state.isExecuting,
+      isSaving: state.isSaving,
+      hasUnsaved: state.hasUnsavedChanges,
+    });
+    return () => setBridge(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.isLocal, state.canUndo, state.canRedo, state.isExecuting, state.isSaving, state.hasUnsavedChanges]);
 
   if (state.isLocal) {
+    // Inline (Scope panel): the chrome lives in the page-menu header instead of a
+    // floating rail. Still mounted above (hooks/effects run) — just no rail.
+    if (embedded) return null;
     return <LocalStudioTopBar actions={actions} state={state} />;
   }
 

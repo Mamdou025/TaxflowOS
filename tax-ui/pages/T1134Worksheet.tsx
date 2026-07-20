@@ -91,13 +91,13 @@ function LinkedCell({ value, currency = '' }: { value: number; currency?: string
 
 // ─── Section accordion ───────────────────────────────────────────────────────
 function SectionAccordion({
-  title, subtitle, defaultOpen = false, children,
+  title, subtitle, defaultOpen = false, anchor, children,
 }: {
-  title: string; subtitle?: string; defaultOpen?: boolean; children: React.ReactNode;
+  title: string; subtitle?: string; defaultOpen?: boolean; anchor?: string; children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div style={{ borderBottom: '1px solid #f3f4f6' }}>
+    <div data-anchor={anchor} style={{ borderBottom: '1px solid #f3f4f6' }}>
       <button
         onClick={() => setOpen(o => !o)}
         style={{
@@ -452,7 +452,7 @@ function PartISummary() {
   ];
 
   return (
-    <div style={{ padding: '20px 24px', maxWidth: 640 }}>
+    <div data-anchor="t1134:part1" style={{ padding: '20px 24px', maxWidth: 640 }}>
       <div style={{ fontSize: 13, fontWeight: 800, color: '#111827', marginBottom: 4 }}>Part I — T1134 Summary</div>
       <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 20 }}>
         Filed once per reporting entity. Applies to Northstar Inc. as the Canadian filer.
@@ -542,7 +542,7 @@ function PartIIGrid() {
       </div>
 
       {/* Section 1 — FA Information */}
-      <SectionAccordion title="Part II · Section 1 — Foreign Affiliate Information" defaultOpen>
+      <SectionAccordion title="Part II · Section 1 — Foreign Affiliate Information" anchor="t1134:part2-s1" defaultOpen>
         <GridRow label="Legal Name" fas={fas} render={fa => <span style={{ fontSize: 11, color: '#374151' }}>{fa.legalName}</span>} />
         <GridRow label="Country of Residence" fas={fas} render={fa => <span>{fa.flag} {fa.countryCode}</span>} />
         <GridRow label="TIN" fas={fas} render={fa => <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#374151' }}>{fa.tin}</span>} />
@@ -597,14 +597,14 @@ function PartIIGrid() {
       </SectionAccordion>
 
       {/* Section 2 — Financial Information */}
-      <SectionAccordion title="Part II · Section 2 — Financial Information">
+      <SectionAccordion title="Part II · Section 2 — Financial Information" anchor="t1134:part2-s2">
         <GridRow label="Financial Statements Available?" fas={fas} render={fa => <YesNoToggle value={fa.financialStatementsAvailable} />} />
         <GridRow label="Financial Statements Included?" fas={fas} render={fa => <YesNoToggle value={fa.financialStatementsIncluded} />} />
         <GridRow label="≥20% Voting Shares?" fas={fas} render={fa => <YesNoToggle value={fa.hasAtLeast20pctVoting} />} />
       </SectionAccordion>
 
       {/* Section 3A — Surplus Accounts */}
-      <SectionAccordion title="Part II · Section 3A — Surplus Accounts & Dividends">
+      <SectionAccordion title="Part II · Section 3A — Surplus Accounts & Dividends" anchor="t1134:part2-s3a">
         <GridRow label="Dividend Received?" fas={fas} render={fa => <YesNoToggle value={fa.dividendReceived} />} />
         <GridRow label="Exempt Surplus Dividend" fas={fas} render={fa => <LinkedCell value={fa.exemptSurplusDividend} currency={fa.dividendCurrency} />} />
         <GridRow label="Hybrid Surplus Dividend" fas={fas} render={fa => <LinkedCell value={fa.hybridSurplusDividend} currency={fa.dividendCurrency} />} />
@@ -659,7 +659,7 @@ function PartIIGrid() {
       </SectionAccordion>
 
       {/* Part III Section 3 — FAPI */}
-      <SectionAccordion title="Part III · Section 3 — FAPI / FAPL / FACL" subtitle="(CFA only — 🔗 linked to FAPI worksheet)">
+      <SectionAccordion title="Part III · Section 3 — FAPI / FAPL / FACL" subtitle="(CFA only — 🔗 linked to FAPI worksheet)" anchor="t1134:part3-fapi">
         <GridRow label="FAPI Earned?" cfaOnly fas={fas} render={fa => <YesNoToggle value={fa.fapiEarned} />} />
         <GridRow label="FAPL Incurred?" cfaOnly fas={fas} render={fa => <YesNoToggle value={fa.faplIncurred} />} />
         <GridRow label="FACL Incurred?" cfaOnly fas={fas} render={fa => <YesNoToggle value={fa.faclIncurred} />} />
@@ -694,7 +694,7 @@ function PartIIGrid() {
       </SectionAccordion>
 
       {/* Part IV — Disclosure */}
-      <SectionAccordion title="Part IV — Disclosure">
+      <SectionAccordion title="Part IV — Disclosure" anchor="t1134:part4">
         <GridRow label="Information Not Available?" fas={fas} render={fa => <YesNoToggle value={fa.infoNotAvailable} />} />
         <GridRow label="Details" fas={fas} render={fa => <span style={{ fontSize: 11, color: '#9ca3af' }}>{fa.infoNotAvailableDetails || '—'}</span>} />
       </SectionAccordion>

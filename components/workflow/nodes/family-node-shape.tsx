@@ -6,6 +6,7 @@ import {
   Calculator,
   CheckCircle2,
   Clock,
+  Cloud,
   Code2,
   Database,
   Download,
@@ -107,6 +108,15 @@ const FAMILY_NODE_STYLES: Record<BlockFamily, FamilyNodeStyle> = {
     contentClassName: "h-full w-full p-0",
     nodeClassName:
       "h-28 w-28 overflow-visible rounded-md border-0 bg-transparent p-0 shadow-none",
+  },
+  // Governed-value blocks (family "Protected"); mirrors Output geometry with a
+  // locked/rose accent. Reached when a block carries family "Protected" directly.
+  Protected: {
+    badgeClassName: "top-1 border-white/15 bg-(--node-badge-bg) text-rose-300",
+    captionClassName: "w-48",
+    contentClassName: "h-full w-full p-0",
+    nodeClassName:
+      "h-28 w-24 overflow-visible rounded-md border-0 bg-transparent p-0 shadow-none",
   },
 };
 
@@ -243,6 +253,7 @@ function getSubtypeIcon(subtype: BlockSubtype | undefined): LucideIcon {
     case "PDF Report":
       return FileText;
     case "API / HTTP Request":
+      return Cloud;
     case "Currency Rate":
       return Braces;
     case "Database Query":

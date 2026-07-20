@@ -22,6 +22,18 @@ export function runFapiInputsSource(
     inclusionRate: config.inclusionRate,
     reportingCurrency: config.reportingCurrency,
     rtf: config.rtf,
+    // Line-driving assumptions consumed by the lines engine as named values.
+    pCoefficient: config.pCoefficient,
+    canadianRules95_4: config.canadianRules95_4,
+    debtForgiveness: config.debtForgiveness,
+    priorYearG: config.priorYearG,
+    cfaIncome: config.cfaIncome,
+    businessLosses: config.businessLosses,
+    faclCarryforward: config.faclCarryforward,
+    prescribedAmount: config.prescribedAmount,
+    prescribedAmountF1: config.prescribedAmountF1,
+    dividendDeductions: config.dividendDeductions,
+    partnershipDividends: config.partnershipDividends,
   };
   const evidenceRef = createEvidenceRef({
     block: context.block,

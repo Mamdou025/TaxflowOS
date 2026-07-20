@@ -56,6 +56,13 @@ export const BLOCK_FAMILY_RULES: Record<BlockFamily, BlockFamilyRule> = {
     responsibility: "Proposes changes, mappings, formulas, or reviews.",
     mustNot: "AI / Agent blocks do not silently mutate workflows.",
   },
+  Protected: {
+    family: "Protected",
+    responsibility:
+      "Holds governed, locked values — approved inputs, official lines, locked rates, and final reviewed amounts.",
+    mustNot:
+      "Protected values are not recalculated or edited without an explicit unlock or approval.",
+  },
 };
 
 export const LOGIC_OUTPUT_GOVERNANCE_WARNING =

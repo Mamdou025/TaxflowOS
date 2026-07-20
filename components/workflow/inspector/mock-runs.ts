@@ -4,6 +4,7 @@ import {
   type LocalRunRecord,
 } from "@/lib/local-fiscal-workflow";
 import type { WorkflowNode, WorkflowNodeData } from "@/lib/workflow-store";
+import { isGovernedValueBlock } from "@/src/domain/workflow/protected-rules";
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Mock output branches mirror the local block families.
 function getFamilyOutput(data: WorkflowNodeData): Record<string, unknown> {
@@ -44,7 +45,7 @@ function getFamilyOutput(data: WorkflowNodeData): Record<string, unknown> {
     };
   }
 
-  if (block.family === "Protected") {
+  if (isGovernedValueBlock(block)) {
     return {
       lockedInRuntime: block.governance?.lockedInRuntime ?? true,
       editIntent: config.protectedEditIntent || block.governance?.editIntent,

@@ -54,3 +54,6 @@ lib/types/integration.ts
 lib/codegen-registry.ts
 lib/step-registry.ts
 lib/output-display-configs.ts
+
+# Copilot trace dumps (COPILOT_TRACE)
+.copilot-trace/

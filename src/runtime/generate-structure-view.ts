@@ -3,6 +3,7 @@ import type {
   WorkflowDefinition,
   WorkflowEdge,
 } from "@/lib/local-fiscal-workflow";
+import { isGovernedValueBlock } from "../domain/workflow/protected-rules";
 
 // Canvas owns graph editing, inspector owns formulas/code/configuration, and
 // Structure owns this generated runtime worksheet view. Keep this module pure so
@@ -116,7 +117,7 @@ export function generateStructureView(
   const protectedSummary = sortStructureBlocksForWorksheet(
     definition.blocks.filter(
       (block) =>
-        block.family === "Protected" &&
+        isGovernedValueBlock(block) &&
         (block.subtype === "Final Reviewed Amount" ||
           block.subtype === "Protected Result")
     )

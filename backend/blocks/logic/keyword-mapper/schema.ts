@@ -18,7 +18,7 @@ export type KeywordMapperUnmatchedStrategy =
 
 export type KeywordMapperConfig = {
   matchFields: KeywordMapperMatchField[];
-  matchMode: "contains" | "exact" | "starts_with";
+  matchMode: "contains" | "exact" | "starts_with" | "all_words";
   lowConfidenceThreshold: number;
   conflictStrategy: KeywordMapperConflictStrategy;
   unmatchedStrategy: KeywordMapperUnmatchedStrategy;
@@ -180,12 +180,16 @@ function parseUnmatchedStrategy(
 }
 
 function parseMatchMode(value: unknown): KeywordMapperConfig["matchMode"] {
-  if (value === "exact" || value === "starts_with") {
+  if (value === "exact" || value === "starts_with" || value === "all_words") {
     return value;
   }
 
   if (value === "starts with") {
     return "starts_with";
+  }
+
+  if (value === "all words") {
+    return "all_words";
   }
 
   return "contains";

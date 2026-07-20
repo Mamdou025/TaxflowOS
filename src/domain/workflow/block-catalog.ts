@@ -17,6 +17,10 @@ export const BLOCK_FAMILY_STAGE: Record<BlockFamily, FiscalStage> = {
   Field: "field",
   Output: "output",
   "AI / Agent": "ai-agent",
+  // "Protected" is an internal governed-value family with no dedicated FiscalStage;
+  // bucket it with "output" (governed/locked final values), matching the worksheet
+  // ordering in generate-structure-view. Revisit at the kernel node-model step.
+  Protected: "output",
 };
 
 export const FISCAL_STAGE_OPTIONS: Array<{

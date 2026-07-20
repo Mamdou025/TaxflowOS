@@ -10,6 +10,7 @@ export type ExcelColumnMapping = {
   currency?: string;
   debit?: string;
   credit?: string;
+  accountType?: string;
 };
 
 export type ExcelNormalizedRow = {
@@ -95,6 +96,11 @@ const AMOUNT_ALIASES = ["amount", "value", "balance"];
 const CURRENCY_ALIASES = ["currency", "curr"];
 const DEBIT_ALIASES = ["debit", "debits"];
 const CREDIT_ALIASES = ["credit", "credits"];
+const ACCOUNT_TYPE_ALIASES = ["accounttype", "statementtype", "postingtype"];
+// Balance-sheet account types — dropped from a trial balance, since only P&L
+// (Revenue/Expense) accounts are relevant to value-extraction workflows (FAPI).
+// Applied ONLY to an explicit account-type column value, never to the label.
+const BALANCE_SHEET_TYPE_REGEX = /\b(asset|liabilit|equity)/i;
 const DELIMITED_LIST_REGEX = /[,;\n|]/;
 const NUMBER_PATTERN = /-?\d+(\.\d+)?/;
 const MAX_PERSISTED_ROWS_PER_SHEET = 1000;
@@ -107,13 +113,37 @@ const DIGIT_REGEX = /\d/;
 const CURRENCY_AND_TEXT_REGEX = /[^\d.,()\-+\s]/g;
 const WHITESPACE_REGEX = /\s+/g;
 const TOTAL_ROW_REGEX =
-  /^(total|subtotal|grand total|sous-total|total general|total général)\b/i;
+  /^(totals?|subtotals?|grand totals?|sous-totals?|total(?:s|aux)?|totals? g[ée]n[ée]ra(?:l|ux))\b/i;
+
+// Currency-code suffixes seen on trial-balance headers like "Debit (USD)".
+const CURRENCY_SUFFIX_KEYS = new Set([
+  "usd", "cad", "eur", "gbp", "aud", "jpy", "chf", "us", "ca",
+]);
 
 function normalizeKey(key: string) {
   return key
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]/g, "");
+}
+
+// Match a header against an alias, tolerating a trailing currency code — so
+// "Debit (USD)" matches "debit" and "Balance (USD)" matches "balance", while
+// "Account Type" does NOT match "account" (remainder "type" isn't a currency).
+function headerMatchesAlias(header: string, alias: string) {
+  const normalizedHeader = normalizeKey(header);
+  const normalizedAlias = normalizeKey(alias);
+  if (!normalizedAlias) {
+    return false;
+  }
+  if (normalizedHeader === normalizedAlias) {
+    return true;
+  }
+  if (normalizedHeader.startsWith(normalizedAlias)) {
+    const rest = normalizedHeader.slice(normalizedAlias.length);
+    return rest.length === 0 || CURRENCY_SUFFIX_KEYS.has(rest);
+  }
+  return false;
 }
 
 function normalizeSheetToken(value: string) {
@@ -220,8 +250,9 @@ function getRecordValue(
 }
 
 function findAlias(headers: string[], aliases: string[]) {
-  const normalizedAliases = new Set(aliases.map(normalizeKey));
-  return headers.find((header) => normalizedAliases.has(normalizeKey(header)));
+  return headers.find((header) =>
+    aliases.some((alias) => headerMatchesAlias(header, alias))
+  );
 }
 
 export function detectExcelColumnMapping(
@@ -229,6 +260,7 @@ export function detectExcelColumnMapping(
 ): ExcelColumnMapping {
   return {
     account: findAlias(headers, ACCOUNT_ALIASES),
+    accountType: findAlias(headers, ACCOUNT_TYPE_ALIASES),
     amount: findAlias(headers, AMOUNT_ALIASES),
     credit: findAlias(headers, CREDIT_ALIASES),
     currency: findAlias(headers, CURRENCY_ALIASES),
@@ -242,6 +274,16 @@ function getAmount(
   valuesByColumn: Record<string, unknown>,
   mapping: ExcelColumnMapping
 ) {
+  // Trial balance: when BOTH debit and credit columns exist, the signed amount is
+  // credit − debit (income → positive, expense → negative). A "Balance" column is
+  // ambiguous/sign-flipped for credit accounts, so it must NOT override this.
+  if (mapping.debit && mapping.credit) {
+    const debit = parseNumber(getRecordValue(valuesByColumn, mapping.debit)) ?? 0;
+    const credit =
+      parseNumber(getRecordValue(valuesByColumn, mapping.credit)) ?? 0;
+    return credit - debit;
+  }
+
   const amount = parseNumber(getRecordValue(valuesByColumn, mapping.amount));
   if (amount !== null) {
     return amount;
@@ -328,13 +370,11 @@ function isHeaderLikeLabel(value: unknown) {
 }
 
 function isDebitHeader(value: unknown) {
-  const normalized = normalizeKey(String(value || ""));
-  return DEBIT_ALIASES.some((alias) => normalizeKey(alias) === normalized);
+  return DEBIT_ALIASES.some((alias) => headerMatchesAlias(String(value || ""), alias));
 }
 
 function isCreditHeader(value: unknown) {
-  const normalized = normalizeKey(String(value || ""));
-  return CREDIT_ALIASES.some((alias) => normalizeKey(alias) === normalized);
+  return CREDIT_ALIASES.some((alias) => headerMatchesAlias(String(value || ""), alias));
 }
 
 function normalizeExcelRow({
@@ -377,7 +417,11 @@ function normalizeExcelRow({
     ),
     label: labelText,
     metadata: {
+      accountType: String(getRecordValue(valuesByColumn, mapping.accountType) || ""),
       hasMappedAmount: hasMappedAmount(valuesByColumn, mapping),
+      isBalanceSheetRow: BALANCE_SHEET_TYPE_REGEX.test(
+        String(getRecordValue(valuesByColumn, mapping.accountType) || "")
+      ),
       isTotalRow: TOTAL_ROW_REGEX.test(labelText.trim()),
       raw,
       rowIndex,
@@ -1151,6 +1195,12 @@ export function getNormalizedRowsForSheet({
       (row) =>
         includeTotalRows ||
         !(row.metadata as Record<string, unknown>).isTotalRow
+    )
+    // Trial balance: drop balance-sheet (Asset/Liability/Equity) rows — only P&L
+    // accounts feed the calculation. Only triggers when an account-type column
+    // is present and says so; files without it are unaffected.
+    .filter(
+      (row) => !(row.metadata as Record<string, unknown>).isBalanceSheetRow
     );
   const fallbackRows = getLooseExtractedRows({
     defaultCurrency: currency,

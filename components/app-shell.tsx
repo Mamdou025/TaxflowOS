@@ -1,64 +1,57 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
+import { CopilotKit } from '@copilotkit/react-core';
 import { GlobalTopNav } from '@/components/global-top-nav';
 import { GlobalClientSwitcher } from '@/components/global-client-switcher';
 import { PersistentCanvas } from '@/components/workflow/persistent-canvas';
-import { ActionOrb } from '@/components/action-orb';
-
-// Fades from #eaeaef → transparent each time the canvas page is entered,
-// revealing the dark canvas beneath. Lives at z-[15] so it covers the z-10
-// content layer but stays below the z-20 chat overlay.
-function CanvasEnterOverlay() {
-  const [faded, setFaded] = useState(false);
-
-  useEffect(() => {
-    // Two rAF frames so the browser paints opacity:1 first, then triggers the transition
-    const id = requestAnimationFrame(() => {
-      requestAnimationFrame(() => setFaded(true));
-    });
-    return () => cancelAnimationFrame(id);
-  }, []);
-
-  return (
-    <div
-      className="fixed inset-0 pointer-events-none"
-      style={{
-        background: '#eaeaef',
-        opacity: faded ? 0 : 1,
-        transition: 'opacity 900ms cubic-bezier(0.23,1,0.32,1)',
-        zIndex: 15,
-      }}
-    />
-  );
-}
+import { AssistantPanel } from '@/components/assistant/assistant-panel';
+import { MemoryCopilot } from '@/components/assistant/memory-copilot';
+import { SpecialistPresence } from '@/components/assistant/specialist-presence';
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isCanvasPage = pathname === '/builder' || pathname.startsWith('/workflows/');
-
-  // Remount the overlay each time the user enters a canvas page so the fade
-  // restarts from scratch even on repeated visits.
-  const [enterKey, setEnterKey] = useState(0);
-  useEffect(() => {
-    if (isCanvasPage) {
-      setEnterKey((k) => k + 1);
-    }
-  }, [isCanvasPage]);
+  // Scope (/) is now the full-height LibreChat shell — flat dark, its own sidebar
+  // for nav, so no global grid and no top navbar there.
+  const isScope = pathname === '/';
+  const isGridPage =
+    pathname === '/dashboard' ||
+    ['/fapi', '/t1134', '/surplus', '/bu-overview'].includes(pathname) ||
+    pathname.startsWith('/client');
+  // Light neumorphic pages paint a full-viewport light bg so the floating navbar
+  // sits on the page colour (no white strip behind the transparent nav row).
+  const isLightPage = pathname.startsWith('/run/');
 
   return (
-    <>
+    <CopilotKit runtimeUrl="/api/copilotkit">
       {/* Fixed canvas layer — only active on builder/workflow pages */}
       <PersistentCanvas />
+
+      {/* Fixed grid background — same dark-canvas grid as the builder, finer
+          cells, running full-screen behind the floating navbar. */}
+      {isGridPage && (
+        <div
+          className="fixed inset-0"
+          style={{
+            zIndex: 0,
+            backgroundColor: '#18181c',
+            backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px)',
+            backgroundSize: '15px 15px',
+          }}
+        />
+      )}
+
+      {/* Full-viewport light background for neumorphic pages (behind the nav) */}
+      {isLightPage && <div className="fixed inset-0" style={{ zIndex: 0, background: '#EEF0F5' }} />}
 
       {/* Main layout stack — pointer-events-none on canvas pages so events reach PersistentCanvas */}
       <div
         className={`relative z-10 flex flex-col${isCanvasPage ? ' pointer-events-none' : ''}`}
         style={{ height: '100dvh' }}
       >
-        <GlobalTopNav />
+        {!isScope && <GlobalTopNav />}
         <div
           className={`flex-1 relative overflow-hidden${isCanvasPage ? ' pointer-events-none' : ''}`}
         >
@@ -66,14 +59,25 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      {/* Light → transparent overlay that plays on every canvas page entry */}
-      {isCanvasPage && <CanvasEnterOverlay key={enterKey} />}
+      {/* Chat is a full page now — see app/chat/page.tsx (ChatWorkspace). */}
 
-      {/* ActionOrb — bottom nav + chat morph */}
-      <ActionOrb />
+      {/* Ambient assistant — docked panel that overlays every page except "/"
+          (focus mode). The navbar "Ask Scope on this page" button (global-top-nav)
+          toggles it; it stays mounted (tools registered, context flowing) even
+          while slid off-screen. */}
+      <AssistantPanel />
+
+      {/* Durable memory instrument — registers rememberFact/forgetFact + publishes
+          the user's remembered facts (Postgres-backed) as grounding. Mounted once
+          here so it registers a single time across all routes. Renders nothing. */}
+      <MemoryCopilot />
+
+      {/* Shows which domain specialist (Sofi/Théo/…) is answering the current turn —
+          cosmetic; yields to a live run. See specialist-presence.tsx. */}
+      <SpecialistPresence />
 
       {/* Floating layers — rendered outside the stacking context so they layer over everything */}
       <GlobalClientSwitcher />
-    </>
+    </CopilotKit>
   );
 }

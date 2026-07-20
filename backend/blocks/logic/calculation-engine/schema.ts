@@ -78,7 +78,9 @@ function collectNumericEntries(target: Record<string, number>, value: unknown) {
 
   for (const [key, item] of Object.entries(record)) {
     const numberValue = parseNumber(item);
-    if (numberValue !== null) {
+    // Skip null AND undefined — an absent value must not clobber a value
+    // supplied by an earlier input role (e.g. rollup-derived named values).
+    if (numberValue !== null && numberValue !== undefined) {
       target[key] = numberValue;
     }
   }

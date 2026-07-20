@@ -159,6 +159,16 @@ export const auth = betterAuth({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
       enabled: !!process.env.GOOGLE_CLIENT_ID,
+      // Read-only Drive + Gmail so the app can pull a client's trial balance
+      // (a workbook in Drive, or an .xlsx email attachment) as a workflow source.
+      scope: [
+        "https://www.googleapis.com/auth/drive.readonly",
+        "https://www.googleapis.com/auth/gmail.readonly",
+      ],
+      // offline + consent → a refresh token is stored so getAccessToken() can
+      // silently refresh for server-side Drive/Gmail calls.
+      accessType: "offline",
+      prompt: "consent",
     },
   },
   plugins,

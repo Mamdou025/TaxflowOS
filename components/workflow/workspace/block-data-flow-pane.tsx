@@ -319,6 +319,7 @@ function getFlowKind({
       outputs: "review info",
     },
     Source: { inputs: "setup", outputs: "immutable data" },
+    Trigger: { inputs: "trigger", outputs: "start signal" },
   };
 
   return (labelsByFamily[block.family] ?? { inputs: "data", outputs: "data" })[side];

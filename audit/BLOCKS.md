@@ -108,11 +108,13 @@ Source blocks carry `SourceMetadata` — they are immutable evidence anchors.
 ### API / HTTP Request
 - **Catalog ID:** `source:api-http-request`
 - **Tool ID:** `source.manual_value`
+- **Icon:** `Cloud` (distinct from Currency Rate's `Braces`) [LIVE]
 - **Purpose:** Reference an external API response as evidence
 - **Config:**
   - `outputs`: `"apiReference"`
   - `sourceLocator`: `"api-http-request"`
 - **Output roles:** `apiReference`
+- **FAPI usage:** `fapi-api-boc-fx` ("Bank of Canada Valet API") is the live source of the FX rate. It feeds `fapi-source-fx-rate` (Currency Rate) so the audit shows the real origin of the rate. Real fetch runs through `GET /api/fx-rate` → `fetchAnnualAverageExchangeRate` (BoC Valet). [LIVE]
 
 ---
 
@@ -127,6 +129,8 @@ Source blocks carry `SourceMetadata` — they are immutable evidence anchors.
   - `rateProvider`: `"bank_of_canada"`
   - `rateType`: `"annual_average"`
   - `overrideRate`: `1.35`
+  - `liveRate`: fetched BoC Valet rate (optional; **preferred over `overrideRate` when present**)
+- **Rate precedence (run.ts):** same-currency → `1`; else `liveRate` (→ `rate_source: "bank_of_canada_valet"`) → `overrideRate` (→ `rate_source: "override"`). `rate_metadata` now carries `live` + `rate_source`. [LIVE]
 - **Output roles:** `exchange_rate` · `rate_metadata`
 - **UI:** `currency-rate-source-panel.tsx`
 
@@ -205,9 +209,13 @@ Source blocks carry `SourceMetadata` — they are immutable evidence anchors.
 ---
 
 ### FAPI Inputs
-- **Catalog ID:** `source:fapi-inputs` [STUB]
+- **Catalog ID:** `source:fapi-inputs`
 - **Tool ID:** `source.fapi_inputs`
-- **Purpose:** Foreign Accrual Property Income specific input values
+- **Purpose:** Foreign Accrual Property Income workbook assumptions
+- **Emits (fapiInputs):** `documentCurrency, reportingCurrency, fapiYear, inclusionRate, fatPaid, rtf` **plus the line-driving assumptions** `pCoefficient (default 1), canadianRules95_4 (95(2)), priorYearG (→A2), prescribedAmount (→F), prescribedAmountF1 (→F1), dividendDeductions (→G), partnershipDividends (→H)`. [LIVE]
+- **Classified lines default to `undefined` [2026-07-14]:** `debtForgiveness (→A1×2), cfaIncome (→C), businessLosses (→D), faclCarryforward (→E)` are NO LONGER defaulted to 0 — they're normally derived by classifying trial-balance rows (the rollup emits them as named values). A `0` here would clobber the classified value (fapi_inputs wins over rollup in the calc engine's named-value merge), so they stay `undefined` unless explicitly entered via the run's editable inputs. Paired with a calc-engine fix so `undefined` named values are skipped (never clobber an earlier role). [LIVE]
+- **RTF snapping:** `rtf` is normalized to one of `{1.9, 4}` (default 1.9) in the block schema. [LIVE]
+- **Consumed by:** the lines engine as `fapi_inputs`/`protected_inputs` named values; exposed in the run as **editable inputs** (`lib/workflow-runs/fapi.ts`).
 
 ---
 
@@ -232,7 +240,7 @@ Logic blocks transform or derive values. They do not overwrite source evidence.
   - `conflictStrategy`: `"highest_confidence"` — pick highest confidence on tie
   - `lowConfidenceThreshold`: `0.75`
   - `matchFields`: `["account", "label", "description"]`
-  - `matchMode`: `"contains"` — substring matching
+  - `matchMode`: `"contains"` (substring) · `"exact"` · `"starts_with"` · **`"all_words"` [2026-07-14]** — every token of a (multi-word) keyword must appear as a word in the field, in ANY order, with singular/plural tolerance (gain↔gains). This makes phrase keywords like `"interest income"` match real GL labels like `"Investment Income - Interest"` that plain substring matching misses. The FAPI mapping rules (`lib/workflow-runs/fapi-mapping.ts`) use `all_words`.
   - `unmatchedStrategy`: `"send_to_review"`
 - **Algorithm:**
   1. Normalize text (diacritics, case, separator chars)
@@ -259,13 +267,15 @@ Logic blocks transform or derive values. They do not overwrite source evidence.
   - `named_values` — passthrough + derived values
 - **Config:**
   - `mode`: `"auto"` | `"inline"` | `"external_rules"`
+- **Two rule forms:** `operands` + `operation`, OR a **`formulaExpression`** string (`+ − * /`, parentheses, functions below) — used for FAPI line A: `pCoefficient * (income_bucket - expense_bucket) + canadianRules95_4`.
 - **Supported functions:**
   - `abs`, `max`, `min`, `round`
   - `max_subtract_zero`, `min_multiply_cap`
+- **Operand namespace:** merges the `named_values`, `protected_inputs`, **and `fapi_inputs`** input roles, so FAPI Inputs keys (P-coefficient, 95(2), A1/A2/C–H assumptions) resolve directly as operands.
 - **Algorithm:**
-  1. Parse inline formulas or load external rules
-  2. Resolve operands from named values
-  3. Apply function
+  1. Parse inline formulas / `formulaExpression` or load external rules
+  2. Resolve operands from the merged named-value namespace (dependency-ordered)
+  3. Apply function / evaluate expression
   4. Return result + trace
 - **UI:** `calculation-engine-workspace.tsx`, `calculation-engine-editor.tsx`
 

@@ -21,6 +21,7 @@ import { AIPrompt } from "@/components/ai-elements/prompt";
 import { ConfigurationOverlay } from "@/components/overlays/configuration-overlay";
 import { useOverlay } from "@/components/overlays/overlay-provider";
 import { WorkflowToolbar } from "@/components/workflow/workflow-toolbar";
+import { sidebarCollapsedAtom } from "@/components/neumorphic-sidebar";
 import "@xyflow/react/dist/style.css";
 
 import { nanoid } from "nanoid";
@@ -50,6 +51,7 @@ import {
   selectedNodeAtom,
   showMinimapAtom,
   triggerFitViewAtom,
+  focusNodeIdAtom,
   updateNodeDataAtom,
   type WorkflowNode,
 } from "@/lib/workflow-store";
@@ -101,6 +103,7 @@ function getNeutralNodeForPendingConnection({
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: React Flow canvas requires complex setup
 export function WorkflowCanvas() {
+  const sidebarCollapsed = useAtomValue(sidebarCollapsedAtom);
   const [nodes, setNodes] = useAtom(nodesAtom);
   const [edges, setEdges] = useAtom(edgesAtom);
   const [isGenerating] = useAtom(isGeneratingAtom);
@@ -121,6 +124,7 @@ export function WorkflowCanvas() {
   const setActiveTab = useSetAtom(propertiesPanelActiveTabAtom);
   const updateNodeData = useSetAtom(updateNodeDataAtom);
   const [triggerFitView, setTriggerFitView] = useAtom(triggerFitViewAtom);
+  const [focusNodeId, setFocusNodeId] = useAtom(focusNodeIdAtom);
   const { open: openOverlay } = useOverlay();
   const { screenToFlowPosition, fitView, getViewport, setViewport } =
     useReactFlow();
@@ -152,6 +156,17 @@ export function WorkflowCanvas() {
       setTriggerFitView(false);
     }
   }, [triggerFitView, fitView, setTriggerFitView]);
+
+  // Scroll to + center a specific node (chat → builder deep-link).
+  useEffect(() => {
+    if (!focusNodeId) return;
+    if (!nodes.some((n) => n.id === focusNodeId)) return; // wait until the node exists
+    const t = window.setTimeout(() => {
+      fitView({ nodes: [{ id: focusNodeId }], maxZoom: 1.25, minZoom: 0.6, padding: 0.6, duration: 600 });
+      setFocusNodeId(null);
+    }, 260);
+    return () => window.clearTimeout(t);
+  }, [focusNodeId, nodes, fitView, setFocusNodeId]);
 
   // Pre-shift viewport when transitioning from homepage (before sidebar animates)
   const hasPreShiftedRef = useRef(false);
@@ -684,6 +699,7 @@ export function WorkflowCanvas() {
         <Panel
           className="workflow-controls-panel border-none bg-transparent p-0"
           position="bottom-left"
+          style={{ marginLeft: sidebarCollapsed ? 66 : 264, transition: 'margin-left 220ms cubic-bezier(0.23,1,0.32,1)' }}
         >
           <Controls />
         </Panel>
