@@ -11,7 +11,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Calculator, FileText, Layers, BarChart3, LayoutDashboard, Building2, LayoutGrid } from 'lucide-react';
 import { useAtomValue } from 'jotai';
 import { NeumorphicSidebar, NeuSidebarHeader, NeuSectionLabel, NeuRow } from '@/components/neumorphic-sidebar';
-import { selectedClientAtom } from '@/lib/nav-store';
+import { selectedClientAtom } from '@/shared/stores/nav-store';
 
 export type WorksheetMeta = {
   label: string;

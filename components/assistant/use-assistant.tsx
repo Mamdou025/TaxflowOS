@@ -33,12 +33,12 @@ import {
   type AttachedDoc,
   runEditsAtom,
   setThinkingCoworkerAtom,
-} from '@/lib/workspace-store';
+} from '@/shared/stores/workspace-store';
 import { pageChatSurfacesAtom } from '@/lib/page-chat-store';
 import { SurfaceEmbed } from './surface-embed';
 import { parseUploadToRows } from '@/lib/workflow-runs/parse-upload';
 import { builderFocusTargetAtom } from '@/lib/workflow-store';
-import { getPage, listPages, anchorToPage, getFieldContext, buildAgentCatalog, resolveFieldId, fieldValuesAtom } from '@/lib/resource-registry';
+import { getPage, listPages, anchorToPage, getFieldContext, buildAgentCatalog, resolveFieldId, fieldValuesAtom } from '@/shared/stores/resource-registry';
 import { InlineFieldCard } from '@/components/workspace/inline-field-card';
 import { WorkflowRunFlow, WorkflowElementCard, RunProposalCard } from '@/components/workspace/workflow-run-flow';
 import type { ComposerSuggestion } from '@/components/workspace/aside-thread';

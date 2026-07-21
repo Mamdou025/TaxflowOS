@@ -2,14 +2,14 @@
 
 import { Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/shared/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/select";
 import type { WorkflowBlock } from "@/lib/local-fiscal-workflow";
 import type { WorkflowEdge, WorkflowNode } from "@/lib/workflow-store";
 

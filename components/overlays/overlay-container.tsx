@@ -9,7 +9,7 @@ import {
 } from "motion/react";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
-import { Dialog, DialogPortal } from "@/components/ui/dialog";
+import { Dialog, DialogPortal } from "@/shared/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { useOverlay } from "./overlay-provider";

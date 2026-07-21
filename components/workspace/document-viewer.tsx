@@ -27,8 +27,8 @@ import {
   FileText, FileSpreadsheet, FileType2, File as FileIcon,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { attachedDocsAtom, uploadedRowsAtom, type AttachedDoc } from '@/lib/workspace-store';
-import { assistantOpenAtom } from '@/lib/chat-store';
+import { attachedDocsAtom, uploadedRowsAtom, type AttachedDoc } from '@/shared/stores/workspace-store';
+import { assistantOpenAtom } from '@/shared/stores/chat-store';
 import { parseUploadToRows } from '@/lib/workflow-runs/parse-upload';
 
 // ── Types ──────────────────────────────────────────────────────────────────────

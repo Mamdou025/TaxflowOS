@@ -2,7 +2,7 @@
 
 import type { NodeProps } from "@xyflow/react";
 import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 
 type AddNodeData = {
   onClick?: () => void;

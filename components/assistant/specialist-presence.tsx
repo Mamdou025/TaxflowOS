@@ -15,7 +15,7 @@
 import { useEffect } from 'react';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useCopilotChat } from '@copilotkit/react-core';
-import { activeCoworkerAtom, activeRunAtom, setActiveCoworkerAtom } from '@/lib/workspace-store';
+import { activeCoworkerAtom, activeRunAtom, setActiveCoworkerAtom } from '@/shared/stores/workspace-store';
 import { classifyDeterministic } from '@/lib/assistant-runtime/routing/classify';
 import { applyRoutePolicy } from '@/lib/assistant-runtime/routing/route-policy';
 import { selectSpecialist, SPECIALISTS } from '@/lib/assistant-runtime/agents/specialists';

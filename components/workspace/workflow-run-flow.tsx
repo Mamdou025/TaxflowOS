@@ -6,7 +6,7 @@ import { Check, Upload, FileUp, ShieldCheck, Loader2, ChevronDown, ExternalLink,
 import { runTemplateLoop, runTemplateCore, buildOverrideRules, initialRunState, resolveBlocker, type TemplateConfig, type RunState, type RunDetail, type SourceRow } from '@/lib/workflow-runs';
 import { parseUploadToRows } from '@/lib/workflow-runs/parse-upload';
 import { GoogleSourcePicker, type PickedSource } from '@/components/workspace/google-source-picker';
-import { pushTrailAtom, activeRunAtom, setActiveCoworkerAtom, uploadedRowsAtom, runEditsAtom, setRunInputAtom, setRunOverrideAtom, setRunEditsAtom, EMPTY_RUN_EDITS } from '@/lib/workspace-store';
+import { pushTrailAtom, activeRunAtom, setActiveCoworkerAtom, uploadedRowsAtom, runEditsAtom, setRunInputAtom, setRunOverrideAtom, setRunEditsAtom, EMPTY_RUN_EDITS } from '@/shared/stores/workspace-store';
 import type { Agent } from '@/lib/agents';
 import { coworkerForAgent, coworkerForWorkflow, WORKFLOW_ENGINE, WORKSPACE_ASSISTANT } from '@/lib/coworkers';
 import { recordWorkItemAtom, workIdFor } from '@/lib/work-store';

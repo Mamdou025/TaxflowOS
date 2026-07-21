@@ -22,18 +22,18 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { CodeEditor } from "@/components/ui/code-editor";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/shared/ui/alert-dialog";
+import { Button } from "@/shared/ui/button";
+import { CodeEditor } from "@/shared/ui/code-editor";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/select";
 import { EdgeInspector } from "@/components/workflow/edge-inspector";
 import { api } from "@/lib/api-client";
 import { integrationsAtom } from "@/lib/integrations-store";
@@ -99,7 +99,7 @@ import {
   getDefaultInspectorTabForSelection,
 } from "@/src/domain/workflow/inspector-rules";
 import { hasExcelSourceEvidence } from "@/src/domain/workflow/source-rules";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { ActionConfig } from "./config/action-config";
 import { ActionGrid } from "./config/action-grid";
 import { FiscalBlockConfig } from "./config/fiscal-block-config";

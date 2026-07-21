@@ -590,21 +590,26 @@
    from the surface and blends with the icon's relief rather than sitting on it as
    flat type. Tune the shadow alphas / face for more or less relief. */
 .isneu-wordmark {
-  /* Light: a readable dark-slate face. A SLIM highlight line (0.5px, soft) crisps the
-     top-left edge, and a soft blurred highlight + shadow wrap the letters as the
-     neumorphic relief — same light direction/tones as the dial. */
-  color: #3d4658;
+  /* Light: a dark-GREY face (not near-black) WITH a real raised relief — a bright
+     white highlight hugging the top-left edge of each stroke + a soft cool shadow
+     bottom-right, so the word reads as legible type that is also embossed/raised out
+     of the surface (matches the dial's light direction). Verified against renders. */
+  color: #767c8a;
+  /* Shadows in em so the SAME relief scales with font-size — identical at the hero's
+     38px and proportionate at the smaller sidebar wordmark (no separate class). */
   text-shadow:
-    -0.5px -0.5px 0.5px rgba(255, 255, 255, 0.8),
-    -2px -2px 5px rgba(255, 255, 255, 0.85),
-    2.5px 3px 6px rgba(146, 151, 178, 0.5);
+    -0.039em -0.039em 0.026em rgba(255, 255, 255, 1),
+    -0.053em -0.053em 0.079em rgba(255, 255, 255, 0.55),
+    0.066em 0.079em 0.132em rgba(140, 146, 178, 0.85),
+    0.039em 0.039em 0.053em rgba(110, 116, 150, 0.7);
 }
 .dark .isneu-wordmark {
-  /* Dark: a readable light-slate face; slim dark edge line + soft bluish highlight and
-     black shadow as the relief. */
-  color: #d2d8e6;
+  /* Dark: readable light-slate face + the same raised relief (bluish highlight top-
+     left, black shadow bottom-right). */
+  color: #c6cddd;
   text-shadow:
-    -0.5px -0.5px 0.5px rgba(18, 20, 28, 0.6),
-    -2px -2px 5px rgba(74, 78, 102, 0.6),
-    2.5px 3px 6px rgba(0, 0, 0, 0.72);
+    -0.039em -0.039em 0.026em rgba(120, 126, 160, 0.75),
+    -0.053em -0.053em 0.079em rgba(90, 96, 130, 0.4),
+    0.066em 0.079em 0.132em rgba(0, 0, 0, 0.9),
+    0.039em 0.039em 0.053em rgba(0, 0, 0, 0.75);
 }

@@ -10,7 +10,7 @@
 
 **Visual Workflow Builder** — the React Flow node-graph editor for fiscal workflows. Three physical zones: the **UI** (`components/workflow/**`, `components/overlays/**`, `components/ai-elements/**`), the **headless engine** (`lib/local-*`, `lib/workflow-*`, `src/domain/**`, `src/state/**`, `lib/steps/**`, `lib/workflow-runs/**`), and the **local execution layer** (`backend/blocks/**`, `backend/runtime/**`). Canvas entry: `components/workflow/workflow-canvas.tsx` (the `<ReactFlow>` host) wrapped by `persistent-canvas.tsx` (mounted app-wide by `components/app-shell.tsx`) and by `inline-builder.tsx` (mounted inside chat). Domain entry: `lib/local-fiscal-workflow.ts` + state hub `lib/workflow-store.ts`. Routes: `app/builder/page.tsx` (current) and `app/workflows/[workflowId]/page.tsx` (legacy).
 
-**Tax Worksheets** — tax workpapers (FAPI, Surplus, T1134, Expense) and client/BU dashboards. Split across a **typed in-app half** (`components/worksheet/**`, `lib/worksheet-intel/**`) and an **untyped `tax-ui/**` island** (excluded from tsconfig, `@tax/*` alias, wouter-shimmed). `/fapi` mounts typed `components/worksheet/fapi-worksheet.tsx`; `/surplus`, `/t1134`, `/dashboard`, `/bu-overview`, `/client/[id]` dynamic-import (`ssr:false`) the island `@tax/pages/*`. Registration table: `lib/resource-registry.tsx`. Route shells: `app/{fapi,surplus,t1134,worksheets}/page.tsx`. **NOTE:** FAPI exists twice — typed `components/worksheet/fapi-worksheet.tsx` (432 LOC, live) supersedes island `tax-ui/pages/FapiWorksheet.tsx` (1076 LOC, dead/unrouted).
+**Tax Worksheets** — tax workpapers (FAPI, Surplus, T1134, Expense) and client/BU dashboards. Split across a **typed in-app half** (`components/worksheet/**`, `lib/worksheet-intel/**`) and an **untyped `tax-ui/**` island** (excluded from tsconfig, `@tax/*` alias, wouter-shimmed). `/fapi` mounts typed `components/worksheet/fapi-worksheet.tsx`; `/surplus`, `/t1134`, `/dashboard`, `/bu-overview`, `/client/[id]` dynamic-import (`ssr:false`) the island `@tax/pages/*`. Registration table: `shared/stores/resource-registry.tsx`. Route shells: `app/{fapi,surplus,t1134,worksheets}/page.tsx`. **NOTE:** FAPI exists twice — typed `components/worksheet/fapi-worksheet.tsx` (432 LOC, live) supersedes island `tax-ui/pages/FapiWorksheet.tsx` (1076 LOC, dead/unrouted).
 
 **Assistant / Chat** — the Ask/Propose/Execute intent-gated AI assistant. Pure deterministic runtime in `lib/assistant-runtime/**` (routing, memory, model-tiering, evals; server-only, no React). Server endpoint: `app/api/copilotkit/route.ts` (CopilotKit `BuiltInAgent` + gate/orphan-repair middleware). Client entry: `components/workspace/copilot-workspace-panel.tsx` = the `/` route `ChatWorkspace` (`app/page.tsx`). The "client brain" is the god-hook `components/assistant/use-assistant.tsx`. **WARNING:** chat-rendering files are scattered between `components/assistant/**` and `components/workspace/**`.
 
@@ -22,7 +22,7 @@
 
 **Platform spine (not a mini-app)** — DB/auth/API shared by everyone. Drizzle schema `lib/db/schema.ts` (11 tables) + client `lib/db/index.ts`; auth `lib/auth.ts` + `components/auth/dialog.tsx`; 36 route handlers under `app/api/**`; browser client `lib/api-client.ts`; aspirational kernel vocabulary `lib/kernel/**` (types-only, only `ActorKind` consumed at runtime).
 
-**App shell + design system (not a mini-app)** — the frame every app renders inside. Provider stack `app/layout.tsx`; per-route chrome `components/app-shell.tsx`; nav `components/global-top-nav.tsx`; rail `components/neumorphic-sidebar.tsx`; brand `components/scope-orb.tsx`. **Theme source of truth**: `app/globals.css` (104 `--sx-*` light/dark tokens), re-mapped by JS palettes `NEU` (in `neumorphic-sidebar.tsx`) and `LC` (`lib/librechat-theme.ts`). shadcn primitives in `components/ui/**`.
+**App shell + design system (not a mini-app)** — the frame every app renders inside. Provider stack `app/layout.tsx`; per-route chrome `components/app-shell.tsx`; nav `components/global-top-nav.tsx`; rail `components/neumorphic-sidebar.tsx`; brand `components/scope-orb.tsx`. **Theme source of truth**: `app/globals.css` (104 `--sx-*` light/dark tokens), re-mapped by JS palettes `NEU` (in `neumorphic-sidebar.tsx`) and `LC` (`lib/librechat-theme.ts`). shadcn primitives in **`shared/ui/**`** *(moved from `components/ui/` in reorg Phase 2, 2026-07-21; import via `@/shared/ui/<name>`)*.
 
 ---
 
@@ -82,8 +82,8 @@ For one block, the spellings across layers: subtype `Currency Rate` (`src/domain
 | **Change block config UI** | Current: `components/overlays/configuration-overlay.tsx`; Legacy: `components/workflow/node-config-panel.tsx` → `inspector/block-inspector.tsx` | Shared leaf editors in `source-viewers/**` + `logic-viewers/**` |
 | **Change node appearance** | `components/workflow/nodes/**` + theming in `components/ai-elements/**` | |
 | **Change how a workflow runs** | Runtime: `lib/workflow-executor.workflow.ts`; Template loop: `lib/workflow-runs/engine.ts`; Local block math: `backend/blocks/**/run.ts` | |
-| **Edit an in-app worksheet (FAPI/Expense)** | `components/worksheet/{fapi-worksheet,expense-worksheet}.tsx` | Register in `lib/resource-registry.tsx` |
-| **Edit an island worksheet (Surplus/T1134/dashboards)** | `tax-ui/pages/*` (**UNTYPED — not type-checked**) | Wired via `dynamic(() => import('@tax/pages/X'), {ssr:false})` in `app/*/page.tsx` + `lib/resource-registry.tsx` |
+| **Edit an in-app worksheet (FAPI/Expense)** | `components/worksheet/{fapi-worksheet,expense-worksheet}.tsx` | Register in `shared/stores/resource-registry.tsx` |
+| **Edit an island worksheet (Surplus/T1134/dashboards)** | `tax-ui/pages/*` (**UNTYPED — not type-checked**) | Wired via `dynamic(() => import('@tax/pages/X'), {ssr:false})` in `app/*/page.tsx` + `shared/stores/resource-registry.tsx` |
 | **Make chat answer about a worksheet** | `lib/worksheet-intel/**` (contract `types.ts`, generic `template-adapter.ts`, registry `registry.ts`) | Publisher `components/assistant/worksheet-copilot.tsx` |
 | **Change assistant behavior/routing** | Runtime `lib/assistant-runtime/**` (routing `routing/classify.ts`, gate `routing/gate.ts`); server `app/api/copilotkit/route.ts` | Client actions in `components/assistant/use-assistant.tsx` |
 | **Change chat UI / thread** | `components/assistant/assistant-thread.tsx` + `components/workspace/{aside-thread,thread-messages,workflow-run-flow}.tsx` | (chat rendering straddles both folders) |
@@ -134,7 +134,7 @@ Files ≥700 LOC and other hotspots. Most are single mega-exports mixing layout,
 | `lib/integrations/vercel.ts` | 671 | **DEAD** — full Vercel SDK wrapper, zero importers. |
 | `lib/api-client.ts` | 664 | Typed browser→API client (~17 UI importers). |
 | `tax-ui/components/OrbitalStage.tsx` | 658 | **DEAD** island nav stage. |
-| `components/ui/template-badge-textarea.tsx` | 620 | Workflow template-var textarea **misfiled** in `components/ui`. |
+| `shared/ui/template-badge-textarea.tsx` | 620 | Workflow template-var textarea — a **domain widget still misfiled** in the design system (split out in Phase 4). |
 | `app/globals.css` | 584 | 104 `--sx-*` tokens + React-Flow overrides + keyframes. |
 | `plugins/registry.ts` | 560 | Plugin registry: types + ~20 query/util fns. |
 

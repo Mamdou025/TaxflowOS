@@ -31,7 +31,7 @@ import {
   builderFocusTargetAtom,
   focusNodeIdAtom,
 } from "@/lib/workflow-store";
-import { uploadedRowsAtom } from "@/lib/workspace-store";
+import { uploadedRowsAtom } from "@/shared/stores/workspace-store";
 
 const BuilderPage = () => {
   const isMobile = useIsMobile();

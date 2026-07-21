@@ -2,7 +2,7 @@
 
 import { ExternalLink } from "lucide-react";
 import type { ReactNode } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import type {
   LocalRunRecord,
   WorkflowBlock,

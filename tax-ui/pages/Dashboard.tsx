@@ -13,8 +13,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { NeumorphicSidebar, NeuSidebarHeader, NeuSectionLabel, NeuRow, NEU } from '@/components/neumorphic-sidebar';
-import { selectedClientAtom } from '@/lib/nav-store';
-import { useInlinePage } from '@/lib/inline-page-context';
+import { selectedClientAtom } from '@/shared/stores/nav-store';
+import { useInlinePage } from '@/shared/stores/inline-page-context';
 
 // ─── Dashboard sidebar (per-page neumorphic rail) ─────────────────────────────
 function DashboardSidebar() {

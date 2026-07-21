@@ -1,7 +1,7 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
 import type { WorkflowBlock } from "@/lib/local-fiscal-workflow";
 import { formatFileSize } from "./excel-utils";
 

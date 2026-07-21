@@ -8,7 +8,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { LC } from '@/lib/librechat-theme';
-import type { PageMenu, PageMenuItem, MenuDropdown } from '@/lib/page-menu-store';
+import type { PageMenu, PageMenuItem, MenuDropdown } from '@/shared/stores/page-menu-store';
 
 function Dropdown({ item }: { item: MenuDropdown }) {
   const [open, setOpen] = useState(false);

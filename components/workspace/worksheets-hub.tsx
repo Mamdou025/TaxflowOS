@@ -7,8 +7,8 @@
 
 import { useSetAtom } from 'jotai';
 import { WorksheetsGallery } from '@/components/worksheet/worksheets-gallery';
-import { openWorkspaceWindowAtom } from '@/lib/workspace-store';
-import { getPage } from '@/lib/resource-registry';
+import { openWorkspaceWindowAtom } from '@/shared/stores/workspace-store';
+import { getPage } from '@/shared/stores/resource-registry';
 
 export default function WorksheetsHub() {
   const openWindow = useSetAtom(openWorkspaceWindowAtom);

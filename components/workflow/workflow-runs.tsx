@@ -34,8 +34,8 @@ import {
   selectedExecutionIdAtom,
 } from "@/lib/workflow-store";
 import { findActionById } from "@/plugins";
-import { Button } from "../ui/button";
-import { Spinner } from "../ui/spinner";
+import { Button } from "@/shared/ui/button";
+import { Spinner } from "@/shared/ui/spinner";
 
 type ExecutionLog = {
   id: string;

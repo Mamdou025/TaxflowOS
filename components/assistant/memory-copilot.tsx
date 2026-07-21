@@ -19,7 +19,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { useCopilotAction, useCopilotReadable } from '@copilotkit/react-core';
 import { toast } from 'sonner';
-import { selectedClientAtom } from '@/lib/nav-store';
+import { selectedClientAtom } from '@/shared/stores/nav-store';
 
 type MemoryView = {
   id: string;

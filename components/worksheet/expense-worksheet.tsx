@@ -17,7 +17,7 @@ import { Upload, GitBranch, Loader2 } from 'lucide-react';
 import { runTemplateCore, buildOverrideRules, type SourceRow } from '@/lib/workflow-runs';
 import { EXPENSE_CONFIG } from '@/lib/workflow-runs/expense';
 import { parseUploadToRows } from '@/lib/workflow-runs/parse-upload';
-import { uploadedRowsAtom, runEditsAtom, setRunInputAtom, EMPTY_RUN_EDITS } from '@/lib/workspace-store';
+import { uploadedRowsAtom, runEditsAtom, setRunInputAtom, EMPTY_RUN_EDITS } from '@/shared/stores/workspace-store';
 import { builderFocusTargetAtom } from '@/lib/workflow-store';
 import { WorksheetCopilot } from '@/components/assistant/worksheet-copilot';
 

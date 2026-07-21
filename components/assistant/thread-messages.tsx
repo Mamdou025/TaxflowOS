@@ -18,7 +18,7 @@ import { useAtomValue } from 'jotai';
 import { useCopilotChatInternal } from '@copilotkit/react-core';
 import { useChatContext, type MessagesProps } from '@copilotkit/react-ui';
 import { MessageSpecialistContext, buildMessageSpecialistMap, messageSignature } from './message-specialists';
-import { thinkingCoworkerAtom } from '@/lib/workspace-store';
+import { thinkingCoworkerAtom } from '@/shared/stores/workspace-store';
 import { AgentThinking } from './agent-thinking';
 
 /** Pinned work (runs / fields / elements) to render atop the message scroll. */

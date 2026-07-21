@@ -10,7 +10,7 @@ import { GitHubStarsProvider } from "@/components/github-stars-provider";
 import { GlobalModals } from "@/components/global-modals";
 import { OverlayProvider } from "@/components/overlays/overlay-provider";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@/shared/ui/sonner";
 import { AppShell } from "@/components/app-shell";
 import { mono, sans } from "@/lib/fonts";
 import { cn } from "@/lib/utils";

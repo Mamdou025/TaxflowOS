@@ -16,7 +16,7 @@
 import { useAtom } from 'jotai';
 import { usePathname, useRouter } from 'next/navigation';
 import { X, Maximize2 } from 'lucide-react';
-import { assistantOpenAtom } from '@/lib/chat-store';
+import { assistantOpenAtom } from '@/shared/stores/chat-store';
 import { useAssistant } from './use-assistant';
 import { AssistantThread } from './assistant-thread';
 import { ScopeMark } from '@/components/scope-orb';

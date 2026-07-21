@@ -25,9 +25,9 @@ import { InlineFieldCard } from '@/components/workspace/inline-field-card';
 import { WorkflowElementCard } from '@/components/workspace/workflow-run-flow';
 import { getWorkflowConfig } from '@/lib/workflow-runs';
 import { getAgent } from '@/lib/agents';
-import { buildAgentCatalog } from '@/lib/resource-registry';
+import { buildAgentCatalog } from '@/shared/stores/resource-registry';
 import { LC } from '@/lib/librechat-theme';
-import { selectedClientAtom, showClientSwitcherAtom, scopeYearAtom } from '@/lib/nav-store';
+import { selectedClientAtom, showClientSwitcherAtom, scopeYearAtom } from '@/shared/stores/nav-store';
 import { InScopeNeuMark } from '@/components/inscope-neu-mark';
 import { WorkMenu, WorkMenuStyles } from './work-menu';
 import { AgentRoster } from './agent-roster';
@@ -293,7 +293,8 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
                     pinned TOP CENTRE. On chat start the dial flies to the header (shared
                     layoutId="scope-orb") and the wordmark is left behind (fades). The dial
                     is pulled in close to the word (negative margin absorbs its transparent
-                    ring). Focus only; theme-aware (wordmark = LC.title, dial themes itself). */}
+                    ring). Focus only; theme-aware (wordmark = .isneu-wordmark embossed
+                    neumorphic in globals.css, dial themes itself). */}
                 {!docked && (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, paddingTop: 12, flexShrink: 0 }}>
                     <motion.span

@@ -4,8 +4,8 @@ import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { usePathname, useRouter } from 'next/navigation';
 import { ChevronDown, LayoutDashboard, GitFork, MessageCircle, Files, Table2 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { selectedClientAtom, showClientSwitcherAtom, navActionsAtom } from '@/lib/nav-store';
-import { assistantOpenAtom } from '@/lib/chat-store';
+import { selectedClientAtom, showClientSwitcherAtom, navActionsAtom } from '@/shared/stores/nav-store';
+import { assistantOpenAtom } from '@/shared/stores/chat-store';
 import { viewTransitionNav } from '@/lib/view-transition';
 import { ScopeKeystone } from '@/components/scope-orb';
 

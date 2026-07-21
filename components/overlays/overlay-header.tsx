@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronLeftIcon, XIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import { cn } from "@/lib/utils";
 import { useOverlay, useOverlayPosition } from "./overlay-provider";
 import type { OverlayHeaderProps } from "./types";

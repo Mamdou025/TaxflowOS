@@ -11,7 +11,7 @@ import {
   LogOut, Workflow, Bell, Home
 } from 'lucide-react';
 import { cn } from '@tax/lib/utils';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip';
 import { toast } from 'sonner';
 
 interface NavItem {

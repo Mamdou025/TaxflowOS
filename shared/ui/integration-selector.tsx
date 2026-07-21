@@ -14,7 +14,7 @@ import { ConfigureConnectionOverlay } from "@/components/overlays/add-connection
 import { AiGatewayConsentOverlay } from "@/components/overlays/ai-gateway-consent-overlay";
 import { EditConnectionOverlay } from "@/components/overlays/edit-connection-overlay";
 import { useOverlay } from "@/components/overlays/overlay-provider";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   aiGatewayStatusAtom,
   aiGatewayTeamsAtom,

@@ -4,7 +4,7 @@ import { useAtom } from 'jotai';
 import { useEffect, useRef, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { CLIENTS, selectedClientAtom, showClientSwitcherAtom } from '@/lib/nav-store';
+import { CLIENTS, selectedClientAtom, showClientSwitcherAtom } from '@/shared/stores/nav-store';
 
 export function GlobalClientSwitcher() {
   const [open, setOpen] = useAtom(showClientSwitcherAtom);

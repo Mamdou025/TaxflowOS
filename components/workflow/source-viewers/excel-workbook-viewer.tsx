@@ -1,7 +1,7 @@
 "use client";
 
 import { Table2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import { cn } from "@/lib/utils";
 import {
   buildExcelSourceConfigPatch,

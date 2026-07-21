@@ -21,7 +21,7 @@ import {
 } from "@/components/ai-elements/node";
 import { ConfigurationOverlay } from "@/components/overlays/configuration-overlay";
 import { useOverlay } from "@/components/overlays/overlay-provider";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 import {
   integrationIdsAtom,
   integrationsLoadedAtom,

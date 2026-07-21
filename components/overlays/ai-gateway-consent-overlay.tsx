@@ -3,7 +3,7 @@
 import { useAtomValue, useSetAtom } from "jotai";
 import { Loader2, Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { Label } from "@/components/ui/label";
+import { Label } from "@/shared/ui/label";
 import {
   Select,
   SelectContent,
@@ -11,7 +11,7 @@ import {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/select";
 import {
   aiGatewayStatusAtom,
   aiGatewayTeamsAtom,

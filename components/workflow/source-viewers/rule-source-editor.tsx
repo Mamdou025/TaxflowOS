@@ -3,16 +3,16 @@
 import { Calculator, Copy, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/select";
 import type { WorkflowBlock } from "@/lib/local-fiscal-workflow";
 import { cn } from "@/lib/utils";
 import type { WorkflowEdge, WorkflowNode } from "@/lib/workflow-store";

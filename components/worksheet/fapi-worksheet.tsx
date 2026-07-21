@@ -17,10 +17,10 @@ import { ChevronRight, Upload, GitBranch, Sparkles, FileSpreadsheet, Loader2, Do
 import { runTemplateCore, buildOverrideRules, type SourceRow, type MappedRow } from '@/lib/workflow-runs';
 import { FAPI_CONFIG } from '@/lib/workflow-runs/fapi';
 import { parseUploadToRows } from '@/lib/workflow-runs/parse-upload';
-import { uploadedRowsAtom, runEditsAtom, setRunInputAtom, EMPTY_RUN_EDITS } from '@/lib/workspace-store';
+import { uploadedRowsAtom, runEditsAtom, setRunInputAtom, EMPTY_RUN_EDITS } from '@/shared/stores/workspace-store';
 import { builderFocusTargetAtom } from '@/lib/workflow-store';
-import { useInlinePage } from '@/lib/inline-page-context';
-import { usePageMenu } from '@/lib/page-menu-store';
+import { useInlinePage } from '@/shared/stores/inline-page-context';
+import { usePageMenu } from '@/shared/stores/page-menu-store';
 import { WorksheetCopilot } from '@/components/assistant/worksheet-copilot';
 
 const INK = 'var(--sx-ink)', MUTED = 'var(--sx-muted)', FAINT = 'var(--sx-faint)';

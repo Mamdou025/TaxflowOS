@@ -6,11 +6,11 @@ import { useEffect, useMemo, useState } from "react";
 import { ConfigureConnectionOverlay } from "@/components/overlays/add-connection-overlay";
 import { AiGatewayConsentOverlay } from "@/components/overlays/ai-gateway-consent-overlay";
 import { useOverlay } from "@/components/overlays/overlay-provider";
-import { Button } from "@/components/ui/button";
-import { CodeEditor } from "@/components/ui/code-editor";
-import { IntegrationIcon } from "@/components/ui/integration-icon";
-import { IntegrationSelector } from "@/components/ui/integration-selector";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/shared/ui/button";
+import { CodeEditor } from "@/shared/ui/code-editor";
+import { IntegrationIcon } from "@/shared/ui/integration-icon";
+import { IntegrationSelector } from "@/shared/ui/integration-selector";
+import { Label } from "@/shared/ui/label";
 import {
   Select,
   SelectContent,
@@ -18,14 +18,14 @@ import {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { TemplateBadgeInput } from "@/components/ui/template-badge-input";
+} from "@/shared/ui/select";
+import { TemplateBadgeInput } from "@/shared/ui/template-badge-input";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@/shared/ui/tooltip";
 import { aiGatewayStatusAtom } from "@/lib/ai-gateway/state";
 import {
   integrationsAtom,

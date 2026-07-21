@@ -8,9 +8,9 @@ import {
   EditConnectionOverlay,
 } from "@/components/overlays/edit-connection-overlay";
 import { useOverlay } from "@/components/overlays/overlay-provider";
-import { Button } from "@/components/ui/button";
-import { IntegrationIcon } from "@/components/ui/integration-icon";
-import { Spinner } from "@/components/ui/spinner";
+import { Button } from "@/shared/ui/button";
+import { IntegrationIcon } from "@/shared/ui/integration-icon";
+import { Spinner } from "@/shared/ui/spinner";
 import { api, type Integration } from "@/lib/api-client";
 import { getIntegrationLabels } from "@/plugins";
 

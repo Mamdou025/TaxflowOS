@@ -6,7 +6,7 @@ import { ArrowUp } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Shimmer } from "@/components/ai-elements/shimmer";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import { api } from "@/lib/api-client";
 import {
   currentWorkflowIdAtom,

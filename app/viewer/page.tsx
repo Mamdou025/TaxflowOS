@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Files, Calculator, FileText, Layers, BarChart3, LayoutDashboard, GitFork, Building2 } from 'lucide-react';
 import { useAtomValue } from 'jotai';
 import { NeumorphicSidebar, NeuSidebarHeader, NeuSectionLabel, NeuRow } from '@/components/neumorphic-sidebar';
-import { selectedClientAtom } from '@/lib/nav-store';
+import { selectedClientAtom } from '@/shared/stores/nav-store';
 
 // Full-height frame for the Document Viewer route. Same neumorphic sidebar as the
 // worksheet routes (for nav parity), but the viewer fills a bounded, overflow-hidden

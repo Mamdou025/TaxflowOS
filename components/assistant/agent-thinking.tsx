@@ -16,7 +16,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAtomValue } from 'jotai';
-import { thinkingCoworkerAtom } from '@/lib/workspace-store';
+import { thinkingCoworkerAtom } from '@/shared/stores/workspace-store';
 import { LC } from '@/lib/librechat-theme';
 import { CoworkerAvatar } from './coworker-avatar';
 

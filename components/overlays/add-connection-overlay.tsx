@@ -4,9 +4,9 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { Search } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
-import { IntegrationIcon } from "@/components/ui/integration-icon";
-import { Label } from "@/components/ui/label";
+import { Input } from "@/shared/ui/input";
+import { IntegrationIcon } from "@/shared/ui/integration-icon";
+import { Label } from "@/shared/ui/label";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   aiGatewayStatusAtom,

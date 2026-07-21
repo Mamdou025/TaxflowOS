@@ -1,7 +1,7 @@
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-import type { SourceRow } from './workflow-runs/engine';
-import type { ActorKind, Coworker } from './coworkers';
+import type { SourceRow } from '@/lib/workflow-runs/engine';
+import type { ActorKind, Coworker } from '@/lib/coworkers';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Chat Workspace store

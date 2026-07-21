@@ -11,7 +11,7 @@ import { useState, type CSSProperties, type ReactNode } from 'react';
 import { useAtom } from 'jotai';
 import { ChevronRight, Folder, FolderOpen, FolderPlus, MessageSquare, MessageSquarePlus, Trash2 } from 'lucide-react';
 import { NEU } from '@/components/neumorphic-sidebar';
-import { selectedClientAtom } from '@/lib/nav-store';
+import { selectedClientAtom } from '@/shared/stores/nav-store';
 import { folderTreeAtom, expandedFoldersAtom, selectedChatAtom, addChild, removeNode, renameNode, uid, type TreeNode } from '@/lib/folder-tree';
 
 const ACCENT = '#8B5CF6';

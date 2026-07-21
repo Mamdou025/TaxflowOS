@@ -6,7 +6,7 @@
 
 import { Bot, Plus, MoreHorizontal } from 'lucide-react';
 import { AGENTS } from '@/lib/agents';
-import { usePageMenu } from '@/lib/page-menu-store';
+import { usePageMenu } from '@/shared/stores/page-menu-store';
 import { NEU } from '@/components/neumorphic-sidebar';
 
 export function AgentBuilder() {

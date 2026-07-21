@@ -30,7 +30,7 @@ import {
   type WorkItemType,
   type WorkItemStatus,
 } from '@/lib/work-store';
-import { activeCoworkerAtom, activeRunAtom } from '@/lib/workspace-store';
+import { activeCoworkerAtom, activeRunAtom } from '@/shared/stores/workspace-store';
 import { CoworkerAvatar } from './coworker-avatar';
 import { LC } from '@/lib/librechat-theme';
 

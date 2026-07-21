@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import type { DataDisplayView } from "./types";
 
 export const DATA_VIEW_LABELS: Record<DataDisplayView, string> = {

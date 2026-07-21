@@ -14,15 +14,15 @@ import { useEffect, useRef, useState, type ReactNode, type CSSProperties } from 
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
 import { X, Plus, GitFork, Bot, LayoutDashboard, Workflow, PanelRightClose, Maximize2, Minimize2, Files, LayoutGrid, ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
-import { chatPanelModeAtom } from '@/lib/chat-store';
+import { chatPanelModeAtom } from '@/shared/stores/chat-store';
 import {
   workspaceWindowsAtom,
   activeWindowIdAtom,
   openWorkspaceWindowAtom,
   closeWorkspaceWindowAtom,
   focusWorkspaceWindowAtom,
-} from '@/lib/workspace-store';
-import { getPage } from '@/lib/resource-registry';
+} from '@/shared/stores/workspace-store';
+import { getPage } from '@/shared/stores/resource-registry';
 import { WORKFLOWS, getAgent, type WorkflowSuggestion } from '@/lib/agents';
 import { useAssistant } from '@/components/assistant/use-assistant';
 import { AssistantThread } from '@/components/assistant/assistant-thread';
@@ -33,9 +33,9 @@ import { ClientFolders } from '@/components/workspace/client-folders';
 import { LC } from '@/lib/librechat-theme';
 import { NEU } from '@/components/neumorphic-sidebar';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { pageMenusAtom } from '@/lib/page-menu-store';
+import { pageMenusAtom } from '@/shared/stores/page-menu-store';
 import { PageMenuBar } from '@/components/workspace/page-menu-bar';
-import { InlinePageProvider } from '@/lib/inline-page-context';
+import { InlinePageProvider } from '@/shared/stores/inline-page-context';
 
 // Foldable Scope sidebar — persisted so it stays folded across navigation.
 const scopeSidebarCollapsedAtom = atomWithStorage('inscope.scope-sidebar.collapsed', false);
@@ -242,24 +242,36 @@ export function ChatWorkspace() {
         .cwp-card { transition: flex-basis 300ms cubic-bezier(0.23,1,0.32,1), flex-grow 300ms cubic-bezier(0.23,1,0.32,1), margin 260ms cubic-bezier(0.23,1,0.32,1), border-radius 260ms cubic-bezier(0.23,1,0.32,1); }
         @keyframes cwp-page-in { from { opacity: 0; transform: translateY(8px) scale(0.99); } to { opacity: 1; transform: none; } }
         .cwp-page-in { animation: cwp-page-in 300ms cubic-bezier(0.23,1,0.32,1) both; }
+        /* Collapsed logo doubles as the expand control: the dial shows at rest and
+           crossfades to the panel-open icon on hover; clicking expands the sidebar. */
+        .cwp-logo-btn .cwp-logo-mark, .cwp-logo-btn .cwp-logo-expand { transition: opacity 150ms ease; }
+        .cwp-logo-btn .cwp-logo-expand { opacity: 0; }
+        .cwp-logo-btn:hover .cwp-logo-mark { opacity: 0; }
+        .cwp-logo-btn:hover .cwp-logo-expand { opacity: 1; }
       `}</style>
 
       {/* ── Left nav sidebar (foldable → icon rail) ── */}
       <div style={{ width: collapsed ? 66 : 258, flexShrink: 0, margin: 10, borderRadius: 12, background: NEU.bg, boxShadow: NEU.shadowOut, display: 'flex', flexDirection: 'column', padding: collapsed ? '12px 8px' : '12px 10px', overflowY: 'auto', overflowX: 'hidden', scrollbarWidth: 'thin', transition: 'width 240ms cubic-bezier(0.23,1,0.32,1)' }}>
         {collapsed ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '2px 0 10px' }}>
-            <button onClick={() => setMode('split')} title="Open chat" aria-label="Open chat" style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'grid', placeItems: 'center' }} className="hover:brightness-105">
-              <InScopeNeuMark size={32} />
+            {/* Icon only when folded; on hover it becomes the expand affordance, click expands. */}
+            <button
+              onClick={() => setCollapsed(false)}
+              title="Expand sidebar" aria-label="Expand sidebar"
+              className="cwp-logo-btn"
+              style={{ position: 'relative', width: 46, height: 46, background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'grid', placeItems: 'center' }}
+            >
+              <span className="cwp-logo-mark" style={{ display: 'grid', placeItems: 'center' }}><InScopeNeuMark size={34} /></span>
+              <span className="cwp-logo-expand" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: NEU.muted }}><PanelLeftOpen size={19} /></span>
             </button>
-            <button onClick={() => setCollapsed(false)} title="Expand sidebar" aria-label="Expand sidebar" style={foldBtn}><PanelLeftOpen size={15} /></button>
           </div>
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 6px 12px' }}>
-            <button onClick={() => setMode('split')} title="Open chat" aria-label="Open chat" style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'transparent', border: 'none', padding: 0, cursor: 'pointer' }} className="hover:brightness-105">
-              <InScopeNeuMark size={26} />
-              <span style={{ fontSize: 14, fontWeight: 700, color: NEU.text, letterSpacing: '-0.01em' }}>Scope</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 6px 12px' }}>
+            {/* Wordmark only (no icon) when expanded; the fold toggle sits right beside it. */}
+            <button onClick={() => setMode('split')} title="Open chat" aria-label="Open chat" style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center' }} className="hover:brightness-105">
+              <span className="isneu-wordmark" style={{ fontSize: 21, fontWeight: 400, letterSpacing: '-0.02em' }}>InScope</span>
             </button>
-            <button onClick={() => setCollapsed(true)} title="Collapse sidebar" aria-label="Collapse sidebar" style={{ ...foldBtn, marginLeft: 'auto' }}><PanelLeftClose size={15} /></button>
+            <button onClick={() => setCollapsed(true)} title="Collapse sidebar" aria-label="Collapse sidebar" style={foldBtn}><PanelLeftClose size={15} /></button>
           </div>
         )}
 

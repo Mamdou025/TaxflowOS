@@ -20,7 +20,7 @@ import { CoworkerAvatar } from '@/components/assistant/coworker-avatar';
 import { coworkerForAgent, coworkerForMessage, coworkerForWorkflow, WORKSPACE_ASSISTANT, type Coworker } from '@/lib/coworkers';
 import { MessageSpecialistContext } from '@/components/assistant/message-specialists';
 import { detectComposerIntent } from '@/lib/composer-intent';
-import { thinkingCoworkerAtom, setThinkingCoworkerAtom } from '@/lib/workspace-store';
+import { thinkingCoworkerAtom, setThinkingCoworkerAtom } from '@/shared/stores/workspace-store';
 import { AGENTS, type Agent } from '@/lib/agents';
 
 // Accent + the reference's soft focus ring (rgba of --is-accent-ring). The composer

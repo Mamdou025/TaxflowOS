@@ -25,7 +25,7 @@ import {
 } from '@tax/lib/data';
 import { cn } from '@tax/lib/utils';
 import { toast } from 'sonner';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 
 // ─── Review stage pipeline ─────────────────────────────────────────────────────
 const REVIEW_STAGES: Array<WorkflowCard['reviewStage']> = [

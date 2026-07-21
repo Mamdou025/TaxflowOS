@@ -26,13 +26,13 @@ See [`docs/REPO-MAP.md`](../docs/REPO-MAP.md) for entry points and the full "whe
 | Mini-app | Owns | Entry point |
 |---|---|---|
 | **Workflow Builder** | `components/workflow/**`, `components/overlays/**`, `components/ai-elements/**` (UI); `lib/local-*`, `lib/workflow-*`, `src/domain`, `src/state` (engine); `backend/**` (execution) | `components/workflow/workflow-canvas.tsx` |
-| **Tax Worksheets** | `components/worksheet/**`, `lib/worksheet-intel/**` (typed) **+ `tax-ui/**` island** (untyped) | `lib/resource-registry.tsx` |
+| **Tax Worksheets** | `components/worksheet/**`, `lib/worksheet-intel/**` (typed) **+ `tax-ui/**` island** (untyped) | `shared/stores/resource-registry.tsx` |
 | **Assistant / Chat** | `lib/assistant-runtime/**`, `components/assistant/**`, `components/workspace/**` | `app/api/copilotkit/route.ts` · `components/assistant/use-assistant.tsx` |
 | **GenUI / OpenUI** | `features/genui/**` *(relocated Phase 1, 2026-07-21)* | `features/genui/library.tsx` |
 | **Integration Plugins** | `plugins/**` (14 plugins) | `plugins/registry.ts` (load-bearing via `scripts/discover-plugins.ts`) |
 | **mapping-agent** | `services/mapping-agent/**` (standalone, own tsconfig) | `services/mapping-agent/src/engine.ts` |
 | *Platform spine* | `lib/db`, `lib/auth`, `app/api/**`, `lib/api-client.ts` | `lib/db/schema.ts` |
-| *App shell + design system* | `app/layout.tsx`, `components/app-shell.tsx`, `components/ui/**`, `app/globals.css` | `components/app-shell.tsx` |
+| *App shell + design system* | `app/layout.tsx`, `components/app-shell.tsx`, `shared/ui/**` *(moved Phase 2, 2026-07-21)*, `app/globals.css` | `components/app-shell.tsx` |
 
 ---
 

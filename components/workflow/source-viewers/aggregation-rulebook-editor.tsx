@@ -2,7 +2,7 @@
 
 import { Plus } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import type { WorkflowBlock } from "@/lib/local-fiscal-workflow";
 import {
   getAggregationRuleMode,

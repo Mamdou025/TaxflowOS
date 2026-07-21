@@ -13,7 +13,7 @@
 import { Component, type ReactNode } from 'react';
 import { useAtomValue } from 'jotai';
 import { pageChatSurfacesAtom } from '@/lib/page-chat-store';
-import { getPage } from '@/lib/resource-registry';
+import { getPage } from '@/shared/stores/resource-registry';
 
 // Light card so the embed reads as one "artifact surface" on the dark chat — same
 // treatment GenUIRender / the run-flow get.

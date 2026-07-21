@@ -1,7 +1,7 @@
 "use client";
 
 import { GitHubIcon } from "@/components/icons/github-icon";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import { formatAbbreviatedNumber } from "@/lib/utils/format-number";
 import { useGitHubStars } from "./github-stars-provider";
 

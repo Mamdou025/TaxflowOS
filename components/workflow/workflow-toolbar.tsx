@@ -30,8 +30,8 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { builderBridgeAtom, builderEmbeddedAtom } from "@/lib/builder-bridge";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
+import { Button } from "@/shared/ui/button";
+import { ButtonGroup } from "@/shared/ui/button-group";
 import { NeumorphicSidebar } from "@/components/neumorphic-sidebar";
 import {
   DropdownMenu,
@@ -45,7 +45,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/shared/ui/dropdown-menu";
 import { api } from "@/lib/api-client";
 import { authClient, useSession } from "@/lib/auth-client";
 import { integrationsAtom } from "@/lib/integrations-store";
@@ -127,7 +127,7 @@ import { ExportWorkflowOverlay } from "../overlays/export-workflow-overlay";
 import { MakePublicOverlay } from "../overlays/make-public-overlay";
 import { useOverlay } from "../overlays/overlay-provider";
 import { WorkflowIssuesOverlay } from "../overlays/workflow-issues-overlay";
-import { WorkflowIcon } from "../ui/workflow-icon";
+import { WorkflowIcon } from "@/shared/ui/workflow-icon";
 import { UserMenu } from "../workflows/user-menu";
 import {
   buildFapiWorkbookImportPatch,
