@@ -12,7 +12,7 @@
 
 import { useState, useEffect } from 'react';
 import { Renderer } from '@openuidev/react-lang';
-import { genuiLibrary } from '@/lib/genui/library';
+import { genuiLibrary } from '@/features/genui/library';
 import '@openuidev/react-ui/index.css';
 import '@openuidev/react-ui/components.css';
 

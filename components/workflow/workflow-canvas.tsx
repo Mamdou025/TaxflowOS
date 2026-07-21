@@ -658,7 +658,7 @@ export function WorkflowCanvas() {
       </div>
 
       {/* Fiscal workflow vocabulary legend */}
-      <div className="pointer-events-none absolute top-16 right-4 z-20 max-w-[260px] rounded-lg px-3 py-2 shadow-sm backdrop-blur" style={{ background: 'rgba(26,26,32,0.88)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="pointer-events-none absolute top-16 right-4 z-20 max-w-[260px] rounded-lg px-3 py-2 shadow-sm backdrop-blur" style={{ background: 'var(--sx-legend-bg)', border: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="font-medium text-[10px] uppercase" style={{ color: 'rgba(255,255,255,0.55)' }}>
           Fiscal Flow
         </div>

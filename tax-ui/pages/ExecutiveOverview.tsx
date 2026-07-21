@@ -1,4 +1,4 @@
-﻿// Tax Business Unit Overview — Screen 0
+// Tax Business Unit Overview — Screen 0
 // Design: Control-tower org-chart. Grayscale + deep navy (#0F2044) palette.
 // Audience: Lead Partners & Business Leads — strategic, calm, uncluttered.
 // LOS nodes in a hub-and-spoke layout; hover reveals deliverable detail panel.
@@ -72,12 +72,12 @@ function LOSNode({
 
       {/* Label below node */}
       <div className="text-center">
-        <div className="text-[10px] font-600 text-slate-700 leading-tight max-w-[72px] text-center">
+        <div className="text-[10px] font-600 text-slate-700 dark:text-slate-300 leading-tight max-w-[72px] text-center">
           {los.name.split(' ').slice(0, 2).join(' ')}
         </div>
         <div className={cn(
           'flex items-center justify-center gap-0.5 text-[9px] font-500 mt-0.5',
-          los.trend === 'up' ? 'text-slate-500' : los.trend === 'down' ? 'text-slate-500' : 'text-slate-400'
+          los.trend === 'up' ? 'text-slate-500 dark:text-slate-400' : los.trend === 'down' ? 'text-slate-500 dark:text-slate-400' : 'text-slate-400 dark:text-slate-500'
         )}>
           <TrendIcon size={8} />
           <span>{los.trendPct}</span>
@@ -92,7 +92,7 @@ function LOSHoverPanel({ los, onClose }: { los: LineOfService; onClose: () => vo
   return (
     <div
       className={cn(
-        'absolute z-50 w-72 bg-white border border-slate-200 rounded-lg shadow-xl',
+        'absolute z-50 w-72 bg-white dark:bg-[#1c1c24] border border-slate-200 dark:border-white/10 rounded-lg shadow-xl',
         'animate-fade-slide-up p-4'
       )}
       onMouseEnter={() => {}} // keep open when hovering panel
@@ -105,48 +105,48 @@ function LOSHoverPanel({ los, onClose }: { los: LineOfService; onClose: () => vo
             <div className="w-6 h-6 rounded bg-[#0F2044] flex items-center justify-center">
               <span className="text-[9px] font-700 text-white">{los.abbreviation}</span>
             </div>
-            <span className="text-sm font-700 text-slate-800">{los.name}</span>
+            <span className="text-sm font-700 text-slate-800 dark:text-slate-100">{los.name}</span>
           </div>
-          <div className="text-[11px] text-slate-500 pl-8">{los.leadPartner}</div>
+          <div className="text-[11px] text-slate-500 dark:text-slate-400 pl-8">{los.leadPartner}</div>
         </div>
         <span className={cn(
           'text-[10px] font-600 px-1.5 py-0.5 rounded',
-          los.trend === 'up' ? 'bg-slate-100 text-slate-600' : los.trend === 'down' ? 'bg-slate-100 text-slate-500' : 'bg-slate-100 text-slate-400'
+          los.trend === 'up' ? 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300' : los.trend === 'down' ? 'bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-400' : 'bg-slate-100 dark:bg-white/10 text-slate-400 dark:text-slate-500'
         )}>
           {los.trendPct} YTD
         </span>
       </div>
 
       {/* Description */}
-      <p className="text-[11px] text-slate-500 leading-relaxed mb-3 border-b border-slate-100 pb-3">
+      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mb-3 border-b border-slate-100 dark:border-white/10 pb-3">
         {los.description}
       </p>
 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-2 mb-3">
-        <div className="text-center p-2 bg-slate-50 rounded">
-          <div className="tabular-nums text-base font-700 text-[#0F2044]">{los.activeClients}</div>
-          <div className="text-[9px] text-slate-400 uppercase tracking-wide mt-0.5">Clients</div>
+        <div className="text-center p-2 bg-slate-50 dark:bg-white/5 rounded">
+          <div className="tabular-nums text-base font-700 text-(--sx-ink)">{los.activeClients}</div>
+          <div className="text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-0.5">Clients</div>
         </div>
-        <div className="text-center p-2 bg-slate-50 rounded">
-          <div className="tabular-nums text-base font-700 text-[#0F2044]">{los.activeWorkflows}</div>
-          <div className="text-[9px] text-slate-400 uppercase tracking-wide mt-0.5">Workflows</div>
+        <div className="text-center p-2 bg-slate-50 dark:bg-white/5 rounded">
+          <div className="tabular-nums text-base font-700 text-(--sx-ink)">{los.activeWorkflows}</div>
+          <div className="text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-0.5">Workflows</div>
         </div>
-        <div className="text-center p-2 bg-slate-50 rounded">
-          <div className={cn('tabular-nums text-base font-700', los.atRisk > 0 ? 'text-slate-600' : 'text-[#0F2044]')}>
+        <div className="text-center p-2 bg-slate-50 dark:bg-white/5 rounded">
+          <div className={cn('tabular-nums text-base font-700', los.atRisk > 0 ? 'text-slate-600 dark:text-slate-300' : 'text-(--sx-ink)')}>
             {los.atRisk > 0 ? `${los.atRisk} ⚠` : '—'}
           </div>
-          <div className="text-[9px] text-slate-400 uppercase tracking-wide mt-0.5">At Risk</div>
+          <div className="text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-0.5">At Risk</div>
         </div>
       </div>
 
       {/* Key deliverables */}
       <div className="mb-3">
-        <div className="text-[9px] font-600 text-slate-400 uppercase tracking-wider mb-1.5">Key Deliverables</div>
+        <div className="text-[9px] font-600 text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Key Deliverables</div>
         <div className="space-y-1">
           {los.keyDeliverables.slice(0, 3).map(d => (
-            <div key={d} className="flex items-center gap-1.5 text-[11px] text-slate-600">
-              <FileText size={9} className="text-slate-400 shrink-0" />
+            <div key={d} className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300">
+              <FileText size={9} className="text-slate-400 dark:text-slate-500 shrink-0" />
               {d}
             </div>
           ))}
@@ -154,22 +154,22 @@ function LOSHoverPanel({ los, onClose }: { los: LineOfService; onClose: () => vo
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-2.5 border-t border-slate-100">
+      <div className="flex items-center justify-between pt-2.5 border-t border-slate-100 dark:border-white/10">
         <div className="flex items-center gap-3">
           {los.pendingReviews > 0 && (
-            <div className="flex items-center gap-1 text-[10px] text-slate-500">
+            <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
               <Clock size={9} />
               {los.pendingReviews} reviews
             </div>
           )}
           {los.upcomingDeadlines > 0 && (
-            <div className="flex items-center gap-1 text-[10px] text-slate-500">
+            <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
               <AlertTriangle size={9} />
               {los.upcomingDeadlines} deadlines
             </div>
           )}
         </div>
-        <span className="tabular-nums text-[11px] font-700 text-[#0F2044]">{los.revenueYTD}</span>
+        <span className="tabular-nums text-[11px] font-700 text-(--sx-ink)">{los.revenueYTD}</span>
       </div>
     </div>
   );
@@ -240,7 +240,7 @@ function ControlTower() {
                 <div key={los.id} className="flex flex-col items-center">
                   {/* Vertical connector line going up (except top row) */}
                   {rowIdx > 0 && nodeIdx === 1 && (
-                    <div className="w-px h-4 bg-slate-200 -mt-4 mb-0" />
+                    <div className="w-px h-4 bg-slate-200 dark:bg-white/10 -mt-4 mb-0" />
                   )}
 
                   <div
@@ -260,7 +260,7 @@ function ControlTower() {
             {/* Horizontal connector line between rows */}
             {rowIdx < rows.length - 1 && (
               <div className="absolute left-1/2 -translate-x-1/2" style={{ top: `${(rowIdx + 1) * 108 - 8}px`, width: '60%' }}>
-                <div className="h-px bg-slate-200 w-full" />
+                <div className="h-px bg-slate-200 dark:bg-white/10 w-full" />
               </div>
             )}
           </div>
@@ -286,7 +286,7 @@ function ControlTower() {
 function CrossLOSRow({ row, index }: { row: CrossLOSClientRow; index: number }) {
   return (
     <tr
-      className="border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer animate-fade-slide-up"
+      className="border-b border-slate-100 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer animate-fade-slide-up"
       style={{ animationDelay: `${index * 50}ms` }}
       onClick={() => {
         if (row.clientId === 'northstar') {
@@ -303,15 +303,15 @@ function CrossLOSRow({ row, index }: { row: CrossLOSClientRow; index: number }) 
             {row.leadPartnerInitials}
           </div>
           <div>
-            <div className="text-[13px] font-600 text-slate-800">{row.clientName}</div>
-            <div className="text-[11px] text-slate-400">{row.leadPartner}</div>
+            <div className="text-[13px] font-600 text-slate-800 dark:text-slate-100">{row.clientName}</div>
+            <div className="text-[11px] text-slate-400 dark:text-slate-500">{row.leadPartner}</div>
           </div>
         </div>
       </td>
 
       {/* Tier */}
       <td className="py-3 px-4">
-        <span className="text-[10px] font-600 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+        <span className="text-[10px] font-600 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10">
           {row.tier}
         </span>
       </td>
@@ -336,7 +336,7 @@ function CrossLOSRow({ row, index }: { row: CrossLOSClientRow; index: number }) 
           {row.sharedDataSets.map(ds => (
             <span
               key={ds}
-              className="text-[10px] px-1.5 py-0.5 rounded border border-slate-200 bg-slate-50 text-slate-500"
+              className="text-[10px] px-1.5 py-0.5 rounded border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400"
             >
               {ds}
             </span>
@@ -346,12 +346,12 @@ function CrossLOSRow({ row, index }: { row: CrossLOSClientRow; index: number }) 
 
       {/* Revenue YTD */}
       <td className="py-3 px-4 text-right">
-        <span className="tabular-nums text-[13px] font-600 text-slate-800">{row.totalRevenueYTD}</span>
+        <span className="tabular-nums text-[13px] font-600 text-slate-800 dark:text-slate-100">{row.totalRevenueYTD}</span>
       </td>
 
       {/* Navigate */}
       <td className="py-3 px-4">
-        <ChevronRight size={14} className="text-slate-300 ml-auto" />
+        <ChevronRight size={14} className="text-slate-300 dark:text-slate-600 ml-auto" />
       </td>
     </tr>
   );
@@ -369,7 +369,7 @@ export default function ExecutiveOverview() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => toast.info('Export executive report — coming soon')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-slate-200 bg-white text-slate-500 text-xs hover:border-slate-300 hover:text-slate-700 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-slate-200 dark:border-white/10 bg-white dark:bg-[#1c1c24] text-slate-500 dark:text-slate-400 text-xs hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
           >
             Export
           </button>
@@ -381,8 +381,8 @@ export default function ExecutiveOverview() {
         {/* ── Page header ─────────────────────────────────────────────────── */}
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-xl font-700 text-[#0F2044]">Tax Business Unit Overview</h1>
-            <p className="text-sm text-slate-400 mt-0.5">
+            <h1 className="text-xl font-700 text-(--sx-ink)">Tax Business Unit Overview</h1>
+            <p className="text-sm text-slate-400 dark:text-slate-500 mt-0.5">
               Executive view · All Lines of Service · FY 2024–2025 · As of May 18, 2025
             </p>
           </div>
@@ -395,14 +395,14 @@ export default function ExecutiveOverview() {
         </div>
 
         {/* ── AI Executive Summary ─────────────────────────────────────────── */}
-        <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 flex items-start gap-3">
-          <div className="w-7 h-7 rounded bg-[#0F2044]/8 border border-[#0F2044]/12 flex items-center justify-center shrink-0 mt-0.5">
+        <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg p-4 flex items-start gap-3">
+          <div className="w-7 h-7 rounded bg-[#0F2044]/8 dark:bg-white/5 border border-[#0F2044]/12 dark:border-white/10 flex items-center justify-center shrink-0 mt-0.5">
             <Sparkles size={13} className="text-[#1B5FD4]" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-[11px] font-600 text-[#1B5FD4] mb-1 uppercase tracking-wider">AI Executive Summary</div>
-            <p className="text-sm text-slate-600 leading-relaxed">
-              <strong className="text-slate-800">4 deliverables are at risk</strong> across ICT, M&A, and Litigation. Pillar 2 GloBE Assessment (Northstar) has 4 unresolved exceptions due May 31. M&A — Project Cedar (Vantage Capital) is overdue for first-pass review. Revenue attainment is at <strong className="text-slate-800">{attainmentPct}%</strong> of target with 4 LOS trending above plan. Northstar Holdings is active across <strong className="text-slate-800">5 LOS</strong> — shared entity list and financial statements are available for cross-team use.
+            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              <strong className="text-slate-800 dark:text-slate-100">4 deliverables are at risk</strong> across ICT, M&A, and Litigation. Pillar 2 GloBE Assessment (Northstar) has 4 unresolved exceptions due May 31. M&A — Project Cedar (Vantage Capital) is overdue for first-pass review. Revenue attainment is at <strong className="text-slate-800 dark:text-slate-100">{attainmentPct}%</strong> of target with 4 LOS trending above plan. Northstar Holdings is active across <strong className="text-slate-800 dark:text-slate-100">5 LOS</strong> — shared entity list and financial statements are available for cross-team use.
             </p>
           </div>
         </div>
@@ -431,24 +431,24 @@ export default function ExecutiveOverview() {
           ].map((stat, i) => (
             <div
               key={stat.label}
-              className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm animate-fade-slide-up"
+              className="bg-white dark:bg-[#1c1c24] border border-slate-200 dark:border-white/10 rounded-lg p-4 shadow-sm animate-fade-slide-up"
               style={{ animationDelay: `${i * 40}ms` }}
             >
               <div className="flex items-center gap-2 mb-3">
-                <stat.icon size={14} className="text-slate-400" />
-                <span className="text-[11px] font-600 text-slate-400 uppercase tracking-wider">{stat.label}</span>
+                <stat.icon size={14} className="text-slate-400 dark:text-slate-500" />
+                <span className="text-[11px] font-600 text-slate-400 dark:text-slate-500 uppercase tracking-wider">{stat.label}</span>
               </div>
-              <div className="tabular-nums text-2xl font-700 text-[#0F2044]">{stat.value}</div>
-              <div className="text-[11px] text-slate-400 mt-1">{stat.sub}</div>
+              <div className="tabular-nums text-2xl font-700 text-(--sx-ink)">{stat.value}</div>
+              <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">{stat.sub}</div>
             </div>
           ))}
         </div>
 
         {/* ── Revenue attainment bar ───────────────────────────────────────── */}
-        <div data-anchor="bu:revenue" className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+        <div data-anchor="bu:revenue" className="bg-white dark:bg-[#1c1c24] border border-slate-200 dark:border-white/10 rounded-lg p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-600 text-slate-400 uppercase tracking-wider">Revenue Attainment by LOS</span>
-            <span className="tabular-nums text-sm font-600 text-slate-500">{attainmentPct}% of target</span>
+            <span className="text-[11px] font-600 text-slate-400 dark:text-slate-500 uppercase tracking-wider">Revenue Attainment by LOS</span>
+            <span className="tabular-nums text-sm font-600 text-slate-500 dark:text-slate-400">{attainmentPct}% of target</span>
           </div>
           {/* Per-LOS bars */}
           <div className="space-y-2">
@@ -459,14 +459,14 @@ export default function ExecutiveOverview() {
               const pct = Math.round((raw / maxRev) * 100);
               return (
                 <div key={los.id} className="flex items-center gap-3">
-                  <span className="w-8 text-[10px] font-600 text-slate-500 text-right shrink-0">{los.abbreviation}</span>
-                  <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                  <span className="w-8 text-[10px] font-600 text-slate-500 dark:text-slate-400 text-right shrink-0">{los.abbreviation}</span>
+                  <div className="flex-1 h-1.5 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full bg-[#1B5FD4] transition-all duration-700"
                       style={{ width: `${pct}%`, opacity: 0.7 + (pct / 100) * 0.3 }}
                     />
                   </div>
-                  <span className="tabular-nums text-[11px] text-slate-500 w-10 text-right shrink-0">{los.revenueYTD}</span>
+                  <span className="tabular-nums text-[11px] text-slate-500 dark:text-slate-400 w-10 text-right shrink-0">{los.revenueYTD}</span>
                 </div>
               );
             })}
@@ -476,26 +476,26 @@ export default function ExecutiveOverview() {
         {/* ── Control Tower — LOS org chart ───────────────────────────────── */}
         <div data-anchor="bu:lines-of-service">
           <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-sm font-700 text-[#0F2044]">Lines of Service</h2>
-            <span className="text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+            <h2 className="text-sm font-700 text-(--sx-ink)">Lines of Service</h2>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-white/10 px-2 py-0.5 rounded-full">
               Hover any node for details
             </span>
           </div>
-          <p className="text-[11px] text-slate-400 mb-4">
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-4">
             9 active lines of service · Hover a node to see deliverables, team, and status
           </p>
 
           {/* Org-chart container */}
-          <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 overflow-visible">
+          <div className="bg-white dark:bg-[#1c1c24] border border-slate-200 dark:border-white/10 rounded-xl shadow-sm p-6 overflow-visible">
             {/* Hub label */}
             <div className="flex flex-col items-center mb-2">
               <div className="w-16 h-16 rounded-full bg-[#0F2044] flex flex-col items-center justify-center shadow-md mb-1.5">
                 <span className="text-[10px] font-600 text-white/60 uppercase tracking-wider">Tax</span>
                 <span className="text-[13px] font-700 text-white leading-tight">BU</span>
               </div>
-              <span className="text-[10px] font-600 text-slate-400 uppercase tracking-wider">Business Unit</span>
+              <span className="text-[10px] font-600 text-slate-400 dark:text-slate-500 uppercase tracking-wider">Business Unit</span>
               {/* Vertical stem from hub */}
-              <div className="w-px h-5 bg-slate-200 mt-1" />
+              <div className="w-px h-5 bg-slate-200 dark:bg-white/10 mt-1" />
             </div>
 
             {/* Three rows of LOS nodes */}
@@ -508,7 +508,7 @@ export default function ExecutiveOverview() {
                 <div key={rowIdx} className="relative">
                   {/* Horizontal connector bar */}
                   <div className="flex items-center justify-center mb-0">
-                    <div className="w-2/3 h-px bg-slate-200" />
+                    <div className="w-2/3 h-px bg-slate-200 dark:bg-white/10" />
                   </div>
 
                   {/* Nodes row */}
@@ -518,7 +518,7 @@ export default function ExecutiveOverview() {
                       return (
                         <div key={los.id} className="flex flex-col items-center relative">
                           {/* Vertical tick from horizontal bar */}
-                          <div className="w-px h-3 bg-slate-200 -mt-3 mb-0" />
+                          <div className="w-px h-3 bg-slate-200 dark:bg-white/10 -mt-3 mb-0" />
                           <div
                             ref={el => {
                               // We'll use a data attribute approach for panel positioning
@@ -535,7 +535,7 @@ export default function ExecutiveOverview() {
                   {/* Vertical connector to next row */}
                   {rowIdx < 2 && (
                     <div className="flex justify-center">
-                      <div className="w-px h-4 bg-slate-200" />
+                      <div className="w-px h-4 bg-slate-200 dark:bg-white/10" />
                     </div>
                   )}
                 </div>
@@ -594,10 +594,10 @@ function LOSNodeWithPanel({ los }: { los: LineOfService }) {
 
       {/* Label */}
       <div className="text-center">
-        <div className="text-[10px] font-600 text-slate-600 leading-tight max-w-[76px] text-center">
+        <div className="text-[10px] font-600 text-slate-600 dark:text-slate-300 leading-tight max-w-[76px] text-center">
           {los.name.split(' ').slice(0, 2).join(' ')}
         </div>
-        <div className="flex items-center justify-center gap-0.5 text-[9px] text-slate-400 mt-0.5">
+        <div className="flex items-center justify-center gap-0.5 text-[9px] text-slate-400 dark:text-slate-500 mt-0.5">
           <TrendIcon size={8} />
           <span>{los.trendPct}</span>
         </div>
@@ -607,7 +607,7 @@ function LOSNodeWithPanel({ los }: { los: LineOfService }) {
       {open && (
         <div
           className={cn(
-            'absolute z-50 w-72 bg-white border border-slate-200 rounded-lg shadow-2xl p-4',
+            'absolute z-50 w-72 bg-white dark:bg-[#1c1c24] border border-slate-200 dark:border-white/10 rounded-lg shadow-2xl p-4',
             'animate-fade-slide-up top-0',
             panelSide === 'right' ? 'left-[calc(100%+12px)]' : 'right-[calc(100%+12px)]'
           )}
@@ -622,17 +622,17 @@ function LOSNodeWithPanel({ los }: { los: LineOfService }) {
                 <div className="w-6 h-6 rounded bg-[#0F2044] flex items-center justify-center shrink-0">
                   <span className="text-[9px] font-700 text-white">{los.abbreviation}</span>
                 </div>
-                <span className="text-sm font-700 text-slate-800">{los.name}</span>
+                <span className="text-sm font-700 text-slate-800 dark:text-slate-100">{los.name}</span>
               </div>
-              <div className="text-[11px] text-slate-400 pl-8">{los.leadPartner}</div>
+              <div className="text-[11px] text-slate-400 dark:text-slate-500 pl-8">{los.leadPartner}</div>
             </div>
-            <span className="text-[10px] font-500 px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 shrink-0">
+            <span className="text-[10px] font-500 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-400 shrink-0">
               {los.trendPct} YTD
             </span>
           </div>
 
           {/* Description */}
-          <p className="text-[11px] text-slate-500 leading-relaxed mb-3 border-b border-slate-100 pb-3">
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mb-3 border-b border-slate-100 dark:border-white/10 pb-3">
             {los.description}
           </p>
 
@@ -643,20 +643,20 @@ function LOSNodeWithPanel({ los }: { los: LineOfService }) {
               { label: 'Workflows', value: los.activeWorkflows },
               { label: 'Revenue', value: los.revenueYTD },
             ].map(s => (
-              <div key={s.label} className="text-center p-2 bg-slate-50 rounded">
-                <div className="tabular-nums text-sm font-700 text-[#0F2044]">{s.value}</div>
-                <div className="text-[9px] text-slate-400 uppercase tracking-wide mt-0.5">{s.label}</div>
+              <div key={s.label} className="text-center p-2 bg-slate-50 dark:bg-white/5 rounded">
+                <div className="tabular-nums text-sm font-700 text-(--sx-ink)">{s.value}</div>
+                <div className="text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-0.5">{s.label}</div>
               </div>
             ))}
           </div>
 
           {/* Key deliverables */}
           <div className="mb-3">
-            <div className="text-[9px] font-600 text-slate-400 uppercase tracking-wider mb-1.5">Key Deliverables</div>
+            <div className="text-[9px] font-600 text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Key Deliverables</div>
             <div className="space-y-1">
               {los.keyDeliverables.slice(0, 3).map(d => (
-                <div key={d} className="flex items-center gap-1.5 text-[11px] text-slate-600">
-                  <FileText size={9} className="text-slate-300 shrink-0" />
+                <div key={d} className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-300">
+                  <FileText size={9} className="text-slate-300 dark:text-slate-600 shrink-0" />
                   {d}
                 </div>
               ))}
@@ -664,16 +664,16 @@ function LOSNodeWithPanel({ los }: { los: LineOfService }) {
           </div>
 
           {/* Active workflows count + at-risk indicator */}
-          <div className="flex items-center justify-between pt-2.5 border-t border-slate-100">
+          <div className="flex items-center justify-between pt-2.5 border-t border-slate-100 dark:border-white/10">
             <div className="flex items-center gap-3">
               {los.pendingReviews > 0 && (
-                <div className="flex items-center gap-1 text-[10px] text-slate-400">
+                <div className="flex items-center gap-1 text-[10px] text-slate-400 dark:text-slate-500">
                   <Clock size={9} />
                   {los.pendingReviews} reviews
                 </div>
               )}
               {los.atRisk > 0 && (
-                <div className="flex items-center gap-1 text-[10px] text-slate-500 font-500">
+                <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 font-500">
                   <AlertTriangle size={9} />
                   {los.atRisk} at risk
                 </div>
@@ -689,5 +689,4 @@ function LOSNodeWithPanel({ los }: { los: LineOfService }) {
     </div>
   );
 }
-
 

@@ -9,7 +9,7 @@
     "build": "tsx scripts/migrate-prod.ts && pnpm discover-plugins && next build",
     "start": "next start",
     "type-check": "tsc --noEmit",
-    "genui:prompt": "node scripts/gen-genui-prompt.cjs",
+    "genui:prompt": "node features/genui/gen-genui-prompt.cjs",
     "assistant:evals": "tsx lib/assistant-runtime/evals/run-evals.ts",
     "check": "pnpm exec ultracite check",
     "fix": "pnpm exec ultracite fix",

@@ -1,7 +1,7 @@
 # Workflow Builder — Audit Index
 
 *Entry point for the living audit. All other files are linked below.*
-*Last updated: 2026-06-07*
+*Last updated: 2026-07-21*
 
 ---
 
@@ -14,18 +14,22 @@
 | [FEATURES.md](./FEATURES.md) | Full feature inventory with `[LIVE]` / `[PARTIAL]` / `[STUB]` / `[PLANNED]` status |
 | [UI.md](./UI.md) | Every UI component — shell, canvas, nodes, inspector, viewers, overlays, AI elements |
 | [TYPES.md](./TYPES.md) | All TypeScript types and domain model — blocks, edges, execution, evidence, lineage |
+| [DEEP-AUDIT-2026-07-21.md](./DEEP-AUDIT-2026-07-21.md) | Maintainability audit — vibecody diagnosis, god-file + dead-code registers, coupling, tooling gaps, action plan |
+| [CORRECTIONS-2026-07-21.md](./CORRECTIONS-2026-07-21.md) | Doc-vs-code errata (the corrections applied to the files above) |
+| [`../docs/REPO-MAP.md`](../docs/REPO-MAP.md) | **Navigation map** — the six mini-apps, "where is each block", "where do I change X", large-file register |
+| [`../docs/reorg-plan.md`](../docs/reorg-plan.md) | Folder reorganization plan — target `features/`+`shared/`+`platform/` layout, mapping table, migration sequence |
 
 > **Target architecture (forward-looking, not current state):** [`docs/kernel-migration-spec.md`](../docs/kernel-migration-spec.md) — the product-kernel unification plan (one workflow/run model, action gateway, versioned agents, surfaces, artifacts) and the file-by-file migration mapping. The audit files above describe what exists **today**; the spec describes where it's going. **Step 1 (stabilize the vocabulary) landed 2026-07-17 — `tsc` is green; see the Global App Shell log + [TYPES.md](./TYPES.md).**
 
 ---
 
-## App State Summary (2026-05-17)
+## App State Summary (2026-07-21)
 
 ### What this app is
 A **fiscal workflow automation studio** — a visual, node-based editor for building data transformation and classification pipelines with evidence tracking, data lineage, and governance compliance. Domain-specific to fiscal/tax work (FAPI, FX rates, keyword-based income/expense classification).
 
 ### Stack at a glance
-Next.js 15 (App Router) · React 19 · @xyflow/react v12 · Jotai v2 · Monaco Editor · Drizzle ORM · better-auth · Vercel AI SDK v5
+Next.js 16 (App Router) · React 19 · @xyflow/react v12 · Jotai v2 · Monaco Editor · Drizzle ORM · better-auth · Vercel AI SDK v5
 
 ### Architecture summary
 Four layers: **Canvas** (React Flow UI) → **Domain** (typed workflow schema) → **Tool Registry** (block toolId lookup) → **Backend Runtime** (per-block `run.ts` functions). Execution runs fully in-browser (no server compute for block runs). State is managed via Jotai atoms. Persistence is localStorage for the local mode; Drizzle/Postgres for database mode (partially wired).
@@ -39,16 +43,17 @@ Four layers: **Canvas** (React Flow UI) → **Domain** (typed workflow schema) �
 - **AI/Agent** blocks propose changes via the prompt panel — approval flow partially wired
 
 ### Features summary
-- **[LIVE]:** Visual canvas editing, undo/redo, local workflow execution (Keyword Mapper, Calculation Engine, Hierarchy Aggregator, Currency Rate, Keyword Rules), evidence tracking, source trace, inspector panel, AI prompt generation, keyboard shortcuts, autosave, **2 starter templates** (FAPI Calculation, Roulement fiscal art. 85)
+- **[LIVE]:** Visual canvas editing, undo/redo, local workflow execution (Keyword Mapper, Calculation Engine, Hierarchy Aggregator, Currency Rate, Keyword Rules), evidence tracking, source trace, inspector panel, AI prompt generation, keyboard shortcuts, autosave, **4 workflow templates** (FAPI Calculation, Roulement fiscal art. 85, Employee Expense, Marketing Campaign — registered in `lib/workflow-runs/index.ts`)
 - **[LIVE]:** Open-ended **generative UI** (OpenUI) — free-form prompt → live UI composed from a registered component library (54 OpenUI built-ins + custom `TaxMetric`), streamed as OpenUI Lang. Distinct from CopilotKit's fixed-action renders. Now runs **inside the chat** via the **`generateUI`** action (renderUI bridge, 2026-07-16) as well as the standalone `/genui-lab`. Reliability: default model `gpt-4.1` (`GENUI_MODEL`) + first-line prose-sniff/retry. Still open: generated forms are display-only (no writeback), data still sample. See [FEATURES.md](./FEATURES.md) / [UI.md](./UI.md).
+- **[LIVE]:** **Light / Dark theme switch (2026-07-20)** — `next-themes` `.dark` class (un-locked from `forcedTheme="light"`), a `--sx-*` design-token contract in `globals.css` (`:root` = current light values, `.dark` = dark skin), the two central JS palettes (`NEU`, `LC`) retargeted to tokens, and a segmented Sun/Dark **toggle in both sidebars** (`components/theme-toggle.tsx`). Light mode is unchanged; dark mode reskins chrome, chat, workflow canvas/nodes, and pages. See [UI.md](./UI.md) → "Theme System".
 - **[PARTIAL]:** Excel upload (UI done, parsing WIP), Rollup/Calculation rule editors, workflow versioning types (no save logic), output mapping preview, publish flow
 - **[STUB]:** PDF, API, DB, Web, AI Search source blocks, all Output block subtypes, Review/Validation blocks, AI gateway, integrations
 - **[PLANNED]:** Full Review/Validation family, Field block live binding, Output handoff generation, version history UI
 
 ### Navigation architecture (2026-06-07)
-- **Homepage:** `/` → `OrbitalStage` (neumorphic orbs + AI chat)
+- **Homepage:** `/` → `ChatWorkspace` (`components/workspace/copilot-workspace-panel.tsx`). *(Was `OrbitalStage`; that survives only in the dead `tax-ui/` island.)*
 - **Worksheets hub:** a gallery of worksheet cards (FAPI · T1134 · Surplus · Executive Overview) reachable from the **Scope sidebar** ("All worksheets" → inline hub, opens worksheets inline) and the `GlobalTopNav` pill (→ `/worksheets` route). Shared `WorksheetsGallery`; inline hub = resource `worksheets` (added 2026-07-19). See UI.md → "Worksheets hub + menu".
-- **Builder:** `/builder` → `WorkflowStudioShell` + `NodeConfigPanel` overlaid on `PersistentCanvas`
+- **Builder:** `/builder` → `inline-builder.tsx` / `RightPanelShell` + `BuilderCopilot` over `PersistentCanvas`. *(`WorkflowStudioShell` is dead code — 0 importers, do not reference.)*
 - **Legacy:** `/workflows` + `/workflows/[id]` → DB-backed workflow pages
 - **ReactFlowProvider** moved from layout root → inside `PersistentCanvas` only; soft navigation (router.push) now works from all pages
 - **CSS View Transitions** enabled via `@view-transition { navigation: auto }` — 180ms crossfade in Chrome/Safari

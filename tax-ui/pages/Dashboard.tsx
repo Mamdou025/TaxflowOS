@@ -36,7 +36,7 @@ function DashboardSidebar() {
   ];
   const badgeEl = (badge?: number, color?: 'amber' | 'red') =>
     badge == null ? undefined : (
-      <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 10, background: color === 'amber' ? '#FEF3C7' : '#FEE2E2', color: color === 'amber' ? '#B45309' : '#DC2626' }}>{badge}</span>
+      <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 10, background: color === 'amber' ? 'rgba(245,158,11,0.18)' : 'rgba(239,68,68,0.18)', color: color === 'amber' ? '#B45309' : '#DC2626' }}>{badge}</span>
     );
 
   return (
@@ -52,15 +52,15 @@ function DashboardSidebar() {
   );
 }
 
-// ─── Content styling (light cards on the dark grid) ───────────────────────────
-const NAVY = '#0F2044';
-const CARD: React.CSSProperties = { background: '#ffffff', borderRadius: 16, border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 14px 34px rgba(0,0,0,0.30)' };
-const SECTION_LABEL: React.CSSProperties = { fontSize: 11, fontWeight: 650, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: 12 };
+// ─── Content styling (light cards on the gray portal ground) ──────────────────
+const NAVY = 'var(--sx-ink)';
+const CARD: React.CSSProperties = { background: 'var(--sx-card)', borderRadius: 16, border: '1px solid var(--sx-hairline)', boxShadow: 'var(--sx-drop-card)' };
+const SECTION_LABEL: React.CSSProperties = { fontSize: 11, fontWeight: 650, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--sx-muted)', marginBottom: 12 };
 
 const STATUS = {
-  ready:  { label: 'Ready',     bg: 'rgba(63,185,80,0.12)',  fg: '#2E7D32', Dot: CheckCircle2 },
-  review: { label: 'In review', bg: 'rgba(217,119,6,0.12)',  fg: '#B45309', Dot: AlertTriangle },
-  draft:  { label: 'Draft',     bg: 'rgba(15,32,68,0.08)',   fg: '#475569', Dot: FileText },
+  ready:  { label: 'Ready',     bg: 'rgba(63,185,80,0.14)',   fg: '#2E7D32', Dot: CheckCircle2 },
+  review: { label: 'In review', bg: 'rgba(217,119,6,0.14)',   fg: '#B45309', Dot: AlertTriangle },
+  draft:  { label: 'Draft',     bg: 'rgba(120,130,150,0.16)', fg: 'var(--sx-muted)', Dot: FileText },
 } as const;
 
 type Ws = {
@@ -105,16 +105,16 @@ export default function Dashboard() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 style={{ fontSize: 22, fontWeight: 700, color: NAVY, letterSpacing: '-0.02em' }}>{client}</h1>
-                  <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.03em', textTransform: 'uppercase', color: '#6B21A8', background: 'rgba(107,33,168,0.10)', border: '1px solid rgba(107,33,168,0.22)', borderRadius: 999, padding: '2px 9px' }}>Platinum</span>
+                  <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.03em', textTransform: 'uppercase', color: 'var(--sx-accent)', background: 'var(--sx-accent-soft)', border: '1px solid rgba(107,33,168,0.22)', borderRadius: 999, padding: '2px 9px' }}>Platinum</span>
                 </div>
-                <div style={{ fontSize: 13, color: '#64748B', marginTop: 3 }}>Lead: Margaret Chen · Partner · Fiscal Year 2024–2025</div>
+                <div style={{ fontSize: 13, color: 'var(--sx-muted)', marginTop: 3 }}>Lead: Margaret Chen · Partner · Fiscal Year 2024–2025</div>
                 <div className="flex items-center gap-1.5 mt-3">
                   {['TC', 'ICT', 'M&A', 'TP'].map((t) => (
-                    <span key={t} style={{ fontSize: 10, fontWeight: 700, color: '#334155', background: '#F1F5F9', border: '1px solid rgba(0,0,0,0.06)', borderRadius: 6, padding: '2px 7px' }}>{t}</span>
+                    <span key={t} style={{ fontSize: 10, fontWeight: 700, color: 'var(--sx-body)', background: 'var(--sx-panel)', border: '1px solid var(--sx-hairline)', borderRadius: 6, padding: '2px 7px' }}>{t}</span>
                   ))}
                 </div>
               </div>
-              <button onClick={() => router.push('/')} className="flex items-center gap-1.5 shrink-0 transition-colors hover:bg-purple-50" style={{ fontSize: 12.5, fontWeight: 600, color: '#6B21A8', background: 'rgba(107,33,168,0.06)', border: '1px solid rgba(107,33,168,0.18)', borderRadius: 10, padding: '8px 13px' }}>
+              <button onClick={() => router.push('/')} className="flex items-center gap-1.5 shrink-0 transition-colors hover:bg-purple-50 dark:hover:bg-purple-500/10" style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--sx-accent)', background: 'var(--sx-accent-soft)', border: '1px solid rgba(107,33,168,0.18)', borderRadius: 10, padding: '8px 13px' }}>
                 <Sparkles size={14} /> Ask the assistant
               </button>
             </div>
@@ -125,11 +125,11 @@ export default function Dashboard() {
             {STATS.map(({ label, value, sub, Icon }) => (
               <div key={label} style={{ ...CARD, padding: '15px 17px' }}>
                 <div className="flex items-center justify-between">
-                  <span style={{ width: 30, height: 30, borderRadius: 9, background: '#F1F5F9', display: 'grid', placeItems: 'center', color: '#64748B' }}><Icon size={15} /></span>
+                  <span style={{ width: 30, height: 30, borderRadius: 9, background: 'var(--sx-panel)', display: 'grid', placeItems: 'center', color: 'var(--sx-muted)' }}><Icon size={15} /></span>
                 </div>
                 <div style={{ fontSize: 26, fontWeight: 700, color: NAVY, marginTop: 10, letterSpacing: '-0.02em' }}>{value}</div>
                 <div style={{ fontSize: 12, color: NAVY, marginTop: 2, fontWeight: 550 }}>{label}</div>
-                <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 1 }}>{sub}</div>
+                <div style={{ fontSize: 11, color: 'var(--sx-faint)', marginTop: 1 }}>{sub}</div>
               </div>
             ))}
           </div>
@@ -141,11 +141,11 @@ export default function Dashboard() {
               const s = STATUS[w.status];
               return (
                 <button key={w.title} onClick={() => router.push(w.href)} className="text-left transition-transform hover:-translate-y-0.5" style={{ ...CARD, padding: 0, overflow: 'hidden', cursor: 'pointer' }}>
-                  <div className="flex items-center gap-3" style={{ padding: '14px 16px', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-                    <span style={{ width: 36, height: 36, borderRadius: 10, background: '#F1F5F9', display: 'grid', placeItems: 'center', color: NAVY, flexShrink: 0 }}><w.Icon size={17} /></span>
+                  <div className="flex items-center gap-3" style={{ padding: '14px 16px', borderBottom: '1px solid var(--sx-hairline)' }}>
+                    <span style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--sx-panel)', display: 'grid', placeItems: 'center', color: NAVY, flexShrink: 0 }}><w.Icon size={17} /></span>
                     <span className="flex-1 min-w-0">
                       <span style={{ display: 'block', fontSize: 13.5, fontWeight: 650, color: NAVY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{w.title}</span>
-                      <span style={{ display: 'block', fontSize: 11.5, color: '#94A3B8' }}>{w.sub}</span>
+                      <span style={{ display: 'block', fontSize: 11.5, color: 'var(--sx-faint)' }}>{w.sub}</span>
                     </span>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 650, color: s.fg, background: s.bg, borderRadius: 999, padding: '3px 8px', flexShrink: 0 }}>
                       <s.Dot size={11} /> {s.label}
@@ -154,13 +154,13 @@ export default function Dashboard() {
                   <div style={{ padding: '10px 16px 12px' }}>
                     {w.figures.map(([k, v]) => (
                       <div key={k} className="flex items-center justify-between" style={{ padding: '3px 0' }}>
-                        <span style={{ fontSize: 12, color: '#64748B' }}>{k}</span>
+                        <span style={{ fontSize: 12, color: 'var(--sx-muted)' }}>{k}</span>
                         <span style={{ fontSize: 12.5, fontWeight: 650, color: NAVY, fontVariantNumeric: 'tabular-nums' }}>{v}</span>
                       </div>
                     ))}
-                    <div className="flex items-center justify-between" style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
-                      <span style={{ fontSize: 11, color: '#94A3B8' }}>Updated {w.updated}</span>
-                      <span className="flex items-center gap-0.5" style={{ fontSize: 11.5, fontWeight: 600, color: '#6B21A8' }}>Open <ChevronRight size={13} /></span>
+                    <div className="flex items-center justify-between" style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--sx-hairline)' }}>
+                      <span style={{ fontSize: 11, color: 'var(--sx-faint)' }}>Updated {w.updated}</span>
+                      <span className="flex items-center gap-0.5" style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--sx-accent)' }}>Open <ChevronRight size={13} /></span>
                     </div>
                   </div>
                 </button>
@@ -172,10 +172,10 @@ export default function Dashboard() {
           <div style={{ ...SECTION_LABEL, marginTop: 30 }}>At a glance</div>
           <div style={{ ...CARD, padding: '16px 20px' }}>
             <div className="flex items-start gap-3">
-              <span style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(107,33,168,0.10)', border: '1px solid rgba(107,33,168,0.16)', display: 'grid', placeItems: 'center', color: '#6B21A8', flexShrink: 0 }}><Sparkles size={15} /></span>
-              <div style={{ fontSize: 12.5, color: '#475569', lineHeight: 1.6 }}>
+              <span style={{ width: 30, height: 30, borderRadius: 9, background: 'var(--sx-accent-soft)', border: '1px solid rgba(107,33,168,0.16)', display: 'grid', placeItems: 'center', color: 'var(--sx-accent)', flexShrink: 0 }}><Sparkles size={15} /></span>
+              <div style={{ fontSize: 12.5, color: 'var(--sx-body)', lineHeight: 1.6 }}>
                 <b style={{ color: NAVY }}>3 deliverables are at risk</b> for {client}. The FAPI Workpaper 2025 is ready for manager sign-off; the T1134 has 2 open exceptions; Surplus Continuity is still in draft.
-                <button onClick={() => router.push('/')} className="ml-1 hover:underline" style={{ color: '#6B21A8', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Ask for a full review →</button>
+                <button onClick={() => router.push('/')} className="ml-1 hover:underline" style={{ color: 'var(--sx-accent)', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Ask for a full review →</button>
               </div>
             </div>
           </div>

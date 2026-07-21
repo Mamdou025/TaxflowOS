@@ -1,6 +1,6 @@
 # Blocks
 
-*Last updated: 2026-05-18*
+*Last updated: 2026-07-21*
 
 ---
 
@@ -8,7 +8,8 @@
 
 The block system is the core abstraction of the app. Each block belongs to a **family** (semantic role) and a **subtype** (specific behavior). Blocks have configs, optional code/formula fields, evidence metadata, and governance metadata.
 
-**Families (7):** Trigger · Source · Logic · Review/Validation · Field · Output · AI/Agent
+**Families (7 public):** Trigger · Source · Logic · Review/Validation · Field · Output · AI/Agent
+> There is an internal **8th** `BlockFamily`, **`Protected`** (governed values), defined at `src/domain/workflow/block-types.ts:16-19` — not in the public palette but legal and used by the tool registry and the edge table below (Logic→Protected, Protected→Output).
 
 **Registered tool modules (11):** mapped to block subtypes via `block.config.toolId`
 

@@ -44,7 +44,7 @@ export function ScopeGlyph({ size, active = false, label }: { size: number; acti
         {INNER.map((d) => <circle key={d.key} cx={d.x} cy={d.y} r={d.r} fill={d.fill} />)}
       </g>
       {label && (
-        <text x="0" y="2" textAnchor="middle" dominantBaseline="central" fontSize="35" fontWeight="750" fill={active ? '#6D28D9' : '#3A4150'} style={{ letterSpacing: '0.3px' }}>{label}</text>
+        <text x="0" y="2" textAnchor="middle" dominantBaseline="central" fontSize="35" fontWeight="750" style={{ letterSpacing: '0.3px', fill: active ? 'var(--sx-accent-strong)' : 'var(--sx-body)' }}>{label}</text>
       )}
     </svg>
   );
@@ -60,8 +60,8 @@ export function ScopeMark({ size = 22, active = false, label }: { size?: number;
       style={{
         position: 'relative', width: size, height: size, borderRadius: '50%', flexShrink: 0, overflow: 'hidden',
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        background: 'linear-gradient(145deg, #F0F4FA 0%, #DCE3EE 100%)',
-        boxShadow: '1.5px 1.5px 4px rgba(166,178,200,0.5), -1.5px -1.5px 4px rgba(255,255,255,0.95)',
+        background: 'var(--sx-orb-badge)',
+        boxShadow: 'var(--sx-orb-badge-shadow)',
       }}
     >
       <ScopeGlyph size={size} active={active} label={label} />
@@ -74,7 +74,7 @@ export function ScopeMark({ size = 22, active = false, label }: { size?: number;
 // as one continuous silhouette). It houses the orb + "Scope" label and is the
 // dominant, central element. Meant to be placed absolutely in the (relative) bar,
 // anchored to overlap its top-center.
-const BAR_BG = '#eaeaef';
+const BAR_BG = 'var(--sx-nav-bar)';
 export function ScopeKeystone({ active, onClick }: { active: boolean; onClick: () => void }) {
   const ORB = 44;
   return (
@@ -88,9 +88,7 @@ export function ScopeKeystone({ active, onClick }: { active: boolean; onClick: (
         width: 150, paddingTop: 12, paddingBottom: 10, border: 'none', cursor: 'pointer',
         background: BAR_BG,
         borderRadius: '36px 36px 14px 14px',
-        boxShadow: active
-          ? '0 7px 20px rgba(109,40,217,0.2), inset 0 1.5px 0 rgba(255,255,255,0.92)'
-          : '0 8px 20px rgba(166,178,200,0.42), inset 0 1.5px 0 rgba(255,255,255,0.92)',
+        boxShadow: active ? 'var(--sx-keystone-shadow-active)' : 'var(--sx-keystone-shadow)',
         transition: 'box-shadow 220ms cubic-bezier(0.23,1,0.32,1)',
       }}
     >
@@ -98,16 +96,14 @@ export function ScopeKeystone({ active, onClick }: { active: boolean; onClick: (
         className="scope-mark group-hover:scale-[1.04]!"
         style={{
           position: 'relative', width: ORB, height: ORB, borderRadius: '50%', overflow: 'hidden',
-          background: 'linear-gradient(145deg, #F0F4FA 0%, #DCE3EE 100%)',
-          boxShadow: active
-            ? '0 0 0 2px rgba(109,40,217,0.5), 3px 3px 8px rgba(109,40,217,0.24), -2px -2px 6px rgba(255,255,255,0.95)'
-            : '3px 3px 7px rgba(166,178,200,0.5), -2px -2px 6px rgba(255,255,255,0.95)',
+          background: 'var(--sx-orb-badge)',
+          boxShadow: active ? 'var(--sx-orb-disc-shadow-active)' : 'var(--sx-orb-disc-shadow)',
           transition: 'box-shadow 220ms, transform 220ms cubic-bezier(0.23,1,0.32,1)',
         }}
       >
         <ScopeGlyph size={ORB} active={active} />
       </span>
-      <span style={{ fontSize: 10, fontWeight: 750, letterSpacing: '0.04em', color: active ? '#6D28D9' : '#4b5563', lineHeight: 1, textTransform: 'uppercase' }}>Scope</span>
+      <span style={{ fontSize: 10, fontWeight: 750, letterSpacing: '0.04em', color: active ? 'var(--sx-accent-strong)' : 'var(--sx-muted)', lineHeight: 1, textTransform: 'uppercase' }}>Scope</span>
     </button>
   );
 }

@@ -29,8 +29,8 @@ function NavPill() {
     <div
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 3, padding: 4, borderRadius: 999,
-        background: '#e6e7ec',
-        boxShadow: 'inset 2px 2px 5px rgba(158,158,178,0.42), inset -2px -2px 5px rgba(255,255,255,0.86)',
+        background: 'var(--sx-nav-track)',
+        boxShadow: 'var(--sx-shadow-in)',
       }}
     >
       {NAV_LINKS.map(({ label, href, Icon }) => {
@@ -43,9 +43,9 @@ function NavPill() {
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 15px', borderRadius: 999,
               border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 600, whiteSpace: 'nowrap',
-              color: active ? '#6B21A8' : '#6B7280',
-              background: active ? '#f4f5f8' : 'transparent',
-              boxShadow: active ? '3px 3px 7px rgba(158,158,178,0.34), -3px -3px 7px rgba(255,255,255,0.92)' : 'none',
+              color: active ? 'var(--sx-accent)' : 'var(--sx-muted)',
+              background: active ? 'var(--sx-nav-pill)' : 'transparent',
+              boxShadow: active ? 'var(--sx-shadow-sm)' : 'none',
             }}
           >
             <Icon size={14} style={{ opacity: active ? 1 : 0.75 }} />
@@ -70,10 +70,10 @@ export function GlobalTopNav() {
   const ClientPill = (
     <button
       onClick={() => setShowClientSwitcher(true)}
-      className="flex items-center gap-1.5 rounded-full px-2 py-1 transition-all hover:bg-black/5 shrink-0"
-      style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}
+      className="flex items-center gap-1.5 rounded-full px-2 py-1 transition-all hover:bg-black/5 dark:hover:bg-white/10 shrink-0"
+      style={{ fontSize: 12, fontWeight: 600, color: 'var(--sx-body)' }}
     >
-      <span className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0" style={{ background: 'rgba(107,33,168,0.12)', color: '#6B21A8' }}>
+      <span className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0" style={{ background: 'var(--sx-accent-soft)', color: 'var(--sx-accent)' }}>
         {client.charAt(0)}
       </span>
       <span className="max-w-[120px] truncate">{client}</span>
@@ -83,18 +83,18 @@ export function GlobalTopNav() {
 
   const Logo = (
     <button onClick={() => router.push('/')} className="flex items-baseline gap-0.5 select-none shrink-0" style={{ background: 'transparent', border: 'none', padding: 0 }}>
-      <span style={{ fontSize: 14.5, fontWeight: 700, color: '#1F2937', letterSpacing: '-0.01em' }}>Sinaxe</span>
-      <span style={{ fontSize: 7, color: '#9CA3AF', verticalAlign: 'super' }}>™</span>
-      <span style={{ fontSize: 14.5, fontWeight: 400, color: '#6B7280', marginLeft: 2, letterSpacing: '-0.01em' }}>InScope</span>
+      <span style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--sx-ink)', letterSpacing: '-0.01em' }}>Sinaxe</span>
+      <span style={{ fontSize: 7, color: 'var(--sx-faint)', verticalAlign: 'super' }}>™</span>
+      <span style={{ fontSize: 14.5, fontWeight: 400, color: 'var(--sx-muted)', marginLeft: 2, letterSpacing: '-0.01em' }}>InScope</span>
     </button>
   );
 
   // Canvas worksheet (/t1134) keeps a full-width bar for its portaled toolbar.
   if (isCanvasPage) {
     return (
-      <div className="shrink-0 flex items-center px-5 gap-3 z-20 pointer-events-auto" style={{ height: NAV_H, background: '#eaeaef', borderBottom: '1px solid rgba(0,0,0,0.07)' }}>
+      <div className="shrink-0 flex items-center px-5 gap-3 z-20 pointer-events-auto" style={{ height: NAV_H, background: 'var(--sx-nav-bar)', borderBottom: '1px solid var(--sx-hairline)' }}>
         {Logo}
-        <div style={{ width: 1, height: 18, background: 'rgba(0,0,0,0.1)', flexShrink: 0 }} />
+        <div style={{ width: 1, height: 18, background: 'var(--sx-divider)', flexShrink: 0 }} />
         <div id="global-nav-workflow-slot" className="flex-1 flex items-center h-full min-w-0 overflow-visible gap-0.5 pointer-events-auto" />
       </div>
     );
@@ -108,16 +108,16 @@ export function GlobalTopNav() {
         className="relative flex items-center justify-between pointer-events-auto"
         style={{
           height: 40, width: 'min(860px, 95vw)', marginBottom: 4, padding: '0 8px', borderRadius: 999,
-          background: '#eaeaef',
-          boxShadow: '0 3px 12px rgba(158,158,178,0.30), 0 1px 0 rgba(255,255,255,0.8), inset 0 1px 0 rgba(255,255,255,0.7)',
-          border: '1px solid rgba(0,0,0,0.04)',
+          background: 'var(--sx-nav-bar)',
+          boxShadow: 'var(--sx-nav-shadow)',
+          border: '1px solid var(--sx-hairline-subtle)',
           overflow: 'visible',
         }}
       >
         {/* Left — logo + sub-navigation */}
         <div className="flex items-center gap-3 min-w-0">
           {Logo}
-          <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.1)', flexShrink: 0 }} />
+          <div style={{ width: 1, height: 16, background: 'var(--sx-divider)', flexShrink: 0 }} />
           <NavPill />
         </div>
 
@@ -135,15 +135,15 @@ export function GlobalTopNav() {
               onClick={() => setAssistantOpen((v) => !v)}
               title="Ask Scope on this page"
               aria-label="Ask Scope on this page"
-              className="flex items-center justify-center rounded-full transition-all hover:bg-black/5 shrink-0"
-              style={{ width: 30, height: 30, color: '#6B7280' }}
+              className="flex items-center justify-center rounded-full transition-all hover:bg-black/5 dark:hover:bg-white/10 shrink-0"
+              style={{ width: 30, height: 30, color: 'var(--sx-muted)' }}
             >
               <MessageCircle size={16} />
             </button>
           )}
           {ClientPill}
           {navActions.map((action) => (
-            <button key={action.id} onClick={() => router.push(action.href)} className="flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-colors hover:bg-black/5 shrink-0" style={{ fontSize: 11.5, fontWeight: 500, color: '#6B7280' }}>
+            <button key={action.id} onClick={() => router.push(action.href)} className="flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-colors hover:bg-black/5 dark:hover:bg-white/10 shrink-0" style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--sx-muted)' }}>
               {action.label}
             </button>
           ))}

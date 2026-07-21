@@ -20,9 +20,11 @@ export const Canvas = ({ children, className, ...props }: CanvasProps) => {
       className={className}
       {...props}
     >
+      {/* Reversed grid: dark hairlines on the gray builder ground (the wrapper
+          paints #c9c9d4). Was white lines on a dark #18181c canvas. */}
       <Background
         bgColor="transparent"
-        color="rgba(255,255,255,0.055)"
+        color="var(--sx-canvas-grid)"
         gap={28}
         lineWidth={0.5}
         variant={BackgroundVariant.Lines}

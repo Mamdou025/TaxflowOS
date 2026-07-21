@@ -63,10 +63,10 @@ const YEARS = ['2022', '2023', '2024', '2025'];
 // Surplus account types
 type SurplusType = 'ES' | 'HS' | 'TS' | 'PAS';
 const SURPLUS_TYPES: { id: SurplusType; label: string; fullLabel: string; color: string }[] = [
-  { id: 'ES',  label: 'ES',  fullLabel: 'Exempt Surplus',          color: '#374151' },
-  { id: 'HS',  label: 'HS',  fullLabel: 'Hybrid Surplus',          color: '#374151' },
-  { id: 'TS',  label: 'TS',  fullLabel: 'Taxable Surplus',         color: '#374151' },
-  { id: 'PAS', label: 'PAS', fullLabel: 'Pre-Acquisition Surplus', color: '#374151' },
+  { id: 'ES',  label: 'ES',  fullLabel: 'Exempt Surplus',          color: 'var(--sx-body)' },
+  { id: 'HS',  label: 'HS',  fullLabel: 'Hybrid Surplus',          color: 'var(--sx-body)' },
+  { id: 'TS',  label: 'TS',  fullLabel: 'Taxable Surplus',         color: 'var(--sx-body)' },
+  { id: 'PAS', label: 'PAS', fullLabel: 'Pre-Acquisition Surplus', color: 'var(--sx-body)' },
 ];
 
 interface CalcRow {
@@ -319,8 +319,8 @@ function OrbitalMilestoneMenu({
                 isActive
                   ? 'text-white border-transparent shadow-lg'
                   : m.done
-                  ? 'bg-white border-green-400 text-green-600'
-                  : 'bg-white border-gray-300 text-gray-500 hover:border-gray-500',
+                  ? 'bg-white dark:bg-[#1c1c24] border-green-400 dark:border-green-500/40 text-green-600 dark:text-green-300'
+                  : 'bg-white dark:bg-[#1c1c24] border-gray-300 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:border-gray-500 dark:hover:border-white/20',
               )}
               style={isActive ? { background: `linear-gradient(135deg, ${PURPLE}, ${ORANGE})`, borderColor: 'transparent' } : {}}
             >
@@ -331,13 +331,13 @@ function OrbitalMilestoneMenu({
                 </span>
               )}
             </div>
-            <span className={cn('text-[9px] font-500 whitespace-nowrap', isActive ? 'text-gray-800' : 'text-gray-500')}>
+            <span className={cn('text-[9px] font-500 whitespace-nowrap', isActive ? 'text-gray-800 dark:text-gray-200' : 'text-gray-500 dark:text-gray-400')}>
               {m.label}
             </span>
           </button>
         );
       })}
-      <button onClick={onClose} className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-gray-400 hover:text-gray-600 text-xs flex items-center gap-1">
+      <button onClick={onClose} className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-xs flex items-center gap-1">
         <X size={12} /> close
       </button>
     </div>
@@ -349,11 +349,11 @@ function RightPanelContent({ milestone }: { milestone: MilestoneId | null }) {
   if (!milestone) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center px-6">
-        <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3" style={{ background: '#f3f4f6' }}>
-          <Sparkles size={20} style={{ color: '#9ca3af' }} />
+        <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3" style={{ background: 'var(--sx-panel)' }}>
+          <Sparkles size={20} style={{ color: 'var(--sx-faint)' }} />
         </div>
-        <p className="text-sm text-gray-500 font-500">Select a menu item</p>
-        <p className="text-xs text-gray-400 mt-1">Click the InScope menu below to open a workflow item</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 font-500">Select a menu item</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Click the InScope menu below to open a workflow item</p>
       </div>
     );
   }
@@ -361,16 +361,16 @@ function RightPanelContent({ milestone }: { milestone: MilestoneId | null }) {
   if (milestone === 'ai-assistant') {
     return (
       <div className="flex flex-col h-full">
-        <div className="px-4 py-3 border-b border-gray-100">
+        <div className="px-4 py-3 border-b border-gray-100 dark:border-white/10">
           <div className="flex items-center gap-2">
-            <Sparkles size={14} className="text-gray-400" />
-            <span className="text-xs font-600 text-gray-700">AI Assistant</span>
+            <Sparkles size={14} className="text-gray-400 dark:text-gray-500" />
+            <span className="text-xs font-600 text-gray-700 dark:text-gray-300">AI Assistant</span>
           </div>
-          <p className="text-[10px] text-gray-400 mt-1">Surplus analysis for SAS Paris · 2024</p>
+          <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">Surplus analysis for SAS Paris · 2024</p>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          <div className="bg-gray-50 rounded-xl p-3">
-            <p className="text-[11px] text-gray-700 leading-relaxed">
+          <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-3">
+            <p className="text-[11px] text-gray-700 dark:text-gray-300 leading-relaxed">
               <strong>AI</strong> has reviewed the prior-year surplus balances and identified the following items requiring attention:
             </p>
           </div>
@@ -380,17 +380,17 @@ function RightPanelContent({ milestone }: { milestone: MilestoneId | null }) {
             { priority: 'low',    msg: 'Exempt surplus increased by $869,000 net. Cross-check against the T1134 Supplement Section 3A.1 for consistency.' },
           ].map((item, i) => (
             <div key={i} style={{
-              padding: '8px 10px', background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 12,
+              padding: '8px 10px', background: 'var(--sx-card)', border: '1px solid var(--sx-hairline)', borderRadius: 8, fontSize: 12,
               borderLeft: `3px solid ${item.priority === 'high' ? '#fca5a5' : item.priority === 'medium' ? '#fde68a' : '#d1d5db'}`,
             }}>
-              <div style={{ color: '#374151', lineHeight: 1.5 }}>{item.msg}</div>
+              <div style={{ color: 'var(--sx-body)', lineHeight: 1.5 }}>{item.msg}</div>
             </div>
           ))}
         </div>
-        <div className="px-4 py-3 border-t border-gray-100 shrink-0">
-          <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2">
-            <input placeholder="Ask about this surplus calculation…" className="flex-1 text-[11px] bg-transparent outline-none text-gray-700 placeholder-gray-400" />
-            <button className="text-gray-400 hover:text-gray-600 transition-colors">
+        <div className="px-4 py-3 border-t border-gray-100 dark:border-white/10 shrink-0">
+          <div className="flex items-center gap-2 bg-gray-50 dark:bg-white/5 rounded-xl px-3 py-2">
+            <input placeholder="Ask about this surplus calculation…" className="flex-1 text-[11px] bg-transparent outline-none text-gray-700 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500" />
+            <button className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
               <ChevronRight size={14} />
             </button>
           </div>
@@ -402,18 +402,18 @@ function RightPanelContent({ milestone }: { milestone: MilestoneId | null }) {
   if (milestone === 'client-context') {
     return (
       <div className="flex flex-col h-full">
-        <div className="px-4 py-3 border-b border-gray-100">
+        <div className="px-4 py-3 border-b border-gray-100 dark:border-white/10">
           <div className="flex items-center gap-2">
-            <FileText size={14} className="text-gray-400" />
-            <span className="text-xs font-600 text-gray-700">Client Context</span>
+            <FileText size={14} className="text-gray-400 dark:text-gray-500" />
+            <span className="text-xs font-600 text-gray-700 dark:text-gray-300">Client Context</span>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, background: '#f9fafb', borderRadius: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, background: 'var(--sx-raised)', borderRadius: 8 }}>
             <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#1e1b4b', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 14 }}>N</div>
             <div>
-              <div style={{ fontWeight: 800, fontSize: 14, color: '#111827' }}>Northstar Inc.</div>
-              <div style={{ fontSize: 11, color: '#6b7280' }}>BN: 123456789 · FY Dec 31, 2024</div>
+              <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--sx-ink)' }}>Northstar Inc.</div>
+              <div style={{ fontSize: 11, color: 'var(--sx-muted)' }}>BN: 123456789 · FY Dec 31, 2024</div>
             </div>
           </div>
           {[
@@ -426,9 +426,9 @@ function RightPanelContent({ milestone }: { milestone: MilestoneId | null }) {
             { label: 'Prior Year ES',    value: '€1,245,000' },
             { label: 'Prior Year TS',    value: '€312,000' },
           ].map((row, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid #f3f4f6', fontSize: 12 }}>
-              <span style={{ color: '#6b7280' }}>{row.label}</span>
-              <span style={{ fontWeight: 700, color: '#111827' }}>{row.value}</span>
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid var(--sx-hairline-subtle)', fontSize: 12 }}>
+              <span style={{ color: 'var(--sx-muted)' }}>{row.label}</span>
+              <span style={{ fontWeight: 700, color: 'var(--sx-ink)' }}>{row.value}</span>
             </div>
           ))}
         </div>
@@ -439,34 +439,34 @@ function RightPanelContent({ milestone }: { milestone: MilestoneId | null }) {
   if (milestone === 'upload') {
     return (
       <div className="flex flex-col h-full">
-        <div className="px-4 py-3 border-b border-gray-100">
+        <div className="px-4 py-3 border-b border-gray-100 dark:border-white/10">
           <div className="flex items-center gap-2">
-            <Upload size={14} className="text-gray-400" />
-            <span className="text-sm font-600 text-gray-800">Upload Documents</span>
-            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-500">✓ 2 files</span>
+            <Upload size={14} className="text-gray-400 dark:text-gray-500" />
+            <span className="text-sm font-600 text-gray-800 dark:text-gray-200">Upload Documents</span>
+            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-300 font-500">✓ 2 files</span>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center gap-2 hover:border-gray-300 transition-colors cursor-pointer">
-            <Upload size={20} className="text-gray-400" />
-            <p className="text-xs font-500 text-gray-600">Drop files here or click to upload</p>
-            <p className="text-[10px] text-gray-400">Prior year surplus summary, FS, tax returns</p>
+          <div className="border-2 border-dashed border-gray-200 dark:border-white/10 rounded-xl p-6 flex flex-col items-center gap-2 hover:border-gray-300 dark:hover:border-white/20 transition-colors cursor-pointer">
+            <Upload size={20} className="text-gray-400 dark:text-gray-500" />
+            <p className="text-xs font-500 text-gray-600 dark:text-gray-300">Drop files here or click to upload</p>
+            <p className="text-[10px] text-gray-400 dark:text-gray-500">Prior year surplus summary, FS, tax returns</p>
           </div>
           <div>
-            <div className="text-[10px] font-700 text-gray-400 uppercase tracking-wider mb-2">Uploaded Files</div>
+            <div className="text-[10px] font-700 text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Uploaded Files</div>
             <div className="space-y-2">
               {[
                 { name: 'Surplus_2023_SASParis.xlsx', size: '340 KB', status: 'processed' },
                 { name: 'SAS_paris_FS_2024.pdf',      size: '2.1 MB', status: 'processed' },
                 { name: 'TaxReturn_SASParis_2024.pdf', size: '1.4 MB', status: 'processing' },
               ].map((file) => (
-                <div key={file.name} className="flex items-center gap-2 bg-gray-50 rounded-lg p-2.5">
-                  <FileText size={14} className="text-gray-400 shrink-0" />
+                <div key={file.name} className="flex items-center gap-2 bg-gray-50 dark:bg-white/5 rounded-lg p-2.5">
+                  <FileText size={14} className="text-gray-400 dark:text-gray-500 shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <div className="text-[11px] font-500 text-gray-700 truncate">{file.name}</div>
-                    <div className="text-[10px] text-gray-400">{file.size}</div>
+                    <div className="text-[11px] font-500 text-gray-700 dark:text-gray-300 truncate">{file.name}</div>
+                    <div className="text-[10px] text-gray-400 dark:text-gray-500">{file.size}</div>
                   </div>
-                  <span className={cn('text-[9px] px-1.5 py-0.5 rounded-full font-500', file.status === 'processed' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700')}>
+                  <span className={cn('text-[9px] px-1.5 py-0.5 rounded-full font-500', file.status === 'processed' ? 'bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-300' : 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300')}>
                     {file.status === 'processed' ? '✓ Ready' : '⟳ Processing'}
                   </span>
                 </div>
@@ -481,15 +481,15 @@ function RightPanelContent({ milestone }: { milestone: MilestoneId | null }) {
   if (milestone === 'sources-mapping') {
     return (
       <div className="flex flex-col h-full">
-        <div className="px-4 py-3 border-b border-gray-100">
+        <div className="px-4 py-3 border-b border-gray-100 dark:border-white/10">
           <div className="flex items-center gap-2">
-            <MapPin size={14} className="text-gray-400" />
-            <span className="text-sm font-600 text-gray-800">Sources Mapping</span>
-            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-500">✓ Mapped</span>
+            <MapPin size={14} className="text-gray-400 dark:text-gray-500" />
+            <span className="text-sm font-600 text-gray-800 dark:text-gray-200">Sources Mapping</span>
+            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-300 font-500">✓ Mapped</span>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          <div className="text-[10px] text-gray-500 mb-3">AI-extracted values mapped to surplus calculator fields</div>
+          <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-3">AI-extracted values mapped to surplus calculator fields</div>
           {[
             { field: 'Net income per FS',          source: 'SAS_paris_FS_2024.pdf · p.4',        value: '€2,180,000', confidence: 97, status: 'mapped' },
             { field: 'Income taxes paid',           source: 'TaxReturn_SASParis_2024.pdf · p.2',  value: '€654,000',   confidence: 94, status: 'mapped' },
@@ -497,15 +497,15 @@ function RightPanelContent({ milestone }: { milestone: MilestoneId | null }) {
             { field: 'Dividends paid',              source: 'SAS_paris_FS_2024.pdf · p.8',        value: '€500,000',   confidence: 91, status: 'mapped' },
             { field: 'Depreciation adjustment',     source: 'TaxReturn_SASParis_2024.pdf · p.5',  value: 'Pending',    confidence: 0,  status: 'pending' },
           ].map((row) => (
-            <div key={row.field} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+            <div key={row.field} className="bg-gray-50 dark:bg-white/5 rounded-lg p-3 border border-gray-100 dark:border-white/10">
               <div className="flex items-start justify-between gap-2 mb-1.5">
-                <div className="text-[10px] font-600 text-gray-700">{row.field}</div>
-                <span className={cn('text-[9px] px-1.5 py-0.5 rounded-full font-500 shrink-0', row.status === 'mapped' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700')}>
+                <div className="text-[10px] font-600 text-gray-700 dark:text-gray-300">{row.field}</div>
+                <span className={cn('text-[9px] px-1.5 py-0.5 rounded-full font-500 shrink-0', row.status === 'mapped' ? 'bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-300' : 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300')}>
                   {row.status === 'mapped' ? `${row.confidence}% conf.` : 'Pending'}
                 </span>
               </div>
-              <div className="text-[10px] text-gray-500">Source: {row.source}</div>
-              <div className="text-[11px] font-600 text-gray-800 mt-1">{row.value}</div>
+              <div className="text-[10px] text-gray-500 dark:text-gray-400">Source: {row.source}</div>
+              <div className="text-[11px] font-600 text-gray-800 dark:text-gray-200 mt-1">{row.value}</div>
             </div>
           ))}
         </div>
@@ -516,13 +516,13 @@ function RightPanelContent({ milestone }: { milestone: MilestoneId | null }) {
   if (milestone === 'irl') {
     return (
       <div className="flex flex-col h-full">
-        <div className="px-4 py-3 border-b border-gray-100">
+        <div className="px-4 py-3 border-b border-gray-100 dark:border-white/10">
           <div className="flex items-center gap-2">
-            <Mail size={14} className="text-gray-400" />
-            <span className="text-xs font-600 text-gray-700">Information Request Letter</span>
-            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-500">3 pending</span>
+            <Mail size={14} className="text-gray-400 dark:text-gray-500" />
+            <span className="text-xs font-600 text-gray-700 dark:text-gray-300">Information Request Letter</span>
+            <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 font-500">3 pending</span>
           </div>
-          <p className="text-[10px] text-gray-400 mt-1">Confirm year-end transactions that may affect surplus balances</p>
+          <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">Confirm year-end transactions that may affect surplus balances</p>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {[
@@ -531,26 +531,26 @@ function RightPanelContent({ milestone }: { milestone: MilestoneId | null }) {
             { id: 3, question: 'Provide the breakdown of income taxes paid between current and deferred portions.', status: 'pending', due: 'Jun 15' },
             { id: 4, question: 'Confirm the depreciation method used for the 2024 tax return (straight-line vs. declining balance).', status: 'received', due: 'Jun 10' },
           ].map((item) => (
-            <div key={item.id} className="bg-gray-50 rounded-xl p-3 space-y-2">
+            <div key={item.id} className="bg-gray-50 dark:bg-white/5 rounded-xl p-3 space-y-2">
               <div className="flex items-start justify-between gap-2">
-                <p className="text-[11px] text-gray-700 leading-relaxed flex-1">{item.question}</p>
-                <span className={cn('shrink-0 text-[9px] px-1.5 py-0.5 rounded-full font-600', item.status === 'received' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700')}>
+                <p className="text-[11px] text-gray-700 dark:text-gray-300 leading-relaxed flex-1">{item.question}</p>
+                <span className={cn('shrink-0 text-[9px] px-1.5 py-0.5 rounded-full font-600', item.status === 'received' ? 'bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-300' : 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300')}>
                   {item.status === 'received' ? '✓ Received' : '⏳ Pending'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[9px] text-gray-400">Due {item.due}</span>
+                <span className="text-[9px] text-gray-400 dark:text-gray-500">Due {item.due}</span>
                 {item.status === 'pending' && (
-                  <button className="text-[9px] font-600 px-2 py-0.5 rounded border border-gray-200 text-gray-500 hover:text-gray-700 transition-colors">Send reminder</button>
+                  <button className="text-[9px] font-600 px-2 py-0.5 rounded border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">Send reminder</button>
                 )}
               </div>
             </div>
           ))}
-          <button className="w-full mt-2 flex items-center justify-center gap-1.5 text-[11px] font-600 py-2 rounded-xl border-2 border-dashed border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600 transition-colors">
+          <button className="w-full mt-2 flex items-center justify-center gap-1.5 text-[11px] font-600 py-2 rounded-xl border-2 border-dashed border-gray-200 dark:border-white/10 text-gray-400 dark:text-gray-500 hover:border-gray-300 dark:hover:border-white/20 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
             <Plus size={12} /> Add request
           </button>
         </div>
-        <div className="px-4 py-3 border-t border-gray-100 shrink-0">
+        <div className="px-4 py-3 border-t border-gray-100 dark:border-white/10 shrink-0">
           <button className="w-full py-2 rounded-xl text-white text-xs font-600 flex items-center justify-center gap-2" style={{ background: '#374151' }}>
             <Mail size={12} /> Send IRL to client
           </button>
@@ -562,12 +562,12 @@ function RightPanelContent({ milestone }: { milestone: MilestoneId | null }) {
   if (milestone === 'validate') {
     return (
       <div className="flex flex-col h-full">
-        <div className="px-4 py-3 border-b border-gray-100">
+        <div className="px-4 py-3 border-b border-gray-100 dark:border-white/10">
           <div className="flex items-center gap-2">
-            <ClipboardCheck size={14} className="text-gray-400" />
-            <span className="text-sm font-600 text-gray-800">Validate</span>
+            <ClipboardCheck size={14} className="text-gray-400 dark:text-gray-500" />
+            <span className="text-sm font-600 text-gray-800 dark:text-gray-200">Validate</span>
           </div>
-          <p className="text-[10px] text-gray-400 mt-1">Running validation checks…</p>
+          <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">Running validation checks…</p>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
           {[
@@ -579,10 +579,10 @@ function RightPanelContent({ milestone }: { milestone: MilestoneId | null }) {
             { label: 'Reg. 5907(2) adjustments complete',                      status: 'warn', count: '2 blank' },
             { label: 'T1134 Supplement Section 3A.1 ties to closing ES',       status: 'pass' },
           ].map((item, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: '#f9fafb', borderRadius: 8, fontSize: 12 }}>
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: 'var(--sx-raised)', borderRadius: 8, fontSize: 12 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: item.status === 'fail' ? '#fca5a5' : item.status === 'warn' ? '#fde68a' : '#a7f3d0' }} />
-              <span style={{ flex: 1, color: '#374151' }}>{item.label}</span>
-              {item.count && <span style={{ fontSize: 11, fontWeight: 700, color: '#6b7280' }}>{item.count}</span>}
+              <span style={{ flex: 1, color: 'var(--sx-body)' }}>{item.label}</span>
+              {item.count && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--sx-muted)' }}>{item.count}</span>}
             </div>
           ))}
         </div>
@@ -593,28 +593,28 @@ function RightPanelContent({ milestone }: { milestone: MilestoneId | null }) {
   if (milestone === 'review') {
     return (
       <div className="flex flex-col h-full">
-        <div className="px-4 py-3 border-b border-gray-100">
+        <div className="px-4 py-3 border-b border-gray-100 dark:border-white/10">
           <div className="flex items-center gap-2">
-            <Eye size={14} className="text-gray-400" />
-            <span className="text-sm font-600 text-gray-800">Review</span>
+            <Eye size={14} className="text-gray-400 dark:text-gray-500" />
+            <span className="text-sm font-600 text-gray-800 dark:text-gray-200">Review</span>
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          <div style={{ fontSize: 12, color: '#6b7280' }}>Manager review comments</div>
+          <div style={{ fontSize: 12, color: 'var(--sx-muted)' }}>Manager review comments</div>
           {[
             { reviewer: 'M. Chen', comment: 'Please confirm the taxable surplus deficit — was a Reg. 5900(2) election filed? If not, the dividend paid may need to be recharacterized.', date: 'Jun 3, 2025', resolved: false },
             { reviewer: 'J. Park', comment: 'Depreciation adjustment looks reasonable. Confirm the CCA class used under French tax rules.', date: 'Jun 4, 2025', resolved: true },
           ].map((c, i) => (
-            <div key={i} style={{ padding: 10, background: c.resolved ? '#f0fdf4' : '#fff', border: `1px solid ${c.resolved ? '#bbf7d0' : '#e5e7eb'}`, borderRadius: 8, fontSize: 12 }}>
+            <div key={i} style={{ padding: 10, background: c.resolved ? 'rgba(16,185,129,0.14)' : 'var(--sx-card)', border: `1px solid ${c.resolved ? 'rgba(16,185,129,0.14)' : 'var(--sx-hairline)'}`, borderRadius: 8, fontSize: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ fontWeight: 700, color: '#111827' }}>{c.reviewer}</span>
-                <span style={{ color: '#9ca3af', fontSize: 11 }}>{c.date}</span>
+                <span style={{ fontWeight: 700, color: 'var(--sx-ink)' }}>{c.reviewer}</span>
+                <span style={{ color: 'var(--sx-faint)', fontSize: 11 }}>{c.date}</span>
               </div>
-              <div style={{ color: '#4b5563', lineHeight: 1.5 }}>{c.comment}</div>
+              <div style={{ color: 'var(--sx-body)', lineHeight: 1.5 }}>{c.comment}</div>
               {c.resolved && <div style={{ marginTop: 6, fontSize: 11, color: '#10b981', fontWeight: 700 }}>✓ Resolved</div>}
             </div>
           ))}
-          <button style={{ padding: '8px 0', background: '#f3f4f6', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer', width: '100%' }}>
+          <button style={{ padding: '8px 0', background: 'var(--sx-panel)', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, color: 'var(--sx-body)', cursor: 'pointer', width: '100%' }}>
             + Add Comment
           </button>
         </div>
@@ -625,12 +625,12 @@ function RightPanelContent({ milestone }: { milestone: MilestoneId | null }) {
   if (milestone === 'sign-off') {
     return (
       <div className="flex flex-col h-full">
-        <div className="px-4 py-3 border-b border-gray-100">
+        <div className="px-4 py-3 border-b border-gray-100 dark:border-white/10">
           <div className="flex items-center gap-2">
-            <PenLine size={14} className="text-gray-400" />
-            <span className="text-sm font-600 text-gray-800">Sign-off</span>
+            <PenLine size={14} className="text-gray-400 dark:text-gray-500" />
+            <span className="text-sm font-600 text-gray-800 dark:text-gray-200">Sign-off</span>
           </div>
-          <p className="text-[10px] text-gray-400 mt-1">Digital sign-off required before filing</p>
+          <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">Digital sign-off required before filing</p>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {[
@@ -638,15 +638,15 @@ function RightPanelContent({ milestone }: { milestone: MilestoneId | null }) {
             { role: 'Reviewer', name: 'Michael Chen',   date: '',            signed: false },
             { role: 'Partner',  name: 'James Park',     date: '',            signed: false },
           ].map((s, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: s.signed ? '#f0fdf4' : '#fafafa', borderRadius: 8, border: `1px solid ${s.signed ? '#bbf7d0' : '#e5e7eb'}` }}>
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: s.signed ? 'rgba(16,185,129,0.14)' : 'var(--sx-raised)', borderRadius: 8, border: `1px solid ${s.signed ? 'rgba(16,185,129,0.14)' : 'var(--sx-hairline)'}` }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#111827' }}>{s.name}</div>
-                <div style={{ fontSize: 11, color: '#9ca3af' }}>{s.role}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--sx-ink)' }}>{s.name}</div>
+                <div style={{ fontSize: 11, color: 'var(--sx-faint)' }}>{s.role}</div>
               </div>
               {s.signed ? (
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: 11, color: '#10b981', fontWeight: 700 }}>✓ Signed</div>
-                  <div style={{ fontSize: 10, color: '#9ca3af' }}>{s.date}</div>
+                  <div style={{ fontSize: 10, color: 'var(--sx-faint)' }}>{s.date}</div>
                 </div>
               ) : (
                 <button style={{ padding: '6px 12px', background: '#374151', color: '#fff', border: 'none', borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Sign</button>
@@ -662,12 +662,12 @@ function RightPanelContent({ milestone }: { milestone: MilestoneId | null }) {
   const m = MILESTONES.find((x) => x.id === milestone);
   return (
     <div className="flex flex-col items-center justify-center h-full text-center px-6">
-      <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3 text-gray-400">
+      <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center mb-3 text-gray-400 dark:text-gray-500">
         {m?.icon}
       </div>
-      <p className="text-sm font-600 text-gray-700">{m?.label}</p>
-      <p className="text-xs text-gray-400 mt-1">This milestone is pending</p>
-      <div className="mt-4 flex items-center gap-1.5 text-[10px] text-gray-400">
+      <p className="text-sm font-600 text-gray-700 dark:text-gray-300">{m?.label}</p>
+      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">This milestone is pending</p>
+      <div className="mt-4 flex items-center gap-1.5 text-[10px] text-gray-400 dark:text-gray-500">
         <Clock size={11} /> Not started
       </div>
     </div>
@@ -703,14 +703,14 @@ function SurplusCalculator({
     return (
       <div key={row.id}>
         {row.isSection ? (
-          <div data-anchor={`surplus:${row.id}`} className="flex items-center gap-2 px-4 py-2 bg-gray-50 border-b border-gray-100 sticky top-0 z-10">
-            <span className="text-[10px] font-700 text-gray-500 uppercase tracking-widest">{row.label}</span>
+          <div data-anchor={`surplus:${row.id}`} className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-white/5 border-b border-gray-100 dark:border-white/10 sticky top-0 z-10">
+            <span className="text-[10px] font-700 text-gray-500 dark:text-gray-400 uppercase tracking-widest">{row.label}</span>
           </div>
         ) : (
           <div
             data-anchor={`surplus:${row.id}`}
             className={cn(
-              'flex items-center border-b border-gray-50 hover:bg-gray-50/50 transition-colors group',
+              'flex items-center border-b border-gray-50 dark:border-white/10 hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors group',
               depth > 0 ? 'pl-6' : '',
             )}
             style={{ minHeight: '40px' }}
@@ -718,7 +718,7 @@ function SurplusCalculator({
             {/* Expand toggle */}
             <div className="w-8 flex items-center justify-center shrink-0">
               {hasChildren ? (
-                <button onClick={() => toggleRow(row.id)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <button onClick={() => toggleRow(row.id)} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                   {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
                 </button>
               ) : <span className="w-3" />}
@@ -736,12 +736,12 @@ function SurplusCalculator({
 
             {/* Label */}
             <div className="flex-1 flex items-center gap-2 py-2 pr-2 min-w-0">
-              <span className={cn('text-[11px] leading-tight', hasChildren ? 'font-500 text-gray-800' : 'text-gray-700', depth > 0 ? 'text-gray-600' : '')}>
+              <span className={cn('text-[11px] leading-tight', hasChildren ? 'font-500 text-gray-800 dark:text-gray-200' : 'text-gray-700 dark:text-gray-300', depth > 0 ? 'text-gray-600 dark:text-gray-300' : '')}>
                 {row.label}
               </span>
               {row.badge && (
                 <span className={cn('text-[9px] px-1.5 py-0.5 rounded font-500 border shrink-0',
-                  row.linked ? 'text-purple-700 border-purple-200 bg-purple-50' : 'text-gray-500 border-gray-200 bg-gray-100')}>
+                  row.linked ? 'text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-500/30 bg-purple-50 dark:bg-purple-500/15' : 'text-gray-500 dark:text-gray-400 border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/10')}>
                   {row.badge}
                 </span>
               )}
@@ -755,10 +755,10 @@ function SurplusCalculator({
                 return (
                   <div key={st.id} className="w-24 text-right pr-3">
                     {isNA ? (
-                      <span className="text-[11px] text-gray-200">—</span>
+                      <span className="text-[11px] text-gray-200 dark:text-gray-600">—</span>
                     ) : (
-                      <span className={cn('text-[11px] tabular-nums', hasChildren ? 'font-600 text-gray-800' : 'text-gray-700',
-                        val?.startsWith('(') ? 'text-gray-600' : '')}>
+                      <span className={cn('text-[11px] tabular-nums', hasChildren ? 'font-600 text-gray-800 dark:text-gray-200' : 'text-gray-700 dark:text-gray-300',
+                        val?.startsWith('(') ? 'text-gray-600 dark:text-gray-300' : '')}>
                         {val}
                       </span>
                     )}
@@ -769,8 +769,8 @@ function SurplusCalculator({
               <div className="w-10 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pr-2">
                 {row.showIcons && (
                   <>
-                    <button className="text-gray-400 hover:text-gray-600 p-0.5"><FileText size={10} /></button>
-                    <button className="text-gray-400 hover:text-gray-600 p-0.5"><Clock size={10} /></button>
+                    <button className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-0.5"><FileText size={10} /></button>
+                    <button className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-0.5"><Clock size={10} /></button>
                   </>
                 )}
               </div>
@@ -787,52 +787,52 @@ function SurplusCalculator({
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-white dark:bg-[#1c1c24]">
       {/* Calculator header */}
-      <div className="px-4 py-3 border-b border-gray-100">
-        <div className="text-[10px] font-700 text-gray-400 uppercase tracking-widest mb-0.5">SURPLUS WORKSHEET</div>
-        <div className="text-lg font-600 text-gray-900">Surplus Accounts Calculator</div>
-        <div className="text-[11px] text-gray-400 mt-0.5">Regulation 5907 — Exempt, Hybrid, Taxable &amp; Pre-Acquisition Surplus</div>
+      <div className="px-4 py-3 border-b border-gray-100 dark:border-white/10">
+        <div className="text-[10px] font-700 text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-0.5">SURPLUS WORKSHEET</div>
+        <div className="text-lg font-600 text-gray-900 dark:text-gray-100">Surplus Accounts Calculator</div>
+        <div className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">Regulation 5907 — Exempt, Hybrid, Taxable &amp; Pre-Acquisition Surplus</div>
       </div>
 
       {/* Selectors bar */}
-      <div className="flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 flex-wrap">
+      <div className="flex items-center gap-3 px-4 py-2.5 border-b border-gray-100 dark:border-white/10 flex-wrap">
         <div className="flex items-center gap-1.5 text-[11px]">
-          <span className="text-gray-400 font-600 uppercase tracking-wider text-[9px]">Company</span>
-          <span className="font-500 text-gray-800 bg-gray-100 px-2 py-1 rounded text-[11px]">Northstar Inc.</span>
+          <span className="text-gray-400 dark:text-gray-500 font-600 uppercase tracking-wider text-[9px]">Company</span>
+          <span className="font-500 text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-white/10 px-2 py-1 rounded text-[11px]">Northstar Inc.</span>
         </div>
         <div className="flex items-center gap-1.5 text-[11px]">
-          <span className="text-gray-400 font-600 uppercase tracking-wider text-[9px]">Affiliate</span>
+          <span className="text-gray-400 dark:text-gray-500 font-600 uppercase tracking-wider text-[9px]">Affiliate</span>
           <select value={affiliate} onChange={(e) => onAffiliateChange(e.target.value)}
-            className="font-500 text-gray-800 bg-gray-100 px-2 py-1 rounded text-[11px] border-0 outline-none cursor-pointer hover:bg-gray-200 transition-colors">
+            className="font-500 text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-white/10 px-2 py-1 rounded text-[11px] border-0 outline-none cursor-pointer hover:bg-gray-200 dark:hover:bg-white/20 transition-colors">
             {AFFILIATES.map((a) => <option key={a} value={a}>{a}</option>)}
           </select>
         </div>
         <div className="flex items-center gap-1.5 text-[11px]">
-          <span className="text-gray-400 font-600 uppercase tracking-wider text-[9px]">Year</span>
+          <span className="text-gray-400 dark:text-gray-500 font-600 uppercase tracking-wider text-[9px]">Year</span>
           <select value={year} onChange={(e) => onYearChange(e.target.value)}
-            className="font-500 text-gray-800 bg-gray-100 px-2 py-1 rounded text-[11px] border-0 outline-none cursor-pointer hover:bg-gray-200 transition-colors">
+            className="font-500 text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-white/10 px-2 py-1 rounded text-[11px] border-0 outline-none cursor-pointer hover:bg-gray-200 dark:hover:bg-white/20 transition-colors">
             {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
         <div className="flex items-center gap-1.5 text-[11px]">
-          <span className="text-gray-400 font-600 uppercase tracking-wider text-[9px]">CCY</span>
-          <span className="font-500 text-gray-800 bg-gray-100 px-2 py-1 rounded text-[11px]">EUR</span>
+          <span className="text-gray-400 dark:text-gray-500 font-600 uppercase tracking-wider text-[9px]">CCY</span>
+          <span className="font-500 text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-white/10 px-2 py-1 rounded text-[11px]">EUR</span>
         </div>
-        <button className="flex items-center gap-1 text-[11px] font-500 px-2.5 py-1 rounded border border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-all">
+        <button className="flex items-center gap-1 text-[11px] font-500 px-2.5 py-1 rounded border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:border-gray-300 dark:hover:border-white/20 hover:bg-gray-50 dark:hover:bg-white/5 transition-all">
           <Plus size={11} /> New affiliate
         </button>
       </div>
 
       {/* Table header */}
-      <div className="flex items-center px-4 py-2 border-b border-gray-200 bg-gray-50 sticky top-0 z-20">
+      <div className="flex items-center px-4 py-2 border-b border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 sticky top-0 z-20">
         <div className="w-8 shrink-0" />
         <div className="w-20 shrink-0" />
-        <div className="flex-1 text-[10px] font-700 text-gray-500 uppercase tracking-wider">Description</div>
+        <div className="flex-1 text-[10px] font-700 text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</div>
         {SURPLUS_TYPES.map((st) => (
           <div key={st.id} className="w-24 text-right pr-3">
-            <div className="text-[10px] font-700 text-gray-500 uppercase tracking-wider">{st.label}</div>
-            <div className="text-[9px] text-gray-400 font-400">{st.fullLabel}</div>
+            <div className="text-[10px] font-700 text-gray-500 dark:text-gray-400 uppercase tracking-wider">{st.label}</div>
+            <div className="text-[9px] text-gray-400 dark:text-gray-500 font-400">{st.fullLabel}</div>
           </div>
         ))}
         <div className="w-10" />
@@ -844,14 +844,14 @@ function SurplusCalculator({
       </div>
 
       {/* Results Summary (sticky bottom) */}
-      <div className="border-t-2 border-gray-200 bg-gray-50">
-        <div className="flex items-center px-4 py-2 border-b border-gray-200">
-          <button className="flex items-center gap-1.5 text-[10px] font-700 text-gray-500 uppercase tracking-wider">
+      <div className="border-t-2 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5">
+        <div className="flex items-center px-4 py-2 border-b border-gray-200 dark:border-white/10">
+          <button className="flex items-center gap-1.5 text-[10px] font-700 text-gray-500 dark:text-gray-400 uppercase tracking-wider">
             <ChevronDown size={12} />
             Closing Balances
           </button>
           <div className="ml-auto">
-            <button className="flex items-center gap-1.5 text-[11px] text-gray-500 hover:text-gray-700 transition-colors">
+            <button className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
               <Download size={12} />
               Export results
             </button>
@@ -864,13 +864,13 @@ function SurplusCalculator({
             <span className="text-[9px] font-700 px-1.5 py-0.5 rounded border"
               style={{ color: PURPLE, borderColor: `${PURPLE}40`, background: `${PURPLE}08` }}>CB</span>
           </div>
-          <div className="flex-1 text-[12px] font-700 text-gray-800">Closing Surplus Balance</div>
+          <div className="flex-1 text-[12px] font-700 text-gray-800 dark:text-gray-200">Closing Surplus Balance</div>
           {SURPLUS_TYPES.map((st) => {
             const val = CLOSING[st.id];
             const isNeg = val.startsWith('(');
             return (
               <div key={st.id} className="w-24 text-right pr-3">
-                <span className={cn('text-[12px] font-700 tabular-nums', isNeg ? 'text-red-600' : 'text-gray-900')}>
+                <span className={cn('text-[12px] font-700 tabular-nums', isNeg ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100')}>
                   {val}
                 </span>
               </div>
@@ -882,9 +882,9 @@ function SurplusCalculator({
         <div className="flex items-center px-4 pb-3">
           <div className="w-8 shrink-0" />
           <div className="w-20 shrink-0">
-            <span className="text-[9px] font-700 px-1.5 py-0.5 rounded border text-gray-400 border-gray-200 bg-gray-50">CAD</span>
+            <span className="text-[9px] font-700 px-1.5 py-0.5 rounded border text-gray-400 dark:text-gray-500 border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5">CAD</span>
           </div>
-          <div className="flex-1 text-[11px] text-gray-500">CAD equivalent (@ 1.4782)</div>
+          <div className="flex-1 text-[11px] text-gray-500 dark:text-gray-400">CAD equivalent (@ 1.4782)</div>
           {SURPLUS_TYPES.map((st) => {
             const rawStr = CLOSING[st.id].replace(/[(),]/g, '');
             const raw = parseFloat(rawStr) || 0;
@@ -892,7 +892,7 @@ function SurplusCalculator({
             const cad = (raw * 1.4782).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
             return (
               <div key={st.id} className="w-24 text-right pr-3">
-                <span className={cn('text-[11px] tabular-nums text-gray-500', isNeg ? 'text-red-400' : '')}>
+                <span className={cn('text-[11px] tabular-nums text-gray-500 dark:text-gray-400', isNeg ? 'text-red-400' : '')}>
                   {isNeg ? `(${cad})` : cad}
                 </span>
               </div>
@@ -961,13 +961,13 @@ function InScopeLogoTrigger({
         <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ pointerEvents: 'none', gap: 2 }}>
           {centerLabel ? (
             <>
-              <span style={{ fontSize: 9, fontWeight: 800, color: '#111827', lineHeight: 1.2, textAlign: 'center', maxWidth: INNER_R * 2 - 8, display: 'block', wordBreak: 'break-word' }}>{centerLabel}</span>
-              <span style={{ fontSize: 6, color: '#9CA3AF', marginTop: 2 }}>active</span>
+              <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--sx-ink)', lineHeight: 1.2, textAlign: 'center', maxWidth: INNER_R * 2 - 8, display: 'block', wordBreak: 'break-word' }}>{centerLabel}</span>
+              <span style={{ fontSize: 6, color: 'var(--sx-muted)', marginTop: 2 }}>active</span>
             </>
           ) : (
             <>
-              <span style={{ fontSize: 9, fontWeight: 800, color: '#111827', lineHeight: 1.2, textAlign: 'center', maxWidth: INNER_R * 2 - 8, display: 'block' }}>Surplus</span>
-              <span style={{ fontSize: 6, color: '#9CA3AF', marginTop: 2 }}>{doneCount}/{total} done</span>
+              <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--sx-ink)', lineHeight: 1.2, textAlign: 'center', maxWidth: INNER_R * 2 - 8, display: 'block' }}>Surplus</span>
+              <span style={{ fontSize: 6, color: 'var(--sx-muted)', marginTop: 2 }}>{doneCount}/{total} done</span>
             </>
           )}
         </div>
@@ -993,32 +993,32 @@ export default function SurplusWorksheet() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-[#141418] overflow-hidden">
       {/* Top bar */}
-      <div className="flex items-center gap-3 px-4 py-2.5 bg-white border-b border-gray-100 z-20 shrink-0">
+      <div className="flex items-center gap-3 px-4 py-2.5 bg-white dark:bg-[#1c1c24] border-b border-gray-100 dark:border-white/10 z-20 shrink-0">
         <button onClick={() => navigate('/')} className="flex items-center gap-1.5 select-none hover:opacity-80 transition-opacity">
-          <span className="text-sm font-700 tracking-tight text-gray-900">Sinaxe</span>
-          <span className="text-[10px] text-gray-300 font-400">™</span>
+          <span className="text-sm font-700 tracking-tight text-gray-900 dark:text-gray-100">Sinaxe</span>
+          <span className="text-[10px] text-gray-300 dark:text-gray-600 font-400">™</span>
           <span className="text-sm font-700 tracking-tight" style={{ color: PURPLE }}>InScope</span>
         </button>
-        <div className="flex items-center gap-1 text-xs text-gray-400">
-          <span className="text-gray-300">·</span>
-          <button onClick={() => navigate('/')} className="hover:text-gray-600 transition-colors">Northstar Inc.</button>
-          <span className="text-gray-300">›</span>
-          <button onClick={() => navigate('/')} className="hover:text-gray-600 transition-colors">ICT</button>
-          <span className="text-gray-300">›</span>
-          <button onClick={() => navigate('/')} className="hover:text-gray-600 transition-colors">Calculate</button>
-          <span className="text-gray-300">›</span>
-          <span className="text-gray-600 font-500">Surplus Worksheet</span>
+        <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500">
+          <span className="text-gray-300 dark:text-gray-600">·</span>
+          <button onClick={() => navigate('/')} className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Northstar Inc.</button>
+          <span className="text-gray-300 dark:text-gray-600">›</span>
+          <button onClick={() => navigate('/')} className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">ICT</button>
+          <span className="text-gray-300 dark:text-gray-600">›</span>
+          <button onClick={() => navigate('/')} className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Calculate</button>
+          <span className="text-gray-300 dark:text-gray-600">›</span>
+          <span className="text-gray-600 dark:text-gray-300 font-500">Surplus Worksheet</span>
         </div>
         <div className="ml-auto flex items-center gap-2">
           <div className="flex items-center gap-1.5">
             <div className="flex gap-0.5">
               {MILESTONES.map((m) => (
-                <div key={m.id} className="w-4 h-1 rounded-full transition-all" style={{ background: m.done ? '#22c55e' : '#e5e7eb' }} />
+                <div key={m.id} className="w-4 h-1 rounded-full transition-all" style={{ background: m.done ? '#22c55e' : 'var(--sx-hairline)' }} />
               ))}
             </div>
-            <span className="text-[10px] text-gray-400 font-500">{doneCount}/{MILESTONES.length} milestones</span>
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 font-500">{doneCount}/{MILESTONES.length} milestones</span>
           </div>
         </div>
       </div>
@@ -1027,7 +1027,7 @@ export default function SurplusWorksheet() {
       <div className="flex flex-1 overflow-hidden relative">
         {/* LEFT PANEL */}
         <div
-          className="flex flex-col overflow-hidden border-r border-gray-100"
+          className="flex flex-col overflow-hidden border-r border-gray-100 dark:border-white/10"
           style={{
             flex: rightPanelOpen ? '0 0 62%' : '1 1 0%',
             transition: 'flex-basis 300ms cubic-bezier(0.23, 1, 0.32, 1)',
@@ -1043,7 +1043,7 @@ export default function SurplusWorksheet() {
 
         {/* RIGHT PANEL — slides in from the right */}
         <div
-          className="absolute top-0 right-0 bottom-0 flex flex-col bg-white border-l border-gray-100 shadow-[-4px_0_16px_rgba(0,0,0,0.06)]"
+          className="absolute top-0 right-0 bottom-0 flex flex-col bg-white dark:bg-[#1c1c24] border-l border-gray-100 dark:border-white/10 shadow-[-4px_0_16px_rgba(0,0,0,0.06)]"
           style={{
             width: '38%',
             transform: rightPanelOpen ? 'translateX(0)' : 'translateX(100%)',
@@ -1051,13 +1051,13 @@ export default function SurplusWorksheet() {
             pointerEvents: rightPanelOpen ? 'auto' : 'none',
           }}
         >
-          <div className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-100 shrink-0">
-            <span className="text-xs font-600 text-gray-700 flex-1">
+          <div className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-100 dark:border-white/10 shrink-0">
+            <span className="text-xs font-600 text-gray-700 dark:text-gray-300 flex-1">
               {activeMilestone ? MILESTONES.find((m) => m.id === activeMilestone)?.label : 'Panel'}
             </span>
             <button
               onClick={() => { setRightPanelOpen(false); setActiveMilestone(null); }}
-              className="text-gray-400 hover:text-gray-700 transition-colors p-1 rounded hover:bg-gray-100"
+              className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-colors p-1 rounded hover:bg-gray-100 dark:hover:bg-white/10"
               title="Close panel"
             >
               <X size={14} />

@@ -3,22 +3,25 @@
 // pill; the OTHER pages keep their dark grid background (that bg is NOT driven by
 // this palette). One place to swap the chat's look. Aligned to the NEU tokens
 // (components/neumorphic-sidebar.tsx).
+// Theme-aware: every key maps to a --sx-* token (globals.css) whose :root value
+// is the original light value and whose .dark value is the dark counterpart, so
+// the chat re-skins with the `.dark` class (these are used in inline style).
 export const LC = {
-  bg: '#F4F5F8',          // chat canvas — the neumorphic ground (same as the sidebar rail)
-  sidebar: '#F4F5F8',     // left nav ground (the rail styles itself neumorphic)
-  panel: '#F1F2F6',       // inline page panel backdrop
-  surface: '#F8F9FB',     // composer, user bubble, hover targets — raised elements
-  surfaceHover: '#E9ECF2',
-  border: 'rgba(150,156,172,0.22)',
-  borderSubtle: 'rgba(150,156,172,0.13)',
-  title: '#202735',       // dark ink
-  text: '#202735',
-  body: '#3A4150',        // softer body text
-  muted: '#7C8493',
-  faint: '#A8AEBA',
-  accent: '#6B21A8',      // purple accent (active / send)
+  bg: 'var(--sx-surface)',          // chat canvas — the neumorphic ground (same as the sidebar rail)
+  sidebar: 'var(--sx-surface)',     // left nav ground (the rail styles itself neumorphic)
+  panel: 'var(--sx-panel)',         // inline page panel backdrop
+  surface: 'var(--sx-raised)',      // composer, user bubble, hover targets — raised elements
+  surfaceHover: 'var(--sx-raised-hover)',
+  border: 'var(--sx-hairline)',
+  borderSubtle: 'var(--sx-hairline-subtle)',
+  title: 'var(--sx-ink)',           // primary ink
+  text: 'var(--sx-ink)',
+  body: 'var(--sx-body)',           // softer body text
+  muted: 'var(--sx-muted)',
+  faint: 'var(--sx-faint)',
+  accent: 'var(--sx-accent)',       // purple accent (active / send)
   // Neumorphic depth (dual light/dark soft shadows) — for raised chat elements.
-  shadowOut: '6px 6px 15px rgba(158,158,178,0.32), -6px -6px 15px rgba(255,255,255,0.85)',
-  shadowSm: '3px 3px 8px rgba(158,158,178,0.26), -3px -3px 8px rgba(255,255,255,0.80)',
-  shadowIn: 'inset 3px 3px 7px rgba(158,158,178,0.26), inset -3px -3px 7px rgba(255,255,255,0.78)',
+  shadowOut: 'var(--sx-chat-shadow-out)',
+  shadowSm: 'var(--sx-chat-shadow-sm)',
+  shadowIn: 'var(--sx-chat-shadow-in)',
 } as const;

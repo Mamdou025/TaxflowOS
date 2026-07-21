@@ -53,7 +53,7 @@ export function WorksheetShell({ children }: { children: ReactNode }) {
       </NeumorphicSidebar>
 
       <div className="flex-1 min-w-0 overflow-auto" style={{ padding: 12 }}>
-        <div className="worksheet-card" style={{ background: '#fff', borderRadius: 16, boxShadow: '0 14px 34px rgba(0,0,0,0.30)', overflow: 'hidden', minHeight: '100%' }}>
+        <div className="worksheet-card" style={{ background: 'var(--sx-card)', borderRadius: 16, boxShadow: 'var(--sx-drop-panel)', overflow: 'hidden', minHeight: '100%' }}>
           {children}
         </div>
       </div>

@@ -1,12 +1,12 @@
 # Architecture
 
-*Last updated: 2026-07-17*
+*Last updated: 2026-07-21*
 
 ---
 
 ## Overview
 
-A fiscal workflow automation platform built on Next.js 15, React Flow, and Jotai. The app lets users build node-based data transformation workflows with strong emphasis on evidence tracking, data governance, and audit compliance. All execution currently runs locally in-browser (no server-side compute for block runs).
+A fiscal workflow automation platform built on Next.js 16, React Flow, and Jotai. The app lets users build node-based data transformation workflows with strong emphasis on evidence tracking, data governance, and audit compliance. All execution currently runs locally in-browser (no server-side compute for block runs).
 
 ---
 
@@ -14,7 +14,7 @@ A fiscal workflow automation platform built on Next.js 15, React Flow, and Jotai
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 15 (App Router) |
+| Framework | Next.js 16 (App Router) |
 | UI | React 19, Tailwind CSS, Radix UI |
 | Canvas | @xyflow/react (React Flow) v12 |
 | State | Jotai v2 (atom-based) |
@@ -268,9 +268,11 @@ sourceBlockId, sourceLabel, evidenceRefId?, relationshipPath[], rowId?, valuePre
 
 | Route | File | Purpose |
 |---|---|---|
-| `/` | `app/page.tsx` | Home — loads local workflow or demo |
+| `/` | `app/page.tsx` | Home — renders `ChatWorkspace` (`copilot-workspace-panel.tsx`), the assistant/chat surface |
 | `/workflows` | `app/workflows/page.tsx` | Redirects to most recent |
-| `/workflows/[workflowId]` | `app/workflows/[workflowId]/page.tsx` | Full workflow editor (750 lines) |
+| `/workflows/[workflowId]` | `app/workflows/[workflowId]/page.tsx` | Full workflow editor (~760 lines) — legacy `NodeConfigPanel` surface |
+| `/builder` | `app/builder/page.tsx` | Current workflow builder (canvas + `configuration-overlay`) |
+| `/run/[workflowId]` | `app/run/[workflowId]/page.tsx` | Inline run view (`WorkflowRunFlow`) |
 | `/viewer` | `app/viewer/page.tsx` | **Document Viewer** — open/read PDF · Excel · Word in-app (`components/workspace/document-viewer.tsx`). Sidebar + bounded panel; top-nav "Documents" |
 
 **AI API routes:**
@@ -280,7 +282,7 @@ sourceBlockId, sourceLabel, evidenceRefId?, relationshipPath[], rowId?, valuePre
 | `POST /api/copilotkit` | `app/api/copilotkit/route.ts` | **CopilotKit runtime** (CopilotRuntime + OpenAIAdapter) — powers the chat panel. Uses `OPENAI_API_KEY`. Middleware runs the intent gate + per-turn model tiering + orphan repair |
 | `GET/POST/DELETE /api/assistant/memory` | `app/api/assistant/memory/route.ts` | **Durable assistant memory** — list/save/forget the session user's remembered facts (`assistant_memories`). better-auth scoped, fail-soft |
 | `POST /api/assistant/extract` | `app/api/assistant/extract/route.ts` | **Attachment/document text extraction** (Node runtime) — file → text: PDF via `unpdf`, Word `.docx` via `mammoth`, plain-text UTF-8. Capped 120k chars + `truncated`; scanned PDF → 422 "needs OCR". Shared by the chat's `onAttach` and the Document Viewer's auto-context (a doc opened in the viewer auto-attaches to `attachedDocsAtom`) |
-| `POST /api/chat-workspace` | `app/api/chat-workspace/route.ts` | Legacy custom agent (superseded by CopilotKit; still present) |
+| ~~`POST /api/chat-workspace`~~ | *(deleted)* | **[REMOVED]** — the custom agent route + `lib/chat-agent.ts` + `lib/fapi-run.ts` were deleted 2026-07-13. Live chat runtime is `/api/copilotkit` + `lib/workflow-runs/engine.ts` (`runTemplateLoop`). |
 | `GET /api/fx-rate` | `app/api/fx-rate/route.ts` | **Live Bank of Canada Valet FX fetch** (`?from=USD&to=CAD&year=2025` → `fetchAnnualAverageExchangeRate`). Real source behind the FAPI `fapi-api-boc-fx` API block; server-side (avoids CORS); `ok:false` + reason on failure so callers fall back to the override rate |
 | `GET /api/google/status` | `app/api/google/status/route.ts` | Whether the session user has Google connected with Drive+Gmail scopes. Never 500s (returns `connected:false`) so the picker degrades gracefully when unconfigured |
 | `GET /api/google/drive/files` | `app/api/google/drive/files/route.ts` | List the user's Drive spreadsheets (native `.xlsx` + Google Sheets); optional `?q=` name filter |
@@ -290,7 +292,9 @@ sourceBlockId, sourceLabel, evidenceRefId?, relationshipPath[], rowId?, valuePre
 
 ---
 
-## Chat Workspace Agent (server-side LLM tool-calling)
+## Chat Workspace Agent (server-side LLM tool-calling) — ⚠️ [SUPERSEDED / files deleted]
+
+> **This section describes a subsystem that no longer exists.** `lib/chat-agent.ts`, `lib/fapi-run.ts`, and `app/api/chat-workspace/route.ts` were all **deleted 2026-07-13** (see INDEX.md log). The live server-side chat path is now `app/api/copilotkit/route.ts` (CopilotKit `BuiltInAgent` + intent-gate/model-tiering/orphan-repair middleware) with the run loop in `lib/workflow-runs/engine.ts` (`runTemplateLoop`). The flow below is retained only as historical reference and should not be treated as current architecture.
 
 The first real server compute in the chat path. Flow:
 

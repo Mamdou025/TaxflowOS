@@ -23,8 +23,8 @@ import { useInlinePage } from '@/lib/inline-page-context';
 import { usePageMenu } from '@/lib/page-menu-store';
 import { WorksheetCopilot } from '@/components/assistant/worksheet-copilot';
 
-const INK = '#18181b', MUTED = '#71717a', FAINT = '#a1a1aa';
-const LINE = 'rgba(24,24,27,0.10)', HAIRLINE = 'rgba(24,24,27,0.07)';
+const INK = 'var(--sx-ink)', MUTED = 'var(--sx-muted)', FAINT = 'var(--sx-faint)';
+const LINE = 'var(--sx-hairline)', HAIRLINE = 'var(--sx-hairline-subtle)';
 // Pastel, discreet — dots read as a quiet accent, not a signal light.
 const TONES = { source: '#7fb2d9', engine: '#7cc3a6', manual: '#dab06c', ai: '#a892d6' } as const;
 type Tone = keyof typeof TONES;
@@ -181,15 +181,15 @@ export default function FapiWorksheet() {
   ];
   const cadOf = (key: string, v: number) => (key === 'NET_FAPI' ? (core?.summaryValues.NET_FAPI_CAD ?? v * fx) : v * fx);
 
-  const chipStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 500, color: MUTED, background: '#fff', border: `1px solid ${LINE}`, borderRadius: 8, padding: '5px 11px' };
-  const toolBtn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 500, color: INK, background: '#fff', border: `1px solid ${LINE}`, borderRadius: 8, padding: '6px 11px', cursor: 'pointer' };
+  const chipStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 500, color: MUTED, background: 'var(--sx-card)', border: `1px solid ${LINE}`, borderRadius: 8, padding: '5px 11px' };
+  const toolBtn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 500, color: INK, background: 'var(--sx-card)', border: `1px solid ${LINE}`, borderRadius: 8, padding: '6px 11px', cursor: 'pointer' };
 
   return (
-    <div style={{ minHeight: '100%', background: '#f7f7f8', padding: '28px 20px 80px' }}>
+    <div style={{ minHeight: '100%', background: 'var(--sx-raised)', padding: '28px 20px 80px' }}>
       {/* Headless: publishes the live worksheet to the assistant (generic — any
           template worksheet mounts this). Retrieval actions live in use-assistant. */}
       <WorksheetCopilot config={FAPI_CONFIG} rows={rows} inputs={inputs} overrides={edits.overrides} />
-      <style>{`@keyframes wsspin{to{transform:rotate(360deg)}} .ws-spin{animation:wsspin .9s linear infinite} .ws-row:hover{background:rgba(24,24,27,0.022)} .ws-row:hover .ws-trace{opacity:1}`}</style>
+      <style>{`@keyframes wsspin{to{transform:rotate(360deg)}} .ws-spin{animation:wsspin .9s linear infinite} .ws-row:hover{background:rgba(24,24,27,0.022)} .dark .ws-row:hover{background:rgba(255,255,255,0.03)} .ws-row:hover .ws-trace{opacity:1} .ws-src-sel{background:rgba(24,24,27,0.035)} .dark .ws-src-sel{background:rgba(255,255,255,0.06)}`}</style>
       <div style={{ maxWidth: sourcesOpen ? 1400 : 960, margin: '0 auto', display: 'flex', gap: 16, alignItems: 'flex-start', transition: 'max-width 220ms' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
 
@@ -221,9 +221,9 @@ export default function FapiWorksheet() {
         </div>
 
         {/* Worksheet card */}
-        <div style={{ background: '#fff', border: `1px solid ${LINE}`, borderRadius: 16, boxShadow: '0 1px 2px rgba(24,24,27,0.04), 0 12px 32px rgba(24,24,27,0.05)', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--sx-card)', border: `1px solid ${LINE}`, borderRadius: 16, boxShadow: '0 1px 2px rgba(24,24,27,0.04), 0 12px 32px rgba(24,24,27,0.05)', overflow: 'hidden' }}>
           {/* Column header */}
-          <div style={{ display: 'flex', alignItems: 'center', padding: '10px 20px', borderBottom: `1px solid ${HAIRLINE}`, background: '#fbfbfc' }}>
+          <div style={{ display: 'flex', alignItems: 'center', padding: '10px 20px', borderBottom: `1px solid ${HAIRLINE}`, background: 'var(--sx-raised)' }}>
             <div style={{ width: 74, fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: FAINT }}>Line</div>
             <div style={{ flex: 1, fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: FAINT }}>Description</div>
             <div style={{ width: 130, textAlign: 'right', fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: FAINT }}>Amount</div>
@@ -241,9 +241,9 @@ export default function FapiWorksheet() {
                   <div key={ln.key}>
                     <div className="ws-row" style={{ display: 'flex', alignItems: 'center', padding: '9px 20px', borderTop: `1px solid ${HAIRLINE}`, cursor: canExpand ? 'pointer' : 'default', transition: 'background 140ms' }} onClick={canExpand ? () => setExpanded(isOpen ? null : ln.key) : undefined}>
                       <div style={{ width: 74, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {canExpand ? <ChevronRight size={13} color={FAINT} style={{ transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform 150ms', flexShrink: 0 }} /> : <span style={{ width: 13, flexShrink: 0 }} />}
+                        {canExpand ? <ChevronRight size={13} style={{ color: FAINT, transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform 150ms', flexShrink: 0 }} /> : <span style={{ width: 13, flexShrink: 0 }} />}
                         <Dot tone={ln.tone} />
-                        <span style={{ fontSize: 10.5, fontWeight: 650, color: MUTED, background: '#f4f4f5', border: `1px solid ${HAIRLINE}`, borderRadius: 5, padding: '1px 6px', fontVariantNumeric: 'tabular-nums' }}>{ln.code}</span>
+                        <span style={{ fontSize: 10.5, fontWeight: 650, color: MUTED, background: 'var(--sx-panel)', border: `1px solid ${HAIRLINE}`, borderRadius: 5, padding: '1px 6px', fontVariantNumeric: 'tabular-nums' }}>{ln.code}</span>
                       </div>
                       <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ fontSize: 12.5, color: INK }}>{ln.label}</span>
@@ -255,7 +255,7 @@ export default function FapiWorksheet() {
                       <div style={{ width: 48, textAlign: 'right', fontSize: 10.5, fontWeight: 600, color: FAINT }}>{ln.isRate ? 'RATE' : cur}</div>
                     </div>
                     {isOpen && canExpand && (
-                      <div style={{ padding: '4px 20px 10px 102px', background: '#fbfbfc', borderTop: `1px solid ${HAIRLINE}` }}>
+                      <div style={{ padding: '4px 20px 10px 102px', background: 'var(--sx-raised)', borderTop: `1px solid ${HAIRLINE}` }}>
                         {subRows(ln.sub).length === 0 && <div style={{ fontSize: 11, color: FAINT, padding: '6px 0' }}>No classified rows in this bucket yet.</div>}
                         {subRows(ln.sub).map((r) => (
                           <div key={r.rowId} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
@@ -283,7 +283,7 @@ export default function FapiWorksheet() {
           ))}
 
           {/* Results summary */}
-          <div style={{ borderTop: `2px solid ${LINE}`, background: '#fbfbfc' }}>
+          <div style={{ borderTop: `2px solid ${LINE}`, background: 'var(--sx-raised)' }}>
             <div style={{ display: 'flex', alignItems: 'center', padding: '11px 20px 6px' }}>
               <span style={{ fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: FAINT }}>Results summary</span>
               <span style={{ marginLeft: 'auto', fontSize: 10.5, color: FAINT }}>FX {rate(fx)} · Net FAPI shown at the annual-average rate</span>
@@ -355,9 +355,9 @@ function SourcesPanel({ rows, mapped, unmatched, fileName, cur, onClose, onTrace
   );
 
   return (
-    <div style={{ width: 400, flexShrink: 0, position: 'sticky', top: 20, maxHeight: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column', background: '#fff', border: `1px solid ${LINE}`, borderRadius: 16, boxShadow: '0 1px 2px rgba(24,24,27,0.04), 0 12px 32px rgba(24,24,27,0.05)', overflow: 'hidden' }}>
+    <div style={{ width: 400, flexShrink: 0, position: 'sticky', top: 20, maxHeight: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column', background: 'var(--sx-card)', border: `1px solid ${LINE}`, borderRadius: 16, boxShadow: '0 1px 2px rgba(24,24,27,0.04), 0 12px 32px rgba(24,24,27,0.05)', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '12px 16px', borderBottom: `1px solid ${HAIRLINE}` }}>
-        <FileSpreadsheet size={14} color={MUTED} />
+        <FileSpreadsheet size={14} style={{ color: MUTED }} />
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: FAINT }}>Sources · file viewer</div>
           <div style={{ fontSize: 12, color: INK, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 300 }}>{fileName ?? 'Sample trial balance'}</div>
@@ -366,7 +366,7 @@ function SourcesPanel({ rows, mapped, unmatched, fileName, cur, onClose, onTrace
       </div>
 
       <div style={{ overflow: 'auto', flex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 16px', position: 'sticky', top: 0, background: '#fbfbfc', borderBottom: `1px solid ${HAIRLINE}`, zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 16px', position: 'sticky', top: 0, background: 'var(--sx-raised)', borderBottom: `1px solid ${HAIRLINE}`, zIndex: 1 }}>
           <span style={{ width: 6, flexShrink: 0 }} />
           <span style={{ flex: 1, fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: FAINT }}>Account / description</span>
           <span style={{ width: 92, textAlign: 'right', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: FAINT }}>Amount</span>
@@ -376,7 +376,7 @@ function SourcesPanel({ rows, mapped, unmatched, fileName, cur, onClose, onTrace
           const un = unmatchedIds.has(r.rowId) || !m;
           const isSel = selected === r.rowId;
           return (
-            <div key={r.rowId} onClick={() => setSelected(isSel ? null : r.rowId)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 16px', borderBottom: `1px solid ${HAIRLINE}`, cursor: 'pointer', background: isSel ? hexA(INK, 0.035) : 'transparent' }}>
+            <div key={r.rowId} className={isSel ? 'ws-src-sel' : undefined} onClick={() => setSelected(isSel ? null : r.rowId)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 16px', borderBottom: `1px solid ${HAIRLINE}`, cursor: 'pointer' }}>
               {un
                 ? <span style={{ width: 5, height: 5, borderRadius: '50%', border: `1px solid ${hexA(TONES.manual, 0.85)}`, boxSizing: 'border-box', flexShrink: 0 }} />
                 : <Dot tone="ai" />}
@@ -391,7 +391,7 @@ function SourcesPanel({ rows, mapped, unmatched, fileName, cur, onClose, onTrace
       </div>
 
       {sel && (
-        <div style={{ borderTop: `1px solid ${LINE}`, background: '#fbfbfc', padding: '12px 16px' }}>
+        <div style={{ borderTop: `1px solid ${LINE}`, background: 'var(--sx-raised)', padding: '12px 16px' }}>
           <div style={{ fontSize: 12.5, fontWeight: 650, color: INK }}>{sel.label}</div>
           {sel.description && <div style={{ fontSize: 11, color: MUTED, marginTop: 1, marginBottom: 6 }}>{sel.description}</div>}
           <div style={{ marginTop: 6 }}>
@@ -404,7 +404,7 @@ function SourcesPanel({ rows, mapped, unmatched, fileName, cur, onClose, onTrace
               : <div style={{ fontSize: 11.5, color: '#b08248', padding: '2px 0' }}>Not matched by any rule — not included in any FAPI line.</div>}
             {kv('Amount', `${money(sel.amount)} ${sel.currency ?? cur}`)}
           </div>
-          <button onClick={onTrace} style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 550, color: INK, background: '#fff', border: `1px solid ${LINE}`, borderRadius: 7, padding: '5px 10px', cursor: 'pointer' }}><GitBranch size={11} /> See the mapper in the builder</button>
+          <button onClick={onTrace} style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 550, color: INK, background: 'var(--sx-card)', border: `1px solid ${LINE}`, borderRadius: 7, padding: '5px 10px', cursor: 'pointer' }}><GitBranch size={11} /> See the mapper in the builder</button>
         </div>
       )}
     </div>

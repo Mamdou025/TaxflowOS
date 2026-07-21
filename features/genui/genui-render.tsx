@@ -19,7 +19,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Renderer } from '@openuidev/react-lang';
 import { ThemeProvider } from '@openuidev/react-ui';
-import { genuiLibrary } from '@/lib/genui/library';
+import { genuiLibrary } from '@/features/genui/library';
 import '@openuidev/react-ui/index.css';
 import '@openuidev/react-ui/components.css';
 

@@ -32,6 +32,7 @@ import { InScopeNeuMark } from '@/components/inscope-neu-mark';
 import { ClientFolders } from '@/components/workspace/client-folders';
 import { LC } from '@/lib/librechat-theme';
 import { NEU } from '@/components/neumorphic-sidebar';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { pageMenusAtom } from '@/lib/page-menu-store';
 import { PageMenuBar } from '@/components/workspace/page-menu-bar';
 import { InlinePageProvider } from '@/lib/inline-page-context';
@@ -39,23 +40,21 @@ import { InlinePageProvider } from '@/lib/inline-page-context';
 // Foldable Scope sidebar — persisted so it stays folded across navigation.
 const scopeSidebarCollapsedAtom = atomWithStorage('inscope.scope-sidebar.collapsed', false);
 
-// The dark grid ground for the Scope canvas + the inline page bodies — the same
-// grid the other routes use (app-shell). The light neumorphic sidebar and chat
-// float on it so the chat reads as the prominent, important surface.
-const DARK_GRID: CSSProperties = {
-  backgroundColor: '#18181c',
-  backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px)',
-  backgroundSize: '15px 15px',
-};
+// The ground for the inline page bodies — a flat darker neumorphic gray (no grid)
+// that reads as the recessed space behind the menus, a shade darker than the
+// #F4F5F8 sidebar/chat surface and tuned to the neumorphic shadow tone
+// (rgba(158,158,178)). The light sidebar + chat float on it so the chat stays the
+// prominent surface. Matches the standalone routes' background (app-shell).
+const PORTAL_GROUND = 'var(--sx-ground)';
 const foldBtn: CSSProperties = { width: 26, height: 26, borderRadius: 9, border: 'none', background: NEU.surface, boxShadow: NEU.shadowSm, color: NEU.muted, cursor: 'pointer', display: 'grid', placeItems: 'center', flexShrink: 0 };
 
-// Dark "portal" chrome — an opened page is a dark recessed slot wedged between the
-// light neumorphic sidebar and chat. These theme its tab strip + tabs. The dark is
-// ONLY the background: a page's files/content still render in their normal LIGHT
-// form (never inverted to dark mode — a light/dark toggle is a future feature).
-const PORTAL_INK = '#e7e7ea';
-const PORTAL_MUTED = 'rgba(255,255,255,0.52)';
-const PORTAL_BORDER = 'rgba(255,255,255,0.08)';
+// "Portal" chrome — an opened page is a recessed gray slot wedged between the
+// light neumorphic sidebar and chat. These theme its tab strip + tabs against the
+// light PORTAL_GROUND: dark ink for the active tab, muted for the rest, a faint
+// shadow-tone hairline. (Pages render in their normal LIGHT form.)
+const PORTAL_INK = NEU.text;      // active tab / underline
+const PORTAL_MUTED = NEU.muted;   // inactive tabs / close icons
+const PORTAL_BORDER = 'var(--sx-divider)';
 
 const WORKSPACE_ITEMS: { key: string; title: string; Icon: typeof GitFork }[] = [
   { key: 'workflow-builder', title: 'Workflow Builder', Icon: GitFork },
@@ -233,11 +232,11 @@ export function ChatWorkspace() {
   return (
     // Exterior ground — a cooler/darker tone than the chat + sidebar panels (both
     // #F4F5F8 / NEU.bg), so those read as one continuous lighter surface on it.
-    <div className="h-full flex" style={{ background: '#DAE0EA' }}>
+    <div className="h-full flex" style={{ background: 'var(--sx-ground-outer)' }}>
       <style>{`
-        @keyframes cwp-anchor-flash { 0% { background: rgba(107,33,168,0.16);} 100% { background: transparent;} }
+        @keyframes cwp-anchor-flash { 0% { background: var(--sx-accent-soft);} 100% { background: transparent;} }
         .cwp-anchor-flash { animation: cwp-anchor-flash 1.7s ease-out; border-radius: 8px; }
-        .lc-siderow:hover { background: rgba(158,158,178,0.16) !important; }
+        .lc-siderow:hover { background: var(--sx-hover-tint) !important; }
         .lc-tab { position: relative; }
         .lc-tab[data-active="true"]::after { content:''; position:absolute; left:10px; right:10px; bottom:-1px; height:2px; background:${PORTAL_INK}; border-radius:2px; }
         .cwp-card { transition: flex-basis 300ms cubic-bezier(0.23,1,0.32,1), flex-grow 300ms cubic-bezier(0.23,1,0.32,1), margin 260ms cubic-bezier(0.23,1,0.32,1), border-radius 260ms cubic-bezier(0.23,1,0.32,1); }
@@ -278,7 +277,7 @@ export function ChatWorkspace() {
 
         {collapsed ? (
           <>
-            <div style={{ height: 1, background: 'rgba(158,158,178,0.28)', margin: '8px 8px' }} />
+            <div style={{ height: 1, background: 'var(--sx-divider)', margin: '8px 8px' }} />
             {WORKSPACE_ITEMS.map((it) => <SideRow key={it.key} collapsed icon={<it.Icon size={16} />} label={it.title} onClick={() => open(it.key)} />)}
             {activeRuns.length > 0 && <div style={{ height: 1, background: 'rgba(158,158,178,0.28)', margin: '8px 8px' }} />}
             {activeRuns.map((w) => (
@@ -310,20 +309,26 @@ export function ChatWorkspace() {
             )}
           </>
         )}
+
+        {/* Theme switch — pinned to the rail bottom (collapsed → icon, else segmented) */}
+        <div style={{ marginTop: 'auto', paddingTop: 10 }}>
+          <div style={{ height: 1, background: 'var(--sx-divider)', margin: collapsed ? '0 8px 10px' : '0 4px 10px' }} />
+          <ThemeToggle collapsed={collapsed} />
+        </div>
       </div>
 
       {/* ── Inline page panel (left) + chat (right) ── */}
       <div className="flex-1 min-w-0 flex relative">
         {hasPages && (
-          <div className="min-w-0 flex flex-col cwp-card cwp-page-in" style={{ flex: showPage ? '1 1 0px' : '0 0 0px', overflow: 'hidden', margin: showPage ? '10px 0 10px 8px' : 0, borderRadius: showPage ? '3px 0 0 3px' : 0, ...DARK_GRID, boxShadow: 'none' }}>
-            <div className="shrink-0 flex items-center px-3" style={{ height: 40, background: 'rgba(0,0,0,0.18)', borderBottom: `1px solid ${PORTAL_BORDER}` }}>
+          <div className="min-w-0 flex flex-col cwp-card cwp-page-in" style={{ flex: showPage ? '1 1 0px' : '0 0 0px', overflow: 'hidden', margin: showPage ? '10px 0 10px 8px' : 0, borderRadius: showPage ? '3px 0 0 3px' : 0, background: PORTAL_GROUND, boxShadow: 'none' }}>
+            <div className="shrink-0 flex items-center px-3" style={{ height: 40, background: 'var(--sx-portal-strip)', borderBottom: `1px solid ${PORTAL_BORDER}` }}>
               <div className="flex items-center gap-1" style={{ overflowX: 'auto', scrollbarWidth: 'none', flex: '1 1 auto', minWidth: 0 }}>
                 {windows.map((w) => {
                   const isActive = active?.id === w.id;
                   return (
                     <button key={w.id} className="lc-tab flex items-center gap-1.5 shrink-0" data-active={isActive} onClick={() => focusWindow(w.id)} style={{ padding: '9px 10px', fontSize: 12.5, fontWeight: 500, color: isActive ? PORTAL_INK : PORTAL_MUTED, background: 'none', border: 'none', cursor: 'pointer' }}>
                       <span className="max-w-40 truncate">{w.title}</span>
-                      <span onClick={(e) => { e.stopPropagation(); requestClose(w.id); }} className="flex items-center justify-center rounded hover:bg-white/10" style={{ width: 16, height: 16 }}><X size={11} style={{ color: PORTAL_MUTED }} /></span>
+                      <span onClick={(e) => { e.stopPropagation(); requestClose(w.id); }} className="flex items-center justify-center rounded hover:bg-black/5" style={{ width: 16, height: 16 }}><X size={11} style={{ color: PORTAL_MUTED }} /></span>
                     </button>
                   );
                 })}
@@ -331,7 +336,7 @@ export function ChatWorkspace() {
               {/* Active page's contextual menu — published via usePageMenu(). */}
               {activeMenu && <PageMenuBar menu={activeMenu} />}
             </div>
-            <div ref={pageBodyRef} className="flex-1 min-h-0 relative" style={{ ...DARK_GRID }}>
+            <div ref={pageBodyRef} className="flex-1 min-h-0 relative" style={{ background: PORTAL_GROUND }}>
               {windows.map((w) => (
                 // Inactive tabs use display:none, NOT visibility:hidden — a hidden
                 // InlineBuilder is a ReactFlow canvas, and @xyflow forces

@@ -27,8 +27,17 @@ type TriggerNodeProps = NodeProps & {
   data?: WorkflowNodeData;
 };
 
+// Dark ink (neumorphic NEU.text) on the light gray builder ground, plus a soft
+// white halo so the title stays legible where the node's drop shadow pools onto
+// the caption zone just below the shape.
 const CANVAS_BLOCK_TITLE_CLASS =
-  "max-w-full truncate text-sm font-semibold leading-tight text-zinc-100";
+  "max-w-full truncate text-base font-semibold leading-tight text-[var(--sx-node-title)] [text-shadow:var(--sx-node-title-halo)]";
+
+// Selection = a soft violet glow hugging the node's real shape (drop-shadow
+// follows the outline, unlike a square `ring`). Applied to a wrapper around the
+// shape only, so the caption below never picks up the glow.
+const SELECTED_GLOW =
+  "drop-shadow(0 0 3px rgba(139,92,246,0.95)) drop-shadow(0 0 11px rgba(139,92,246,0.6))";
 
 const getTriggerIcon = (triggerType: string) => {
   if (triggerType === "Schedule") {
@@ -111,10 +120,8 @@ export const TriggerNode = memo(({ data, selected }: TriggerNodeProps) => {
   return (
     <Node
       className={cn(
-        "relative flex flex-col items-center justify-center filter-[drop-shadow(0_4px_14px_rgba(0,0,0,0.45))] transition-all duration-150 ease-out",
-        nodeStyle.nodeClassName,
-        selected &&
-          "ring-2 ring-primary/70 ring-offset-2 ring-offset-background"
+        "relative flex flex-col items-center justify-center filter-[drop-shadow(0_3px_9px_rgba(30,30,45,0.20))] transition-all duration-150 ease-out",
+        nodeStyle.nodeClassName
       )}
       handles={{ target: false, source: true }}
       status={status}
@@ -141,7 +148,12 @@ export const TriggerNode = memo(({ data, selected }: TriggerNodeProps) => {
           nodeStyle.contentClassName
         )}
       >
-        {triggerIconNode}
+        <div
+          className="relative flex items-center justify-center"
+          style={selected ? { filter: SELECTED_GLOW } : undefined}
+        >
+          {triggerIconNode}
+        </div>
         <div
           className={cn(
             "-translate-x-1/2 absolute top-[calc(100%+0.5rem)] left-1/2 flex flex-col items-center gap-0.5 text-center",

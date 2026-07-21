@@ -20,7 +20,7 @@ import {
 } from '@tax/lib/t1134Data';
 
 // ─── Brand colour ─────────────────────────────────────────────────────────────
-const PURPLE = '#6B21A8';
+const PURPLE = 'var(--sx-accent)';
 
 // ─── Milestone definitions ────────────────────────────────────────────────────
 type MilestoneId = 'ai-assistant' | 'client-context' | 'upload' | 'irl' | 'validate' | 'review' | 'signoff' | 'file';
@@ -42,8 +42,8 @@ function YesNoToggle({ value, onChange, disabled }: { value: YesNo; onChange?: (
       <span style={{
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         padding: '1px 8px', borderRadius: 9999, fontSize: 11, fontWeight: 700,
-        background: value === 'Yes' ? '#dcfce7' : value === 'No' ? '#f3f4f6' : '#fef3c7',
-        color: value === 'Yes' ? '#166534' : value === 'No' ? '#6b7280' : '#92400e',
+        background: value === 'Yes' ? 'rgba(34,197,94,0.15)' : value === 'No' ? 'var(--sx-panel)' : 'rgba(245,158,11,0.15)',
+        color: value === 'Yes' ? '#166534' : value === 'No' ? 'var(--sx-muted)' : '#92400e',
       }}>
         {value || '—'}
       </span>
@@ -55,8 +55,8 @@ function YesNoToggle({ value, onChange, disabled }: { value: YesNo; onChange?: (
       style={{
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         padding: '1px 8px', borderRadius: 9999, fontSize: 11, fontWeight: 700, cursor: 'pointer',
-        background: value === 'Yes' ? '#dcfce7' : value === 'No' ? '#f3f4f6' : '#fef3c7',
-        color: value === 'Yes' ? '#166534' : value === 'No' ? '#6b7280' : '#92400e',
+        background: value === 'Yes' ? 'rgba(34,197,94,0.15)' : value === 'No' ? 'var(--sx-panel)' : 'rgba(245,158,11,0.15)',
+        color: value === 'Yes' ? '#166534' : value === 'No' ? 'var(--sx-muted)' : '#92400e',
         border: 'none', transition: 'all 0.15s',
       }}
     >
@@ -77,7 +77,7 @@ function fmtPct(n: number) {
 
 // ─── Linked cell ─────────────────────────────────────────────────────────────
 function LinkedCell({ value, currency = '' }: { value: number; currency?: string }) {
-  if (value === 0) return <span style={{ color: '#d1d5db' }}>—</span>;
+  if (value === 0) return <span style={{ color: 'var(--sx-faint)' }}>—</span>;
   return (
     <span style={{ color: PURPLE, display: 'inline-flex', alignItems: 'center', gap: 3, fontWeight: 600 }}>
       <Link2 size={10} />
@@ -97,18 +97,18 @@ function SectionAccordion({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div data-anchor={anchor} style={{ borderBottom: '1px solid #f3f4f6' }}>
+    <div data-anchor={anchor} style={{ borderBottom: '1px solid var(--sx-panel)' }}>
       <button
         onClick={() => setOpen(o => !o)}
         style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-          padding: '10px 16px', background: '#fafafa', border: 'none', cursor: 'pointer',
+          padding: '10px 16px', background: 'var(--sx-raised)', border: 'none', cursor: 'pointer',
           textAlign: 'left',
         }}
       >
-        <span style={{ fontSize: 11, fontWeight: 800, color: '#374151', letterSpacing: '0.06em', textTransform: 'uppercase', flex: 1 }}>
+        <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--sx-body)', letterSpacing: '0.06em', textTransform: 'uppercase', flex: 1 }}>
           {title}
-          {subtitle && <span style={{ fontWeight: 400, color: '#9ca3af', marginLeft: 8, textTransform: 'none', letterSpacing: 0 }}>{subtitle}</span>}
+          {subtitle && <span style={{ fontWeight: 400, color: 'var(--sx-faint)', marginLeft: 8, textTransform: 'none', letterSpacing: 0 }}>{subtitle}</span>}
         </span>
         {open ? <ChevronUp size={14} color="#9ca3af" /> : <ChevronDown size={14} color="#9ca3af" />}
       </button>
@@ -127,15 +127,15 @@ function GridRow({
   render: CellRenderer; fas: ForeignAffiliate[];
 }) {
   return (
-    <div style={{ display: 'flex', borderBottom: '1px solid #f9fafb', minHeight: 32 }}>
+    <div style={{ display: 'flex', borderBottom: '1px solid var(--sx-raised)', minHeight: 32 }}>
       {/* Frozen label column */}
       <div style={{
-        minWidth: 220, maxWidth: 220, padding: '6px 12px', fontSize: 12, color: '#4b5563',
-        borderRight: '1px solid #e5e7eb', background: '#fff', display: 'flex', alignItems: 'center', gap: 6,
+        minWidth: 220, maxWidth: 220, padding: '6px 12px', fontSize: 12, color: 'var(--sx-body)',
+        borderRight: '1px solid var(--sx-hairline)', background: 'var(--sx-card)', display: 'flex', alignItems: 'center', gap: 6,
         position: 'sticky', left: 0, zIndex: 2,
       }}>
         <span style={{ flex: 1 }}>{label}</span>
-        {cfaOnly && <span style={{ fontSize: 10, color: '#a78bfa', fontWeight: 600 }}>CFA</span>}
+        {cfaOnly && <span style={{ fontSize: 10, color: 'var(--sx-accent-strong)', fontWeight: 600 }}>CFA</span>}
         {tooltip && <span title={tooltip} style={{ cursor: 'help', flexShrink: 0, display: 'inline-flex' }}><Info size={11} color="#d1d5db" /></span>}
       </div>
       {/* FA cells */}
@@ -144,12 +144,12 @@ function GridRow({
           key={fa.id}
           style={{
             minWidth: 140, maxWidth: 140, padding: '6px 10px', fontSize: 12,
-            borderRight: '1px solid #f3f4f6', display: 'flex', alignItems: 'center',
-            background: cfaOnly && fa.tier === 'NCFA' ? '#fafafa' : '#fff',
-            color: cfaOnly && fa.tier === 'NCFA' ? '#d1d5db' : undefined,
+            borderRight: '1px solid var(--sx-panel)', display: 'flex', alignItems: 'center',
+            background: cfaOnly && fa.tier === 'NCFA' ? 'var(--sx-raised)' : 'var(--sx-card)',
+            color: cfaOnly && fa.tier === 'NCFA' ? 'var(--sx-faint)' : undefined,
           }}
         >
-          {cfaOnly && fa.tier === 'NCFA' ? <span style={{ fontSize: 10, color: '#d1d5db' }}>N/A</span> : render(fa)}
+          {cfaOnly && fa.tier === 'NCFA' ? <span style={{ fontSize: 10, color: 'var(--sx-faint)' }}>N/A</span> : render(fa)}
         </div>
       ))}
     </div>
@@ -179,10 +179,10 @@ function RightPanelContent({
       {/* Panel header */}
       <div style={{
         display: 'flex', alignItems: 'center', padding: '14px 16px',
-        borderBottom: '1px solid #e5e7eb', background: '#fff', flexShrink: 0,
+        borderBottom: '1px solid var(--sx-hairline)', background: 'var(--sx-card)', flexShrink: 0,
       }}>
-        <span style={{ flex: 1, fontWeight: 700, fontSize: 13, color: '#111827' }}>{titles[milestone]}</span>
-        <button onClick={onClose} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#9ca3af', padding: 4 }}>
+        <span style={{ flex: 1, fontWeight: 700, fontSize: 13, color: 'var(--sx-ink)' }}>{titles[milestone]}</span>
+        <button onClick={onClose} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--sx-faint)', padding: 4 }}>
           <X size={16} />
         </button>
       </div>
@@ -191,7 +191,7 @@ function RightPanelContent({
       <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
         {milestone === 'ai-assistant' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ background: '#f5f3ff', borderRadius: 8, padding: 12, fontSize: 12, color: '#4b5563', lineHeight: 1.6 }}>
+            <div style={{ background: 'var(--sx-accent-soft)', borderRadius: 8, padding: 12, fontSize: 12, color: 'var(--sx-body)', lineHeight: 1.6 }}>
               <strong style={{ color: PURPLE }}>AI</strong> has analysed the 2023 T1134 and identified the following items requiring attention for the 2024 filing:
             </div>
             {[
@@ -201,16 +201,16 @@ function RightPanelContent({
               { fa: 'AG Frankfurt', msg: 'Financial statements not available. IRL has been auto-generated to request them.' },
               { fa: 'SAS Paris', msg: 'FAPI > $0. Confirm FAPIT entry and participating percentage in Section 3 (iii).' },
             ].map((item, i) => (
-              <div key={i} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: 10, fontSize: 12 }}>
-                <div style={{ fontWeight: 700, color: '#111827', marginBottom: 4 }}>{item.fa}</div>
-                <div style={{ color: '#6b7280', lineHeight: 1.5 }}>{item.msg}</div>
+              <div key={i} style={{ background: 'var(--sx-card)', border: '1px solid var(--sx-hairline)', borderRadius: 8, padding: 10, fontSize: 12 }}>
+                <div style={{ fontWeight: 700, color: 'var(--sx-ink)', marginBottom: 4 }}>{item.fa}</div>
+                <div style={{ color: 'var(--sx-muted)', lineHeight: 1.5 }}>{item.msg}</div>
               </div>
             ))}
             <div style={{ marginTop: 8 }}>
               <input
                 placeholder="Ask the AI assistant…"
                 style={{
-                  width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #e5e7eb',
+                  width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--sx-hairline)',
                   fontSize: 12, outline: 'none', boxSizing: 'border-box',
                 }}
               />
@@ -220,13 +220,13 @@ function RightPanelContent({
 
         {milestone === 'client-context' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, background: '#f9fafb', borderRadius: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, background: 'var(--sx-raised)', borderRadius: 8 }}>
               <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#1e1b4b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Building2 size={18} color="#fff" />
               </div>
               <div>
-                <div style={{ fontWeight: 800, fontSize: 14, color: '#111827' }}>Northstar Inc.</div>
-                <div style={{ fontSize: 11, color: '#6b7280' }}>BN: 123456789 · FY Dec 31, 2024</div>
+                <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--sx-ink)' }}>Northstar Inc.</div>
+                <div style={{ fontSize: 11, color: 'var(--sx-muted)' }}>BN: 123456789 · FY Dec 31, 2024</div>
               </div>
             </div>
             {[
@@ -237,9 +237,9 @@ function RightPanelContent({
               { label: 'Supplements Complete', value: '12 / 20', status: 'warn' },
               { label: 'Flags Outstanding', value: '6 items', status: 'error' },
             ].map((row, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f3f4f6', fontSize: 12 }}>
-                <span style={{ color: '#6b7280' }}>{row.label}</span>
-                <span style={{ fontWeight: 700, color: row.status === 'error' ? '#ef4444' : row.status === 'warn' ? '#f59e0b' : '#111827' }}>
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--sx-panel)', fontSize: 12 }}>
+                <span style={{ color: 'var(--sx-muted)' }}>{row.label}</span>
+                <span style={{ fontWeight: 700, color: row.status === 'error' ? '#ef4444' : row.status === 'warn' ? '#f59e0b' : 'var(--sx-ink)' }}>
                   {row.value}
                 </span>
               </div>
@@ -250,23 +250,23 @@ function RightPanelContent({
         {milestone === 'upload' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{
-              border: '2px dashed #e5e7eb', borderRadius: 10, padding: 24, textAlign: 'center',
-              background: '#fafafa', cursor: 'pointer',
+              border: '2px dashed var(--sx-hairline)', borderRadius: 10, padding: 24, textAlign: 'center',
+              background: 'var(--sx-raised)', cursor: 'pointer',
             }}>
               <Upload size={24} color="#d1d5db" className="mx-auto mb-2" />
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Drop files here</div>
-              <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 4 }}>Prior year T1134, financial statements, org charts</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--sx-body)' }}>Drop files here</div>
+              <div style={{ fontSize: 11, color: 'var(--sx-faint)', marginTop: 4 }}>Prior year T1134, financial statements, org charts</div>
             </div>
             {[
               { name: 'T1134_2023_Northstar.pdf', size: '2.4 MB', status: 'done' },
               { name: 'OrgChart_2024.pdf', size: '1.1 MB', status: 'done' },
               { name: 'FS_SASParis_2024.xlsx', size: '890 KB', status: 'pending' },
             ].map((f, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: '#f9fafb', borderRadius: 8, fontSize: 12 }}>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: 'var(--sx-raised)', borderRadius: 8, fontSize: 12 }}>
                 <FileText size={14} color="#9ca3af" />
-                <span style={{ flex: 1, color: '#374151' }}>{f.name}</span>
-                <span style={{ color: '#9ca3af' }}>{f.size}</span>
-                {f.status === 'done' ? <Check size={12} color="#9ca3af" /> : <span style={{ fontSize: 10, color: '#9ca3af', fontWeight: 700 }}>PENDING</span>}
+                <span style={{ flex: 1, color: 'var(--sx-body)' }}>{f.name}</span>
+                <span style={{ color: 'var(--sx-faint)' }}>{f.size}</span>
+                {f.status === 'done' ? <Check size={12} color="#9ca3af" /> : <span style={{ fontSize: 10, color: 'var(--sx-faint)', fontWeight: 700 }}>PENDING</span>}
               </div>
             ))}
           </div>
@@ -275,27 +275,27 @@ function RightPanelContent({
         {milestone === 'irl' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span style={{ fontSize: 12, color: '#6b7280', flex: 1 }}>AI generated {SOPHIA_IRL_QUESTIONS.flatMap(g => g.questions).length} questions</span>
-              <span style={{ fontSize: 11, background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 9999, fontWeight: 700 }}>
+              <span style={{ fontSize: 12, color: 'var(--sx-muted)', flex: 1 }}>AI generated {SOPHIA_IRL_QUESTIONS.flatMap(g => g.questions).length} questions</span>
+              <span style={{ fontSize: 11, background: 'rgba(245,158,11,0.15)', color: '#92400e', padding: '2px 8px', borderRadius: 9999, fontWeight: 700 }}>
                 {SOPHIA_IRL_QUESTIONS.flatMap(g => g.questions).filter(q => q.priority === 'high').length} high priority
               </span>
             </div>
             {SOPHIA_IRL_QUESTIONS.map((group, gi) => (
               <div key={gi}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6, marginTop: gi > 0 ? 8 : 0 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--sx-body)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6, marginTop: gi > 0 ? 8 : 0 }}>
                   {group.category}
                 </div>
                 {group.questions.map(q => (
                   <div key={q.id} style={{
-                    padding: '8px 10px', background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, marginBottom: 6, fontSize: 12,
-                    borderLeft: `3px solid ${q.priority === 'high' ? '#ef4444' : q.priority === 'medium' ? '#f59e0b' : '#d1d5db'}`,
+                    padding: '8px 10px', background: 'var(--sx-card)', border: '1px solid var(--sx-hairline)', borderRadius: 8, marginBottom: 6, fontSize: 12,
+                    borderLeft: `3px solid ${q.priority === 'high' ? '#ef4444' : q.priority === 'medium' ? '#f59e0b' : 'var(--sx-faint)'}`,
                   }}>
                     {q.fa !== 'all' && (
-                      <div style={{ fontSize: 10, fontWeight: 700, color: '#6b7280', marginBottom: 3 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--sx-muted)', marginBottom: 3 }}>
                         {FOREIGN_AFFILIATES.find(f => f.id === q.fa)?.shortName}
                       </div>
                     )}
-                    <div style={{ color: '#374151', lineHeight: 1.5 }}>{q.text}</div>
+                    <div style={{ color: 'var(--sx-body)', lineHeight: 1.5 }}>{q.text}</div>
                   </div>
                 ))}
               </div>
@@ -311,7 +311,7 @@ function RightPanelContent({
 
         {milestone === 'validate' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>
+            <div style={{ fontSize: 12, color: 'var(--sx-muted)', marginBottom: 4 }}>
               Running validation across all 20 supplements…
             </div>
             {[
@@ -326,12 +326,12 @@ function RightPanelContent({
             ].map((item, i) => (
               <div key={i} style={{
                 display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px',
-                background: '#f9fafb',
+                background: 'var(--sx-raised)',
                 borderRadius: 8, fontSize: 12,
               }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: item.status === 'fail' ? '#fca5a5' : item.status === 'warn' ? '#fde68a' : '#a7f3d0' }} />
-                <span style={{ flex: 1, color: '#374151' }}>{item.label}</span>
-                {item.count && <span style={{ fontSize: 11, fontWeight: 700, color: '#6b7280' }}>{item.count}</span>}
+                <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: item.status === 'fail' ? 'rgba(239,68,68,0.15)' : item.status === 'warn' ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.14)' }} />
+                <span style={{ flex: 1, color: 'var(--sx-body)' }}>{item.label}</span>
+                {item.count && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--sx-muted)' }}>{item.count}</span>}
               </div>
             ))}
           </div>
@@ -339,21 +339,21 @@ function RightPanelContent({
 
         {milestone === 'review' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ fontSize: 12, color: '#6b7280' }}>Manager review comments</div>
+            <div style={{ fontSize: 12, color: 'var(--sx-muted)' }}>Manager review comments</div>
             {[
               { reviewer: 'M. Chen', comment: 'Please confirm the FAPI breakdown for GmbH Berlin — the interest vs. indebtedness split needs to be verified against the loan agreement.', date: 'Jun 3, 2025', resolved: false },
               { reviewer: 'J. Park', comment: 'SAS Paris dividend — confirm Reg. 5900(2) election was not required given the surplus composition.', date: 'Jun 4, 2025', resolved: true },
             ].map((c, i) => (
-              <div key={i} style={{ padding: 10, background: c.resolved ? '#f0fdf4' : '#fff', border: `1px solid ${c.resolved ? '#bbf7d0' : '#e5e7eb'}`, borderRadius: 8, fontSize: 12 }}>
+              <div key={i} style={{ padding: 10, background: c.resolved ? 'rgba(16,185,129,0.14)' : 'var(--sx-card)', border: `1px solid ${c.resolved ? 'rgba(16,185,129,0.14)' : 'var(--sx-hairline)'}`, borderRadius: 8, fontSize: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontWeight: 700, color: '#111827' }}>{c.reviewer}</span>
-                  <span style={{ color: '#9ca3af', fontSize: 11 }}>{c.date}</span>
+                  <span style={{ fontWeight: 700, color: 'var(--sx-ink)' }}>{c.reviewer}</span>
+                  <span style={{ color: 'var(--sx-faint)', fontSize: 11 }}>{c.date}</span>
                 </div>
-                <div style={{ color: '#4b5563', lineHeight: 1.5 }}>{c.comment}</div>
+                <div style={{ color: 'var(--sx-body)', lineHeight: 1.5 }}>{c.comment}</div>
                 {c.resolved && <div style={{ marginTop: 6, fontSize: 11, color: '#10b981', fontWeight: 700 }}>✓ Resolved</div>}
               </div>
             ))}
-            <button style={{ padding: '8px 0', background: '#f3f4f6', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer', width: '100%' }}>
+            <button style={{ padding: '8px 0', background: 'var(--sx-panel)', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, color: 'var(--sx-body)', cursor: 'pointer', width: '100%' }}>
               + Add Comment
             </button>
           </div>
@@ -361,21 +361,21 @@ function RightPanelContent({
 
         {milestone === 'signoff' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ fontSize: 12, color: '#6b7280' }}>Digital sign-off required before filing</div>
+            <div style={{ fontSize: 12, color: 'var(--sx-muted)' }}>Digital sign-off required before filing</div>
             {[
               { role: 'Preparer', name: 'Sarah Thompson', date: 'Jun 5, 2025', signed: true },
               { role: 'Reviewer', name: 'Michael Chen', date: '', signed: false },
               { role: 'Partner', name: 'James Park', date: '', signed: false },
             ].map((s, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: s.signed ? '#f0fdf4' : '#fafafa', borderRadius: 8, border: `1px solid ${s.signed ? '#bbf7d0' : '#e5e7eb'}` }}>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: s.signed ? 'rgba(16,185,129,0.14)' : 'var(--sx-raised)', borderRadius: 8, border: `1px solid ${s.signed ? 'rgba(16,185,129,0.14)' : 'var(--sx-hairline)'}` }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#111827' }}>{s.name}</div>
-                  <div style={{ fontSize: 11, color: '#9ca3af' }}>{s.role}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--sx-ink)' }}>{s.name}</div>
+                  <div style={{ fontSize: 11, color: 'var(--sx-faint)' }}>{s.role}</div>
                 </div>
                 {s.signed ? (
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: 11, color: '#10b981', fontWeight: 700 }}>✓ Signed</div>
-                    <div style={{ fontSize: 10, color: '#9ca3af' }}>{s.date}</div>
+                    <div style={{ fontSize: 10, color: 'var(--sx-faint)' }}>{s.date}</div>
                   </div>
                 ) : (
                   <button style={{ padding: '6px 12px', background: '#374151', color: '#fff', border: 'none', borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
@@ -389,10 +389,10 @@ function RightPanelContent({
 
         {milestone === 'file' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ padding: 12, background: '#fef3c7', borderRadius: 8, fontSize: 12, color: '#92400e' }}>
+            <div style={{ padding: 12, background: 'rgba(245,158,11,0.15)', borderRadius: 8, fontSize: 12, color: '#92400e' }}>
               <strong>2 sign-offs pending</strong> — complete sign-off before filing.
             </div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 4 }}>Export Options</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--sx-body)', marginBottom: 4 }}>Export Options</div>
             <button
               onClick={() => {
                 // Generate iFirm CSV
@@ -414,10 +414,10 @@ function RightPanelContent({
             >
               <Download size={14} /> Download iFirm CSV
             </button>
-            <button style={{ padding: '10px 0', background: '#f3f4f6', color: '#9ca3af', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'not-allowed', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button style={{ padding: '10px 0', background: 'var(--sx-panel)', color: 'var(--sx-faint)', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'not-allowed', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               <Globe size={14} /> CRA XML Export <span style={{ fontSize: 10 }}>(Coming soon)</span>
             </button>
-            <div style={{ marginTop: 8, padding: 10, background: '#f9fafb', borderRadius: 8, fontSize: 11, color: '#9ca3af' }}>
+            <div style={{ marginTop: 8, padding: 10, background: 'var(--sx-raised)', borderRadius: 8, fontSize: 11, color: 'var(--sx-faint)' }}>
               CRA submission reference will appear here after filing confirmation.
             </div>
           </div>
@@ -453,31 +453,31 @@ function PartISummary() {
 
   return (
     <div data-anchor="t1134:part1" style={{ padding: '20px 24px', maxWidth: 640 }}>
-      <div style={{ fontSize: 13, fontWeight: 800, color: '#111827', marginBottom: 4 }}>Part I — T1134 Summary</div>
-      <div style={{ fontSize: 12, color: '#9ca3af', marginBottom: 20 }}>
+      <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--sx-ink)', marginBottom: 4 }}>Part I — T1134 Summary</div>
+      <div style={{ fontSize: 12, color: 'var(--sx-faint)', marginBottom: 20 }}>
         Filed once per reporting entity. Applies to Northstar Inc. as the Canadian filer.
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 0, border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 0, border: '1px solid var(--sx-hairline)', borderRadius: 10, overflow: 'hidden' }}>
         {fields.map((f, i) => (
           <div key={i} style={{
             display: 'flex', alignItems: 'flex-start', gap: 16,
-            padding: '9px 14px', background: i % 2 === 0 ? '#fff' : '#fafafa',
-            borderBottom: i < fields.length - 1 ? '1px solid #f3f4f6' : 'none',
+            padding: '9px 14px', background: i % 2 === 0 ? 'var(--sx-card)' : 'var(--sx-raised)',
+            borderBottom: i < fields.length - 1 ? '1px solid var(--sx-panel)' : 'none',
           }}>
-            <span style={{ minWidth: 200, fontSize: 12, color: '#6b7280', paddingTop: 1 }}>{f.label}</span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: '#111827' }}>{String(f.value)}</span>
+            <span style={{ minWidth: 200, fontSize: 12, color: 'var(--sx-muted)', paddingTop: 1 }}>{f.label}</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--sx-ink)' }}>{String(f.value)}</span>
           </div>
         ))}
       </div>
       <div style={{ marginTop: 20 }}>
-        <div style={{ fontSize: 12, fontWeight: 800, color: '#374151', marginBottom: 10 }}>Section 3D — Dormant Foreign Affiliates</div>
-        <div style={{ fontSize: 12, color: '#9ca3af', padding: '12px 14px', background: '#fafafa', borderRadius: 8, border: '1px solid #e5e7eb' }}>
+        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--sx-body)', marginBottom: 10 }}>Section 3D — Dormant Foreign Affiliates</div>
+        <div style={{ fontSize: 12, color: 'var(--sx-faint)', padding: '12px 14px', background: 'var(--sx-raised)', borderRadius: 8, border: '1px solid var(--sx-hairline)' }}>
           No dormant affiliates reported for 2024.
         </div>
       </div>
       <div style={{ marginTop: 16 }}>
-        <div style={{ fontSize: 12, fontWeight: 800, color: '#374151', marginBottom: 10 }}>Section 3E — Lower-Tier Non-Controlled Foreign Affiliates</div>
-        <div style={{ fontSize: 12, color: '#9ca3af', padding: '12px 14px', background: '#fafafa', borderRadius: 8, border: '1px solid #e5e7eb' }}>
+        <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--sx-body)', marginBottom: 10 }}>Section 3E — Lower-Tier Non-Controlled Foreign Affiliates</div>
+        <div style={{ fontSize: 12, color: 'var(--sx-faint)', padding: '12px 14px', background: 'var(--sx-raised)', borderRadius: 8, border: '1px solid var(--sx-hairline)' }}>
           No lower-tier NCFAs reported for 2024.
         </div>
       </div>
@@ -492,11 +492,11 @@ function PartIIGrid() {
   return (
     <div style={{ overflowX: 'auto', overflowY: 'visible' }}>
       {/* Country group + column headers */}
-      <div style={{ display: 'flex', position: 'sticky', top: 0, zIndex: 10, background: '#fff', borderBottom: '2px solid #e5e7eb' }}>
+      <div style={{ display: 'flex', position: 'sticky', top: 0, zIndex: 10, background: 'var(--sx-card)', borderBottom: '2px solid var(--sx-hairline)' }}>
         {/* Frozen label header */}
         <div style={{
           minWidth: 220, maxWidth: 220, padding: '10px 12px', fontSize: 11, fontWeight: 800,
-          color: '#374151', borderRight: '1px solid #e5e7eb', background: '#fff',
+          color: 'var(--sx-body)', borderRight: '1px solid var(--sx-hairline)', background: 'var(--sx-card)',
           position: 'sticky', left: 0, zIndex: 11, letterSpacing: '0.04em',
         }}>
           FIELD
@@ -507,8 +507,8 @@ function PartIIGrid() {
             {/* Country banner */}
             <div style={{
               display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px',
-              background: '#f9fafb', borderBottom: '1px solid #e5e7eb', borderRight: '1px solid #e5e7eb',
-              fontSize: 11, fontWeight: 600, color: '#6b7280', minWidth: group.ids.length * 140,
+              background: 'var(--sx-raised)', borderBottom: '1px solid var(--sx-hairline)', borderRight: '1px solid var(--sx-hairline)',
+              fontSize: 11, fontWeight: 600, color: 'var(--sx-muted)', minWidth: group.ids.length * 140,
             }}>
               <span>{group.flag}</span> {group.country}
             </div>
@@ -518,20 +518,20 @@ function PartIIGrid() {
                 const fa = fas.find(f => f.id === id)!;
                 return (
                   <div key={id} style={{
-                    minWidth: 140, maxWidth: 140, padding: '6px 10px', borderRight: '1px solid #f3f4f6',
-                    background: '#fff',
+                    minWidth: 140, maxWidth: 140, padding: '6px 10px', borderRight: '1px solid var(--sx-panel)',
+                    background: 'var(--sx-card)',
                   }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--sx-ink)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {fa.shortName}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
                       <span style={{
-                        fontSize: 9, fontWeight: 600, color: '#9ca3af',
+                        fontSize: 9, fontWeight: 600, color: 'var(--sx-faint)',
                       }}>{fa.tier}</span>
                     </div>
                     {/* Completion bar — subtle */}
-                    <div style={{ marginTop: 4, height: 2, background: '#f0f0f0', borderRadius: 9999, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${fa.completionPct}%`, background: fa.completionPct >= 90 ? '#a7f3d0' : fa.completionPct >= 60 ? '#fde68a' : '#fca5a5', borderRadius: 9999 }} />
+                    <div style={{ marginTop: 4, height: 2, background: 'var(--sx-panel)', borderRadius: 9999, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${fa.completionPct}%`, background: fa.completionPct >= 90 ? 'rgba(16,185,129,0.14)' : fa.completionPct >= 60 ? 'rgba(245,158,11,0.15)' : 'rgba(239,68,68,0.15)', borderRadius: 9999 }} />
                     </div>
                   </div>
                 );
@@ -543,13 +543,13 @@ function PartIIGrid() {
 
       {/* Section 1 — FA Information */}
       <SectionAccordion title="Part II · Section 1 — Foreign Affiliate Information" anchor="t1134:part2-s1" defaultOpen>
-        <GridRow label="Legal Name" fas={fas} render={fa => <span style={{ fontSize: 11, color: '#374151' }}>{fa.legalName}</span>} />
+        <GridRow label="Legal Name" fas={fas} render={fa => <span style={{ fontSize: 11, color: 'var(--sx-body)' }}>{fa.legalName}</span>} />
         <GridRow label="Country of Residence" fas={fas} render={fa => <span>{fa.flag} {fa.countryCode}</span>} />
-        <GridRow label="TIN" fas={fas} render={fa => <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#374151' }}>{fa.tin}</span>} />
+        <GridRow label="TIN" fas={fas} render={fa => <span style={{ fontSize: 11, fontFamily: 'monospace', color: 'var(--sx-body)' }}>{fa.tin}</span>} />
         <GridRow label="NAICS Code(s)" fas={fas} render={fa => <span style={{ fontSize: 11 }}>{fa.naicsCodes.join(', ')}</span>} />
         <GridRow label="Functional Currency" fas={fas} render={fa => <span style={{ fontWeight: 700 }}>{fa.functionalCurrency}</span>} />
         <GridRow label="Tier (CFA / NCFA)" fas={fas} render={fa => (
-          <span style={{ fontWeight: 600, color: '#6b7280' }}>{fa.tier}</span>
+          <span style={{ fontWeight: 600, color: 'var(--sx-muted)' }}>{fa.tier}</span>
         )} />
         <GridRow label="First-Time Filing?" fas={fas} render={fa => <YesNoToggle value={fa.firstTimeFiling} />} />
         <GridRow label="Multiple Tax Years?" fas={fas} render={fa => <YesNoToggle value={fa.multipleTaxYears} />} />
@@ -696,7 +696,7 @@ function PartIIGrid() {
       {/* Part IV — Disclosure */}
       <SectionAccordion title="Part IV — Disclosure" anchor="t1134:part4">
         <GridRow label="Information Not Available?" fas={fas} render={fa => <YesNoToggle value={fa.infoNotAvailable} />} />
-        <GridRow label="Details" fas={fas} render={fa => <span style={{ fontSize: 11, color: '#9ca3af' }}>{fa.infoNotAvailableDetails || '—'}</span>} />
+        <GridRow label="Details" fas={fas} render={fa => <span style={{ fontSize: 11, color: 'var(--sx-faint)' }}>{fa.infoNotAvailableDetails || '—'}</span>} />
       </SectionAccordion>
     </div>
   );
@@ -804,41 +804,41 @@ export default function T1134Worksheet() {
   const panelOpen = activePanel !== null;
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 overflow-hidden">
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-white/5 overflow-hidden">
       {/* Portals breadcrumb + milestone buttons into GlobalTopNav */}
       <T1134Toolbar activePanel={activePanel} onSelect={handleMilestoneSelect} />
 
       {/* ── Row 1: worksheet title ─────────────────────────────────────────── */}
-      <div className="px-4 pt-3 pb-1 bg-white">
-        <div className="text-[10px] font-700 text-gray-400 uppercase tracking-widest mb-0.5">T1134 WORKPAPER</div>
-        <div className="text-base font-600 text-gray-900 leading-tight">Information Return Relating to Controlled and Non-Controlled Foreign Affiliates</div>
+      <div className="px-4 pt-3 pb-1 bg-white dark:bg-[#1c1c24]">
+        <div className="text-[10px] font-700 text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-0.5">T1134 WORKPAPER</div>
+        <div className="text-base font-600 text-gray-900 dark:text-gray-100 leading-tight">Information Return Relating to Controlled and Non-Controlled Foreign Affiliates</div>
       </div>
 
       {/* ── Row 3: company / year metadata + action buttons ───────────────── */}
-      <div className="flex items-center gap-3 px-4 py-2 bg-white border-b border-gray-100 flex-wrap">
+      <div className="flex items-center gap-3 px-4 py-2 bg-white dark:bg-[#1c1c24] border-b border-gray-100 dark:border-white/10 flex-wrap">
         <div className="flex items-center gap-1.5 text-[11px]">
-          <span className="text-gray-400 font-600 uppercase tracking-wider text-[9px]">Company</span>
-          <span className="font-500 text-gray-800 bg-gray-100 px-2 py-1 rounded text-[11px]">Northstar Inc.</span>
+          <span className="text-gray-400 dark:text-gray-500 font-600 uppercase tracking-wider text-[9px]">Company</span>
+          <span className="font-500 text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-white/10 px-2 py-1 rounded text-[11px]">Northstar Inc.</span>
         </div>
         <div className="flex items-center gap-1.5 text-[11px]">
-          <span className="text-gray-400 font-600 uppercase tracking-wider text-[9px]">Filing Year</span>
-          <span className="font-500 text-gray-800 bg-gray-100 px-2 py-1 rounded text-[11px]">2024</span>
+          <span className="text-gray-400 dark:text-gray-500 font-600 uppercase tracking-wider text-[9px]">Filing Year</span>
+          <span className="font-500 text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-white/10 px-2 py-1 rounded text-[11px]">2024</span>
         </div>
         <div className="flex items-center gap-1.5 text-[11px]">
-          <span className="text-gray-400 font-600 uppercase tracking-wider text-[9px]">Tax Year End</span>
-          <span className="font-500 text-gray-800 bg-gray-100 px-2 py-1 rounded text-[11px]">Dec 31, 2024</span>
+          <span className="text-gray-400 dark:text-gray-500 font-600 uppercase tracking-wider text-[9px]">Tax Year End</span>
+          <span className="font-500 text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-white/10 px-2 py-1 rounded text-[11px]">Dec 31, 2024</span>
         </div>
         <div className="flex items-center gap-1.5 text-[11px]">
-          <span className="text-gray-400 font-600 uppercase tracking-wider text-[9px]">Due</span>
-          <span className="font-500 text-gray-800 bg-gray-100 px-2 py-1 rounded text-[11px]">Oct 31, 2025</span>
+          <span className="text-gray-400 dark:text-gray-500 font-600 uppercase tracking-wider text-[9px]">Due</span>
+          <span className="font-500 text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-white/10 px-2 py-1 rounded text-[11px]">Oct 31, 2025</span>
         </div>
         <div className="flex items-center gap-1.5 text-[11px]">
-          <span className="text-gray-400 font-600 uppercase tracking-wider text-[9px]">Affiliates</span>
-          <span className="font-500 text-gray-800 bg-gray-100 px-2 py-1 rounded text-[11px]">20</span>
+          <span className="text-gray-400 dark:text-gray-500 font-600 uppercase tracking-wider text-[9px]">Affiliates</span>
+          <span className="font-500 text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-white/10 px-2 py-1 rounded text-[11px]">20</span>
         </div>
         <div className="ml-auto flex items-center gap-2">
           {/* Completion dots */}
-          <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
+          <div className="flex items-center gap-1.5 text-[10px] text-gray-400 dark:text-gray-500">
             <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" /> 4 complete
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" /> 12 in progress
             <span className="w-1.5 h-1.5 rounded-full bg-red-400 inline-block" /> 4 not started
@@ -846,7 +846,7 @@ export default function T1134Worksheet() {
           {/* iFirm CSV — minimal */}
           <button
             onClick={() => handleMilestoneSelect('file')}
-            className="flex items-center gap-1 text-[11px] font-500 px-2.5 py-1 rounded border border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-all"
+            className="flex items-center gap-1 text-[11px] font-500 px-2.5 py-1 rounded border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:border-gray-300 dark:hover:border-white/20 hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
             style={{ cursor: 'pointer', background: 'none' }}
           >
             <Download size={11} /> iFirm CSV
@@ -854,7 +854,7 @@ export default function T1134Worksheet() {
           {/* Share with client — minimal */}
           <button
             onClick={() => setActiveTab('client')}
-            className="flex items-center gap-1 text-[11px] font-500 px-2.5 py-1 rounded border border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-all"
+            className="flex items-center gap-1 text-[11px] font-500 px-2.5 py-1 rounded border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:border-gray-300 dark:hover:border-white/20 hover:bg-gray-50 dark:hover:bg-white/5 transition-all"
             style={{ cursor: 'pointer', background: 'none' }}
           >
             <Users size={11} /> Share with Client
@@ -863,7 +863,7 @@ export default function T1134Worksheet() {
       </div>
 
       {/* ── Tab bar — minimal underline style ─────────────────────────────── */}
-      <div className="flex items-center gap-0 bg-white border-b border-gray-100 px-4 shrink-0">
+      <div className="flex items-center gap-0 bg-white dark:bg-[#1c1c24] border-b border-gray-100 dark:border-white/10 px-4 shrink-0">
         {([
           { id: 'part1', label: 'Part I — Summary' },
           { id: 'part2', label: 'Part II — Supplement (20 FAs)' },
@@ -876,8 +876,8 @@ export default function T1134Worksheet() {
             style={{
               background: 'none',
               fontWeight: activeTab === tab.id ? 600 : 400,
-              color: activeTab === tab.id ? '#374151' : '#9ca3af',
-              borderBottom: activeTab === tab.id ? '1.5px solid #374151' : '1.5px solid transparent',
+              color: activeTab === tab.id ? 'var(--sx-body)' : 'var(--sx-faint)',
+              borderBottom: activeTab === tab.id ? '1.5px solid var(--sx-body)' : '1.5px solid transparent',
               marginBottom: -1,
             }}
           >
@@ -898,13 +898,13 @@ export default function T1134Worksheet() {
           {activeTab === 'part2' && <PartIIGrid />}
           {activeTab === 'client' && (
             <div style={{ padding: 32, maxWidth: 600 }}>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#111827', marginBottom: 8 }}>Client Portal View</div>
-              <div style={{ fontSize: 13, color: '#6b7280', lineHeight: 1.7, marginBottom: 20 }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--sx-ink)', marginBottom: 8 }}>Client Portal View</div>
+              <div style={{ fontSize: 13, color: 'var(--sx-muted)', lineHeight: 1.7, marginBottom: 20 }}>
                 This view shows the T1134 workpaper as Northstar Inc.'s tax team would see it — with calculated fields locked and only confirmation questions editable. Share a secure link with the client to allow them to confirm ownership percentages, loan balances, and transaction details directly.
               </div>
-              <div style={{ padding: 16, background: '#f5f3ff', border: `1px solid ${PURPLE}33`, borderRadius: 10, fontSize: 12, color: '#4b5563' }}>
+              <div style={{ padding: 16, background: 'var(--sx-accent-soft)', border: '1px solid var(--sx-accent-soft)', borderRadius: 10, fontSize: 12, color: 'var(--sx-body)' }}>
                 <div style={{ fontWeight: 800, color: PURPLE, marginBottom: 8 }}>🔗 Shareable Link</div>
-                <div style={{ fontFamily: 'monospace', background: '#fff', padding: '6px 10px', borderRadius: 6, color: '#374151', marginBottom: 10 }}>
+                <div style={{ fontFamily: 'monospace', background: 'var(--sx-card)', padding: '6px 10px', borderRadius: 6, color: 'var(--sx-body)', marginBottom: 10 }}>
                   https://inscope.sinaxe.com/client/northstar/t1134/2024?token=abc123
                 </div>
                 <button style={{ padding: '8px 16px', background: PURPLE, color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
@@ -912,13 +912,13 @@ export default function T1134Worksheet() {
                 </button>
               </div>
               <div style={{ marginTop: 20 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#374151', marginBottom: 10 }}>Questions awaiting client confirmation</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--sx-body)', marginBottom: 10 }}>Questions awaiting client confirmation</div>
                 {SOPHIA_IRL_QUESTIONS.flatMap(g => g.questions).filter(q => q.priority === 'high').slice(0, 5).map(q => (
-                  <div key={q.id} style={{ padding: '10px 12px', background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, marginBottom: 8, fontSize: 12 }}>
-                    <div style={{ color: '#374151', lineHeight: 1.5 }}>{q.text}</div>
+                  <div key={q.id} style={{ padding: '10px 12px', background: 'var(--sx-card)', border: '1px solid var(--sx-hairline)', borderRadius: 8, marginBottom: 8, fontSize: 12 }}>
+                    <div style={{ color: 'var(--sx-body)', lineHeight: 1.5 }}>{q.text}</div>
                     <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                      <button style={{ padding: '4px 12px', background: '#dcfce7', color: '#166534', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: 11, cursor: 'pointer' }}>Confirmed</button>
-                      <button style={{ padding: '4px 12px', background: '#fef2f2', color: '#991b1b', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: 11, cursor: 'pointer' }}>Change needed</button>
+                      <button style={{ padding: '4px 12px', background: 'rgba(34,197,94,0.15)', color: '#166534', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: 11, cursor: 'pointer' }}>Confirmed</button>
+                      <button style={{ padding: '4px 12px', background: 'rgba(239,68,68,0.15)', color: '#991b1b', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: 11, cursor: 'pointer' }}>Change needed</button>
                     </div>
                   </div>
                 ))}
@@ -930,7 +930,7 @@ export default function T1134Worksheet() {
         {/* Right panel — slides in from right */}
         <div style={{
           position: 'absolute', top: 0, right: 0, bottom: 0, width: '38%',
-          background: '#fff', borderLeft: '1px solid #e5e7eb',
+          background: 'var(--sx-card)', borderLeft: '1px solid var(--sx-hairline)',
           boxShadow: panelOpen ? '-4px 0 24px rgba(0,0,0,0.08)' : 'none',
           transform: panelOpen ? 'translateX(0)' : 'translateX(100%)',
           transition: 'transform 0.3s cubic-bezier(0.23,1,0.32,1)',

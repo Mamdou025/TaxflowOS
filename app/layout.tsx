@@ -42,7 +42,6 @@ const RootLayout = ({ children }: RootLayoutProps) => (
         defaultTheme="light"
         disableTransitionOnChange
         enableSystem={false}
-        forcedTheme="light"
       >
         <Provider>
           <AuthProvider>

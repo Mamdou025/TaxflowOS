@@ -8,6 +8,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useSetAtom } from 'jotai';
+import { useTheme } from 'next-themes';
 import { ArrowLeft } from 'lucide-react';
 import { getWorkflowConfig } from '@/lib/workflow-runs';
 import { getAgent } from '@/lib/agents';
@@ -19,13 +20,14 @@ export default function RunPage() {
   const params = useParams();
   const router = useRouter();
   const setBuilderFocus = useSetAtom(builderFocusTargetAtom);
+  const { resolvedTheme } = useTheme();
   const workflowId = String(params?.workflowId ?? '');
   const config = getWorkflowConfig(workflowId);
 
   if (!config) {
     return (
-      <div style={{ height: '100%', display: 'grid', placeItems: 'center', color: '#6b7280', fontSize: 14 }}>
-        Unknown workflow “{workflowId}”. <button onClick={() => router.push('/home')} style={{ marginLeft: 8, color: '#6B21A8', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Back home</button>
+      <div style={{ height: '100%', display: 'grid', placeItems: 'center', color: 'var(--sx-muted)', fontSize: 14 }}>
+        Unknown workflow “{workflowId}”. <button onClick={() => router.push('/home')} style={{ marginLeft: 8, color: 'var(--sx-accent)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Back home</button>
       </div>
     );
   }
@@ -37,21 +39,21 @@ export default function RunPage() {
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '4vh 24px 48px' }}>
         <button
           onClick={() => router.push('/home')}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', fontSize: 13, fontWeight: 550, padding: 0, marginBottom: 14 }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#1c2130')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = '#6b7280')}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--sx-muted)', fontSize: 13, fontWeight: 550, padding: 0, marginBottom: 14 }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--sx-ink)')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--sx-muted)')}
         >
           <ArrowLeft size={15} /> Home
         </button>
         <div style={{ marginBottom: 16 }}>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: '#1c2130', letterSpacing: '-0.02em' }}>{config.name}</h1>
-          {agent && <p style={{ margin: '4px 0 0', fontSize: 13.5, color: '#6b7280' }}>Run by {agent.name} · {agent.role}</p>}
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: 'var(--sx-ink)', letterSpacing: '-0.02em' }}>{config.name}</h1>
+          {agent && <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--sx-muted)' }}>Run by {agent.name} · {agent.role}</p>}
         </div>
-        <div style={{ background: '#F4F5F8', borderRadius: 18, boxShadow: '8px 8px 18px rgba(158,158,178,0.38), -8px -8px 18px rgba(255,255,255,0.85)', padding: '18px 18px 14px' }}>
+        <div style={{ background: 'var(--sx-surface)', borderRadius: 18, boxShadow: 'var(--sx-shadow-out)', padding: '18px 18px 14px' }}>
           <WorkflowRunFlow
             config={config}
             agent={agent}
-            surface="light"
+            surface={resolvedTheme === 'dark' ? 'dark' : 'light'}
             onComplete={() => { /* run stays on screen showing the result */ }}
             onOpenPage={(pk) => router.push(pageRoute(pk))}
             onOpenBuilder={(blockId) => { setBuilderFocus({ workflowId: config.id, blockId }); router.push('/builder'); }}

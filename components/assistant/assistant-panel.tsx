@@ -57,7 +57,7 @@ function AssistantPanelInner({ open, onClose, onExpand, panelW }: { open: boolea
         background: LC.bg,
         borderRadius: 16,
         border: `1px solid ${LC.border}`,
-        boxShadow: '0 18px 44px rgba(0,0,0,0.38)',
+        boxShadow: 'var(--sx-drop-panel)',
         overflow: 'hidden',
       }}
       aria-hidden={!open}
@@ -67,10 +67,10 @@ function AssistantPanelInner({ open, onClose, onExpand, panelW }: { open: boolea
         <ScopeMark size={22} />
         <span style={{ fontSize: 13, fontWeight: 650, color: LC.text }}>Scope</span>
         <div style={{ flex: 1 }} />
-        <button onClick={onExpand} title="Open full-screen focus mode" className="hover:bg-black/5" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 9, border: 'none', background: 'transparent', color: LC.muted, cursor: 'pointer' }}>
+        <button onClick={onExpand} title="Open full-screen focus mode" className="hover:bg-black/5 dark:hover:bg-white/10" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 9, border: 'none', background: 'transparent', color: LC.muted, cursor: 'pointer' }}>
           <Maximize2 size={15} />
         </button>
-        <button onClick={onClose} title="Close" className="hover:bg-black/5" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 9, border: 'none', background: 'transparent', color: LC.muted, cursor: 'pointer' }}>
+        <button onClick={onClose} title="Close" className="hover:bg-black/5 dark:hover:bg-white/10" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 9, border: 'none', background: 'transparent', color: LC.muted, cursor: 'pointer' }}>
           <X size={16} />
         </button>
       </div>

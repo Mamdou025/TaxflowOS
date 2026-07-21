@@ -28,56 +28,56 @@ const CARD_SHADOW = '0 2px 8px rgba(0,0,0,0.42), 0 6px 20px rgba(0,0,0,0.28)';
 
 const DEFAULT_STYLE: VisualLevelStyle = {
   Icon: Zap,
-  badgeClassName: "top-1 border-white/15 bg-[#1a1a20] text-zinc-300",
+  badgeClassName: "top-1 border-white/15 bg-[var(--sx-node-chip-2)] text-zinc-300",
   captionClassName: "w-40",
   contentClassName: "h-full w-full p-0",
   defaultRole: "step",
   iconClassName: "text-zinc-400",
   iconShellClassName:
-    "size-24 rounded-lg border-2 border-white/10 bg-[#25252f]",
+    "size-24 rounded-lg border-2 border-white/10 bg-[var(--sx-node-chip-3)]",
   nodeClassName:
-    "size-24 overflow-visible rounded-lg border-0 bg-transparent p-0 shadow-none",
+    "size-24 overflow-visible rounded-lg border-0 bg-transparent! p-0 shadow-none",
   placeholderDescription: "Select an action",
 };
 
 const VISUAL_LEVEL_STYLES: Record<VisualLevel, VisualLevelStyle> = {
   L1: {
     Icon: Layers,
-    badgeClassName: "top-2 border-white/15 bg-[#1a1a20] text-orange-300",
+    badgeClassName: "top-2 border-white/15 bg-[var(--sx-node-chip-2)] text-orange-300",
     captionClassName: "w-64",
     contentClassName: "h-full w-full p-0",
     defaultRole: "stage",
     iconClassName: "text-orange-400",
     iconShellClassName:
-      "h-24 w-64 rounded-xl border-2 border-white/10 bg-[#25252f]",
+      "h-24 w-64 rounded-xl border-2 border-white/10 bg-[var(--sx-node-chip-3)]",
     nodeClassName:
-      "h-24 w-64 overflow-visible rounded-xl border-0 bg-transparent p-0 shadow-none",
+      "h-24 w-64 overflow-visible rounded-xl border-0 bg-transparent! p-0 shadow-none",
     placeholderDescription: "Workflow stage",
   },
   L2: {
     Icon: Calculator,
-    badgeClassName: "top-1 border-white/15 bg-[#1a1a20] text-emerald-300",
+    badgeClassName: "top-1 border-white/15 bg-[var(--sx-node-chip-2)] text-emerald-300",
     captionClassName: "w-40",
     contentClassName: "h-full w-full p-0",
     defaultRole: "logic",
     iconClassName: "text-emerald-400",
     iconShellClassName:
-      "size-24 rounded-lg border-2 border-white/10 bg-[#25252f]",
+      "size-24 rounded-lg border-2 border-white/10 bg-[var(--sx-node-chip-3)]",
     nodeClassName:
-      "size-24 overflow-visible rounded-lg border-0 bg-transparent p-0 shadow-none",
+      "size-24 overflow-visible rounded-lg border-0 bg-transparent! p-0 shadow-none",
     placeholderDescription: "Workflow block",
   },
   L3: {
     Icon: FileText,
-    badgeClassName: "top-1 border-white/15 bg-[#1a1a20] text-sky-300",
+    badgeClassName: "top-1 border-white/15 bg-[var(--sx-node-chip-2)] text-sky-300",
     captionClassName: "w-40",
     contentClassName: "h-full w-full p-0",
     defaultRole: "source",
     iconClassName: "text-sky-400",
     iconShellClassName:
-      "size-24 rounded-l-3xl rounded-r-lg border-2 border-white/10 bg-[#25252f]",
+      "size-24 rounded-l-3xl rounded-r-lg border-2 border-white/10 bg-[var(--sx-node-chip-3)]",
     nodeClassName:
-      "size-24 overflow-visible rounded-l-3xl rounded-r-lg border-0 bg-transparent p-0 shadow-none",
+      "size-24 overflow-visible rounded-l-3xl rounded-r-lg border-0 bg-transparent! p-0 shadow-none",
     placeholderDescription: "Source evidence",
   },
 };

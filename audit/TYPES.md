@@ -1,6 +1,6 @@
 # Types & Domain Model
 
-*Last updated: 2026-07-17*
+*Last updated: 2026-07-21*
 
 All core types live in `src/domain/workflow/`. Re-exports and runtime types are in `lib/local-tool-registry.ts` and `backend/runtime/types.ts`.
 

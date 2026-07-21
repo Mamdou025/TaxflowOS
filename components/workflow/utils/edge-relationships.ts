@@ -39,7 +39,9 @@ export function getEdgeStatusClasses(status: EdgeStatus | undefined) {
   return {
     labelClassName:
       "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-    stroke: "rgb(248 250 252)",
+    // Themed idle stroke (--sx-edge-idle): dark slate on the light board, a light
+    // slate on the dark board. Was near-white rgb(248 250 252) on the old dark canvas.
+    stroke: "var(--sx-edge-idle)",
     strokeDasharray: "5",
   };
 }

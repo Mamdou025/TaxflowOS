@@ -19,10 +19,10 @@ export function PersistentCanvas() {
     return null;
   }
 
-  // The whole app is dark-grid now, so the canvas starts dark immediately — no
-  // light→dark fade (that wash was the main "slow" feeling on entry).
+  // Light neumorphic builder ground — a flat gray (#c9c9d4) matching the page
+  // grounds; the canvas grid (ai-elements/canvas.tsx) draws dark hairlines on it.
   return (
-    <div className="fixed inset-0 z-0" style={{ background: '#18181c' }}>
+    <div className="fixed inset-0 z-0" style={{ background: 'var(--sx-canvas-ground)' }}>
       <ReactFlowProvider>
         <WorkflowCanvas />
       </ReactFlowProvider>

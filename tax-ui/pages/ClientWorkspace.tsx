@@ -45,48 +45,48 @@ function WorkflowCardItem({ wf, restricted }: { wf: WorkflowCard; restricted?: b
 
   if (restricted) {
     return (
-      <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex items-center gap-3 opacity-50">
-        <Lock size={13} className="text-slate-400 shrink-0" />
+      <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 flex items-center gap-3 opacity-50">
+        <Lock size={13} className="text-slate-400 dark:text-slate-500 shrink-0" />
         <div className="flex-1 min-w-0">
-          <span className="text-[13px] font-semibold text-slate-500 truncate block">{wf.name}</span>
+          <span className="text-[13px] font-semibold text-slate-500 dark:text-slate-400 truncate block">{wf.name}</span>
           <div className="flex items-center gap-2 mt-0.5">
             <TeamBadge
               name={wf.team}
               color={wf.teamColor}
               abbreviation={TAX_TEAMS.find(t => t.name === wf.team)?.abbreviation}
             />
-            <span className="text-[10px] text-slate-400">FY {wf.year} · Due {wf.dueDate}</span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500">FY {wf.year} · Due {wf.dueDate}</span>
           </div>
         </div>
-        <span className="text-[10px] text-slate-400 italic shrink-0">Not in your team</span>
+        <span className="text-[10px] text-slate-400 dark:text-slate-500 italic shrink-0">Not in your team</span>
       </div>
     );
   }
 
   return (
     <div className={cn(
-      'bg-white border rounded-xl overflow-hidden transition-all duration-150',
-      isAwaitingSignoff ? 'border-red-300' : 'border-slate-200',
-      'hover:border-slate-300 hover:shadow-sm'
+      'bg-white dark:bg-[#1c1c24] border rounded-xl overflow-hidden transition-all duration-150',
+      isAwaitingSignoff ? 'border-red-300 dark:border-red-500/40' : 'border-slate-200 dark:border-white/10',
+      'hover:border-slate-300 dark:hover:border-white/20 hover:shadow-sm'
     )}>
       {/* ── Always-visible row ─────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 px-4 py-3">
         {/* Name + status signal */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[13px] font-semibold text-slate-800 truncate">{wf.name}</span>
+            <span className="text-[13px] font-semibold text-slate-800 dark:text-slate-100 truncate">{wf.name}</span>
             {isAwaitingSignoff && (
-              <span className="text-[10px] text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full font-medium">
+              <span className="text-[10px] text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-500/15 border border-red-200 dark:border-red-500/30 px-1.5 py-0.5 rounded-full font-medium">
                 Awaiting Partner Sign-off
               </span>
             )}
             {isUnderReview && (
-              <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full">
+              <span className="text-[10px] text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 px-1.5 py-0.5 rounded-full">
                 Under Review
               </span>
             )}
             {wf.status === 'Complete' && (
-              <span className="flex items-center gap-1 text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">
+              <span className="flex items-center gap-1 text-[10px] text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 px-1.5 py-0.5 rounded-full">
                 <CheckCircle2 size={9} />
                 Complete
               </span>
@@ -98,7 +98,7 @@ function WorkflowCardItem({ wf, restricted }: { wf: WorkflowCard; restricted?: b
               color={wf.teamColor}
               abbreviation={TAX_TEAMS.find(t => t.name === wf.team)?.abbreviation}
             />
-            <span className="text-[10px] text-slate-400">FY {wf.year} · Due {wf.dueDate}</span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500">FY {wf.year} · Due {wf.dueDate}</span>
           </div>
         </div>
 
@@ -113,7 +113,7 @@ function WorkflowCardItem({ wf, restricted }: { wf: WorkflowCard; restricted?: b
           ) : (
             <button
               onClick={() => toast.info('Workflow execution — coming soon')}
-              className="text-[12px] font-semibold px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800 transition-colors"
+              className="text-[12px] font-semibold px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-800 dark:hover:text-slate-100 transition-colors"
             >
               Open Workflow
             </button>
@@ -124,8 +124,8 @@ function WorkflowCardItem({ wf, restricted }: { wf: WorkflowCard; restricted?: b
             className={cn(
               'flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-lg border transition-colors',
               expanded
-                ? 'border-slate-300 bg-slate-50 text-slate-700'
-                : 'border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-300'
+                ? 'border-slate-300 dark:border-white/15 bg-slate-50 dark:bg-white/5 text-slate-700 dark:text-slate-300'
+                : 'border-slate-200 dark:border-white/10 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-white/20'
             )}
           >
             {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
@@ -136,10 +136,10 @@ function WorkflowCardItem({ wf, restricted }: { wf: WorkflowCard; restricted?: b
 
       {/* ── Expandable details ─────────────────────────────────────────────── */}
       {expanded && (
-        <div className="border-t border-slate-100 bg-slate-50/60 px-4 py-4 space-y-4">
+        <div className="border-t border-slate-100 dark:border-white/10 bg-slate-50/60 dark:bg-white/5 px-4 py-4 space-y-4">
           {/* Review stage */}
           <div>
-            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Review Stage</div>
+            <div className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Review Stage</div>
             <div className="flex items-center gap-0">
               {REVIEW_STAGES.map((stage, i) => {
                 const isDone = i < currentStageIdx;
@@ -151,19 +151,19 @@ function WorkflowCardItem({ wf, restricted }: { wf: WorkflowCard; restricted?: b
                       <div className={cn(
                         'w-2.5 h-2.5 rounded-full border',
                         isDone ? 'bg-emerald-500 border-emerald-500' :
-                        isCurrent ? 'bg-[#0F2044] border-[#0F2044]' :
-                        'bg-white border-slate-300'
+                        isCurrent ? 'bg-[#0F2044] dark:bg-slate-100 border-[#0F2044] dark:border-slate-100' :
+                        'bg-white dark:bg-white/10 border-slate-300 dark:border-white/20'
                       )} />
                       <span className={cn(
                         'text-[9px] mt-1 whitespace-nowrap',
-                        isCurrent ? 'text-[#0F2044] font-semibold' :
-                        isDone ? 'text-emerald-600' : 'text-slate-400'
+                        isCurrent ? 'text-[#0F2044] dark:text-slate-100 font-semibold' :
+                        isDone ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'
                       )}>
                         {stage === 'Senior Manager' ? 'Sr. Mgr' : stage}
                       </span>
                     </div>
                     {!isLast && (
-                      <div className={cn('flex-1 h-px mx-1 mb-3', isDone ? 'bg-emerald-400/50' : 'bg-slate-200')} />
+                      <div className={cn('flex-1 h-px mx-1 mb-3', isDone ? 'bg-emerald-400/50' : 'bg-slate-200 dark:bg-white/10')} />
                     )}
                   </div>
                 );
@@ -173,7 +173,7 @@ function WorkflowCardItem({ wf, restricted }: { wf: WorkflowCard; restricted?: b
 
           {/* Team */}
           <div>
-            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Team</div>
+            <div className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Team</div>
             <div className="grid grid-cols-2 gap-x-6 gap-y-2">
               {[
                 { role: 'Preparer', name: wf.preparer },
@@ -188,8 +188,8 @@ function WorkflowCardItem({ wf, restricted }: { wf: WorkflowCard; restricted?: b
                     size="xs"
                   />
                   <div>
-                    <div className="text-[9px] text-slate-400 uppercase tracking-wider">{m.role}</div>
-                    <div className="text-[11px] text-slate-700 font-medium">{m.name}</div>
+                    <div className="text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">{m.role}</div>
+                    <div className="text-[11px] text-slate-700 dark:text-slate-300 font-medium">{m.name}</div>
                   </div>
                 </div>
               ))}
@@ -198,7 +198,7 @@ function WorkflowCardItem({ wf, restricted }: { wf: WorkflowCard; restricted?: b
 
           {/* Milestones */}
           <div>
-            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Milestones</div>
+            <div className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Milestones</div>
             <div className="space-y-1.5">
               {[
                 { label: 'Source documents received', done: true },
@@ -210,11 +210,11 @@ function WorkflowCardItem({ wf, restricted }: { wf: WorkflowCard; restricted?: b
                 <div key={i} className="flex items-center gap-2">
                   <div className={cn(
                     'w-4 h-4 rounded-full flex items-center justify-center shrink-0',
-                    m.done ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'
+                    m.done ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-slate-100 dark:bg-white/10 text-slate-400 dark:text-slate-500'
                   )}>
                     {m.done ? <CheckCircle2 size={10} /> : <Clock size={9} />}
                   </div>
-                  <span className={cn('text-[11px]', m.done ? 'text-slate-400 line-through' : 'text-slate-700')}>
+                  <span className={cn('text-[11px]', m.done ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-slate-700 dark:text-slate-300')}>
                     {m.label}
                   </span>
                 </div>
@@ -222,7 +222,7 @@ function WorkflowCardItem({ wf, restricted }: { wf: WorkflowCard; restricted?: b
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 text-[10px] text-slate-400 pt-1 border-t border-slate-200">
+          <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 pt-1 border-t border-slate-200 dark:border-white/10">
             <Activity size={10} />
             <span>Last activity: {wf.lastActivity}</span>
           </div>
@@ -448,7 +448,7 @@ function TaxAttributesMap() {
   return (
     <div className="flex gap-4 h-full min-h-[520px]">
       {/* Map */}
-      <div className="flex-1 bg-white border border-slate-200 rounded-xl overflow-hidden relative">
+      <div className="flex-1 bg-white dark:bg-[#1c1c24] border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden relative">
         <div className="absolute top-3 left-3 z-10">
           <div className="text-[11px] font-semibold text-slate-700 bg-white/90 backdrop-blur-sm border border-slate-200 rounded-lg px-2.5 py-1.5">
             <Globe size={11} className="inline mr-1.5 text-[#0F2044]" />
@@ -560,44 +560,44 @@ function TaxAttributesMap() {
 
       {/* Side panel */}
       {selectedCountry && countryData && affiliate ? (
-        <div ref={panelRef} className="w-80 bg-white border border-slate-200 rounded-xl flex flex-col overflow-hidden shrink-0">
+        <div ref={panelRef} className="w-80 bg-white dark:bg-[#1c1c24] border border-slate-200 dark:border-white/10 rounded-xl flex flex-col overflow-hidden shrink-0">
           {/* Panel header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-white/5">
             <div>
               <div className="flex items-center gap-1.5">
-                <MapPin size={12} className="text-[#0F2044]" />
-                <span className="text-[13px] font-bold text-[#0F2044]">{countryData.countryName}</span>
+                <MapPin size={12} className="text-[#0F2044] dark:text-slate-100" />
+                <span className="text-[13px] font-bold text-[#0F2044] dark:text-slate-100">{countryData.countryName}</span>
               </div>
-              <div className="text-[10px] text-slate-400 mt-0.5">{countryData.affiliates.length} foreign affiliate{countryData.affiliates.length !== 1 ? 's' : ''}</div>
+              <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">{countryData.affiliates.length} foreign affiliate{countryData.affiliates.length !== 1 ? 's' : ''}</div>
             </div>
             <button
               onClick={() => setSelectedCountry(null)}
-              className="w-6 h-6 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
+              className="w-6 h-6 rounded-full bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/15 flex items-center justify-center transition-colors"
             >
-              <X size={12} className="text-slate-500" />
+              <X size={12} className="text-slate-500 dark:text-slate-400" />
             </button>
           </div>
 
           {/* Affiliate selector */}
-          <div className="px-4 py-3 border-b border-slate-100">
-            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Foreign Affiliate</div>
+          <div className="px-4 py-3 border-b border-slate-100 dark:border-white/10">
+            <div className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">Foreign Affiliate</div>
             <div className="relative">
               <button
                 onClick={() => setAffiliateDropdownOpen(v => !v)}
-                className="w-full flex items-center justify-between text-[12px] font-semibold text-[#0F2044] bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 hover:border-slate-300 transition-colors"
+                className="w-full flex items-center justify-between text-[12px] font-semibold text-[#0F2044] dark:text-slate-100 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 hover:border-slate-300 dark:hover:border-white/20 transition-colors"
               >
                 <span className="truncate">{selectedAffiliate}</span>
-                <ChevronDown size={13} className="text-slate-400 shrink-0 ml-2" />
+                <ChevronDown size={13} className="text-slate-400 dark:text-slate-500 shrink-0 ml-2" />
               </button>
               {affiliateDropdownOpen && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-20 py-1">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-[#1c1c24] border border-slate-200 dark:border-white/10 rounded-lg shadow-lg z-20 py-1">
                   {countryData.affiliates.map(a => (
                     <button
                       key={a.name}
                       onClick={() => { setSelectedAffiliate(a.name); setAffiliateDropdownOpen(false); }}
                       className={cn(
                         'w-full text-left px-3 py-2 text-[12px] transition-colors',
-                        a.name === selectedAffiliate ? 'bg-slate-50 text-[#0F2044] font-semibold' : 'text-slate-700 hover:bg-slate-50'
+                        a.name === selectedAffiliate ? 'bg-slate-50 dark:bg-white/5 text-[#0F2044] dark:text-slate-100 font-semibold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'
                       )}
                     >
                       {a.name}
@@ -610,19 +610,19 @@ function TaxAttributesMap() {
 
           {/* Tax attributes */}
           <div className="flex-1 overflow-auto px-4 py-3 space-y-3">
-            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+            <div className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
               Tax Attributes — FY {affiliate.taxYear} ({affiliate.currency})
             </div>
 
             {/* Income */}
-            <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 space-y-2">
-              <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Income</div>
+            <div className="bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-lg p-3 space-y-2">
+              <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Income</div>
               {[
-                { label: 'Taxable Income / (Loss)', value: affiliate.taxableIncome, color: 'text-slate-800' },
-                { label: 'FAPI Income', value: affiliate.fapiIncome, color: affiliate.fapiIncome !== '0' ? 'text-amber-700' : 'text-slate-400' },
+                { label: 'Taxable Income / (Loss)', value: affiliate.taxableIncome, color: 'text-slate-800 dark:text-slate-100' },
+                { label: 'FAPI Income', value: affiliate.fapiIncome, color: affiliate.fapiIncome !== '0' ? 'text-amber-700 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500' },
               ].map(row => (
                 <div key={row.label} className="flex items-center justify-between">
-                  <span className="text-[11px] text-slate-600">{row.label}</span>
+                  <span className="text-[11px] text-slate-600 dark:text-slate-300">{row.label}</span>
                   <span className={cn('text-[12px] font-semibold tabular-nums', row.color)}>
                     {row.value === '0' ? '—' : row.value}
                   </span>
@@ -631,15 +631,15 @@ function TaxAttributesMap() {
             </div>
 
             {/* Surplus balances */}
-            <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 space-y-2">
-              <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Surplus Balances</div>
+            <div className="bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-lg p-3 space-y-2">
+              <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Surplus Balances</div>
               {[
-                { label: 'Exempt Surplus', value: affiliate.exemptSurplus, color: 'text-emerald-700' },
-                { label: 'Taxable Surplus', value: affiliate.taxableSurplus, color: 'text-slate-800' },
-                { label: 'Pre-Acquisition Surplus', value: affiliate.preAcquisitionSurplus, color: 'text-slate-600' },
+                { label: 'Exempt Surplus', value: affiliate.exemptSurplus, color: 'text-emerald-700 dark:text-emerald-400' },
+                { label: 'Taxable Surplus', value: affiliate.taxableSurplus, color: 'text-slate-800 dark:text-slate-100' },
+                { label: 'Pre-Acquisition Surplus', value: affiliate.preAcquisitionSurplus, color: 'text-slate-600 dark:text-slate-300' },
               ].map(row => (
                 <div key={row.label} className="flex items-center justify-between">
-                  <span className="text-[11px] text-slate-600">{row.label}</span>
+                  <span className="text-[11px] text-slate-600 dark:text-slate-300">{row.label}</span>
                   <span className={cn('text-[12px] font-semibold tabular-nums', row.color)}>
                     {row.value === '0' ? '—' : row.value}
                   </span>
@@ -657,7 +657,7 @@ function TaxAttributesMap() {
               </button>
               <button
                 onClick={() => toast.info('Open Surplus Calculator — coming soon')}
-                className="w-full text-[11px] py-2 rounded-lg border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-800 transition-colors"
+                className="w-full text-[11px] py-2 rounded-lg border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-white/20 hover:text-slate-800 dark:hover:text-slate-100 transition-colors"
               >
                 Open in Surplus Calculator
               </button>
@@ -665,13 +665,13 @@ function TaxAttributesMap() {
           </div>
         </div>
       ) : (
-        <div className="w-80 bg-white border border-slate-200 rounded-xl flex flex-col items-center justify-center shrink-0 text-center px-6">
-          <Globe size={32} className="text-slate-300 mb-3" />
-          <div className="text-[13px] font-semibold text-slate-600 mb-1">Select a country</div>
-          <div className="text-[11px] text-slate-400 leading-relaxed">
+        <div className="w-80 bg-white dark:bg-[#1c1c24] border border-slate-200 dark:border-white/10 rounded-xl flex flex-col items-center justify-center shrink-0 text-center px-6">
+          <Globe size={32} className="text-slate-300 dark:text-slate-600 mb-3" />
+          <div className="text-[13px] font-semibold text-slate-600 dark:text-slate-300 mb-1">Select a country</div>
+          <div className="text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed">
             Click on a highlighted country on the map to view foreign affiliate details and tax attributes.
           </div>
-          <div className="mt-4 text-[10px] text-slate-400">
+          <div className="mt-4 text-[10px] text-slate-400 dark:text-slate-500">
             {activeCountries.length} countries with active affiliates
           </div>
         </div>
@@ -689,8 +689,8 @@ function TaxAttributesTab({ clientName }: { clientName: string }) {
       {/* Header row with flip button */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-sm font-semibold text-slate-800">Tax Attributes</h2>
-          <p className="text-[11px] text-slate-400 mt-0.5">
+          <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Tax Attributes</h2>
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
             {view === 'map'
               ? `Foreign affiliates of ${clientName} — click a country to view tax attributes`
               : `Corporate structure of ${clientName} — click an entity to view tax attributes`
@@ -699,14 +699,14 @@ function TaxAttributesTab({ clientName }: { clientName: string }) {
         </div>
 
         {/* Flip toggle */}
-        <div className="flex items-center bg-slate-100 rounded-lg p-0.5 gap-0.5">
+        <div className="flex items-center bg-slate-100 dark:bg-white/10 rounded-lg p-0.5 gap-0.5">
           <button
             onClick={() => setView('map')}
             className={cn(
               'flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded-md transition-all duration-150',
               view === 'map'
-                ? 'bg-white text-[#0F2044] shadow-sm border border-slate-200'
-                : 'text-slate-400 hover:text-slate-600'
+                ? 'bg-white dark:bg-[#1c1c24] text-[#0F2044] dark:text-slate-100 shadow-sm border border-slate-200 dark:border-white/10'
+                : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
             )}
           >
             <Globe size={12} />
@@ -717,8 +717,8 @@ function TaxAttributesTab({ clientName }: { clientName: string }) {
             className={cn(
               'flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded-md transition-all duration-150',
               view === 'orgchart'
-                ? 'bg-white text-[#0F2044] shadow-sm border border-slate-200'
-                : 'text-slate-400 hover:text-slate-600'
+                ? 'bg-white dark:bg-[#1c1c24] text-[#0F2044] dark:text-slate-100 shadow-sm border border-slate-200 dark:border-white/10'
+                : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
             )}
           >
             <Network size={12} />
@@ -783,7 +783,7 @@ export default function ClientWorkspace() {
       actions={
         <button
           onClick={() => toast.info('Upload documents — coming soon')}
-          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 transition-colors"
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-white/20 transition-colors"
         >
           <Upload size={12} />
           <span className="hidden sm:inline">Upload</span>
@@ -793,11 +793,11 @@ export default function ClientWorkspace() {
       <div className="flex flex-col h-full">
 
         {/* ── Client header ──────────────────────────────────────────────────── */}
-        <div className="border-b border-slate-200 bg-white px-5 py-4">
+        <div className="border-b border-slate-200 dark:border-white/10 bg-white dark:bg-[#1c1c24] px-5 py-4">
           <div className="flex items-center gap-4">
             {/* Logo */}
-            <div className="w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center shrink-0">
-              <Building2 size={18} className="text-[#0F2044]" />
+            <div className="w-10 h-10 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 flex items-center justify-center shrink-0">
+              <Building2 size={18} className="text-[#0F2044] dark:text-slate-100" />
             </div>
 
             {/* Client name + tier + switcher */}
@@ -805,16 +805,16 @@ export default function ClientWorkspace() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setDropdownOpen(v => !v)}
-                  className="flex items-center gap-1.5 text-[17px] font-bold text-[#0F2044] hover:text-[#1a3060] transition-colors"
+                  className="flex items-center gap-1.5 text-[17px] font-bold text-[#0F2044] dark:text-slate-100 hover:text-[#1a3060] dark:hover:text-white transition-colors"
                 >
                   {client.name}
-                  <ChevronDown size={15} className={cn('text-slate-400 transition-transform duration-150', dropdownOpen && 'rotate-180')} />
+                  <ChevronDown size={15} className={cn('text-slate-400 dark:text-slate-500 transition-transform duration-150', dropdownOpen && 'rotate-180')} />
                 </button>
                 <span className={cn(
                   'text-[10px] px-2 py-0.5 rounded-full font-semibold border',
-                  client.tier === 'Platinum' ? 'bg-slate-100 text-slate-600 border-slate-300' :
-                  client.tier === 'Strategic' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                  'bg-slate-50 text-slate-500 border-slate-200'
+                  client.tier === 'Platinum' ? 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-white/15' :
+                  client.tier === 'Strategic' ? 'bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/30' :
+                  'bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/10'
                 )}>
                   {client.tier}
                 </span>
@@ -822,22 +822,22 @@ export default function ClientWorkspace() {
 
               {/* Dropdown */}
               {dropdownOpen && (
-                <div className="absolute mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 min-w-[260px] py-1.5">
+                <div className="absolute mt-1 bg-white dark:bg-[#1c1c24] border border-slate-200 dark:border-white/10 rounded-xl shadow-lg z-50 min-w-[260px] py-1.5">
                   {CLIENTS.map(c => (
                     <button
                       key={c.id}
                       onClick={() => handleClientChange(c.id)}
                       className={cn(
                         'flex items-center gap-3 w-full text-left px-3 py-2 transition-colors',
-                        c.id === selectedClientId ? 'bg-slate-50 text-[#0F2044]' : 'text-slate-700 hover:bg-slate-50'
+                        c.id === selectedClientId ? 'bg-slate-50 dark:bg-white/5 text-[#0F2044] dark:text-slate-100' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'
                       )}
                     >
-                      <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                        <Building2 size={13} className="text-slate-500" />
+                      <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/10 flex items-center justify-center shrink-0">
+                        <Building2 size={13} className="text-slate-500 dark:text-slate-400" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-[12px] font-semibold truncate">{c.name}</div>
-                        <div className="text-[10px] text-slate-400">{c.leadPartner} · {c.tier}</div>
+                        <div className="text-[10px] text-slate-400 dark:text-slate-500">{c.leadPartner} · {c.tier}</div>
                       </div>
                       {c.id === selectedClientId && (
                         <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
@@ -849,10 +849,10 @@ export default function ClientWorkspace() {
             </div>
 
             {/* Workflow count only */}
-            <div className="hidden lg:flex items-center gap-2 shrink-0 border-l border-slate-100 pl-4">
+            <div className="hidden lg:flex items-center gap-2 shrink-0 border-l border-slate-100 dark:border-white/10 pl-4">
               <div className="text-center">
-                <div className="text-xl font-bold text-[#0F2044] tabular-nums">{client.workflows.length}</div>
-                <div className="text-[10px] text-slate-400">Workflows</div>
+                <div className="text-xl font-bold text-[#0F2044] dark:text-slate-100 tabular-nums">{client.workflows.length}</div>
+                <div className="text-[10px] text-slate-400 dark:text-slate-500">Workflows</div>
               </div>
             </div>
           </div>
@@ -861,7 +861,7 @@ export default function ClientWorkspace() {
         {/* ── Tabs ───────────────────────────────────────────────────────────── */}
         <div className="flex-1 overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full">
-            <div className="border-b border-slate-200 bg-white px-5">
+            <div className="border-b border-slate-200 dark:border-white/10 bg-white dark:bg-[#1c1c24] px-5">
               <TabsList className="bg-transparent h-10 gap-0 p-0">
                 {[
                   { value: 'workflows', label: 'Active Workflows', icon: <Activity size={12} /> },
@@ -872,8 +872,8 @@ export default function ClientWorkspace() {
                     value={tab.value}
                     className={cn(
                       'flex items-center gap-1.5 text-xs px-3 py-2 rounded-none border-b-2 border-transparent',
-                      'data-[state=active]:border-[#0F2044] data-[state=active]:text-[#0F2044] data-[state=active]:bg-transparent',
-                      'text-slate-400 hover:text-slate-600 transition-colors'
+                      'data-[state=active]:border-[#0F2044] dark:data-[state=active]:border-slate-100 data-[state=active]:text-[#0F2044] dark:data-[state=active]:text-slate-100 data-[state=active]:bg-transparent',
+                      'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors'
                     )}
                   >
                     {tab.icon}
@@ -883,14 +883,14 @@ export default function ClientWorkspace() {
               </TabsList>
             </div>
 
-            <div className="flex-1 overflow-auto bg-slate-50">
+            <div className="flex-1 overflow-auto bg-slate-50 dark:bg-white/5">
 
               {/* ── Active Workflows ──────────────────────────────────────── */}
               <TabsContent value="workflows" className="p-5 mt-0">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h2 className="text-sm font-semibold text-slate-800">Active Workflows</h2>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
+                    <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Active Workflows</h2>
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
                       {myWorkflows.length} accessible · {restrictedWorkflows.length} restricted
                     </p>
                   </div>
@@ -906,9 +906,9 @@ export default function ClientWorkspace() {
                 {annualWorkflows.length > 0 && (
                   <div className="mb-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="h-px flex-1 bg-slate-200" />
-                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-2">Annual Recurring</span>
-                      <div className="h-px flex-1 bg-slate-200" />
+                      <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
+                      <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2">Annual Recurring</span>
+                      <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
                     </div>
                     <div className="space-y-2">
                       {annualWorkflows.map(wf => <WorkflowCardItem key={wf.id} wf={wf} />)}
@@ -920,9 +920,9 @@ export default function ClientWorkspace() {
                 {consultingWorkflows.length > 0 && (
                   <div className="mb-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="h-px flex-1 bg-slate-200" />
-                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-2">Consulting</span>
-                      <div className="h-px flex-1 bg-slate-200" />
+                      <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
+                      <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2">Consulting</span>
+                      <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
                     </div>
                     <div className="space-y-2">
                       {consultingWorkflows.map(wf => <WorkflowCardItem key={wf.id} wf={wf} />)}
@@ -934,9 +934,9 @@ export default function ClientWorkspace() {
                 {restrictedWorkflows.length > 0 && (
                   <div className="mt-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="h-px flex-1 bg-slate-200" />
-                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-2">Other Teams</span>
-                      <div className="h-px flex-1 bg-slate-200" />
+                      <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
+                      <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2">Other Teams</span>
+                      <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
                     </div>
                     <div className="space-y-2">
                       {restrictedWorkflows.map(wf => <WorkflowCardItem key={wf.id} wf={wf} restricted />)}

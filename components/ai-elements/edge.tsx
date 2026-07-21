@@ -19,7 +19,7 @@ import {
 
 const EDGE_SELECTED_STROKE = "rgb(167 139 250)";
 const EDGE_SELECTED_GLOW = "rgba(139, 92, 246, 0.60)";
-const EDGE_TEMPORARY_STROKE = "rgb(248 250 252)";
+const EDGE_TEMPORARY_STROKE = "var(--sx-edge-idle)";
 
 type EdgeRunStatus = "error" | "idle" | "running" | "success" | "warning";
 

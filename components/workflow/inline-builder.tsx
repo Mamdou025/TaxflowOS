@@ -98,7 +98,7 @@ export function InlineBuilder() {
   ]);
 
   return (
-    <div className="relative h-full w-full overflow-hidden" style={{ background: '#18181c' }}>
+    <div className="relative h-full w-full overflow-hidden" style={{ background: 'var(--sx-canvas-ground)' }}>
       {/* Teaches the chat about this canvas + publishes the header menu. Render nothing. */}
       <BuilderCopilot />
       <BuilderPageMenu />

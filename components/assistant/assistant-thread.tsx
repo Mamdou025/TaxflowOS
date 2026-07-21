@@ -8,7 +8,7 @@
 // `assistant` object (see useAssistant). Palette: lib/librechat-theme.ts.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { CSSProperties } from 'react';
+import { type CSSProperties, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { X, ChevronDown, Calendar } from 'lucide-react';
@@ -117,7 +117,7 @@ export function AssistantThreadStyles() {
 // homepage hero (centred, in the "InScope" lockup) and the header cluster (top-left)
 // when a chat starts/stops. Pass the SAME layoutId in both places; framer tweens the
 // position + size. `label=''` renders the bare orb (docked); 'Scope' engraves the word.
-function ScopeOrbButton({ size, layoutId, onClick, label = 'Scope' }: { size: number; layoutId?: string; onClick?: () => void; label?: string }) {
+function ScopeOrbButton({ size, layoutId, onClick, label = 'Scope', style }: { size: number; layoutId?: string; onClick?: () => void; label?: string; style?: CSSProperties }) {
   return (
     <motion.button
       layoutId={layoutId}
@@ -126,7 +126,7 @@ function ScopeOrbButton({ size, layoutId, onClick, label = 'Scope' }: { size: nu
       title="Choose client — Scope reads their worksheets & documents"
       whileHover={{ scale: 1.05 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      style={{ position: 'relative', zIndex: 2, flexShrink: 0, display: 'grid', placeItems: 'center', width: size, height: size, borderRadius: '50%', padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}
+      style={{ position: 'relative', zIndex: 2, flexShrink: 0, display: 'grid', placeItems: 'center', width: size, height: size, borderRadius: '50%', padding: 0, border: 'none', background: 'transparent', cursor: 'pointer', ...style }}
     >
       <InScopeNeuMark size={size} animate label={label} />
     </motion.button>
@@ -149,7 +149,7 @@ function ScopeCluster({ compact = false, onOpenWork }: { compact?: boolean; onOp
     <div style={{ display: 'flex', alignItems: 'center', minWidth: 0, maxWidth: '100%' }}>
       {/* The orb — the control. Opens the client switcher. Shares layoutId with the
           homepage hero orb so it FLIES between the two on chat start/stop (focus only). */}
-      <ScopeOrbButton size={orbSize} layoutId={compact ? undefined : 'scope-orb'} onClick={() => openClientSwitcher(true)} label={compact ? '' : 'Scope'} />
+      <ScopeOrbButton size={orbSize} layoutId={compact ? undefined : 'scope-orb'} onClick={() => openClientSwitcher(true)} label="" />
 
       {/* The scope tray — the tags the orb controls (company · year · current workflow).
           It "pulls out" of the orb on reveal: a clip-path wipe from the orb's edge. */}
@@ -171,7 +171,7 @@ function ScopeCluster({ compact = false, onOpenWork }: { compact?: boolean; onOp
           title="Choose client — Scope reads their worksheets & documents"
           style={{ display: 'inline-flex', alignItems: 'center', gap: 7, minWidth: 0, maxWidth: compact ? 150 : 210, height: 32, padding: '0 8px', borderRadius: 9, border: 'none', background: 'transparent', cursor: 'pointer' }}
         >
-          <span style={{ width: 20, height: 20, flexShrink: 0, borderRadius: '50%', display: 'grid', placeItems: 'center', background: 'rgba(139,92,246,0.16)', color: '#7C3AED', fontSize: 9.5, fontWeight: 800 }}>{client.charAt(0)}</span>
+          <span style={{ width: 20, height: 20, flexShrink: 0, borderRadius: '50%', display: 'grid', placeItems: 'center', background: 'var(--sx-accent-soft)', color: 'var(--sx-accent-strong)', fontSize: 9.5, fontWeight: 800 }}>{client.charAt(0)}</span>
           <span style={{ minWidth: 0, fontSize: 13, fontWeight: 650, color: LC.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.replace(/\.$/, '')}</span>
           <ChevronDown size={12} style={{ color: LC.muted, opacity: 0.6, flexShrink: 0 }} />
         </button>
@@ -205,6 +205,14 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
   } = assistant;
   const docked = variant === 'docked';
   const openClientSwitcher = useSetAtom(showClientSwitcherAtom);
+
+  // Time-based hero greeting. Pre-mount (SSR + first client render) both use the
+  // evening bucket so there's no hydration mismatch; after mount we read the real
+  // client hour and the heading re-renders to the correct part of day.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const hour = mounted ? new Date().getHours() : 18;
+  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
   // "Open current state" from the Work menu: reopen each item where it lives.
   const onOpenWork = (item: WorkItem) => {
@@ -272,7 +280,7 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
       )}
 
       <div className="flex-1 min-h-0 flex flex-col">
-        <AsideComposerContext.Provider value={{ search: composerSearch, tools: composerTools, commands: composerCommands, onAttach, agents: <AgentRoster onAssign={addressAgent} />, addressedAgent, onClearAddress: clearAddressedAgent, onAddressedSend: beginAgentThinking }}>
+        <AsideComposerContext.Provider value={{ search: composerSearch, tools: composerTools, commands: composerCommands, onAttach, agents: <AgentRoster onAssign={addressAgent} />, onAssignAgent: addressAgent, addressedAgent, onClearAddress: clearAddressedAgent, onAddressedSend: beginAgentThinking }}>
           <AnimatePresence mode="wait" initial={false}>
             {showHero ? (
               <motion.div
@@ -281,24 +289,28 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
                 style={{ padding: docked ? '10px' : '20px' }}
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
               >
-                {/* "InScope" lockup — the orb (carrying "Scope") preceded by "In", pinned
-                    TOP CENTRE. On chat start the orb flies to the header (shared
-                    layoutId="scope-orb") and the "In" is left behind (fades). Focus only. */}
+                {/* "InScope" lockup — the full wordmark beside the animated dial mark,
+                    pinned TOP CENTRE. On chat start the dial flies to the header (shared
+                    layoutId="scope-orb") and the wordmark is left behind (fades). The dial
+                    is pulled in close to the word (negative margin absorbs its transparent
+                    ring). Focus only; theme-aware (wordmark = LC.title, dial themes itself). */}
                 {!docked && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, paddingTop: 12, flexShrink: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, paddingTop: 12, flexShrink: 0 }}>
                     <motion.span
+                      className="isneu-wordmark"
                       initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }}
                       transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-                      style={{ fontSize: 48, fontWeight: 600, color: LC.title, letterSpacing: '-0.03em' }}
-                    >In</motion.span>
-                    <ScopeOrbButton size={116} layoutId="scope-orb" onClick={() => openClientSwitcher(true)} label="Scope" />
+                      style={{ fontSize: 38, fontWeight: 400, letterSpacing: '-0.02em' }}
+                    >InScope</motion.span>
+                    <ScopeOrbButton size={116} layoutId="scope-orb" onClick={() => openClientSwitcher(true)} label="" />
                   </div>
                 )}
                 {/* Greeting + composer + suggestions — centred in the space below the orb. */}
                 <div className="flex-1 min-h-0 flex items-center justify-center">
                   <div style={{ width: '100%', maxWidth: docked ? 'none' : 720 }}>
                     <div style={{ textAlign: 'center', marginBottom: docked ? 10 : 20 }}>
-                      <div style={{ fontSize: docked ? 20 : 26, fontWeight: 600, color: LC.title, letterSpacing: '-0.02em' }}>How can I help, Sophia?</div>
+                      <div style={{ fontSize: docked ? 22 : 34, fontWeight: 700, color: LC.title, letterSpacing: '-0.02em' }}>{greeting}, Sophia</div>
+                      <div style={{ fontSize: docked ? 13 : 16, fontWeight: 400, color: LC.muted, marginTop: 6 }}>How can I help you drive impact today?</div>
                     </div>
                     <AsideInput onSend={(t) => say(String(t))} />
                     {!docked && (

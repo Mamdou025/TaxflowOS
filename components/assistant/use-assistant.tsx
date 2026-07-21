@@ -45,7 +45,7 @@ import type { ComposerSuggestion } from '@/components/workspace/aside-thread';
 import { getWorkflowConfig, WORKFLOW_CONFIGS, type TemplateConfig } from '@/lib/workflow-runs';
 import { AGENTS, WORKFLOWS, getAgent, agentThinking, type Agent } from '@/lib/agents';
 import { worksheetIntelRegistryAtom, pickIntel, listIntel, createTemplateIntel } from '@/lib/worksheet-intel';
-import { GenUIRender } from './genui-render';
+import { GenUIRender } from '@/features/genui/genui-render';
 import { recordWorkItemAtom, workIdFor, workKeyFromText, type WorkItemType } from '@/lib/work-store';
 import { UI_CONCIERGE, UI_COMPOSER, coworkerForAgent, coworkerForWorkflow } from '@/lib/coworkers';
 import { CoworkerAvatar } from './coworker-avatar';

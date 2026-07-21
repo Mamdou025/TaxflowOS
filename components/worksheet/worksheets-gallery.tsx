@@ -1,10 +1,10 @@
 'use client';
 
 // Presentational worksheets gallery — a card per worksheet. Shared by the
-// standalone /worksheets route (light, inside WorksheetShell) and the Scope
-// inline "Worksheets" hub (dark — it sits on the dark page ground so the chat
-// stays the prominent surface). The caller owns "open" via onOpen and the ground
-// via `dark`.
+// standalone /worksheets route (paints its own light bg, inside WorksheetShell)
+// and the Scope inline "Worksheets" hub (transparent — it sits on the portal's
+// light gray ground so the chat stays the prominent surface). The caller owns
+// "open" via onOpen and whether the gallery is transparent via `dark`.
 
 import { ArrowRight } from 'lucide-react';
 import { WORKSHEETS, type WorksheetMeta } from '@/components/worksheet-shell';
@@ -15,12 +15,14 @@ export function WorksheetsGallery({ subtitle, onOpen, dark = false }: {
   onOpen: (ws: WorksheetMeta) => void;
   dark?: boolean;
 }) {
-  // `dark` = only the BACKGROUND is dark (the portal). The cards are the "content"
-  // and stay in their normal LIGHT rendering — the files are never inverted into
-  // dark mode (a real light/dark theme toggle is a future feature).
+  // `dark` now means only that the gallery is TRANSPARENT so the host portal's
+  // gray ground shows through (the portal is a light neumorphic gray, no longer a
+  // dark canvas). Text + cards render the same light neumorphic way in both modes;
+  // the sole difference is whether the gallery paints its own light bg (standalone
+  // /worksheets) or lets the portal ground show (inline hub).
   const t = dark
-    ? { outer: 'transparent', title: '#ededf0', sub: 'rgba(255,255,255,0.6)',
-        card: NEU.surface, cardBorder: 'none', cardShadow: '0 6px 18px rgba(0,0,0,0.32)', cardHover: '0 12px 28px rgba(0,0,0,0.44)',
+    ? { outer: 'transparent', title: NEU.text, sub: NEU.muted,
+        card: NEU.surface, cardBorder: 'none', cardShadow: NEU.shadowSm, cardHover: NEU.shadowOut,
         iconBg: NEU.bg, iconColor: NEU.accent, label: NEU.text, desc: NEU.muted, arrow: NEU.faint }
     : { outer: NEU.bg, title: NEU.text, sub: NEU.muted,
         card: NEU.surface, cardBorder: 'none', cardShadow: NEU.shadowSm, cardHover: NEU.shadowOut,
@@ -49,7 +51,7 @@ export function WorksheetsGallery({ subtitle, onOpen, dark = false }: {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ width: 40, height: 40, borderRadius: 12, background: t.iconBg, boxShadow: dark ? 'none' : NEU.shadowSm, display: 'grid', placeItems: 'center', color: t.iconColor }}>
+                <span style={{ width: 40, height: 40, borderRadius: 12, background: t.iconBg, boxShadow: NEU.shadowSm, display: 'grid', placeItems: 'center', color: t.iconColor }}>
                   <ws.Icon size={19} />
                 </span>
                 <ArrowRight size={16} style={{ color: t.arrow }} />

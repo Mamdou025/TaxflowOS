@@ -199,6 +199,18 @@
   }
 }
 
+/* React Flow grid — themed via --sx-canvas-grid. The <Background color> prop is
+   set as an SVG stroke/fill attribute where var() may not resolve, so pin it here
+   (CSS wins over the presentation attribute). Lines use stroke; dots use fill. */
+.react-flow__background-pattern.lines,
+.react-flow__background-pattern path {
+  stroke: var(--sx-canvas-grid) !important;
+}
+.react-flow__background-pattern.dots,
+.react-flow__background-pattern circle {
+  fill: var(--sx-canvas-grid) !important;
+}
+
 /* React Flow attribution styling */
 .react-flow__attribution {
   background: transparent !important;
@@ -402,4 +414,197 @@
 .dark .neu-menu [data-state="open"][data-slot="dropdown-menu-sub-trigger"],
 .dark .neu-menu [data-state="open"][data-slot="context-menu-sub-trigger"] {
   background: oklch(0.11 0.010 250) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   THEME DESIGN TOKENS — the single source of truth for the light/dark switch.
+
+   The neumorphic redesign hardcoded light hex/rgba in JS palettes (NEU, LC) and
+   inline styles, so it could not flip with the `.dark` class. These tokens fix
+   that: every themeable surface now reads `var(--sx-*)`, whose `:root` value is
+   the EXACT current light value (so Light mode is unchanged) and whose `.dark`
+   value is the dark counterpart. Because these are consumed in inline `style={}`
+   and Tailwind arbitrary values, flipping `.dark` on <html> re-skins the app with
+   no React re-render. Toggle lives in the sidebars (next-themes).
+   ───────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* Page / canvas grounds (recessed spaces behind the neumorphic panels) */
+  --sx-ground: #c9c9d4;          /* grid pages + builder board + chat portal ground */
+  --sx-ground-outer: #DAE0EA;    /* exterior canvas behind the Scope panels */
+  --sx-ground-run: #EEF0F5;      /* /run/* light neumorphic pages */
+  --sx-nav-bar: #eaeaef;         /* floating top-nav bar */
+  --sx-nav-track: #e6e7ec;       /* nav pill track */
+  --sx-nav-pill: #f4f5f8;        /* active nav pill */
+
+  /* Neumorphic surfaces (NEU + LC base) */
+  --sx-surface: #F4F5F8;         /* NEU.bg / LC.bg / LC.sidebar — the neu ground */
+  --sx-raised: #F8F9FB;          /* NEU.surface / LC.surface — raised elements */
+  --sx-raised-hover: #E9ECF2;    /* LC.surfaceHover */
+  --sx-panel: #F1F2F6;           /* LC.panel — inline page panel backdrop */
+  --sx-card: #ffffff;            /* opaque cards (dashboard, worksheet frame, modal) */
+
+  /* Ink */
+  --sx-ink: #202735;             /* NEU/LC primary text */
+  --sx-body: #3A4150;            /* LC.body — softer body text */
+  --sx-muted: #7C8493;           /* NEU/LC muted */
+  --sx-faint: #A8AEBA;           /* NEU/LC faint */
+
+  /* Accent (purple) */
+  --sx-accent: #6B21A8;
+  --sx-accent-strong: #7C3AED;
+  --sx-accent-soft: rgba(107, 33, 168, 0.10);   /* active-row / chip tint */
+  --sx-accent-ink: #ffffff;                      /* text on a filled accent button */
+
+  /* Hairlines / dividers */
+  --sx-hairline: rgba(150, 156, 172, 0.22);      /* LC.border */
+  --sx-hairline-subtle: rgba(150, 156, 172, 0.13); /* LC.borderSubtle */
+  --sx-divider: rgba(158, 158, 178, 0.28);
+  --sx-hover-tint: rgba(158, 158, 178, 0.12);    /* neu-row hover */
+  --sx-portal-strip: rgba(255, 255, 255, 0.35);  /* recessed page tab strip */
+  --sx-scrim: rgba(244, 244, 246, 0.7);          /* modal backdrop */
+
+  /* Neumorphic dual shadows — NEU sizing */
+  --sx-shadow-out: 8px 8px 18px rgba(158, 158, 178, 0.34), -8px -8px 18px rgba(255, 255, 255, 0.82);
+  --sx-shadow-sm: 4px 4px 10px rgba(158, 158, 178, 0.30), -4px -4px 10px rgba(255, 255, 255, 0.78);
+  --sx-shadow-in: inset 4px 4px 9px rgba(158, 158, 178, 0.30), inset -4px -4px 9px rgba(255, 255, 255, 0.78);
+  /* LC sizing (chat bubbles / composer) */
+  --sx-chat-shadow-out: 6px 6px 15px rgba(158, 158, 178, 0.32), -6px -6px 15px rgba(255, 255, 255, 0.85);
+  --sx-chat-shadow-sm: 3px 3px 8px rgba(158, 158, 178, 0.26), -3px -3px 8px rgba(255, 255, 255, 0.80);
+  --sx-chat-shadow-in: inset 3px 3px 7px rgba(158, 158, 178, 0.26), inset -3px -3px 7px rgba(255, 255, 255, 0.78);
+  /* Opaque drop shadows (cards / floating panels) */
+  --sx-drop-card: 0 6px 20px rgba(158, 158, 178, 0.35);
+  --sx-drop-panel: 0 18px 44px rgba(0, 0, 0, 0.18);
+  /* Floating top-nav bar elevation (soft lift + white rim highlights) */
+  --sx-nav-shadow: 0 3px 12px rgba(158, 158, 178, 0.30), 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+
+  /* Scope keystone + orb badge (the nav centerpiece) */
+  --sx-orb-badge: linear-gradient(145deg, #F0F4FA 0%, #DCE3EE 100%);
+  --sx-orb-badge-shadow: 1.5px 1.5px 4px rgba(166, 178, 200, 0.5), -1.5px -1.5px 4px rgba(255, 255, 255, 0.95);
+  --sx-orb-disc-shadow: 3px 3px 7px rgba(166, 178, 200, 0.5), -2px -2px 6px rgba(255, 255, 255, 0.95);
+  --sx-orb-disc-shadow-active: 0 0 0 2px rgba(109, 40, 217, 0.5), 3px 3px 8px rgba(109, 40, 217, 0.24), -2px -2px 6px rgba(255, 255, 255, 0.95);
+  --sx-keystone-shadow: 0 8px 20px rgba(166, 178, 200, 0.42), inset 0 1.5px 0 rgba(255, 255, 255, 0.92);
+  --sx-keystone-shadow-active: 0 7px 20px rgba(109, 40, 217, 0.2), inset 0 1.5px 0 rgba(255, 255, 255, 0.92);
+
+  /* Workflow canvas */
+  --sx-canvas-ground: #c9c9d4;              /* the builder board */
+  --sx-canvas-grid: rgba(24, 24, 27, 0.08); /* hairline grid on the board */
+  --sx-node-chip: #141418;                  /* family-node fill (dark chip on light board) */
+  --sx-node-chip-2: #1a1a20;                /* visual-level badge */
+  --sx-node-chip-3: #25252f;                /* visual-level icon shell */
+  --sx-node-title: #202735;                 /* node title ink */
+  --sx-node-title-halo: 0 1px 2px rgba(255, 255, 255, 0.9);
+  --sx-node-drop: drop-shadow(0 3px 9px rgba(30, 30, 45, 0.20));
+  --sx-edge-idle: rgb(71 85 105);           /* idle / temporary edge stroke */
+  --sx-legend-bg: rgba(26, 26, 32, 0.88);   /* canvas legend (dark island, both themes) */
+}
+
+.dark {
+  --sx-ground: #101014;
+  --sx-ground-outer: #0b0b0e;
+  --sx-ground-run: #101014;
+  --sx-nav-bar: #17171c;
+  --sx-nav-track: #101014;
+  --sx-nav-pill: #23232b;
+
+  --sx-surface: #1a1a20;
+  --sx-raised: #22222b;
+  --sx-raised-hover: #2a2a34;
+  --sx-panel: #161620;
+  --sx-card: #1c1c24;
+
+  --sx-ink: #e7e8ec;
+  --sx-body: #c3c6cf;
+  --sx-muted: #8b93a3;
+  --sx-faint: #59606e;
+
+  --sx-accent: #b590ff;
+  --sx-accent-strong: #c4a6ff;
+  --sx-accent-soft: rgba(181, 144, 255, 0.16);
+  --sx-accent-ink: #17131f;
+
+  --sx-hairline: rgba(255, 255, 255, 0.09);
+  --sx-hairline-subtle: rgba(255, 255, 255, 0.05);
+  --sx-divider: rgba(255, 255, 255, 0.08);
+  --sx-hover-tint: rgba(255, 255, 255, 0.06);
+  --sx-portal-strip: rgba(255, 255, 255, 0.03);
+  --sx-scrim: rgba(6, 6, 9, 0.62);
+
+  --sx-shadow-out: 8px 8px 18px rgba(0, 0, 0, 0.55), -8px -8px 18px rgba(58, 66, 92, 0.30);
+  --sx-shadow-sm: 4px 4px 10px rgba(0, 0, 0, 0.50), -4px -4px 10px rgba(58, 66, 92, 0.26);
+  --sx-shadow-in: inset 4px 4px 9px rgba(0, 0, 0, 0.55), inset -4px -4px 9px rgba(58, 66, 92, 0.24);
+  --sx-chat-shadow-out: 6px 6px 15px rgba(0, 0, 0, 0.55), -6px -6px 15px rgba(58, 66, 92, 0.24);
+  --sx-chat-shadow-sm: 3px 3px 8px rgba(0, 0, 0, 0.50), -3px -3px 8px rgba(58, 66, 92, 0.20);
+  --sx-chat-shadow-in: inset 3px 3px 7px rgba(0, 0, 0, 0.55), inset -3px -3px 7px rgba(58, 66, 92, 0.20);
+  --sx-drop-card: 0 6px 20px rgba(0, 0, 0, 0.55);
+  --sx-drop-panel: 0 18px 44px rgba(0, 0, 0, 0.62);
+  --sx-nav-shadow: 0 3px 12px rgba(0, 0, 0, 0.55), 0 1px 0 rgba(255, 255, 255, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  --sx-orb-badge: linear-gradient(145deg, #2b2b36 0%, #1b1b23 100%);
+  --sx-orb-badge-shadow: 1.5px 1.5px 4px rgba(0, 0, 0, 0.55), -1.5px -1.5px 4px rgba(255, 255, 255, 0.05);
+  --sx-orb-disc-shadow: 3px 3px 7px rgba(0, 0, 0, 0.55), -2px -2px 6px rgba(255, 255, 255, 0.05);
+  --sx-orb-disc-shadow-active: 0 0 0 2px rgba(181, 144, 255, 0.55), 3px 3px 8px rgba(0, 0, 0, 0.5), -2px -2px 6px rgba(255, 255, 255, 0.05);
+  --sx-keystone-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), inset 0 1.5px 0 rgba(255, 255, 255, 0.06);
+  --sx-keystone-shadow-active: 0 7px 20px rgba(181, 144, 255, 0.28), inset 0 1.5px 0 rgba(255, 255, 255, 0.08);
+
+  --sx-canvas-ground: #0c0c10;
+  --sx-canvas-grid: rgba(255, 255, 255, 0.05);
+  --sx-node-chip: #23232d;
+  --sx-node-chip-2: #20202a;
+  --sx-node-chip-3: #2b2b38;
+  --sx-node-title: #e7e8ec;
+  --sx-node-title-halo: 0 1px 2px rgba(0, 0, 0, 0.65);
+  --sx-node-drop: drop-shadow(0 3px 9px rgba(0, 0, 0, 0.55));
+  --sx-edge-idle: rgba(180, 188, 208, 0.55);
+  --sx-legend-bg: rgba(30, 30, 38, 0.92);
+}
+
+/* InScope dial mark (components/inscope-neu-mark.tsx) — DARK dial palette (icon
+   v14-dark). The component carries the LIGHT values as SVG attributes; these rules
+   swap the disc gradients, neumorphic highlight/shadow tints, glow strength, and the
+   engraved label for dark mode. Set via CSS because stop-color / flood-color / fill
+   resolve as CSS properties (they don't when a var() is put in the raw attribute).
+   The animation (rotating comet spirals) is unaffected and runs in both themes. */
+.dark .isneu-bg-0 { stop-color: #232531; }
+.dark .isneu-bg-1 { stop-color: #15161e; }
+.dark .isneu-disc-0 { stop-color: #2b2d3c; }
+.dark .isneu-disc-1 { stop-color: #1c1e29; }
+.dark .isneu-inner-0 { stop-color: #20222e; }
+.dark .isneu-inner-1 { stop-color: #272935; }
+.dark .isneu-nb-hl { flood-color: #414459; flood-opacity: 0.9; }
+.dark .isneu-nb-sh { flood-color: #000000; flood-opacity: 0.6; }
+.dark .isneu-nm-hl { flood-color: #414459; flood-opacity: 0.85; }
+.dark .isneu-nm-sh { flood-color: #000000; flood-opacity: 0.55; }
+.dark .isneu-ns-hl { flood-color: #414459; flood-opacity: 0.85; }
+.dark .isneu-ns-sh { flood-color: #000000; flood-opacity: 0.5; }
+.dark .isneu-in-sh { flood-color: #000000; flood-opacity: 0.55; }
+.dark .isneu-in-hl { flood-color: #454866; flood-opacity: 0.95; }
+.dark .isneu-glow-o { flood-opacity: 0.7; }
+.dark .isneu-glow-p { flood-opacity: 0.7; }
+.dark .isneu-lbl-face { fill: #cfd4e2; }
+.dark .isneu-lbl-hi { fill: #0a0b12; fill-opacity: 0.6; }
+
+/* Neumorphic "InScope" wordmark (homepage hero, assistant-thread.tsx) — the letters
+   are the SAME surface material as the dial: a near-surface face whose form comes
+   from a built-in relief (a highlight top-left + a shadow bottom-right, in the same
+   light direction and tones as the dial's neu filters), so the word reads as extruded
+   from the surface and blends with the icon's relief rather than sitting on it as
+   flat type. Tune the shadow alphas / face for more or less relief. */
+.isneu-wordmark {
+  /* Light: a readable dark-slate face. A SLIM highlight line (0.5px, soft) crisps the
+     top-left edge, and a soft blurred highlight + shadow wrap the letters as the
+     neumorphic relief — same light direction/tones as the dial. */
+  color: #3d4658;
+  text-shadow:
+    -0.5px -0.5px 0.5px rgba(255, 255, 255, 0.8),
+    -2px -2px 5px rgba(255, 255, 255, 0.85),
+    2.5px 3px 6px rgba(146, 151, 178, 0.5);
+}
+.dark .isneu-wordmark {
+  /* Dark: a readable light-slate face; slim dark edge line + soft bluish highlight and
+     black shadow as the relief. */
+  color: #d2d8e6;
+  text-shadow:
+    -0.5px -0.5px 0.5px rgba(18, 20, 28, 0.6),
+    -2px -2px 5px rgba(74, 78, 102, 0.6),
+    2.5px 3px 6px rgba(0, 0, 0, 0.72);
 }

@@ -74,40 +74,43 @@ export function InScopeNeuMark({
       aria-hidden
     >
       <defs>
+        {/* Colors carry the LIGHT values as attributes; the `isneu-*` classes let a
+            `.dark` rule (globals.css) swap them to the dark dial palette. stop-color /
+            flood-color resolve when set via CSS, so the mark flips with the theme. */}
         <linearGradient id={u('bg')} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#f3f5fb" />
-          <stop offset="1" stopColor="#e3e6f1" />
+          <stop className="isneu-bg-0" offset="0" stopColor="#f3f5fb" />
+          <stop className="isneu-bg-1" offset="1" stopColor="#e3e6f1" />
         </linearGradient>
         <linearGradient id={u('disc')} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#fbfcff" />
-          <stop offset="1" stopColor="#e4e7f2" />
+          <stop className="isneu-disc-0" offset="0" stopColor="#fbfcff" />
+          <stop className="isneu-disc-1" offset="1" stopColor="#e4e7f2" />
         </linearGradient>
         <linearGradient id={u('discInner')} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#f3f5fb" />
-          <stop offset="1" stopColor="#fafbfe" />
+          <stop className="isneu-inner-0" offset="0" stopColor="#f3f5fb" />
+          <stop className="isneu-inner-1" offset="1" stopColor="#fafbfe" />
         </linearGradient>
         <filter id={u('neuBig')} x="-60%" y="-60%" width="220%" height="220%">
-          <feDropShadow dx="-7" dy="-7" stdDeviation="10" floodColor="#ffffff" floodOpacity="0.95" />
-          <feDropShadow dx="8" dy="10" stdDeviation="14" floodColor="#a3a8c6" floodOpacity="0.5" />
+          <feDropShadow className="isneu-nb-hl" dx="-7" dy="-7" stdDeviation="10" floodColor="#ffffff" floodOpacity="0.95" />
+          <feDropShadow className="isneu-nb-sh" dx="8" dy="10" stdDeviation="14" floodColor="#a3a8c6" floodOpacity="0.5" />
         </filter>
         <filter id={u('neuMid')} x="-60%" y="-60%" width="220%" height="220%">
-          <feDropShadow dx="-4" dy="-4" stdDeviation="6" floodColor="#ffffff" floodOpacity="0.9" />
-          <feDropShadow dx="4.5" dy="6" stdDeviation="8" floodColor="#a8adc9" floodOpacity="0.45" />
+          <feDropShadow className="isneu-nm-hl" dx="-4" dy="-4" stdDeviation="6" floodColor="#ffffff" floodOpacity="0.9" />
+          <feDropShadow className="isneu-nm-sh" dx="4.5" dy="6" stdDeviation="8" floodColor="#a8adc9" floodOpacity="0.45" />
         </filter>
         <filter id={u('neuSmall')} x="-60%" y="-60%" width="220%" height="220%">
-          <feDropShadow dx="-2.5" dy="-2.5" stdDeviation="3.5" floodColor="#ffffff" floodOpacity="0.9" />
-          <feDropShadow dx="3" dy="4" stdDeviation="5" floodColor="#a8adc9" floodOpacity="0.4" />
+          <feDropShadow className="isneu-ns-hl" dx="-2.5" dy="-2.5" stdDeviation="3.5" floodColor="#ffffff" floodOpacity="0.9" />
+          <feDropShadow className="isneu-ns-sh" dx="3" dy="4" stdDeviation="5" floodColor="#a8adc9" floodOpacity="0.4" />
         </filter>
         <filter id={u('insetBand')} x="-40%" y="-40%" width="180%" height="180%">
           <feOffset dx="1.2" dy="1.5" />
           <feGaussianBlur stdDeviation="1.4" result="ob" />
           <feComposite in="SourceGraphic" in2="ob" operator="out" result="cut" />
-          <feFlood floodColor="#979cba" floodOpacity="0.4" />
+          <feFlood className="isneu-in-sh" floodColor="#979cba" floodOpacity="0.4" />
           <feComposite in2="cut" operator="in" result="innersh" />
           <feOffset in="SourceGraphic" dx="-1" dy="-1.3" />
           <feGaussianBlur stdDeviation="1.2" result="ob2" />
           <feComposite in="SourceGraphic" in2="ob2" operator="out" result="cut2" />
-          <feFlood floodColor="#ffffff" floodOpacity="1" />
+          <feFlood className="isneu-in-hl" floodColor="#ffffff" floodOpacity="1" />
           <feComposite in2="cut2" operator="in" result="innerhl" />
           <feMerge>
             <feMergeNode in="SourceGraphic" />
@@ -116,10 +119,10 @@ export function InScopeNeuMark({
           </feMerge>
         </filter>
         <filter id={u('glowO')} x="-120%" y="-120%" width="340%" height="340%">
-          <feDropShadow dx="0" dy="0" stdDeviation="2.2" floodColor="#f97316" floodOpacity="0.55" />
+          <feDropShadow className="isneu-glow-o" dx="0" dy="0" stdDeviation="2.2" floodColor="#f97316" floodOpacity="0.55" />
         </filter>
         <filter id={u('glowP')} x="-120%" y="-120%" width="340%" height="340%">
-          <feDropShadow dx="0" dy="0" stdDeviation="2.2" floodColor="#7c3aed" floodOpacity="0.55" />
+          <feDropShadow className="isneu-glow-p" dx="0" dy="0" stdDeviation="2.2" floodColor="#7c3aed" floodOpacity="0.55" />
         </filter>
       </defs>
 
@@ -158,8 +161,8 @@ export function InScopeNeuMark({
         // (light source is top-left, matching the neumorphic shadows) + the darker
         // face on top — so "Scope" reads as pressed into the surface, and legibly.
         <g style={{ pointerEvents: 'none' }}>
-          <text x="100.6" y="101.5" textAnchor="middle" dominantBaseline="central" fill="#ffffff" fillOpacity="0.8" fontSize="30" fontWeight="550" style={{ letterSpacing: '0.4px', fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif' }}>{label}</text>
-          <text x="100" y="100" textAnchor="middle" dominantBaseline="central" fill="#3E4657" fontSize="30" fontWeight="550" style={{ letterSpacing: '0.4px', fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif' }}>{label}</text>
+          <text className="isneu-lbl-hi" x="100.6" y="101.5" textAnchor="middle" dominantBaseline="central" fill="#ffffff" fillOpacity="0.8" fontSize="30" fontWeight="550" style={{ letterSpacing: '0.4px', fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif' }}>{label}</text>
+          <text className="isneu-lbl-face" x="100" y="100" textAnchor="middle" dominantBaseline="central" fill="#3E4657" fontSize="30" fontWeight="550" style={{ letterSpacing: '0.4px', fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif' }}>{label}</text>
         </g>
       )}
     </svg>

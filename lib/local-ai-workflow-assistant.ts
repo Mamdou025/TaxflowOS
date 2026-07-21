@@ -368,7 +368,7 @@ function answerLogicFeedsProtected(context: AskContext) {
     context.selectedBlockId
   );
   const protectedBlocks =
-    isGovernedValueBlock(selectedBlock)
+    isGovernedValueBlock(selectedBlock) && selectedBlock
       ? [selectedBlock]
       : getBlocksByFamily(context.definition, "Protected");
   const blockMap = getBlockMap(context.definition);
@@ -403,7 +403,7 @@ function answerOutputsForProtected(context: AskContext) {
     context.selectedBlockId
   );
   const protectedBlocks =
-    isGovernedValueBlock(selectedBlock)
+    isGovernedValueBlock(selectedBlock) && selectedBlock
       ? [selectedBlock]
       : getBlocksByFamily(context.definition, "Protected");
   const blockMap = getBlockMap(context.definition);

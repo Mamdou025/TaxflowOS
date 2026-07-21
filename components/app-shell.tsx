@@ -29,22 +29,19 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Fixed canvas layer — only active on builder/workflow pages */}
       <PersistentCanvas />
 
-      {/* Fixed grid background — same dark-canvas grid as the builder, finer
-          cells, running full-screen behind the floating navbar. */}
+      {/* Fixed page background — a flat darker gray (no grid) that reads as the
+          recessed space behind the neumorphic menus. Tuned to the neumorphic
+          shadow tone (rgba(158,158,178)), a shade darker than the #eaeaef
+          surface. Chat/Scope keep their own dark-grid canvas. */}
       {isGridPage && (
         <div
           className="fixed inset-0"
-          style={{
-            zIndex: 0,
-            backgroundColor: '#18181c',
-            backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px)',
-            backgroundSize: '15px 15px',
-          }}
+          style={{ zIndex: 0, backgroundColor: 'var(--sx-ground)' }}
         />
       )}
 
       {/* Full-viewport light background for neumorphic pages (behind the nav) */}
-      {isLightPage && <div className="fixed inset-0" style={{ zIndex: 0, background: '#EEF0F5' }} />}
+      {isLightPage && <div className="fixed inset-0" style={{ zIndex: 0, background: 'var(--sx-ground-run)' }} />}
 
       {/* Main layout stack — pointer-events-none on canvas pages so events reach PersistentCanvas */}
       <div

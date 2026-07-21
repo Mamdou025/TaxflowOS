@@ -65,49 +65,49 @@ const FAMILY_NODE_STYLES: Record<BlockFamily, FamilyNodeStyle> = {
     captionClassName: "w-44",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
-      "size-24 overflow-visible border-0 bg-transparent p-0 shadow-none",
+      "size-24 overflow-visible border-0 bg-transparent! p-0 shadow-none",
   },
   "AI / Agent": {
     badgeClassName: "top-1 border-white/15 bg-(--node-badge-bg) text-fuchsia-300",
     captionClassName: "w-44",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
-      "size-28 overflow-visible rounded-full border-0 bg-transparent p-0 shadow-none",
+      "size-28 overflow-visible rounded-full border-0 bg-transparent! p-0 shadow-none",
   },
   Logic: {
     badgeClassName: "top-1 border-white/15 bg-(--node-badge-bg) text-emerald-300",
     captionClassName: "w-44",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
-      "size-24 overflow-visible rounded-sm border-0 bg-transparent p-0 shadow-none",
+      "size-24 overflow-visible rounded-sm border-0 bg-transparent! p-0 shadow-none",
   },
   Output: {
     badgeClassName: "top-1 border-white/15 bg-(--node-badge-bg) text-indigo-300",
     captionClassName: "w-48",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
-      "h-28 w-24 overflow-visible rounded-md border-0 bg-transparent p-0 shadow-none",
+      "h-28 w-24 overflow-visible rounded-md border-0 bg-transparent! p-0 shadow-none",
   },
   Field: {
     badgeClassName: "top-1 border-white/15 bg-(--node-badge-bg) text-violet-300",
     captionClassName: "w-64",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
-      "h-20 w-56 overflow-visible rounded-sm border-0 bg-transparent p-0 shadow-none",
+      "h-20 w-56 overflow-visible rounded-sm border-0 bg-transparent! p-0 shadow-none",
   },
   "Review / Validation": {
     badgeClassName: "top-1 border-white/15 bg-(--node-badge-bg) text-amber-300",
     captionClassName: "w-48",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
-      "size-24 overflow-visible rounded-none border-0 bg-transparent p-0 shadow-none",
+      "size-24 overflow-visible rounded-none border-0 bg-transparent! p-0 shadow-none",
   },
   Source: {
     badgeClassName: "top-1 border-white/15 bg-(--node-badge-bg) text-sky-300",
     captionClassName: "w-48",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
-      "h-28 w-28 overflow-visible rounded-md border-0 bg-transparent p-0 shadow-none",
+      "h-28 w-28 overflow-visible rounded-md border-0 bg-transparent! p-0 shadow-none",
   },
   // Governed-value blocks (family "Protected"); mirrors Output geometry with a
   // locked/rose accent. Reached when a block carries family "Protected" directly.
@@ -116,20 +116,24 @@ const FAMILY_NODE_STYLES: Record<BlockFamily, FamilyNodeStyle> = {
     captionClassName: "w-48",
     contentClassName: "h-full w-full p-0",
     nodeClassName:
-      "h-28 w-24 overflow-visible rounded-md border-0 bg-transparent p-0 shadow-none",
+      "h-28 w-24 overflow-visible rounded-md border-0 bg-transparent! p-0 shadow-none",
   },
 };
 
-// Shared card design tokens — dark card on dark canvas
-const NEU_BG = '#25252f';
+// Shared card design tokens — chip fill flips with the theme (dark chip on the
+// light gray board in light mode; a raised slate chip on the dark board in dark).
+const NEU_BG = 'var(--sx-node-chip)';
 const NEU_BORDER = 'rgba(255,255,255,0.09)';
 const NEU_DECOR = 'rgba(255,255,255,0.07)';
-// Clean elevation shadow — no white glow
+// Soft elevation shadow, tuned for the light gray canvas — the heavy near-black
+// shadow (built for the old dark canvas) pooled onto the caption zone right below
+// each node and drowned the title. Lighter + a cool tone keeps the node elevated
+// without darkening the label area.
 const NEU_BOX_SHADOW =
-  '0 2px 8px rgba(0,0,0,0.42), 0 6px 20px rgba(0,0,0,0.28)';
+  '0 2px 6px rgba(30,30,45,0.16), 0 6px 16px rgba(30,30,45,0.10)';
 // Filter-based elevation for clip-path shapes (hex, diamond)
 const NEU_FILTER =
-  'drop-shadow(0 2px 6px rgba(0,0,0,0.48)) drop-shadow(0 8px 18px rgba(0,0,0,0.30))';
+  'drop-shadow(0 2px 5px rgba(30,30,45,0.18)) drop-shadow(0 6px 13px rgba(30,30,45,0.11))';
 
 function getFamilyFromRole(role: WorkflowNodeData["visualRole"]): CanvasFamily {
   if (role === "trigger") {
