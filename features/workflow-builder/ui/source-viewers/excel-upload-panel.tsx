@@ -26,7 +26,7 @@ import {
   getExcelWorkbookFromConfig,
   hasExcelSourceEvidence,
   parseExcelWorkbookFile,
-} from "./excel-utils";
+} from "@/shared/workflow-engine/parsing/excel-utils";
 
 type ExcelUploadPanelProps = {
   block: WorkflowBlock;

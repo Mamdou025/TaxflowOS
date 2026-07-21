@@ -34,7 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
-import { EdgeInspector } from "@/components/workflow/edge-inspector";
+import { EdgeInspector } from "@/features/workflow-builder/ui/edge-inspector";
 import { api } from "@/lib/api-client";
 import { integrationsAtom } from "@/lib/integrations-store";
 import {

@@ -15,7 +15,7 @@ import {
   formatRelationshipType,
   getEdgeLabelClassName,
   getEdgeStatusClasses,
-} from "@/components/workflow/utils/edge-relationships";
+} from "@/features/workflow-builder/ui/utils/edge-relationships";
 
 const EDGE_SELECTED_STROKE = "rgb(167 139 250)";
 const EDGE_SELECTED_GLOW = "rgba(139, 92, 246, 0.60)";

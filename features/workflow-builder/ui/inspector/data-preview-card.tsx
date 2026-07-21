@@ -9,14 +9,14 @@ import {
   getDefaultView,
   getItemCount,
   getPreviewText,
-} from "@/components/workflow/data-viewer/data-preview-utils";
-import { DATA_VIEW_LABELS as DATA_VIEW_LABELS_INTERNAL } from "@/components/workflow/data-viewer/data-view-tabs";
-import { DataDisplayViewer as DataDisplayViewerInternal } from "@/components/workflow/data-viewer/data-viewer";
+} from "@/features/workflow-builder/ui/data-viewer/data-preview-utils";
+import { DATA_VIEW_LABELS as DATA_VIEW_LABELS_INTERNAL } from "@/features/workflow-builder/ui/data-viewer/data-view-tabs";
+import { DataDisplayViewer as DataDisplayViewerInternal } from "@/features/workflow-builder/ui/data-viewer/data-viewer";
 import type {
   DataConsumer,
   DataDisplayView as LocalDataDisplayView,
   DataStatus as LocalDataStatus,
-} from "@/components/workflow/data-viewer/types";
+} from "@/features/workflow-builder/ui/data-viewer/types";
 import { cn } from "@/lib/utils";
 
 export type DataPreviewCardProps = {

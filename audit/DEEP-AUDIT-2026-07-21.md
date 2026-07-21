@@ -25,7 +25,7 @@ See [`docs/REPO-MAP.md`](../docs/REPO-MAP.md) for entry points and the full "whe
 
 | Mini-app | Owns | Entry point |
 |---|---|---|
-| **Workflow Builder** | `components/workflow/**`, `components/overlays/**`, `components/ai-elements/**` (UI); `lib/local-*`, `lib/workflow-*`, `src/domain`, `src/state` (engine); `backend/**` (execution) | `components/workflow/workflow-canvas.tsx` |
+| **Workflow Builder** | `features/workflow-builder/ui/**`, `components/overlays/**`, `features/workflow-builder/ui/ai-elements/**` (UI); `lib/local-*`, `lib/workflow-*`, `src/domain`, `src/state` (engine); `backend/**` (execution) | `features/workflow-builder/ui/workflow-canvas.tsx` |
 | **Tax Worksheets** | `components/worksheet/**`, `lib/worksheet-intel/**` (typed) **+ `tax-ui/**` island** (untyped) | `shared/stores/resource-registry.tsx` |
 | **Assistant / Chat** | `lib/assistant-runtime/**`, `components/assistant/**`, `components/workspace/**` | `app/api/copilotkit/route.ts` · `components/assistant/use-assistant.tsx` |
 | **GenUI / OpenUI** | `features/genui/**` *(relocated Phase 1, 2026-07-21)* | `features/genui/library.tsx` |
@@ -44,8 +44,8 @@ Full table in [`docs/REPO-MAP.md` §4](../docs/REPO-MAP.md). The refactor-priori
 |---|---:|---|---|
 | `shared/workflow-engine/local-tool-registry.ts` | 5,906 | ~200 helpers + 40 inline tool defs + 3 near-duplicate evidence builders in one module | `lib/tool-registry/{types,helpers/*,roles,evidence/*,tools/*}` |
 | `shared/workflow-engine/local-fiscal-workflow.ts` | 5,854 | domain barrel + catalog data + 8 factories + persistence + fixtures; **54 importers** | delete the re-export barrel (point 54 sites at `src/domain`), then split catalog/edges/persistence/templates |
-| `components/workflow/workflow-toolbar.tsx` | 3,119 | embeds a **client-side execution engine** + validators + 12 buttons in a toolbar | executor → `shared/workflow-engine/runtime/workflow-runs`, validators → `lib/workflow/validation.ts`, buttons → `toolbar/*` |
-| `components/workflow/node-config-panel.tsx` | 2,225 | one ~1,850-line `PanelInner` React function | per-block-type sections under `node-config/sections/*` |
+| `features/workflow-builder/ui/workflow-toolbar.tsx` | 3,119 | embeds a **client-side execution engine** + validators + 12 buttons in a toolbar | executor → `shared/workflow-engine/runtime/workflow-runs`, validators → `lib/workflow/validation.ts`, buttons → `toolbar/*` |
+| `features/workflow-builder/ui/node-config-panel.tsx` | 2,225 | one ~1,850-line `PanelInner` React function | per-block-type sections under `node-config/sections/*` |
 | `components/overlays/configuration-overlay.tsx` + `inspector/block-inspector.tsx` + `workspace/block-data-flow-pane.tsx` | ~5,900 | **~500 lines of helpers copy-pasted across all three** | shared `block-kinds.ts` + `block-outputs.ts` |
 | `shared/workflow-engine/codegen/workflow-codegen.ts` | 1,316 | one ~1,268-line `generateWorkflowCode` function | per-block-type emitters under `codegen/emitters/*` |
 | `backend/blocks/logic/hierarchy-aggregator/run.ts` + `calculation-engine/run.ts` | 2,210 | **formula tokenizer/RPN/evaluator duplicated verbatim** across both | extract `backend/blocks/logic/shared/formula-expression.ts` |
@@ -63,7 +63,7 @@ Full table in [`docs/REPO-MAP.md` §4](../docs/REPO-MAP.md). The refactor-priori
 
 | File(s) | LOC | Note |
 |---|---:|---|
-| `components/workflow/workflow-studio-shell.tsx` | 1,426 | largest dead file; superseded by `ChatWorkspace` |
+| `features/workflow-builder/ui/workflow-studio-shell.tsx` | 1,426 | largest dead file; superseded by `ChatWorkspace` |
 | `tax-ui/pages/FapiWorksheet.tsx` | 1,076 | dead duplicate of live `components/worksheet/fapi-worksheet.tsx` (432) |
 | `lib/integrations/vercel.ts` | 671 | full Vercel SDK wrapper, zero importers |
 | `tax-ui/components/OrbitalStage.tsx` | 658 | old skeuomorphic home surface |
@@ -73,7 +73,7 @@ Full table in [`docs/REPO-MAP.md` §4](../docs/REPO-MAP.md). The refactor-priori
 | assistant-runtime dead barrels: `lib/assistant-runtime/{index,errors}.ts`, `routing/intent-router.ts` | ~211 | superseded by enforced `routing/classify.ts` |
 | `backend/runtime/{runner,validation}.ts` | ~131 | unreferenced wrappers |
 | `tax-ui/pages/{Home,NotFound}.tsx`, `tax-ui/components/{Map,ManusDialog,ErrorBoundary}.tsx`, `tax-ui/hooks/useComposition.ts` | ~450 | wouter-era island leftovers |
-| `components/workflow/{worksheet-page-menu.tsx, inspector/mock-runs.ts, config/condition-config.tsx}`, `components/overlays/alert-overlay.tsx` | ~487 | orphaned builder pieces (`alert-overlay` is reusable — keep if wanted) |
+| `features/workflow-builder/ui/{worksheet-page-menu.tsx, inspector/mock-runs.ts, config/condition-config.tsx}`, `components/overlays/alert-overlay.tsx` | ~487 | orphaned builder pieces (`alert-overlay` is reusable — keep if wanted) |
 | **3 orphaned demo routes**: `app/copilot-test/`, `app/genui-lab/`, `app/viewer/` | — | reachable only by typing the URL; `copilot-test` self-labels "Delete after." |
 
 **Also:** knip reports **16 unused npm deps** and **5 unused shadcn primitives** (`collapsible, context-menu, drawer, resizable, sheet`) — but verify plugin-referenced deps (`@slack/web-api`, `resend`, `@linear/sdk`, `@vercel/sdk`, `firecrawl`) against `plugins/**` before removing.
@@ -83,7 +83,7 @@ Full table in [`docs/REPO-MAP.md` §4](../docs/REPO-MAP.md). The refactor-priori
 ### ⚠️ KEEP — verification caught these false-positives
 - **`lib/next-boilerplate/**`** — looks dead (excluded from tsc, knip-unused) but is **read from disk at runtime** by `app/api/workflows/[workflowId]/download/route.ts:13`. Deleting it breaks workflow export.
 - **`shared/workflow-engine/codegen/workflow-codegen.ts` + `shared/workflow-engine/codegen/workflow-codegen-shared.ts`** — flagged as superseded but are **live**: they power the "Code" tab and the download route.
-- **`components/workflow/node-config-panel.tsx`** — flagged dead but is the **live** config panel for the `/workflows/[workflowId]` route.
+- **`features/workflow-builder/ui/node-config-panel.tsx`** — flagged dead but is the **live** config panel for the `/workflows/[workflowId]` route.
 - **`lib/kernel/**`** — unreferenced but **intentional** migration scaffolding. Do not delete; add to knip ignore.
 - **`plugins/index.ts`, `_template/*.txt`, `tax-ui/wouter-shim.tsx`, `features/genui/system-prompt.txt`** — inert-looking but generated/aliased/runtime-read.
 
@@ -94,7 +94,7 @@ Full table in [`docs/REPO-MAP.md` §4](../docs/REPO-MAP.md). The refactor-priori
 1. **`tax-ui/` is not a one-way island — it has a real import cycle.** It is excluded from tsc yet imports 7 `@/` app modules; `lib/resource-registry.tsx` lazy-imports `@tax/pages/*` **and** `tax-ui/pages/FapiWorksheet.tsx` imports `@/lib/resource-registry`. All 14 seam edges are untyped. (Deleting dead `FapiWorksheet.tsx` breaks the cycle for free.)
 2. **`lib/kernel/**` is a dead parallel model.** 10 files, 1 real importer, defining a *second* `WorkflowRun`/`RunStatus` model that duplicates `src/domain`. Either land it or quarantine it — two run models is drift cost at zero benefit today.
 3. **The assistant launders types through the god-file.** 0 files under `lib/assistant-runtime` import `src/domain` directly; they reach workflow types via `shared/workflow-engine/local-fiscal-workflow` re-exports. The clean boundary exists; it's just bypassed.
-4. **UI→lib inversion.** `shared/workflow-engine/runtime/workflow-runs/parse-upload.ts` imports `components/workflow/source-viewers/excel-utils.ts` (1,765 lines of pure parsing sitting under a UI folder).
+4. **UI→lib inversion.** `shared/workflow-engine/runtime/workflow-runs/parse-upload.ts` imports `shared/workflow-engine/parsing/excel-utils.ts` (1,765 lines of pure parsing sitting under a UI folder).
 
 Positive: **no circular imports among the god-files themselves** (clean DAG), and `shared/workflow-engine/domain/workflow` is genuinely canonical.
 

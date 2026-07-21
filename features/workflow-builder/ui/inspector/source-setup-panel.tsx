@@ -3,14 +3,14 @@
 import {
   CurrencyRateSourcePanel,
   FapiInputsSourcePanel,
-} from "@/components/workflow/source-viewers/currency-rate-source-panel";
-import { ExcelUploadPanel } from "@/components/workflow/source-viewers/excel-upload-panel";
-import { AggregationRulebookEditor } from "@/components/workflow/source-viewers/aggregation-rulebook-editor";
-import { RuleSourceEditor } from "@/components/workflow/source-viewers/rule-source-editor";
+} from "@/features/workflow-builder/ui/source-viewers/currency-rate-source-panel";
+import { ExcelUploadPanel } from "@/features/workflow-builder/ui/source-viewers/excel-upload-panel";
+import { AggregationRulebookEditor } from "@/features/workflow-builder/ui/source-viewers/aggregation-rulebook-editor";
+import { RuleSourceEditor } from "@/features/workflow-builder/ui/source-viewers/rule-source-editor";
 import {
   CalculationRulesSourceEditor,
   RollupRulesSourceEditor,
-} from "@/components/workflow/source-viewers/split-rule-source-editors";
+} from "@/features/workflow-builder/ui/source-viewers/split-rule-source-editors";
 import type { WorkflowBlock } from "@/shared/workflow-engine/local-fiscal-workflow";
 
 type SourceSetupPanelProps = {

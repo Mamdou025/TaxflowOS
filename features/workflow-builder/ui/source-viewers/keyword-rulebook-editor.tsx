@@ -26,7 +26,7 @@ import {
   type RulebookKeywordRule,
 } from "@/lib/keyword-rulebook-store";
 import { cn } from "@/lib/utils";
-import { TwoPanelToolShell } from "@/components/workflow/two-panel-tool-shell";
+import { TwoPanelToolShell } from "@/features/workflow-builder/ui/two-panel-tool-shell";
 
 const DEFAULT_SCOPE = "company";
 const KEYWORD_LIST_DELIMITER_REGEX = /[,;\n|]/;

@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { CopilotKit } from '@copilotkit/react-core';
 import { GlobalTopNav } from '@/components/global-top-nav';
 import { GlobalClientSwitcher } from '@/components/global-client-switcher';
-import { PersistentCanvas } from '@/components/workflow/persistent-canvas';
+import { PersistentCanvas } from '@/features/workflow-builder/ui/persistent-canvas';
 import { AssistantPanel } from '@/components/assistant/assistant-panel';
 import { MemoryCopilot } from '@/components/assistant/memory-copilot';
 import { SpecialistPresence } from '@/components/assistant/specialist-presence';

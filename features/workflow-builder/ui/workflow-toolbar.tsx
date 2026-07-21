@@ -118,21 +118,21 @@ import {
   summarizeWorkflowForAudit,
   type WorkflowAuditEventType,
 } from "@/shared/workflow-engine/audit/workflow-events";
-import { Panel } from "../ai-elements/panel";
-import { DeployButton } from "../deploy-button";
-import { GitHubStarsButton } from "../github-stars-button";
-import { ConfigurationOverlay } from "../overlays/configuration-overlay";
-import { ConfirmOverlay } from "../overlays/confirm-overlay";
-import { ExportWorkflowOverlay } from "../overlays/export-workflow-overlay";
-import { MakePublicOverlay } from "../overlays/make-public-overlay";
-import { useOverlay } from "../overlays/overlay-provider";
-import { WorkflowIssuesOverlay } from "../overlays/workflow-issues-overlay";
+import { Panel } from "./ai-elements/panel";
+import { DeployButton } from "@/components/deploy-button";
+import { GitHubStarsButton } from "@/components/github-stars-button";
+import { ConfigurationOverlay } from "@/components/overlays/configuration-overlay";
+import { ConfirmOverlay } from "@/components/overlays/confirm-overlay";
+import { ExportWorkflowOverlay } from "@/components/overlays/export-workflow-overlay";
+import { MakePublicOverlay } from "@/components/overlays/make-public-overlay";
+import { useOverlay } from "@/components/overlays/overlay-provider";
+import { WorkflowIssuesOverlay } from "@/components/overlays/workflow-issues-overlay";
 import { WorkflowIcon } from "@/shared/ui/workflow-icon";
-import { UserMenu } from "../workflows/user-menu";
+import { UserMenu } from "@/components/workflows/user-menu";
 import {
   buildFapiWorkbookImportPatch,
   parseExcelWorkbookFile,
-} from "./source-viewers/excel-utils";
+} from "@/shared/workflow-engine/parsing/excel-utils";
 
 type WorkflowToolbarProps = {
   workflowId?: string;

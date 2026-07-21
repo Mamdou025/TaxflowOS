@@ -9,7 +9,7 @@ import {
   formatFileSize,
   getExcelSheet,
   getExcelWorkbookFromConfig,
-} from "./excel-utils";
+} from "@/shared/workflow-engine/parsing/excel-utils";
 
 function getColumnLetter(index: number) {
   let value = "";

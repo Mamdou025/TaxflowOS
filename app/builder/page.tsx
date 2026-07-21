@@ -3,7 +3,7 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { RightPanelShell } from "@/components/workflow/right-panel-shell";
+import { RightPanelShell } from "@/features/workflow-builder/ui/right-panel-shell";
 import { BuilderCopilot } from "@/components/assistant/builder-copilot";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {

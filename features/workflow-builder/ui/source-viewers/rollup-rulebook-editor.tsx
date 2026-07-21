@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
-import { TwoPanelToolShell } from "@/components/workflow/two-panel-tool-shell";
+import { TwoPanelToolShell } from "@/features/workflow-builder/ui/two-panel-tool-shell";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

@@ -14,13 +14,13 @@ import {
 } from "@xyflow/react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Canvas } from "@/components/ai-elements/canvas";
-import { Connection } from "@/components/ai-elements/connection";
-import { Controls } from "@/components/ai-elements/controls";
-import { AIPrompt } from "@/components/ai-elements/prompt";
+import { Canvas } from "@/features/workflow-builder/ui/ai-elements/canvas";
+import { Connection } from "@/features/workflow-builder/ui/ai-elements/connection";
+import { Controls } from "@/features/workflow-builder/ui/ai-elements/controls";
+import { AIPrompt } from "@/features/workflow-builder/ui/ai-elements/prompt";
 import { ConfigurationOverlay } from "@/components/overlays/configuration-overlay";
 import { useOverlay } from "@/components/overlays/overlay-provider";
-import { WorkflowToolbar } from "@/components/workflow/workflow-toolbar";
+import { WorkflowToolbar } from "@/features/workflow-builder/ui/workflow-toolbar";
 import { sidebarCollapsedAtom } from "@/components/neumorphic-sidebar";
 import "@xyflow/react/dist/style.css";
 
@@ -59,8 +59,8 @@ import {
   getDefaultInspectorTabForFamily,
   getDefaultInspectorTabForSelection,
 } from "@/shared/workflow-engine/domain/workflow/inspector-rules";
-import { Edge } from "../ai-elements/edge";
-import { Panel } from "../ai-elements/panel";
+import { Edge } from "./ai-elements/edge";
+import { Panel } from "./ai-elements/panel";
 import { ActionNode } from "./nodes/action-node";
 import { AddNode } from "./nodes/add-node";
 import { TriggerNode } from "./nodes/trigger-node";

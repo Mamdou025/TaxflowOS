@@ -25,14 +25,14 @@ import { Button } from "@/shared/ui/button";
 import { CodeEditor } from "@/shared/ui/code-editor";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
-import { EdgeInspector } from "@/components/workflow/edge-inspector";
-import { CalculationEngineModeSection } from "@/components/workflow/logic-viewers/calculation-engine-panel";
-import { CalculationEngineEditor } from "@/components/workflow/logic-viewers/calculation-engine-editor";
-import { AggregatorWorkspace } from "@/components/workflow/logic-viewers/aggregator-workspace";
-import { CalculationEngineWorkspace } from "@/components/workflow/logic-viewers/calculation-engine-workspace";
-import { FieldBlockWorkspace } from "@/components/workflow/logic-viewers/field-block-workspace";
-import { KeywordMapperWorkspace } from "@/components/workflow/logic-viewers/keyword-mapper-workspace";
-import { HierarchyAggregatorPanel } from "@/components/workflow/logic-viewers/hierarchy-aggregator-panel";
+import { EdgeInspector } from "@/features/workflow-builder/ui/edge-inspector";
+import { CalculationEngineModeSection } from "@/features/workflow-builder/ui/logic-viewers/calculation-engine-panel";
+import { CalculationEngineEditor } from "@/features/workflow-builder/ui/logic-viewers/calculation-engine-editor";
+import { AggregatorWorkspace } from "@/features/workflow-builder/ui/logic-viewers/aggregator-workspace";
+import { CalculationEngineWorkspace } from "@/features/workflow-builder/ui/logic-viewers/calculation-engine-workspace";
+import { FieldBlockWorkspace } from "@/features/workflow-builder/ui/logic-viewers/field-block-workspace";
+import { KeywordMapperWorkspace } from "@/features/workflow-builder/ui/logic-viewers/keyword-mapper-workspace";
+import { HierarchyAggregatorPanel } from "@/features/workflow-builder/ui/logic-viewers/hierarchy-aggregator-panel";
 import { api } from "@/lib/api-client";
 import { integrationsAtom } from "@/lib/integrations-store";
 import {
@@ -90,15 +90,15 @@ import {
 import { findActionById } from "@/plugins";
 import { isInspectorTab } from "@/shared/workflow-engine/domain/workflow/inspector-rules";
 import { hasExcelSourceEvidence } from "@/shared/workflow-engine/domain/workflow/source-rules";
-import { ActionConfig } from "../workflow/config/action-config";
-import { ActionGrid } from "../workflow/config/action-grid";
-import { FiscalBlockConfig } from "../workflow/config/fiscal-block-config";
-import { TriggerConfig } from "../workflow/config/trigger-config";
-import { generateBlockCodePreview } from "../workflow/inspector/code-preview/generate-code-preview";
-import { SourceSetupPanel } from "../workflow/inspector/source-setup-panel";
-import { ExcelWorkbookViewer } from "../workflow/source-viewers/excel-workbook-viewer";
-import { KeywordRulebookEditor } from "../workflow/source-viewers/keyword-rulebook-editor";
-import { RollupRulebookEditor } from "../workflow/source-viewers/rollup-rulebook-editor";
+import { ActionConfig } from "@/features/workflow-builder/ui/config/action-config";
+import { ActionGrid } from "@/features/workflow-builder/ui/config/action-grid";
+import { FiscalBlockConfig } from "@/features/workflow-builder/ui/config/fiscal-block-config";
+import { TriggerConfig } from "@/features/workflow-builder/ui/config/trigger-config";
+import { generateBlockCodePreview } from "@/features/workflow-builder/ui/inspector/code-preview/generate-code-preview";
+import { SourceSetupPanel } from "@/features/workflow-builder/ui/inspector/source-setup-panel";
+import { ExcelWorkbookViewer } from "@/features/workflow-builder/ui/source-viewers/excel-workbook-viewer";
+import { KeywordRulebookEditor } from "@/features/workflow-builder/ui/source-viewers/keyword-rulebook-editor";
+import { RollupRulebookEditor } from "@/features/workflow-builder/ui/source-viewers/rollup-rulebook-editor";
 import {
   getKeywordRules,
   KeywordMapperRulesPanel,
@@ -107,16 +107,16 @@ import {
   NEW_KEYWORD_RULE_ID,
   NEW_ROLLUP_RULE_ID,
   RuleSourceViewer,
-} from "../workflow/source-viewers/rule-source-editor";
-import { generateNodeCode } from "../workflow/utils/code-generators";
-import { WorkflowRuns } from "../workflow/workflow-runs";
-import { BlockDataFlowColumn } from "../workflow/workspace/block-data-flow-pane";
-import { getLatestLocalRunForBlock } from "../workflow/workspace/latest-local-run";
+} from "@/features/workflow-builder/ui/source-viewers/rule-source-editor";
+import { generateNodeCode } from "@/features/workflow-builder/ui/utils/code-generators";
+import { WorkflowRuns } from "@/features/workflow-builder/ui/workflow-runs";
+import { BlockDataFlowColumn } from "@/features/workflow-builder/ui/workspace/block-data-flow-pane";
+import { getLatestLocalRunForBlock } from "@/features/workflow-builder/ui/workspace/latest-local-run";
 import {
   getWorkspaceGridColumns,
   useWorkspacePaneSizing,
   WorkspaceResizeHandle,
-} from "../workflow/workspace/workspace-pane-sizing";
+} from "@/features/workflow-builder/ui/workspace/workspace-pane-sizing";
 import type { OverlayComponentProps } from "./types";
 
 // System actions that need integrations (not in plugin registry)

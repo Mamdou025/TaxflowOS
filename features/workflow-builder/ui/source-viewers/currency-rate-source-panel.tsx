@@ -3,7 +3,7 @@
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import type { WorkflowBlock } from "@/shared/workflow-engine/local-fiscal-workflow";
-import { formatFileSize } from "./excel-utils";
+import { formatFileSize } from "@/shared/workflow-engine/parsing/excel-utils";
 
 type SourcePanelProps = {
   block: WorkflowBlock;

@@ -18,7 +18,7 @@ import {
   Node,
   NodeDescription,
   NodeTitle,
-} from "@/components/ai-elements/node";
+} from "@/features/workflow-builder/ui/ai-elements/node";
 import { ConfigurationOverlay } from "@/components/overlays/configuration-overlay";
 import { useOverlay } from "@/components/overlays/overlay-provider";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";

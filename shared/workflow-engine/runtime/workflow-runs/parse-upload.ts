@@ -3,7 +3,7 @@
 import {
   buildExcelSourceConfigPatch,
   parseExcelWorkbookFile,
-} from '@/components/workflow/source-viewers/excel-utils';
+} from '@/shared/workflow-engine/parsing/excel-utils';
 import type { SourceRow } from './engine';
 
 export type ParsedUpload = { fileName: string; rows: SourceRow[] };

@@ -14,10 +14,10 @@ import { useEffect } from 'react';
 import { useSetAtom } from 'jotai';
 import { ReactFlowProvider } from '@xyflow/react';
 import { toast } from 'sonner';
-import { WorkflowCanvas } from '@/components/workflow/workflow-canvas';
-import { RightPanelShell } from '@/components/workflow/right-panel-shell';
+import { WorkflowCanvas } from '@/features/workflow-builder/ui/workflow-canvas';
+import { RightPanelShell } from '@/features/workflow-builder/ui/right-panel-shell';
 import { BuilderCopilot } from '@/components/assistant/builder-copilot';
-import { BuilderPageMenu } from '@/components/workflow/builder-page-menu';
+import { BuilderPageMenu } from '@/features/workflow-builder/ui/builder-page-menu';
 import { builderEmbeddedAtom } from '@/lib/builder-bridge';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {

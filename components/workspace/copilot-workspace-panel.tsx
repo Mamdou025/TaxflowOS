@@ -26,7 +26,7 @@ import { getPage } from '@/shared/stores/resource-registry';
 import { WORKFLOWS, getAgent, type WorkflowSuggestion } from '@/lib/agents';
 import { useAssistant } from '@/components/assistant/use-assistant';
 import { AssistantThread } from '@/components/assistant/assistant-thread';
-import { InlineBuilder } from '@/components/workflow/inline-builder';
+import { InlineBuilder } from '@/features/workflow-builder/ui/inline-builder';
 import { AgentBuilder } from '@/components/assistant/agent-builder';
 import { InScopeNeuMark } from '@/components/inscope-neu-mark';
 import { ClientFolders } from '@/components/workspace/client-folders';

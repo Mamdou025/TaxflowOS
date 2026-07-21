@@ -4,7 +4,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Check, Eye, EyeOff, Workflow, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { WorksheetPageView } from "@/components/workflow/worksheet-page-view";
+import { WorksheetPageView } from "@/features/workflow-builder/ui/worksheet-page-view";
 import { WORKFLOWS } from "@/lib/agents";
 import {
   createFapiTemplateWorkflow,
