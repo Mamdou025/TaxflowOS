@@ -175,9 +175,13 @@ Each step ends with the **gate**: `pnpm type-check` **must** stay green (0 error
 - **Engine now COMPLETE:** `shared/workflow-engine/{domain(9),state(2),audit(2),runtime(steps 7 + workflow-runs 9 + 3),codegen(6),templates(6)}` + 4 god files = **48 files**. *(Runtime verification of the workflow-download feature still pending — its codegen-templates path is read at request time, not type-checked.)*
 *Highest-blast-radius phase. Gate each step: type-check (+ e2e when the app runs).*
 
-**Phase 4 — Move the builder UI + execution onto the engine.**
+**Phase 4 — Move the builder UI + execution onto the engine. 🟡 IN PROGRESS.**
 6. `components/workflow/**` + `ai-elements` + builder overlays → **`features/workflow-builder/ui/`** (row 12).
-7. `backend/**` → **`features/workflow-builder/execution/`** (row 10); update smoke scripts + `local-tool-registry` importer.
+   - ✅ **Step 4a DONE 2026-07-21** — `components/workflow/**` (78) → `features/workflow-builder/ui/`; `components/ai-elements/**` (8) → `ui/ai-elements/`. **Fixed the excel-utils inversion**: `excel-utils.ts` → `shared/workflow-engine/parsing/` (engine no longer imports a UI leaf). Codemod + fixed cross-boundary relatives (`configuration-overlay`'s `../workflow/*`; toolbar/canvas `../ai-elements→./ai-elements`, `../overlays→@/components/overlays`). tsc exit 0. Committed `0a81afa`.
+   - ⏳ **builder overlays** — `components/overlays/**` (18) still to split (see step below).
+7. `backend/**` → ~~`features/workflow-builder/execution/`~~ **`shared/workflow-engine/execution/`** (deviation from the plan): the engine's `local-tool-registry` imports `backend/runtime/registry`, so putting backend under a *feature* would invert the layering (engine→feature). It belongs with the engine. ⏳ **pending.**
+8. **`components/overlays/` split** — generic framework (`overlay-provider/-container/-header/-footer/-sync/overlay/types`) → `shared/ui/overlays/`; builder-specific (`configuration`, `add/edit-connection`, `export-workflow`, `workflow-issues`, `make-public`) → `features/workflow-builder/ui/overlays/`; app-wide (`settings`, `api-keys`, `integrations`, `ai-gateway-consent`, `confirm`) → `shared/ui/overlays/` or a platform home. ⏳ **pending** (nuanced — 11 external importers, mounted app-wide).
+9. **shared/ui domain-widget split** (row A) — the 5 polluters (`integration-icon/-selector`, `template-badge-input/-textarea`, `template-autocomplete`) → `features/workflow-builder/ui/inputs/` (+ integration widgets to platform). ⏳ **pending.**
 *Gate: type-check + `workflow.spec.ts`.*
 
 **Phase 5 — Worksheets consolidation (the risky untyped seam).**
