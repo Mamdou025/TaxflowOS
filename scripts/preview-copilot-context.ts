@@ -8,7 +8,7 @@
  * receives. Run: `pnpm tsx scripts/preview-copilot-context.ts`
  */
 
-import { WORKFLOW_CONFIGS, getWorkflowConfig } from '@/lib/workflow-runs';
+import { WORKFLOW_CONFIGS, getWorkflowConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
 import { createTemplateIntel } from '@/lib/worksheet-intel';
 
 const line = (s = '') => console.log(s);

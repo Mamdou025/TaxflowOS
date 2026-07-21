@@ -1,4 +1,4 @@
-import type { WorkflowEdge, WorkflowNode } from "@/lib/workflow-store";
+import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
 import { isGovernedValueBlock } from "../domain/workflow/protected-rules";
 
 export const WORKFLOW_AUDIT_EVENT_TYPES = [

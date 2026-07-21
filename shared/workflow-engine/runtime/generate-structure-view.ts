@@ -2,7 +2,7 @@ import type {
   WorkflowBlock,
   WorkflowDefinition,
   WorkflowEdge,
-} from "@/lib/local-fiscal-workflow";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
 import { isGovernedValueBlock } from "../domain/workflow/protected-rules";
 
 // Canvas owns graph editing, inspector owns formulas/code/configuration, and

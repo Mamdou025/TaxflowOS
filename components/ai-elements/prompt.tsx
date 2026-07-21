@@ -15,7 +15,7 @@ import {
   isGeneratingAtom,
   nodesAtom,
   selectedNodeAtom,
-} from "@/lib/workflow-store";
+} from "@/shared/workflow-engine/state/workflow-store";
 
 type AIPromptProps = {
   workflowId?: string;

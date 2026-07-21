@@ -164,9 +164,16 @@ Each step ends with the **gate**: `pnpm type-check` **must** stay green (0 error
 4b. **`shared/app-shell/`** (row 4) — ⏸️ **DEFERRED.** `app-shell.tsx`/`neumorphic-sidebar.tsx`/`global-top-nav.tsx`/`globals.css` are the live Neumorphic redesign surface (collision risk). Do this once the redesign settles.
 *Gate: type-check. This is broad but mechanical; do it before the mini-apps so their imports land on stable shared paths.*
 
-**Phase 3 — Extract the headless engine (the real core).**
+**Phase 3 — Extract the headless engine (the real core). 🟡 IN PROGRESS (step 1 of ~5 done).**
 5. Move `src/**` + `lib/workflow-*` + `lib/steps` + `lib/workflow-runs` + codegen + samples → **`shared/workflow-engine/`** (rows 6–9). Fix the `excel-utils` inversion (2b) in the same phase. Update `download/route.ts:16`.
-*Highest-blast-radius move (46 + 54 importers). De-risk: codemod all specifiers in one commit per file; keep a temporary re-export shim at each old path for one commit if a large importer set makes a single atomic commit unreviewable, then delete the shims. Gate: type-check + e2e (`workflow.spec.ts`).*
+
+- ✅ **Step 1 DONE 2026-07-21 — `src/** → shared/workflow-engine/`** (the canonical domain model; establishes the `{domain,state,audit,runtime}` structure the rest drops into). 13 files moved; codemod `@/src/` → `@/shared/workflow-engine/` (14 files/25 occ) + relative `../src/` in the 3 god files (3 files/11 occ). Gate: `tsc --noEmit` exit 0. **⚠️ Windows/dev-server lock hazard:** `git mv src` failed mid-operation because the running Turbopack dev server held handles on the hot `src/domain` files — recovered by moving subdirs/files individually with retry. **The remaining (larger) sub-steps below MUST be run with the dev server stopped.**
+- ✅ **Step 2 DONE 2026-07-21 (dev server stopped)** — `lib/workflow-store` → `engine/state/`; `lib/workflow-runs/`, `lib/workflow-executor.workflow.ts`, `lib/workflow-logging.ts` → `engine/runtime/`. Codemod + fixed 30 cross-boundary relative imports (surfaced by tsc). *(`lib/steps` NOT moved — see Step 3 deferral.)* `parse-upload → excel-utils` inversion **not yet fixed** (excel-utils moves in Phase 4). tsc exit 0.
+- ✅ **Step 4 DONE 2026-07-21** — `lib/workflow/sample-workflows/**` → `shared/workflow-engine/templates/sample-workflows/`. tsc exit 0.
+- ✅ **Step 5 DONE 2026-07-21** — the 4 god files moved WHOLE (`local-fiscal-workflow`, `local-tool-registry`, `local-tool-runner`, `local-ai-workflow-assistant`) → `shared/workflow-engine/` root (intact; decomposed in Phase 9). tsc exit 0. **`discover-plugins` re-verified** (regenerates `lib/codegen-registry.ts` — 36 templates — and `lib/step-registry.ts` fine; those reference `@/plugins/*/steps`, not moved code).
+- ⏸️ **Step 3 DEFERRED — `lib/steps` (36 imp) + codegen group** (`lib/workflow-codegen*`, `lib/codegen-templates/`). Reason: they couple to the **download feature** (`download/route.ts:16` hardcodes `lib/codegen-templates`) and to the **generated** `lib/step-registry.ts`/`lib/codegen-registry.ts` (which stay at `lib/`). Needs the download-route path fix + a `discover-plugins` recheck as its own careful step. `lib/steps/step-handler` is imported by ~40 plugin step files — moving it is a large codemod best isolated.
+- **Engine now:** `shared/workflow-engine/{domain(9),state(2),audit(2),runtime(12),templates(6)}` + 4 god files = **35 files**.
+*Highest-blast-radius phase. Gate each step: type-check (+ e2e when the app runs).*
 
 **Phase 4 — Move the builder UI + execution onto the engine.**
 6. `components/workflow/**` + `ai-elements` + builder overlays → **`features/workflow-builder/ui/`** (row 12).

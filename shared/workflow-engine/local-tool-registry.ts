@@ -1,11 +1,11 @@
 import {
   executeTool as executeBackendTool,
   getToolDefinition as getBackendToolDefinition,
-} from "../backend/runtime/registry";
+} from "@/backend/runtime/registry";
 import type {
   ToolExecutionContext as BackendToolExecutionContext,
   ToolRunResult as BackendToolRunResult,
-} from "../backend/runtime/types";
+} from "@/backend/runtime/types";
 import {
   type BlockFamily,
   type BlockSubtype,
@@ -13,7 +13,7 @@ import {
   type WorkflowBlock,
   type WorkflowDefinition,
 } from "./local-fiscal-workflow";
-import { isGovernedValueBlock } from "../src/domain/workflow/protected-rules";
+import { isGovernedValueBlock } from "@/shared/workflow-engine/domain/workflow/protected-rules";
 
 export type ToolRunStatus =
   | "error"

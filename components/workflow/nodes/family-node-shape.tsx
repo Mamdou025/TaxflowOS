@@ -33,8 +33,8 @@ import type {
   BlockFamily,
   BlockSubtype,
   WorkflowBlock,
-} from "@/lib/local-fiscal-workflow";
-import type { WorkflowNodeData } from "@/lib/workflow-store";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
+import type { WorkflowNodeData } from "@/shared/workflow-engine/state/workflow-store";
 
 type CanvasFamily = BlockFamily | "Generic";
 

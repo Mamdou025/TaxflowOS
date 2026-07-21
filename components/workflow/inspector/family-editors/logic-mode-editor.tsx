@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
-import { LOGIC_CODE_MODES } from "@/src/domain/workflow/inspector-rules";
+import { LOGIC_CODE_MODES } from "@/shared/workflow-engine/domain/workflow/inspector-rules";
 
 type LogicModeEditorProps = {
   disabled?: boolean;

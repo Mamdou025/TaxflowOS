@@ -23,7 +23,7 @@
 import { useEffect, useMemo } from 'react';
 import { useSetAtom } from 'jotai';
 import { useCopilotReadable } from '@copilotkit/react-core';
-import type { TemplateConfig, SourceRow } from '@/lib/workflow-runs';
+import type { TemplateConfig, SourceRow } from '@/shared/workflow-engine/runtime/workflow-runs';
 import {
   createTemplateIntel,
   registerWorksheetIntelAtom,

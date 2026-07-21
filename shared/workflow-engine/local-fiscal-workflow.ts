@@ -1,8 +1,8 @@
-import type { BlockCatalogItem as DomainBlockCatalogItem } from "../src/domain/workflow/block-catalog";
+import type { BlockCatalogItem as DomainBlockCatalogItem } from "@/shared/workflow-engine/domain/workflow/block-catalog";
 import {
   BLOCK_FAMILY_STAGE as DOMAIN_BLOCK_FAMILY_STAGE,
   FISCAL_STAGE_OPTIONS as DOMAIN_FISCAL_STAGE_OPTIONS,
-} from "../src/domain/workflow/block-catalog";
+} from "@/shared/workflow-engine/domain/workflow/block-catalog";
 import type {
   BlockFamily as DomainBlockFamily,
   BlockRunStatus as DomainBlockRunStatus,
@@ -10,13 +10,13 @@ import type {
   BlockSubtype as DomainBlockSubtype,
   FiscalStage as DomainFiscalStage,
   WorkflowDefinitionStatus as DomainWorkflowDefinitionStatus,
-} from "../src/domain/workflow/block-types";
+} from "@/shared/workflow-engine/domain/workflow/block-types";
 import type {
   EdgeBindingStatus as DomainEdgeBindingStatus,
   EdgeStatus as DomainEdgeStatus,
   WorkflowEdgeHistoryEntry as DomainWorkflowEdgeHistoryEntry,
   WorkflowRelationshipType as DomainWorkflowRelationshipType,
-} from "../src/domain/workflow/edge-types";
+} from "@/shared/workflow-engine/domain/workflow/edge-types";
 import {
   CANDIDATE_OUTPUT_RELATIONSHIP_TYPES as DOMAIN_CANDIDATE_OUTPUT_RELATIONSHIP_TYPES,
   EDGE_BINDING_STATUS_VALUES as DOMAIN_EDGE_BINDING_STATUS_VALUES,
@@ -28,12 +28,12 @@ import {
   isCandidateOutputRelationshipType as domainIsCandidateOutputRelationshipType,
   isGovernedOutputRelationshipType as domainIsGovernedOutputRelationshipType,
   isOutputMappingRelationshipType as domainIsOutputMappingRelationshipType,
-} from "../src/domain/workflow/edge-types";
-import { getProtectedKindForSubtype } from "../src/domain/workflow/protected-rules";
+} from "@/shared/workflow-engine/domain/workflow/edge-types";
+import { getProtectedKindForSubtype } from "@/shared/workflow-engine/domain/workflow/protected-rules";
 import {
   LOGIC_OUTPUT_GOVERNANCE_WARNING as DOMAIN_LOGIC_OUTPUT_GOVERNANCE_WARNING,
   getAllowedRelationshipTypesForFamilies,
-} from "../src/domain/workflow/workflow-rules";
+} from "@/shared/workflow-engine/domain/workflow/workflow-rules";
 import type {
   AiProposal as DomainAiProposal,
   AiProposalHistoryEntry as DomainAiProposalHistoryEntry,
@@ -63,41 +63,41 @@ import type {
   WorkflowPosition as DomainWorkflowPosition,
   WorkflowStructure as DomainWorkflowStructure,
   WorkflowVersionSnapshot as DomainWorkflowVersionSnapshot,
-} from "../src/domain/workflow/workflow-types";
+} from "@/shared/workflow-engine/domain/workflow/workflow-types";
 import {
   AI_PROPOSAL_STATUS_VALUES as DOMAIN_AI_PROPOSAL_STATUS_VALUES,
   WORKFLOW_EVENT_TYPES as DOMAIN_WORKFLOW_EVENT_TYPES,
   WORKFLOW_SCHEMA_VERSION as DOMAIN_WORKFLOW_SCHEMA_VERSION,
-} from "../src/domain/workflow/workflow-types";
+} from "@/shared/workflow-engine/domain/workflow/workflow-types";
 import {
   EXPANDED_MAPPING_PIPELINE_BLOCK_SPECS,
   EXPANDED_MAPPING_PIPELINE_EDGE_SPECS,
-} from "./workflow/sample-workflows/expanded-mapping-pipeline-demo";
+} from "@/shared/workflow-engine/templates/sample-workflows/expanded-mapping-pipeline-demo";
 import {
   WORKING_SOURCE_DEMO_BLOCK_SPECS,
   WORKING_SOURCE_DEMO_EDGE_SPECS,
-} from "./workflow/sample-workflows/working-source-rules-demo";
+} from "@/shared/workflow-engine/templates/sample-workflows/working-source-rules-demo";
 import {
   FAPI_TEMPLATE_BLOCK_SPECS,
   FAPI_TEMPLATE_EDGE_SPECS,
-} from "./workflow/sample-workflows/fapi-template";
+} from "@/shared/workflow-engine/templates/sample-workflows/fapi-template";
 import {
   ROULEMENT_FISCAL_BLOCK_SPECS,
   ROULEMENT_FISCAL_EDGE_SPECS,
-} from "./workflow/sample-workflows/roulement-fiscal-template";
+} from "@/shared/workflow-engine/templates/sample-workflows/roulement-fiscal-template";
 import {
   EXPENSE_TEMPLATE_BLOCK_SPECS,
   EXPENSE_TEMPLATE_EDGE_SPECS,
-} from "./workflow/sample-workflows/expense-reimbursement-template";
+} from "@/shared/workflow-engine/templates/sample-workflows/expense-reimbursement-template";
 import {
   CAMPAIGN_TEMPLATE_BLOCK_SPECS,
   CAMPAIGN_TEMPLATE_EDGE_SPECS,
-} from "./workflow/sample-workflows/campaign-budget-template";
+} from "@/shared/workflow-engine/templates/sample-workflows/campaign-budget-template";
 import type {
   WorkflowEdge as CanvasWorkflowEdge,
   WorkflowNode,
   WorkflowNodeType,
-} from "./workflow-store";
+} from "@/shared/workflow-engine/state/workflow-store";
 
 export type BlockCatalogItem = DomainBlockCatalogItem;
 export type BlockFamily = DomainBlockFamily;

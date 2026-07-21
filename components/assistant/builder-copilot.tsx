@@ -33,8 +33,8 @@ import {
   getBlockCatalogItem,
   saveWorkflowDefinitionSnapshot,
   workflowDefinitionToCanvas,
-} from '@/lib/local-fiscal-workflow';
-import { getWorkflowConfig, WORKFLOW_CONFIGS } from '@/lib/workflow-runs';
+} from '@/shared/workflow-engine/local-fiscal-workflow';
+import { getWorkflowConfig, WORKFLOW_CONFIGS } from '@/shared/workflow-engine/runtime/workflow-runs';
 import { usePageChat } from '@/lib/page-chat-store';
 import {
   addNodeAtom,
@@ -51,7 +51,7 @@ import {
   updateNodeDataAtom,
   type WorkflowEdge,
   type WorkflowNode,
-} from '@/lib/workflow-store';
+} from '@/shared/workflow-engine/state/workflow-store';
 
 // Config values can be huge (e.g. a source block's parsed rows). Summarize so the
 // model gets shape, not a data dump.

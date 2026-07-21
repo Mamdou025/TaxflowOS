@@ -13,9 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
-import type { WorkflowBlock } from "@/lib/local-fiscal-workflow";
+import type { WorkflowBlock } from "@/shared/workflow-engine/local-fiscal-workflow";
 import { cn } from "@/lib/utils";
-import type { WorkflowEdge, WorkflowNode } from "@/lib/workflow-store";
+import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
 import {
   AGGREGATION_RULE_MODE_DESCRIPTIONS,
   getAggregationRuleMode,

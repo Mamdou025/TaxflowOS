@@ -2,7 +2,7 @@
 
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
-import type { WorkflowBlock } from "@/lib/local-fiscal-workflow";
+import type { WorkflowBlock } from "@/shared/workflow-engine/local-fiscal-workflow";
 import { formatFileSize } from "./excel-utils";
 
 type SourcePanelProps = {

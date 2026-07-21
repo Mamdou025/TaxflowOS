@@ -36,13 +36,13 @@ import {
 } from '@/shared/stores/workspace-store';
 import { pageChatSurfacesAtom } from '@/lib/page-chat-store';
 import { SurfaceEmbed } from './surface-embed';
-import { parseUploadToRows } from '@/lib/workflow-runs/parse-upload';
-import { builderFocusTargetAtom } from '@/lib/workflow-store';
+import { parseUploadToRows } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
+import { builderFocusTargetAtom } from '@/shared/workflow-engine/state/workflow-store';
 import { getPage, listPages, anchorToPage, getFieldContext, buildAgentCatalog, resolveFieldId, fieldValuesAtom } from '@/shared/stores/resource-registry';
 import { InlineFieldCard } from '@/components/workspace/inline-field-card';
 import { WorkflowRunFlow, WorkflowElementCard, RunProposalCard } from '@/components/workspace/workflow-run-flow';
 import type { ComposerSuggestion } from '@/components/workspace/aside-thread';
-import { getWorkflowConfig, WORKFLOW_CONFIGS, type TemplateConfig } from '@/lib/workflow-runs';
+import { getWorkflowConfig, WORKFLOW_CONFIGS, type TemplateConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
 import { AGENTS, WORKFLOWS, getAgent, agentThinking, type Agent } from '@/lib/agents';
 import { worksheetIntelRegistryAtom, pickIntel, listIntel, createTemplateIntel } from '@/lib/worksheet-intel';
 import { GenUIRender } from '@/features/genui/genui-render';

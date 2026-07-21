@@ -26,7 +26,7 @@ import {
   loadLocalWorkflowSnapshotResult,
   saveWorkflowDefinitionSnapshot,
   workflowDefinitionToCanvas,
-} from '@/lib/local-fiscal-workflow';
+} from '@/shared/workflow-engine/local-fiscal-workflow';
 import {
   currentWorkflowIdAtom,
   currentWorkflowNameAtom,
@@ -40,7 +40,7 @@ import {
   selectedExecutionIdAtom,
   selectedNodeAtom,
   workflowNotFoundAtom,
-} from '@/lib/workflow-store';
+} from '@/shared/workflow-engine/state/workflow-store';
 
 export function InlineBuilder() {
   const isMobile = useIsMobile();

@@ -8,7 +8,7 @@
 
 ## 1. The Mini-Apps (and their entry points)
 
-**Visual Workflow Builder** — the React Flow node-graph editor for fiscal workflows. Three physical zones: the **UI** (`components/workflow/**`, `components/overlays/**`, `components/ai-elements/**`), the **headless engine** (`lib/local-*`, `lib/workflow-*`, `src/domain/**`, `src/state/**`, `lib/steps/**`, `lib/workflow-runs/**`), and the **local execution layer** (`backend/blocks/**`, `backend/runtime/**`). Canvas entry: `components/workflow/workflow-canvas.tsx` (the `<ReactFlow>` host) wrapped by `persistent-canvas.tsx` (mounted app-wide by `components/app-shell.tsx`) and by `inline-builder.tsx` (mounted inside chat). Domain entry: `lib/local-fiscal-workflow.ts` + state hub `lib/workflow-store.ts`. Routes: `app/builder/page.tsx` (current) and `app/workflows/[workflowId]/page.tsx` (legacy).
+**Visual Workflow Builder** — the React Flow node-graph editor for fiscal workflows. Three physical zones: the **UI** (`components/workflow/**`, `components/overlays/**`, `components/ai-elements/**`), the **headless engine** (`lib/local-*`, `lib/workflow-*`, `shared/workflow-engine/domain/**`, `shared/workflow-engine/state/**`, `lib/steps/**`, `shared/workflow-engine/runtime/workflow-runs/**`), and the **local execution layer** (`backend/blocks/**`, `backend/runtime/**`). Canvas entry: `components/workflow/workflow-canvas.tsx` (the `<ReactFlow>` host) wrapped by `persistent-canvas.tsx` (mounted app-wide by `components/app-shell.tsx`) and by `inline-builder.tsx` (mounted inside chat). Domain entry: `shared/workflow-engine/local-fiscal-workflow.ts` + state hub `shared/workflow-engine/state/workflow-store.ts`. Routes: `app/builder/page.tsx` (current) and `app/workflows/[workflowId]/page.tsx` (legacy).
 
 **Tax Worksheets** — tax workpapers (FAPI, Surplus, T1134, Expense) and client/BU dashboards. Split across a **typed in-app half** (`components/worksheet/**`, `lib/worksheet-intel/**`) and an **untyped `tax-ui/**` island** (excluded from tsconfig, `@tax/*` alias, wouter-shimmed). `/fapi` mounts typed `components/worksheet/fapi-worksheet.tsx`; `/surplus`, `/t1134`, `/dashboard`, `/bu-overview`, `/client/[id]` dynamic-import (`ssr:false`) the island `@tax/pages/*`. Registration table: `shared/stores/resource-registry.tsx`. Route shells: `app/{fapi,surplus,t1134,worksheets}/page.tsx`. **NOTE:** FAPI exists twice — typed `components/worksheet/fapi-worksheet.tsx` (432 LOC, live) supersedes island `tax-ui/pages/FapiWorksheet.tsx` (1076 LOC, dead/unrouted).
 
@@ -31,12 +31,12 @@
 "Block" means three related things — know which you're touching.
 
 ### 2a. Block domain model (types)
-- Real kernel types: `src/domain/workflow/{workflow-types.ts, block-types.ts, edge-types.ts}`.
-- Re-exported (46 symbols) through the shim `lib/local-fiscal-workflow.ts` — **39 files import the shim, not the kernel.** Prefer `src/domain/workflow/**` for new code.
+- Real kernel types: `shared/workflow-engine/domain/workflow/{workflow-types.ts, block-types.ts, edge-types.ts}`.
+- Re-exported (46 symbols) through the shim `shared/workflow-engine/local-fiscal-workflow.ts` — **39 files import the shim, not the kernel.** Prefer `shared/workflow-engine/domain/workflow/**` for new code.
 
 ### 2b. Block catalog (~250 tool/block definitions)
-- `lib/local-tool-registry.ts` (5906 LOC, 98% hardcoded catalog data). `LOCAL_TOOL_REGISTRY` object near line 5769; getters/sample helpers follow.
-- Catalog *type* is `src/domain/workflow/block-catalog.ts` (82 LOC); the concrete `BLOCK_CATALOG` array is buried at `lib/local-fiscal-workflow.ts:174`.
+- `shared/workflow-engine/local-tool-registry.ts` (5906 LOC, 98% hardcoded catalog data). `LOCAL_TOOL_REGISTRY` object near line 5769; getters/sample helpers follow.
+- Catalog *type* is `shared/workflow-engine/domain/workflow/block-catalog.ts` (82 LOC); the concrete `BLOCK_CATALOG` array is buried at `shared/workflow-engine/local-fiscal-workflow.ts:174`.
 
 ### 2c. Block UI (add / render / configure)
 | Concern | File |
@@ -54,7 +54,7 @@
 
 **Path A — local block modules (`toolId` → registry → `run.ts`)** *(verified)*
 1. `toolId` string identifies a block.
-2. `lib/local-tool-registry.ts` re-exports `executeTool`/`getToolDefinition` from `backend/runtime/registry.ts` (lines 1–8).
+2. `shared/workflow-engine/local-tool-registry.ts` re-exports `executeTool`/`getToolDefinition` from `backend/runtime/registry.ts` (lines 1–8).
 3. `backend/runtime/registry.ts` maps `toolId` → a registered module's `run()`, returning an auditable `ToolRunResult`.
 4. Each module lives in `backend/blocks/{source,logic}/<name>/` as `definition.ts` + `schema.ts` + `run.ts` + `index.ts`.
    - **7 source blocks**: `aggregation-rules, calculation-rules, currency-rate, fapi-inputs, keyword-rules, manual-table, rollup-rules` (emit immutable evidence).
@@ -62,15 +62,15 @@
    - Contract: `backend/runtime/types.ts`. Dead: `backend/runtime/{runner.ts, validation.ts}`.
 
 **Path B — plugin steps (integration actions at runtime)**
-- `lib/workflow-executor.workflow.ts` walks the graph → `getStepImporter(actionType)` from generated `lib/step-registry.ts` → dynamic-imports `plugins/<name>/steps/<step>.ts`. Shared wrapper: `lib/steps/step-handler.ts` (`withStepLogging`, 41 importers). NOTE: hand-maintained `lib/steps/index.ts` (`stepRegistry`) has **zero importers** — stale.
+- `shared/workflow-engine/runtime/workflow-executor.workflow.ts` walks the graph → `getStepImporter(actionType)` from generated `lib/step-registry.ts` → dynamic-imports `plugins/<name>/steps/<step>.ts`. Shared wrapper: `lib/steps/step-handler.ts` (`withStepLogging`, 41 importers). NOTE: hand-maintained `lib/steps/index.ts` (`stepRegistry`) has **zero importers** — stale.
 
 **Path C — template-run engine (interactive upload/categorize/elect loop)**
-- `lib/workflow-runs/engine.ts` (`classify → roll up → compute`) driven by `lib/local-tool-runner`; per-domain configs in `lib/workflow-runs/{fapi,expense,...}`. Feeds the worksheets. (Layer smell: `lib/workflow-runs/parse-upload.ts` imports up into `components/workflow/source-viewers/excel-utils.ts`.)
+- `shared/workflow-engine/runtime/workflow-runs/engine.ts` (`classify → roll up → compute`) driven by `shared/workflow-engine/local-tool-runner`; per-domain configs in `shared/workflow-engine/runtime/workflow-runs/{fapi,expense,...}`. Feeds the worksheets. (Layer smell: `shared/workflow-engine/runtime/workflow-runs/parse-upload.ts` imports up into `components/workflow/source-viewers/excel-utils.ts`.)
 
 **Codegen (a fourth "run" model)**: legacy `lib/workflow-codegen.ts` (3 callers) vs successor `lib/workflow-codegen-sdk.ts` (1 caller) vs component templates `lib/codegen-templates/**` + `lib/codegen-registry.ts`.
 
 ### 2e. Block identity chain (one block, 4-5 names)
-For one block, the spellings across layers: subtype `Currency Rate` (`src/domain/workflow/block-types.ts`) ↔ catalogId `source:currency-rate` (`lib/local-fiscal-workflow.ts`) ↔ toolId `source.currency_rate` (`backend/blocks/source/currency-rate/definition.ts`) ↔ backend folder `currency-rate/`. There is no single source-of-truth table bridging them — tracing a block means following this chain.
+For one block, the spellings across layers: subtype `Currency Rate` (`shared/workflow-engine/domain/workflow/block-types.ts`) ↔ catalogId `source:currency-rate` (`shared/workflow-engine/local-fiscal-workflow.ts`) ↔ toolId `source.currency_rate` (`backend/blocks/source/currency-rate/definition.ts`) ↔ backend folder `currency-rate/`. There is no single source-of-truth table bridging them — tracing a block means following this chain.
 
 ---
 
@@ -78,10 +78,10 @@ For one block, the spellings across layers: subtype `Currency Rate` (`src/domain
 
 | I want to… | Go here | Then |
 |---|---|---|
-| **Add a block/tool to the catalog** | `lib/local-tool-registry.ts` (catalog entry) | + execution module under `backend/blocks/{source,logic}/<name>/{definition,schema,run,index}.ts`, register in `backend/runtime/registry.ts` |
+| **Add a block/tool to the catalog** | `shared/workflow-engine/local-tool-registry.ts` (catalog entry) | + execution module under `backend/blocks/{source,logic}/<name>/{definition,schema,run,index}.ts`, register in `backend/runtime/registry.ts` |
 | **Change block config UI** | Current: `components/overlays/configuration-overlay.tsx`; Legacy: `components/workflow/node-config-panel.tsx` → `inspector/block-inspector.tsx` | Shared leaf editors in `source-viewers/**` + `logic-viewers/**` |
 | **Change node appearance** | `components/workflow/nodes/**` + theming in `components/ai-elements/**` | |
-| **Change how a workflow runs** | Runtime: `lib/workflow-executor.workflow.ts`; Template loop: `lib/workflow-runs/engine.ts`; Local block math: `backend/blocks/**/run.ts` | |
+| **Change how a workflow runs** | Runtime: `shared/workflow-engine/runtime/workflow-executor.workflow.ts`; Template loop: `shared/workflow-engine/runtime/workflow-runs/engine.ts`; Local block math: `backend/blocks/**/run.ts` | |
 | **Edit an in-app worksheet (FAPI/Expense)** | `components/worksheet/{fapi-worksheet,expense-worksheet}.tsx` | Register in `shared/stores/resource-registry.tsx` |
 | **Edit an island worksheet (Surplus/T1134/dashboards)** | `tax-ui/pages/*` (**UNTYPED — not type-checked**) | Wired via `dynamic(() => import('@tax/pages/X'), {ssr:false})` in `app/*/page.tsx` + `shared/stores/resource-registry.tsx` |
 | **Make chat answer about a worksheet** | `lib/worksheet-intel/**` (contract `types.ts`, generic `template-adapter.ts`, registry `registry.ts`) | Publisher `components/assistant/worksheet-copilot.tsx` |
@@ -102,21 +102,21 @@ Files ≥700 LOC and other hotspots. Most are single mega-exports mixing layout,
 
 | Path | LOC | What it does |
 |---|---:|---|
-| `lib/local-tool-registry.ts` | 5906 | God file #1: ~250-tool catalog (98% inline data) + thin registry. |
-| `lib/local-fiscal-workflow.ts` | 5854 | God file #2 / domain entrypoint (~54 importers): kernel re-export shim + edge rules + 8 demo factories + persistence + FAPI fixtures. |
+| `shared/workflow-engine/local-tool-registry.ts` | 5906 | God file #1: ~250-tool catalog (98% inline data) + thin registry. |
+| `shared/workflow-engine/local-fiscal-workflow.ts` | 5854 | God file #2 / domain entrypoint (~54 importers): kernel re-export shim + edge rules + 8 demo factories + persistence + FAPI fixtures. |
 | `components/workflow/workflow-toolbar.tsx` | 3119 | Add-block palette, run controls — embeds a client-side executor. |
 | `components/workflow/source-viewers/rule-source-editor.tsx` | 2351 | Block source-rule editor (paired with `split-rule-source-editors.tsx` 1232). |
 | `components/workflow/node-config-panel.tsx` | 2225 | LEGACY block-config surface (`/workflows/[id]`) — one ~1,850-line function. |
 | `components/workflow/workspace/block-data-flow-pane.tsx` | 2090 | Block I/O data-flow visualizer (helpers dup'd with block-inspector). |
 | `components/overlays/configuration-overlay.tsx` | 2030 | CURRENT block-config surface (`/builder`). |
 | `components/workflow/inspector/block-inspector.tsx` | 1797 | Tabbed inspector body under node-config-panel. |
-| `components/workflow/source-viewers/excel-utils.ts` | 1765 | Pure Excel parsing under a UI folder; imported by `lib/workflow-runs` (layer inversion). |
-| `lib/workflow/sample-workflows/working-source-rules-demo.ts` | 1524 | Largest sample-workflow fixture (data). |
-| `lib/local-ai-workflow-assistant.ts` | 1496 | Deterministic builder "AI" Ask/Propose engine. |
+| `components/workflow/source-viewers/excel-utils.ts` | 1765 | Pure Excel parsing under a UI folder; imported by `shared/workflow-engine/runtime/workflow-runs` (layer inversion). |
+| `shared/workflow-engine/templates/sample-workflows/working-source-rules-demo.ts` | 1524 | Largest sample-workflow fixture (data). |
+| `shared/workflow-engine/local-ai-workflow-assistant.ts` | 1496 | Deterministic builder "AI" Ask/Propose engine. |
 | `components/workflow/workflow-studio-shell.tsx` | 1426 | **DEAD** — only exports unused `RuntimePreviewContent`. |
 | `backend/blocks/logic/hierarchy-aggregator/run.ts` | 1343 | FAPI aggregation + embedded formula tokenizer/parser/evaluator. |
 | `lib/workflow-codegen.ts` | 1316 | Codegen (live; one ~1,268-line function). |
-| `src/state/workflow-commands.ts` | 1306 | Command-reducer over canvas nodes/edges. |
+| `shared/workflow-engine/state/workflow-commands.ts` | 1306 | Command-reducer over canvas nodes/edges. |
 | `tax-ui/pages/SurplusWorksheet.tsx` | 1102 | LIVE island Surplus worksheet (untyped). |
 | `tax-ui/pages/FapiWorksheet.tsx` | 1076 | **DEAD/SUPERSEDED** — replaced by `components/worksheet/fapi-worksheet.tsx`. |
 | `components/workflow/logic-viewers/calculation-engine-panel.tsx` | 1073 | Innermost of the calc-engine panel/editor/workspace triad. |
@@ -127,7 +127,7 @@ Files ≥700 LOC and other hotspots. Most are single mega-exports mixing layout,
 | `components/assistant/use-assistant.tsx` | 864 | God-hook client brain: ~15 actions + ~8 readables. |
 | `components/workspace/workflow-run-flow.tsx` | 800 | Renders a run inline in chat (also `app/run/[workflowId]`). |
 | `tax-ui/lib/data.ts` | 797 | Hardcoded client/portfolio mock data. |
-| `lib/workflow-executor.workflow.ts` | 766 | Runtime step-executor (execution path A/B). |
+| `shared/workflow-engine/runtime/workflow-executor.workflow.ts` | 766 | Runtime step-executor (execution path A/B). |
 | `lib/workflow-codegen-sdk.ts` | 736 | Newer codegen "SDK" (intended successor). |
 | `components/workflow/workflow-canvas.tsx` | 729 | Canonical ReactFlow host. |
 | `components/auth/dialog.tsx` | 694 | better-auth sign-in/up modal. |

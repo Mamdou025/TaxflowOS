@@ -70,11 +70,11 @@ import {
   saveLocalWorkflowSnapshot,
   saveWorkflowDefinitionSnapshot,
   workflowDefinitionToCanvas,
-} from "@/lib/local-fiscal-workflow";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
 import {
   type LocalEdgeRunStatus,
   runLocalWorkflowTools,
-} from "@/lib/local-tool-runner";
+} from "@/shared/workflow-engine/local-tool-runner";
 import type { IntegrationType } from "@/lib/types/integration";
 import {
   activeRightPanelAtom,
@@ -106,18 +106,18 @@ import {
   type WorkflowEdge,
   type WorkflowNode,
   type WorkflowVisibility,
-} from "@/lib/workflow-store";
+} from "@/shared/workflow-engine/state/workflow-store";
 import {
   findActionById,
   flattenConfigFields,
   getIntegrationLabels,
 } from "@/plugins";
-import { appendWorkflowChangeEvent } from "@/src/audit/change-log";
+import { appendWorkflowChangeEvent } from "@/shared/workflow-engine/audit/change-log";
 import {
   createWorkflowAuditEvent,
   summarizeWorkflowForAudit,
   type WorkflowAuditEventType,
-} from "@/src/audit/workflow-events";
+} from "@/shared/workflow-engine/audit/workflow-events";
 import { Panel } from "../ai-elements/panel";
 import { DeployButton } from "../deploy-button";
 import { GitHubStarsButton } from "../github-stars-button";

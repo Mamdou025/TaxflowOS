@@ -1,4 +1,4 @@
-import type { WorkflowBlock } from "../../lib/local-fiscal-workflow";
+import type { WorkflowBlock } from "@/shared/workflow-engine/local-fiscal-workflow";
 import type { EvidenceRef, SourceTraceRef } from "./types";
 
 type SourceLineageInput = {

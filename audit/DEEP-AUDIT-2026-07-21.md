@@ -10,12 +10,12 @@
 
 TaxflowOS is **six overlapping mini-apps wearing one repo**, and the "vibecody" feeling comes from four concrete, measurable things — not vibes:
 
-1. **Two ~5,900-line god-files** (`lib/local-tool-registry.ts` 5,906, `lib/local-fiscal-workflow.ts` 5,854) plus **~12 more files over 1,300 lines**. `local-fiscal-workflow.ts` alone is imported by **~54 files across every zone** — it is the de-facto spine, and it fuses a type re-export barrel, the block catalog data, 8 sample-workflow factories, edge logic, persistence, and ~1,500 lines of FAPI fixtures.
+1. **Two ~5,900-line god-files** (`shared/workflow-engine/local-tool-registry.ts` 5,906, `shared/workflow-engine/local-fiscal-workflow.ts` 5,854) plus **~12 more files over 1,300 lines**. `local-fiscal-workflow.ts` alone is imported by **~54 files across every zone** — it is the de-facto spine, and it fuses a type re-export barrel, the block catalog data, 8 sample-workflow factories, edge logic, persistence, and ~1,500 lines of FAPI fixtures.
 2. **~5,173 lines of provably-dead code** (0 importers each), the largest being a fully dead 1,426-line "shell."
 3. **Folders lie about ownership.** There is no top-level map, the one folder map (`docs/01-folder-map.md`) is stale by ~2 months and describes folders that were never created, and the README still describes the upstream boilerplate template, not this app.
 4. **The gates are half-blind.** `tax-ui/**` (25 files, a *shipped* worksheet island) is excluded from type-checking; the lint gate (`pnpm check`) fails with ~3,500 real errors so CI signal is effectively off; `knip` is installed but wired to nothing.
 
-The good news: the **domain model is sound**. `src/domain/workflow/**` is a genuine single source of truth for block/edge/workflow types (one catalog, consumed everywhere), `tsc` is green over the typed subset, and the mini-app boundaries are real and separable. This is untangleable, not rewrite-bait.
+The good news: the **domain model is sound**. `shared/workflow-engine/domain/workflow/**` is a genuine single source of truth for block/edge/workflow types (one catalog, consumed everywhere), `tsc` is green over the typed subset, and the mini-app boundaries are real and separable. This is untangleable, not rewrite-bait.
 
 ---
 
@@ -42,14 +42,14 @@ Full table in [`docs/REPO-MAP.md` §4](../docs/REPO-MAP.md). The refactor-priori
 
 | File | LOC | Problem | Split target |
 |---|---:|---|---|
-| `lib/local-tool-registry.ts` | 5,906 | ~200 helpers + 40 inline tool defs + 3 near-duplicate evidence builders in one module | `lib/tool-registry/{types,helpers/*,roles,evidence/*,tools/*}` |
-| `lib/local-fiscal-workflow.ts` | 5,854 | domain barrel + catalog data + 8 factories + persistence + fixtures; **54 importers** | delete the re-export barrel (point 54 sites at `src/domain`), then split catalog/edges/persistence/templates |
-| `components/workflow/workflow-toolbar.tsx` | 3,119 | embeds a **client-side execution engine** + validators + 12 buttons in a toolbar | executor → `lib/workflow-runs`, validators → `lib/workflow/validation.ts`, buttons → `toolbar/*` |
+| `shared/workflow-engine/local-tool-registry.ts` | 5,906 | ~200 helpers + 40 inline tool defs + 3 near-duplicate evidence builders in one module | `lib/tool-registry/{types,helpers/*,roles,evidence/*,tools/*}` |
+| `shared/workflow-engine/local-fiscal-workflow.ts` | 5,854 | domain barrel + catalog data + 8 factories + persistence + fixtures; **54 importers** | delete the re-export barrel (point 54 sites at `src/domain`), then split catalog/edges/persistence/templates |
+| `components/workflow/workflow-toolbar.tsx` | 3,119 | embeds a **client-side execution engine** + validators + 12 buttons in a toolbar | executor → `shared/workflow-engine/runtime/workflow-runs`, validators → `lib/workflow/validation.ts`, buttons → `toolbar/*` |
 | `components/workflow/node-config-panel.tsx` | 2,225 | one ~1,850-line `PanelInner` React function | per-block-type sections under `node-config/sections/*` |
 | `components/overlays/configuration-overlay.tsx` + `inspector/block-inspector.tsx` + `workspace/block-data-flow-pane.tsx` | ~5,900 | **~500 lines of helpers copy-pasted across all three** | shared `block-kinds.ts` + `block-outputs.ts` |
 | `lib/workflow-codegen.ts` | 1,316 | one ~1,268-line `generateWorkflowCode` function | per-block-type emitters under `codegen/emitters/*` |
 | `backend/blocks/logic/hierarchy-aggregator/run.ts` + `calculation-engine/run.ts` | 2,210 | **formula tokenizer/RPN/evaluator duplicated verbatim** across both | extract `backend/blocks/logic/shared/formula-expression.ts` |
-| `lib/local-ai-workflow-assistant.ts` | 1,496 | 1 Ask responder + 17 Propose generators flat in one file | `lib/ai-assistant/{ask,proposals}/*` |
+| `shared/workflow-engine/local-ai-workflow-assistant.ts` | 1,496 | 1 Ask responder + 17 Propose generators flat in one file | `lib/ai-assistant/{ask,proposals}/*` |
 
 > **Two parallel block-config UIs** coexist (~6k LOC): legacy `node-config-panel → block-inspector` (route `/workflows/[id]`) vs current `configuration-overlay` (route `/builder`). They share leaf editors but drift independently. **Both are live** — deciding whether `/workflows/[id]` is deprecated is the highest-leverage single decision in the UI.
 
@@ -78,7 +78,7 @@ Full table in [`docs/REPO-MAP.md` §4](../docs/REPO-MAP.md). The refactor-priori
 
 **Also:** knip reports **16 unused npm deps** and **5 unused shadcn primitives** (`collapsible, context-menu, drawer, resizable, sheet`) — but verify plugin-referenced deps (`@slack/web-api`, `resend`, `@linear/sdk`, `@vercel/sdk`, `firecrawl`) against `plugins/**` before removing.
 
-**Remaining knip "unused files" candidates (10, NOT auto-deleted — review first, several are plausibly dynamic-loaded or intentional):** `e2e-deep.config.ts` (needs a `test:e2e:deep` script, not dead), the 5 shadcn primitives above, `lib/steps/{credentials,index.ts}` (steps are dynamic-imported via the generated registry — verify), `src/runtime/generate-structure-view.ts`, `backend/blocks/logic/keyword-mapper/fixtures.ts` (test fixture).
+**Remaining knip "unused files" candidates (10, NOT auto-deleted — review first, several are plausibly dynamic-loaded or intentional):** `e2e-deep.config.ts` (needs a `test:e2e:deep` script, not dead), the 5 shadcn primitives above, `lib/steps/{credentials,index.ts}` (steps are dynamic-imported via the generated registry — verify), `shared/workflow-engine/runtime/generate-structure-view.ts`, `backend/blocks/logic/keyword-mapper/fixtures.ts` (test fixture).
 
 ### ⚠️ KEEP — verification caught these false-positives
 - **`lib/next-boilerplate/**`** — looks dead (excluded from tsc, knip-unused) but is **read from disk at runtime** by `app/api/workflows/[workflowId]/download/route.ts:13`. Deleting it breaks workflow export.
@@ -93,10 +93,10 @@ Full table in [`docs/REPO-MAP.md` §4](../docs/REPO-MAP.md). The refactor-priori
 
 1. **`tax-ui/` is not a one-way island — it has a real import cycle.** It is excluded from tsc yet imports 7 `@/` app modules; `lib/resource-registry.tsx` lazy-imports `@tax/pages/*` **and** `tax-ui/pages/FapiWorksheet.tsx` imports `@/lib/resource-registry`. All 14 seam edges are untyped. (Deleting dead `FapiWorksheet.tsx` breaks the cycle for free.)
 2. **`lib/kernel/**` is a dead parallel model.** 10 files, 1 real importer, defining a *second* `WorkflowRun`/`RunStatus` model that duplicates `src/domain`. Either land it or quarantine it — two run models is drift cost at zero benefit today.
-3. **The assistant launders types through the god-file.** 0 files under `lib/assistant-runtime` import `src/domain` directly; they reach workflow types via `lib/local-fiscal-workflow` re-exports. The clean boundary exists; it's just bypassed.
-4. **UI→lib inversion.** `lib/workflow-runs/parse-upload.ts` imports `components/workflow/source-viewers/excel-utils.ts` (1,765 lines of pure parsing sitting under a UI folder).
+3. **The assistant launders types through the god-file.** 0 files under `lib/assistant-runtime` import `src/domain` directly; they reach workflow types via `shared/workflow-engine/local-fiscal-workflow` re-exports. The clean boundary exists; it's just bypassed.
+4. **UI→lib inversion.** `shared/workflow-engine/runtime/workflow-runs/parse-upload.ts` imports `components/workflow/source-viewers/excel-utils.ts` (1,765 lines of pure parsing sitting under a UI folder).
 
-Positive: **no circular imports among the god-files themselves** (clean DAG), and `src/domain/workflow` is genuinely canonical.
+Positive: **no circular imports among the god-files themselves** (clean DAG), and `shared/workflow-engine/domain/workflow` is genuinely canonical.
 
 ---
 
@@ -118,7 +118,7 @@ Positive: **no circular imports among the god-files themselves** (clean DAG), an
 The audit docs and README have drifted from the code. Full errata (exact lines + correct values) in [`audit/CORRECTIONS-2026-07-21.md`](./CORRECTIONS-2026-07-21.md). Highlights, now corrected in-place:
 
 - **"Next.js 15" → 16** in 3 places (package.json pins `16.0.10`).
-- **"2 starter templates" → 4** (`lib/workflow-runs/index.ts` registers `fapi, roulement, expense, campaign`).
+- **"2 starter templates" → 4** (`shared/workflow-engine/runtime/workflow-runs/index.ts` registers `fapi, roulement, expense, campaign`).
 - **Homepage "OrbitalStage" → `ChatWorkspace`** (`app/page.tsx`).
 - **A whole ARCHITECTURE section** documented a deleted chat subsystem (`lib/chat-agent.ts`, `lib/fapi-run.ts`, `/api/chat-workspace`) as live — banner-marked superseded.
 - **Stale "Last updated" dates** on every audit file; **deleted files** (`chat-workspace-panel.tsx`, `entity-text.tsx`, `action-orb.tsx`) still carry `[LIVE]`/`[SUPERSEDED — retained]` headings.

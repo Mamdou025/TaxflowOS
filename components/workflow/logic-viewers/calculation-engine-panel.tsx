@@ -10,8 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
-import type { WorkflowBlock } from "@/lib/local-fiscal-workflow";
-import type { WorkflowEdge, WorkflowNode } from "@/lib/workflow-store";
+import type { WorkflowBlock } from "@/shared/workflow-engine/local-fiscal-workflow";
+import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

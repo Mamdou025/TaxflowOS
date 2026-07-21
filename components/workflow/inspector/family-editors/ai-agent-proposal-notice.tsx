@@ -1,6 +1,6 @@
 "use client";
 
-import { getBlockFamilyRule } from "@/src/domain/workflow/workflow-rules";
+import { getBlockFamilyRule } from "@/shared/workflow-engine/domain/workflow/workflow-rules";
 
 const AI_AGENT_PROPOSAL_MESSAGE = `${getBlockFamilyRule("AI / Agent").responsibility} ${getBlockFamilyRule("AI / Agent").mustNot}`;
 

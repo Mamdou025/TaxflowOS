@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSetAtom, useAtom, useAtomValue } from 'jotai';
 import { Check, Upload, FileUp, ShieldCheck, Loader2, ChevronDown, ExternalLink, X, GitBranch, SlidersHorizontal, AlertTriangle, Cloud, Play } from 'lucide-react';
-import { runTemplateLoop, runTemplateCore, buildOverrideRules, initialRunState, resolveBlocker, type TemplateConfig, type RunState, type RunDetail, type SourceRow } from '@/lib/workflow-runs';
-import { parseUploadToRows } from '@/lib/workflow-runs/parse-upload';
+import { runTemplateLoop, runTemplateCore, buildOverrideRules, initialRunState, resolveBlocker, type TemplateConfig, type RunState, type RunDetail, type SourceRow } from '@/shared/workflow-engine/runtime/workflow-runs';
+import { parseUploadToRows } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
 import { GoogleSourcePicker, type PickedSource } from '@/components/workspace/google-source-picker';
 import { pushTrailAtom, activeRunAtom, setActiveCoworkerAtom, uploadedRowsAtom, runEditsAtom, setRunInputAtom, setRunOverrideAtom, setRunEditsAtom, EMPTY_RUN_EDITS } from '@/shared/stores/workspace-store';
 import type { Agent } from '@/lib/agents';

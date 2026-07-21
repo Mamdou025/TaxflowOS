@@ -21,7 +21,7 @@ import {
   isLocalWorkflowId,
   type LocalRunRecord,
   loadLocalRunRecords,
-} from "@/lib/local-fiscal-workflow";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
 import {
   OUTPUT_DISPLAY_CONFIGS,
   type OutputDisplayConfig,
@@ -32,7 +32,7 @@ import {
   currentWorkflowIdAtom,
   executionLogsAtom,
   selectedExecutionIdAtom,
-} from "@/lib/workflow-store";
+} from "@/shared/workflow-engine/state/workflow-store";
 import { findActionById } from "@/plugins";
 import { Button } from "@/shared/ui/button";
 import { Spinner } from "@/shared/ui/spinner";

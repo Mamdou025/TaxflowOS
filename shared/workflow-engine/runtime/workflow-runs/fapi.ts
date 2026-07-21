@@ -1,7 +1,7 @@
 'use client';
 
-import { createFapiTemplateWorkflow } from '@/lib/local-fiscal-workflow';
-import { FAPI_LINES_CALC_RULES, FAPI_SUMMARY_CALC_RULES } from '@/lib/workflow/sample-workflows/fapi-template';
+import { createFapiTemplateWorkflow } from '@/shared/workflow-engine/local-fiscal-workflow';
+import { FAPI_LINES_CALC_RULES, FAPI_SUMMARY_CALC_RULES } from '@/shared/workflow-engine/templates/sample-workflows/fapi-template';
 import { FAPI_MAPPING_RULES } from './fapi-mapping';
 import type { TemplateConfig, SourceRow, CategoryOption } from './engine';
 

@@ -5,7 +5,7 @@ import { Check } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
-import { edgesAtom, nodesAtom, type WorkflowNode } from "@/lib/workflow-store";
+import { edgesAtom, nodesAtom, type WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
 import { findActionById } from "@/plugins";
 
 type TemplateAutocompleteProps = {

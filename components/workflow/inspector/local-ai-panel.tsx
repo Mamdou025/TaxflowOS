@@ -30,8 +30,8 @@ import {
   inferMockAiActionId,
   MOCK_AI_ACTIONS,
   type MockAiActionId,
-} from "@/lib/local-ai-workflow-assistant";
-import type { EdgeStatus } from "@/lib/local-fiscal-workflow";
+} from "@/shared/workflow-engine/local-ai-workflow-assistant";
+import type { EdgeStatus } from "@/shared/workflow-engine/local-fiscal-workflow";
 import {
   type AiProposal,
   createCanvasEdgeFromWorkflowEdge,
@@ -47,7 +47,7 @@ import {
   type WorkflowCodeField,
   type WorkflowDefinition,
   type WorkflowFormulaField,
-} from "@/lib/local-fiscal-workflow";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
 import { cn } from "@/lib/utils";
 import {
   edgesAtom,
@@ -58,9 +58,9 @@ import {
   selectedNodeAtom,
   type WorkflowEdge,
   type WorkflowNode,
-} from "@/lib/workflow-store";
-import { appendWorkflowChangeEvent } from "@/src/audit/change-log";
-import { createWorkflowAuditEvent } from "@/src/audit/workflow-events";
+} from "@/shared/workflow-engine/state/workflow-store";
+import { appendWorkflowChangeEvent } from "@/shared/workflow-engine/audit/change-log";
+import { createWorkflowAuditEvent } from "@/shared/workflow-engine/audit/workflow-events";
 
 type LocalAiPanelProps = {
   disabled?: boolean;

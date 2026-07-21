@@ -33,18 +33,18 @@ import {
 import type {
   LocalRunRecord,
   WorkflowBlock,
-} from "@/lib/local-fiscal-workflow";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
 import {
   getToolForBlock,
   type ToolDefinition,
   type ToolOutputRole,
-} from "@/lib/local-tool-registry";
+} from "@/shared/workflow-engine/local-tool-registry";
 import type {
   WorkflowEdge,
   WorkflowNode,
   WorkflowNodeData,
-} from "@/lib/workflow-store";
-import { hasExcelSourceEvidence } from "@/src/domain/workflow/source-rules";
+} from "@/shared/workflow-engine/state/workflow-store";
+import { hasExcelSourceEvidence } from "@/shared/workflow-engine/domain/workflow/source-rules";
 import {
   CalculationEngineModeSection,
   CalculationEngineRunSections,

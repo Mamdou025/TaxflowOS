@@ -15,7 +15,7 @@ import {
   integrationsLoadedAtom,
   integrationsVersionAtom,
 } from "@/lib/integrations-store";
-import { isLocalRunExecutionId } from "@/lib/local-fiscal-workflow";
+import { isLocalRunExecutionId } from "@/shared/workflow-engine/local-fiscal-workflow";
 import type { IntegrationType } from "@/lib/types/integration";
 import {
   currentWorkflowIdAtom,
@@ -37,7 +37,7 @@ import {
   type WorkflowNode,
   type WorkflowVisibility,
   workflowNotFoundAtom,
-} from "@/lib/workflow-store";
+} from "@/shared/workflow-engine/state/workflow-store";
 import { findActionById } from "@/plugins";
 
 type WorkflowPageProps = {

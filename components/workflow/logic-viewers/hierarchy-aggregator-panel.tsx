@@ -6,8 +6,8 @@ import { Button } from "@/shared/ui/button";
 import type {
   LocalRunRecord,
   WorkflowBlock,
-} from "@/lib/local-fiscal-workflow";
-import type { WorkflowEdge, WorkflowNode } from "@/lib/workflow-store";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
+import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
 import { SUPPORTED_AGGREGATION_OPERATIONS } from "../source-viewers/aggregation-rule-modes";
 import { AggregationRulesOverview } from "../source-viewers/aggregation-rules-overview";
 import {

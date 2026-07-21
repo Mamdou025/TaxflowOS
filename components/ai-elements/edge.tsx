@@ -10,7 +10,7 @@ import {
   useInternalNode,
 } from "@xyflow/react";
 import { CheckCircle2, Loader2, TriangleAlert, XCircle } from "lucide-react";
-import type { WorkflowEdge as SchemaWorkflowEdge } from "@/lib/local-fiscal-workflow";
+import type { WorkflowEdge as SchemaWorkflowEdge } from "@/shared/workflow-engine/local-fiscal-workflow";
 import {
   formatRelationshipType,
   getEdgeLabelClassName,

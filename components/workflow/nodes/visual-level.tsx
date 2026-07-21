@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import type { WorkflowNodeData } from "@/lib/workflow-store";
+import type { WorkflowNodeData } from "@/shared/workflow-engine/state/workflow-store";
 
 type VisualLevel = NonNullable<WorkflowNodeData["visualLevel"]>;
 type VisualRole = NonNullable<WorkflowNodeData["visualRole"]>;

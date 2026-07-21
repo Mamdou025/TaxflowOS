@@ -3,7 +3,7 @@ import type {
   BlockSubtype,
   WorkflowBlock,
   WorkflowDefinition,
-} from "../../lib/local-fiscal-workflow";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
 
 export type BlockExecutionStatus =
   | "error"

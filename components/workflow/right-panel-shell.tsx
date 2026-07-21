@@ -11,8 +11,8 @@ import {
   saveWorkflowDefinitionSnapshot,
   type WorkflowBlock,
   workflowDefinitionToCanvas,
-} from "@/lib/local-fiscal-workflow";
-import { getWorkflowConfig } from "@/lib/workflow-runs";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { getWorkflowConfig } from "@/shared/workflow-engine/runtime/workflow-runs";
 import {
   activeRightPanelAtom,
   type ActiveRightPanel,
@@ -28,7 +28,7 @@ import {
   showMinimapAtom,
   triggerFitViewAtom,
   updateNodeDataAtom,
-} from "@/lib/workflow-store";
+} from "@/shared/workflow-engine/state/workflow-store";
 
 const PANEL_WIDTH = "34%";
 

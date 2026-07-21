@@ -12,13 +12,13 @@ import {
   updateWorkflowEdgeRecord,
   type WorkflowBlock,
   type WorkflowEdge as WorkflowSchemaEdge,
-} from "@/lib/local-fiscal-workflow";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
 import type {
   WorkflowEdge,
   WorkflowNode,
   WorkflowNodeData,
-} from "@/lib/workflow-store";
-import { isGovernedValueBlock } from "@/src/domain/workflow/protected-rules";
+} from "@/shared/workflow-engine/state/workflow-store";
+import { isGovernedValueBlock } from "@/shared/workflow-engine/domain/workflow/protected-rules";
 import {
   createWorkflowAuditEvent,
   summarizeBlockForAudit,
@@ -26,16 +26,16 @@ import {
   type WorkflowAuditEvent,
   type WorkflowAuditEventType,
   type WorkflowAuditTargetType,
-} from "@/src/audit/workflow-events";
-import type { WorkflowRelationshipType } from "@/src/domain/workflow/edge-types";
+} from "@/shared/workflow-engine/audit/workflow-events";
+import type { WorkflowRelationshipType } from "@/shared/workflow-engine/domain/workflow/edge-types";
 import {
   SOURCE_LOCKED_CONFIG_KEYS,
   sourceHasLockableEvidence,
-} from "@/src/domain/workflow/source-rules";
+} from "@/shared/workflow-engine/domain/workflow/source-rules";
 import {
   isKnownWorkflowRelationshipType,
   isWorkflowRelationshipAllowed,
-} from "@/src/domain/workflow/workflow-validation";
+} from "@/shared/workflow-engine/domain/workflow/workflow-validation";
 
 export type WorkflowCommandType =
   | "add-block"

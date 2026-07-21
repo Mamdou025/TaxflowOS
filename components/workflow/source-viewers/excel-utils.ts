@@ -1,6 +1,6 @@
 "use client";
 
-import { hasExcelSourceEvidence as hasConfiguredExcelSourceEvidence } from "@/src/domain/workflow/source-rules";
+import { hasExcelSourceEvidence as hasConfiguredExcelSourceEvidence } from "@/shared/workflow-engine/domain/workflow/source-rules";
 
 export type ExcelColumnMapping = {
   account?: string;

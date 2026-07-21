@@ -18,5 +18,5 @@ export type { EvidenceRef, SourceTraceRef };
 export type {
   GovernanceMetadata,
   SourceMetadata,
-} from '@/src/domain/workflow/workflow-types';
-export type { ProtectedKind } from '@/src/domain/workflow/protected-rules';
+} from '@/shared/workflow-engine/domain/workflow/workflow-types';
+export type { ProtectedKind } from '@/shared/workflow-engine/domain/workflow/protected-rules';

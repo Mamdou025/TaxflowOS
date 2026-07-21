@@ -13,7 +13,7 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { Workflow, FileText, Settings, Save, Play } from 'lucide-react';
 import { usePageMenu } from '@/shared/stores/page-menu-store';
 import { builderBridgeAtom } from '@/lib/builder-bridge';
-import { activeRightPanelAtom, triggerFitViewAtom, type ActiveRightPanel } from '@/lib/workflow-store';
+import { activeRightPanelAtom, triggerFitViewAtom, type ActiveRightPanel } from '@/shared/workflow-engine/state/workflow-store';
 
 export function BuilderPageMenu() {
   const bridge = useAtomValue(builderBridgeAtom);

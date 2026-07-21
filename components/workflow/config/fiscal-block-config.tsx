@@ -21,7 +21,7 @@ import {
   FISCAL_STAGE_OPTIONS,
   type FiscalStage,
   getFiscalStageLabel,
-} from "@/lib/local-fiscal-workflow";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
 
 type FiscalBlockConfigProps = {
   config: Record<string, unknown>;

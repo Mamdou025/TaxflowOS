@@ -1,5 +1,5 @@
-import type { WorkflowBlock } from "@/lib/local-fiscal-workflow";
-import type { ToolDefinition } from "@/lib/local-tool-registry";
+import type { WorkflowBlock } from "@/shared/workflow-engine/local-fiscal-workflow";
+import type { ToolDefinition } from "@/shared/workflow-engine/local-tool-registry";
 
 export type BlockCodePreviewLanguage =
   | "formula"

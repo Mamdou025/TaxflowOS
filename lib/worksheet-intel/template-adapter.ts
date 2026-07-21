@@ -16,7 +16,7 @@
 // so numbers + explanations match the worksheet regardless of how it computes.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { runTemplateCore, buildOverrideRules, type CoreResult, type DerivedRow, type TemplateConfig } from '@/lib/workflow-runs';
+import { runTemplateCore, buildOverrideRules, type CoreResult, type DerivedRow, type TemplateConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
 import type {
   LineExplanation,
   OperandBreakdown,

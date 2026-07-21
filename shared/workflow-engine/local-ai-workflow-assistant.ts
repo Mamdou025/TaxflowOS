@@ -17,7 +17,7 @@ import {
   type WorkflowEdge,
   type WorkflowRelationshipType,
 } from "./local-fiscal-workflow";
-import { isGovernedValueBlock } from "../src/domain/workflow/protected-rules";
+import { isGovernedValueBlock } from "@/shared/workflow-engine/domain/workflow/protected-rules";
 
 const MOCK_AI_USER = "mock-ai-panel";
 const SOURCE_EDIT_INTENT_REGEX = /\b(edit|correct|override|annotate)\b/;

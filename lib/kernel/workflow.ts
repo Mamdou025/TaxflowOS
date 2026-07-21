@@ -20,7 +20,7 @@ export type {
   WorkflowBlock,
   WorkflowEdge,
   WorkflowVersionSnapshot,
-} from '@/src/domain/workflow/workflow-types';
+} from '@/shared/workflow-engine/domain/workflow/workflow-types';
 
 // ── Canonical node model (freeze this first — §2.2) ──────────────────────────────
 // Public palette keeps friendly family names; INTERNALLY there are five node kinds.

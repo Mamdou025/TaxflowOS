@@ -1,10 +1,10 @@
 'use client';
 
-import { createCampaignBudgetWorkflow } from '@/lib/local-fiscal-workflow';
+import { createCampaignBudgetWorkflow } from '@/shared/workflow-engine/local-fiscal-workflow';
 import {
   CAMPAIGN_ELECTION_CALC_RULES,
   CAMPAIGN_SUMMARY_CALC_RULES,
-} from '@/lib/workflow/sample-workflows/campaign-budget-template';
+} from '@/shared/workflow-engine/templates/sample-workflows/campaign-budget-template';
 import type { TemplateConfig, SourceRow, CategoryOption, DerivedRow } from './engine';
 
 // Sample channel spend requests — one row per proposed campaign line. The

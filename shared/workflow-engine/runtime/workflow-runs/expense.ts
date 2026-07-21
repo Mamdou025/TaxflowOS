@@ -1,10 +1,10 @@
 'use client';
 
-import { createExpenseReimbursementWorkflow } from '@/lib/local-fiscal-workflow';
+import { createExpenseReimbursementWorkflow } from '@/shared/workflow-engine/local-fiscal-workflow';
 import {
   EXPENSE_LINES_CALC_RULES,
   EXPENSE_SUMMARY_CALC_RULES,
-} from '@/lib/workflow/sample-workflows/expense-reimbursement-template';
+} from '@/shared/workflow-engine/templates/sample-workflows/expense-reimbursement-template';
 import type { TemplateConfig, SourceRow, CategoryOption, DerivedRow } from './engine';
 
 // Sample expense report — one row per receipt. The classifier matches on label +

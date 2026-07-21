@@ -1,10 +1,10 @@
 import { SAMPLE_CALCULATION_RULES } from "../backend/blocks/source/calculation-rules/fixtures";
 import { SAMPLE_ROLLUP_RULES } from "../backend/blocks/source/rollup-rules/fixtures";
 import { executeTool } from "../backend/runtime/registry";
-import type { WorkflowBlock } from "../lib/local-fiscal-workflow";
-import { createWorkingSourceRulesDemoWorkflow } from "../lib/local-fiscal-workflow";
-import { runLocalWorkflowTools } from "../lib/local-tool-runner";
-import type { WorkflowEdge, WorkflowNode } from "../lib/workflow-store";
+import type { WorkflowBlock } from "@/shared/workflow-engine/local-fiscal-workflow";
+import { createWorkingSourceRulesDemoWorkflow } from "@/shared/workflow-engine/local-fiscal-workflow";
+import { runLocalWorkflowTools } from "@/shared/workflow-engine/local-tool-runner";
+import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
 
 type TrialBalanceRow = {
   account: string;

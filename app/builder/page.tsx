@@ -13,8 +13,8 @@ import {
   loadLocalWorkflowSnapshotResult,
   saveWorkflowDefinitionSnapshot,
   workflowDefinitionToCanvas,
-} from "@/lib/local-fiscal-workflow";
-import { getWorkflowConfig } from "@/lib/workflow-runs";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { getWorkflowConfig } from "@/shared/workflow-engine/runtime/workflow-runs";
 import {
   currentWorkflowIdAtom,
   currentWorkflowNameAtom,
@@ -30,7 +30,7 @@ import {
   workflowNotFoundAtom,
   builderFocusTargetAtom,
   focusNodeIdAtom,
-} from "@/lib/workflow-store";
+} from "@/shared/workflow-engine/state/workflow-store";
 import { uploadedRowsAtom } from "@/shared/stores/workspace-store";
 
 const BuilderPage = () => {

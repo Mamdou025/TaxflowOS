@@ -11,8 +11,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { HardDrive, Mail, Search, Loader2, FileSpreadsheet, Paperclip, X } from 'lucide-react';
 import { authClient } from '@/lib/auth-client';
-import { parseUploadToRows } from '@/lib/workflow-runs/parse-upload';
-import type { SourceRow } from '@/lib/workflow-runs';
+import { parseUploadToRows } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
+import type { SourceRow } from '@/shared/workflow-engine/runtime/workflow-runs';
 import type { GoogleStatusResponse } from '@/app/api/google/status/route';
 import type { DriveFilesResponse } from '@/app/api/google/drive/files/route';
 import type { GmailMessagesResponse } from '@/app/api/google/gmail/messages/route';

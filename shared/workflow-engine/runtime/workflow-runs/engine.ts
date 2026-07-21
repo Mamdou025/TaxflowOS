@@ -1,7 +1,7 @@
 'use client';
 
-import { runLocalWorkflowTools } from '@/lib/local-tool-runner';
-import { workflowDefinitionToCanvas } from '@/lib/local-fiscal-workflow';
+import { runLocalWorkflowTools } from '@/shared/workflow-engine/local-tool-runner';
+import { workflowDefinitionToCanvas } from '@/shared/workflow-engine/local-fiscal-workflow';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Generic "classify → roll up → compute" workflow-run engine.

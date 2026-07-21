@@ -14,11 +14,11 @@ import { useMemo, useRef, useState } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { useRouter } from 'next/navigation';
 import { Upload, GitBranch, Loader2 } from 'lucide-react';
-import { runTemplateCore, buildOverrideRules, type SourceRow } from '@/lib/workflow-runs';
-import { EXPENSE_CONFIG } from '@/lib/workflow-runs/expense';
-import { parseUploadToRows } from '@/lib/workflow-runs/parse-upload';
+import { runTemplateCore, buildOverrideRules, type SourceRow } from '@/shared/workflow-engine/runtime/workflow-runs';
+import { EXPENSE_CONFIG } from '@/shared/workflow-engine/runtime/workflow-runs/expense';
+import { parseUploadToRows } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
 import { uploadedRowsAtom, runEditsAtom, setRunInputAtom, EMPTY_RUN_EDITS } from '@/shared/stores/workspace-store';
-import { builderFocusTargetAtom } from '@/lib/workflow-store';
+import { builderFocusTargetAtom } from '@/shared/workflow-engine/state/workflow-store';
 import { WorksheetCopilot } from '@/components/assistant/worksheet-copilot';
 
 const INK = '#18181b', MUTED = '#71717a', FAINT = '#a1a1aa';

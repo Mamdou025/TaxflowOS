@@ -1,7 +1,7 @@
 'use client';
 
-import { createRoullementFiscalWorkflow } from '@/lib/local-fiscal-workflow';
-import { ROULEMENT_ELECTION_CALC_RULES, ROULEMENT_SUMMARY_CALC_RULES } from '@/lib/workflow/sample-workflows/roulement-fiscal-template';
+import { createRoullementFiscalWorkflow } from '@/shared/workflow-engine/local-fiscal-workflow';
+import { ROULEMENT_ELECTION_CALC_RULES, ROULEMENT_SUMMARY_CALC_RULES } from '@/shared/workflow-engine/templates/sample-workflows/roulement-fiscal-template';
 import type { TemplateConfig, SourceRow, CategoryOption, DerivedRow } from './engine';
 
 // Sample "biens transférés" — the property being rolled into the corporation.

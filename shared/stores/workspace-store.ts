@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-import type { SourceRow } from '@/lib/workflow-runs/engine';
+import type { SourceRow } from '@/shared/workflow-engine/runtime/workflow-runs/engine';
 import type { ActorKind, Coworker } from '@/lib/coworkers';
 
 // ─────────────────────────────────────────────────────────────────────────────

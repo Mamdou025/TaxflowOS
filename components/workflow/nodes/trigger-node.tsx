@@ -9,7 +9,7 @@ import {
   NodeTitle,
 } from "@/components/ai-elements/node";
 import { cn } from "@/lib/utils";
-import type { WorkflowNodeData } from "@/lib/workflow-store";
+import type { WorkflowNodeData } from "@/shared/workflow-engine/state/workflow-store";
 import {
   FamilyNodeShape,
   getFamilyCanvasTitle,

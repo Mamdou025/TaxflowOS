@@ -18,7 +18,7 @@ import {
   type ToolRunStatus,
   type WorkflowRunResult,
 } from "./local-tool-registry";
-import type { WorkflowEdge, WorkflowNode } from "./workflow-store";
+import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
 
 type LocalToolRunMode = "downstream" | "selected" | "workflow";
 export type LocalEdgeRunStatus = "error" | "success" | "warning";

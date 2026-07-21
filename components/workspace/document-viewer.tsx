@@ -29,7 +29,7 @@ import {
 import * as XLSX from 'xlsx';
 import { attachedDocsAtom, uploadedRowsAtom, type AttachedDoc } from '@/shared/stores/workspace-store';
 import { assistantOpenAtom } from '@/shared/stores/chat-store';
-import { parseUploadToRows } from '@/lib/workflow-runs/parse-upload';
+import { parseUploadToRows } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type DocKind = 'pdf' | 'excel' | 'word' | 'text' | 'unsupported';

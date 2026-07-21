@@ -3,7 +3,7 @@
 import { useAtom } from "jotai";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { nodesAtom, selectedNodeAtom } from "@/lib/workflow-store";
+import { nodesAtom, selectedNodeAtom } from "@/shared/workflow-engine/state/workflow-store";
 import { findActionById } from "@/plugins";
 import { TemplateAutocomplete } from "./template-autocomplete";
 

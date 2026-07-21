@@ -1,24 +1,24 @@
 import type { Edge, EdgeChange, Node, NodeChange } from "@xyflow/react";
 import { atom, type Getter, type Setter } from "jotai";
-import { appendWorkflowChangeEvents } from "@/src/audit/change-log";
-import type { WorkflowAuditEvent } from "@/src/audit/workflow-events";
+import { appendWorkflowChangeEvents } from "@/shared/workflow-engine/audit/change-log";
+import type { WorkflowAuditEvent } from "@/shared/workflow-engine/audit/workflow-events";
 import {
   runWorkflowCommand,
   type WorkflowChangeEvent,
   type WorkflowCommand,
   type WorkflowCommandState,
-} from "@/src/state/workflow-commands";
-import { api } from "./api-client";
+} from "@/shared/workflow-engine/state/workflow-commands";
+import { api } from "@/lib/api-client";
 import type {
   WorkflowBlock,
   WorkflowEvent,
   WorkflowEdge as WorkflowSchemaEdge,
-} from "./local-fiscal-workflow";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
 import {
   isLocalWorkflowId,
   LOCAL_WORKFLOW_ID,
   saveLocalWorkflowSnapshot,
-} from "./local-fiscal-workflow";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
 
 export type WorkflowNodeType = "trigger" | "action" | "add";
 

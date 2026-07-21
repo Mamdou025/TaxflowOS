@@ -35,7 +35,7 @@ import {
   selectedExecutionIdAtom,
   selectedNodeAtom,
   type WorkflowNodeData,
-} from "@/lib/workflow-store";
+} from "@/shared/workflow-engine/state/workflow-store";
 import { findActionById, getIntegration } from "@/plugins";
 import {
   FamilyNodeShape,

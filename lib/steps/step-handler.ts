@@ -10,7 +10,7 @@ import {
   logStepCompleteDb,
   logStepStartDb,
   logWorkflowCompleteDb,
-} from "../workflow-logging";
+} from "@/shared/workflow-engine/runtime/workflow-logging";
 
 export type StepContext = {
   executionId?: string;

@@ -11,7 +11,7 @@ import {
   CalculationRulesSourceEditor,
   RollupRulesSourceEditor,
 } from "@/components/workflow/source-viewers/split-rule-source-editors";
-import type { WorkflowBlock } from "@/lib/local-fiscal-workflow";
+import type { WorkflowBlock } from "@/shared/workflow-engine/local-fiscal-workflow";
 
 type SourceSetupPanelProps = {
   block: WorkflowBlock;

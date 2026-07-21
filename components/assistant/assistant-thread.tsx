@@ -23,7 +23,7 @@ import {
 } from '@/components/workspace/aside-thread';
 import { InlineFieldCard } from '@/components/workspace/inline-field-card';
 import { WorkflowElementCard } from '@/components/workspace/workflow-run-flow';
-import { getWorkflowConfig } from '@/lib/workflow-runs';
+import { getWorkflowConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
 import { getAgent } from '@/lib/agents';
 import { buildAgentCatalog } from '@/shared/stores/resource-registry';
 import { LC } from '@/lib/librechat-theme';

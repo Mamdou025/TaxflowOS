@@ -15,13 +15,13 @@ import { Input } from "@/shared/ui/input";
 import type {
   LocalRunRecord,
   WorkflowBlock,
-} from "@/lib/local-fiscal-workflow";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
 import {
   getToolForBlock,
   type ToolDefinition,
   type ToolOutputRole,
-} from "@/lib/local-tool-registry";
-import type { WorkflowEdge, WorkflowNode } from "@/lib/workflow-store";
+} from "@/shared/workflow-engine/local-tool-registry";
+import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
 import { getDataPreviewSummary } from "../data-viewer/data-preview-summary";
 import { DATA_VIEW_LABELS } from "../data-viewer/data-view-tabs";
 import { DataDisplayViewer } from "../data-viewer/data-viewer";

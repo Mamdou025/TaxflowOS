@@ -32,7 +32,7 @@ import {
   getUnsupportedWorkflowRelationshipMessage,
   getWorkflowEdgeDefaults,
   isLocalWorkflowId,
-} from "@/lib/local-fiscal-workflow";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
 import {
   addNodeAtom,
   connectBlocksAtom,
@@ -54,11 +54,11 @@ import {
   focusNodeIdAtom,
   updateNodeDataAtom,
   type WorkflowNode,
-} from "@/lib/workflow-store";
+} from "@/shared/workflow-engine/state/workflow-store";
 import {
   getDefaultInspectorTabForFamily,
   getDefaultInspectorTabForSelection,
-} from "@/src/domain/workflow/inspector-rules";
+} from "@/shared/workflow-engine/domain/workflow/inspector-rules";
 import { Edge } from "../ai-elements/edge";
 import { Panel } from "../ai-elements/panel";
 import { ActionNode } from "./nodes/action-node";

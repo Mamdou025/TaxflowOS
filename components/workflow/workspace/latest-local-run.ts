@@ -1,8 +1,8 @@
 import {
   LOCAL_WORKFLOW_ID,
   type LocalRunRecord,
-} from "@/lib/local-fiscal-workflow";
-import type { ExecutionLogEntry } from "@/lib/workflow-store";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
+import type { ExecutionLogEntry } from "@/shared/workflow-engine/state/workflow-store";
 
 function createRunRecordFromExecutionLogs({
   executionId,

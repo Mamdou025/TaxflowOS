@@ -10,10 +10,10 @@ import { useParams, useRouter } from 'next/navigation';
 import { useSetAtom } from 'jotai';
 import { useTheme } from 'next-themes';
 import { ArrowLeft } from 'lucide-react';
-import { getWorkflowConfig } from '@/lib/workflow-runs';
+import { getWorkflowConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
 import { getAgent } from '@/lib/agents';
 import { WorkflowRunFlow } from '@/components/workspace/workflow-run-flow';
-import { builderFocusTargetAtom } from '@/lib/workflow-store';
+import { builderFocusTargetAtom } from '@/shared/workflow-engine/state/workflow-store';
 import { pageRoute } from '@/lib/page-routes';
 
 export default function RunPage() {

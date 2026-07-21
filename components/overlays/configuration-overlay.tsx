@@ -54,12 +54,12 @@ import {
   saveLocalRunRecord,
   saveLocalWorkflowSnapshot,
   type WorkflowBlock,
-} from "@/lib/local-fiscal-workflow";
-import { getToolForBlock } from "@/lib/local-tool-registry";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { getToolForBlock } from "@/shared/workflow-engine/local-tool-registry";
 import {
   type LocalEdgeRunStatus,
   runLocalWorkflowTools,
-} from "@/lib/local-tool-runner";
+} from "@/shared/workflow-engine/local-tool-runner";
 import type { IntegrationType } from "@/lib/types/integration";
 import { generateWorkflowCode } from "@/lib/workflow-codegen";
 import {
@@ -86,10 +86,10 @@ import {
   updateNodeDataAtom,
   type WorkflowEdge,
   type WorkflowNode,
-} from "@/lib/workflow-store";
+} from "@/shared/workflow-engine/state/workflow-store";
 import { findActionById } from "@/plugins";
-import { isInspectorTab } from "@/src/domain/workflow/inspector-rules";
-import { hasExcelSourceEvidence } from "@/src/domain/workflow/source-rules";
+import { isInspectorTab } from "@/shared/workflow-engine/domain/workflow/inspector-rules";
+import { hasExcelSourceEvidence } from "@/shared/workflow-engine/domain/workflow/source-rules";
 import { ActionConfig } from "../workflow/config/action-config";
 import { ActionGrid } from "../workflow/config/action-grid";
 import { FiscalBlockConfig } from "../workflow/config/fiscal-block-config";

@@ -1,8 +1,8 @@
 import type {
   EdgeStatus,
   WorkflowRelationshipType,
-} from "@/lib/local-fiscal-workflow";
-import { WORKFLOW_RELATIONSHIP_LABELS } from "@/lib/local-fiscal-workflow";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { WORKFLOW_RELATIONSHIP_LABELS } from "@/shared/workflow-engine/local-fiscal-workflow";
 import { cn } from "@/lib/utils";
 
 export function formatRelationshipType(type: WorkflowRelationshipType) {

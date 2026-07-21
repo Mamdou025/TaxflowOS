@@ -36,11 +36,11 @@ import {
   TooltipTrigger,
 } from "@/shared/ui/tooltip";
 import { useIsTouch } from "@/hooks/use-touch";
-import { BLOCK_CATALOG, isLocalWorkflowId } from "@/lib/local-fiscal-workflow";
+import { BLOCK_CATALOG, isLocalWorkflowId } from "@/shared/workflow-engine/local-fiscal-workflow";
 import { cn } from "@/lib/utils";
-import { currentWorkflowIdAtom } from "@/lib/workflow-store";
+import { currentWorkflowIdAtom } from "@/shared/workflow-engine/state/workflow-store";
 import { getAllActions } from "@/plugins";
-import { PUBLIC_BLOCK_FAMILIES } from "@/src/domain/workflow/block-types";
+import { PUBLIC_BLOCK_FAMILIES } from "@/shared/workflow-engine/domain/workflow/block-types";
 
 type ActionType = {
   id: string;

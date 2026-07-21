@@ -4,7 +4,7 @@
  */
 
 import type { IntegrationConfig, IntegrationType } from "./types/integration";
-import type { WorkflowEdge, WorkflowNode } from "./workflow-store";
+import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
 
 // Workflow data types
 export type WorkflowVisibility = "private" | "public";

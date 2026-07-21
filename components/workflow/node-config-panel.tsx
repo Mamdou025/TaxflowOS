@@ -57,11 +57,11 @@ import {
   saveLocalRunRecord,
   saveLocalWorkflowSnapshot,
   type WorkflowBlock,
-} from "@/lib/local-fiscal-workflow";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
 import {
   type LocalEdgeRunStatus,
   runLocalWorkflowTools,
-} from "@/lib/local-tool-runner";
+} from "@/shared/workflow-engine/local-tool-runner";
 import type { IntegrationType } from "@/lib/types/integration";
 import { generateWorkflowCode } from "@/lib/workflow-codegen";
 import {
@@ -92,13 +92,13 @@ import {
   updateNodeDataAtom,
   type WorkflowEdge,
   type WorkflowNodeData,
-} from "@/lib/workflow-store";
+} from "@/shared/workflow-engine/state/workflow-store";
 import { findActionById } from "@/plugins";
 import {
   getDefaultInspectorTabForFamily,
   getDefaultInspectorTabForSelection,
-} from "@/src/domain/workflow/inspector-rules";
-import { hasExcelSourceEvidence } from "@/src/domain/workflow/source-rules";
+} from "@/shared/workflow-engine/domain/workflow/inspector-rules";
+import { hasExcelSourceEvidence } from "@/shared/workflow-engine/domain/workflow/source-rules";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { ActionConfig } from "./config/action-config";
 import { ActionGrid } from "./config/action-grid";

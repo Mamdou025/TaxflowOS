@@ -3,14 +3,14 @@
 import { ArrowLeft, FileText } from "lucide-react";
 import { useState } from "react";
 import { useAtomValue } from "jotai";
-import { loadLocalRunRecords, type WorkflowBlock } from "@/lib/local-fiscal-workflow";
+import { loadLocalRunRecords, type WorkflowBlock } from "@/shared/workflow-engine/local-fiscal-workflow";
 import {
   currentWorkflowNameAtom,
   edgesAtom,
   nodesAtom,
   type WorkflowEdge,
   type WorkflowNode,
-} from "@/lib/workflow-store";
+} from "@/shared/workflow-engine/state/workflow-store";
 import {
   extractFieldEntries,
   FieldRow,

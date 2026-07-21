@@ -7,7 +7,7 @@ import { nanoid } from "nanoid";
 import { useCallback, useEffect, useRef } from "react";
 import { ConfirmOverlay } from "@/components/overlays/confirm-overlay";
 import { useOverlay } from "@/components/overlays/overlay-provider";
-import { createDefaultWorkflowBlockCandidate } from "@/lib/local-fiscal-workflow";
+import { createDefaultWorkflowBlockCandidate } from "@/shared/workflow-engine/local-fiscal-workflow";
 import { cn } from "@/lib/utils";
 import {
   addNodeAtom,
@@ -17,7 +17,7 @@ import {
   propertiesPanelActiveTabAtom,
   selectedNodeAtom,
   type WorkflowNode,
-} from "@/lib/workflow-store";
+} from "@/shared/workflow-engine/state/workflow-store";
 
 export type ContextMenuType = "node" | "edge" | "pane" | null;
 

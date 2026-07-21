@@ -23,9 +23,9 @@ import {
   WORKFLOW_RELATIONSHIP_TYPES,
   type WorkflowBlock,
   type WorkflowRelationshipType,
-} from "@/lib/local-fiscal-workflow";
-import { getToolForBlock } from "@/lib/local-tool-registry";
-import type { WorkflowEdge } from "@/lib/workflow-store";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { getToolForBlock } from "@/shared/workflow-engine/local-tool-registry";
+import type { WorkflowEdge } from "@/shared/workflow-engine/state/workflow-store";
 import { formatRelationshipType } from "./utils/edge-relationships";
 
 type EdgeInspectorProps = {

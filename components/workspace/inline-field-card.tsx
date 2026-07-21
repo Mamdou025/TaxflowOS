@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { getFieldContext, fieldValuesAtom } from '@/shared/stores/resource-registry';
 import { runEditsAtom, setRunInputAtom } from '@/shared/stores/workspace-store';
-import { getWorkflowConfig } from '@/lib/workflow-runs';
+import { getWorkflowConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
 
 const INK = '#18181b', FAINT = '#a1a1aa', LINE = 'rgba(24,24,27,0.12)', MUTED = '#71717a';
 
