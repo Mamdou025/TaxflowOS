@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
-import { TemplateBadgeInput } from "@/shared/ui/template-badge-input";
+import { TemplateBadgeInput } from "@/features/workflow-builder/ui/inputs/template-badge-input";
 import {
   Tooltip,
   TooltipContent,

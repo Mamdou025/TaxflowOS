@@ -134,7 +134,7 @@ Files ≥700 LOC and other hotspots. Most are single mega-exports mixing layout,
 | `lib/integrations/vercel.ts` | 671 | **DEAD** — full Vercel SDK wrapper, zero importers. |
 | `lib/api-client.ts` | 664 | Typed browser→API client (~17 UI importers). |
 | `tax-ui/components/OrbitalStage.tsx` | 658 | **DEAD** island nav stage. |
-| `shared/ui/template-badge-textarea.tsx` | 620 | Workflow template-var textarea — a **domain widget still misfiled** in the design system (split out in Phase 4). |
+| `features/workflow-builder/ui/inputs/template-badge-textarea.tsx` | 620 | Workflow template-var textarea — a **domain widget still misfiled** in the design system (split out in Phase 4). |
 | `app/globals.css` | 584 | 104 `--sx-*` tokens + React-Flow overrides + keyframes. |
 | `plugins/registry.ts` | 560 | Plugin registry: types + ~20 query/util fns. |
 

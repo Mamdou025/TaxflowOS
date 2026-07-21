@@ -11,8 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
-import { TemplateBadgeInput } from "@/shared/ui/template-badge-input";
-import { TemplateBadgeTextarea } from "@/shared/ui/template-badge-textarea";
+import { TemplateBadgeInput } from "@/features/workflow-builder/ui/inputs/template-badge-input";
+import { TemplateBadgeTextarea } from "@/features/workflow-builder/ui/inputs/template-badge-textarea";
 import {
   type ActionConfigField,
   type ActionConfigFieldBase,
