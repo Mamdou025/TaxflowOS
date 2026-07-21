@@ -7,7 +7,7 @@
 // `EvidenceReference` is the kernel's canonical name for the existing `EvidenceRef`.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { EvidenceRef, SourceTraceRef } from '@/backend/runtime/types';
+import type { EvidenceRef, SourceTraceRef } from '@/shared/workflow-engine/execution/runtime/types';
 
 /** Canonical kernel name for an immutable pointer to a source value. */
 export type EvidenceReference = EvidenceRef;

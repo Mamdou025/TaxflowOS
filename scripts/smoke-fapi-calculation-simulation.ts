@@ -1,6 +1,6 @@
-import { SAMPLE_CALCULATION_RULES } from "../backend/blocks/source/calculation-rules/fixtures";
-import { SAMPLE_ROLLUP_RULES } from "../backend/blocks/source/rollup-rules/fixtures";
-import { executeTool } from "../backend/runtime/registry";
+import { SAMPLE_CALCULATION_RULES } from "@/shared/workflow-engine/execution/blocks/source/calculation-rules/fixtures";
+import { SAMPLE_ROLLUP_RULES } from "@/shared/workflow-engine/execution/blocks/source/rollup-rules/fixtures";
+import { executeTool } from "@/shared/workflow-engine/execution/runtime/registry";
 import type { WorkflowBlock } from "@/shared/workflow-engine/local-fiscal-workflow";
 import { createWorkingSourceRulesDemoWorkflow } from "@/shared/workflow-engine/local-fiscal-workflow";
 import { runLocalWorkflowTools } from "@/shared/workflow-engine/local-tool-runner";

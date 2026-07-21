@@ -1,11 +1,11 @@
 import {
   executeTool as executeBackendTool,
   getToolDefinition as getBackendToolDefinition,
-} from "@/backend/runtime/registry";
+} from "@/shared/workflow-engine/execution/runtime/registry";
 import type {
   ToolExecutionContext as BackendToolExecutionContext,
   ToolRunResult as BackendToolRunResult,
-} from "@/backend/runtime/types";
+} from "@/shared/workflow-engine/execution/runtime/types";
 import {
   type BlockFamily,
   type BlockSubtype,

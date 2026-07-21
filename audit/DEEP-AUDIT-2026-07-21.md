@@ -48,7 +48,7 @@ Full table in [`docs/REPO-MAP.md` §4](../docs/REPO-MAP.md). The refactor-priori
 | `features/workflow-builder/ui/node-config-panel.tsx` | 2,225 | one ~1,850-line `PanelInner` React function | per-block-type sections under `node-config/sections/*` |
 | `components/overlays/configuration-overlay.tsx` + `inspector/block-inspector.tsx` + `workspace/block-data-flow-pane.tsx` | ~5,900 | **~500 lines of helpers copy-pasted across all three** | shared `block-kinds.ts` + `block-outputs.ts` |
 | `shared/workflow-engine/codegen/workflow-codegen.ts` | 1,316 | one ~1,268-line `generateWorkflowCode` function | per-block-type emitters under `codegen/emitters/*` |
-| `backend/blocks/logic/hierarchy-aggregator/run.ts` + `calculation-engine/run.ts` | 2,210 | **formula tokenizer/RPN/evaluator duplicated verbatim** across both | extract `backend/blocks/logic/shared/formula-expression.ts` |
+| `shared/workflow-engine/execution/blocks/logic/hierarchy-aggregator/run.ts` + `calculation-engine/run.ts` | 2,210 | **formula tokenizer/RPN/evaluator duplicated verbatim** across both | extract `shared/workflow-engine/execution/blocks/logic/shared/formula-expression.ts` |
 | `shared/workflow-engine/local-ai-workflow-assistant.ts` | 1,496 | 1 Ask responder + 17 Propose generators flat in one file | `lib/ai-assistant/{ask,proposals}/*` |
 
 > **Two parallel block-config UIs** coexist (~6k LOC): legacy `node-config-panel → block-inspector` (route `/workflows/[id]`) vs current `configuration-overlay` (route `/builder`). They share leaf editors but drift independently. **Both are live** — deciding whether `/workflows/[id]` is deprecated is the highest-leverage single decision in the UI.
@@ -71,14 +71,14 @@ Full table in [`docs/REPO-MAP.md` §4](../docs/REPO-MAP.md). The refactor-priori
 | `tax-ui/pages/Workbench.tsx` | 455 | un-wired leftover page |
 | 9-file orphan cluster (`inscope-home`+`inscope-sidebar` pair, `ambient-orbs`, `canvas-page-wrapper`, `coworker-activity`, `scope-launchpad`, `assistant/*`, `field-editor`, …) | ~1,066 | superseded home/sidebar + orphans |
 | assistant-runtime dead barrels: `lib/assistant-runtime/{index,errors}.ts`, `routing/intent-router.ts` | ~211 | superseded by enforced `routing/classify.ts` |
-| `backend/runtime/{runner,validation}.ts` | ~131 | unreferenced wrappers |
+| `shared/workflow-engine/execution/runtime/{runner,validation}.ts` | ~131 | unreferenced wrappers |
 | `tax-ui/pages/{Home,NotFound}.tsx`, `tax-ui/components/{Map,ManusDialog,ErrorBoundary}.tsx`, `tax-ui/hooks/useComposition.ts` | ~450 | wouter-era island leftovers |
 | `features/workflow-builder/ui/{worksheet-page-menu.tsx, inspector/mock-runs.ts, config/condition-config.tsx}`, `components/overlays/alert-overlay.tsx` | ~487 | orphaned builder pieces (`alert-overlay` is reusable — keep if wanted) |
 | **3 orphaned demo routes**: `app/copilot-test/`, `app/genui-lab/`, `app/viewer/` | — | reachable only by typing the URL; `copilot-test` self-labels "Delete after." |
 
 **Also:** knip reports **16 unused npm deps** and **5 unused shadcn primitives** (`collapsible, context-menu, drawer, resizable, sheet`) — but verify plugin-referenced deps (`@slack/web-api`, `resend`, `@linear/sdk`, `@vercel/sdk`, `firecrawl`) against `plugins/**` before removing.
 
-**Remaining knip "unused files" candidates (10, NOT auto-deleted — review first, several are plausibly dynamic-loaded or intentional):** `e2e-deep.config.ts` (needs a `test:e2e:deep` script, not dead), the 5 shadcn primitives above, `shared/workflow-engine/runtime/steps/{credentials,index.ts}` (steps are dynamic-imported via the generated registry — verify), `shared/workflow-engine/runtime/generate-structure-view.ts`, `backend/blocks/logic/keyword-mapper/fixtures.ts` (test fixture).
+**Remaining knip "unused files" candidates (10, NOT auto-deleted — review first, several are plausibly dynamic-loaded or intentional):** `e2e-deep.config.ts` (needs a `test:e2e:deep` script, not dead), the 5 shadcn primitives above, `shared/workflow-engine/runtime/steps/{credentials,index.ts}` (steps are dynamic-imported via the generated registry — verify), `shared/workflow-engine/runtime/generate-structure-view.ts`, `shared/workflow-engine/execution/blocks/logic/keyword-mapper/fixtures.ts` (test fixture).
 
 ### ⚠️ KEEP — verification caught these false-positives
 - **`lib/next-boilerplate/**`** — looks dead (excluded from tsc, knip-unused) but is **read from disk at runtime** by `app/api/workflows/[workflowId]/download/route.ts:13`. Deleting it breaks workflow export.
