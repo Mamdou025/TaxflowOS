@@ -3,9 +3,9 @@
  */
 
 import { AUTO_GENERATED_TEMPLATES } from "@/lib/codegen-registry";
-import conditionTemplate from "@/lib/codegen-templates/condition";
-import databaseQueryTemplate from "@/lib/codegen-templates/database-query";
-import httpRequestTemplate from "@/lib/codegen-templates/http-request";
+import conditionTemplate from "@/shared/workflow-engine/codegen/codegen-templates/condition";
+import databaseQueryTemplate from "@/shared/workflow-engine/codegen/codegen-templates/database-query";
+import httpRequestTemplate from "@/shared/workflow-engine/codegen/codegen-templates/http-request";
 import { findActionById } from "@/plugins";
 
 const NON_IDENTIFIER_SEGMENT_REGEX = /[^a-zA-Z0-9]+/;

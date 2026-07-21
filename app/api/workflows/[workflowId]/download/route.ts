@@ -5,15 +5,15 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { workflows } from "@/lib/db/schema";
-import { generateWorkflowModule } from "@/lib/workflow-codegen";
+import { generateWorkflowModule } from "@/shared/workflow-engine/codegen/workflow-codegen";
 import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
 import { getAllEnvVars, getDependenciesForActions } from "@/plugins";
 
 // Path to the Next.js boilerplate directory
 const BOILERPLATE_PATH = join(process.cwd(), "lib", "next-boilerplate");
 
-// Path to the codegen templates directory
-const CODEGEN_TEMPLATES_PATH = join(process.cwd(), "lib", "codegen-templates");
+// Path to the codegen templates directory (moved to shared/workflow-engine in reorg Phase 3)
+const CODEGEN_TEMPLATES_PATH = join(process.cwd(), "shared", "workflow-engine", "codegen", "codegen-templates");
 
 // Regex patterns for code generation
 const NON_ALPHANUMERIC_REGEX = /[^a-zA-Z0-9\s]/g;

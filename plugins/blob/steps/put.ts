@@ -1,7 +1,7 @@
 import "server-only";
 
 import { fetchCredentials } from "@/lib/credential-fetcher";
-import { type StepInput, withStepLogging } from "@/lib/steps/step-handler";
+import { type StepInput, withStepLogging } from "@/shared/workflow-engine/runtime/steps/step-handler";
 import type { BlobCredentials } from "../credentials";
 
 const BLOB_API_URL = "https://blob.vercel-storage.com";

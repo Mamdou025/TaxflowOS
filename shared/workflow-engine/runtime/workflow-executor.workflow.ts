@@ -12,8 +12,8 @@ import {
   getStepImporter,
   type StepImporter,
 } from "@/lib/step-registry";
-import type { StepContext } from "@/lib/steps/step-handler";
-import { triggerStep } from "@/lib/steps/trigger";
+import type { StepContext } from "@/shared/workflow-engine/runtime/steps/step-handler";
+import { triggerStep } from "@/shared/workflow-engine/runtime/steps/trigger";
 import { getErrorMessageAsync } from "@/lib/utils";
 import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
 
@@ -21,17 +21,17 @@ import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/
 const SYSTEM_ACTIONS: Record<string, StepImporter> = {
   "Database Query": {
     // biome-ignore lint/suspicious/noExplicitAny: Dynamic module import
-    importer: () => import("@/lib/steps/database-query") as Promise<any>,
+    importer: () => import("@/shared/workflow-engine/runtime/steps/database-query") as Promise<any>,
     stepFunction: "databaseQueryStep",
   },
   "HTTP Request": {
     // biome-ignore lint/suspicious/noExplicitAny: Dynamic module import
-    importer: () => import("@/lib/steps/http-request") as Promise<any>,
+    importer: () => import("@/shared/workflow-engine/runtime/steps/http-request") as Promise<any>,
     stepFunction: "httpRequestStep",
   },
   Condition: {
     // biome-ignore lint/suspicious/noExplicitAny: Dynamic module import
-    importer: () => import("@/lib/steps/condition") as Promise<any>,
+    importer: () => import("@/shared/workflow-engine/runtime/steps/condition") as Promise<any>,
     stepFunction: "conditionStep",
   },
 };

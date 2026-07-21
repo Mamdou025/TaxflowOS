@@ -63,7 +63,7 @@ import {
   runLocalWorkflowTools,
 } from "@/shared/workflow-engine/local-tool-runner";
 import type { IntegrationType } from "@/lib/types/integration";
-import { generateWorkflowCode } from "@/lib/workflow-codegen";
+import { generateWorkflowCode } from "@/shared/workflow-engine/codegen/workflow-codegen";
 import {
   addNodeAtom,
   autosaveAtom,

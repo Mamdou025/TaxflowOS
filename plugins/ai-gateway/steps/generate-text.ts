@@ -3,7 +3,7 @@ import "server-only";
 import { createGateway, generateObject, generateText } from "ai";
 import { z } from "zod";
 import { fetchCredentials } from "@/lib/credential-fetcher";
-import { type StepInput, withStepLogging } from "@/lib/steps/step-handler";
+import { type StepInput, withStepLogging } from "@/shared/workflow-engine/runtime/steps/step-handler";
 import { getErrorMessageAsync } from "@/lib/utils";
 import type { AiGatewayCredentials } from "../credentials";
 

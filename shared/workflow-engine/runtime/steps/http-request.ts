@@ -3,7 +3,7 @@
  */
 import "server-only";
 
-import { getErrorMessage } from "../utils";
+import { getErrorMessage } from "@/lib/utils";
 import { type StepInput, withStepLogging } from "./step-handler";
 
 type HttpRequestResult =

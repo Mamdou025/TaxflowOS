@@ -5,7 +5,7 @@
  */
 import "server-only";
 
-import { redactSensitiveData } from "../utils/redact";
+import { redactSensitiveData } from "@/lib/utils/redact";
 import {
   logStepCompleteDb,
   logStepStartDb,

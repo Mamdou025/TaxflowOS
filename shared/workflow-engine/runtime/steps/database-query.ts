@@ -9,7 +9,7 @@ import "server-only";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { fetchCredentials } from "../credential-fetcher";
+import { fetchCredentials } from "@/lib/credential-fetcher";
 import { type StepInput, withStepLogging } from "./step-handler";
 
 type DatabaseQueryResult =

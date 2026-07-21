@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { workflows } from "@/lib/db/schema";
-import { generateWorkflowSDKCode } from "@/lib/workflow-codegen-sdk";
+import { generateWorkflowSDKCode } from "@/shared/workflow-engine/codegen/workflow-codegen-sdk";
 
 export async function GET(
   request: Request,

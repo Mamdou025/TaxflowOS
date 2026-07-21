@@ -47,7 +47,7 @@ Full table in [`docs/REPO-MAP.md` §4](../docs/REPO-MAP.md). The refactor-priori
 | `components/workflow/workflow-toolbar.tsx` | 3,119 | embeds a **client-side execution engine** + validators + 12 buttons in a toolbar | executor → `shared/workflow-engine/runtime/workflow-runs`, validators → `lib/workflow/validation.ts`, buttons → `toolbar/*` |
 | `components/workflow/node-config-panel.tsx` | 2,225 | one ~1,850-line `PanelInner` React function | per-block-type sections under `node-config/sections/*` |
 | `components/overlays/configuration-overlay.tsx` + `inspector/block-inspector.tsx` + `workspace/block-data-flow-pane.tsx` | ~5,900 | **~500 lines of helpers copy-pasted across all three** | shared `block-kinds.ts` + `block-outputs.ts` |
-| `lib/workflow-codegen.ts` | 1,316 | one ~1,268-line `generateWorkflowCode` function | per-block-type emitters under `codegen/emitters/*` |
+| `shared/workflow-engine/codegen/workflow-codegen.ts` | 1,316 | one ~1,268-line `generateWorkflowCode` function | per-block-type emitters under `codegen/emitters/*` |
 | `backend/blocks/logic/hierarchy-aggregator/run.ts` + `calculation-engine/run.ts` | 2,210 | **formula tokenizer/RPN/evaluator duplicated verbatim** across both | extract `backend/blocks/logic/shared/formula-expression.ts` |
 | `shared/workflow-engine/local-ai-workflow-assistant.ts` | 1,496 | 1 Ask responder + 17 Propose generators flat in one file | `lib/ai-assistant/{ask,proposals}/*` |
 
@@ -78,11 +78,11 @@ Full table in [`docs/REPO-MAP.md` §4](../docs/REPO-MAP.md). The refactor-priori
 
 **Also:** knip reports **16 unused npm deps** and **5 unused shadcn primitives** (`collapsible, context-menu, drawer, resizable, sheet`) — but verify plugin-referenced deps (`@slack/web-api`, `resend`, `@linear/sdk`, `@vercel/sdk`, `firecrawl`) against `plugins/**` before removing.
 
-**Remaining knip "unused files" candidates (10, NOT auto-deleted — review first, several are plausibly dynamic-loaded or intentional):** `e2e-deep.config.ts` (needs a `test:e2e:deep` script, not dead), the 5 shadcn primitives above, `lib/steps/{credentials,index.ts}` (steps are dynamic-imported via the generated registry — verify), `shared/workflow-engine/runtime/generate-structure-view.ts`, `backend/blocks/logic/keyword-mapper/fixtures.ts` (test fixture).
+**Remaining knip "unused files" candidates (10, NOT auto-deleted — review first, several are plausibly dynamic-loaded or intentional):** `e2e-deep.config.ts` (needs a `test:e2e:deep` script, not dead), the 5 shadcn primitives above, `shared/workflow-engine/runtime/steps/{credentials,index.ts}` (steps are dynamic-imported via the generated registry — verify), `shared/workflow-engine/runtime/generate-structure-view.ts`, `backend/blocks/logic/keyword-mapper/fixtures.ts` (test fixture).
 
 ### ⚠️ KEEP — verification caught these false-positives
 - **`lib/next-boilerplate/**`** — looks dead (excluded from tsc, knip-unused) but is **read from disk at runtime** by `app/api/workflows/[workflowId]/download/route.ts:13`. Deleting it breaks workflow export.
-- **`lib/workflow-codegen.ts` + `lib/workflow-codegen-shared.ts`** — flagged as superseded but are **live**: they power the "Code" tab and the download route.
+- **`shared/workflow-engine/codegen/workflow-codegen.ts` + `shared/workflow-engine/codegen/workflow-codegen-shared.ts`** — flagged as superseded but are **live**: they power the "Code" tab and the download route.
 - **`components/workflow/node-config-panel.tsx`** — flagged dead but is the **live** config panel for the `/workflows/[workflowId]` route.
 - **`lib/kernel/**`** — unreferenced but **intentional** migration scaffolding. Do not delete; add to knip ignore.
 - **`plugins/index.ts`, `_template/*.txt`, `tax-ui/wouter-shim.tsx`, `features/genui/system-prompt.txt`** — inert-looking but generated/aliased/runtime-read.
