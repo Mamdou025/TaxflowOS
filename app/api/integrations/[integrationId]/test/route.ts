@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import postgres from "postgres";
-import { auth } from "@/lib/auth";
-import { getIntegration as getIntegrationFromDb } from "@/lib/db/integrations";
+import { auth } from "@/platform/auth/auth";
+import { getIntegration as getIntegrationFromDb } from "@/platform/db/integrations";
 import {
   getCredentialMapping,
   getIntegration as getPluginFromRegistry,

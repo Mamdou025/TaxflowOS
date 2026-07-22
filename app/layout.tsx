@@ -4,7 +4,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Provider } from "jotai";
 import { type ReactNode, Suspense } from "react";
-import { AuthProvider } from "@/components/auth/provider";
+import { AuthProvider } from "@/platform/auth/ui/provider";
 import { GitHubStarsLoader } from "@/components/github-stars-loader";
 import { GitHubStarsProvider } from "@/components/github-stars-provider";
 import { GlobalModals } from "@/components/global-modals";

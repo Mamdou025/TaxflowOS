@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AccountSettings } from "@/components/settings/account-settings";
 import { Spinner } from "@/shared/ui/spinner";
-import { api } from "@/lib/api-client";
+import { api } from "@/platform/api-client";
 import { Overlay } from "@/shared/ui/overlays/overlay";
 import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
 

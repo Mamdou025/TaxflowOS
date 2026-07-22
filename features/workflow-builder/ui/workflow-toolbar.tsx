@@ -46,8 +46,8 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
-import { api } from "@/lib/api-client";
-import { authClient, useSession } from "@/lib/auth-client";
+import { api } from "@/platform/api-client";
+import { authClient, useSession } from "@/platform/auth/auth-client";
 import { integrationsAtom } from "@/lib/integrations-store";
 import {
   createDefaultWorkflowBlockCandidate,

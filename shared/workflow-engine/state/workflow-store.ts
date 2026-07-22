@@ -8,7 +8,7 @@ import {
   type WorkflowCommand,
   type WorkflowCommandState,
 } from "@/shared/workflow-engine/state/workflow-commands";
-import { api } from "@/lib/api-client";
+import { api } from "@/platform/api-client";
 import type {
   WorkflowBlock,
   WorkflowEvent,

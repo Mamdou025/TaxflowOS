@@ -15,7 +15,7 @@ import {
 import Image from "next/image";
 import type { JSX } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api } from "@/lib/api-client";
+import { api } from "@/platform/api-client";
 import {
   isLocalRunExecutionId,
   isLocalWorkflowId,

@@ -26,7 +26,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/shared/ui/tooltip";
-import { aiGatewayStatusAtom } from "@/lib/ai-gateway/state";
+import { aiGatewayStatusAtom } from "@/platform/integrations/ai-gateway/state";
 import {
   integrationsAtom,
   integrationsVersionAtom,

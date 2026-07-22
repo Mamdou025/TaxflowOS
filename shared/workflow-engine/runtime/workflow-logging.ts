@@ -5,8 +5,8 @@
 import "server-only";
 
 import { eq } from "drizzle-orm";
-import { db } from "@/lib/db";
-import { workflowExecutionLogs, workflowExecutions } from "@/lib/db/schema";
+import { db } from "@/platform/db";
+import { workflowExecutionLogs, workflowExecutions } from "@/platform/db/schema";
 
 export type LogStepStartParams = {
   executionId: string;

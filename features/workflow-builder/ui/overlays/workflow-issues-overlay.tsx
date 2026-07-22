@@ -5,7 +5,7 @@ import { AlertTriangle } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { IntegrationIcon } from "@/shared/ui/integration-icon";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { aiGatewayStatusAtom } from "@/lib/ai-gateway/state";
+import { aiGatewayStatusAtom } from "@/platform/integrations/ai-gateway/state";
 import { integrationsVersionAtom } from "@/lib/integrations-store";
 import type { IntegrationType } from "@/lib/types/integration";
 import { ConfigureConnectionOverlay } from "@/components/overlays/add-connection-overlay";

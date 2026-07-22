@@ -20,8 +20,8 @@ import {
   aiGatewayTeamsAtom,
   aiGatewayTeamsFetchedAtom,
   aiGatewayTeamsLoadingAtom,
-} from "@/lib/ai-gateway/state";
-import { api, type Integration } from "@/lib/api-client";
+} from "@/platform/integrations/ai-gateway/state";
+import { api, type Integration } from "@/platform/api-client";
 import {
   integrationsAtom,
   integrationsVersionAtom,

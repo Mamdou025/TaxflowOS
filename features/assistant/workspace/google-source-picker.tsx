@@ -10,13 +10,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { HardDrive, Mail, Search, Loader2, FileSpreadsheet, Paperclip, X } from 'lucide-react';
-import { authClient } from '@/lib/auth-client';
+import { authClient } from '@/platform/auth/auth-client';
 import { parseUploadToRows } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
 import type { SourceRow } from '@/shared/workflow-engine/runtime/workflow-runs';
 import type { GoogleStatusResponse } from '@/app/api/google/status/route';
 import type { DriveFilesResponse } from '@/app/api/google/drive/files/route';
 import type { GmailMessagesResponse } from '@/app/api/google/gmail/messages/route';
-import type { DriveFile, GmailMessage } from '@/lib/google/client';
+import type { DriveFile, GmailMessage } from '@/platform/integrations/google/client';
 
 const INK = '#18181b', MUTED = '#71717a', FAINT = '#a1a1aa', LINE = 'rgba(24,24,27,0.10)';
 

@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { workflowExecutionLogs, workflowExecutions } from "@/lib/db/schema";
+import { auth } from "@/platform/auth/auth";
+import { db } from "@/platform/db";
+import { workflowExecutionLogs, workflowExecutions } from "@/platform/db/schema";
 
 type NodeStatus = {
   nodeId: string;

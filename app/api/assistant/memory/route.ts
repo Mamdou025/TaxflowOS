@@ -12,11 +12,11 @@
 
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
+import { auth } from '@/platform/auth/auth';
 import { deleteMemory, insertMemory, listMemoriesForUser } from '@/features/assistant/runtime/memory/repository';
 import { selectRelevantMemories } from '@/features/assistant/runtime/memory/retrieval';
 import { SaveMemoryInputSchema } from '@/features/assistant/runtime/memory/types';
-import type { AssistantMemory } from '@/lib/db/schema';
+import type { AssistantMemory } from '@/platform/db/schema';
 
 async function getUserId(req: NextRequest): Promise<string | null> {
   try {

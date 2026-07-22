@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { getConnectedGoogle, REQUIRED_GOOGLE_SCOPES } from "@/lib/google/client";
+import { auth } from "@/platform/auth/auth";
+import { getConnectedGoogle, REQUIRED_GOOGLE_SCOPES } from "@/platform/integrations/google/client";
 
 export type GoogleStatusResponse = {
   connected: boolean;

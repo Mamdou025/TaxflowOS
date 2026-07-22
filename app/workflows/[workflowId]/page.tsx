@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Button } from "@/shared/ui/button";
 import { NodeConfigPanel } from "@/features/workflow-builder/ui/node-config-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { api } from "@/lib/api-client";
+import { api } from "@/platform/api-client";
 import {
   integrationsAtom,
   integrationsLoadedAtom,

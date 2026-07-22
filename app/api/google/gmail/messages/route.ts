@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { gmailListAttachmentMessages, type GmailMessage } from "@/lib/google/client";
-import { googleErrorResponse, requireUserId } from "@/lib/google/require-user";
+import { gmailListAttachmentMessages, type GmailMessage } from "@/platform/integrations/google/client";
+import { googleErrorResponse, requireUserId } from "@/platform/integrations/google/require-user";
 
 export type GmailMessagesResponse = { messages: GmailMessage[] };
 

@@ -10,10 +10,10 @@
     "e2e/**/*.spec.ts",
     "services/mapping-agent/src/index.ts"
   ],
-  "project": ["**/*.{ts,tsx}", "!lib/next-boilerplate/**", "!tax-ui/**"],
+  "project": ["**/*.{ts,tsx}", "!templates/next-project/**", "!tax-ui/**"],
   "ignore": [
-    "lib/next-boilerplate/**",
-    "lib/kernel/**"
+    "templates/next-project/**",
+    "shared/kernel/**"
   ],
   "ignoreDependencies": []
 }

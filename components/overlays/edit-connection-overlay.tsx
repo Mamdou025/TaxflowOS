@@ -8,7 +8,7 @@ import { Checkbox } from "@/shared/ui/checkbox";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { api, type Integration } from "@/lib/api-client";
+import { api, type Integration } from "@/platform/api-client";
 import { getIntegration, getIntegrationLabels } from "@/plugins";
 import { ConfirmOverlay } from "@/shared/ui/overlays/confirm-overlay";
 import { Overlay } from "@/shared/ui/overlays/overlay";

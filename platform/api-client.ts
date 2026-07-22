@@ -3,7 +3,7 @@
  * Replaces server actions with API endpoints
  */
 
-import type { IntegrationConfig, IntegrationType } from "./types/integration";
+import type { IntegrationConfig, IntegrationType } from "@/lib/types/integration";
 import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
 
 // Workflow data types

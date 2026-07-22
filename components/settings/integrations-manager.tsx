@@ -11,7 +11,7 @@ import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
 import { Button } from "@/shared/ui/button";
 import { IntegrationIcon } from "@/shared/ui/integration-icon";
 import { Spinner } from "@/shared/ui/spinner";
-import { api, type Integration } from "@/lib/api-client";
+import { api, type Integration } from "@/platform/api-client";
 import { getIntegrationLabels } from "@/plugins";
 
 // System integrations that don't have plugins

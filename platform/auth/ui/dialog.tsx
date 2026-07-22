@@ -15,11 +15,11 @@ import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Separator } from "@/shared/ui/separator";
 import { Spinner } from "@/shared/ui/spinner";
-import { signIn, signUp } from "@/lib/auth-client";
+import { signIn, signUp } from "@/platform/auth/auth-client";
 import {
   getEnabledAuthProviders,
   getSingleProvider,
-} from "@/lib/auth-providers";
+} from "@/platform/auth/auth-providers";
 
 type AuthDialogProps = {
   children?: ReactNode;

@@ -2,8 +2,8 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { anonymous, genericOAuth } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
-import { isAiGatewayManagedKeysEnabled } from "./ai-gateway/config";
-import { db } from "./db";
+import { isAiGatewayManagedKeysEnabled } from "@/platform/integrations/ai-gateway/config";
+import { db } from "@/platform/db";
 import {
   accounts,
   integrations,
@@ -14,7 +14,7 @@ import {
   workflowExecutions,
   workflowExecutionsRelations,
   workflows,
-} from "./db/schema";
+} from "@/platform/db/schema";
 
 // Construct schema object for drizzle adapter
 const schema = {

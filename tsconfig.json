@@ -37,8 +37,8 @@
   ],
   "exclude": [
     "node_modules",
-    "lib/next-boilerplate/**/*.ts",
-    "lib/next-boilerplate/**/*.tsx",
+    "templates/next-project/**/*.ts",
+    "templates/next-project/**/*.tsx",
     "tmp/**/*",
     "features/worksheets/legacy/**/*"
   ]

@@ -31,7 +31,7 @@ See [`docs/REPO-MAP.md`](../docs/REPO-MAP.md) for entry points and the full "whe
 | **GenUI / OpenUI** | `features/genui/**` *(relocated Phase 1, 2026-07-21)* | `features/genui/library.tsx` |
 | **Integration Plugins** | `plugins/**` (14 plugins) | `plugins/registry.ts` (load-bearing via `scripts/discover-plugins.ts`) |
 | **mapping-agent** | `services/mapping-agent/**` (standalone, own tsconfig) | `services/mapping-agent/src/engine.ts` |
-| *Platform spine* | `lib/db`, `lib/auth`, `app/api/**`, `lib/api-client.ts` | `lib/db/schema.ts` |
+| *Platform spine* | `platform/db`, `platform/auth`, `app/api/**`, `platform/api-client.ts` | `platform/db/schema.ts` |
 | *App shell + design system* | `app/layout.tsx`, `components/app-shell.tsx`, `shared/ui/**` *(moved Phase 2, 2026-07-21)*, `app/globals.css` | `components/app-shell.tsx` |
 
 ---
@@ -81,10 +81,10 @@ Full table in [`docs/REPO-MAP.md` §4](../docs/REPO-MAP.md). The refactor-priori
 **Remaining knip "unused files" candidates (10, NOT auto-deleted — review first, several are plausibly dynamic-loaded or intentional):** `e2e-deep.config.ts` (needs a `test:e2e:deep` script, not dead), the 5 shadcn primitives above, `shared/workflow-engine/runtime/steps/{credentials,index.ts}` (steps are dynamic-imported via the generated registry — verify), `shared/workflow-engine/runtime/generate-structure-view.ts`, `shared/workflow-engine/execution/blocks/logic/keyword-mapper/fixtures.ts` (test fixture).
 
 ### ⚠️ KEEP — verification caught these false-positives
-- **`lib/next-boilerplate/**`** — looks dead (excluded from tsc, knip-unused) but is **read from disk at runtime** by `app/api/workflows/[workflowId]/download/route.ts:13`. Deleting it breaks workflow export.
+- **`templates/next-project/**`** — looks dead (excluded from tsc, knip-unused) but is **read from disk at runtime** by `app/api/workflows/[workflowId]/download/route.ts:13`. Deleting it breaks workflow export.
 - **`shared/workflow-engine/codegen/workflow-codegen.ts` + `shared/workflow-engine/codegen/workflow-codegen-shared.ts`** — flagged as superseded but are **live**: they power the "Code" tab and the download route.
 - **`features/workflow-builder/ui/node-config-panel.tsx`** — flagged dead but is the **live** config panel for the `/workflows/[workflowId]` route.
-- **`lib/kernel/**`** — unreferenced but **intentional** migration scaffolding. Do not delete; add to knip ignore.
+- **`shared/kernel/**`** — unreferenced but **intentional** migration scaffolding. Do not delete; add to knip ignore.
 - **`plugins/index.ts`, `_template/*.txt`, `tax-ui/wouter-shim.tsx`, `features/genui/system-prompt.txt`** — inert-looking but generated/aliased/runtime-read.
 
 ---
@@ -92,7 +92,7 @@ Full table in [`docs/REPO-MAP.md` §4](../docs/REPO-MAP.md). The refactor-priori
 ## 5. Coupling & boundary defects
 
 1. **`tax-ui/` is not a one-way island — it has a real import cycle.** It is excluded from tsc yet imports 7 `@/` app modules; `lib/resource-registry.tsx` lazy-imports `@tax/pages/*` **and** `tax-ui/pages/FapiWorksheet.tsx` imports `@/lib/resource-registry`. All 14 seam edges are untyped. (Deleting dead `FapiWorksheet.tsx` breaks the cycle for free.)
-2. **`lib/kernel/**` is a dead parallel model.** 10 files, 1 real importer, defining a *second* `WorkflowRun`/`RunStatus` model that duplicates `src/domain`. Either land it or quarantine it — two run models is drift cost at zero benefit today.
+2. **`shared/kernel/**` is a dead parallel model.** 10 files, 1 real importer, defining a *second* `WorkflowRun`/`RunStatus` model that duplicates `src/domain`. Either land it or quarantine it — two run models is drift cost at zero benefit today.
 3. **The assistant launders types through the god-file.** 0 files under `features/assistant/runtime` import `src/domain` directly; they reach workflow types via `shared/workflow-engine/local-fiscal-workflow` re-exports. The clean boundary exists; it's just bypassed.
 4. **UI→lib inversion.** `shared/workflow-engine/runtime/workflow-runs/parse-upload.ts` imports `shared/workflow-engine/parsing/excel-utils.ts` (1,765 lines of pure parsing sitting under a UI folder).
 

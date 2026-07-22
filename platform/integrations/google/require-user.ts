@@ -1,8 +1,8 @@
 import "server-only";
 
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { GoogleAuthError } from "@/lib/google/client";
+import { auth } from "@/platform/auth/auth";
+import { GoogleAuthError } from "@/platform/integrations/google/client";
 
 /**
  * Resolve the signed-in user's id for a Google API route, or return a 401

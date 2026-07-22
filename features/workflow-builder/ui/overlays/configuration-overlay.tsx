@@ -33,7 +33,7 @@ import { CalculationEngineWorkspace } from "@/features/workflow-builder/ui/logic
 import { FieldBlockWorkspace } from "@/features/workflow-builder/ui/logic-viewers/field-block-workspace";
 import { KeywordMapperWorkspace } from "@/features/workflow-builder/ui/logic-viewers/keyword-mapper-workspace";
 import { HierarchyAggregatorPanel } from "@/features/workflow-builder/ui/logic-viewers/hierarchy-aggregator-panel";
-import { api } from "@/lib/api-client";
+import { api } from "@/platform/api-client";
 import { integrationsAtom } from "@/lib/integrations-store";
 import {
   clearLocalRunRecords,

@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from "@/shared/ui/select";
 import { EdgeInspector } from "@/features/workflow-builder/ui/edge-inspector";
-import { api } from "@/lib/api-client";
+import { api } from "@/platform/api-client";
 import { integrationsAtom } from "@/lib/integrations-store";
 import {
   clearLocalRunRecords,

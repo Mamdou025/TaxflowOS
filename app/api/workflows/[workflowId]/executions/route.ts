@@ -1,8 +1,8 @@
 import { and, desc, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { workflowExecutions, workflows } from "@/lib/db/schema";
+import { auth } from "@/platform/auth/auth";
+import { db } from "@/platform/db";
+import { workflowExecutions, workflows } from "@/platform/db/schema";
 
 export async function GET(
   request: Request,
@@ -92,7 +92,7 @@ export async function DELETE(
 
     // Delete logs first (if there are any executions)
     if (executionIds.length > 0) {
-      const { workflowExecutionLogs } = await import("@/lib/db/schema");
+      const { workflowExecutionLogs } = await import("@/platform/db/schema");
       const { inArray } = await import("drizzle-orm");
 
       await db

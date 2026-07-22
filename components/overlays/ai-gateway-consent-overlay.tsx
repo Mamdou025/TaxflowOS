@@ -16,8 +16,8 @@ import {
   aiGatewayStatusAtom,
   aiGatewayTeamsAtom,
   aiGatewayTeamsLoadingAtom,
-} from "@/lib/ai-gateway/state";
-import { api } from "@/lib/api-client";
+} from "@/platform/integrations/ai-gateway/state";
+import { api } from "@/platform/api-client";
 import { Overlay } from "@/shared/ui/overlays/overlay";
 import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
 import type { OverlayAction } from "@/shared/ui/overlays/types";

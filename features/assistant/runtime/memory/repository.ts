@@ -8,8 +8,8 @@
 
 import 'server-only';
 import { and, desc, eq } from 'drizzle-orm';
-import { db } from '@/lib/db';
-import { assistantMemories, type AssistantMemory, type NewAssistantMemory } from '@/lib/db/schema';
+import { db } from '@/platform/db';
+import { assistantMemories, type AssistantMemory, type NewAssistantMemory } from '@/platform/db/schema';
 
 /** Insert a memory. Returns the row, or null if the DB is unavailable. */
 export async function insertMemory(input: NewAssistantMemory): Promise<AssistantMemory | null> {

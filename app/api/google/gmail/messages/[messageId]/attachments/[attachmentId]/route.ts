@@ -1,5 +1,5 @@
-import { gmailDownloadAttachment } from "@/lib/google/client";
-import { googleErrorResponse, requireUserId } from "@/lib/google/require-user";
+import { gmailDownloadAttachment } from "@/platform/integrations/google/client";
+import { googleErrorResponse, requireUserId } from "@/platform/integrations/google/require-user";
 
 /**
  * GET /api/google/gmail/messages/[messageId]/attachments/[attachmentId]?filename=<name>

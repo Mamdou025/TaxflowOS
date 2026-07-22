@@ -1,8 +1,8 @@
 import { and, eq } from "drizzle-orm";
-import { isAiGatewayManagedKeysEnabled } from "@/lib/ai-gateway/config";
-import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { accounts, integrations } from "@/lib/db/schema";
+import { isAiGatewayManagedKeysEnabled } from "@/platform/integrations/ai-gateway/config";
+import { auth } from "@/platform/auth/auth";
+import { db } from "@/platform/db";
+import { accounts, integrations } from "@/platform/db/schema";
 
 /**
  * GET /api/ai-gateway/status

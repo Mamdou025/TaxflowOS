@@ -9,7 +9,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { getAgentForWorkflow, type Agent } from './agents';
-import type { ActorKind } from './kernel/scope';
+import type { ActorKind } from '@/shared/kernel/scope';
 
 /** The audit-grade actor taxonomy — the canonical definition lives in the kernel
  *  (lib/kernel/scope.ts); re-exported here so the UI layer shares the one vocabulary. */

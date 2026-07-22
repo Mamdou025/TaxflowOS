@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import {
   AuthDialog,
   isSingleProviderSignInInitiated,
-} from "@/components/auth/dialog";
+} from "@/platform/auth/ui/dialog";
 import { ApiKeysOverlay } from "@/components/overlays/api-keys-overlay";
 import { IntegrationsOverlay } from "@/components/overlays/integrations-overlay";
 import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
@@ -26,8 +26,8 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
-import { api } from "@/lib/api-client";
-import { signOut, useSession } from "@/lib/auth-client";
+import { api } from "@/platform/api-client";
+import { signOut, useSession } from "@/platform/auth/auth-client";
 
 export const UserMenu = () => {
   const { data: session, isPending } = useSession();

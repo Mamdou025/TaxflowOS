@@ -1,8 +1,8 @@
 import "server-only";
 
 import { and, eq } from "drizzle-orm";
-import { db } from "@/lib/db";
-import { accounts } from "@/lib/db/schema";
+import { db } from "@/platform/db";
+import { accounts } from "@/platform/db/schema";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Google Drive + Gmail access, built on the Google OAuth tokens better-auth

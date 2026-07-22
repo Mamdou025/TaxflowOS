@@ -2,7 +2,7 @@ import "server-only";
 
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { and, eq, inArray } from "drizzle-orm";
-import type { IntegrationConfig, IntegrationType } from "../types/integration";
+import type { IntegrationConfig, IntegrationType } from "@/lib/types/integration";
 import { db } from "./index";
 import { integrations, type NewIntegration } from "./schema";
 
