@@ -190,9 +190,12 @@ Each step ends with the **gate**: `pnpm type-check` **must** stay green (0 error
 - (e) ⏳ **follow-up (not done):** port the 5 live island pages to typed components + retire `@tax/*` + wouter shim. This is real work (touches connection-validation + the worksheets), deferred.
 *Gate met: type-check 0 + manual island verification. **Runtime smoke-test still recommended** — the island only runs client-side (`ssr:false` dynamic import), so its actual mounting is unverified until the app runs.*
 
-**Phase 6 — Assistant.**
-9. `lib/assistant-runtime/**` → `features/assistant/runtime/`; `components/assistant/**` + chat-rendering pulled out of `components/workspace/**` → `features/assistant/ui/`. Update `app/api/copilotkit/route.ts` + `assistant:evals` script path.
-*Gate: type-check + `assistant:evals` (must stay 118/118) + `deep-chat.spec.ts`.*
+**Phase 6 — Assistant. ✅ DONE 2026-07-21 (`b10c66f`).**
+9. `lib/assistant-runtime/**` → `features/assistant/runtime/` (15 files); `components/assistant/**` → `features/assistant/ui/` (16); `components/workspace/**` → `features/assistant/workspace/` (9). Updated `assistant:evals` script path (`app/api/copilotkit/route.ts` handled by the `@/` codemod). Instead of a fiddly per-file chat-vs-workspace split, moved the whole `workspace/` dir — the `components/{assistant,workspace}` → `features/assistant/{ui,workspace}` **sibling relationship is preserved**, so all relative cross-imports stayed valid (alias-only codemod, 18 files/39 occ).
+   - **Dev-server lock recurred:** `lib/assistant-runtime` was held by an *orphaned* dev-server tree (`pnpm dev`→`next`→turbopack worker survived the earlier kill); identified via `Get-CimInstance Win32_Process` command lines and stopped, then the move completed.
+   - **Gates:** `tsc` exit 0; **`pnpm assistant:evals` PASS** (model-tiering + memory-retrieval + specialist-selection); **runtime smoke 8/8** (`/` needed a warm server — 90s cold-compile timeout, then HTTP 200 in 2.1s rendering the full ChatWorkspace).
+   - **Minor debt:** `worksheets-hub` + `document-viewer` rode along in `workspace/` — should re-home to `features/worksheets/` and a documents home later.
+*Gate met: type-check + evals + browser smoke.*
 
 **Phase 7 — Platform spine + boilerplate template.**
 10. `lib/db`, `lib/auth`, `components/auth`, `lib/api-client`, `lib/google`, `lib/ai-gateway` → `platform/**` (row 18); thin the 36 `app/api/**` handlers into adapters. Move `lib/next-boilerplate` → `templates/next-project`, updating `download/route.ts:13` + tsconfig exclude. Move `lib/kernel` → `shared/kernel` (row 19).
