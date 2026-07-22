@@ -3,7 +3,7 @@
 import { useSetAtom } from "jotai";
 import { Search } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { IntegrationsManager } from "@/components/settings/integrations-manager";
+import { IntegrationsManager } from "@/platform/settings/integrations-manager";
 import { Input } from "@/shared/ui/input";
 import { Spinner } from "@/shared/ui/spinner";
 import { integrationsVersionAtom } from "@/lib/integrations-store";

@@ -6,10 +6,10 @@ import { toast } from "sonner";
 import {
   DeleteConnectionOverlay,
   EditConnectionOverlay,
-} from "@/components/overlays/edit-connection-overlay";
+} from "@/platform/settings/edit-connection-overlay";
 import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
 import { Button } from "@/shared/ui/button";
-import { IntegrationIcon } from "@/shared/ui/integration-icon";
+import { IntegrationIcon } from "@/platform/integrations/ui/integration-icon";
 import { Spinner } from "@/shared/ui/spinner";
 import { api, type Integration } from "@/platform/api-client";
 import { getIntegrationLabels } from "@/plugins";

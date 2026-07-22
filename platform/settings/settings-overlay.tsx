@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { AccountSettings } from "@/components/settings/account-settings";
+import { AccountSettings } from "@/platform/settings/account-settings";
 import { Spinner } from "@/shared/ui/spinner";
 import { api } from "@/platform/api-client";
 import { Overlay } from "@/shared/ui/overlays/overlay";

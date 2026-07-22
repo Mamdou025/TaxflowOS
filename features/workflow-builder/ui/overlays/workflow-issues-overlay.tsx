@@ -3,13 +3,13 @@
 import { useAtomValue, useSetAtom } from "jotai";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/shared/ui/button";
-import { IntegrationIcon } from "@/shared/ui/integration-icon";
+import { IntegrationIcon } from "@/platform/integrations/ui/integration-icon";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { aiGatewayStatusAtom } from "@/platform/integrations/ai-gateway/state";
 import { integrationsVersionAtom } from "@/lib/integrations-store";
 import type { IntegrationType } from "@/lib/types/integration";
-import { ConfigureConnectionOverlay } from "@/components/overlays/add-connection-overlay";
-import { AiGatewayConsentOverlay } from "@/components/overlays/ai-gateway-consent-overlay";
+import { ConfigureConnectionOverlay } from "@/platform/settings/add-connection-overlay";
+import { AiGatewayConsentOverlay } from "@/platform/settings/ai-gateway-consent-overlay";
 import { ConfigurationOverlay } from "./configuration-overlay";
 import { Overlay } from "@/shared/ui/overlays/overlay";
 import { useOverlay } from "@/shared/ui/overlays/overlay-provider";

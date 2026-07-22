@@ -5,7 +5,7 @@ import { Search } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Input } from "@/shared/ui/input";
-import { IntegrationIcon } from "@/shared/ui/integration-icon";
+import { IntegrationIcon } from "@/platform/integrations/ui/integration-icon";
 import { Label } from "@/shared/ui/label";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {

@@ -7,10 +7,10 @@ import {
   AuthDialog,
   isSingleProviderSignInInitiated,
 } from "@/platform/auth/ui/dialog";
-import { ApiKeysOverlay } from "@/components/overlays/api-keys-overlay";
-import { IntegrationsOverlay } from "@/components/overlays/integrations-overlay";
+import { ApiKeysOverlay } from "@/platform/settings/api-keys-overlay";
+import { IntegrationsOverlay } from "@/platform/settings/integrations-overlay";
 import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
-import { SettingsOverlay } from "@/components/overlays/settings-overlay";
+import { SettingsOverlay } from "@/platform/settings/settings-overlay";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
 import {

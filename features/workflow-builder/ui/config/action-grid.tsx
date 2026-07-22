@@ -28,7 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
 import { Input } from "@/shared/ui/input";
-import { IntegrationIcon } from "@/shared/ui/integration-icon";
+import { IntegrationIcon } from "@/platform/integrations/ui/integration-icon";
 import {
   Tooltip,
   TooltipContent,
