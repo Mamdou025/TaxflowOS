@@ -28,7 +28,7 @@ import {
   createTemplateIntel,
   registerWorksheetIntelAtom,
   unregisterWorksheetIntelAtom,
-} from '@/lib/worksheet-intel';
+} from '@/features/worksheets/intel';
 
 export function WorksheetCopilot({ config, rows, inputs, overrides }: { config: TemplateConfig; rows: SourceRow[]; inputs: Record<string, number>; overrides?: Record<string, string> }) {
   const register = useSetAtom(registerWorksheetIntelAtom);

@@ -9,7 +9,7 @@
  */
 
 import { WORKFLOW_CONFIGS, getWorkflowConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
-import { createTemplateIntel } from '@/lib/worksheet-intel';
+import { createTemplateIntel } from '@/features/worksheets/intel';
 
 const line = (s = '') => console.log(s);
 const h = (s: string) => { line(); line(`━━━ ${s} ━━━`); };

@@ -204,7 +204,7 @@ export const RESOURCES: Resource[] = [
       title: 'FAPI Worksheet',
       subtitle: 'Foreign accrual property income',
       icon: Globe,
-      Component: lazyPage(() => import('@/components/worksheet/fapi-worksheet')),
+      Component: lazyPage(() => import('@/features/worksheets/components/fapi-worksheet')),
     },
     anchors: [
       // Order: most specific first (first keyword match wins on navigate).
@@ -253,7 +253,7 @@ export const RESOURCES: Resource[] = [
       title: 'Expense Reimbursement',
       subtitle: 'Receipts · policy caps · net payable',
       icon: Receipt,
-      Component: lazyPage(() => import('@/components/worksheet/expense-worksheet')),
+      Component: lazyPage(() => import('@/features/worksheets/components/expense-worksheet')),
     },
   },
 

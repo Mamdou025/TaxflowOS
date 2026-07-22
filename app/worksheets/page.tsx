@@ -7,7 +7,7 @@
 import { useRouter } from 'next/navigation';
 import { useAtomValue } from 'jotai';
 import { WorksheetShell } from '@/components/worksheet-shell';
-import { WorksheetsGallery } from '@/components/worksheet/worksheets-gallery';
+import { WorksheetsGallery } from '@/features/worksheets/components/worksheets-gallery';
 import { selectedClientAtom } from '@/shared/stores/nav-store';
 
 export default function WorksheetsPage() {

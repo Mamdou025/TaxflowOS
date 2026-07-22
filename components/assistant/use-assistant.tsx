@@ -44,7 +44,7 @@ import { WorkflowRunFlow, WorkflowElementCard, RunProposalCard } from '@/compone
 import type { ComposerSuggestion } from '@/components/workspace/aside-thread';
 import { getWorkflowConfig, WORKFLOW_CONFIGS, type TemplateConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
 import { AGENTS, WORKFLOWS, getAgent, agentThinking, type Agent } from '@/lib/agents';
-import { worksheetIntelRegistryAtom, pickIntel, listIntel, createTemplateIntel } from '@/lib/worksheet-intel';
+import { worksheetIntelRegistryAtom, pickIntel, listIntel, createTemplateIntel } from '@/features/worksheets/intel';
 import { GenUIRender } from '@/features/genui/genui-render';
 import { recordWorkItemAtom, workIdFor, workKeyFromText, type WorkItemType } from '@/lib/work-store';
 import { UI_CONCIERGE, UI_COMPOSER, coworkerForAgent, coworkerForWorkflow } from '@/lib/coworkers';

@@ -6,7 +6,7 @@
 // so it stays in the chat workspace instead of navigating away.
 
 import { useSetAtom } from 'jotai';
-import { WorksheetsGallery } from '@/components/worksheet/worksheets-gallery';
+import { WorksheetsGallery } from '@/features/worksheets/components/worksheets-gallery';
 import { openWorkspaceWindowAtom } from '@/shared/stores/workspace-store';
 import { getPage } from '@/shared/stores/resource-registry';
 

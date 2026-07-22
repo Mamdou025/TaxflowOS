@@ -23,7 +23,7 @@
     ],
     "paths": {
       "@/*": ["./*"],
-      "@tax/*": ["./tax-ui/*"]
+      "@tax/*": ["./features/worksheets/legacy/*"]
     },
     "strictNullChecks": true
   },
@@ -40,6 +40,6 @@
     "lib/next-boilerplate/**/*.ts",
     "lib/next-boilerplate/**/*.tsx",
     "tmp/**/*",
-    "tax-ui/**/*"
+    "features/worksheets/legacy/**/*"
   ]
 }
