@@ -1,4 +1,4 @@
-import { ChatWorkspace } from '@/components/workspace/copilot-workspace-panel';
+import { ChatWorkspace } from '@/features/assistant/workspace/copilot-workspace-panel';
 
 // The main page IS the assistant — the chat is mounted on landing (no navigation
 // delay), with the composer centered until the first message, then it transitions

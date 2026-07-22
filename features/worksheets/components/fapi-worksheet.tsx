@@ -21,7 +21,7 @@ import { uploadedRowsAtom, runEditsAtom, setRunInputAtom, EMPTY_RUN_EDITS } from
 import { builderFocusTargetAtom } from '@/shared/workflow-engine/state/workflow-store';
 import { useInlinePage } from '@/shared/stores/inline-page-context';
 import { usePageMenu } from '@/shared/stores/page-menu-store';
-import { WorksheetCopilot } from '@/components/assistant/worksheet-copilot';
+import { WorksheetCopilot } from '@/features/assistant/ui/worksheet-copilot';
 
 const INK = 'var(--sx-ink)', MUTED = 'var(--sx-muted)', FAINT = 'var(--sx-faint)';
 const LINE = 'var(--sx-hairline)', HAIRLINE = 'var(--sx-hairline-subtle)';

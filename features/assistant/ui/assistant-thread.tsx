@@ -20,9 +20,9 @@ import {
   AsideInput,
   AsideThreadStyles,
   AsideComposerContext,
-} from '@/components/workspace/aside-thread';
-import { InlineFieldCard } from '@/components/workspace/inline-field-card';
-import { WorkflowElementCard } from '@/components/workspace/workflow-run-flow';
+} from '@/features/assistant/workspace/aside-thread';
+import { InlineFieldCard } from '@/features/assistant/workspace/inline-field-card';
+import { WorkflowElementCard } from '@/features/assistant/workspace/workflow-run-flow';
 import { getWorkflowConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
 import { getAgent } from '@/lib/agents';
 import { buildAgentCatalog } from '@/shared/stores/resource-registry';

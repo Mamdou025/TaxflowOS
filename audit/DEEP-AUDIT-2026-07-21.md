@@ -27,7 +27,7 @@ See [`docs/REPO-MAP.md`](../docs/REPO-MAP.md) for entry points and the full "whe
 |---|---|---|
 | **Workflow Builder** | `features/workflow-builder/ui/**`, `shared/ui/overlays/** (framework) + features/workflow-builder/ui/overlays/** (builder) + components/overlays/** (settings)`, `features/workflow-builder/ui/ai-elements/**` (UI); `lib/local-*`, `lib/workflow-*`, `src/domain`, `src/state` (engine); `backend/**` (execution) | `features/workflow-builder/ui/workflow-canvas.tsx` |
 | **Tax Worksheets** | `features/worksheets/{components,intel}/**` (typed) **+ `features/worksheets/legacy/**` island** (untyped, @tax alias) | `shared/stores/resource-registry.tsx` |
-| **Assistant / Chat** | `lib/assistant-runtime/**`, `components/assistant/**`, `components/workspace/**` | `app/api/copilotkit/route.ts` · `components/assistant/use-assistant.tsx` |
+| **Assistant / Chat** | `features/assistant/runtime/**`, `features/assistant/ui/**`, `features/assistant/workspace/**` | `app/api/copilotkit/route.ts` · `features/assistant/ui/use-assistant.tsx` |
 | **GenUI / OpenUI** | `features/genui/**` *(relocated Phase 1, 2026-07-21)* | `features/genui/library.tsx` |
 | **Integration Plugins** | `plugins/**` (14 plugins) | `plugins/registry.ts` (load-bearing via `scripts/discover-plugins.ts`) |
 | **mapping-agent** | `services/mapping-agent/**` (standalone, own tsconfig) | `services/mapping-agent/src/engine.ts` |
@@ -70,7 +70,7 @@ Full table in [`docs/REPO-MAP.md` §4](../docs/REPO-MAP.md). The refactor-priori
 | `lib/utils/template.ts` | 549 | `processTemplate` — 0 importers (live path is in codegen-sdk) |
 | `tax-ui/pages/Workbench.tsx` | 455 | un-wired leftover page |
 | 9-file orphan cluster (`inscope-home`+`inscope-sidebar` pair, `ambient-orbs`, `canvas-page-wrapper`, `coworker-activity`, `scope-launchpad`, `assistant/*`, `field-editor`, …) | ~1,066 | superseded home/sidebar + orphans |
-| assistant-runtime dead barrels: `lib/assistant-runtime/{index,errors}.ts`, `routing/intent-router.ts` | ~211 | superseded by enforced `routing/classify.ts` |
+| assistant-runtime dead barrels: `features/assistant/runtime/{index,errors}.ts`, `routing/intent-router.ts` | ~211 | superseded by enforced `routing/classify.ts` |
 | `shared/workflow-engine/execution/runtime/{runner,validation}.ts` | ~131 | unreferenced wrappers |
 | `tax-ui/pages/{Home,NotFound}.tsx`, `tax-ui/components/{Map,ManusDialog,ErrorBoundary}.tsx`, `tax-ui/hooks/useComposition.ts` | ~450 | wouter-era island leftovers |
 | `features/workflow-builder/ui/{worksheet-page-menu.tsx, inspector/mock-runs.ts, config/condition-config.tsx}`, `components/overlays/alert-overlay.tsx` | ~487 | orphaned builder pieces (`alert-overlay` is reusable — keep if wanted) |
@@ -93,7 +93,7 @@ Full table in [`docs/REPO-MAP.md` §4](../docs/REPO-MAP.md). The refactor-priori
 
 1. **`tax-ui/` is not a one-way island — it has a real import cycle.** It is excluded from tsc yet imports 7 `@/` app modules; `lib/resource-registry.tsx` lazy-imports `@tax/pages/*` **and** `tax-ui/pages/FapiWorksheet.tsx` imports `@/lib/resource-registry`. All 14 seam edges are untyped. (Deleting dead `FapiWorksheet.tsx` breaks the cycle for free.)
 2. **`lib/kernel/**` is a dead parallel model.** 10 files, 1 real importer, defining a *second* `WorkflowRun`/`RunStatus` model that duplicates `src/domain`. Either land it or quarantine it — two run models is drift cost at zero benefit today.
-3. **The assistant launders types through the god-file.** 0 files under `lib/assistant-runtime` import `src/domain` directly; they reach workflow types via `shared/workflow-engine/local-fiscal-workflow` re-exports. The clean boundary exists; it's just bypassed.
+3. **The assistant launders types through the god-file.** 0 files under `features/assistant/runtime` import `src/domain` directly; they reach workflow types via `shared/workflow-engine/local-fiscal-workflow` re-exports. The clean boundary exists; it's just bypassed.
 4. **UI→lib inversion.** `shared/workflow-engine/runtime/workflow-runs/parse-upload.ts` imports `shared/workflow-engine/parsing/excel-utils.ts` (1,765 lines of pure parsing sitting under a UI folder).
 
 Positive: **no circular imports among the god-files themselves** (clean DAG), and `shared/workflow-engine/domain/workflow` is genuinely canonical.

@@ -10,7 +10,7 @@
     "start": "next start",
     "type-check": "tsc --noEmit",
     "genui:prompt": "node features/genui/gen-genui-prompt.cjs",
-    "assistant:evals": "tsx lib/assistant-runtime/evals/run-evals.ts",
+    "assistant:evals": "tsx features/assistant/runtime/evals/run-evals.ts",
     "check": "pnpm exec ultracite check",
     "fix": "pnpm exec ultracite fix",
     "db:generate": "drizzle-kit generate",

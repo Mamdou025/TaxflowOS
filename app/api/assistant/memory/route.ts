@@ -13,9 +13,9 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { deleteMemory, insertMemory, listMemoriesForUser } from '@/lib/assistant-runtime/memory/repository';
-import { selectRelevantMemories } from '@/lib/assistant-runtime/memory/retrieval';
-import { SaveMemoryInputSchema } from '@/lib/assistant-runtime/memory/types';
+import { deleteMemory, insertMemory, listMemoriesForUser } from '@/features/assistant/runtime/memory/repository';
+import { selectRelevantMemories } from '@/features/assistant/runtime/memory/retrieval';
+import { SaveMemoryInputSchema } from '@/features/assistant/runtime/memory/types';
 import type { AssistantMemory } from '@/lib/db/schema';
 
 async function getUserId(req: NextRequest): Promise<string | null> {

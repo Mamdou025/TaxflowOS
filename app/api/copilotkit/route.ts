@@ -4,10 +4,10 @@ import OpenAI from 'openai';
 import type { NextRequest } from 'next/server';
 import { repairOrphanToolCalls } from '@/lib/copilot-orphan-repair';
 import { traceCopilotInput } from '@/lib/copilot-trace';
-import { getAssistantRuntimeConfig } from '@/lib/assistant-runtime/config';
-import { computeGateDecision, applyGateDecision, classifyTurn } from '@/lib/assistant-runtime/routing/gate';
-import { pickModelDecision } from '@/lib/assistant-runtime/model-policy';
-import { selectSpecialist, specialistDirective } from '@/lib/assistant-runtime/agents/specialists';
+import { getAssistantRuntimeConfig } from '@/features/assistant/runtime/config';
+import { computeGateDecision, applyGateDecision, classifyTurn } from '@/features/assistant/runtime/routing/gate';
+import { pickModelDecision } from '@/features/assistant/runtime/model-policy';
+import { selectSpecialist, specialistDirective } from '@/features/assistant/runtime/agents/specialists';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CopilotKit runtime endpoint.

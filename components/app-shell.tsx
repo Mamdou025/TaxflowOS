@@ -6,9 +6,9 @@ import { CopilotKit } from '@copilotkit/react-core';
 import { GlobalTopNav } from '@/components/global-top-nav';
 import { GlobalClientSwitcher } from '@/components/global-client-switcher';
 import { PersistentCanvas } from '@/features/workflow-builder/ui/persistent-canvas';
-import { AssistantPanel } from '@/components/assistant/assistant-panel';
-import { MemoryCopilot } from '@/components/assistant/memory-copilot';
-import { SpecialistPresence } from '@/components/assistant/specialist-presence';
+import { AssistantPanel } from '@/features/assistant/ui/assistant-panel';
+import { MemoryCopilot } from '@/features/assistant/ui/memory-copilot';
+import { SpecialistPresence } from '@/features/assistant/ui/specialist-presence';
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();

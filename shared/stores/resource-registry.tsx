@@ -156,7 +156,7 @@ export const RESOURCES: Resource[] = [
       title: 'Documents',
       subtitle: 'Open PDF, Excel & Word files',
       icon: Files,
-      Component: lazyPage(() => import('@/components/workspace/document-viewer')),
+      Component: lazyPage(() => import('@/features/assistant/workspace/document-viewer')),
     },
   },
   {
@@ -171,7 +171,7 @@ export const RESOURCES: Resource[] = [
       title: 'Worksheets',
       subtitle: 'FAPI · T1134 · Surplus · Executive Overview',
       icon: LayoutGrid,
-      Component: lazyPage(() => import('@/components/workspace/worksheets-hub')),
+      Component: lazyPage(() => import('@/features/assistant/workspace/worksheets-hub')),
     },
   },
   {

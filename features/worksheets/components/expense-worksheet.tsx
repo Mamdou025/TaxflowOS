@@ -19,7 +19,7 @@ import { EXPENSE_CONFIG } from '@/shared/workflow-engine/runtime/workflow-runs/e
 import { parseUploadToRows } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
 import { uploadedRowsAtom, runEditsAtom, setRunInputAtom, EMPTY_RUN_EDITS } from '@/shared/stores/workspace-store';
 import { builderFocusTargetAtom } from '@/shared/workflow-engine/state/workflow-store';
-import { WorksheetCopilot } from '@/components/assistant/worksheet-copilot';
+import { WorksheetCopilot } from '@/features/assistant/ui/worksheet-copilot';
 
 const INK = '#18181b', MUTED = '#71717a', FAINT = '#a1a1aa';
 const LINE = 'rgba(24,24,27,0.10)', HAIRLINE = 'rgba(24,24,27,0.07)';

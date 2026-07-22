@@ -12,7 +12,7 @@ import { useTheme } from 'next-themes';
 import { ArrowLeft } from 'lucide-react';
 import { getWorkflowConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
 import { getAgent } from '@/lib/agents';
-import { WorkflowRunFlow } from '@/components/workspace/workflow-run-flow';
+import { WorkflowRunFlow } from '@/features/assistant/workspace/workflow-run-flow';
 import { builderFocusTargetAtom } from '@/shared/workflow-engine/state/workflow-store';
 import { pageRoute } from '@/lib/page-routes';
 

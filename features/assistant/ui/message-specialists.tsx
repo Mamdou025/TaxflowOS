@@ -15,9 +15,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createContext } from 'react';
-import { classifyDeterministic } from '@/lib/assistant-runtime/routing/classify';
-import { applyRoutePolicy } from '@/lib/assistant-runtime/routing/route-policy';
-import { selectSpecialist } from '@/lib/assistant-runtime/agents/specialists';
+import { classifyDeterministic } from '@/features/assistant/runtime/routing/classify';
+import { applyRoutePolicy } from '@/features/assistant/runtime/routing/route-policy';
+import { selectSpecialist } from '@/features/assistant/runtime/agents/specialists';
 import { getAgent } from '@/lib/agents';
 import { coworkerForAgent, type Coworker } from '@/lib/coworkers';
 

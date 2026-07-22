@@ -24,17 +24,17 @@ import {
 } from '@/shared/stores/workspace-store';
 import { getPage } from '@/shared/stores/resource-registry';
 import { WORKFLOWS, getAgent, type WorkflowSuggestion } from '@/lib/agents';
-import { useAssistant } from '@/components/assistant/use-assistant';
-import { AssistantThread } from '@/components/assistant/assistant-thread';
+import { useAssistant } from '@/features/assistant/ui/use-assistant';
+import { AssistantThread } from '@/features/assistant/ui/assistant-thread';
 import { InlineBuilder } from '@/features/workflow-builder/ui/inline-builder';
-import { AgentBuilder } from '@/components/assistant/agent-builder';
+import { AgentBuilder } from '@/features/assistant/ui/agent-builder';
 import { InScopeNeuMark } from '@/components/inscope-neu-mark';
-import { ClientFolders } from '@/components/workspace/client-folders';
+import { ClientFolders } from '@/features/assistant/workspace/client-folders';
 import { LC } from '@/lib/librechat-theme';
 import { NEU } from '@/components/neumorphic-sidebar';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { pageMenusAtom } from '@/shared/stores/page-menu-store';
-import { PageMenuBar } from '@/components/workspace/page-menu-bar';
+import { PageMenuBar } from '@/features/assistant/workspace/page-menu-bar';
 import { InlinePageProvider } from '@/shared/stores/inline-page-context';
 
 // Foldable Scope sidebar — persisted so it stays folded across navigation.

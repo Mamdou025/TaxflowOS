@@ -11,7 +11,7 @@ import { selectedClientAtom } from '@/shared/stores/nav-store';
 // worksheet routes (for nav parity), but the viewer fills a bounded, overflow-hidden
 // panel — NOT the scrolling `worksheet-card` (whose `height:auto` override would
 // collapse the PDF iframe / the viewer's own flex layout).
-const DocumentViewer = dynamic(() => import('@/components/workspace/document-viewer'), { ssr: false });
+const DocumentViewer = dynamic(() => import('@/features/assistant/workspace/document-viewer'), { ssr: false });
 
 export default function ViewerPage() {
   const router = useRouter();
