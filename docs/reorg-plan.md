@@ -197,7 +197,7 @@ Each step ends with the **gate**: `pnpm type-check` **must** stay green (0 error
    - **Minor debt:** `worksheets-hub` + `document-viewer` rode along in `workspace/` — should re-home to `features/worksheets/` and a documents home later.
 *Gate met: type-check + evals + browser smoke.*
 
-**Phase 7 — Platform spine + boilerplate template. ✅ DONE 2026-07-21 (`0aaa6e7`)** — lib/db+auth+api-client+google+ai-gateway→platform/; lib/kernel→shared/kernel; lib/next-boilerplate→templates/next-project. Config couplings (drizzle schema, download BOILERPLATE_PATH, tsconfig, knip) updated; 9 cross-boundary relatives fixed. tsc 0, discover-plugins clean. Deferred: integration widgets+settings overlays→platform/integrations.
+**Phase 7 — Platform spine + boilerplate template. ✅ DONE 2026-07-21 (`0aaa6e7`)** — lib/db+auth+api-client+google+ai-gateway→platform/; lib/kernel→shared/kernel; lib/next-boilerplate→templates/next-project. Config couplings (drizzle schema, download BOILERPLATE_PATH, tsconfig, knip) updated; 9 cross-boundary relatives fixed. tsc 0, discover-plugins clean. ✅ TAIL DONE (`d8d6481`): integration widgets→platform/integrations/ui, 6 settings overlays + components/settings→platform/settings. shared/ui fully de-polluted; components/overlays+settings now empty.
 10. `lib/db`, `lib/auth`, `components/auth`, `lib/api-client`, `lib/google`, `lib/ai-gateway` → `platform/**` (row 18); thin the 36 `app/api/**` handlers into adapters. Move `lib/next-boilerplate` → `templates/next-project`, updating `download/route.ts:13` + tsconfig exclude. Move `lib/kernel` → `shared/kernel` (row 19).
 *Gate: type-check + full e2e + a manual workflow-download smoke (the boilerplate move is runtime-path, not type-checked).*
 
