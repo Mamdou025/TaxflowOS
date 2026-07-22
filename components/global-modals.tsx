@@ -1,7 +1,7 @@
 "use client";
 
-import { OverlayContainer } from "@/components/overlays/overlay-container";
-import { OverlaySync } from "@/components/overlays/overlay-sync";
+import { OverlayContainer } from "@/shared/ui/overlays/overlay-container";
+import { OverlaySync } from "@/shared/ui/overlays/overlay-sync";
 
 /**
  * Global modals and overlays that need to be rendered once at app level

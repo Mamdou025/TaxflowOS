@@ -8,8 +8,8 @@ import { Input } from "@/shared/ui/input";
 import { Spinner } from "@/shared/ui/spinner";
 import { integrationsVersionAtom } from "@/lib/integrations-store";
 import { AddConnectionOverlay } from "./add-connection-overlay";
-import { Overlay } from "./overlay";
-import { useOverlay } from "./overlay-provider";
+import { Overlay } from "@/shared/ui/overlays/overlay";
+import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
 
 type IntegrationsOverlayProps = {
   overlayId: string;

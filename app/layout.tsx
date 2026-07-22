@@ -8,7 +8,7 @@ import { AuthProvider } from "@/components/auth/provider";
 import { GitHubStarsLoader } from "@/components/github-stars-loader";
 import { GitHubStarsProvider } from "@/components/github-stars-provider";
 import { GlobalModals } from "@/components/global-modals";
-import { OverlayProvider } from "@/components/overlays/overlay-provider";
+import { OverlayProvider } from "@/shared/ui/overlays/overlay-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/shared/ui/sonner";
 import { AppShell } from "@/components/app-shell";

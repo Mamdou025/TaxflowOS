@@ -9,7 +9,7 @@ import {
 } from "@/components/auth/dialog";
 import { ApiKeysOverlay } from "@/components/overlays/api-keys-overlay";
 import { IntegrationsOverlay } from "@/components/overlays/integrations-overlay";
-import { useOverlay } from "@/components/overlays/overlay-provider";
+import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
 import { SettingsOverlay } from "@/components/overlays/settings-overlay";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";

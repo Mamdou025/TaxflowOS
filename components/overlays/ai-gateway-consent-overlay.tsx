@@ -18,9 +18,9 @@ import {
   aiGatewayTeamsLoadingAtom,
 } from "@/lib/ai-gateway/state";
 import { api } from "@/lib/api-client";
-import { Overlay } from "./overlay";
-import { useOverlay } from "./overlay-provider";
-import type { OverlayAction } from "./types";
+import { Overlay } from "@/shared/ui/overlays/overlay";
+import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
+import type { OverlayAction } from "@/shared/ui/overlays/types";
 
 type AiGatewayConsentOverlayProps = {
   overlayId: string;

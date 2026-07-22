@@ -5,8 +5,8 @@ import { toast } from "sonner";
 import { AccountSettings } from "@/components/settings/account-settings";
 import { Spinner } from "@/shared/ui/spinner";
 import { api } from "@/lib/api-client";
-import { Overlay } from "./overlay";
-import { useOverlay } from "./overlay-provider";
+import { Overlay } from "@/shared/ui/overlays/overlay";
+import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
 
 type SettingsOverlayProps = {
   overlayId: string;

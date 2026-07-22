@@ -18,9 +18,9 @@ import {
 import { nanoid } from "nanoid";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ConfirmOverlay } from "@/components/overlays/confirm-overlay";
-import { SmartOverlayHeader } from "@/components/overlays/overlay-header";
-import { useOverlay } from "@/components/overlays/overlay-provider";
+import { ConfirmOverlay } from "@/shared/ui/overlays/confirm-overlay";
+import { SmartOverlayHeader } from "@/shared/ui/overlays/overlay-header";
+import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
 import { Button } from "@/shared/ui/button";
 import { CodeEditor } from "@/shared/ui/code-editor";
 import { Input } from "@/shared/ui/input";
@@ -117,7 +117,7 @@ import {
   useWorkspacePaneSizing,
   WorkspaceResizeHandle,
 } from "@/features/workflow-builder/ui/workspace/workspace-pane-sizing";
-import type { OverlayComponentProps } from "./types";
+import type { OverlayComponentProps } from "@/shared/ui/overlays/types";
 
 // System actions that need integrations (not in plugin registry)
 const SYSTEM_ACTION_INTEGRATIONS: Record<string, IntegrationType> = {

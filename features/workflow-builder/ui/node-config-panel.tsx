@@ -11,8 +11,8 @@ import {
 import { nanoid } from "nanoid";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ConfigurationOverlay } from "@/components/overlays/configuration-overlay";
-import { useOverlay } from "@/components/overlays/overlay-provider";
+import { ConfigurationOverlay } from "@/features/workflow-builder/ui/overlays/configuration-overlay";
+import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
 import {
   AlertDialog,
   AlertDialogAction,

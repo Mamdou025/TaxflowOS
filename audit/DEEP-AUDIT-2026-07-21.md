@@ -25,7 +25,7 @@ See [`docs/REPO-MAP.md`](../docs/REPO-MAP.md) for entry points and the full "whe
 
 | Mini-app | Owns | Entry point |
 |---|---|---|
-| **Workflow Builder** | `features/workflow-builder/ui/**`, `components/overlays/**`, `features/workflow-builder/ui/ai-elements/**` (UI); `lib/local-*`, `lib/workflow-*`, `src/domain`, `src/state` (engine); `backend/**` (execution) | `features/workflow-builder/ui/workflow-canvas.tsx` |
+| **Workflow Builder** | `features/workflow-builder/ui/**`, `shared/ui/overlays/** (framework) + features/workflow-builder/ui/overlays/** (builder) + components/overlays/** (settings)`, `features/workflow-builder/ui/ai-elements/**` (UI); `lib/local-*`, `lib/workflow-*`, `src/domain`, `src/state` (engine); `backend/**` (execution) | `features/workflow-builder/ui/workflow-canvas.tsx` |
 | **Tax Worksheets** | `components/worksheet/**`, `lib/worksheet-intel/**` (typed) **+ `tax-ui/**` island** (untyped) | `shared/stores/resource-registry.tsx` |
 | **Assistant / Chat** | `lib/assistant-runtime/**`, `components/assistant/**`, `components/workspace/**` | `app/api/copilotkit/route.ts` · `components/assistant/use-assistant.tsx` |
 | **GenUI / OpenUI** | `features/genui/**` *(relocated Phase 1, 2026-07-21)* | `features/genui/library.tsx` |
@@ -46,7 +46,7 @@ Full table in [`docs/REPO-MAP.md` §4](../docs/REPO-MAP.md). The refactor-priori
 | `shared/workflow-engine/local-fiscal-workflow.ts` | 5,854 | domain barrel + catalog data + 8 factories + persistence + fixtures; **54 importers** | delete the re-export barrel (point 54 sites at `src/domain`), then split catalog/edges/persistence/templates |
 | `features/workflow-builder/ui/workflow-toolbar.tsx` | 3,119 | embeds a **client-side execution engine** + validators + 12 buttons in a toolbar | executor → `shared/workflow-engine/runtime/workflow-runs`, validators → `lib/workflow/validation.ts`, buttons → `toolbar/*` |
 | `features/workflow-builder/ui/node-config-panel.tsx` | 2,225 | one ~1,850-line `PanelInner` React function | per-block-type sections under `node-config/sections/*` |
-| `components/overlays/configuration-overlay.tsx` + `inspector/block-inspector.tsx` + `workspace/block-data-flow-pane.tsx` | ~5,900 | **~500 lines of helpers copy-pasted across all three** | shared `block-kinds.ts` + `block-outputs.ts` |
+| `features/workflow-builder/ui/overlays/configuration-overlay.tsx` + `inspector/block-inspector.tsx` + `workspace/block-data-flow-pane.tsx` | ~5,900 | **~500 lines of helpers copy-pasted across all three** | shared `block-kinds.ts` + `block-outputs.ts` |
 | `shared/workflow-engine/codegen/workflow-codegen.ts` | 1,316 | one ~1,268-line `generateWorkflowCode` function | per-block-type emitters under `codegen/emitters/*` |
 | `shared/workflow-engine/execution/blocks/logic/hierarchy-aggregator/run.ts` + `calculation-engine/run.ts` | 2,210 | **formula tokenizer/RPN/evaluator duplicated verbatim** across both | extract `shared/workflow-engine/execution/blocks/logic/shared/formula-expression.ts` |
 | `shared/workflow-engine/local-ai-workflow-assistant.ts` | 1,496 | 1 Ask responder + 17 Propose generators flat in one file | `lib/ai-assistant/{ask,proposals}/*` |

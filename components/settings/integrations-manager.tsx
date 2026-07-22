@@ -7,7 +7,7 @@ import {
   DeleteConnectionOverlay,
   EditConnectionOverlay,
 } from "@/components/overlays/edit-connection-overlay";
-import { useOverlay } from "@/components/overlays/overlay-provider";
+import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
 import { Button } from "@/shared/ui/button";
 import { IntegrationIcon } from "@/shared/ui/integration-icon";
 import { Spinner } from "@/shared/ui/spinner";

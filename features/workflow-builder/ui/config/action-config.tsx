@@ -5,7 +5,7 @@ import { HelpCircle, Plus, Settings } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ConfigureConnectionOverlay } from "@/components/overlays/add-connection-overlay";
 import { AiGatewayConsentOverlay } from "@/components/overlays/ai-gateway-consent-overlay";
-import { useOverlay } from "@/components/overlays/overlay-provider";
+import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
 import { Button } from "@/shared/ui/button";
 import { CodeEditor } from "@/shared/ui/code-editor";
 import { IntegrationIcon } from "@/shared/ui/integration-icon";

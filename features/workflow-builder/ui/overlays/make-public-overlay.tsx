@@ -1,9 +1,9 @@
 "use client";
 
 import { Globe } from "lucide-react";
-import { Overlay } from "./overlay";
-import { useOverlay } from "./overlay-provider";
-import type { OverlayComponentProps } from "./types";
+import { Overlay } from "@/shared/ui/overlays/overlay";
+import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
+import type { OverlayComponentProps } from "@/shared/ui/overlays/types";
 
 type MakePublicOverlayProps = OverlayComponentProps<{
   onConfirm: () => void;

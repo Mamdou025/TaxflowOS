@@ -22,9 +22,9 @@ import {
 } from "@/plugins";
 import { getIntegrationDescriptions } from "@/plugins/registry";
 import { AiGatewayConsentOverlay } from "./ai-gateway-consent-overlay";
-import { ConfirmOverlay } from "./confirm-overlay";
-import { Overlay } from "./overlay";
-import { useOverlay } from "./overlay-provider";
+import { ConfirmOverlay } from "@/shared/ui/overlays/confirm-overlay";
+import { Overlay } from "@/shared/ui/overlays/overlay";
+import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
 
 // System integrations that don't have plugins
 const SYSTEM_INTEGRATION_TYPES: IntegrationType[] = ["database"];

@@ -8,12 +8,12 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { aiGatewayStatusAtom } from "@/lib/ai-gateway/state";
 import { integrationsVersionAtom } from "@/lib/integrations-store";
 import type { IntegrationType } from "@/lib/types/integration";
-import { ConfigureConnectionOverlay } from "./add-connection-overlay";
-import { AiGatewayConsentOverlay } from "./ai-gateway-consent-overlay";
+import { ConfigureConnectionOverlay } from "@/components/overlays/add-connection-overlay";
+import { AiGatewayConsentOverlay } from "@/components/overlays/ai-gateway-consent-overlay";
 import { ConfigurationOverlay } from "./configuration-overlay";
-import { Overlay } from "./overlay";
-import { useOverlay } from "./overlay-provider";
-import type { OverlayComponentProps } from "./types";
+import { Overlay } from "@/shared/ui/overlays/overlay";
+import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
+import type { OverlayComponentProps } from "@/shared/ui/overlays/types";
 
 type BrokenReference = {
   nodeId: string;

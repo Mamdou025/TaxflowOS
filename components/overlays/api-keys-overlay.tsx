@@ -7,9 +7,9 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Spinner } from "@/shared/ui/spinner";
-import { ConfirmOverlay } from "./confirm-overlay";
-import { Overlay } from "./overlay";
-import { useOverlay } from "./overlay-provider";
+import { ConfirmOverlay } from "@/shared/ui/overlays/confirm-overlay";
+import { Overlay } from "@/shared/ui/overlays/overlay";
+import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
 
 type ApiKey = {
   id: string;

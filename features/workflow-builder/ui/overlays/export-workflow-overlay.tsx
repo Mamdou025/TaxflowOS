@@ -2,9 +2,9 @@
 
 import { Download, FlaskConical } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/shared/ui/alert";
-import { Overlay } from "./overlay";
-import { useOverlay } from "./overlay-provider";
-import type { OverlayComponentProps } from "./types";
+import { Overlay } from "@/shared/ui/overlays/overlay";
+import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
+import type { OverlayComponentProps } from "@/shared/ui/overlays/types";
 
 type ExportWorkflowOverlayProps = OverlayComponentProps<{
   onExport: () => void;
