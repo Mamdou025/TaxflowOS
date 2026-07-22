@@ -183,9 +183,12 @@ Each step ends with the **gate**: `pnpm type-check` **must** stay green (0 error
 9. **shared/ui domain-widget split** (row A) — the 5 polluters (`integration-icon/-selector`, `template-badge-input/-textarea`, `template-autocomplete`) → `features/workflow-builder/ui/inputs/` (+ integration widgets to platform). ⏳ **pending.**
 *Gate: type-check + `workflow.spec.ts`.*
 
-**Phase 5 — Worksheets consolidation (the risky untyped seam).**
-8. (a) delete dead island files (breaks the cycle); (b) extract the typed contract module; (c) move in-app worksheets + `worksheet-intel` + `worksheet-copilot` → `features/worksheets/` (row 14); (d) move the island → `features/worksheets/legacy/`, updating `@tax/*` + `next.config.ts:15`; (e) *follow-up increment:* port the 5 live island pages to typed components, retire `@tax/*` + wouter shim.
-*Gate: type-check **+ `tsconfig.tax-ui.json` loose check** (the main gate is blind here) + e2e. Do steps a–d before touching the harder port (e).*
+**Phase 5 — Worksheets consolidation. ✅ DONE 2026-07-21 (`8bee99d`).**
+- (a) ✅ dead island files already deleted in Phase 0 (cycle already broken).
+- (b/c) ✅ typed in-app worksheets `components/worksheet/**` → `features/worksheets/components/`; `lib/worksheet-intel/**` → `features/worksheets/intel/`. Codemod (7 files). tsc 0. *(`worksheet-copilot` left in `components/assistant` — moves with the assistant in Phase 6.)*
+- (d) ✅ untyped island `tax-ui/**` (18 files) → `features/worksheets/legacy/` — **alias-mediated, no import codemod**: retargeted `tsconfig` `@tax/*` → `./features/worksheets/legacy/*`, `exclude` → `features/worksheets/legacy/**/*`, and `next.config.ts:15` wouter-shim path. The typed `@tax/pages/*` importers (`app/dashboard`, `app/surplus`, `app/t1134`, `app/bu-overview`, `app/client/[id]`, `resource-registry`) keep `tsc` honest about the alias — tsc exit 0. Manually verified (tsc-blind zone): no literal `tax-ui` paths remain, all 5 `@tax/pages` + all `@/` seam targets (`shared/ui`, `shared/stores`, `neumorphic-sidebar`) exist, wouter-shim present, all internal `@tax` imports resolve.
+- (e) ⏳ **follow-up (not done):** port the 5 live island pages to typed components + retire `@tax/*` + wouter shim. This is real work (touches connection-validation + the worksheets), deferred.
+*Gate met: type-check 0 + manual island verification. **Runtime smoke-test still recommended** — the island only runs client-side (`ssr:false` dynamic import), so its actual mounting is unverified until the app runs.*
 
 **Phase 6 — Assistant.**
 9. `lib/assistant-runtime/**` → `features/assistant/runtime/`; `components/assistant/**` + chat-rendering pulled out of `components/workspace/**` → `features/assistant/ui/`. Update `app/api/copilotkit/route.ts` + `assistant:evals` script path.

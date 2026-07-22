@@ -26,7 +26,7 @@ See [`docs/REPO-MAP.md`](../docs/REPO-MAP.md) for entry points and the full "whe
 | Mini-app | Owns | Entry point |
 |---|---|---|
 | **Workflow Builder** | `features/workflow-builder/ui/**`, `shared/ui/overlays/** (framework) + features/workflow-builder/ui/overlays/** (builder) + components/overlays/** (settings)`, `features/workflow-builder/ui/ai-elements/**` (UI); `lib/local-*`, `lib/workflow-*`, `src/domain`, `src/state` (engine); `backend/**` (execution) | `features/workflow-builder/ui/workflow-canvas.tsx` |
-| **Tax Worksheets** | `components/worksheet/**`, `lib/worksheet-intel/**` (typed) **+ `tax-ui/**` island** (untyped) | `shared/stores/resource-registry.tsx` |
+| **Tax Worksheets** | `features/worksheets/{components,intel}/**` (typed) **+ `features/worksheets/legacy/**` island** (untyped, @tax alias) | `shared/stores/resource-registry.tsx` |
 | **Assistant / Chat** | `lib/assistant-runtime/**`, `components/assistant/**`, `components/workspace/**` | `app/api/copilotkit/route.ts` · `components/assistant/use-assistant.tsx` |
 | **GenUI / OpenUI** | `features/genui/**` *(relocated Phase 1, 2026-07-21)* | `features/genui/library.tsx` |
 | **Integration Plugins** | `plugins/**` (14 plugins) | `plugins/registry.ts` (load-bearing via `scripts/discover-plugins.ts`) |

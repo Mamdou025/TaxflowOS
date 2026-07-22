@@ -10,7 +10,7 @@
 
 **Visual Workflow Builder** — the React Flow node-graph editor for fiscal workflows. Three physical zones: the **UI** (`features/workflow-builder/ui/**`, `shared/ui/overlays/** (framework) + features/workflow-builder/ui/overlays/** (builder) + components/overlays/** (settings)`, `features/workflow-builder/ui/ai-elements/**`), the **headless engine** (`lib/local-*`, `lib/workflow-*`, `shared/workflow-engine/domain/**`, `shared/workflow-engine/state/**`, `shared/workflow-engine/runtime/steps/**`, `shared/workflow-engine/runtime/workflow-runs/**`), and the **local execution layer** (`shared/workflow-engine/execution/blocks/**`, `shared/workflow-engine/execution/runtime/**`). Canvas entry: `features/workflow-builder/ui/workflow-canvas.tsx` (the `<ReactFlow>` host) wrapped by `persistent-canvas.tsx` (mounted app-wide by `components/app-shell.tsx`) and by `inline-builder.tsx` (mounted inside chat). Domain entry: `shared/workflow-engine/local-fiscal-workflow.ts` + state hub `shared/workflow-engine/state/workflow-store.ts`. Routes: `app/builder/page.tsx` (current) and `app/workflows/[workflowId]/page.tsx` (legacy).
 
-**Tax Worksheets** — tax workpapers (FAPI, Surplus, T1134, Expense) and client/BU dashboards. Split across a **typed in-app half** (`components/worksheet/**`, `lib/worksheet-intel/**`) and an **untyped `tax-ui/**` island** (excluded from tsconfig, `@tax/*` alias, wouter-shimmed). `/fapi` mounts typed `components/worksheet/fapi-worksheet.tsx`; `/surplus`, `/t1134`, `/dashboard`, `/bu-overview`, `/client/[id]` dynamic-import (`ssr:false`) the island `@tax/pages/*`. Registration table: `shared/stores/resource-registry.tsx`. Route shells: `app/{fapi,surplus,t1134,worksheets}/page.tsx`. **NOTE:** FAPI exists twice — typed `components/worksheet/fapi-worksheet.tsx` (432 LOC, live) supersedes island `tax-ui/pages/FapiWorksheet.tsx` (1076 LOC, dead/unrouted).
+**Tax Worksheets** — tax workpapers (FAPI, Surplus, T1134, Expense) and client/BU dashboards. Split across a **typed in-app half** (`features/worksheets/components/**`, `features/worksheets/intel/**`) and an **untyped `features/worksheets/legacy/**` island** (excluded from tsconfig, `@tax/*` alias, wouter-shimmed). `/fapi` mounts typed `features/worksheets/components/fapi-worksheet.tsx`; `/surplus`, `/t1134`, `/dashboard`, `/bu-overview`, `/client/[id]` dynamic-import (`ssr:false`) the island `@tax/pages/*`. Registration table: `shared/stores/resource-registry.tsx`. Route shells: `app/{fapi,surplus,t1134,worksheets}/page.tsx`. **NOTE:** FAPI exists twice — typed `features/worksheets/components/fapi-worksheet.tsx` (432 LOC, live) supersedes island `features/worksheets/legacy/pages/FapiWorksheet.tsx` (1076 LOC, dead/unrouted).
 
 **Assistant / Chat** — the Ask/Propose/Execute intent-gated AI assistant. Pure deterministic runtime in `lib/assistant-runtime/**` (routing, memory, model-tiering, evals; server-only, no React). Server endpoint: `app/api/copilotkit/route.ts` (CopilotKit `BuiltInAgent` + gate/orphan-repair middleware). Client entry: `components/workspace/copilot-workspace-panel.tsx` = the `/` route `ChatWorkspace` (`app/page.tsx`). The "client brain" is the god-hook `components/assistant/use-assistant.tsx`. **WARNING:** chat-rendering files are scattered between `components/assistant/**` and `components/workspace/**`.
 
@@ -82,9 +82,9 @@ For one block, the spellings across layers: subtype `Currency Rate` (`shared/wor
 | **Change block config UI** | Current: `features/workflow-builder/ui/overlays/configuration-overlay.tsx`; Legacy: `features/workflow-builder/ui/node-config-panel.tsx` → `inspector/block-inspector.tsx` | Shared leaf editors in `source-viewers/**` + `logic-viewers/**` |
 | **Change node appearance** | `features/workflow-builder/ui/nodes/**` + theming in `features/workflow-builder/ui/ai-elements/**` | |
 | **Change how a workflow runs** | Runtime: `shared/workflow-engine/runtime/workflow-executor.workflow.ts`; Template loop: `shared/workflow-engine/runtime/workflow-runs/engine.ts`; Local block math: `shared/workflow-engine/execution/blocks/**/run.ts` | |
-| **Edit an in-app worksheet (FAPI/Expense)** | `components/worksheet/{fapi-worksheet,expense-worksheet}.tsx` | Register in `shared/stores/resource-registry.tsx` |
-| **Edit an island worksheet (Surplus/T1134/dashboards)** | `tax-ui/pages/*` (**UNTYPED — not type-checked**) | Wired via `dynamic(() => import('@tax/pages/X'), {ssr:false})` in `app/*/page.tsx` + `shared/stores/resource-registry.tsx` |
-| **Make chat answer about a worksheet** | `lib/worksheet-intel/**` (contract `types.ts`, generic `template-adapter.ts`, registry `registry.ts`) | Publisher `components/assistant/worksheet-copilot.tsx` |
+| **Edit an in-app worksheet (FAPI/Expense)** | `features/worksheets/components/{fapi-worksheet,expense-worksheet}.tsx` | Register in `shared/stores/resource-registry.tsx` |
+| **Edit an island worksheet (Surplus/T1134/dashboards)** | `features/worksheets/legacy/pages/*` (**UNTYPED — not type-checked**) | Wired via `dynamic(() => import('@tax/pages/X'), {ssr:false})` in `app/*/page.tsx` + `shared/stores/resource-registry.tsx` |
+| **Make chat answer about a worksheet** | `features/worksheets/intel/**` (contract `types.ts`, generic `template-adapter.ts`, registry `registry.ts`) | Publisher `components/assistant/worksheet-copilot.tsx` |
 | **Change assistant behavior/routing** | Runtime `lib/assistant-runtime/**` (routing `routing/classify.ts`, gate `routing/gate.ts`); server `app/api/copilotkit/route.ts` | Client actions in `components/assistant/use-assistant.tsx` |
 | **Change chat UI / thread** | `components/assistant/assistant-thread.tsx` + `components/workspace/{aside-thread,thread-messages,workflow-run-flow}.tsx` | (chat rendering straddles both folders) |
 | **Add/edit an integration plugin** | `plugins/<name>/index.ts` (+ `steps/*.ts`, `credentials.ts`, `icon.tsx`, `test.ts`) | Run `pnpm discover-plugins` to regenerate `plugins/index.ts` + `lib/step-registry.ts` |
@@ -117,34 +117,34 @@ Files ≥700 LOC and other hotspots. Most are single mega-exports mixing layout,
 | `shared/workflow-engine/execution/blocks/logic/hierarchy-aggregator/run.ts` | 1343 | FAPI aggregation + embedded formula tokenizer/parser/evaluator. |
 | `shared/workflow-engine/codegen/workflow-codegen.ts` | 1316 | Codegen (live; one ~1,268-line function). |
 | `shared/workflow-engine/state/workflow-commands.ts` | 1306 | Command-reducer over canvas nodes/edges. |
-| `tax-ui/pages/SurplusWorksheet.tsx` | 1102 | LIVE island Surplus worksheet (untyped). |
-| `tax-ui/pages/FapiWorksheet.tsx` | 1076 | **DEAD/SUPERSEDED** — replaced by `components/worksheet/fapi-worksheet.tsx`. |
+| `features/worksheets/legacy/pages/SurplusWorksheet.tsx` | 1102 | LIVE island Surplus worksheet (untyped). |
+| `features/worksheets/legacy/pages/FapiWorksheet.tsx` | 1076 | **DEAD/SUPERSEDED** — replaced by `features/worksheets/components/fapi-worksheet.tsx`. |
 | `features/workflow-builder/ui/logic-viewers/calculation-engine-panel.tsx` | 1073 | Innermost of the calc-engine panel/editor/workspace triad. |
-| `tax-ui/lib/t1134Data.ts` | 1002 | Hardcoded T1134 mock data. |
-| `tax-ui/pages/ClientWorkspace.tsx` | 961 | LIVE island client workspace (`/client/[id]`). |
-| `tax-ui/pages/T1134Worksheet.tsx` | 947 | LIVE island T1134 workpaper (`/t1134`). |
+| `features/worksheets/legacy/lib/t1134Data.ts` | 1002 | Hardcoded T1134 mock data. |
+| `features/worksheets/legacy/pages/ClientWorkspace.tsx` | 961 | LIVE island client workspace (`/client/[id]`). |
+| `features/worksheets/legacy/pages/T1134Worksheet.tsx` | 947 | LIVE island T1134 workpaper (`/t1134`). |
 | `shared/workflow-engine/execution/blocks/logic/calculation-engine/run.ts` | 867 | Calc-rule evaluation; **near-duplicate** formula engine of hierarchy-aggregator. |
 | `components/assistant/use-assistant.tsx` | 864 | God-hook client brain: ~15 actions + ~8 readables. |
 | `components/workspace/workflow-run-flow.tsx` | 800 | Renders a run inline in chat (also `app/run/[workflowId]`). |
-| `tax-ui/lib/data.ts` | 797 | Hardcoded client/portfolio mock data. |
+| `features/worksheets/legacy/lib/data.ts` | 797 | Hardcoded client/portfolio mock data. |
 | `shared/workflow-engine/runtime/workflow-executor.workflow.ts` | 766 | Runtime step-executor (execution path A/B). |
 | `shared/workflow-engine/codegen/workflow-codegen-sdk.ts` | 736 | Newer codegen "SDK" (intended successor). |
 | `features/workflow-builder/ui/workflow-canvas.tsx` | 729 | Canonical ReactFlow host. |
 | `components/auth/dialog.tsx` | 694 | better-auth sign-in/up modal. |
 | `lib/integrations/vercel.ts` | 671 | **DEAD** — full Vercel SDK wrapper, zero importers. |
 | `lib/api-client.ts` | 664 | Typed browser→API client (~17 UI importers). |
-| `tax-ui/components/OrbitalStage.tsx` | 658 | **DEAD** island nav stage. |
+| `features/worksheets/legacy/components/OrbitalStage.tsx` | 658 | **DEAD** island nav stage. |
 | `features/workflow-builder/ui/inputs/template-badge-textarea.tsx` | 620 | Workflow template-var textarea — a **domain widget still misfiled** in the design system (split out in Phase 4). |
 | `app/globals.css` | 584 | 104 `--sx-*` tokens + React-Flow overrides + keyframes. |
 | `plugins/registry.ts` | 560 | Plugin registry: types + ~20 query/util fns. |
 
 ### Removed 2026-07-21 (Phase 0 — 30 files / 6,866 LOC; restore via `git checkout main -- <path>`)
-`features/workflow-builder/ui/workflow-studio-shell.tsx` (1426), `worksheet-page-menu.tsx` (201), `components/overlays/alert-overlay.tsx` (132), `inspector/mock-runs.ts` (123), `config/condition-config.tsx` (31), `components/{inscope-home,inscope-sidebar,ambient-orbs,canvas-page-wrapper}.tsx`, `components/assistant/{coworker-activity,scope-launchpad}.tsx`, `components/workspace/field-editor.tsx`, `lib/integrations/vercel.ts` (671), `lib/utils/template.ts` (549), `lib/assistant-runtime/{index,errors}.ts` + `routing/intent-router.ts`, `shared/workflow-engine/execution/runtime/{runner,validation}.ts`, `tax-ui/pages/{Workbench,Home,NotFound,FapiWorksheet}.tsx`, `tax-ui/components/{OrbitalStage,Map,ManusDialog,ErrorBoundary}.tsx`, `tax-ui/hooks/useComposition.ts`, `app/copilot-test/`.
+`features/workflow-builder/ui/workflow-studio-shell.tsx` (1426), `worksheet-page-menu.tsx` (201), `components/overlays/alert-overlay.tsx` (132), `inspector/mock-runs.ts` (123), `config/condition-config.tsx` (31), `components/{inscope-home,inscope-sidebar,ambient-orbs,canvas-page-wrapper}.tsx`, `components/assistant/{coworker-activity,scope-launchpad}.tsx`, `components/workspace/field-editor.tsx`, `lib/integrations/vercel.ts` (671), `lib/utils/template.ts` (549), `lib/assistant-runtime/{index,errors}.ts` + `routing/intent-router.ts`, `shared/workflow-engine/execution/runtime/{runner,validation}.ts`, `features/worksheets/legacy/pages/{Workbench,Home,NotFound,FapiWorksheet}.tsx`, `features/worksheets/legacy/components/{OrbitalStage,Map,ManusDialog,ErrorBoundary}.tsx`, `features/worksheets/legacy/hooks/useComposition.ts`, `app/copilot-test/`.
 **Held (NOT removed):** `app/genui-lab/` (intentional OpenUI spike), `app/viewer/` (live via top-nav "Documents"). **knip's 10 remaining unused-file candidates** (5 shadcn primitives, `shared/workflow-engine/runtime/steps/*`, `e2e-deep.config.ts`, etc.) await review — several are dynamic-loaded/intentional.
 
 ### Inert-as-code but LOAD-BEARING at runtime (DO NOT delete)
 - `plugins/index.ts` + `_template/*.txt` — regenerated by `scripts/discover-plugins.ts`; part of the build.
 - `lib/next-boilerplate/**` — file-copy template for `app/api/workflows/[workflowId]/download/route.ts`.
-- `tax-ui/wouter-shim.tsx` — aliased by `next.config.ts` for every island `import … from 'wouter'`.
+- `features/worksheets/legacy/wouter-shim.tsx` — aliased by `next.config.ts` for every island `import … from 'wouter'`.
 - `features/genui/system-prompt.txt` — read at request time by `app/api/genui/route.ts`.
 - `lib/kernel/**` — intentional (not-yet-wired) migration scaffolding.
