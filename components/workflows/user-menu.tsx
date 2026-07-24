@@ -6,13 +6,13 @@ import { useEffect, useState } from "react";
 import {
   AuthDialog,
   isSingleProviderSignInInitiated,
-} from "@/components/auth/dialog";
-import { ApiKeysOverlay } from "@/components/overlays/api-keys-overlay";
-import { IntegrationsOverlay } from "@/components/overlays/integrations-overlay";
-import { useOverlay } from "@/components/overlays/overlay-provider";
-import { SettingsOverlay } from "@/components/overlays/settings-overlay";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+} from "@/platform/auth/ui/dialog";
+import { ApiKeysOverlay } from "@/platform/settings/api-keys-overlay";
+import { IntegrationsOverlay } from "@/platform/settings/integrations-overlay";
+import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
+import { SettingsOverlay } from "@/platform/settings/settings-overlay";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
+import { Button } from "@/shared/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,9 +25,9 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { api } from "@/lib/api-client";
-import { signOut, useSession } from "@/lib/auth-client";
+} from "@/shared/ui/dropdown-menu";
+import { api } from "@/platform/api-client";
+import { signOut, useSession } from "@/platform/auth/auth-client";
 
 export const UserMenu = () => {
   const { data: session, isPending } = useSession();

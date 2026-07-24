@@ -1,6 +1,6 @@
 # Types & Domain Model
 
-*Last updated: 2026-07-17*
+*Last updated: 2026-07-21*
 
 All core types live in `src/domain/workflow/`. Re-exports and runtime types are in `lib/local-tool-registry.ts` and `backend/runtime/types.ts`.
 
@@ -40,7 +40,7 @@ Runtime-validated (zod) types for the Ask/Propose/Execute intent gate. Server-on
 | `AssistantRuntimeConfig` · `IntentGateMode` · `ModelTier` | `config.ts` | Env-resolved feature flags + model policy (`ASSISTANT_INTENT_GATE`, `ASSISTANT_MODEL_TIERING`, conductor/fast/deep tiers + reasoning). |
 | `ModelDecision` · `ModelTierName` · `pickModelDecision()` · `tierForRoute()` · `normalizeModelSpec()` | `model-policy.ts` | Per-turn model tiering: route → tier (fast/standard/deep) → provider-prefixed model spec (null when it equals the baseline). |
 | `MemoryView` · `MemoryKind` · `SaveMemoryInput`(Schema) · `MemoryScope` · `selectRelevantMemories()` | `memory/{types,retrieval}.ts` | Durable memory: validated write input + PURE retrieval policy (global-always, client-specific-only-for-its-client, no cross-client bleed). Backed by the `assistant_memories` table + `memory/repository.ts` (fail-soft Drizzle CRUD). |
-| `Specialist` · `SPECIALISTS` · `selectSpecialist()` · `specialistForWorkflow()` · `specialistDirective()` | `agents/specialists.ts` | "Many hats": route → the workflow's domain specialist (Sofi/Théo/Mira/Nova) + the persona directive injected into model context. Pure/isomorphic (server injects; client `SpecialistPresence` shows who). |
+| `WorkflowDomain` · `WORKFLOW_DOMAINS` · `selectDomain()` · `domainForWorkflow()` | `agents/specialists.ts` | The per-workflow DOMAIN-KNOWLEDGE registry the one agent **Sina** applies: route → the workflow's domain (`expertise` text) injected as a "DOMAIN FOCUS" context item (`sina.ts` `sinaTurnDirective`). No personas — renamed from `Specialist`/`SPECIALISTS`/`selectSpecialist` and the persona `specialistDirective` removed on 2026-07-24. Pure/isomorphic. |
 | `AssistantMemory` · `NewAssistantMemory` · `assistantMemories` | `lib/db/schema.ts` | Drizzle table + inferred row types; migration `drizzle/0005_strange_deathstrike.sql`. |
 | `AssistantErrorCode` · `AssistantRuntimeError` | `errors.ts` | Stable error-code vocabulary for routing/target/tool failures. |
 
@@ -627,6 +627,42 @@ interface BlockCatalogItem {
   defaultConfig: Record<string, unknown>
 }
 ```
+
+---
+
+## Portfolio Workflow Spec Types (`shared/workflow-engine/templates/portfolio/portfolio-workflows.ts`) [NEW — 2026-07-22]
+
+Declarative descriptions of the 15 Sinaxe portfolio blueprints (Canadian Corporate Tax Workflow Portfolio §2.1–2.11 + Platform Services Addendum). Pure data — the generic `createPortfolioWorkflow(def)` in `local-fiscal-workflow.ts` turns any `PortfolioWorkflowDef` into a `LocalWorkflowSnapshot` (block ids prefixed with the workflow id; positions from `stage`×340 / `row`×150). No new block families or catalog entries — every `catalogId` is an existing `BlockCatalogItem.id`.
+
+```typescript
+type PortfolioWorkflowGroup = "foundation" | "tier1" | "platform";
+
+interface PortfolioBlockSpec {
+  catalogId: string        // an existing BLOCK_CATALOG id, e.g. "source:excel-workbook"
+  id: string               // short, unique within the workflow (prefixed on build)
+  label: string
+  description: string
+  stage: number            // pipeline column
+  row: number              // row within the column
+  config?: Record<string, unknown>
+}
+
+interface PortfolioEdgeSpec {
+  from: string; to: string           // short block ids
+  label: string; reason: string
+  rel?: string                       // WorkflowRelationshipType (default "provides_data_to")
+  fromRole?: string; toRole?: string
+}
+
+interface PortfolioWorkflowDef {
+  id: string; name: string; description: string
+  group: PortfolioWorkflowGroup
+  sub: string                        // tagline for the template menu
+  blocks: PortfolioBlockSpec[]
+  edges: PortfolioEdgeSpec[]
+}
+```
+Registry: `PORTFOLIO_WORKFLOWS: PortfolioWorkflowDef[]` + `getPortfolioWorkflowDef(id)`. Integrity check: `scripts/verify-portfolio.ts`.
 
 ---
 

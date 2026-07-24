@@ -5,20 +5,30 @@ import type { ReactNode } from 'react';
 import { CopilotKit } from '@copilotkit/react-core';
 import { GlobalTopNav } from '@/components/global-top-nav';
 import { GlobalClientSwitcher } from '@/components/global-client-switcher';
-import { PersistentCanvas } from '@/components/workflow/persistent-canvas';
-import { AssistantPanel } from '@/components/assistant/assistant-panel';
-import { MemoryCopilot } from '@/components/assistant/memory-copilot';
-import { SpecialistPresence } from '@/components/assistant/specialist-presence';
+import { PersistentCanvas } from '@/features/workflow-builder/ui/persistent-canvas';
+import { AssistantPanel } from '@/features/assistant/ui/assistant-panel';
+import { MemoryCopilot } from '@/features/assistant/ui/memory-copilot';
+import { SpecialistPresence } from '@/features/assistant/ui/specialist-presence';
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+
+  // The Agent Lab (/agent-lab) is a standalone, isolated surface: no global nav,
+  // no CopilotKit chat overlay, its own scroll. `body` is locked to `overflow:hidden`
+  // at 100dvh (globals.css), so this must be a FIXED-height container that scrolls
+  // internally (`h-dvh` + overflow-y-auto) — `min-h-dvh` would grow past the screen
+  // and get clipped by the body. It ships its own back button.
+  if (pathname.startsWith('/agent-lab')) {
+    return <div className="h-dvh overflow-y-auto bg-white dark:bg-neutral-950">{children}</div>;
+  }
+
   const isCanvasPage = pathname === '/builder' || pathname.startsWith('/workflows/');
   // Scope (/) is now the full-height LibreChat shell — flat dark, its own sidebar
   // for nav, so no global grid and no top navbar there.
   const isScope = pathname === '/';
   const isGridPage =
     pathname === '/dashboard' ||
-    ['/fapi', '/t1134', '/surplus', '/bu-overview'].includes(pathname) ||
+    ['/fapi', '/t1134', '/surplus', '/bu-overview', '/worksheets'].includes(pathname) ||
     pathname.startsWith('/client');
   // Light neumorphic pages paint a full-viewport light bg so the floating navbar
   // sits on the page colour (no white strip behind the transparent nav row).
@@ -29,22 +39,19 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Fixed canvas layer — only active on builder/workflow pages */}
       <PersistentCanvas />
 
-      {/* Fixed grid background — same dark-canvas grid as the builder, finer
-          cells, running full-screen behind the floating navbar. */}
+      {/* Fixed page background — a flat darker gray (no grid) that reads as the
+          recessed space behind the neumorphic menus. Tuned to the neumorphic
+          shadow tone (rgba(158,158,178)), a shade darker than the #eaeaef
+          surface. Chat/Scope keep their own dark-grid canvas. */}
       {isGridPage && (
         <div
           className="fixed inset-0"
-          style={{
-            zIndex: 0,
-            backgroundColor: '#18181c',
-            backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px)',
-            backgroundSize: '15px 15px',
-          }}
+          style={{ zIndex: 0, backgroundColor: 'var(--sx-ground)' }}
         />
       )}
 
       {/* Full-viewport light background for neumorphic pages (behind the nav) */}
-      {isLightPage && <div className="fixed inset-0" style={{ zIndex: 0, background: '#EEF0F5' }} />}
+      {isLightPage && <div className="fixed inset-0" style={{ zIndex: 0, background: 'var(--sx-ground-run)' }} />}
 
       {/* Main layout stack — pointer-events-none on canvas pages so events reach PersistentCanvas */}
       <div
@@ -72,8 +79,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           here so it registers a single time across all routes. Renders nothing. */}
       <MemoryCopilot />
 
-      {/* Shows which domain specialist (Sofi/Théo/…) is answering the current turn —
-          cosmetic; yields to a live run. See specialist-presence.tsx. */}
+      {/* Shows that Sina is answering the current turn — cosmetic; yields to a
+          live run. See specialist-presence.tsx. */}
       <SpecialistPresence />
 
       {/* Floating layers — rendered outside the stacking context so they layer over everything */}

@@ -3,18 +3,19 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { RightPanelShell } from "@/components/workflow/right-panel-shell";
-import { BuilderCopilot } from "@/components/assistant/builder-copilot";
+import { RightPanelShell } from "@/features/workflow-builder/ui/right-panel-shell";
+import { BuilderCopilot } from "@/features/assistant/ui/builder-copilot";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   createFapiTemplateWorkflow,
+  createPortfolioWorkflowById,
   createWorkingSourceRulesDemoWorkflow,
   LOCAL_WORKFLOW_ID,
   loadLocalWorkflowSnapshotResult,
   saveWorkflowDefinitionSnapshot,
   workflowDefinitionToCanvas,
-} from "@/lib/local-fiscal-workflow";
-import { getWorkflowConfig } from "@/lib/workflow-runs";
+} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { getWorkflowConfig } from "@/shared/workflow-engine/runtime/workflow-runs";
 import {
   currentWorkflowIdAtom,
   currentWorkflowNameAtom,
@@ -30,8 +31,8 @@ import {
   workflowNotFoundAtom,
   builderFocusTargetAtom,
   focusNodeIdAtom,
-} from "@/lib/workflow-store";
-import { uploadedRowsAtom } from "@/lib/workspace-store";
+} from "@/shared/workflow-engine/state/workflow-store";
+import { uploadedRowsAtom } from "@/shared/stores/workspace-store";
 
 const BuilderPage = () => {
   const isMobile = useIsMobile();
@@ -61,9 +62,12 @@ const BuilderPage = () => {
     let snapshot;
     if (focus) {
       // Resolve ANY registered workflow to its canvas via the run-config registry
-      // (fapi · roulement · expense · campaign · …). Falls back to FAPI if unknown.
+      // (fapi · roulement · expense · campaign), OR a Sinaxe portfolio blueprint
+      // (pf-*). Falls back to FAPI if the id is unknown.
       const cfg = getWorkflowConfig(focus.workflowId);
-      snapshot = cfg ? (cfg.buildSnapshot() as ReturnType<typeof createFapiTemplateWorkflow>) : createFapiTemplateWorkflow();
+      snapshot = cfg
+        ? (cfg.buildSnapshot() as ReturnType<typeof createFapiTemplateWorkflow>)
+        : (createPortfolioWorkflowById(focus.workflowId) ?? createFapiTemplateWorkflow());
       // Same shared upload the chat used → show the exact same rows on the canvas.
       const stored = uploadedRef.current[focus.workflowId];
       if (stored?.rows?.length) {

@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { validateWorkflowIntegrations } from "@/lib/db/integrations";
-import { workflows } from "@/lib/db/schema";
+import { auth } from "@/platform/auth/auth";
+import { db } from "@/platform/db";
+import { validateWorkflowIntegrations } from "@/platform/db/integrations";
+import { workflows } from "@/platform/db/schema";
 import { generateId } from "@/lib/utils/id";
 
 // Helper function to create a default trigger node

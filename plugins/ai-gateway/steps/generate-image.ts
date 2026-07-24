@@ -5,7 +5,7 @@ import {
   experimental_generateImage as generateImage,
 } from "ai";
 import { fetchCredentials } from "@/lib/credential-fetcher";
-import { type StepInput, withStepLogging } from "@/lib/steps/step-handler";
+import { type StepInput, withStepLogging } from "@/shared/workflow-engine/runtime/steps/step-handler";
 import { getErrorMessageAsync } from "@/lib/utils";
 import type { AiGatewayCredentials } from "../credentials";
 

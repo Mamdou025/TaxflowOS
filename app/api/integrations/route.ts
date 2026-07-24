@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { createIntegration, getIntegrations } from "@/lib/db/integrations";
+import { auth } from "@/platform/auth/auth";
+import { createIntegration, getIntegrations } from "@/platform/db/integrations";
 import type {
   IntegrationConfig,
   IntegrationType,

@@ -53,8 +53,8 @@ test("sidebar run → records a Work item, names the coworker, Jump reaches the 
   await expect(startBtn).toBeVisible({ timeout: 15_000 });
   await startBtn.click();
 
-  // Coworker indicator names the specialist working the run.
-  await expect(page.getByText(/Sofi/).first()).toBeVisible({ timeout: 20_000 });
+  // Coworker indicator names Sina (the one unified agent) working the run.
+  await expect(page.getByText(/Sina/).first()).toBeVisible({ timeout: 20_000 });
 
   // Work menu lists the run, awaiting/running.
   await page.getByTestId("work-menu").click();
@@ -123,23 +123,15 @@ test("LLM round-trip: message + follow-up both get responses; runtime serves; no
   // The runtime was actually hit and never returned a 500.
   expect(apiStatuses.length, "no /api/copilotkit calls were made").toBeGreaterThan(0);
   expect(apiStatuses.filter((s) => s >= 500), "5xx from /api/copilotkit: " + apiStatuses.join(",")).toEqual([]);
-  // Capture the header roster + per-message coworker avatars.
-  await page.screenshot({ path: "test-results/roster-and-avatars.png", fullPage: false });
+  // Capture the per-message coworker avatars (all Sina — one unified agent).
+  await page.screenshot({ path: "test-results/avatars.png", fullPage: false });
 
   // The "Tool result is missing" orphan error must NOT surface.
   const orphan = errors.filter((e) => /tool result is missing|MissingToolResults/i.test(e));
   expect(orphan, "orphan error surfaced:\n" + orphan.join("\n")).toEqual([]);
 });
 
-test("agent roster is present in the thread header and @-mentions include agents", async ({ page }) => {
-  await gotoChat(page);
-  // Roster: the "Agents" label + agent avatar buttons (initials) in the header.
-  await expect(page.getByText("Agents", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "So", exact: true })).toBeVisible(); // Sofi's roster chip
-  // @-palette lists agents: typing "@sofi" surfaces Sofi as an assign command.
-  const composer = page.locator(COMPOSER).first();
-  await composer.click();
-  await composer.fill("@sofi");
-  await expect(page.getByText(/Assign — FAPI specialist/i).first()).toBeVisible({ timeout: 8_000 });
-  await page.screenshot({ path: "test-results/roster-mention.png", fullPage: false });
-});
+// The four-persona roster (Sofi/Théo/Mira/Nova) + the "address an agent" flow were
+// retired on 2026-07-24 — there is ONE unified agent, Sina. The old roster/mention/
+// addressed-agent tests were removed with it. Sina's per-message attribution is
+// covered by the LLM round-trip test above (`.lc-avatar` rows).

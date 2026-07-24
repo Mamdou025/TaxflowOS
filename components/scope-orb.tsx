@@ -1,59 +1,71 @@
 'use client';
 
-// Scope orb — the animated dot-orb that represents Scope (the product that
-// encompasses everything). Rendered as a raised "crown" in the center of the top
-// nav; clicking it takes you into Scope. OrbDots is the same ring animation the
-// old ActionOrb used.
+import { LC } from '@/lib/librechat-theme';
 
-const PURPLE = '#6B21A8';
-const ORANGE = '#C2410C';
+// InScope mark — the animated "Scope orb": two concentric rings of small dots
+// (mostly light slate, with a few larger orange + purple accents) that orbit the
+// centre continuously (outer ring one way, inner the other) — the original dot-orb
+// look. `label` renders text (e.g. "Scope") in the middle; only the composer orb
+// uses it (elsewhere the mark pairs with a separate wordmark).
+const LIGHT = '#AEB7C6';
+const ORANGE = '#F5822A';
+const PURPLE = '#7C3AED';
 
-export function OrbDots({ size }: { size: number }) {
-  const cx = size / 2;
-  const cy = size / 2;
-  const outerR = size * (57 / 170);
-  const innerR = size * (43 / 170);
+type Dot = { x: number; y: number; r: number; fill: string; key: string };
+function dotRing(count: number, radius: number, sizeSeed: number, colorSeed: number): Dot[] {
+  return Array.from({ length: count }, (_, i) => {
+    const a = (i / count) * Math.PI * 2 - Math.PI / 2;
+    const accent = (i + colorSeed) % 6 === 0;
+    const fill = accent ? (Math.floor((i + colorSeed) / 6) % 2 === 0 ? ORANGE : PURPLE) : LIGHT;
+    const r = accent ? 4 : (i + sizeSeed) % 3 === 0 ? 3 : 1.9;
+    return { x: radius * Math.cos(a), y: radius * Math.sin(a), r, fill, key: `${radius}-${i}` };
+  });
+}
+const OUTER = dotRing(26, 84, 0, 1);
+const INNER = dotRing(18, 62, 1, 4);
+
+export function ScopeGlyph({ size, active = false, label }: { size: number; active?: boolean; label?: string }) {
   return (
-    <>
+    <svg width={size} height={size} viewBox="-100 -100 200 200" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }} aria-hidden>
+      {/* Rings orbit continuously (outer CW, inner CCW); the orange/purple accents
+          make the rotation read. Rotates around the viewBox centre (0,0). */}
       <style>{`
-        @keyframes navorb-cw  { to { transform: rotate(360deg);  } }
-        @keyframes navorb-ccw { to { transform: rotate(-360deg); } }
-        .navorb-cw  { animation: navorb-cw  9s linear infinite; transform-origin: ${cx}px ${cy}px; }
-        .navorb-ccw { animation: navorb-ccw 6s linear infinite; transform-origin: ${cx}px ${cy}px; }
+        .orb-cw, .orb-ccw { transform-box: view-box; transform-origin: center; }
+        .orb-cw  { animation: orb-cw 16s linear infinite; }
+        .orb-ccw { animation: orb-ccw 12s linear infinite; }
+        @keyframes orb-cw  { to { transform: rotate(360deg); } }
+        @keyframes orb-ccw { to { transform: rotate(-360deg); } }
+        @media (prefers-reduced-motion: reduce) { .orb-cw, .orb-ccw { animation: none; } }
       `}</style>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-        <g className="navorb-cw">
-          {Array.from({ length: 40 }, (_, i) => {
-            const a = (i / 40) * Math.PI * 2;
-            const dur = 22;
-            const begin = -(i / 40) * dur;
-            const kt = '0;0.02;0.07;0.93;0.98;1';
-            const ks = '0 0 1 1;0.42 0 1 1;0 0 1 1;0 0 0.58 1;0 0 1 1';
-            return (
-              <circle key={i} cx={cx + outerR * Math.cos(a)} cy={cy + outerR * Math.sin(a)} r={0} fill={PURPLE}>
-                <animate attributeName="r" values="0;0;0.15;1.9;0;0" keyTimes={kt} dur={`${dur}s`} begin={`${begin}s`} repeatCount="indefinite" calcMode="spline" keySplines={ks} />
-                <animate attributeName="opacity" values="0;0;0.85;0.85;0;0" keyTimes={kt} dur={`${dur}s`} begin={`${begin}s`} repeatCount="indefinite" calcMode="spline" keySplines={ks} />
-              </circle>
-            );
-          })}
-        </g>
-        <g className="navorb-ccw">
-          {Array.from({ length: 26 }, (_, i) => {
-            const a = (i / 26) * Math.PI * 2;
-            const dur = 15;
-            const begin = -((26 - i) / 26) * dur;
-            const kt = '0;0.02;0.07;0.93;0.98;1';
-            const ks = '0 0 1 1;0.42 0 1 1;0 0 1 1;0 0 0.58 1;0 0 1 1';
-            return (
-              <circle key={i} cx={cx + innerR * Math.cos(a)} cy={cy + innerR * Math.sin(a)} r={0} fill={ORANGE}>
-                <animate attributeName="r" values="0;0;0.15;1.6;0;0" keyTimes={kt} dur={`${dur}s`} begin={`${begin}s`} repeatCount="indefinite" calcMode="spline" keySplines={ks} />
-                <animate attributeName="opacity" values="0;0;0.85;0.85;0;0" keyTimes={kt} dur={`${dur}s`} begin={`${begin}s`} repeatCount="indefinite" calcMode="spline" keySplines={ks} />
-              </circle>
-            );
-          })}
-        </g>
-      </svg>
-    </>
+      <g className="orb-cw">
+        {OUTER.map((d) => <circle key={d.key} cx={d.x} cy={d.y} r={d.r} fill={d.fill} />)}
+      </g>
+      <g className="orb-ccw">
+        {INNER.map((d) => <circle key={d.key} cx={d.x} cy={d.y} r={d.r} fill={d.fill} />)}
+      </g>
+      {label && (
+        <text x="0" y="2" textAnchor="middle" dominantBaseline="central" fontSize="35" fontWeight="750" style={{ letterSpacing: '0.3px', fill: active ? 'var(--sx-accent-strong)' : 'var(--sx-body)' }}>{label}</text>
+      )}
+    </svg>
+  );
+}
+
+// Compact shared Scope orb on a small raised convex badge (the design's cool
+// neumorphic panel). Pass `label` to show text (e.g. "Scope") inside — the composer
+// orb does; the sidebar/nav/header keep their own wordmarks alongside.
+export function ScopeMark({ size = 22, active = false, label }: { size?: number; active?: boolean; label?: string }) {
+  return (
+    <span
+      className="scope-mark"
+      style={{
+        position: 'relative', width: size, height: size, borderRadius: '50%', flexShrink: 0, overflow: 'hidden',
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        background: 'var(--sx-orb-badge)',
+        boxShadow: 'var(--sx-orb-badge-shadow)',
+      }}
+    >
+      <ScopeGlyph size={size} active={active} label={label} />
+    </span>
   );
 }
 
@@ -62,7 +74,7 @@ export function OrbDots({ size }: { size: number }) {
 // as one continuous silhouette). It houses the orb + "Scope" label and is the
 // dominant, central element. Meant to be placed absolutely in the (relative) bar,
 // anchored to overlap its top-center.
-const BAR_BG = '#eaeaef';
+const BAR_BG = 'var(--sx-nav-bar)';
 export function ScopeKeystone({ active, onClick }: { active: boolean; onClick: () => void }) {
   const ORB = 44;
   return (
@@ -76,29 +88,105 @@ export function ScopeKeystone({ active, onClick }: { active: boolean; onClick: (
         width: 150, paddingTop: 12, paddingBottom: 10, border: 'none', cursor: 'pointer',
         background: BAR_BG,
         borderRadius: '36px 36px 14px 14px',
-        // Raised: a soft, diffuse elevation (no tight groove at the base) + a top
-        // rim highlight; the bottom sits inside the bar (same colour) so bar and
-        // pedestal read as one continuous silhouette bulging upward.
-        boxShadow: active
-          ? '0 7px 20px rgba(107,33,168,0.18), inset 0 1.5px 0 rgba(255,255,255,0.92)'
-          : '0 8px 20px rgba(158,158,178,0.42), inset 0 1.5px 0 rgba(255,255,255,0.92)',
+        boxShadow: active ? 'var(--sx-keystone-shadow-active)' : 'var(--sx-keystone-shadow)',
         transition: 'box-shadow 220ms cubic-bezier(0.23,1,0.32,1)',
       }}
     >
       <span
-        className="group-hover:scale-[1.04]!"
+        className="scope-mark group-hover:scale-[1.04]!"
         style={{
           position: 'relative', width: ORB, height: ORB, borderRadius: '50%', overflow: 'hidden',
-          background: '#eef0f4',
-          boxShadow: active
-            ? '0 0 0 2px rgba(107,33,168,0.5), 0 3px 9px rgba(107,33,168,0.28)'
-            : 'inset 0 1px 3px rgba(158,158,178,0.45), 0 1px 0 rgba(255,255,255,0.8)',
+          background: 'var(--sx-orb-badge)',
+          boxShadow: active ? 'var(--sx-orb-disc-shadow-active)' : 'var(--sx-orb-disc-shadow)',
           transition: 'box-shadow 220ms, transform 220ms cubic-bezier(0.23,1,0.32,1)',
         }}
       >
-        <OrbDots size={ORB} />
+        <ScopeGlyph size={ORB} active={active} />
       </span>
-      <span style={{ fontSize: 10, fontWeight: 750, letterSpacing: '0.04em', color: active ? '#6B21A8' : '#4b5563', lineHeight: 1, textTransform: 'uppercase' }}>Scope</span>
+      <span style={{ fontSize: 10, fontWeight: 750, letterSpacing: '0.04em', color: active ? 'var(--sx-accent-strong)' : 'var(--sx-muted)', lineHeight: 1, textTransform: 'uppercase' }}>Scope</span>
+    </button>
+  );
+}
+
+// ── The Scope Console orb ─────────────────────────────────────────────────────
+// A faithful port of the tax-workspace-UI reference composer orb (`ScopeButton`):
+// a large raised neumorphic disc holding two concentric rings of dots that ROTATE
+// while individually BREATHING (fade/scale in and out as they travel) — outer
+// purple ring clockwise, inner orange ring counter-clockwise — with "Scope" set in
+// the centre. This is the chat composer's logo (the reference uses it only there;
+// the nav/sidebar/header keep the compact ScopeMark). Doubles as the client
+// switcher, so it takes an onClick.
+const NEU_PURPLE = '#6B21A8';
+const NEU_ORANGE = '#C2410C';
+const ACCENT_RING = 'rgba(124,110,174,0.28)'; // reference --is-accent-ring
+
+export function ScopeConsoleOrb({
+  size = 80,
+  onClick,
+  title = 'Choose client — Scope reads their worksheets & documents',
+}: { size?: number; onClick?: () => void; title?: string }) {
+  const CX = 40; const CY = 40; // normalised 0 0 80 80 viewBox (matches the reference math)
+  return (
+    <button
+      onClick={onClick}
+      aria-label="Open Scope"
+      title={title}
+      style={{
+        width: size, height: size, borderRadius: '50%', padding: 0, flexShrink: 0,
+        background: LC.surface, boxShadow: LC.shadowOut, border: 'none',
+        cursor: onClick ? 'pointer' : 'default', position: 'relative',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        transition: 'box-shadow 180ms cubic-bezier(0.23,1,0.32,1)',
+      }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = `${LC.shadowOut}, 0 0 0 2px ${ACCENT_RING}`; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = LC.shadowOut; }}
+    >
+      <svg width={size} height={size} viewBox="0 0 80 80" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }} aria-hidden>
+        {/* The rings rotate (CSS on the groups); each dot independently breathes
+            (CSS opacity+scale, staggered by index) — the reference's living orb, but
+            driven by CSS so it renders reliably (SMIL was dropped by the pipeline). */}
+        <style>{`
+          @keyframes sb-cw  { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+          @keyframes sb-ccw { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+          @keyframes sb-breathe { 0%, 100% { opacity: 0.12; transform: scale(0.45); } 50% { opacity: 0.85; transform: scale(1); } }
+          .sb-cw  { animation: sb-cw  14s linear infinite; transform-box: view-box; transform-origin: center; }
+          .sb-ccw { animation: sb-ccw  9s linear infinite; transform-box: view-box; transform-origin: center; }
+          .sb-dot { transform-box: fill-box; transform-origin: center; animation: sb-breathe linear infinite; }
+          @media (prefers-reduced-motion: reduce) {
+            .sb-cw, .sb-ccw, .sb-dot { animation: none; }
+            .sb-dot { opacity: 0.5; }
+          }
+        `}</style>
+        {/* Outer purple dots — breathing + rotating clockwise */}
+        <g className="sb-cw">
+          {Array.from({ length: 24 }, (_, i) => {
+            const a = (i / 24) * Math.PI * 2;
+            return (
+              <circle
+                key={i} className="sb-dot"
+                cx={CX + 34 * Math.cos(a)} cy={CY + 34 * Math.sin(a)} r={1.7} fill={NEU_PURPLE}
+                style={{ animationDuration: '3.6s', animationDelay: `${-(i / 24) * 3.6}s` }}
+              />
+            );
+          })}
+        </g>
+        {/* Inner orange dots — breathing + counter-rotating */}
+        <g className="sb-ccw">
+          {Array.from({ length: 16 }, (_, i) => {
+            const a = (i / 16) * Math.PI * 2;
+            return (
+              <circle
+                key={i} className="sb-dot"
+                cx={CX + 24 * Math.cos(a)} cy={CY + 24 * Math.sin(a)} r={1.5} fill={NEU_ORANGE}
+                style={{ animationDuration: '3s', animationDelay: `${-(i / 16) * 3}s` }}
+              />
+            );
+          })}
+        </g>
+      </svg>
+      <span style={{ position: 'relative', zIndex: 1, fontSize: Math.round(size * 0.1375), fontWeight: 700, color: LC.text, letterSpacing: '0.02em' }}>
+        Scope
+      </span>
     </button>
   );
 }

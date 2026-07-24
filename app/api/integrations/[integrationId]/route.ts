@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { auth } from "@/platform/auth/auth";
 import {
   deleteIntegration,
   getIntegration,
   updateIntegration,
-} from "@/lib/db/integrations";
+} from "@/platform/db/integrations";
 import type { IntegrationConfig } from "@/lib/types/integration";
 
 export type GetIntegrationResponse = {

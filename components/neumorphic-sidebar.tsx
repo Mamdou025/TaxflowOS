@@ -11,19 +11,23 @@ import type { CSSProperties, ReactNode } from 'react';
 import { atomWithStorage } from 'jotai/utils';
 import { useAtom, useAtomValue } from 'jotai';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export const sidebarCollapsedAtom = atomWithStorage('inscope.sidebar.collapsed', false);
 
+// Theme-aware: each key maps to a --sx-* token (defined in globals.css) whose
+// :root value is the original light hex and whose .dark value is the dark
+// counterpart. Consumed in inline style, so it flips with the `.dark` class.
 export const NEU = {
-  bg: '#F4F5F8',
-  surface: '#F8F9FB',
-  text: '#202735',
-  muted: '#7C8493',
-  faint: '#A8AEBA',
-  accent: '#6B21A8',
-  shadowOut: '8px 8px 18px rgba(158,158,178,0.34), -8px -8px 18px rgba(255,255,255,0.82)',
-  shadowSm: '4px 4px 10px rgba(158,158,178,0.30), -4px -4px 10px rgba(255,255,255,0.78)',
-  shadowIn: 'inset 4px 4px 9px rgba(158,158,178,0.30), inset -4px -4px 9px rgba(255,255,255,0.78)',
+  bg: 'var(--sx-surface)',
+  surface: 'var(--sx-raised)',
+  text: 'var(--sx-ink)',
+  muted: 'var(--sx-muted)',
+  faint: 'var(--sx-faint)',
+  accent: 'var(--sx-accent)',
+  shadowOut: 'var(--sx-shadow-out)',
+  shadowSm: 'var(--sx-shadow-sm)',
+  shadowIn: 'var(--sx-shadow-in)',
 };
 
 const COLLAPSED_W = 60;
@@ -49,7 +53,7 @@ export function NeumorphicSidebar({ header, footer, children, width = 248, float
       className={`flex flex-col ${posClass}`}
       style={{ width: w, margin: floating ? 0 : 12, borderRadius: 20, background: NEU.bg, boxShadow: 'none', overflow: 'hidden', transition: 'width 220ms cubic-bezier(0.23,1,0.32,1)' }}
     >
-      <style>{`.neu-row:hover { background: rgba(158,158,178,0.12) !important; }`}</style>
+      <style>{`.neu-row:hover { background: var(--sx-hover-tint) !important; }`}</style>
 
       {collapsed ? (
         <div className="flex justify-center shrink-0" style={{ padding: '12px 0 8px' }}>
@@ -70,7 +74,12 @@ export function NeumorphicSidebar({ header, footer, children, width = 248, float
 
       <div className={`flex-1 overflow-y-auto flex flex-col ${rawIconCls} ${contentClassName ?? ''}`} style={{ padding: collapsed ? '2px 8px 12px' : '4px 10px 12px', scrollbarWidth: 'thin' }}>{children}</div>
 
-      {!collapsed && footer && <div className="shrink-0" style={{ padding: '8px 12px 12px' }}>{footer}</div>}
+      {/* Theme switch — always visible (collapsed → icon, expanded → segmented) */}
+      <div className="shrink-0" style={{ padding: collapsed ? '6px 8px 10px' : '8px 12px 10px' }}>
+        <ThemeToggle collapsed={collapsed} />
+      </div>
+
+      {!collapsed && footer && <div className="shrink-0" style={{ padding: '0 12px 12px' }}>{footer}</div>}
     </aside>
   );
 }
@@ -89,7 +98,7 @@ export function NeuSidebarHeader({ title, subtitle, dotColor = NEU.accent }: { t
 
 export function NeuSectionLabel({ children }: { children: ReactNode }) {
   const collapsed = useAtomValue(sidebarCollapsedAtom);
-  if (collapsed) return <div style={{ height: 1, background: 'rgba(158,158,178,0.28)', margin: '7px 6px' }} />;
+  if (collapsed) return <div style={{ height: 1, background: 'var(--sx-divider)', margin: '7px 6px' }} />;
   return <div style={{ fontSize: 10, fontWeight: 650, letterSpacing: '0.05em', textTransform: 'uppercase', color: NEU.faint, padding: '10px 8px 5px' }}>{children}</div>;
 }
 
@@ -102,13 +111,13 @@ export function NeuRow({ icon, rawIcon, label, sub, active, badge, dim, onClick 
   const collapsed = useAtomValue(sidebarCollapsedAtom);
   if (collapsed) {
     return (
-      <button onClick={onClick} disabled={dim} title={label} className="neu-row" style={{ width: 40, height: 40, borderRadius: 11, border: 'none', background: active ? 'rgba(107,33,168,0.10)' : 'transparent', display: 'grid', placeItems: 'center', margin: '2px auto', cursor: dim ? 'default' : 'pointer', opacity: dim ? 0.5 : 1 }}>
+      <button onClick={onClick} disabled={dim} title={label} className="neu-row" style={{ width: 40, height: 40, borderRadius: 11, border: 'none', background: active ? 'var(--sx-accent-soft)' : 'transparent', display: 'grid', placeItems: 'center', margin: '2px auto', cursor: dim ? 'default' : 'pointer', opacity: dim ? 0.5 : 1 }}>
         {rawIcon ?? (icon && <span style={iconSquare(active)}>{icon}</span>)}
       </button>
     );
   }
   return (
-    <button onClick={onClick} disabled={dim} className="neu-row" style={{ ...ROW, background: active ? 'rgba(107,33,168,0.10)' : 'transparent', opacity: dim ? 0.5 : 1, cursor: dim ? 'default' : 'pointer' }}>
+    <button onClick={onClick} disabled={dim} className="neu-row" style={{ ...ROW, background: active ? 'var(--sx-accent-soft)' : 'transparent', opacity: dim ? 0.5 : 1, cursor: dim ? 'default' : 'pointer' }}>
       {rawIcon ?? (icon && <span style={iconSquare(active)}>{icon}</span>)}
       <span className="min-w-0 flex-1">
         <span style={{ display: 'block', fontSize: 12.5, fontWeight: active ? 650 : 600, color: active ? NEU.accent : NEU.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>

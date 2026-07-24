@@ -1,12 +1,12 @@
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { start } from "workflow/api";
-import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { validateWorkflowIntegrations } from "@/lib/db/integrations";
-import { workflowExecutions, workflows } from "@/lib/db/schema";
-import { executeWorkflow } from "@/lib/workflow-executor.workflow";
-import type { WorkflowEdge, WorkflowNode } from "@/lib/workflow-store";
+import { auth } from "@/platform/auth/auth";
+import { db } from "@/platform/db";
+import { validateWorkflowIntegrations } from "@/platform/db/integrations";
+import { workflowExecutions, workflows } from "@/platform/db/schema";
+import { executeWorkflow } from "@/shared/workflow-engine/runtime/workflow-executor.workflow";
+import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
 
 // biome-ignore lint/nursery/useMaxParams: Background execution requires all workflow context
 async function executeWorkflowBackground(

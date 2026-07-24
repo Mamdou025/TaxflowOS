@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { driveListSpreadsheets, type DriveFile } from "@/lib/google/client";
-import { googleErrorResponse, requireUserId } from "@/lib/google/require-user";
+import { driveListSpreadsheets, type DriveFile } from "@/platform/integrations/google/client";
+import { googleErrorResponse, requireUserId } from "@/platform/integrations/google/require-user";
 
 export type DriveFilesResponse = { files: DriveFile[] };
 

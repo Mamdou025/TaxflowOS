@@ -4,7 +4,7 @@
   "files": {
     "includes": [
       "**/*",
-      "!components/ui",
+      "!shared/ui",
       "!components/ai-elements",
       "!lib/utils.ts",
       "!hooks/use-mobile.ts",

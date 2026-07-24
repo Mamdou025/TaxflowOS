@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { db } from "@/lib/db";
-import { workflows } from "@/lib/db/schema";
+import { db } from "@/platform/db";
+import { workflows } from "@/platform/db/schema";
 
 type WorkflowLayoutProps = {
   children: ReactNode;

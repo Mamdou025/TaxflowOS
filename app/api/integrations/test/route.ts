@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import postgres from "postgres";
-import { auth } from "@/lib/auth";
+import { auth } from "@/platform/auth/auth";
 import type {
   IntegrationConfig,
   IntegrationType,

@@ -1,9 +1,9 @@
 import { createHash, randomBytes } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { apiKeys } from "@/lib/db/schema";
+import { auth } from "@/platform/auth/auth";
+import { db } from "@/platform/db";
+import { apiKeys } from "@/platform/db/schema";
 
 // Generate a secure API key
 function generateApiKey(): { key: string; hash: string; prefix: string } {

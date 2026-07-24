@@ -2,11 +2,11 @@ import { createHash } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { start } from "workflow/api";
-import { db } from "@/lib/db";
-import { validateWorkflowIntegrations } from "@/lib/db/integrations";
-import { apiKeys, workflowExecutions, workflows } from "@/lib/db/schema";
-import { executeWorkflow } from "@/lib/workflow-executor.workflow";
-import type { WorkflowEdge, WorkflowNode } from "@/lib/workflow-store";
+import { db } from "@/platform/db";
+import { validateWorkflowIntegrations } from "@/platform/db/integrations";
+import { apiKeys, workflowExecutions, workflows } from "@/platform/db/schema";
+import { executeWorkflow } from "@/shared/workflow-engine/runtime/workflow-executor.workflow";
+import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
 
 // Validate API key and return the user ID if valid
 async function validateApiKey(

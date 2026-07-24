@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { api } from "@/lib/api-client";
+import { api } from "@/platform/api-client";
 
 export default function WorkflowsPage() {
   const router = useRouter();

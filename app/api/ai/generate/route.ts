@@ -1,6 +1,6 @@
 import { streamText } from "ai";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { auth } from "@/platform/auth/auth";
 import { generateAIActionPrompts } from "@/plugins";
 
 // Simple type for operations

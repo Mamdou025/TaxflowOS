@@ -5,7 +5,7 @@ import type {
   OverlayComponentProps,
   OverlayOptions,
   OverlayStackItem,
-} from "@/components/overlays/types";
+} from "@/shared/ui/overlays/types";
 
 /**
  * Atom holding the current overlay stack.

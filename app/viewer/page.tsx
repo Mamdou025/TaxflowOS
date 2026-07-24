@@ -5,13 +5,13 @@ import { useRouter } from 'next/navigation';
 import { Files, Calculator, FileText, Layers, BarChart3, LayoutDashboard, GitFork, Building2 } from 'lucide-react';
 import { useAtomValue } from 'jotai';
 import { NeumorphicSidebar, NeuSidebarHeader, NeuSectionLabel, NeuRow } from '@/components/neumorphic-sidebar';
-import { selectedClientAtom } from '@/lib/nav-store';
+import { selectedClientAtom } from '@/shared/stores/nav-store';
 
 // Full-height frame for the Document Viewer route. Same neumorphic sidebar as the
 // worksheet routes (for nav parity), but the viewer fills a bounded, overflow-hidden
 // panel — NOT the scrolling `worksheet-card` (whose `height:auto` override would
 // collapse the PDF iframe / the viewer's own flex layout).
-const DocumentViewer = dynamic(() => import('@/components/workspace/document-viewer'), { ssr: false });
+const DocumentViewer = dynamic(() => import('@/features/assistant/workspace/document-viewer'), { ssr: false });
 
 export default function ViewerPage() {
   const router = useRouter();

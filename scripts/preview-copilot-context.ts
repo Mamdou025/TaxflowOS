@@ -8,8 +8,8 @@
  * receives. Run: `pnpm tsx scripts/preview-copilot-context.ts`
  */
 
-import { WORKFLOW_CONFIGS, getWorkflowConfig } from '@/lib/workflow-runs';
-import { createTemplateIntel } from '@/lib/worksheet-intel';
+import { WORKFLOW_CONFIGS, getWorkflowConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
+import { createTemplateIntel } from '@/features/worksheets/intel';
 
 const line = (s = '') => console.log(s);
 const h = (s: string) => { line(); line(`━━━ ${s} ━━━`); };
@@ -63,7 +63,7 @@ line(JSON.stringify(fxEntry, null, 2));
 h('FUZZY FIELD RESOLUTION  —  the model\'s guesses now resolve');
 try {
   // May fail outside Next (resource-registry imports next/dynamic at load).
-  const reg = await import('@/lib/resource-registry');
+  const reg = await import('@/shared/stores/resource-registry');
   for (const guess of ['FX_RATE', 'fx rate', 'exchange rate', 'fxRate', 'fx']) {
     line(`resolveFieldId(${JSON.stringify(guess)}) → ${JSON.stringify(reg.resolveFieldId(guess))}`);
   }

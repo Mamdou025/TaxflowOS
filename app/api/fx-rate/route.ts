@@ -1,4 +1,4 @@
-import { fetchAnnualAverageExchangeRate } from "@/backend/blocks/source/currency-rate/schema";
+import { fetchAnnualAverageExchangeRate } from "@/shared/workflow-engine/execution/blocks/source/currency-rate/schema";
 
 /**
  * GET /api/fx-rate?from=USD&to=CAD&year=2025

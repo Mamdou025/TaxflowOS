@@ -1,4 +1,19 @@
 {
-  "ignore": ["lib/next-boilerplate/**"],
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "app/**/page.tsx",
+    "app/**/layout.tsx",
+    "app/**/route.ts",
+    "scripts/**/*.{ts,cjs}",
+    "plugins/**/index.ts",
+    "plugins/**/steps/*.ts",
+    "e2e/**/*.spec.ts",
+    "services/mapping-agent/src/index.ts"
+  ],
+  "project": ["**/*.{ts,tsx}", "!templates/next-project/**", "!tax-ui/**"],
+  "ignore": [
+    "templates/next-project/**",
+    "shared/kernel/**"
+  ],
   "ignoreDependencies": []
 }

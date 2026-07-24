@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['@copilotkit/runtime', 'express'],
   webpack(config) {
     // Redirect all `import ... from 'wouter'` to our Next.js-compatible shim
-    config.resolve.alias['wouter'] = path.resolve('./tax-ui/wouter-shim.tsx');
+    config.resolve.alias['wouter'] = path.resolve('./features/worksheets/legacy/wouter-shim.tsx');
     return config;
   },
 };

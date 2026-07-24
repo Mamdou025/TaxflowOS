@@ -25,12 +25,12 @@ import type { NextRequest } from 'next/server';
 
 export const runtime = 'nodejs';
 
-// The system prompt is PRE-GENERATED to a text file by scripts/gen-genui-prompt.cjs
+// The system prompt is PRE-GENERATED to a text file by features/genui/gen-genui-prompt.cjs
 // (pnpm genui:prompt). We can't import the OpenUI library here: @openuidev/react-lang
 // calls React.createContext at load, which doesn't exist in the App Router's RSC
 // react-server build — importing it in a route handler throws. Reading the txt keeps
 // OpenUI entirely on the client. Re-run the script whenever the library changes.
-const SYSTEM_PROMPT = readFileSync(join(process.cwd(), 'lib', 'genui', 'system-prompt.txt'), 'utf8');
+const SYSTEM_PROMPT = readFileSync(join(process.cwd(), 'features', 'genui', 'system-prompt.txt'), 'utf8');
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string };
 

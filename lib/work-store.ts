@@ -74,6 +74,14 @@ export const workItemsListAtom = atom((get) => {
   return items.sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || b.updatedAt - a.updatedAt);
 });
 
+/** Items in strict reverse-chronological order (most-recently-updated first) — the
+ *  header "work switcher" reads this so the list is a plain timeline: the current
+ *  (latest) work on top, previous work below, regardless of status. */
+export const workItemsChronoAtom = atom((get) => {
+  const items = Object.values(get(workItemsAtom));
+  return items.sort((a, b) => b.updatedAt - a.updatedAt);
+});
+
 /** Count of items still needing attention (awaiting/running) — badge on the Work menu. */
 export const activeWorkCountAtom = atom((get) =>
   Object.values(get(workItemsAtom)).filter((w) => w.status === 'awaiting' || w.status === 'running').length

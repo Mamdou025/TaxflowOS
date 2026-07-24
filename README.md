@@ -280,7 +280,7 @@ const searchResult = await firecrawlSearchStep({
 - **Authentication**: Better Auth
 - **Code Editor**: Monaco Editor
 - **Workflow Canvas**: React Flow
-- **AI**: OpenAI GPT-5
+- **AI**: OpenAI via AI Gateway (chat default `gpt-4o`; GenUI `gpt-4.1`)
 - **Type Checking**: TypeScript
 - **Code Quality**: Ultracite (formatter + linter)
 

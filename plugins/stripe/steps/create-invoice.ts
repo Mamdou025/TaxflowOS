@@ -1,7 +1,7 @@
 import "server-only";
 
 import { fetchCredentials } from "@/lib/credential-fetcher";
-import { type StepInput, withStepLogging } from "@/lib/steps/step-handler";
+import { type StepInput, withStepLogging } from "@/shared/workflow-engine/runtime/steps/step-handler";
 import type { StripeCredentials } from "../credentials";
 
 const STRIPE_API_URL = "https://api.stripe.com/v1";

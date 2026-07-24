@@ -6,16 +6,16 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { use, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { NodeConfigPanel } from "@/components/workflow/node-config-panel";
+import { Button } from "@/shared/ui/button";
+import { NodeConfigPanel } from "@/features/workflow-builder/ui/node-config-panel";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { api } from "@/lib/api-client";
+import { api } from "@/platform/api-client";
 import {
   integrationsAtom,
   integrationsLoadedAtom,
   integrationsVersionAtom,
 } from "@/lib/integrations-store";
-import { isLocalRunExecutionId } from "@/lib/local-fiscal-workflow";
+import { isLocalRunExecutionId } from "@/shared/workflow-engine/local-fiscal-workflow";
 import type { IntegrationType } from "@/lib/types/integration";
 import {
   currentWorkflowIdAtom,
@@ -37,7 +37,7 @@ import {
   type WorkflowNode,
   type WorkflowVisibility,
   workflowNotFoundAtom,
-} from "@/lib/workflow-store";
+} from "@/shared/workflow-engine/state/workflow-store";
 import { findActionById } from "@/plugins";
 
 type WorkflowPageProps = {
