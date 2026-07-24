@@ -1,8 +1,8 @@
 import { eq } from "drizzle-orm";
-import { isAiGatewayManagedKeysEnabled } from "@/platform/integrations/ai-gateway/config";
 import { auth } from "@/platform/auth/auth";
 import { db } from "@/platform/db";
 import { accounts } from "@/platform/db/schema";
+import { isAiGatewayManagedKeysEnabled } from "@/platform/integrations/ai-gateway/config";
 
 export type VercelTeam = {
   id: string;
