@@ -6,8 +6,8 @@ import { repairOrphanToolCalls } from '@/lib/copilot-orphan-repair';
 import { traceCopilotInput } from '@/lib/copilot-trace';
 import { getAssistantRuntimeConfig } from '@/features/assistant/runtime/config';
 import { computeGateDecision, applyGateDecision, classifyTurn } from '@/features/assistant/runtime/routing/gate';
-import { pickModelDecision } from '@/features/assistant/runtime/model-policy';
-import { selectSpecialist, specialistDirective } from '@/features/assistant/runtime/agents/specialists';
+import { normalizeModelSpec, pickModelDecision } from '@/features/assistant/runtime/model-policy';
+import { sinaTurnDirective } from '@/features/assistant/runtime/agents/sina';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CopilotKit runtime endpoint.
@@ -32,16 +32,26 @@ import { selectSpecialist, specialistDirective } from '@/features/assistant/runt
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const POST = async (req: NextRequest) => {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: 'OPENAI_API_KEY not set in .env.local' }), {
+  // Prefer the Vercel AI Gateway when its key is set: one key unlocks every
+  // provider/model (vercel.com/ai-gateway/models). The OpenAI SDK talks to the
+  // gateway's OpenAI-compatible endpoint, where models must be "provider/model" —
+  // so a bare OPENAI_CHAT_MODEL like "gpt-5.6-terra" is normalized to "openai/…".
+  // Falls back to calling OpenAI directly with OPENAI_API_KEY (previous behavior).
+  const gatewayKey = process.env.AI_GATEWAY_API_KEY;
+  const openaiKey = process.env.OPENAI_API_KEY;
+  if (!gatewayKey && !openaiKey) {
+    return new Response(JSON.stringify({ error: 'Set AI_GATEWAY_API_KEY or OPENAI_API_KEY in .env.local' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
   }
 
-  const openai = new OpenAI({ apiKey });
-  const serviceAdapter = new OpenAIAdapter({ openai, model: process.env.OPENAI_CHAT_MODEL ?? 'gpt-4o' });
+  const configuredModel = process.env.OPENAI_CHAT_MODEL ?? 'gpt-4o';
+  const openai = gatewayKey
+    ? new OpenAI({ apiKey: gatewayKey, baseURL: 'https://ai-gateway.vercel.sh/v1' })
+    : new OpenAI({ apiKey: openaiKey });
+  const model = gatewayKey ? normalizeModelSpec(configuredModel) : configuredModel;
+  const serviceAdapter = new OpenAIAdapter({ openai, model });
 
   // Explicit default agent + orphan-repair middleware. The middleware runs before
   // BuiltInAgent converts input.messages for the AI SDK, so the exact thread the SDK
@@ -91,20 +101,20 @@ export const POST = async (req: NextRequest) => {
       }
     }
 
-    // Specialist "hat" (lib/assistant-runtime/agents/specialists). A turn about a
-    // resolved workflow is answered AS that workflow's specialist (Sofi/Théo/Mira/
-    // Nova) — one conductor, one thread, but the domain persona + expertise for this
-    // turn. Injected as a context item so it reaches the model without touching the
-    // message thread. Controlled by ASSISTANT_SPECIALISTS (default on).
+    // Domain focus (agents/sina). There is ONE unified agent — Sina. A turn about a
+    // resolved workflow surfaces that domain's expertise (FAPI / s.85 rollover / expense
+    // / campaign) as a "DOMAIN FOCUS" note — Sina stays Sina, no persona swap. Injected
+    // as a context item so it reaches the model without touching the message thread.
+    // Controlled by ASSISTANT_SPECIALISTS (default on).
     let context = input.context;
     let specialistLabel: string | undefined;
     if (runtimeConfig.specialists && route) {
-      const specialist = selectSpecialist(route);
-      if (specialist) {
-        specialistLabel = specialist.name;
+      const directive = sinaTurnDirective(route);
+      if (directive) {
+        specialistLabel = 'Sina';
         context = [
           ...(input.context ?? []),
-          { value: specialistDirective(specialist), description: 'Active specialist persona for this turn (wear this hat)' },
+          { value: directive, description: 'Domain focus for this turn (Sina — one unified agent)' },
         ];
       }
     }

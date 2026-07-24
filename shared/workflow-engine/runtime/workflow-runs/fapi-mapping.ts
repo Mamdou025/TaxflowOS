@@ -9,7 +9,7 @@
 //   • negativeIndicators + frenchNegativeIndicators → excludeKeywords (disqualify)
 //   • lineId / fieldName → the mapper's line + category targets
 //
-// So Sofi now classifies with Platform's exact vocabulary (bilingual, with
+// So the FAPI run now classifies with Platform's exact vocabulary (bilingual, with
 // negative indicators), instead of the old 18 static demo keywords.
 // ─────────────────────────────────────────────────────────────────────────────
 

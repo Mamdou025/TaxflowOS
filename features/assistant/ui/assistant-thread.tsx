@@ -24,15 +24,14 @@ import {
 import { InlineFieldCard } from '@/features/assistant/workspace/inline-field-card';
 import { WorkflowElementCard } from '@/features/assistant/workspace/workflow-run-flow';
 import { getWorkflowConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
-import { getAgent } from '@/lib/agents';
+import { agentConfigAtom, applyLiveConfig } from '@/features/assistant/runtime/agent-config';
+import { WORKFLOWS } from '@/lib/agents';
 import { buildAgentCatalog } from '@/shared/stores/resource-registry';
 import { LC } from '@/lib/librechat-theme';
 import { selectedClientAtom, showClientSwitcherAtom, scopeYearAtom } from '@/shared/stores/nav-store';
 import { InScopeNeuMark } from '@/components/inscope-neu-mark';
 import { WorkMenu, WorkMenuStyles } from './work-menu';
-import { AgentRoster } from './agent-roster';
-import { AgentGreeting } from './agent-greeting';
-import { workIdFor, type WorkItem } from '@/lib/work-store';
+import { workIdFor, workItemsChronoAtom, type WorkItem } from '@/lib/work-store';
 import { ThreadMessages, PinnedThreadContext } from './thread-messages';
 import { RunWorkflowRender, type Assistant } from './use-assistant';
 
@@ -60,7 +59,7 @@ const INSTRUCTIONS = () => {
   const c = buildAgentCatalog();
   const pages = c.pages.map((p) => `- ${p.key}: ${p.title} — ${p.subtitle}`).join('\n');
   const fields = c.fields.map((f) => `- ${f.fieldId} (${f.pageKey}): ${f.label}`).join('\n');
-  return `You are the assistant inside InScope, a fiscalist's workspace. You help by talking AND by acting through tools.
+  return `You are Sina, the assistant inside InScope, a fiscalist's workspace. You help by talking AND by acting through tools.
 
 Style: ALWAYS reply with a short, natural sentence FIRST — acknowledge the request and say what you're about to do — then call the tool(s). Never act silently. Keep replies concise and professional.
 
@@ -92,8 +91,9 @@ MEMORY — durable facts you can save:
 - When the user EXPLICITLY asks you to remember / save / note something for later ("remember that…", "always…", "my default … is…"), call **rememberFact** with a short self-contained sentence; use global=true only for a preference that applies to every client, otherwise it is saved for the current client. Do NOT auto-save things the user didn't ask you to remember.
 - To remove a saved item when asked to forget it, call **forgetFact** with its id from the remembered-facts context.
 
-SPECIALISTS — one assistant, many hats:
-- Some turns include a "SPECIALIST FOR THIS TURN" persona in context (e.g. Sofi for FAPI, Théo for the art. 85 rollover, Mira for expenses, Nova for campaign budgets). When present, ADOPT that persona and its domain expertise for the turn — answer as that specialist. When it shifts to another domain, switch specialists; for general/navigation turns, remain the coordinating assistant. There is only ONE of you and one conversation — the persona is a lens, not a separate agent.
+YOUR EXPERTISE — one unified specialist:
+- You are Sina, a single tax specialist who carries deep domain expertise across FAPI (foreign accrual property income), the section 85 rollover (roulement, art. 85), employee expense reimbursement, and marketing campaign budgets. There are NO separate agents — you handle all of it yourself.
+- Some turns include a "DOMAIN FOCUS FOR THIS TURN" note in context. When present, apply that domain's expertise for the turn. When the topic shifts, apply the other domain's expertise; on general or navigation turns, act as the coordinating workspace assistant. It is one you, one conversation — the domain focus is a lens, not a separate agent.
 
 Registered pages:
 ${pages}
@@ -109,6 +109,8 @@ export function AssistantThreadStyles() {
     <style>{`
       @keyframes cwp-run-halo { 0% { box-shadow: 0 0 0 0 rgba(167,139,250,0.4);} 70% { box-shadow: 0 0 0 7px rgba(167,139,250,0);} 100% { box-shadow: 0 0 0 0 rgba(167,139,250,0);} }
       .cwp-run-halo { animation: cwp-run-halo 1.8s ease-out infinite; }
+      .cwp-launch { transition: transform 160ms cubic-bezier(0.23,1,0.32,1); }
+      .cwp-launch:hover { transform: translateY(-2px); }
     `}</style>
   );
 }
@@ -195,16 +197,104 @@ function ScopeCluster({ compact = false, onOpenWork }: { compact?: boolean; onOp
   );
 }
 
+// ── Hero launchpad ─────────────────────────────────────────────────────────────
+// Three richer entry cards below the quick-suggestion pills — the product's core
+// verbs: BUILD a workflow, RESUME the last piece of work, DELEGATE to a specialist.
+// Build/Delegate are evergreen; RESUME is live (the most-recent reopenable work
+// item, from the Work registry) and hides itself when there is nothing to resume.
+// Focus variant only — the docked drawer is too narrow. Illustrations are inline
+// SVG (self-contained, theme-aware via currentColor + the accent token).
+function timeAgo(ts: number): string {
+  const s = Math.max(1, Math.round((Date.now() - ts) / 1000));
+  if (s < 60) return 'just now';
+  const m = Math.round(s / 60); if (m < 60) return `${m}m ago`;
+  const h = Math.round(m / 60); if (h < 24) return `${h}h ago`;
+  return `${Math.round(h / 24)}d ago`;
+}
+
+const launchWell: CSSProperties = { height: 76, borderRadius: 12, background: LC.bg, boxShadow: LC.shadowIn, display: 'grid', placeItems: 'center', overflow: 'hidden', color: LC.muted };
+const launchCard: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 10, flex: '1 1 168px', minWidth: 158, maxWidth: 224, padding: 14, textAlign: 'left', border: 'none', background: LC.surface, boxShadow: LC.shadowSm, borderRadius: 16, cursor: 'pointer' };
+const launchTitle: CSSProperties = { fontSize: 13.5, fontWeight: 650, color: LC.title, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
+const launchSub: CSSProperties = { fontSize: 11.5, color: LC.muted, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
+
+// A small workflow node-graph: two inputs merge into a step, then the accent output.
+function BuildArt() {
+  return (
+    <svg width="72" height="44" viewBox="0 0 72 44" fill="none" aria-hidden>
+      <path d="M18 11 C24 11 24 22 28 22 M18 33 C24 33 24 22 28 22 M44 22 H54" stroke="currentColor" strokeWidth="1.5" opacity="0.35" />
+      <rect x="2" y="6" width="16" height="10" rx="3" fill="currentColor" opacity="0.16" />
+      <rect x="2" y="28" width="16" height="10" rx="3" fill="currentColor" opacity="0.16" />
+      <rect x="28" y="17" width="16" height="10" rx="3" fill="currentColor" opacity="0.16" />
+      <rect x="54" y="17" width="16" height="10" rx="3" fill="var(--sx-accent)" />
+    </svg>
+  );
+}
+// A worksheet: a document with an accent header bar and a few data rows.
+function SheetArt() {
+  return (
+    <svg width="52" height="44" viewBox="0 0 52 44" fill="none" aria-hidden>
+      <rect x="4" y="4" width="44" height="36" rx="5" fill="currentColor" opacity="0.10" />
+      <path d="M4 9 a5 5 0 0 1 5 -5 h34 a5 5 0 0 1 5 5 v3 h-44 z" fill="var(--sx-accent)" opacity="0.9" />
+      <line x1="11" y1="21" x2="41" y2="21" stroke="currentColor" strokeWidth="1.6" opacity="0.28" />
+      <line x1="11" y1="28" x2="41" y2="28" stroke="currentColor" strokeWidth="1.6" opacity="0.28" />
+      <line x1="11" y1="35" x2="30" y2="35" stroke="currentColor" strokeWidth="1.6" opacity="0.28" />
+    </svg>
+  );
+}
+
+function HeroLaunchpad({ onBuild, onResume, onStartWorkflow }: { onBuild: () => void; onResume: (item: WorkItem) => void; onStartWorkflow: (workflowId: string) => void }) {
+  const recent = useAtomValue(workItemsChronoAtom);
+  const resumeItem = recent.find((w) => w.open.kind !== 'none');
+  const tasks = WORKFLOWS.filter((w) => w.ready);
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 12, marginTop: 16, padding: '0 16px' }}>
+      {/* BUILD — opens the Workflows surface (Build canvas) inline next to the chat. */}
+      <button onClick={onBuild} className="cwp-launch hover:brightness-[0.98]" style={launchCard}>
+        <div style={launchWell}><BuildArt /></div>
+        <div style={{ minWidth: 0 }}>
+          <div style={launchTitle}>Build a workflow</div>
+          <div style={launchSub}>Design an automation on the canvas</div>
+        </div>
+      </button>
+
+      {/* RESUME — the most-recent reopenable work item; omitted entirely when none. */}
+      {resumeItem && (
+        <button onClick={() => onResume(resumeItem)} className="cwp-launch hover:brightness-[0.98]" style={launchCard}>
+          <div style={launchWell}><SheetArt /></div>
+          <div style={{ minWidth: 0 }}>
+            <div style={launchTitle}>{resumeItem.title}</div>
+            <div style={launchSub}>Resume · {timeAgo(resumeItem.updatedAt)}</div>
+          </div>
+        </button>
+      )}
+
+      {/* TASK QUICK-STARTS — start a workflow run directly. There is one unified agent
+          (Sina) that handles them all, so these are tasks, not separate specialists. */}
+      {tasks.map((w) => (
+        <button key={w.id} onClick={() => onStartWorkflow(w.id)} className="cwp-launch hover:brightness-[0.98]" style={launchCard}>
+          <div style={launchWell}><SheetArt /></div>
+          <div style={{ minWidth: 0 }}>
+            <div style={launchTitle}>{w.name}</div>
+            <div style={launchSub}>{w.sub}</div>
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function AssistantThread({ assistant, variant = 'focus' }: { assistant: Assistant; variant?: 'focus' | 'docked' }) {
   const {
     say, showHero,
     pinnedFields, pinnedElements, setPinnedFields, setPinnedElements,
     pinnedRuns, setPinnedRuns,
     composerSearch, composerTools, composerCommands, onAttach, launchOpenPage, launchStartWorkflow, setBuilderFocus, router,
-    addressedAgent, addressAgent, clearAddressedAgent, beginAgentThinking,
   } = assistant;
   const docked = variant === 'docked';
   const openClientSwitcher = useSetAtom(showClientSwitcherAtom);
+  // Live-agent config (Build tab writes it): fiscal guardrails + operator additions
+  // are layered over the base system prompt for the live chat.
+  const agentConfig = useAtomValue(agentConfigAtom);
 
   // Time-based hero greeting. Pre-mount (SSR + first client render) both use the
   // evening bucket so there's no hydration mismatch; after mount we read the real
@@ -221,22 +311,19 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
     else if (item.open.kind === 'genui') say(`Generate this view: ${item.open.prompt}`);
   };
 
-  // Pinned work (the addressed-agent greeting + deterministically-launched runs +
-  // summoned elements/fields). Rendered INSIDE the message scroll by ThreadMessages,
-  // so it's part of ONE scrollable conversation (composer fixed at the bottom). The
-  // greeting sits first — it's the conversation's opener (click agent → greet → type).
-  const hasPinned = !!addressedAgent || pinnedRuns.length > 0 || pinnedElements.length > 0 || pinnedFields.length > 0;
+  // Pinned work (deterministically-launched runs + summoned elements/fields).
+  // Rendered INSIDE the message scroll by ThreadMessages, so it's part of ONE
+  // scrollable conversation (composer fixed at the bottom).
+  const hasPinned = pinnedRuns.length > 0 || pinnedElements.length > 0 || pinnedFields.length > 0;
   const pinnedNode = hasPinned ? (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
-      {addressedAgent && <AgentGreeting agent={addressedAgent} />}
       {pinnedRuns.map((wid) => {
         const cfg = getWorkflowConfig(wid);
         if (!cfg) return null;
-        const agent = cfg.agentId ? getAgent(cfg.agentId) ?? undefined : undefined;
         return (
           <div key={`run:${wid}`} className="flex items-start gap-2" data-work-id={workIdFor('workflow-run', wid)}>
             <div className="flex-1">
-              <RunWorkflowRender config={cfg} agent={agent} onOpenPage={(pk) => launchOpenPage(pk)} onOpenBuilder={(blockId) => { setBuilderFocus({ workflowId: cfg.id, blockId }); router.push('/builder'); }} />
+              <RunWorkflowRender config={cfg} onOpenPage={(pk) => launchOpenPage(pk)} onOpenBuilder={(blockId) => { setBuilderFocus({ workflowId: cfg.id, blockId }); router.push('/builder'); }} />
             </div>
             <button onClick={() => setPinnedRuns((p) => p.filter((x) => x !== wid))} className="rounded hover:bg-black/5" style={{ width: 22, height: 22, color: LC.muted, border: 'none', background: 'none', cursor: 'pointer', marginTop: 4 }} title="Remove"><X size={13} /></button>
           </div>
@@ -280,7 +367,7 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
       )}
 
       <div className="flex-1 min-h-0 flex flex-col">
-        <AsideComposerContext.Provider value={{ search: composerSearch, tools: composerTools, commands: composerCommands, onAttach, agents: <AgentRoster onAssign={addressAgent} />, onAssignAgent: addressAgent, addressedAgent, onClearAddress: clearAddressedAgent, onAddressedSend: beginAgentThinking }}>
+        <AsideComposerContext.Provider value={{ search: composerSearch, tools: composerTools, commands: composerCommands, onAttach }}>
           <AnimatePresence mode="wait" initial={false}>
             {showHero ? (
               <motion.div
@@ -326,6 +413,13 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
                         ))}
                       </div>
                     )}
+                    {!docked && (
+                      <HeroLaunchpad
+                        onBuild={() => launchOpenPage('workflows')}
+                        onResume={onOpenWork}
+                        onStartWorkflow={launchStartWorkflow}
+                      />
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -340,7 +434,7 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
                   {/* One scroll: pinned runs/cards render INSIDE the message stream (via
                       the custom ThreadMessages), with the composer fixed at the bottom. */}
                   <PinnedThreadContext.Provider value={pinnedNode}>
-                    <CopilotChat className="h-full" instructions={INSTRUCTIONS()} labels={{ title: 'Assistant', initial: '', placeholder: 'Message Scope…' }} AssistantMessage={AsideAssistantMessage} UserMessage={AsideUserMessage} Input={AsideInput} Messages={ThreadMessages} />
+                    <CopilotChat className="h-full" instructions={applyLiveConfig(INSTRUCTIONS(), agentConfig)} labels={{ title: 'Assistant', initial: '', placeholder: 'Message Scope…' }} AssistantMessage={AsideAssistantMessage} UserMessage={AsideUserMessage} Input={AsideInput} Messages={ThreadMessages} />
                   </PinnedThreadContext.Provider>
                 </div>
               </motion.div>

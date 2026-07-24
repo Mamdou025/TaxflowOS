@@ -32,7 +32,6 @@ import {
   attachedDocsAtom,
   type AttachedDoc,
   runEditsAtom,
-  setThinkingCoworkerAtom,
 } from '@/shared/stores/workspace-store';
 import { pageChatSurfacesAtom } from '@/lib/page-chat-store';
 import { SurfaceEmbed } from './surface-embed';
@@ -43,11 +42,12 @@ import { InlineFieldCard } from '@/features/assistant/workspace/inline-field-car
 import { WorkflowRunFlow, WorkflowElementCard, RunProposalCard } from '@/features/assistant/workspace/workflow-run-flow';
 import type { ComposerSuggestion } from '@/features/assistant/workspace/aside-thread';
 import { getWorkflowConfig, WORKFLOW_CONFIGS, type TemplateConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
-import { AGENTS, WORKFLOWS, getAgent, agentThinking, type Agent } from '@/lib/agents';
+import { PORTFOLIO_WORKFLOWS } from '@/shared/workflow-engine/templates/portfolio/portfolio-workflows';
+import { WORKFLOWS } from '@/lib/agents';
 import { worksheetIntelRegistryAtom, pickIntel, listIntel, createTemplateIntel } from '@/features/worksheets/intel';
 import { GenUIRender } from '@/features/genui/genui-render';
 import { recordWorkItemAtom, workIdFor, workKeyFromText, type WorkItemType } from '@/lib/work-store';
-import { UI_CONCIERGE, UI_COMPOSER, coworkerForAgent, coworkerForWorkflow } from '@/lib/coworkers';
+import { UI_CONCIERGE, UI_COMPOSER } from '@/lib/coworkers';
 import { CoworkerAvatar } from './coworker-avatar';
 
 
@@ -66,7 +66,7 @@ export type SearchHit =
   | { kind: 'page'; id: string; label: string; sub: string }
   | { kind: 'field'; id: string; label: string; sub: string }
   | { kind: 'workflow'; id: string; label: string; sub: string; ready: boolean }
-  | { kind: 'agent'; id: string; label: string; sub: string; live: boolean }
+  | { kind: 'blueprint'; id: string; label: string; sub: string }
   | { kind: 'element'; id: string; label: string; sub: string; workflowId: string; element: 'source' | 'output' };
 
 function searchWorkspace(q: string): SearchHit[] {
@@ -75,7 +75,8 @@ function searchWorkspace(q: string): SearchHit[] {
   const cat = buildAgentCatalog();
   const hits: SearchHit[] = [];
   for (const w of WORKFLOWS) if (`${w.name} ${w.sub}`.toLowerCase().includes(t)) hits.push({ kind: 'workflow', id: w.id, label: w.name, sub: w.sub, ready: w.ready });
-  for (const a of AGENTS) if (`${a.name} ${a.role}`.toLowerCase().includes(t)) hits.push({ kind: 'agent', id: a.id, label: a.name, sub: a.role, live: a.live });
+  // Sinaxe portfolio blueprints — openable in the builder (not runnable).
+  for (const w of PORTFOLIO_WORKFLOWS) if (`${w.name} ${w.sub} ${w.group}`.toLowerCase().includes(t)) hits.push({ kind: 'blueprint', id: w.id, label: w.name, sub: w.sub });
   // Workflow elements — summon a source/output into the chat without the builder.
   for (const c of Object.values(WORKFLOW_CONFIGS)) {
     if (`${c.name} source document ${c.documentLabel}`.toLowerCase().includes(t)) hits.push({ kind: 'element', id: `${c.id}:source`, label: `${c.name} — source`, sub: c.documentLabel, workflowId: c.id, element: 'source' });
@@ -86,7 +87,18 @@ function searchWorkspace(q: string): SearchHit[] {
   return hits.slice(0, 9);
 }
 
-const HIT_ICON = { page: Globe, field: FileText, workflow: Workflow, agent: Bot, element: GitBranch } as const;
+const HIT_ICON = { page: Globe, field: FileText, workflow: Workflow, blueprint: Workflow, element: GitBranch } as const;
+
+// Sinaxe portfolio blueprints — structural workflow graphs (Canadian Corporate
+// Tax Workflow Portfolio + Platform Services). Openable in the builder; NOT
+// runnable via runWorkflow (no deterministic engine yet). Published to the
+// assistant so it knows they exist and can offer to open them.
+const PORTFOLIO_BLUEPRINTS = PORTFOLIO_WORKFLOWS.map((w) => ({
+  workflowId: w.id,
+  name: w.name,
+  group: w.group,
+  summary: w.sub,
+}));
 
 // Human label for the current route — what the assistant reports as "where we are".
 function describeRoute(pathname: string): { route: string; label: string } {
@@ -112,9 +124,8 @@ export type PinnedElement = { workflowId: string; element: 'source' | 'output' }
 // Offer-then-accept: it first shows a PROPOSAL card (what the run will do + what
 // it needs). The live run only begins when the user clicks Start — so a workflow
 // is never kicked off without an explicit accept. Stop/complete handled locally.
-export function RunWorkflowRender({ config, agent, onOpenPage, onOpenBuilder }: {
+export function RunWorkflowRender({ config, onOpenPage, onOpenBuilder }: {
   config: TemplateConfig;
-  agent?: Agent;
   onOpenPage: (pageKey: string) => void;
   onOpenBuilder: (blockId: string) => void;
 }) {
@@ -137,7 +148,7 @@ export function RunWorkflowRender({ config, agent, onOpenPage, onOpenBuilder }: 
           exit={reduce ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.985 }}
           transition={{ duration: reduce ? 0 : 0.32, ease, delay: reduce ? 0 : 0.25 }}
         >
-          <RunProposalCard config={config} agent={agent} onStart={() => setStarted(true)} />
+          <RunProposalCard config={config} onStart={() => setStarted(true)} />
         </motion.div>
       ) : (
         <motion.div
@@ -148,7 +159,6 @@ export function RunWorkflowRender({ config, agent, onOpenPage, onOpenBuilder }: 
         >
           <WorkflowRunFlow
             config={config}
-            agent={agent}
             onOpenPage={onOpenPage}
             onOpenBuilder={onOpenBuilder}
             onStop={() => setStopped(true)}
@@ -385,6 +395,14 @@ export function useAssistant() {
     value: liveWorkflowContext.length ? liveWorkflowContext : 'No workflow has live data yet — nothing has been uploaded, edited, or run.',
   });
 
+  // Sinaxe portfolio blueprints — the assistant knows these exist so it can list
+  // them and offer to open them, WITHOUT treating them as runnable.
+  useCopilotReadable({
+    description:
+      'The Sinaxe portfolio blueprints — 15 pre-built workflow templates covering the Canadian Corporate Tax Workflow Portfolio (ownership graph, T1134, FAPI, foreign-affiliate surplus, T106, EIFEL, the T2 compliance suite, corporate tax provision, tax-attribute ledgers, Part XIII withholding, portfolio operations) PLUS the shared Platform Services (Universal Execution Sequence, Scope, Tax Position Summary, Data Readiness). These are STRUCTURAL blueprints: the user can OPEN them in the Workflow Builder to view/edit their block graph — call openWorkflowBuilder with the workflowId (e.g. "pf-t1134", "pf-scope-service"). They are NOT runnable via runWorkflow yet — only the four runnable workflows (fapi, roulement, expense, campaign) execute. When asked what workflows exist, list BOTH these blueprints and the runnable ones, and make clear which are which (blueprints = open in the builder; runnable = can be executed).',
+    value: PORTFOLIO_BLUEPRINTS,
+  });
+
   const pageEnum = listPages().map((p) => p.key).join(', ');
   const workflowEnum = Object.keys(WORKFLOW_CONFIGS).join(', ');
 
@@ -465,10 +483,17 @@ export function useAssistant() {
 
   useCopilotAction({
     name: 'openWorkflowBuilder',
-    description: 'Navigate to the visual workflow builder canvas.',
+    description: 'Navigate to the visual workflow builder canvas. Optionally pass a workflowId to open a specific workflow OR a Sinaxe portfolio blueprint onto the canvas (e.g. "pf-t1134", "pf-scope-service", "pf-eifel", or a runnable id like "fapi"). Use this when the user wants to see/open/edit a blueprint.',
     followUp: false,
-    parameters: [],
-    handler: async () => { router.push('/builder'); return 'Opening the workflow builder.'; },
+    parameters: [{ name: 'workflowId', type: 'string', description: 'optional — a workflow or blueprint id to open on the canvas', required: false }],
+    handler: async ({ workflowId }: { workflowId?: string }) => {
+      if (workflowId && (getWorkflowConfig(workflowId) || PORTFOLIO_WORKFLOWS.some((w) => w.id === workflowId))) {
+        launchOpenBuilder(workflowId);
+        return `Opening ${workflowId} in the workflow builder.`;
+      }
+      router.push('/builder');
+      return 'Opening the workflow builder.';
+    },
   });
 
   // Non-blocking: the handler resolves the tool call the instant the run starts,
@@ -490,12 +515,10 @@ export function useAssistant() {
     render: ({ args }: { args: { workflowId?: string } }) => {
       const config = getWorkflowConfig(args?.workflowId ?? 'fapi');
       if (!config) return <div style={{ fontSize: 12.5, color: '#71717a' }}>Unknown workflow “{args?.workflowId}”.</div>;
-      const agent = config.agentId ? getAgent(config.agentId) ?? undefined : undefined;
       return (
         <div data-work-id={workIdFor('workflow-run', config.id)}>
           <RunWorkflowRender
             config={config}
-            agent={agent}
             onOpenPage={(pk) => { const def = getPage(pk); if (def) openWindow({ pageKey: pk, title: def.title }); }}
             onOpenBuilder={(blockId) => { setBuilderFocus({ workflowId: config.id, blockId }); router.push('/builder'); }}
           />
@@ -516,7 +539,7 @@ export function useAssistant() {
       const c = getWorkflowConfig(workflowId);
       if (!c) return `Unknown workflow “${workflowId}”.`;
       const el = element === 'output' ? 'output' : 'source';
-      recordWork({ id: workIdFor('source-review', `${c.id}:${el}`), type: 'source-review', title: `${c.name} — ${el}`, status: 'open', by: coworkerForWorkflow(c.id) ?? UI_CONCIERGE, open: { kind: 'workflow', workflowId: c.id } });
+      recordWork({ id: workIdFor('source-review', `${c.id}:${el}`), type: 'source-review', title: `${c.name} — ${el}`, status: 'open', by: UI_CONCIERGE, open: { kind: 'workflow', workflowId: c.id } });
       return `Here is the ${element} of ${c.name}.`;
     },
     render: ({ args }: { args: { workflowId?: string; element?: string } }) => {
@@ -644,17 +667,15 @@ export function useAssistant() {
 
   // ── Conversation-launch state ────────────────────────────────────────────────
   const { appendMessage, visibleMessages, reset } = useCopilotChat();
-  const setThinkingCoworker = useSetAtom(setThinkingCoworkerAtom);
   const [sent, setSent] = useState(false); // flips the hero → conversation the instant you send
   const [pinnedFields, setPinnedFields] = useState<string[]>([]); // fields brought in via search
   const [pinnedElements, setPinnedElements] = useState<PinnedElement[]>([]); // workflow source/output summoned in
   const [pinnedRuns, setPinnedRuns] = useState<string[]>([]); // workflow ids launched deterministically (no LLM routing)
-  const [addressedAgent, setAddressedAgent] = useState<Agent | null>(null); // the agent you're "talking to" (click → greet → type → send)
 
   const say = (content: string) => { appendMessage(new TextMessage({ content, role: Role.User })); setSent(true); };
   const threadEmpty = (visibleMessages?.length ?? 0) === 0;
   const showHero = threadEmpty && !sent; // centered composer until the first message
-  const newChat = () => { reset(); setSent(false); setAddressedAgent(null); setThinkingCoworker(null); };
+  const newChat = () => { reset(); setSent(false); };
 
   // ── Launcher handlers ────────────────────────────────────────────────────────
   const launchOpenPage = (pageKey: string) => {
@@ -675,41 +696,15 @@ export function useAssistant() {
     setSent(true); // flip hero → conversation so the pinned run card is visible
     setPinnedRuns((prev) => (prev.includes(config.id) ? prev : [...prev, config.id]));
   };
-  const launchStartAgent = (agentId: string) => { const a = getAgent(agentId); if (a?.live && a.workflow) launchStartWorkflow(a.workflow); };
 
-  // Clicking an agent no longer starts their workflow — it ADDRESSES them: the agent
-  // greets in the thread, the composer is addressed to them, and you type instructions
-  // before sending. (The run, if any, comes from the agent's real reply once you send.)
-  const addressAgent = (agentId: string) => {
-    const a = getAgent(agentId);
-    if (!a?.live) return;
-    setAddressedAgent(a);
-    setSent(true); // leave the hero → show the thread with the greeting + composer
-    setThinkingCoworker(null); // drop any stale narration from a prior agent
-    // Focus the composer so you can start typing right away.
-    if (typeof window !== 'undefined') requestAnimationFrame(() => window.dispatchEvent(new CustomEvent('cwp-focus-composer')));
+  // Open a workflow OR a Sinaxe portfolio blueprint on the builder canvas. Sets
+  // the builder focus target (resolved by app/builder/page.tsx — run-config OR
+  // portfolio blueprint) and navigates there. Blueprints aren't runnable, so this
+  // is how the chat surfaces them: view/edit in the builder, not execute.
+  const launchOpenBuilder = (workflowId: string) => {
+    setBuilderFocus({ workflowId, blockId: '' });
+    router.push('/builder');
   };
-  const clearAddressedAgent = () => setAddressedAgent(null);
-  // Fired on send while an agent is addressed: play that agent's SCRIPTED "thinking"
-  // narration (revealed line-by-line) while the real reply streams — the run/answer
-  // then arrives with human timing instead of an instant proposal card. Auto-clears
-  // as a safety if the reply stalls (the reply itself clears it on arrival).
-  const beginAgentThinking = () => {
-    if (!addressedAgent) return;
-    setThinkingCoworker({ coworker: coworkerForAgent(addressedAgent), lines: agentThinking(addressedAgent) });
-    if (typeof window !== 'undefined') window.setTimeout(() => setThinkingCoworker(null), 15000);
-  };
-
-  // Tell the model who the user is talking to right now (they clicked this agent),
-  // so it replies in that persona's voice and offers THEIR workflow — without us
-  // mangling the user's message. Complements the server-side specialist injection.
-  useCopilotReadable({
-    description:
-      'The specialist the user has addressed in the chat right now (they clicked this agent to talk to them). Reply in this persona\'s voice, stay in their domain, and if the user asks to run/compute something, offer THIS specialist\'s workflow (runWorkflow with the workflow id below). When null, you are the general coordinating assistant.',
-    value: addressedAgent
-      ? { name: addressedAgent.name, role: addressedAgent.role, workflow: addressedAgent.workflow ?? null }
-      : 'No specific agent addressed — general assistant.',
-  });
 
   // Scroll the thread to the live run when the status chip is clicked.
   const scrollToRun = () => {
@@ -746,23 +741,14 @@ export function useAssistant() {
     { key: 'cmd:gen-table', title: 'Generate a data table', sub: 'Foreign affiliates with columns', kind: 'genui', icon: <Sparkles size={14} />, run: () => genui('A table of 4 foreign affiliates with columns Name, Jurisdiction, Ownership %, Surplus balance.') },
     { key: 'cmd:gen-form', title: 'Generate an input form', sub: 'FX rate + dividend amount', kind: 'genui', icon: <Sparkles size={14} />, run: () => genui('A short form to enter an FX rate and a dividend amount, with a submit button.') },
     { key: 'cmd:gen-pie', title: 'Generate a pie chart + callout', sub: 'Income by category', kind: 'genui', icon: <Sparkles size={14} />, run: () => genui('A pie chart breaking down income by category, and a callout summarizing the largest slice.') },
-    // Talk to an agent (@-mention): greet + address them so you can type instructions.
-    ...AGENTS.map((a) => ({
-      key: `cmd:agent-${a.id}`,
-      title: a.name,
-      sub: a.live ? `Talk to ${a.name} — ${a.role}` : `${a.role} · soon`,
-      kind: 'agent',
-      dim: !a.live,
-      icon: <CoworkerAvatar coworker={coworkerForAgent(a)} size={18} dim={!a.live} />,
-      run: () => addressAgent(a.id),
-    })),
+    // (The former "talk to an agent" @-mentions were removed — there is one unified agent, Sina.)
   ];
 
   // ── Composer wiring ──────────────────────────────────────────────────────────
   const composerSearch = (q: string): ComposerSuggestion[] =>
     searchWorkspace(q).map((h) => {
       const Icon = HIT_ICON[h.kind];
-      const dim = (h.kind === 'workflow' && !h.ready) || (h.kind === 'agent' && !h.live);
+      const dim = h.kind === 'workflow' && !h.ready;
       return {
         key: `${h.kind}:${h.id}`, title: h.label, sub: h.sub, kind: h.kind, dim,
         icon: <Icon size={14} />,
@@ -770,21 +756,17 @@ export function useAssistant() {
           if (h.kind === 'page') launchOpenPage(h.id);
           else if (h.kind === 'field') launchPinField(h.id);
           else if (h.kind === 'workflow') launchStartWorkflow(h.id);
+          else if (h.kind === 'blueprint') launchOpenBuilder(h.id);
           else if (h.kind === 'element') launchPinElement(h.workflowId, h.element);
-          else addressAgent(h.id);
         },
       };
     });
 
   const composerTools: ComposerSuggestion[] = [
     ...WORKFLOWS.map((w) => ({
-      key: `wf:${w.id}`, title: w.name, sub: w.agentId ? `${getAgent(w.agentId)?.name} · ${w.sub}` : w.sub,
+      key: `wf:${w.id}`, title: w.name, sub: w.sub,
       kind: 'workflow', dim: !w.ready, icon: <Workflow size={14} />,
       run: () => { if (w.ready) launchStartWorkflow(w.id); },
-    })),
-    ...AGENTS.map((a) => ({
-      key: `ag:${a.id}`, title: a.name, sub: a.role, kind: 'agent', dim: !a.live, icon: <Bot size={14} />,
-      run: () => { if (a.live) addressAgent(a.id); },
     })),
   ];
 
@@ -851,9 +833,7 @@ export function useAssistant() {
     // run
     activeRun, scrollToRun,
     // launcher
-    launchOpenPage, launchPinField, launchPinElement, launchStartWorkflow, launchStartAgent,
-    // agent addressing (click agent → greet → type → send; scripted thinking on send)
-    addressedAgent, addressAgent, clearAddressedAgent, beginAgentThinking,
+    launchOpenPage, launchPinField, launchPinElement, launchStartWorkflow,
     // navigation helpers (for inline card "open in builder")
     setBuilderFocus, router,
   };

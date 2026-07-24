@@ -13,6 +13,8 @@ import {
   Receipt,
   Files,
   LayoutGrid,
+  Workflow,
+  Bot,
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -172,6 +174,36 @@ export const RESOURCES: Resource[] = [
       subtitle: 'FAPI · T1134 · Surplus · Executive Overview',
       icon: LayoutGrid,
       Component: lazyPage(() => import('@/features/assistant/workspace/worksheets-hub')),
+    },
+  },
+  {
+    id: 'workflows',
+    kind: 'tool',
+    token: 'WORKFLOWS',
+    mentions: ['workflows', 'the workflows', 'all workflows', 'workflow portfolio'],
+    keywords: ['workflows', 'all workflows', 'workflow portfolio', 'tax workflows', 'open workflow', 'workflow list'],
+    note: 'The workflow portfolio — procedures to view, run and review',
+    open: { as: 'page', pageKey: 'workflows' },
+    page: {
+      title: 'Workflows',
+      subtitle: 'Canadian Corporate Tax portfolio · Platform services',
+      icon: Workflow,
+      Component: lazyPage(() => import('@/features/workflows-hub/workflows-hub')),
+    },
+  },
+  {
+    id: 'agent',
+    kind: 'tool',
+    token: 'AGENT',
+    mentions: ['agent', 'sina', 'the agent', 'agent settings'],
+    keywords: ['agent', 'sina', 'agent settings', 'assistant settings', 'configure the agent', 'agent overview', 'what the agent knows'],
+    note: 'Sina — the one live agent: see everything it knows / sees / can do, and configure it',
+    open: { as: 'page', pageKey: 'agent' },
+    page: {
+      title: 'Agent',
+      subtitle: 'Sina — overview & configuration',
+      icon: Bot,
+      Component: lazyPage(() => import('@/features/agent-hub/agent-hub')),
     },
   },
   {

@@ -558,6 +558,21 @@
   --sx-legend-bg: rgba(30, 30, 38, 0.92);
 }
 
+/* Flat surface — opt a region OUT of the neumorphic depth. Redefines the soft
+   dual-shadow tokens to a crisp 1px hairline ring (and drops the recessed inset to
+   a border), so cards/panels read as flat instead of raised/pressed. Scoped: only
+   descendants inherit these overrides, so applying it to the ChatWorkspace middle
+   panel flattens the page content while the sidebar + chat (siblings, outside this
+   scope) keep the neumorphic tokens. Theme-aware via --sx-hairline. */
+.flat-surface {
+  --sx-shadow-out: 0 0 0 1px var(--sx-hairline);
+  --sx-shadow-sm: 0 0 0 1px var(--sx-hairline);
+  --sx-shadow-in: inset 0 0 0 1px var(--sx-hairline);
+  --sx-chat-shadow-out: 0 0 0 1px var(--sx-hairline);
+  --sx-chat-shadow-sm: 0 0 0 1px var(--sx-hairline);
+  --sx-chat-shadow-in: inset 0 0 0 1px var(--sx-hairline);
+}
+
 /* InScope dial mark (components/inscope-neu-mark.tsx) — DARK dial palette (icon
    v14-dark). The component carries the LIGHT values as SVG attributes; these rules
    swap the disc gradients, neumorphic highlight/shadow tints, glow strength, and the

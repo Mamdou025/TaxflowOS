@@ -10,10 +10,11 @@
 // inline; the builder is the real canvas (InlineBuilder). Palette: librechat-theme.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useRef, useState, type ReactNode, type CSSProperties } from 'react';
+import dynamic from 'next/dynamic';
+import { useEffect, useRef, useState, type ReactNode, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-import { X, Plus, GitFork, Bot, LayoutDashboard, Workflow, PanelRightClose, Maximize2, Minimize2, Files, LayoutGrid, ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { X, Plus, GitFork, Bot, LayoutDashboard, Workflow, PanelRightClose, Maximize2, Minimize2, Files, ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { chatPanelModeAtom } from '@/shared/stores/chat-store';
 import {
   workspaceWindowsAtom,
@@ -23,22 +24,33 @@ import {
   focusWorkspaceWindowAtom,
 } from '@/shared/stores/workspace-store';
 import { getPage } from '@/shared/stores/resource-registry';
-import { WORKFLOWS, getAgent, type WorkflowSuggestion } from '@/lib/agents';
+import { WORKFLOWS, type WorkflowSuggestion } from '@/lib/agents';
 import { useAssistant } from '@/features/assistant/ui/use-assistant';
 import { AssistantThread } from '@/features/assistant/ui/assistant-thread';
-import { InlineBuilder } from '@/features/workflow-builder/ui/inline-builder';
-import { AgentBuilder } from '@/features/assistant/ui/agent-builder';
 import { InScopeNeuMark } from '@/components/inscope-neu-mark';
 import { ClientFolders } from '@/features/assistant/workspace/client-folders';
 import { LC } from '@/lib/librechat-theme';
 import { NEU } from '@/components/neumorphic-sidebar';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { pageMenusAtom } from '@/shared/stores/page-menu-store';
+import { pageSidebarsAtom } from '@/shared/stores/page-sidebar-store';
 import { PageMenuBar } from '@/features/assistant/workspace/page-menu-bar';
 import { InlinePageProvider } from '@/shared/stores/inline-page-context';
 
+// The builder is a heavy ReactFlow canvas — load it on demand so @xyflow/react
+// stays out of the Scope page's first-load JS. It's only rendered when a
+// 'workflow-builder' tab is opened (PageBody below), never at landing.
+const InlineBuilder = dynamic(
+  () => import('@/features/workflow-builder/ui/inline-builder').then((m) => m.InlineBuilder),
+  { ssr: false, loading: () => <div style={{ padding: 32, fontSize: 13, color: LC.muted }}>Loading builder…</div> },
+);
+
 // Foldable Scope sidebar — persisted so it stays folded across navigation.
 const scopeSidebarCollapsedAtom = atomWithStorage('inscope.scope-sidebar.collapsed', false);
+// Persisted split ratio — the chat's fraction of the page↔chat split. The width the
+// user drags to is remembered across sessions (replaces the old hardcoded clamp), so
+// the chat settles at a predictable size instead of an arbitrary one on every open.
+const scopeSplitRatioAtom = atomWithStorage('inscope.scope-split.chat-ratio', 0.4);
 
 // The ground for the inline page bodies — a flat darker neumorphic gray (no grid)
 // that reads as the recessed space behind the menus, a shade darker than the
@@ -56,12 +68,14 @@ const PORTAL_INK = NEU.text;      // active tab / underline
 const PORTAL_MUTED = NEU.muted;   // inactive tabs / close icons
 const PORTAL_BORDER = 'var(--sx-divider)';
 
+// The workflow builder + worksheets are now MODES of the Workflows surface (its
+// Build + Results tabs), not standalone destinations — so they're not sidebar
+// items. Their code lives on (Build reuses InlineBuilder; Results the worksheet).
 const WORKSPACE_ITEMS: { key: string; title: string; Icon: typeof GitFork }[] = [
-  { key: 'workflow-builder', title: 'Workflow Builder', Icon: GitFork },
-  { key: 'agent-builder', title: 'Agent Builder', Icon: Bot },
+  { key: 'workflows', title: 'Workflows', Icon: Workflow },
+  { key: 'agent', title: 'Agent', Icon: Bot },
   { key: 'dashboard', title: 'Dashboard', Icon: LayoutDashboard },
   { key: 'viewer', title: 'Documents', Icon: Files },
-  { key: 'worksheets', title: 'Worksheets', Icon: LayoutGrid },
 ];
 
 // The workflow(s) each open page can run — drives the contextual "Run" group,
@@ -92,7 +106,6 @@ function PageBody({ pageKey }: { pageKey: string }) {
   // usePageMenu writing an atom this tree reads, loops infinitely).
   let content: ReactNode;
   if (pageKey === 'workflow-builder') content = <InlineBuilder />;
-  else if (pageKey === 'agent-builder') content = <AgentBuilder />;
   else {
     const Comp = getPage(pageKey)?.Component ?? null;
     content = Comp ? <Comp /> : <div style={{ padding: 32, fontSize: 13, color: LC.muted }}>Page unavailable.</div>;
@@ -157,8 +170,12 @@ export function ChatWorkspace() {
   const a = useAssistant();
 
   const pageMenus = useAtomValue(pageMenusAtom);
+  const pageSidebars = useAtomValue(pageSidebarsAtom);
   const [mode, setMode] = useAtom(chatPanelModeAtom);
   const [collapsed, setCollapsed] = useAtom(scopeSidebarCollapsedAtom);
+  const [splitRatio, setSplitRatio] = useAtom(scopeSplitRatioAtom);
+  const splitRef = useRef<HTMLDivElement>(null);
+  const [dragging, setDragging] = useState(false);
   const hasPages = windows.length > 0;
   const active = windows.find((w) => w.id === activeId) ?? windows[windows.length - 1] ?? null;
   const activeMenu = active ? pageMenus[active.pageKey] : undefined;
@@ -181,6 +198,33 @@ export function ChatWorkspace() {
   // The chat takes the whole surface: no page open, chat expanded, or the last
   // page is mid-slide-out.
   const chatFull = !hasPages || mode === 'expanded' || closingLast;
+
+  // The chat's flex-basis in split mode — the remembered ratio, floored/capped so
+  // the composer and the page each keep a usable minimum. The same expression
+  // positions the drag handle over the seam (chat width + its 10px right margin).
+  const chatBasis = `clamp(360px, ${(splitRatio * 100).toFixed(1)}%, calc(100% - 420px))`;
+
+  // Drag the page↔chat seam. Measures the split container once at pointer-down, then
+  // maps the pointer's distance from the right edge to the chat's fraction (clamped).
+  // Listeners live on window so the drag survives the pointer leaving the thin handle.
+  const startSplitDrag = (e: ReactPointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const el = splitRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setDragging(true);
+    const onMove = (ev: PointerEvent) => {
+      const r = (rect.right - ev.clientX) / rect.width;
+      setSplitRatio(Math.min(0.72, Math.max(0.24, r)));
+    };
+    const onUp = () => {
+      setDragging(false);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  };
 
   useEffect(() => {
     if (hasPages && !windows.some((w) => w.id === activeId)) setActiveId(windows[windows.length - 1].id);
@@ -242,6 +286,11 @@ export function ChatWorkspace() {
         .cwp-card { transition: flex-basis 300ms cubic-bezier(0.23,1,0.32,1), flex-grow 300ms cubic-bezier(0.23,1,0.32,1), margin 260ms cubic-bezier(0.23,1,0.32,1), border-radius 260ms cubic-bezier(0.23,1,0.32,1); }
         @keyframes cwp-page-in { from { opacity: 0; transform: translateY(8px) scale(0.99); } to { opacity: 1; transform: none; } }
         .cwp-page-in { animation: cwp-page-in 300ms cubic-bezier(0.23,1,0.32,1) both; }
+        /* Page↔chat drag handle — a transparent grab strip over the seam with a
+           subtle grip that brightens to the accent on hover/drag. */
+        .cwp-split-handle { display: grid; place-items: center; }
+        .cwp-split-grip { width: 3px; height: 32px; border-radius: 3px; background: var(--sx-divider); transition: background 140ms ease, height 140ms ease; }
+        .cwp-split-handle:hover .cwp-split-grip, .cwp-split-handle.dragging .cwp-split-grip { background: var(--sx-accent); height: 48px; }
         /* Collapsed logo doubles as the expand control: the dial shows at rest and
            crossfades to the panel-open icon on hover; clicking expands the sidebar. */
         .cwp-logo-btn .cwp-logo-mark, .cwp-logo-btn .cwp-logo-expand { transition: opacity 150ms ease; }
@@ -306,6 +355,18 @@ export function ChatWorkspace() {
               <ClientFolders />
             </SideSection>
 
+            {/* Contextual section — the active page's own sidebar (usePageSidebar).
+                e.g. the Workflows surface publishes its workflow list here so the
+                canvas keeps the full body width. */}
+            {(() => {
+              const SideComp = active ? pageSidebars[active.pageKey] : undefined;
+              return SideComp ? (
+                <SideSection label={active?.title ?? 'Page'}>
+                  <SideComp />
+                </SideSection>
+              ) : null;
+            })()}
+
             {/* Run — follows the open tab: only the workflow(s) the active page can run. */}
             {activeRuns.length > 0 && (
               <>
@@ -313,7 +374,7 @@ export function ChatWorkspace() {
                 {activeRuns.map((w) => (
                   <SideRow
                     key={w.id} icon={<Workflow size={15} />} label={w.name}
-                    sub={`${(w.agentId ? getAgent(w.agentId)?.name : w.sub) ?? w.sub}${!w.ready ? ' · soon' : ''}`}
+                    sub={`${w.sub}${!w.ready ? ' · soon' : ''}`}
                     dim={!w.ready} onClick={() => a.launchStartWorkflow(w.id)}
                   />
                 ))}
@@ -330,11 +391,11 @@ export function ChatWorkspace() {
       </div>
 
       {/* ── Inline page panel (left) + chat (right) ── */}
-      <div className="flex-1 min-w-0 flex relative">
+      <div ref={splitRef} className="flex-1 min-w-0 flex relative" style={{ userSelect: dragging ? 'none' : undefined, cursor: dragging ? 'col-resize' : undefined }}>
         {hasPages && (
-          <div className="min-w-0 flex flex-col cwp-card cwp-page-in" style={{ flex: showPage ? '1 1 0px' : '0 0 0px', overflow: 'hidden', margin: showPage ? '10px 0 10px 8px' : 0, borderRadius: showPage ? '3px 0 0 3px' : 0, background: PORTAL_GROUND, boxShadow: 'none' }}>
+          <div className="min-w-0 flex flex-col cwp-card cwp-page-in flat-surface" style={{ flex: showPage ? '1 1 0px' : '0 0 0px', overflow: 'hidden', margin: showPage ? '10px 0 10px 8px' : 0, borderRadius: showPage ? '3px 0 0 3px' : 0, background: PORTAL_GROUND, boxShadow: 'none', transition: dragging ? 'none' : undefined }}>
             <div className="shrink-0 flex items-center px-3" style={{ height: 40, background: 'var(--sx-portal-strip)', borderBottom: `1px solid ${PORTAL_BORDER}` }}>
-              <div className="flex items-center gap-1" style={{ overflowX: 'auto', scrollbarWidth: 'none', flex: '1 1 auto', minWidth: 0 }}>
+              <div className="flex items-center gap-1" style={{ overflowX: 'auto', scrollbarWidth: 'none', flex: '0 0 auto', minWidth: 0, maxWidth: 360 }}>
                 {windows.map((w) => {
                   const isActive = active?.id === w.id;
                   return (
@@ -364,12 +425,28 @@ export function ChatWorkspace() {
           </div>
         )}
 
+        {/* Drag-resize the page↔chat split (split mode only). Overlays the seam so the
+            two panels stay flush; the remembered ratio drives the chat's basis. The
+            seam sits at the chat's width plus its 10px right margin from the edge. */}
+        {showPage && showChat && !closingLast && mode === 'split' && (
+          <div
+            onPointerDown={startSplitDrag}
+            className={`cwp-split-handle${dragging ? ' dragging' : ''}`}
+            role="separator"
+            aria-orientation="vertical"
+            title="Drag to resize"
+            style={{ position: 'absolute', top: 10, bottom: 10, right: `calc(${chatBasis} + 10px)`, width: 14, transform: 'translateX(50%)', cursor: 'col-resize', zIndex: 6, touchAction: 'none' }}
+          >
+            <span className="cwp-split-grip" />
+          </div>
+        )}
+
         {/* Chat — permanent, on the RIGHT when a page is open; fills otherwise.
             Fold ('collapsed') or take over ('expanded') via the header controls. */}
         <div
           className="relative min-w-0 flex flex-col cwp-card"
           style={{
-            flex: chatFull ? '1 1 0px' : mode === 'collapsed' ? '0 0 0px' : '0 0 clamp(360px, 38%, 520px)',
+            flex: chatFull ? '1 1 0px' : mode === 'collapsed' ? '0 0 0px' : `0 0 ${chatBasis}`,
             overflow: 'hidden',
             margin: mode === 'collapsed' ? 0 : 10,
             marginLeft: hasPages && showPage ? 0 : 10,
@@ -378,6 +455,7 @@ export function ChatWorkspace() {
             // No dark shadow cast onto the page panel on its left — only the chat's
             // own soft neumorphic elevation (and none while docked flush to a page).
             boxShadow: mode === 'collapsed' ? 'none' : (hasPages && showPage ? 'none' : NEU.shadowOut),
+            transition: dragging ? 'none' : undefined,
             zIndex: 1,
           }}
         >
@@ -386,10 +464,10 @@ export function ChatWorkspace() {
               height when a page opens or closes; the chat stays a constant size). */}
           {hasPages && showChat && (
             <div className="absolute flex items-center gap-1" style={{ top: 17, left: 12, zIndex: 5 }}>
-              <button onClick={() => setMode('collapsed')} title="Fold chat away" className="hover:bg-black/5" style={{ display: 'grid', placeItems: 'center', width: 28, height: 28, borderRadius: 7, border: 'none', background: 'transparent', color: LC.muted, cursor: 'pointer' }}>
+              <button onClick={() => setMode('collapsed')} title="Focus the page — hide the chat" className="hover:bg-black/5" style={{ display: 'grid', placeItems: 'center', width: 28, height: 28, borderRadius: 7, border: 'none', background: 'transparent', color: LC.muted, cursor: 'pointer' }}>
                 <PanelRightClose size={16} />
               </button>
-              <button onClick={() => setMode(mode === 'expanded' ? 'split' : 'expanded')} title={mode === 'expanded' ? 'Back to split' : 'Expand chat'} className="hover:bg-black/5" style={{ display: 'grid', placeItems: 'center', width: 28, height: 28, borderRadius: 7, border: 'none', background: 'transparent', color: LC.muted, cursor: 'pointer' }}>
+              <button onClick={() => setMode(mode === 'expanded' ? 'split' : 'expanded')} title={mode === 'expanded' ? 'Back to split view' : 'Focus the chat — hide the page'} className="hover:bg-black/5" style={{ display: 'grid', placeItems: 'center', width: 28, height: 28, borderRadius: 7, border: 'none', background: 'transparent', color: LC.muted, cursor: 'pointer' }}>
                 {mode === 'expanded' ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
               </button>
             </div>

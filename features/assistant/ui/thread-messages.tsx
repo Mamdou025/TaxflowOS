@@ -14,12 +14,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react';
-import { useAtomValue } from 'jotai';
 import { useCopilotChatInternal } from '@copilotkit/react-core';
 import { useChatContext, type MessagesProps } from '@copilotkit/react-ui';
 import { MessageSpecialistContext, buildMessageSpecialistMap, messageSignature } from './message-specialists';
-import { thinkingCoworkerAtom } from '@/shared/stores/workspace-store';
-import { AgentThinking } from './agent-thinking';
 
 /** Pinned work (runs / fields / elements) to render atop the message scroll. */
 export const PinnedThreadContext = createContext<ReactNode>(null);
@@ -78,7 +75,6 @@ export function ThreadMessages(props: MessagesProps) {
   const messages = (internal.messages ?? []) as AnyMessage[];
   const interrupt = internal.interrupt ?? null;
   const pinned = useContext(PinnedThreadContext);
-  const thinking = useAtomValue(thinkingCoworkerAtom);
   const { messagesContainerRef, messagesEndRef } = useScrollToBottom(
     messages.filter((m) => m?.role === 'user').length
   );
@@ -118,14 +114,9 @@ export function ThreadMessages(props: MessagesProps) {
             markdownTagRenderers={markdownTagRenderers}
           />
         ))}
-        {inProgress && (last?.role === 'user' || last?.role === 'tool') && !thinking && (
+        {inProgress && (last?.role === 'user' || last?.role === 'tool') && (
           <span data-testid="copilot-loading-cursor">{icons?.activityIcon}</span>
         )}
-        {/* Scripted agent narration — rendered at the bottom of the thread whenever an
-            agent is "thinking" (set on send to an addressed agent), independent of
-            CopilotKit's fleeting per-message loading state, so it reliably fills the
-            wait and is then replaced by the real reply (which clears the atom). */}
-        {thinking && <AgentThinking />}
         {interrupt}
         {chatError && ErrorMessage ? <ErrorMessage error={chatError} isCurrentMessage /> : null}
       </div>

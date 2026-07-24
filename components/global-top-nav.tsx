@@ -2,7 +2,7 @@
 
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { usePathname, useRouter } from 'next/navigation';
-import { ChevronDown, LayoutDashboard, GitFork, MessageCircle, Files, Table2 } from 'lucide-react';
+import { ChevronDown, LayoutDashboard, MessageCircle, Files, Workflow, Bot } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { selectedClientAtom, showClientSwitcherAtom, navActionsAtom } from '@/shared/stores/nav-store';
 import { assistantOpenAtom } from '@/shared/stores/chat-store';
@@ -14,10 +14,14 @@ const CROWN_NAV_H = 84;    // taller floating row so the Scope keystone can rise
 
 // Sub-navigation only — Scope itself is the raised crown orb (below), not a pill,
 // because Scope encompasses these. Main page (/) is Scope, the assistant.
+// Consolidated: the workflow builder + worksheets are now MODES of the Workflows
+// surface (Build tab / Results tab), not standalone destinations — so they're not
+// top-level pills. Their routes still exist (Build reuses the builder; Results the
+// worksheet); "New workflow" on the Workflows page reaches a blank builder.
 const NAV_LINKS: { label: string; href: string; Icon: LucideIcon }[] = [
   { label: 'Dashboard', href: '/dashboard', Icon: LayoutDashboard },
-  { label: 'Worksheets', href: '/worksheets', Icon: Table2 },
-  { label: 'Builder', href: '/builder', Icon: GitFork },
+  { label: 'Workflows', href: '/workflows-hub', Icon: Workflow },
+  { label: 'Agent', href: '/agent', Icon: Bot },
   { label: 'Documents', href: '/viewer', Icon: Files },
 ];
 

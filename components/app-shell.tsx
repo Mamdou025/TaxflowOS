@@ -12,6 +12,16 @@ import { SpecialistPresence } from '@/features/assistant/ui/specialist-presence'
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+
+  // The Agent Lab (/agent-lab) is a standalone, isolated surface: no global nav,
+  // no CopilotKit chat overlay, its own scroll. `body` is locked to `overflow:hidden`
+  // at 100dvh (globals.css), so this must be a FIXED-height container that scrolls
+  // internally (`h-dvh` + overflow-y-auto) — `min-h-dvh` would grow past the screen
+  // and get clipped by the body. It ships its own back button.
+  if (pathname.startsWith('/agent-lab')) {
+    return <div className="h-dvh overflow-y-auto bg-white dark:bg-neutral-950">{children}</div>;
+  }
+
   const isCanvasPage = pathname === '/builder' || pathname.startsWith('/workflows/');
   // Scope (/) is now the full-height LibreChat shell — flat dark, its own sidebar
   // for nav, so no global grid and no top navbar there.
@@ -69,8 +79,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           here so it registers a single time across all routes. Renders nothing. */}
       <MemoryCopilot />
 
-      {/* Shows which domain specialist (Sofi/Théo/…) is answering the current turn —
-          cosmetic; yields to a live run. See specialist-presence.tsx. */}
+      {/* Shows that Sina is answering the current turn — cosmetic; yields to a
+          live run. See specialist-presence.tsx. */}
       <SpecialistPresence />
 
       {/* Floating layers — rendered outside the stacking context so they layer over everything */}

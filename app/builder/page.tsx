@@ -8,6 +8,7 @@ import { BuilderCopilot } from "@/features/assistant/ui/builder-copilot";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   createFapiTemplateWorkflow,
+  createPortfolioWorkflowById,
   createWorkingSourceRulesDemoWorkflow,
   LOCAL_WORKFLOW_ID,
   loadLocalWorkflowSnapshotResult,
@@ -61,9 +62,12 @@ const BuilderPage = () => {
     let snapshot;
     if (focus) {
       // Resolve ANY registered workflow to its canvas via the run-config registry
-      // (fapi · roulement · expense · campaign · …). Falls back to FAPI if unknown.
+      // (fapi · roulement · expense · campaign), OR a Sinaxe portfolio blueprint
+      // (pf-*). Falls back to FAPI if the id is unknown.
       const cfg = getWorkflowConfig(focus.workflowId);
-      snapshot = cfg ? (cfg.buildSnapshot() as ReturnType<typeof createFapiTemplateWorkflow>) : createFapiTemplateWorkflow();
+      snapshot = cfg
+        ? (cfg.buildSnapshot() as ReturnType<typeof createFapiTemplateWorkflow>)
+        : (createPortfolioWorkflowById(focus.workflowId) ?? createFapiTemplateWorkflow());
       // Same shared upload the chat used → show the exact same rows on the canvas.
       const stored = uploadedRef.current[focus.workflowId];
       if (stored?.rows?.length) {

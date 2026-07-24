@@ -11,6 +11,7 @@
     "type-check": "tsc --noEmit",
     "genui:prompt": "node features/genui/gen-genui-prompt.cjs",
     "assistant:evals": "tsx features/assistant/runtime/evals/run-evals.ts",
+    "agent-lab:evals": "tsx features/agent-lab/evals/run.ts",
     "check": "pnpm exec ultracite check",
     "fix": "pnpm exec ultracite fix",
     "db:generate": "drizzle-kit generate",

@@ -17,7 +17,7 @@ import { pickModelDecision, normalizeModelSpec } from '../model-policy';
 import type { AssistantRuntimeConfig } from '../config';
 import { selectRelevantMemories } from '../memory/retrieval';
 import type { MemoryView } from '../memory/types';
-import { selectSpecialist } from '../agents/specialists';
+import { selectDomain } from '../agents/specialists';
 import { ROUTING_CASES, type RoutingEvalCase } from './routing-cases';
 
 type Result = {
@@ -159,15 +159,15 @@ function memoryChecks(): { pass: boolean; lines: string[] } {
   return { pass, lines };
 }
 
-// Specialist "hat" selection — a workflow turn → its specialist; general → none.
+// Domain-focus selection — a workflow turn → its domain; general → none.
 function specialistChecks(): { pass: boolean; lines: string[] } {
-  const pick = (t: string) => selectSpecialist(applyRoutePolicy(classifyDeterministic({ text: t })))?.id ?? null;
+  const pick = (t: string) => selectDomain(applyRoutePolicy(classifyDeterministic({ text: t })))?.id ?? null;
   const cases: Array<[string, string | null]> = [
-    ['Explain the FAPI workflow.', 'sofi'],
-    ['Start the FAPI workflow.', 'sofi'],
-    ['Run the art. 85 rollover.', 'theo'],
-    ['Run the employee expense reimbursement.', 'mira'],
-    ['Start the marketing budget allocation workflow.', 'nova'],
+    ['Explain the FAPI workflow.', 'fapi'],
+    ['Start the FAPI workflow.', 'fapi'],
+    ['Run the art. 85 rollover.', 'roulement'],
+    ['Run the employee expense reimbursement.', 'expense'],
+    ['Start the marketing budget allocation workflow.', 'campaign'],
     ['Open the dashboard.', null],
     ['Hi, how are you?', null],
   ];

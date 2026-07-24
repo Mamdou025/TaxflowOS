@@ -28,9 +28,11 @@ import { builderBridgeAtom } from '@/lib/builder-bridge';
 import {
   BLOCK_CATALOG,
   createFapiTemplateWorkflow,
+  createPortfolioWorkflowById,
   createWorkflowBlockFromCatalog,
   createWorkflowNodeFromBlock,
   getBlockCatalogItem,
+  PORTFOLIO_WORKFLOWS,
   saveWorkflowDefinitionSnapshot,
   workflowDefinitionToCanvas,
 } from '@/shared/workflow-engine/local-fiscal-workflow';
@@ -86,6 +88,15 @@ const CATALOG_SUMMARY = BLOCK_CATALOG.map((item) => ({
 const BUILT_WORKFLOWS = Object.entries(WORKFLOW_CONFIGS).map(([id, cfg]) => ({
   workflowId: id,
   name: cfg.name,
+}));
+
+// Sinaxe portfolio blueprints — also loadable onto the canvas via loadWorkflow,
+// but structural (not runnable). Canadian Corporate Tax Portfolio + Platform Services.
+const PORTFOLIO_BLUEPRINTS = PORTFOLIO_WORKFLOWS.map((w) => ({
+  workflowId: w.id,
+  name: w.name,
+  group: w.group,
+  summary: w.sub,
 }));
 
 // Cheap, deterministic structural health check — grounds the chat so it can say
@@ -237,10 +248,16 @@ export function BuilderCopilot() {
     value: CATALOG_SUMMARY,
   });
 
-  // GROUNDING — the pre-built workflows the chat can open with loadWorkflow.
+  // GROUNDING — the pre-built (runnable) workflows the chat can open with loadWorkflow.
   useCopilotReadable({
-    description: 'The pre-built workflows that can be opened onto the canvas with the loadWorkflow action, by workflowId. Loading one replaces whatever is currently open.',
+    description: 'The pre-built RUNNABLE workflows that can be opened onto the canvas with the loadWorkflow action, by workflowId (fapi, roulement, expense, campaign). Loading one replaces whatever is currently open.',
     value: BUILT_WORKFLOWS,
+  });
+
+  // GROUNDING — the Sinaxe portfolio blueprints, also loadable via loadWorkflow.
+  useCopilotReadable({
+    description: 'The Sinaxe portfolio blueprints (Canadian Corporate Tax Workflow Portfolio + Platform Services) that can ALSO be opened onto the canvas with loadWorkflow, by workflowId (e.g. "pf-t1134", "pf-scope-service"). These are structural, editable templates — not runnable. Loading one replaces whatever is open.',
+    value: PORTFOLIO_BLUEPRINTS,
   });
 
   // GROUNDING — live health/validation so the chat can flag + fix gaps proactively.
@@ -427,15 +444,17 @@ export function BuilderCopilot() {
   // Load a pre-built workflow onto the canvas (replaces what's open).
   useCopilotAction({
     name: 'loadWorkflow',
-    description: 'Open one of the pre-built workflows onto the builder canvas, replacing whatever is currently open. workflowId must be one of the workflowIds from the built-workflows context (e.g. "fapi", "roulement", "expense", "campaign").',
+    description: 'Open a pre-built workflow OR a Sinaxe portfolio blueprint onto the builder canvas, replacing whatever is currently open. workflowId is either a runnable id ("fapi", "roulement", "expense", "campaign") or a blueprint id from the portfolio-blueprints context (e.g. "pf-t1134", "pf-scope-service", "pf-eifel").',
     followUp: false,
-    parameters: [{ name: 'workflowId', type: 'string', description: 'id of the built workflow to open', required: true }],
+    parameters: [{ name: 'workflowId', type: 'string', description: 'id of the workflow or blueprint to open', required: true }],
     handler: async ({ workflowId }: { workflowId: string }) => {
       const cfg = getWorkflowConfig(workflowId);
-      if (!cfg) {
-        return `"${workflowId}" is not a built workflow. Choose one of: ${BUILT_WORKFLOWS.map((w) => w.workflowId).join(', ')}.`;
+      const snapshot = (cfg
+        ? cfg.buildSnapshot()
+        : createPortfolioWorkflowById(workflowId)) as ReturnType<typeof createFapiTemplateWorkflow> | null;
+      if (!snapshot) {
+        return `"${workflowId}" is not a known workflow. Runnable: ${BUILT_WORKFLOWS.map((w) => w.workflowId).join(', ')}. Blueprints: ${PORTFOLIO_BLUEPRINTS.map((w) => w.workflowId).join(', ')}.`;
       }
-      const snapshot = cfg.buildSnapshot() as ReturnType<typeof createFapiTemplateWorkflow>;
       const canvas = workflowDefinitionToCanvas(snapshot);
       const selected = canvas.nodes.find((n) => n.selected) || canvas.nodes[0];
       setNodes(

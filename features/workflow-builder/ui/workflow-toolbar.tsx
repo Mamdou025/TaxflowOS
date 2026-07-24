@@ -3,6 +3,7 @@
 import { useReactFlow } from "@xyflow/react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
+  Bot,
   Check,
   ChevronDown,
   Copy,
@@ -27,7 +28,7 @@ import {
 } from "lucide-react";
 import { nanoid } from "nanoid";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { builderBridgeAtom, builderEmbeddedAtom } from "@/lib/builder-bridge";
 import { toast } from "sonner";
 import { Button } from "@/shared/ui/button";
@@ -60,6 +61,9 @@ import {
   createWorkflowEvent,
   createWorkflowNodeFromBlock,
   createWorkingSourceRulesDemoWorkflow,
+  createPortfolioWorkflow,
+  PORTFOLIO_WORKFLOWS,
+  type PortfolioWorkflowDef,
   isLocalWorkflowId,
   LOCAL_WORKFLOW_ID,
   type LocalRunRecord,
@@ -1733,6 +1737,35 @@ function useWorkflowActions(state: ReturnType<typeof useWorkflowState>) {
         title: "Gabarit Roulement fiscal",
       });
     },
+    handleLoadPortfolioWorkflow: (def: PortfolioWorkflowDef) => {
+      openOverlay(ConfirmOverlay, {
+        confirmLabel: `Open ${def.name}`,
+        confirmVariant: "default" as const,
+        message: `Open “${def.name}”? Current local nodes and connections will be replaced.`,
+        onConfirm: () => {
+          const demo = {
+            ...createPortfolioWorkflow(def),
+            events: [
+              createWorkflowEvent({
+                message: `Local studio loaded ${def.name}.`,
+                type: "reset_sample",
+              }),
+            ],
+          };
+          const canvas = workflowDefinitionToCanvas(demo);
+          setNodes(canvas.nodes);
+          setEdges(canvas.edges);
+          setCurrentWorkflowName(demo.name);
+          setSelectedNodeId(canvas.nodes[0]?.id ?? null);
+          setSelectedExecutionId(null);
+          setExecutionLogs({});
+          saveWorkflowDefinitionSnapshot(demo);
+          setHasUnsavedChanges(false);
+          toast.success(`${def.name} loaded`);
+        },
+        title: def.name,
+      });
+    },
     handleResetSample: () => {
       openOverlay(ConfirmOverlay, {
         title: "Reset Sample",
@@ -2718,6 +2751,40 @@ function LocalStudioTopBar({
                       Biens → classification → PBR → élection art. 85 → T2057
                     </span>
                   </DropdownMenuItem>
+                  {(
+                    [
+                      ["platform", "Sinaxe portfolio · Platform services"],
+                      ["foundation", "Sinaxe portfolio · Foundation"],
+                      ["tier1", "Sinaxe portfolio · Tier 1"],
+                    ] as const
+                  ).map(([group, heading]) => (
+                    <Fragment key={group}>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="text-xs text-muted-foreground">
+                        {heading}
+                      </DropdownMenuLabel>
+                      {PORTFOLIO_WORKFLOWS.filter((w) => w.group === group).map(
+                        (w) => (
+                          <DropdownMenuItem
+                            key={w.id}
+                            className="flex flex-col items-start gap-0.5 py-2"
+                            onClick={() => {
+                              actions.handleLoadPortfolioWorkflow(w);
+                              updatePublishStatus("draft");
+                              setLatestPublishedVersion(null);
+                            }}
+                          >
+                            <span className="text-sm font-medium">
+                              {w.name.replace(/^Platform Services · /, "")}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {w.sub}
+                            </span>
+                          </DropdownMenuItem>
+                        )
+                      )}
+                    </Fragment>
+                  ))}
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
               <DropdownMenuItem onClick={actions.handleClearWorkflow}>
@@ -3098,6 +3165,16 @@ export const WorkflowToolbar = ({ workflowId }: WorkflowToolbarProps) => {
             workflowId={workflowId}
           />
           <div className="flex items-center gap-2">
+            <Button
+              className="border hover:bg-black/5 dark:hover:bg-white/5"
+              onClick={() => state.router.push("/agent-lab")}
+              size="sm"
+              title="Open the Agent Lab — configure & evaluate an agent"
+              variant="secondary"
+            >
+              <Bot className="size-4" />
+              <span className="hidden lg:inline">Agent Lab</span>
+            </Button>
             {!workflowId && (
               <>
                 <GitHubStarsButton />

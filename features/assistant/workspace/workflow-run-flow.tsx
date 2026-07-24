@@ -7,8 +7,7 @@ import { runTemplateLoop, runTemplateCore, buildOverrideRules, initialRunState, 
 import { parseUploadToRows } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
 import { GoogleSourcePicker, type PickedSource } from '@/features/assistant/workspace/google-source-picker';
 import { pushTrailAtom, activeRunAtom, setActiveCoworkerAtom, uploadedRowsAtom, runEditsAtom, setRunInputAtom, setRunOverrideAtom, setRunEditsAtom, EMPTY_RUN_EDITS } from '@/shared/stores/workspace-store';
-import type { Agent } from '@/lib/agents';
-import { coworkerForAgent, coworkerForWorkflow, WORKFLOW_ENGINE, WORKSPACE_ASSISTANT } from '@/lib/coworkers';
+import { WORKFLOW_ENGINE, SINA } from '@/lib/coworkers';
 import { recordWorkItemAtom, workIdFor } from '@/lib/work-store';
 
 // ── Palette ─────────────────────────────────────────────────────────────────────
@@ -363,7 +362,7 @@ function EditableInputs({ config, inputs, onCommit, onOpenBuilder, snapshot, liv
 
 // ── Offer-to-run card — the assistant PROPOSES a workflow; the run starts only
 // when the user clicks Start. Renders on the dark thread (dark-token fallbacks).
-export function RunProposalCard({ config, agent, onStart }: { config: TemplateConfig; agent?: Agent; onStart: () => void }) {
+export function RunProposalCard({ config, onStart }: { config: TemplateConfig; onStart: () => void }) {
   const [dismissed, setDismissed] = useState(false);
   if (dismissed) return <div style={{ fontSize: 12.5, color: MUTED, padding: '4px 0' }}>Okay — I won’t start it yet. Say the word when you’re ready.</div>;
   return (
@@ -372,7 +371,7 @@ export function RunProposalCard({ config, agent, onStart }: { config: TemplateCo
         <span style={{ display: 'grid', placeItems: 'center', width: 28, height: 28, borderRadius: 9, background: hexA(TONES.ai, 0.16), flexShrink: 0 }}><Play size={13} style={{ color: INK }} /></span>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 13.5, fontWeight: 650, color: INK }}>Run {config.name}</div>
-          <div style={{ fontSize: 11, color: FAINT }}>{agent ? `${agent.name} · ${agent.role}` : 'Workflow'}</div>
+          <div style={{ fontSize: 11, color: FAINT }}>{SINA.name}</div>
         </div>
       </div>
       <div style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5, marginBottom: 12 }}>
@@ -399,10 +398,9 @@ export function RunProposalCard({ config, agent, onStart }: { config: TemplateCo
 }
 
 // ── Generic, inspectable run flow — works for any TemplateConfig ────────────────
-export function WorkflowRunFlow({ config, onComplete, agent, onOpenPage, onOpenBuilder, onStop, surface = 'dark' }: {
+export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder, onStop, surface = 'dark' }: {
   config: TemplateConfig;
   onComplete: (summary: string) => void;
-  agent?: Agent;
   onOpenPage?: (pageKey: string, anchor?: string) => void;
   onOpenBuilder?: (blockId: string) => void;
   onStop?: () => void;
@@ -575,15 +573,14 @@ export function WorkflowRunFlow({ config, onComplete, agent, onOpenPage, onOpenB
       : 'categorize';
     const awaiting = { upload: `waiting for you to upload the ${config.documentLabel}`, categorize: 'waiting for you to categorize an unmatched row', elect: 'waiting for you to elect an amount', approve: 'waiting for your approval of the computed figures', done: 'complete' }[phase];
     setActiveRun({
-      workflowId: config.id, workflowName: config.name, agentName: agent?.name, documentLabel: config.documentLabel,
+      workflowId: config.id, workflowName: config.name, agentName: SINA.name, documentLabel: config.documentLabel,
       totalSteps: config.steps.length, stepIndex: activeIdx, stepLabel: config.steps[Math.min(activeIdx, config.steps.length - 1)].label,
       phase, awaiting, headline: outcome?.headline, data: runData,
     });
 
-    // Who is visibly working right now: the specialist while awaiting a human
+    // Who is visibly working right now: Sina (the one agent) while awaiting a human
     // decision, the DETERMINISTIC Workflow Engine while computing, nobody once done.
-    const specialist =
-      (agent ? coworkerForAgent(agent) : coworkerForWorkflow(config.id)) ?? WORKSPACE_ASSISTANT;
+    const runActor = SINA;
 
     // Record/update this run in the durable Work registry (the Work menu reads it;
     // never cleared on unmount, so it's preserved after completion).
@@ -595,7 +592,7 @@ export function WorkflowRunFlow({ config, onComplete, agent, onOpenPage, onOpenB
       detail: done
         ? (outcome?.headline ? `${outcome.headline.label} ${Math.round(outcome.headline.value).toLocaleString()} ${outcome.headline.currency}` : 'Completed')
         : `Step ${Math.min(activeIdx + 1, config.steps.length)}/${config.steps.length} · ${awaiting}`,
-      by: specialist,
+      by: runActor,
       open: { kind: 'workflow', workflowId: config.id },
     });
 
@@ -608,13 +605,13 @@ export function WorkflowRunFlow({ config, onComplete, agent, onOpenPage, onOpenB
         : blocker.kind === 'choice'
           ? (blocker.choiceId === '__elect__' ? 'Waiting for you to elect an amount' : 'Waiting for your decision')
           : 'Reviewing…';
-      setActiveCoworker({ coworker: specialist, status });
+      setActiveCoworker({ coworker: runActor, status });
     } else {
       setActiveCoworker({ coworker: WORKFLOW_ENGINE, status: `Calculating ${config.documentLabel}…` });
     }
 
     return () => { setActiveRun(null); setActiveCoworker(null); };
-  }, [config, agent, activeIdx, done, blocker, outcome, runData, setActiveRun, setActiveCoworker, recordWork]);
+  }, [config, activeIdx, done, blocker, outcome, runData, setActiveRun, setActiveCoworker, recordWork]);
 
   const resolve = (choiceId?: string) => {
     if (!blocker) return;
@@ -658,7 +655,7 @@ export function WorkflowRunFlow({ config, onComplete, agent, onOpenPage, onOpenB
 
   return (
     // Chat-native: no card chrome — this renders inline in the aside thread,
-    // indented under Sofi's step, so it reads as part of the conversation.
+    // indented under the run's step, so it reads as part of the conversation.
     <div data-run-flow={config.id} style={{ width: '100%', maxWidth: '100%', ...(surface === 'light' ? (LIGHT_VARS as React.CSSProperties) : null) }}>
       <style>{`
         @keyframes cwpspin{to{transform:rotate(360deg)}}

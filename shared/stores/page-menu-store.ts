@@ -29,7 +29,10 @@ export type MenuDropdown = {
   title?: string;
 };
 export type MenuSeparator = { kind: 'separator'; id: string };
-export type PageMenuItem = MenuButton | MenuDropdown | MenuSeparator;
+/** A non-interactive text label (e.g. the current item's name, breadcrumb-style).
+ *  `width` reserves a fixed slot (px) so items after it keep a consistent x. */
+export type MenuLabel = { kind: 'label'; id: string; text: string; strong?: boolean; width?: number };
+export type PageMenuItem = MenuButton | MenuDropdown | MenuSeparator | MenuLabel;
 
 /** left = near the tabs (File/Edit/Add…); right = far end (Save/Run…). */
 export type PageMenu = { left?: PageMenuItem[]; right?: PageMenuItem[] };

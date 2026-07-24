@@ -21,12 +21,15 @@ import { BuilderPageMenu } from '@/features/workflow-builder/ui/builder-page-men
 import { builderEmbeddedAtom } from '@/lib/builder-bridge';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
+  createBlankWorkflow,
+  createPortfolioWorkflowById,
   createWorkingSourceRulesDemoWorkflow,
   LOCAL_WORKFLOW_ID,
   loadLocalWorkflowSnapshotResult,
   saveWorkflowDefinitionSnapshot,
   workflowDefinitionToCanvas,
 } from '@/shared/workflow-engine/local-fiscal-workflow';
+import { getWorkflowConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
 import {
   currentWorkflowIdAtom,
   currentWorkflowNameAtom,
@@ -42,7 +45,7 @@ import {
   workflowNotFoundAtom,
 } from '@/shared/workflow-engine/state/workflow-store';
 
-export function InlineBuilder() {
+export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blank?: boolean } = {}) {
   const isMobile = useIsMobile();
   const setEmbedded = useSetAtom(builderEmbeddedAtom);
   const setNodes = useSetAtom(nodesAtom);
@@ -65,11 +68,25 @@ export function InlineBuilder() {
   }, [setEmbedded]);
 
   useEffect(() => {
-    const loadResult = loadLocalWorkflowSnapshotResult();
-    if (loadResult.warning) {
-      toast.warning('Saved local workflow could not be loaded. Restored the working Excel workflow.');
+    // A specific workflow (the Build tab of a workflow page) loads THAT graph —
+    // a portfolio blueprint (pf-*) or a runnable config — WITHOUT clobbering the
+    // user's saved local workflow. No workflowId → the usual saved-local load.
+    let snapshot;
+    if (blank) {
+      snapshot = createBlankWorkflow();
+    } else if (workflowId) {
+      const cfg = getWorkflowConfig(workflowId.replace(/^pf-/, ''));
+      snapshot =
+        createPortfolioWorkflowById(workflowId) ||
+        (cfg ? (cfg.buildSnapshot() as ReturnType<typeof createWorkingSourceRulesDemoWorkflow>) : null) ||
+        createWorkingSourceRulesDemoWorkflow();
+    } else {
+      const loadResult = loadLocalWorkflowSnapshotResult();
+      if (loadResult.warning) {
+        toast.warning('Saved local workflow could not be loaded. Restored the working Excel workflow.');
+      }
+      snapshot = loadResult.snapshot || createWorkingSourceRulesDemoWorkflow();
     }
-    const snapshot = loadResult.snapshot || createWorkingSourceRulesDemoWorkflow();
     const canvas = workflowDefinitionToCanvas(snapshot);
     const selectedNode = canvas.nodes.find((n) => n.selected) || canvas.nodes[0];
     setNodes(
@@ -90,8 +107,12 @@ export function InlineBuilder() {
     setSelectedNode(selectedNode?.id ?? null);
     setSelectedEdge(null);
     setSelectedExecutionId(null);
-    saveWorkflowDefinitionSnapshot(snapshot);
+    // Only the default (saved-local) load persists; a specific/blank workflow loaded
+    // into Build is transient so it doesn't overwrite the user's saved local workflow
+    // (they persist it with the Save button when ready).
+    if (!workflowId && !blank) saveWorkflowDefinitionSnapshot(snapshot);
   }, [
+    workflowId, blank,
     setCurrentWorkflowId, setCurrentWorkflowName, setCurrentWorkflowVisibility,
     setEdges, setHasSidebarBeenShown, setHasUnsavedChanges, setIsWorkflowOwner,
     setNodes, setSelectedEdge, setSelectedExecutionId, setSelectedNode, setWorkflowNotFound,

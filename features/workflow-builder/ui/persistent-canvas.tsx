@@ -1,9 +1,13 @@
 "use client";
 
-import { ReactFlowProvider } from "@xyflow/react";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { WorkflowCanvas } from "./workflow-canvas";
+
+// The ReactFlow canvas + provider live in a separate module loaded on demand, so
+// @xyflow/react stays out of the shared app-shell bundle (loaded on every route)
+// and only ships when a canvas route (/builder, /workflows/*) is actually open.
+const PersistentCanvasInner = dynamic(() => import("./persistent-canvas-inner"), { ssr: false });
 
 export function PersistentCanvas() {
   const pathname = usePathname();
@@ -19,13 +23,5 @@ export function PersistentCanvas() {
     return null;
   }
 
-  // Light neumorphic builder ground — a flat gray (#c9c9d4) matching the page
-  // grounds; the canvas grid (ai-elements/canvas.tsx) draws dark hairlines on it.
-  return (
-    <div className="fixed inset-0 z-0" style={{ background: 'var(--sx-canvas-ground)' }}>
-      <ReactFlowProvider>
-        <WorkflowCanvas />
-      </ReactFlowProvider>
-    </div>
-  );
+  return <PersistentCanvasInner />;
 }

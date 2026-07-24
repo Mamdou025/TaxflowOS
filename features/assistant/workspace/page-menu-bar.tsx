@@ -50,6 +50,7 @@ function Dropdown({ item }: { item: MenuDropdown }) {
 
 function Item({ item }: { item: PageMenuItem }) {
   if (item.kind === 'separator') return <span style={{ width: 1, height: 18, background: LC.border, margin: '0 4px', flexShrink: 0 }} />;
+  if (item.kind === 'label') return <span style={{ flexShrink: 0, padding: '0 8px', fontSize: 13, fontWeight: item.strong ? 700 : 600, color: LC.body, whiteSpace: 'nowrap', ...(item.width ? { width: item.width } : { maxWidth: 260 }), overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.text}</span>;
   if (item.kind === 'dropdown') return <Dropdown item={item} />;
   // button
   const primary = item.primary;
@@ -78,12 +79,12 @@ export function PageMenuBar({ menu }: { menu: PageMenu }) {
   const right = menu.right ?? [];
   if (left.length === 0 && right.length === 0) return null;
   return (
-    // flex '1 0 auto' — grow to fill (so left items sit near the tabs and right
-    // items push to the far end via the spacer), but NEVER shrink below content
-    // width. Shrinking crushed the bar and made its items overlap/overflow the
-    // header when several tabs were open; instead the tab strip (flex 1 1 auto)
-    // absorbs the squeeze and scrolls, keeping the whole menu intact.
-    <div style={{ display: 'flex', alignItems: 'center', gap: 3, flex: '1 0 auto', paddingLeft: 6 }}>
+    // flex '1 1 auto' — grow to fill AND shrink when the panel is narrow (chat
+    // open). The tab strip is now fixed-width (flex 0 0 auto), so ALL squeeze is
+    // absorbed here by the inner spacer collapsing — the fixed buttons never
+    // shrink — which keeps the left group (title + tabs) anchored at a constant x
+    // regardless of the panel width or the right-side controls.
+    <div style={{ display: 'flex', alignItems: 'center', gap: 3, flex: '1 1 auto', minWidth: 0, paddingLeft: 6 }}>
       {left.map((it) => <Item key={it.id} item={it} />)}
       <div style={{ flex: 1 }} />
       {right.map((it) => <Item key={it.id} item={it} />)}

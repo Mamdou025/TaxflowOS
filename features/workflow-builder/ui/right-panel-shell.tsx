@@ -8,6 +8,8 @@ import { WorksheetPageView } from "@/features/workflow-builder/ui/worksheet-page
 import { WORKFLOWS } from "@/lib/agents";
 import {
   createFapiTemplateWorkflow,
+  createPortfolioWorkflow,
+  PORTFOLIO_WORKFLOWS,
   saveWorkflowDefinitionSnapshot,
   type WorkflowBlock,
   workflowDefinitionToCanvas,
@@ -186,6 +188,12 @@ type BuiltWorkflow = {
   snapshot: ReturnType<typeof createFapiTemplateWorkflow>;
 };
 
+const PORTFOLIO_GROUP_LABELS: Record<string, string> = {
+  platform: "Platform services",
+  foundation: "Foundation",
+  tier1: "Tier 1",
+};
+
 function WorkflowsListContent({ onLoaded }: { onLoaded: () => void }) {
   const workflowName = useAtomValue(currentWorkflowNameAtom);
   const setNodes = useSetAtom(nodesAtom);
@@ -212,6 +220,23 @@ function WorkflowsListContent({ onLoaded }: { onLoaded: () => void }) {
     []
   );
 
+  // Sinaxe portfolio blueprints (Canadian Corporate Tax Workflow Portfolio +
+  // Platform Services). Built here so they show up on the builder page itself,
+  // not only in the toolbar's template menu.
+  const portfolio: (BuiltWorkflow & { group: string })[] = useMemo(
+    () =>
+      PORTFOLIO_WORKFLOWS.map((def) => ({
+        id: def.id,
+        name: def.name,
+        sub: def.sub,
+        group: def.group,
+        snapshot: createPortfolioWorkflow(def) as ReturnType<
+          typeof createFapiTemplateWorkflow
+        >,
+      })),
+    []
+  );
+
   function load(item: BuiltWorkflow) {
     const canvas = workflowDefinitionToCanvas(item.snapshot);
     const selected = canvas.nodes.find((n) => n.selected) || canvas.nodes[0];
@@ -233,51 +258,68 @@ function WorkflowsListContent({ onLoaded }: { onLoaded: () => void }) {
     onLoaded();
   }
 
+  const row = (item: BuiltWorkflow) => {
+    const isOpen = workflowName === item.snapshot.name;
+    return (
+      <button
+        className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-muted/40 ${isOpen ? "bg-primary/5" : ""}`}
+        key={item.id}
+        onClick={() => load(item)}
+        type="button"
+      >
+        <span
+          className={`flex size-7 shrink-0 items-center justify-center rounded-md border ${isOpen ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-background text-muted-foreground"}`}
+        >
+          <Workflow className="size-3.5" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-2">
+            <span className={`truncate text-sm font-medium ${isOpen ? "text-foreground" : ""}`}>
+              {item.name.replace(/^Platform Services · /, "")}
+            </span>
+            {isOpen && (
+              <span className="shrink-0 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-medium uppercase text-primary">
+                Open
+              </span>
+            )}
+          </span>
+          <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+            {item.sub}
+          </span>
+        </span>
+        {isOpen && <Check className="size-4 shrink-0 text-primary" />}
+      </button>
+    );
+  };
+
+  const sectionHeader = (text: string) => (
+    <div className="sticky top-0 z-10 border-b bg-muted/40 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+      {text}
+    </div>
+  );
+
   return (
     <div className="flex h-full flex-col">
       <div className="border-b bg-muted/20 px-4 py-1.5 text-[10px] text-muted-foreground">
-        {built.length} workflow{built.length === 1 ? "" : "s"} you&apos;ve built
+        {built.length} runnable · {portfolio.length} Sinaxe portfolio blueprints
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {built.length === 0 ? (
-          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-            No built workflows are registered yet.
-          </div>
-        ) : (
-          built.map((item) => {
-            const isOpen = workflowName === item.snapshot.name;
-            return (
-              <button
-                className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-muted/40 ${isOpen ? "bg-primary/5" : ""}`}
-                key={item.id}
-                onClick={() => load(item)}
-                type="button"
-              >
-                <span
-                  className={`flex size-7 shrink-0 items-center justify-center rounded-md border ${isOpen ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-background text-muted-foreground"}`}
-                >
-                  <Workflow className="size-3.5" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-2">
-                    <span className={`truncate text-sm font-medium ${isOpen ? "text-foreground" : ""}`}>
-                      {item.name}
-                    </span>
-                    {isOpen && (
-                      <span className="shrink-0 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-medium uppercase text-primary">
-                        Open
-                      </span>
-                    )}
-                  </span>
-                  <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
-                    {item.sub}
-                  </span>
-                </span>
-                {isOpen && <Check className="size-4 shrink-0 text-primary" />}
-              </button>
-            );
-          })
+        {built.length > 0 && (
+          <>
+            {sectionHeader("Runnable workflows")}
+            {built.map((item) => row(item))}
+          </>
         )}
+        {(["platform", "foundation", "tier1"] as const).map((group) => {
+          const items = portfolio.filter((p) => p.group === group);
+          if (items.length === 0) return null;
+          return (
+            <div key={group}>
+              {sectionHeader(`Sinaxe portfolio · ${PORTFOLIO_GROUP_LABELS[group]}`)}
+              {items.map((item) => row(item))}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -12,16 +12,13 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useRef, useEffect, createContext, useContext, type ReactNode } from 'react';
-import { useAtomValue, useSetAtom } from 'jotai';
-import { Plus, ChevronDown, X, Square, Play, Sparkles, ArrowRight, ArrowUp, ExternalLink, Search, Paperclip, Users, Workflow, Table2 } from 'lucide-react';
+import { Plus, ChevronDown, X, Square, Play, Sparkles, ArrowRight, ArrowUp, ExternalLink, Search, Paperclip, Workflow, Table2 } from 'lucide-react';
 import { LC } from '@/lib/librechat-theme';
 import { ScopeMark } from '@/components/scope-orb';
 import { CoworkerAvatar } from '@/features/assistant/ui/coworker-avatar';
-import { coworkerForAgent, coworkerForMessage, coworkerForWorkflow, WORKSPACE_ASSISTANT, type Coworker } from '@/lib/coworkers';
+import { coworkerForMessage, WORKSPACE_ASSISTANT, SINA, type Coworker } from '@/lib/coworkers';
 import { MessageSpecialistContext } from '@/features/assistant/ui/message-specialists';
 import { detectComposerIntent } from '@/lib/composer-intent';
-import { thinkingCoworkerAtom, setThinkingCoworkerAtom } from '@/shared/stores/workspace-store';
-import { AGENTS, type Agent } from '@/lib/agents';
 
 // Accent + the reference's soft focus ring (rgba of --is-accent-ring). The composer
 // bar mirrors the tax-workspace-UI reference: a plain raised pill that lifts a soft
@@ -36,19 +33,9 @@ export const AsideComposerContext = createContext<{
   tools?: ComposerSuggestion[];
   commands?: ComposerSuggestion[]; // pickable "build functions" — shown when the text starts with "@"
   onAttach?: (files: File[]) => Promise<string>;
-  agents?: ReactNode; // (legacy) agent roster node — no longer rendered; kept for reuse
-  onAssignAgent?: (agentId: string) => void; // address a specialist (from the composer's Agents popover)
-  addressedAgent?: Agent | null; // the agent you're "talking to" (click → greet → type → send)
-  onClearAddress?: () => void; // dismiss the addressed agent (back to the general assistant)
-  onAddressedSend?: () => void; // fired on send while addressed — kicks off the agent's scripted narration
 } | null>(null);
 
 type ComposerMode = 'ask' | 'search';
-
-// Minimum on-screen time for an addressed agent's scripted "thinking" narration
-// before the real reply is revealed — so the answer lands with a human beat instead
-// of instantly. Kept short enough to stay snappy, long enough to read as deliberate.
-const AGENT_THINK_MIN_MS = 2200;
 
 function md(text: string): ReactNode {
   return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
@@ -81,33 +68,15 @@ export function AsideAssistantMessage(props: {
 }) {
   const content = typeof props.message === 'string' ? props.message : props.message?.content ?? '';
 
-  // Avatar: a tool call attributes the message (runWorkflow → specialist, generateUI →
-  // UI Composer, page ops → UI Concierge). For a plain reply (generic Workspace
-  // Assistant), fall back to the specialist of the preceding user turn, so a past FAPI
-  // answer shows Sofi. Never overrides a specific tool attribution.
+  // Avatar: a tool call attributes the message (runWorkflow → Sina, generateUI → UI
+  // Composer, page ops → UI Concierge); a plain reply is Sina. The message-specialist
+  // map is always empty now (one unified agent) but kept as an override seam. Never
+  // overrides a specific tool attribution.
   const specialistMap = useContext(MessageSpecialistContext);
   const own: Coworker = coworkerForMessage(props.message);
   const msgId = typeof props.message === 'object' ? props.message?.id : undefined;
   const specialist = msgId ? specialistMap[msgId] : undefined;
   const coworker: Coworker = specialist && own.id === WORKSPACE_ASSISTANT.id ? specialist : own;
-
-  // Scripted agent narration (set on send while an agent is addressed). The narration
-  // row itself is rendered once at the bottom of the thread by ThreadMessages; here we
-  // (a) HIDE this in-flight reply while the narration plays, so the answer doesn't pop
-  // in instantly, and (b) clear the narration once the reply has arrived AND the
-  // narration has had its minimum on-screen time — revealing the reply with a beat.
-  const thinking = useAtomValue(thinkingCoworkerAtom);
-  const setThinking = useSetAtom(setThinkingCoworkerAtom);
-  const arrived = !!content || !!props.subComponent;
-  useEffect(() => {
-    if (!thinking || !arrived) return;
-    const wait = Math.max(0, AGENT_THINK_MIN_MS - (Date.now() - thinking.since));
-    const id = setTimeout(() => setThinking(null), wait);
-    return () => clearTimeout(id);
-  }, [arrived, thinking, setThinking]);
-
-  // Hold the current reply behind the narration until it clears (past messages stay).
-  if (thinking && props.isCurrentMessage) return null;
 
   if (props.isLoading && !content && !props.subComponent) {
     return (
@@ -142,7 +111,6 @@ export function AsideInput(props: {
   const [active, setActive] = useState(-1);
   const [mode, setMode] = useState<ComposerMode>('ask');
   const [showTools, setShowTools] = useState(false);
-  const [showAgents, setShowAgents] = useState(false);
   const [openSection, setOpenSection] = useState<'workflows' | 'worksheets' | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [attaching, setAttaching] = useState(false);
@@ -156,7 +124,7 @@ export function AsideInput(props: {
   // in Ask mode and never for the "@" command palette or Search mode.
   const intent = mode === 'ask' && !text.startsWith('@') ? detectComposerIntent(text) : null;
   const isAction = !!intent && intent.action !== 'answer';
-  const runCoworker = intent?.action === 'run' && intent.workflowId ? coworkerForWorkflow(intent.workflowId) : null;
+  const runCoworker = intent?.action === 'run' && intent.workflowId ? SINA : null;
   const VerbIcon = intent?.action === 'run' ? Play : intent?.action === 'open' ? ExternalLink : Sparkles;
   const showAction = ready && isAction;
 
@@ -172,16 +140,11 @@ export function AsideInput(props: {
   const palette = commandMode ? commands : suggestions;
   const showPalette = palette.length > 0;
 
-  const addressedAgent = ctx?.addressedAgent ?? null;
-
   const send = async () => {
     if (!ready) return;
     const t = text.trim();
     const pending = files;
     setText(''); setActive(-1); setFiles([]);
-    // Talking to an agent → play their scripted "thinking" narration while the real
-    // reply streams, so the answer/run arrives with human timing (not an instant card).
-    if (addressedAgent) ctx?.onAddressedSend?.();
     let note = '';
     if (pending.length && ctx?.onAttach) {
       setAttaching(true);
@@ -216,12 +179,6 @@ export function AsideInput(props: {
     el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
   }, [text]);
   useEffect(() => { setActive(-1); }, [text]);
-  // Focus the composer when an agent is addressed (click Sofi → start typing).
-  useEffect(() => {
-    const onFocus = () => { setMode('ask'); ref.current?.focus(); };
-    window.addEventListener('cwp-focus-composer', onFocus);
-    return () => window.removeEventListener('cwp-focus-composer', onFocus);
-  }, []);
 
   const sqBtn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 10, border: `1px solid ${LC.borderSubtle}`, background: 'transparent', color: LC.muted, cursor: 'pointer', flexShrink: 0, transition: 'background 140ms, color 140ms' };
   const suggList = (items: ComposerSuggestion[], withActive: boolean) => items.map((s, i) => (
@@ -309,31 +266,8 @@ export function AsideInput(props: {
           );
         })()}
 
-        {/* Agents popover — the specialist roster (opened by the ⌘/Agents button).
-            Click one to TALK TO them (addresses the composer to that agent). */}
-        {showAgents && !showPalette && (
-          <>
-            <div onMouseDown={() => setShowAgents(false)} style={{ position: 'fixed', inset: 0, zIndex: 19 }} />
-            <div style={{ position: 'absolute', left: 0, right: 0, bottom: 'calc(100% + 8px)', zIndex: 20, background: LC.surface, border: `1px solid ${LC.border}`, borderRadius: 14, boxShadow: LC.shadowOut, overflow: 'hidden', maxHeight: 340, overflowY: 'auto' }}>
-              <div style={{ padding: '9px 14px 4px', fontSize: 10, fontWeight: 650, letterSpacing: '0.05em', textTransform: 'uppercase', color: LC.muted }}>Agents · talk to a specialist</div>
-              {AGENTS.map((a) => (
-                <button
-                  key={a.id}
-                  onMouseDown={(e) => { e.preventDefault(); if (!a.live) return; ctx?.onAssignAgent?.(a.id); setShowAgents(false); ref.current?.focus(); }}
-                  disabled={!a.live}
-                  className="w-full flex items-center gap-2.5 text-left hover:bg-black/5"
-                  style={{ padding: '9px 14px', border: 'none', background: 'transparent', cursor: a.live ? 'pointer' : 'default', opacity: a.live ? 1 : 0.5 }}
-                >
-                  <CoworkerAvatar coworker={coworkerForAgent(a)} size={26} dim={!a.live} />
-                  <span className="flex-1 min-w-0">
-                    <span style={{ display: 'block', fontSize: 13, fontWeight: 550, color: LC.title }}>{a.name}{!a.live && <span style={{ color: LC.muted, fontWeight: 400 }}> · soon</span>}</span>
-                    <span style={{ display: 'block', fontSize: 11.5, color: LC.muted }}>{a.role}</span>
-                  </span>
-                </button>
-              ))}
-            </div>
-          </>
-        )}
+        {/* (Agents popover removed 2026-07-24 — one unified agent, Sina. Tasks are
+            started from the composer's + menu / hero quick-starts instead.) */}
 
         {/* ── The Scope Console — the tax-workspace-UI composer bar ─────────────
             A raised neumorphic pill: [+ add-menu] · a hairline divider · the prompt
@@ -386,22 +320,13 @@ export function AsideInput(props: {
         >
           <input ref={fileRef} type="file" multiple style={{ display: 'none' }} onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
 
-          {/* Addressed-agent chip — you're talking to this specialist; ✕ back to Scope. */}
-          {addressedAgent && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, alignSelf: 'flex-start', padding: '4px 8px 4px 5px', borderRadius: 999, background: LC.surfaceHover, border: `1px solid ${LC.border}` }}>
-              <CoworkerAvatar coworker={coworkerForAgent(addressedAgent)} size={18} />
-              <span style={{ fontSize: 12, fontWeight: 600, color: LC.title }}>To {addressedAgent.name}</span>
-              <button onClick={() => ctx?.onClearAddress?.()} title="Talk to Scope instead" style={{ display: 'flex', border: 'none', background: 'none', color: LC.muted, cursor: 'pointer', padding: 0 }} aria-label={`Stop talking to ${addressedAgent.name}`}><X size={13} /></button>
-            </span>
-          )}
-
           <textarea
             ref={ref}
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={onKeyDown}
             rows={1}
-            placeholder={mode === 'search' ? 'Search worksheets, workflows, agents…' : addressedAgent ? `Message ${addressedAgent.name}, your ${addressedAgent.role.toLowerCase()}…` : 'Ask Scope, or describe a task…'}
+            placeholder={mode === 'search' ? 'Search worksheets, workflows, agents…' : 'Ask Scope, or describe a task…'}
             className="lc-textarea"
             style={{ width: '100%', minWidth: 0, display: 'block', resize: 'none', fontSize: 16, color: LC.text, background: 'transparent', outline: 'none', border: 'none', lineHeight: 1.5, minHeight: 30, maxHeight: 200, overflowY: 'auto', fontFamily: 'inherit', fontWeight: 400, padding: '2px 2px' }}
           />
@@ -421,12 +346,9 @@ export function AsideInput(props: {
           {/* Control row — squared icon buttons on the left, dark send on the right. */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
             {/* + add-menu — Search · Attach · Workflows · Worksheets */}
-            <button onClick={() => { setShowTools((o) => !o); setShowAgents(false); setOpenSection(null); }} style={{ ...sqBtn, background: showTools ? LC.surfaceHover : 'transparent', color: mode === 'search' ? ACCENT : showTools ? LC.title : LC.muted }} className="hover:bg-black/5" title={mode === 'search' ? 'Search mode on — Enter searches the workspace. Click for options.' : 'Add — search, attach files, run a workflow, open a worksheet'} aria-label="Add — search, attach, workflows, worksheets"><Plus size={18} /></button>
+            <button onClick={() => { setShowTools((o) => !o); setOpenSection(null); }} style={{ ...sqBtn, background: showTools ? LC.surfaceHover : 'transparent', color: mode === 'search' ? ACCENT : showTools ? LC.title : LC.muted }} className="hover:bg-black/5" title={mode === 'search' ? 'Search mode on — Enter searches the workspace. Click for options.' : 'Add — search, attach files, run a workflow, open a worksheet'} aria-label="Add — search, attach, workflows, worksheets"><Plus size={18} /></button>
             {/* attach */}
             <button onClick={() => fileRef.current?.click()} style={sqBtn} className="hover:bg-black/5" title="Attach a document or workbook Scope can read" aria-label="Attach files"><Paperclip size={16} /></button>
-            {/* agents — talk to a specialist (Sofi · Théo · …) */}
-            <button onClick={() => { setShowAgents((o) => !o); setShowTools(false); }} style={{ ...sqBtn, background: showAgents ? LC.surfaceHover : 'transparent', color: showAgents ? LC.title : LC.muted }} className="hover:bg-black/5" title="Agents — talk to a specialist" aria-label="Agents"><Users size={16} /></button>
-
             <span style={{ flex: 1 }} />
 
             {/* Send — dark rounded-square (its icon hints the detected action) */}
