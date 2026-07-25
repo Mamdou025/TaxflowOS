@@ -8,6 +8,14 @@ All core types live in `src/domain/workflow/`. Re-exports and runtime types are 
 
 ---
 
+## Persistence & RAG tables (`platform/db/schema.ts`) [NEW — 2026-07-25]
+
+- **`chat_threads`** — `id`, `userId`→users, `clientId?`, `title?`, `createdAt`, `updatedAt`, `archivedAt?`. Index `(userId, updatedAt)`. Types: `ChatThread` / `NewChatThread`.
+- **`chat_messages`** — `id` (CopilotKit message id, upsert key), `threadId`→chat_threads (cascade), `userId`, `role` (`ChatMessageRole` = user|assistant|tool|system), `seq`, `content` (jsonb `ChatMessageContent` = `{ text?, toolCall?: { name, args?, result?, callId? } }`), `createdAt`. Index `(threadId, seq)`. Types: `ChatMessage` / `NewChatMessage`. (Client-side mirror types live in `features/assistant/runtime/chat/message-codec.ts` to stay off the server-only schema import.)
+- **`documents`** — `id`, `userId`, `clientId?`, `fileName`, `mimeType?`, `sizeBytes?`, `storageBucket`, `storageKey`, `status` (`DocumentStatus` = uploading|processing|ready|failed), `extractedChars?`, `pageCount?`, `error?`, timestamps. Index `(userId, createdAt)`. Types: `DocumentRow` / `NewDocumentRow` (named `*Row` to avoid the DOM `Document` clash).
+- **`document_chunks`** — `id`, `documentId`→documents (cascade), `userId`, `clientId?`, `chunkIndex`, `content`, `tokens?`, `embedding` (`vector(1536)`, `EMBEDDING_DIMENSIONS`), `createdAt`. Indexes: btree `(documentId)` + **HNSW** `(embedding vector_cosine_ops)`. Types: `DocumentChunk` / `NewDocumentChunk`.
+- Relations: `chatThreads↔chatMessages`, `documents↔documentChunks`. All registered in the drizzle `schema` object in `platform/db/index.ts`. Migrations `0006`–`0008` (`0008` prepends `CREATE EXTENSION IF NOT EXISTS vector`).
+
 ## Product Kernel (`lib/kernel/`) [NEW — 2026-07-17, kernel-migration Step 2]
 
 The single canonical vocabulary — **pure types + pure helpers, no React/jotai**. Types only, **no behavior change**: the strong existing pieces are re-exported unchanged; the net-new concepts are defined as the target the runtimes will fold onto via adapters (Steps 3–7). Barrel: `lib/kernel/index.ts`. See `docs/kernel-migration-spec.md`.

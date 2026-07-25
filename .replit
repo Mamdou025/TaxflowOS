@@ -1,0 +1,29 @@
+# Replit configuration for TaxflowOS (Next.js 16 + pnpm)
+# Docs: https://docs.replit.com/replit-workspace/configuring-repl
+#
+# The app uses pnpm, which isn't preinstalled on the Node module, so every
+# entry point bootstraps it via `corepack` (bundled with Node 22).
+
+entrypoint = "next.config.ts"
+modules = ["nodejs-22"]
+hidden = [".config", ".next", "node_modules"]
+
+# ── Workspace "Run" button (development) ──────────────────────────────────────
+# `pnpm dev` internally calls `pnpm discover-plugins` then `next dev`.
+run = "sh -c 'corepack enable && pnpm install && pnpm dev'"
+
+[nix]
+channel = "stable-24_11"
+
+# ── Production deployment (Autoscale / Cloud Run) ─────────────────────────────
+# build: install deps + generate plugin registry + next build
+# run:   `npm run start` == `next start` (no pnpm needed at runtime)
+[deployment]
+build = ["sh", "-c", "corepack enable && pnpm install && pnpm build"]
+run = ["sh", "-c", "npm run start"]
+deploymentTarget = "cloudrun"
+
+# next start listens on 0.0.0.0:3000; Replit exposes it publicly on 80/443.
+[[ports]]
+localPort = 3000
+externalPort = 80

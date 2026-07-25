@@ -6,6 +6,28 @@ Status markers: `[LIVE]` fully working · `[PARTIAL]` works but incomplete · `[
 
 ---
 
+## Persistent chats + company-document RAG [LIVE — 2026-07-25]
+
+- **Saved chats [LIVE]** — the Sina conversation autosaves to Postgres (per-user) and reopens from a **"Recent chats"** sidebar list (rename / delete / new). Full-fidelity *projection* (text + tool name/args/result); generative-UI cards re-render from the live action registry on restore. Server: `app/api/chat/threads/*`, `features/assistant/runtime/chat/*`. Fail-soft (no DB → unsaved, as before).
+- **Company document store [LIVE]** — upload large files at **`/documents`** (or via `uploadDocument`); bytes go **directly to Supabase Storage** (signed URL, bypasses Vercel's 4.5 MB limit), metadata + status in Postgres. Open (signed URL) / delete / status badges. Server: `app/api/documents/*`, `platform/storage/supabase.ts`, `platform/db/documents.ts`.
+- **Document RAG [LIVE]** — on upload-complete, documents are extracted → chunked → embedded (OpenAI `text-embedding-3-small`) into a **pgvector** index (`platform/rag/*`), then retrievable by Sina via the **`searchCompanyDocuments`** tool (returns cited passages). Ingestion runs via `after()`; **[PARTIAL]** very large docs may need a background worker.
+- **[PLANNED]** per-client scoping UI for chats/documents; adopt CopilotKit's native Threads API; OCR for scanned PDFs.
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) → "Persistence & RAG", [`docs/persistence-setup.md`](../docs/persistence-setup.md).
+
+## Sina web + live-data tools [LIVE — 2026-07-25]
+
+Sina (the live CopilotKit chat) gained web reach and live-data tools, ported from the Agent Lab sandbox (`features/agent-lab/tools.ts`) — previously the chat had NO tool that reached the internet.
+
+- **`searchCanadianTax` [LIVE]** — web search scoped to official Canadian tax sources (canada.ca + CRA) via Firecrawl; returns titles/URLs/snippets to cite. Needs `FIRECRAWL_API_KEY`.
+- **`fetchWebPage` [LIVE]** — fetches a public URL and returns ~15k chars of readable text. SSRF-guarded (blocks loopback/private/link-local hosts; http(s) only).
+- **`getFxRate` [LIVE]** — live annual-average Bank of Canada exchange rate.
+- **`estimateForeignIncomeTax` [LIVE]** — template calc: foreign income → CAD (live FX) → illustrative combined corporate tax ($500k small-biz threshold).
+- **`calculate` / `getCurrentDateTime` [LIVE]** — pure client-side helpers (no network).
+- **Single-source implementation** — the four live-data tools' logic lives ONCE in a shared registry `platform/agent-tools/registry.ts` (`AGENT_TOOL_REGISTRY` + `runAgentTool`). **Both** the Agent Lab (`features/agent-lab/tools.ts` wraps them in `tool()`) and Sina (`app/api/assistant/tools/route.ts` delegates to `runAgentTool`) call the same code — so a change prototyped in the Lab reaches Sina with no re-implementation and no drift.
+- All secret-bearing / live-data calls go through **one auth-gated server route** `app/api/assistant/tools/route.ts`; registered as CopilotKit actions in `features/assistant/ui/use-assistant.tsx`. Fail-soft (missing key/host error → returned as `{ error }`, chat unaffected). Treated as `unknown` risk group by the intent gate → never withheld.
+- **Not ported** (deliberately): `getWeatherDemo` (fake data), `rememberNote`/`recallNotes` (Sina already has durable `rememberFact`/`forgetFact`), `focusBlock`/`addBlock`/`editBlockConfig` (Sina already has the real BuilderCopilot versions).
+
 ## Core Workflow Editing
 
 | Feature | Status | Notes |

@@ -11,10 +11,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import dynamic from 'next/dynamic';
-import { useEffect, useRef, useState, type ReactNode, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type CSSProperties, type ComponentType, type PointerEvent as ReactPointerEvent } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-import { X, Plus, GitFork, Bot, LayoutDashboard, Workflow, PanelRightClose, Maximize2, Minimize2, Files, ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { X, Plus, LayoutDashboard, Workflow, PanelRightClose, Maximize2, Minimize2, Files, ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { chatPanelModeAtom } from '@/shared/stores/chat-store';
 import {
   workspaceWindowsAtom,
@@ -28,7 +28,9 @@ import { WORKFLOWS, type WorkflowSuggestion } from '@/lib/agents';
 import { useAssistant } from '@/features/assistant/ui/use-assistant';
 import { AssistantThread } from '@/features/assistant/ui/assistant-thread';
 import { InScopeNeuMark } from '@/components/inscope-neu-mark';
+import { SinaMarkIcon } from '@/features/assistant/ui/sina-mark';
 import { ClientFolders } from '@/features/assistant/workspace/client-folders';
+import { ChatHistory } from '@/features/assistant/ui/chat-history';
 import { LC } from '@/lib/librechat-theme';
 import { NEU } from '@/components/neumorphic-sidebar';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -71,9 +73,9 @@ const PORTAL_BORDER = 'var(--sx-divider)';
 // The workflow builder + worksheets are now MODES of the Workflows surface (its
 // Build + Results tabs), not standalone destinations — so they're not sidebar
 // items. Their code lives on (Build reuses InlineBuilder; Results the worksheet).
-const WORKSPACE_ITEMS: { key: string; title: string; Icon: typeof GitFork }[] = [
+const WORKSPACE_ITEMS: { key: string; title: string; Icon: ComponentType<{ size?: number | string }> }[] = [
   { key: 'workflows', title: 'Workflows', Icon: Workflow },
-  { key: 'agent', title: 'Agent', Icon: Bot },
+  { key: 'agent', title: 'Agent', Icon: SinaMarkIcon },
   { key: 'dashboard', title: 'Dashboard', Icon: LayoutDashboard },
   { key: 'viewer', title: 'Documents', Icon: Files },
 ];
@@ -353,6 +355,16 @@ export function ChatWorkspace() {
 
             <SideSection label="Clients & Chats">
               <ClientFolders />
+            </SideSection>
+
+            {/* Real saved conversations (Postgres-backed) — reopen / rename / delete. */}
+            <SideSection label="Recent chats">
+              <ChatHistory
+                activeThreadId={a.activeThreadId}
+                onOpen={(id) => {
+                  void a.openThread(id);
+                }}
+              />
             </SideSection>
 
             {/* Contextual section — the active page's own sidebar (usePageSidebar).

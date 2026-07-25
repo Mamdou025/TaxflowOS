@@ -49,6 +49,7 @@ import { GenUIRender } from '@/features/genui/genui-render';
 import { recordWorkItemAtom, workIdFor, workKeyFromText, type WorkItemType } from '@/lib/work-store';
 import { UI_CONCIERGE, UI_COMPOSER } from '@/lib/coworkers';
 import { CoworkerAvatar } from './coworker-avatar';
+import { useChatPersistence } from '@/features/assistant/runtime/chat/use-chat-persistence';
 
 
 // ── Work-item classification ────────────────────────────────────────────────────
@@ -665,8 +666,138 @@ export function useAssistant() {
     },
   });
 
+  // Retrieval over the company's STORED documents (RAG). Distinct from
+  // searchWorksheet (open worksheet lines) — this reaches uploaded contracts,
+  // financials, filings, policies, correspondence via the pgvector index and
+  // returns cited passages. See platform/rag/* + app/api/documents/search.
+  useCopilotAction({
+    name: 'searchCompanyDocuments',
+    description:
+      "Search the company's STORED documents (uploaded contracts, financial statements, tax filings, policies, correspondence) for passages relevant to a question, returned with their source file so you can cite them. Use whenever the user asks about the content of company/uploaded documents, or when answering needs facts that live in a document rather than an open worksheet. query = a question or keywords.",
+    parameters: [
+      { name: 'query', type: 'string', description: 'what to look for in the documents', required: true },
+    ],
+    handler: async ({ query }: { query: string }) => {
+      try {
+        const res = await fetch('/api/documents/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query, k: 6 }),
+        });
+        if (!res.ok) return { passages: [], note: 'Document search is unavailable.' };
+        const data = (await res.json()) as {
+          passages?: { fileName: string; content: string; chunkIndex: number }[];
+        };
+        const passages = data.passages ?? [];
+        if (passages.length === 0) {
+          return { passages: [], note: 'No relevant passages found in the stored documents.' };
+        }
+        return {
+          passages: passages.map((p) => ({ source: p.fileName, excerpt: p.content })),
+          instruction:
+            'Answer using these passages and CITE the source file name for each fact. If they do not answer the question, say so plainly.',
+        };
+      } catch {
+        return { passages: [], note: 'Document search failed.' };
+      }
+    },
+  });
+
+  // ── Web + live-data tools (ported from the Agent Lab) ─────────────────────────
+  // Give Sina reach beyond its training data: official Canadian-tax web search,
+  // reading a public URL, live Bank of Canada FX, and a foreign-income tax estimate.
+  // The live-data/secret-bearing calls go through one server route (auth + the
+  // Firecrawl key stay server-side); calculate + getCurrentDateTime are pure and run
+  // here. See app/api/assistant/tools/route.ts. These mirror features/agent-lab/tools.ts.
+  const callServerTool = async (tool: string, args: Record<string, unknown>) => {
+    try {
+      const res = await fetch('/api/assistant/tools', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tool, args }),
+      });
+      if (!res.ok) return { error: `Tool unavailable (HTTP ${res.status}).` };
+      return await res.json();
+    } catch {
+      return { error: 'Tool call failed.' };
+    }
+  };
+
+  useCopilotAction({
+    name: 'searchCanadianTax',
+    description:
+      'Search official Canadian tax sources (canada.ca and the CRA) for CURRENT rules, rates, forms, and deadlines. Use whenever the answer depends on up-to-date or authoritative Canadian tax info rather than your training data. Returns titles, URLs, and snippets — cite the source URL.',
+    parameters: [
+      { name: 'query', type: 'string', description: 'what to look up, e.g. "capital gains inclusion rate 2024"', required: true },
+      { name: 'limit', type: 'number', description: 'max results (default 5, max 10)', required: false },
+    ],
+    handler: async ({ query, limit }: { query: string; limit?: number }) => callServerTool('searchCanadianTax', { query, limit }),
+  });
+
+  useCopilotAction({
+    name: 'fetchWebPage',
+    description:
+      'Fetch a public web page and return its readable text so you can answer about the whole page. Returns up to ~15k characters; if `truncated` is true, the tail was cut. Good follow-up to searchCanadianTax to read a result URL in full.',
+    parameters: [{ name: 'url', type: 'string', description: 'the public http(s) URL to read', required: true }],
+    handler: async ({ url }: { url: string }) => callServerTool('fetchWebPage', { url }),
+  });
+
+  useCopilotAction({
+    name: 'getFxRate',
+    description:
+      'Get the annual-average exchange rate between two currencies using live Bank of Canada data. Use for currency conversions instead of guessing a rate.',
+    parameters: [
+      { name: 'from', type: 'string', description: 'source currency code, e.g. USD', required: true },
+      { name: 'to', type: 'string', description: 'target currency code, e.g. CAD', required: true },
+      { name: 'year', type: 'number', description: 'calendar year; defaults to the current year', required: false },
+    ],
+    handler: async ({ from, to, year }: { from: string; to: string; year?: number }) => callServerTool('getFxRate', { from, to, year }),
+  });
+
+  useCopilotAction({
+    name: 'estimateForeignIncomeTax',
+    description:
+      'Estimate Canadian corporate tax on foreign-currency income. Requires grossIncome (in its foreign currency), currency (code like USD), and taxYear. Converts to CAD with the live Bank of Canada rate and applies an illustrative combined rate with a $500k small-business threshold. If any input is missing, ask for it before calling.',
+    parameters: [
+      { name: 'grossIncome', type: 'number', description: 'gross income amount in the foreign currency, e.g. 250000', required: true },
+      { name: 'currency', type: 'string', description: 'the income currency code, e.g. USD', required: true },
+      { name: 'taxYear', type: 'number', description: 'the tax year, e.g. 2024', required: true },
+    ],
+    handler: async ({ grossIncome, currency, taxYear }: { grossIncome: number; currency: string; taxYear: number }) =>
+      callServerTool('estimateForeignIncomeTax', { grossIncome, currency, taxYear }),
+  });
+
+  useCopilotAction({
+    name: 'calculate',
+    description: 'Evaluate a basic arithmetic expression, e.g. "0.18 * 240" or "3 * (4 + 5)". Use only numbers and + - * / ( ) .',
+    parameters: [{ name: 'expression', type: 'string', description: 'a math expression using only numbers and + - * / ( ) .', required: true }],
+    handler: async ({ expression }: { expression: string }) => {
+      if (!/^[0-9+\-*/().\s]+$/.test(expression)) return { error: 'Only numbers and + - * / ( ) are allowed.' };
+      try {
+        // Sandboxed: the regex above guarantees only arithmetic characters reach here.
+        const result = Function(`"use strict"; return (${expression});`)() as number;
+        return { expression, result };
+      } catch {
+        return { error: 'Could not evaluate that expression.' };
+      }
+    },
+  });
+
+  useCopilotAction({
+    name: 'getCurrentDateTime',
+    description: 'Get the current date and time.',
+    parameters: [],
+    handler: async () => {
+      const now = new Date();
+      return { iso: now.toISOString(), readable: now.toString() };
+    },
+  });
+
   // ── Conversation-launch state ────────────────────────────────────────────────
-  const { appendMessage, visibleMessages, reset } = useCopilotChat();
+  const { appendMessage, visibleMessages } = useCopilotChat();
+  // Server-side persistence: autosaves each turn + restores saved threads. Additive
+  // — it observes CopilotKit, doesn't change how the chat runs. See use-chat-persistence.
+  const persistence = useChatPersistence();
   const [sent, setSent] = useState(false); // flips the hero → conversation the instant you send
   const [pinnedFields, setPinnedFields] = useState<string[]>([]); // fields brought in via search
   const [pinnedElements, setPinnedElements] = useState<PinnedElement[]>([]); // workflow source/output summoned in
@@ -675,7 +806,14 @@ export function useAssistant() {
   const say = (content: string) => { appendMessage(new TextMessage({ content, role: Role.User })); setSent(true); };
   const threadEmpty = (visibleMessages?.length ?? 0) === 0;
   const showHero = threadEmpty && !sent; // centered composer until the first message
-  const newChat = () => { reset(); setSent(false); };
+  // New chat: clear the store + start a fresh (unsaved-until-first-message) thread.
+  const newChat = () => { persistence.startNewThread(); setSent(false); };
+  // Restore a saved conversation from history, then show it (not the hero).
+  const openThread = async (id: string) => {
+    const ok = await persistence.loadThread(id);
+    if (ok) setSent(true);
+    return ok;
+  };
 
   // ── Launcher handlers ────────────────────────────────────────────────────────
   const launchOpenPage = (pageKey: string) => {
@@ -825,6 +963,8 @@ export function useAssistant() {
   return {
     // conversation
     say, newChat, showHero, threadEmpty,
+    // persistence (saved threads)
+    openThread, activeThreadId: persistence.activeThreadId, saving: persistence.saving,
     // pinned inline cards
     pinnedFields, pinnedElements, setPinnedFields, setPinnedElements,
     pinnedRuns, setPinnedRuns,

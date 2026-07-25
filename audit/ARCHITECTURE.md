@@ -521,4 +521,14 @@ Default dataset loaded on demo/new workflow:
 - External API calls from blocks (stubbed)
 - Real integration execution (stubbed)
 
-**Now server-side:** the chat workspace agent (`/api/chat-workspace`) — LLM tool-selection runs on the server; tool *execution* stays on the client (against Jotai atoms).
+**Now server-side:** the chat workspace agent (`/api/chat-workspace`) — LLM tool-selection runs on the server; tool *execution* stays on the client (against Jotai atoms). **Also server-side now:** saved chat transcripts, company-document storage + metadata, and document RAG (see "Persistence & RAG" below).
+
+## Persistence & RAG — saved chats + company documents (2026-07-25)
+
+The DB layer (Supabase Postgres via Drizzle) gained two capabilities. Both are **fail-soft** — unset `DATABASE_URL`/Storage keys degrade to "no persistence" and the app runs on localStorage as before. Setup: [`docs/persistence-setup.md`](../docs/persistence-setup.md).
+
+**Connection (Supabase + Vercel).** `platform/db/index.ts` uses `DATABASE_URL` (Supavisor **transaction pooler**, port 6543) with **`prepare:false`** for app queries; migrations use `DIRECT_URL` (port 5432) via `drizzle.config.ts` + `migrationClient`.
+
+**Saved chats (per-user, full fidelity).** Tables `chat_threads` + `chat_messages` (`platform/db/schema.ts`); repository `features/assistant/runtime/chat/repository.ts`; routes `app/api/chat/threads/*`. The conversation stays owned by CopilotKit client-side; `useChatPersistence` (`features/assistant/runtime/chat/use-chat-persistence.ts`, called inside `useAssistant`) observes `visibleMessages`, **projects** them to a serializable shape (`message-codec.ts` — text + tool name/args/result, NOT the non-serializable `render` closures), and **debounce-autosaves** each settled turn. Restore feeds reconstructed `Message` instances to `useCopilotMessagesContext().setMessages`; CopilotKit re-attaches generative-UI renders from the live action registry by tool `name`. `activeChatThreadIdAtom` (localStorage) holds the current thread. Fidelity note: pinned deterministic run cards live in local React state and are not part of the saved transcript.
+
+**Company documents + RAG.** Bytes live in **Supabase Storage** (`platform/storage/supabase.ts`, service-role, server-only); metadata + status in `documents`; chunks + embeddings in `document_chunks` (pgvector `vector(1536)`, HNSW cosine index). Flow: `POST /api/documents/upload-url` creates the row + a **signed direct-upload URL** → the browser PUTs bytes straight to Storage (bypasses Vercel's 4.5 MB body limit) → `POST /api/documents/:id/complete` marks `processing` and runs ingestion via `after()` (extract → chunk → embed, `platform/rag/*`) → status `ready`/`failed`. Retrieval: `POST /api/documents/search` embeds the query and cosine-ranks chunks (`platform/rag/retrieve.ts`), exposed to Sina as the **`searchCompanyDocuments`** tool (cited passages). **Large-doc caveat:** ingestion runs in one `after()` call; a very large document can exceed the serverless max duration — a durable background worker is the follow-up.

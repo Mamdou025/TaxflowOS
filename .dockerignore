@@ -1,0 +1,41 @@
+# Never copy host build artifacts into the image — they're rebuilt inside the
+# Linux container. Critical on Windows/macOS hosts: host node_modules contain
+# platform-specific native binaries that break in the container.
+node_modules
+.next
+.swc
+out
+build
+
+# VCS + IDE
+.git
+.gitignore
+.vscode
+.idea
+
+# Secrets — passed at runtime via --env-file / -e, never baked into the image
+.env
+.env.*
+
+# Tests / reports / tooling
+coverage
+test-results
+playwright-report
+blob-report
+playwright/.cache
+*.tsbuildinfo
+.copilot-trace
+tmp
+
+# Docs / meta (not needed to run)
+audit
+docs
+README.md
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.vercel
+.DS_Store
