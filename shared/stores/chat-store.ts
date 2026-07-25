@@ -1,8 +1,21 @@
 import { atom } from 'jotai';
+import { atomWithStorage } from 'jotai/utils';
 
 // The conversation itself is now owned by CopilotKit (see CopilotWorkspacePanel).
 // These two atoms are all that remains: the panel's open state and a small
 // page-context label that pages set (e.g. the OrbitalStage breadcrumb).
+
+/**
+ * The id of the conversation currently shown in the chat. Persisted to
+ * localStorage so a reload stays on the same thread (and so the save path keeps
+ * writing to it) before/without server-side hydration. `null` = a brand-new,
+ * not-yet-saved conversation; the persistence layer mints an id on first save.
+ * See features/assistant/runtime/chat/use-chat-persistence.ts.
+ */
+export const activeChatThreadIdAtom = atomWithStorage<string | null>(
+  'inscope.chat.activeThreadId',
+  null
+);
 
 export type ChatPageContext = {
   page: string;

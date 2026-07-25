@@ -1,5 +1,14 @@
 import { relations } from "drizzle-orm";
-import { boolean, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  vector,
+} from "drizzle-orm/pg-core";
 import type { IntegrationType } from "@/lib/types/integration";
 import { generateId } from "@/lib/utils/id";
 
@@ -187,6 +196,150 @@ export const assistantMemories = pgTable("assistant_memories", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Chat persistence — saved Sina conversations (per-user, full-fidelity transcript).
+// A thread is one conversation; a message row is the PROJECTED, serializable
+// CopilotKit log entry (text + tool name/args/result) — NOT the raw message object,
+// which carries a non-serializable generative-UI `render` closure. On reload the
+// client re-associates each tool call's render from the live useCopilotAction
+// registry, so only the serializable args need to be stored.
+// ─────────────────────────────────────────────────────────────────────────────
+export type ChatMessageRole = "user" | "assistant" | "tool" | "system";
+
+/** One tool call within a message (generative-UI action, workflow run, etc.). */
+export type ChatToolCall = {
+  name: string;
+  // biome-ignore lint/suspicious/noExplicitAny: JSONB payload - plain JSON args/result
+  args?: any;
+  // biome-ignore lint/suspicious/noExplicitAny: JSONB payload - plain JSON args/result
+  result?: any;
+  // Links an action-execution message to its result message on restore (the
+  // ResultMessage.actionExecutionId / ActionExecutionMessage.id pairing).
+  callId?: string;
+};
+
+/** The serializable projection of a CopilotKit message we persist. */
+export type ChatMessageContent = {
+  text?: string;
+  toolCall?: ChatToolCall;
+};
+
+export const chatThreads = pgTable(
+  "chat_threads",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => generateId()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    clientId: text("client_id"), // optional scope: the active client (null = unscoped)
+    title: text("title"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    archivedAt: timestamp("archived_at"),
+  },
+  (t) => [
+    // List a user's threads, most-recently-updated first.
+    index("chat_threads_user_updated_idx").on(t.userId, t.updatedAt),
+  ]
+);
+
+export const chatMessages = pgTable(
+  "chat_messages",
+  {
+    // The CopilotKit message id (stable across turns) — upsert key, not app-generated.
+    id: text("id").primaryKey(),
+    threadId: text("thread_id")
+      .notNull()
+      .references(() => chatThreads.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id), // denormalized tenancy filter
+    role: text("role").notNull().$type<ChatMessageRole>(),
+    seq: integer("seq").notNull(), // ordering within the thread
+    content: jsonb("content").notNull().$type<ChatMessageContent>(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    // Fetch a thread's messages in order.
+    index("chat_messages_thread_seq_idx").on(t.threadId, t.seq),
+  ]
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Company documents — large files stored in Supabase Storage (bytes), with their
+// metadata + processing status here. `storageKey` points at the object in
+// `storageBucket`; the raw bytes never live in Postgres. Chunks + embeddings for
+// retrieval live in `document_chunks` (added in the RAG phase).
+// ─────────────────────────────────────────────────────────────────────────────
+export type DocumentStatus = "uploading" | "processing" | "ready" | "failed";
+
+export const documents = pgTable(
+  "documents",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => generateId()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    clientId: text("client_id"), // optional scope: the owning client/company
+    fileName: text("file_name").notNull(),
+    mimeType: text("mime_type"),
+    sizeBytes: integer("size_bytes"),
+    storageBucket: text("storage_bucket").notNull(),
+    storageKey: text("storage_key").notNull(),
+    status: text("status").notNull().default("uploading").$type<DocumentStatus>(),
+    extractedChars: integer("extracted_chars"),
+    pageCount: integer("page_count"),
+    error: text("error"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    // List a user's documents, newest first.
+    index("documents_user_created_idx").on(t.userId, t.createdAt),
+  ]
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Document chunks — the RAG index. Each row is a slice of a document's text plus
+// its embedding (pgvector). Retrieval embeds the query and finds the nearest
+// chunks (cosine distance) scoped to the user/client. Cascade-deleted with the
+// parent document. Embeddings are OpenAI text-embedding-3-small → 1536 dims.
+// ─────────────────────────────────────────────────────────────────────────────
+export const EMBEDDING_DIMENSIONS = 1536;
+
+export const documentChunks = pgTable(
+  "document_chunks",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => generateId()),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => documents.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id), // denormalized tenancy filter
+    clientId: text("client_id"),
+    chunkIndex: integer("chunk_index").notNull(),
+    content: text("content").notNull(),
+    tokens: integer("tokens"),
+    embedding: vector("embedding", { dimensions: EMBEDDING_DIMENSIONS }).notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("document_chunks_document_idx").on(t.documentId),
+    // Approximate-nearest-neighbour index for cosine similarity search.
+    index("document_chunks_embedding_idx").using(
+      "hnsw",
+      t.embedding.op("vector_cosine_ops")
+    ),
+  ]
+);
+
 // Relations
 export const workflowExecutionsRelations = relations(
   workflowExecutions,
@@ -197,6 +350,28 @@ export const workflowExecutionsRelations = relations(
     }),
   })
 );
+
+export const documentsRelations = relations(documents, ({ many }) => ({
+  chunks: many(documentChunks),
+}));
+
+export const documentChunksRelations = relations(documentChunks, ({ one }) => ({
+  document: one(documents, {
+    fields: [documentChunks.documentId],
+    references: [documents.id],
+  }),
+}));
+
+export const chatThreadsRelations = relations(chatThreads, ({ many }) => ({
+  messages: many(chatMessages),
+}));
+
+export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
+  thread: one(chatThreads, {
+    fields: [chatMessages.threadId],
+    references: [chatThreads.id],
+  }),
+}));
 
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
@@ -212,3 +387,11 @@ export type ApiKey = typeof apiKeys.$inferSelect;
 export type NewApiKey = typeof apiKeys.$inferInsert;
 export type AssistantMemory = typeof assistantMemories.$inferSelect;
 export type NewAssistantMemory = typeof assistantMemories.$inferInsert;
+export type ChatThread = typeof chatThreads.$inferSelect;
+export type NewChatThread = typeof chatThreads.$inferInsert;
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type NewChatMessage = typeof chatMessages.$inferInsert;
+export type DocumentRow = typeof documents.$inferSelect;
+export type NewDocumentRow = typeof documents.$inferInsert;
+export type DocumentChunk = typeof documentChunks.$inferSelect;
+export type NewDocumentChunk = typeof documentChunks.$inferInsert;

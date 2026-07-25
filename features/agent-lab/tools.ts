@@ -10,7 +10,7 @@
 
 import { tool, type ToolSet } from 'ai';
 import { z } from 'zod';
-import { fetchAnnualAverageExchangeRate } from '@/shared/workflow-engine/execution/blocks/source/currency-rate/schema';
+import { AGENT_TOOL_REGISTRY } from '@/platform/agent-tools/registry';
 import type { AgentLabDoc } from './catalog';
 
 // ── TEMPLATE TOOLS (safe sandbox) ────────────────────────────────────────────
@@ -70,184 +70,20 @@ const recallNotes = tool({
   execute: () => Promise.resolve({ notes: savedNotes }),
 });
 
-// ── REAL CAPABILITIES (live data / your integrations) ────────────────────────
-
-const getFxRate = tool({
-  description:
-    'Get the annual-average exchange rate between two currencies using live Bank of Canada data.',
-  inputSchema: z.object({
-    from: z.string().describe('source currency code, e.g. USD'),
-    to: z.string().describe('target currency code, e.g. CAD'),
-    year: z.number().optional().describe('calendar year; defaults to the current year'),
-  }),
-  execute: async ({ from, to, year }) => {
-    const resolvedYear = year ?? new Date().getFullYear();
-    try {
-      const result = await fetchAnnualAverageExchangeRate({
-        documentCurrency: from.toUpperCase(),
-        reportingCurrency: to.toUpperCase(),
-        year: resolvedYear,
-      });
-      return { from, to, year: resolvedYear, provider: 'bank_of_canada', ...result };
-    } catch (error) {
-      return { error: error instanceof Error ? error.message : 'FX lookup failed.' };
-    }
-  },
-});
-
-const WEB_PAGE_MAX_CHARS = 15_000;
-
-const fetchWebPage = tool({
-  description:
-    'Fetch a public web page and return its readable text so you can answer about the WHOLE page (not just the top). ' +
-    'Returns up to ~15k characters; if `truncated` is true, the tail was cut — say so if the answer might be past it.',
-  inputSchema: z.object({ url: z.string().url() }),
-  execute: async ({ url }) => {
-    try {
-      const res = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 (AgentLab)' } });
-      const html = await res.text();
-      const text = html
-        .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-        .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-      const truncated = text.length > WEB_PAGE_MAX_CHARS;
-      return {
-        url,
-        status: res.status,
-        totalChars: text.length,
-        truncated,
-        text: truncated ? text.slice(0, WEB_PAGE_MAX_CHARS) : text,
-      };
-    } catch (error) {
-      return { url, error: error instanceof Error ? error.message : 'fetch failed' };
-    }
-  },
-});
-
-// ── CANADIAN TAX: live lookup on official sources (CRA / canada.ca) ──────────
-// Uses Firecrawl search (same REST endpoint as plugins/firecrawl), but scopes the
-// query to official Canadian tax domains and hard-filters results to them — so the
-// agent answers current/authoritative Canadian tax questions with a citable URL
-// instead of relying on frozen training data.
-const OFFICIAL_CA_TAX_HOSTS = ['canada.ca', 'cra-arc.gc.ca'];
-
-function hostMatches(url: string, host: string): boolean {
-  try {
-    const h = new URL(url).hostname.toLowerCase();
-    return h === host || h.endsWith(`.${host}`);
-  } catch {
-    return false;
-  }
+// ── SHARED CAPABILITIES (live data + template calc) ──────────────────────────
+// getFxRate / fetchWebPage / searchCanadianTax / estimateForeignIncomeTax are sourced
+// from the SHARED registry (platform/agent-tools/registry.ts), so the Agent Lab (here)
+// and Sina's live chat run the EXACT same code — prototype/adjust a tool here and Sina
+// inherits it with no re-implementation, no drift. Each is a thin tool() wrapper.
+function fromRegistry(id: keyof typeof AGENT_TOOL_REGISTRY) {
+  const def = AGENT_TOOL_REGISTRY[id];
+  return tool({ description: def.description, inputSchema: def.inputSchema, execute: (args) => def.run(args) });
 }
 
-const searchCanadianTax = tool({
-  description:
-    'Search official Canadian tax sources (canada.ca and the CRA) for current rules, rates, forms, and deadlines. ' +
-    'Use this whenever the answer depends on up-to-date or authoritative Canadian tax info rather than your training ' +
-    'data. Returns titles, URLs, and snippets — cite the source URL in your answer.',
-  inputSchema: z.object({
-    query: z.string().describe('what to look up, e.g. "capital gains inclusion rate 2024"'),
-    limit: z.number().optional().describe('max results (default 5, max 10)'),
-  }),
-  execute: async ({ query, limit }) => {
-    const apiKey = process.env.FIRECRAWL_API_KEY;
-    if (!apiKey) {
-      return { error: 'FIRECRAWL_API_KEY is not set in .env.local — it is required for Canadian tax lookups.' };
-    }
-    const scopedQuery = `${query} (site:canada.ca OR site:cra-arc.gc.ca)`;
-    try {
-      const res = await fetch('https://api.firecrawl.dev/v1/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({ query: scopedQuery, limit: Math.min(Math.max(limit ?? 5, 1), 10) }),
-      });
-      if (!res.ok) {
-        return { error: `Search failed: HTTP ${res.status}` };
-      }
-      const json = (await res.json()) as { success: boolean; data?: unknown[]; error?: string };
-      if (!json.success) {
-        return { error: json.error ?? 'Search failed.' };
-      }
-      const items = (json.data ?? []) as { url?: string; title?: string; description?: string }[];
-      const results = items
-        .filter((r) => typeof r.url === 'string' && OFFICIAL_CA_TAX_HOSTS.some((h) => hostMatches(r.url as string, h)))
-        .map((r) => ({ title: r.title ?? '', url: r.url as string, snippet: (r.description ?? '').slice(0, 600) }));
-      return {
-        query,
-        results,
-        note: results.length === 0 ? 'No results from official Canadian sources — try rephrasing the query.' : undefined,
-      };
-    } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Canadian tax lookup failed.' };
-    }
-  },
-});
-
-// ── TEMPLATE WORKFLOW: 3 inputs → a calculation with context ─────────────────
-// A small, self-contained example. Give it three inputs (type them in chat or
-// attach a file with them): a gross income amount, its currency, and a tax year.
-// It converts to CAD with the LIVE Bank of Canada rate, then estimates combined
-// corporate tax using a $500k small-business threshold. The rates are illustrative
-// (returned in `assumptions` so you see the "context") — not tax advice.
-const SMALL_BIZ_THRESHOLD_CAD = 500_000;
-const SMALL_BIZ_RATE = 0.122; // combined federal+provincial small-business rate (illustrative)
-const GENERAL_RATE = 0.265; // combined general corporate rate (illustrative)
-
-const estimateForeignIncomeTax = tool({
-  description:
-    'TEMPLATE (3 inputs → result): estimate Canadian corporate tax on foreign-currency income. ' +
-    'Requires grossIncome (amount in its foreign currency), currency (code like USD), and taxYear. ' +
-    'Converts to CAD with the live Bank of Canada rate, applies a combined corporate rate with a ' +
-    '$500k small-business threshold, and returns a full breakdown. If any of the three inputs is ' +
-    'missing, ask the user for it before calling.',
-  inputSchema: z.object({
-    grossIncome: z.number().describe('gross income amount in the foreign currency, e.g. 250000'),
-    currency: z.string().describe('the income currency code, e.g. USD'),
-    taxYear: z.number().describe('the tax year, e.g. 2024'),
-  }),
-  execute: async ({ grossIncome, currency, taxYear }) => {
-    const from = currency.toUpperCase();
-    // 1) Convert to CAD using the live annual-average FX rate.
-    let fxRate: number;
-    let fxSource: string;
-    try {
-      const fx = await fetchAnnualAverageExchangeRate({ documentCurrency: from, reportingCurrency: 'CAD', year: taxYear });
-      fxRate = fx.rate;
-      fxSource = fx.rateSource;
-    } catch (error) {
-      return {
-        error:
-          error instanceof Error
-            ? error.message
-            : 'FX lookup failed — try a currency the Bank of Canada publishes against CAD (e.g. USD, EUR, GBP).',
-      };
-    }
-
-    const grossCAD = grossIncome * fxRate;
-
-    // 2) Progressive combined-rate estimate — this is the "context"/rules.
-    const smallBizPortion = Math.min(grossCAD, SMALL_BIZ_THRESHOLD_CAD);
-    const generalPortion = Math.max(grossCAD - SMALL_BIZ_THRESHOLD_CAD, 0);
-    const taxCAD = smallBizPortion * SMALL_BIZ_RATE + generalPortion * GENERAL_RATE;
-    const netCAD = grossCAD - taxCAD;
-
-    return {
-      inputs: { grossIncome, currency: from, taxYear },
-      fx: { rate: Number(fxRate.toFixed(4)), source: fxSource, pair: `${from}->CAD` },
-      grossIncomeCAD: Number(grossCAD.toFixed(2)),
-      taxBreakdown: {
-        smallBusiness: { appliesUpTo: SMALL_BIZ_THRESHOLD_CAD, rate: SMALL_BIZ_RATE, taxedAmount: Number(smallBizPortion.toFixed(2)) },
-        general: { rate: GENERAL_RATE, taxedAmount: Number(generalPortion.toFixed(2)) },
-      },
-      estimatedTaxCAD: Number(taxCAD.toFixed(2)),
-      netIncomeCAD: Number(netCAD.toFixed(2)),
-      effectiveRate: Number((taxCAD / grossCAD).toFixed(4)),
-      assumptions: 'Illustrative combined federal+provincial rates: 12.2% up to $500k CAD, 26.5% above. Not tax advice.',
-    };
-  },
-});
+const getFxRate = fromRegistry('getFxRate');
+const fetchWebPage = fromRegistry('fetchWebPage');
+const searchCanadianTax = fromRegistry('searchCanadianTax');
+const estimateForeignIncomeTax = fromRegistry('estimateForeignIncomeTax');
 
 // ── WORKFLOW-BUILDER ACTIONS (demo echoes on this page) ──────────────────────
 // These mirror your real useCopilotAction tools. On the Agent Lab page there is no

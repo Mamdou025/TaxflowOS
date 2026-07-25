@@ -1,8 +1,22 @@
 # UI Components
 
-*Last updated: 2026-07-24*
+*Last updated: 2026-07-25*
 
 ---
+
+## Sina identity mark [LIVE — 2026-07-25]
+
+- **New `features/assistant/ui/sina-mark.tsx`** — one on-brand identity for the unified assistant Sina: a friendly **coworker figure** (head + shoulders, the 👤 silhouette) in the brand violet, in two forms:
+  - **`SinaGlyph`** — a **neumorphic** avatar built in the InScope dial's vocabulary (`inscope-neu-mark.tsx`): a soft raised disc with a **debossed inner well** cradling the softly-lit violet figure (clipped to the well; a subtle head sheen + `isneu-glow-p` halo). Self-contained SVG (namespaced ids via `useId`) that **reuses the shared `isneu-*` classes** (`isneu-disc-*`, `isneu-inner-*`, `isneu-nm-hl/sh`, `isneu-in-sh/hl`, `isneu-glow-p`), so its highlights/shadows **flip with the light↔dark theme** via `globals.css`. `overflow: visible` so the soft neu elevation isn't clipped. Reads at 22–26px.
+  - **`SinaMarkIcon`** — an **outline** person drawn in lucide's exact style (24 viewBox, `stroke: currentColor`, width 2, round caps — the canonical `UserRound` geometry), lucide-compatible (`{ size }`), for the sidebar. Stroked (NOT filled) so it sits at the same weight as the lucide line icons beside it (Workflows / Dashboard / Documents).
+- **`CoworkerAvatar`** (`coworker-avatar.tsx`) renders `SinaGlyph` for the Sina coworker (`coworker.id === SINA.id`) **unclipped** (so its own soft shadow reads); every other actor keeps initials-on-accent. Upgrades Sina's face **everywhere at once** (chat thread avatars, work-menu trigger, run cards).
+- **Scope sidebar "Agent" row** (`copilot-workspace-panel.tsx` `WORKSPACE_ITEMS`) swapped from the generic lucide **`Bot`** to **`SinaMarkIcon`**. (Its `Icon` type widened to `ComponentType<{ size?: number | string }>`; unused `Bot`/`GitFork` imports dropped.) tsc clean.
+- **Iterations (same day):** flat violet gradient disc → neumorphic disc (to match the surfaces) → the inner mark went from a four-point **spark** to the **coworker figure** (the spark read as too generic; Sina is a coworker).
+
+## Saved chats + documents library [LIVE — 2026-07-25]
+
+- **Recent chats** — a sidebar section in the Scope panel (`copilot-workspace-panel.tsx`) rendering `features/assistant/ui/chat-history.tsx`: the user's real saved conversations (Postgres) with reopen (click), rename (double-click), delete, and relative timestamps. Highlights the active thread. Distinct from the mock "Clients & Chats" folder tree (`client-folders.tsx`), which is a local scaffold and is left as-is. Autosave/restore are wired through `useAssistant` (`newChat` → `startNewThread`, `openThread`).
+- **Documents library** — `features/documents/documents-library.tsx` at route **`/documents`** (`app/documents/page.tsx`, neumorphic sidebar for nav parity): drag-drop / picker upload with progress, a list with per-doc **status badges** (Uploading / Processing / Ready / Failed), open (signed URL → new tab), and delete. Light polling refreshes status while anything is processing. Upload goes through `features/documents/upload-client.ts` (signed URL → direct Storage PUT → complete).
 
 ## Layout Overview
 
