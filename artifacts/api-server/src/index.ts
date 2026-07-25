@@ -1,5 +1,32 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { db, users, eq } from "@workspace/db";
+
+// Ensure the anonymous user row exists — it is the FK anchor for all data
+// written before real auth is wired up. Safe to run on every startup (no-op
+// if the row already exists).
+const ANONYMOUS_USER_ID = "anonymous";
+try {
+  const existing = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.id, ANONYMOUS_USER_ID))
+    .limit(1);
+  if (!existing.length) {
+    await db.insert(users).values({
+      id: ANONYMOUS_USER_ID,
+      name: "Guest",
+      emailVerified: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isAnonymous: true,
+    });
+    logger.info("Seeded anonymous user row");
+  }
+} catch (err) {
+  // Non-fatal — DB may not have the users table yet (first deploy before migration).
+  logger.warn({ err }, "Could not seed anonymous user; ensure migrations have run");
+}
 
 const rawPort = process.env["PORT"];
 

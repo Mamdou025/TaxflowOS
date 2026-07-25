@@ -1,0 +1,630 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@view-transition {
+  navigation: auto;
+}
+
+/* Root crossfade for client-side view transitions (see lib/view-transition.ts).
+   Asymmetric — the outgoing page fades a touch faster than the incoming settles,
+   so a light→dark move (home → Scope) reads as "entering" rather than a hard cut. */
+::view-transition-old(root) {
+  animation: 200ms cubic-bezier(0.4, 0, 0.2, 1) both vt-root-out;
+}
+::view-transition-new(root) {
+  animation: 320ms cubic-bezier(0.22, 1, 0.36, 1) both vt-root-in;
+}
+@keyframes vt-root-out {
+  to { opacity: 0; }
+}
+@keyframes vt-root-in {
+  from { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation: none; }
+}
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+  --node-source-bg: oklch(0.17 0.016 195);
+  --node-logic-bg: oklch(0.15 0.016 150);
+  --node-review-bg: oklch(0.16 0.020 75);
+  --node-protected-bg: oklch(0.14 0.020 280);
+  --node-output-bg: oklch(0.14 0.022 245);
+  --node-ai-bg: oklch(0.15 0.022 305);
+  --node-badge-bg: oklch(0.12 0.012 275);
+}
+
+.dark {
+  --background: oklch(0 0 0);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.08 0.006 250);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.09 0.006 250);
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.98 0 0);
+  --primary-foreground: oklch(0.09 0 0);
+  --secondary: oklch(0.12 0.006 250);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.15 0.008 245);
+  --muted-foreground: oklch(0.65 0 0);
+  --accent: oklch(0.16 0.008 245);
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.65 0.25 29);
+  --border: oklch(0.25 0.008 240);
+  --input: oklch(0.25 0.008 240);
+  --ring: oklch(0.8 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0 0 0);
+  --sidebar-foreground: oklch(0.65 0 0);
+  --sidebar-primary: oklch(0.98 0 0);
+  --sidebar-primary-foreground: oklch(0 0 0);
+  --sidebar-accent: oklch(0.1 0 0);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(0.18 0 0);
+  --sidebar-ring: oklch(0.8 0 0);
+  --node-source-bg: oklch(0.17 0.016 195);
+  --node-logic-bg: oklch(0.15 0.016 150);
+  --node-review-bg: oklch(0.16 0.020 75);
+  --node-protected-bg: oklch(0.14 0.020 280);
+  --node-output-bg: oklch(0.14 0.022 245);
+  --node-ai-bg: oklch(0.15 0.022 305);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  }
+  html,
+  body {
+    @apply overflow-hidden;
+  }
+}
+
+/* This layer is by next-forge */
+@layer base {
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    @apply border-border;
+  }
+  * {
+    @apply min-w-0;
+  }
+  html {
+    text-rendering: optimizelegibility;
+  }
+  body {
+    @apply min-h-dvh;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    @apply text-muted-foreground;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    @apply cursor-pointer;
+  }
+}
+
+@keyframes dashdraw {
+  from {
+    stroke-dashoffset: 10;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* React Flow grid — themed via --sx-canvas-grid. The <Background color> prop is
+   set as an SVG stroke/fill attribute where var() may not resolve, so pin it here
+   (CSS wins over the presentation attribute). Lines use stroke; dots use fill. */
+.react-flow__background-pattern.lines,
+.react-flow__background-pattern path {
+  stroke: var(--sx-canvas-grid) !important;
+}
+.react-flow__background-pattern.dots,
+.react-flow__background-pattern circle {
+  fill: var(--sx-canvas-grid) !important;
+}
+
+/* React Flow attribution styling */
+.react-flow__attribution {
+  background: transparent !important;
+  padding: 2px 4px !important;
+  font-size: 10px !important;
+  opacity: 0.4 !important;
+}
+
+.dark .react-flow__attribution {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.dark .react-flow__attribution a {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.workflow-studio-overlay {
+  --background: oklch(0.985 0 0);
+  --foreground: oklch(0.19 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.19 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.19 0 0);
+  --primary: oklch(0.25 0 0);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.94 0 0);
+  --secondary-foreground: oklch(0.22 0 0);
+  --muted: oklch(0.94 0 0);
+  --muted-foreground: oklch(0.48 0 0);
+  --accent: oklch(0.91 0 0);
+  --accent-foreground: oklch(0.2 0 0);
+  --border: oklch(0.88 0 0);
+  --input: oklch(0.88 0 0);
+  --ring: oklch(0.58 0 0);
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.dark .workflow-studio-overlay {
+  --background: oklch(0.11 0.008 250);
+  --foreground: oklch(0.95 0 0);
+  --card: oklch(0.14 0.008 248);
+  --card-foreground: oklch(0.95 0 0);
+  --popover: oklch(0.14 0.008 248);
+  --popover-foreground: oklch(0.95 0 0);
+  --primary: oklch(0.92 0 0);
+  --primary-foreground: oklch(0.11 0 0);
+  --secondary: oklch(0.18 0.008 245);
+  --secondary-foreground: oklch(0.92 0 0);
+  --muted: oklch(0.18 0.008 245);
+  --muted-foreground: oklch(0.60 0 0);
+  --accent: oklch(0.20 0.008 245);
+  --accent-foreground: oklch(0.92 0 0);
+  --border: oklch(0.28 0.008 240);
+  --input: oklch(0.28 0.008 240);
+  --ring: oklch(0.72 0 0);
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* React Flow pane cursor */
+.react-flow__pane {
+  cursor: grab !important;
+}
+
+.react-flow__pane:active {
+  cursor: grabbing !important;
+}
+
+/* React Flow node and edge cursor */
+.react-flow__node {
+  cursor: pointer !important;
+}
+
+/* When dragging a node, show grabbing cursor */
+.react-flow__node.dragging {
+  cursor: grabbing !important;
+}
+
+.react-flow__edge {
+  cursor: pointer !important;
+}
+
+/* React Flow handle positioning and styling */
+.react-flow__handle {
+  width: 12px !important;
+  height: 12px !important;
+  border: 2px solid var(--border) !important;
+  border-radius: 50% !important;
+  background: var(--primary) !important;
+  cursor: crosshair !important;
+  z-index: 20 !important;
+}
+
+/* Invisible hit area for desktop */
+.react-flow__handle::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 24px !important;
+  height: 24px !important;
+}
+
+/* Invisible hit area for mobile with WCAG minimum target size */
+@media (max-width: 768px) {
+  .react-flow__handle::after {
+    width: 44px !important;
+    height: 44px !important;
+  }
+}
+
+.react-flow__handle-left {
+  left: -0.5px !important;
+}
+
+.react-flow__handle-right {
+  right: -0.5px !important;
+}
+
+/* Safe area support for mobile devices */
+@supports (height: 100dvh) {
+  html,
+  body {
+    height: 100dvh;
+  }
+}
+
+/* Safe area support for mobile devices */
+@media (max-width: 768px) {
+  .workflow-controls-panel {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 5.5rem) !important;
+  }
+}
+
+/* Neumorphic design utilities — matches OrbitalStage's #eaeaef palette */
+:root {
+  --neu-bg: #eaeaef;
+  --neu-shadow-up: -4px -4px 9px rgba(255, 255, 255, 0.86), 4px 4px 9px rgba(158, 158, 178, 0.42);
+  --neu-shadow-menu: -5px -5px 11px rgba(255, 255, 255, 0.86), 5px 5px 11px rgba(158, 158, 178, 0.42);
+  --neu-shadow-press: inset 3px 3px 7px rgba(158, 158, 178, 0.38), inset -3px -3px 7px rgba(255, 255, 255, 0.84);
+  --neu-text: oklch(0.25 0 0);
+  --neu-text-muted: oklch(0.50 0 0);
+}
+
+.dark {
+  --neu-bg: oklch(0.14 0.010 250);
+  --neu-shadow-up: -3px -3px 7px rgba(44, 56, 85, 0.4), 3px 3px 7px rgba(0, 0, 0, 0.55);
+  --neu-shadow-menu: -4px -4px 9px rgba(44, 56, 85, 0.4), 4px 4px 9px rgba(0, 0, 0, 0.6);
+  --neu-shadow-press: inset 2px 2px 5px rgba(0, 0, 0, 0.45), inset -2px -2px 5px rgba(44, 56, 85, 0.35);
+  --neu-text: oklch(0.88 0 0);
+  --neu-text-muted: oklch(0.60 0 0);
+}
+
+.neu-surface {
+  background: var(--neu-bg) !important;
+  box-shadow: var(--neu-shadow-up) !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  color: var(--neu-text);
+}
+
+/* Ghost button inside neu-surface: pressed look on hover / open */
+.neu-action:not(:disabled):hover,
+.neu-action[data-state="open"] {
+  background: #d8d8e2 !important;
+  box-shadow: var(--neu-shadow-press) !important;
+  border-radius: calc(var(--radius) - 4px);
+}
+.dark .neu-action:not(:disabled):hover,
+.dark .neu-action[data-state="open"] {
+  background: oklch(0.11 0.010 250) !important;
+}
+
+.neu-menu {
+  background: var(--neu-bg) !important;
+  box-shadow: var(--neu-shadow-menu) !important;
+  border: none !important;
+  color: var(--neu-text);
+}
+
+.neu-menu [data-highlighted] {
+  background: #d8d8e2 !important;
+  box-shadow: var(--neu-shadow-press) !important;
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.dark .neu-menu [data-highlighted] {
+  background: oklch(0.11 0.010 250) !important;
+}
+
+.neu-menu [data-state="open"][data-slot="dropdown-menu-sub-trigger"],
+.neu-menu [data-state="open"][data-slot="context-menu-sub-trigger"] {
+  background: #d8d8e2 !important;
+  box-shadow: var(--neu-shadow-press) !important;
+  border-radius: calc(var(--radius) - 4px);
+}
+
+.dark .neu-menu [data-state="open"][data-slot="dropdown-menu-sub-trigger"],
+.dark .neu-menu [data-state="open"][data-slot="context-menu-sub-trigger"] {
+  background: oklch(0.11 0.010 250) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   THEME DESIGN TOKENS — the single source of truth for the light/dark switch.
+
+   The neumorphic redesign hardcoded light hex/rgba in JS palettes (NEU, LC) and
+   inline styles, so it could not flip with the `.dark` class. These tokens fix
+   that: every themeable surface now reads `var(--sx-*)`, whose `:root` value is
+   the EXACT current light value (so Light mode is unchanged) and whose `.dark`
+   value is the dark counterpart. Because these are consumed in inline `style={}`
+   and Tailwind arbitrary values, flipping `.dark` on <html> re-skins the app with
+   no React re-render. Toggle lives in the sidebars (next-themes).
+   ───────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* Page / canvas grounds (recessed spaces behind the neumorphic panels) */
+  --sx-ground: #c9c9d4;          /* grid pages + builder board + chat portal ground */
+  --sx-ground-outer: #DAE0EA;    /* exterior canvas behind the Scope panels */
+  --sx-ground-run: #EEF0F5;      /* /run/* light neumorphic pages */
+  --sx-nav-bar: #eaeaef;         /* floating top-nav bar */
+  --sx-nav-track: #e6e7ec;       /* nav pill track */
+  --sx-nav-pill: #f4f5f8;        /* active nav pill */
+
+  /* Neumorphic surfaces (NEU + LC base) */
+  --sx-surface: #F4F5F8;         /* NEU.bg / LC.bg / LC.sidebar — the neu ground */
+  --sx-raised: #F8F9FB;          /* NEU.surface / LC.surface — raised elements */
+  --sx-raised-hover: #E9ECF2;    /* LC.surfaceHover */
+  --sx-panel: #F1F2F6;           /* LC.panel — inline page panel backdrop */
+  --sx-card: #ffffff;            /* opaque cards (dashboard, worksheet frame, modal) */
+
+  /* Ink */
+  --sx-ink: #202735;             /* NEU/LC primary text */
+  --sx-body: #3A4150;            /* LC.body — softer body text */
+  --sx-muted: #7C8493;           /* NEU/LC muted */
+  --sx-faint: #A8AEBA;           /* NEU/LC faint */
+
+  /* Accent (purple) */
+  --sx-accent: #6B21A8;
+  --sx-accent-strong: #7C3AED;
+  --sx-accent-soft: rgba(107, 33, 168, 0.10);   /* active-row / chip tint */
+  --sx-accent-ink: #ffffff;                      /* text on a filled accent button */
+
+  /* Hairlines / dividers */
+  --sx-hairline: rgba(150, 156, 172, 0.22);      /* LC.border */
+  --sx-hairline-subtle: rgba(150, 156, 172, 0.13); /* LC.borderSubtle */
+  --sx-divider: rgba(158, 158, 178, 0.28);
+  --sx-hover-tint: rgba(158, 158, 178, 0.12);    /* neu-row hover */
+  --sx-portal-strip: rgba(255, 255, 255, 0.35);  /* recessed page tab strip */
+  --sx-scrim: rgba(244, 244, 246, 0.7);          /* modal backdrop */
+
+  /* Neumorphic dual shadows — NEU sizing */
+  --sx-shadow-out: 8px 8px 18px rgba(158, 158, 178, 0.34), -8px -8px 18px rgba(255, 255, 255, 0.82);
+  --sx-shadow-sm: 4px 4px 10px rgba(158, 158, 178, 0.30), -4px -4px 10px rgba(255, 255, 255, 0.78);
+  --sx-shadow-in: inset 4px 4px 9px rgba(158, 158, 178, 0.30), inset -4px -4px 9px rgba(255, 255, 255, 0.78);
+  /* LC sizing (chat bubbles / composer) */
+  --sx-chat-shadow-out: 6px 6px 15px rgba(158, 158, 178, 0.32), -6px -6px 15px rgba(255, 255, 255, 0.85);
+  --sx-chat-shadow-sm: 3px 3px 8px rgba(158, 158, 178, 0.26), -3px -3px 8px rgba(255, 255, 255, 0.80);
+  --sx-chat-shadow-in: inset 3px 3px 7px rgba(158, 158, 178, 0.26), inset -3px -3px 7px rgba(255, 255, 255, 0.78);
+  /* Opaque drop shadows (cards / floating panels) */
+  --sx-drop-card: 0 6px 20px rgba(158, 158, 178, 0.35);
+  --sx-drop-panel: 0 18px 44px rgba(0, 0, 0, 0.18);
+  /* Floating top-nav bar elevation (soft lift + white rim highlights) */
+  --sx-nav-shadow: 0 3px 12px rgba(158, 158, 178, 0.30), 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+
+  /* Scope keystone + orb badge (the nav centerpiece) */
+  --sx-orb-badge: linear-gradient(145deg, #F0F4FA 0%, #DCE3EE 100%);
+  --sx-orb-badge-shadow: 1.5px 1.5px 4px rgba(166, 178, 200, 0.5), -1.5px -1.5px 4px rgba(255, 255, 255, 0.95);
+  --sx-orb-disc-shadow: 3px 3px 7px rgba(166, 178, 200, 0.5), -2px -2px 6px rgba(255, 255, 255, 0.95);
+  --sx-orb-disc-shadow-active: 0 0 0 2px rgba(109, 40, 217, 0.5), 3px 3px 8px rgba(109, 40, 217, 0.24), -2px -2px 6px rgba(255, 255, 255, 0.95);
+  --sx-keystone-shadow: 0 8px 20px rgba(166, 178, 200, 0.42), inset 0 1.5px 0 rgba(255, 255, 255, 0.92);
+  --sx-keystone-shadow-active: 0 7px 20px rgba(109, 40, 217, 0.2), inset 0 1.5px 0 rgba(255, 255, 255, 0.92);
+
+  /* Workflow canvas */
+  --sx-canvas-ground: #c9c9d4;              /* the builder board */
+  --sx-canvas-grid: rgba(24, 24, 27, 0.08); /* hairline grid on the board */
+  --sx-node-chip: #141418;                  /* family-node fill (dark chip on light board) */
+  --sx-node-chip-2: #1a1a20;                /* visual-level badge */
+  --sx-node-chip-3: #25252f;                /* visual-level icon shell */
+  --sx-node-title: #202735;                 /* node title ink */
+  --sx-node-title-halo: 0 1px 2px rgba(255, 255, 255, 0.9);
+  --sx-node-drop: drop-shadow(0 3px 9px rgba(30, 30, 45, 0.20));
+  --sx-edge-idle: rgb(71 85 105);           /* idle / temporary edge stroke */
+  --sx-legend-bg: rgba(26, 26, 32, 0.88);   /* canvas legend (dark island, both themes) */
+}
+
+.dark {
+  --sx-ground: #101014;
+  --sx-ground-outer: #0b0b0e;
+  --sx-ground-run: #101014;
+  --sx-nav-bar: #17171c;
+  --sx-nav-track: #101014;
+  --sx-nav-pill: #23232b;
+
+  --sx-surface: #1a1a20;
+  --sx-raised: #22222b;
+  --sx-raised-hover: #2a2a34;
+  --sx-panel: #161620;
+  --sx-card: #1c1c24;
+
+  --sx-ink: #e7e8ec;
+  --sx-body: #c3c6cf;
+  --sx-muted: #8b93a3;
+  --sx-faint: #59606e;
+
+  --sx-accent: #b590ff;
+  --sx-accent-strong: #c4a6ff;
+  --sx-accent-soft: rgba(181, 144, 255, 0.16);
+  --sx-accent-ink: #17131f;
+
+  --sx-hairline: rgba(255, 255, 255, 0.09);
+  --sx-hairline-subtle: rgba(255, 255, 255, 0.05);
+  --sx-divider: rgba(255, 255, 255, 0.08);
+  --sx-hover-tint: rgba(255, 255, 255, 0.06);
+  --sx-portal-strip: rgba(255, 255, 255, 0.03);
+  --sx-scrim: rgba(6, 6, 9, 0.62);
+
+  --sx-shadow-out: 8px 8px 18px rgba(0, 0, 0, 0.55), -8px -8px 18px rgba(58, 66, 92, 0.30);
+  --sx-shadow-sm: 4px 4px 10px rgba(0, 0, 0, 0.50), -4px -4px 10px rgba(58, 66, 92, 0.26);
+  --sx-shadow-in: inset 4px 4px 9px rgba(0, 0, 0, 0.55), inset -4px -4px 9px rgba(58, 66, 92, 0.24);
+  --sx-chat-shadow-out: 6px 6px 15px rgba(0, 0, 0, 0.55), -6px -6px 15px rgba(58, 66, 92, 0.24);
+  --sx-chat-shadow-sm: 3px 3px 8px rgba(0, 0, 0, 0.50), -3px -3px 8px rgba(58, 66, 92, 0.20);
+  --sx-chat-shadow-in: inset 3px 3px 7px rgba(0, 0, 0, 0.55), inset -3px -3px 7px rgba(58, 66, 92, 0.20);
+  --sx-drop-card: 0 6px 20px rgba(0, 0, 0, 0.55);
+  --sx-drop-panel: 0 18px 44px rgba(0, 0, 0, 0.62);
+  --sx-nav-shadow: 0 3px 12px rgba(0, 0, 0, 0.55), 0 1px 0 rgba(255, 255, 255, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  --sx-orb-badge: linear-gradient(145deg, #2b2b36 0%, #1b1b23 100%);
+  --sx-orb-badge-shadow: 1.5px 1.5px 4px rgba(0, 0, 0, 0.55), -1.5px -1.5px 4px rgba(255, 255, 255, 0.05);
+  --sx-orb-disc-shadow: 3px 3px 7px rgba(0, 0, 0, 0.55), -2px -2px 6px rgba(255, 255, 255, 0.05);
+  --sx-orb-disc-shadow-active: 0 0 0 2px rgba(181, 144, 255, 0.55), 3px 3px 8px rgba(0, 0, 0, 0.5), -2px -2px 6px rgba(255, 255, 255, 0.05);
+  --sx-keystone-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), inset 0 1.5px 0 rgba(255, 255, 255, 0.06);
+  --sx-keystone-shadow-active: 0 7px 20px rgba(181, 144, 255, 0.28), inset 0 1.5px 0 rgba(255, 255, 255, 0.08);
+
+  --sx-canvas-ground: #0c0c10;
+  --sx-canvas-grid: rgba(255, 255, 255, 0.05);
+  --sx-node-chip: #23232d;
+  --sx-node-chip-2: #20202a;
+  --sx-node-chip-3: #2b2b38;
+  --sx-node-title: #e7e8ec;
+  --sx-node-title-halo: 0 1px 2px rgba(0, 0, 0, 0.65);
+  --sx-node-drop: drop-shadow(0 3px 9px rgba(0, 0, 0, 0.55));
+  --sx-edge-idle: rgba(180, 188, 208, 0.55);
+  --sx-legend-bg: rgba(30, 30, 38, 0.92);
+}
+
+/* Flat surface — opt a region OUT of the neumorphic depth. Redefines the soft
+   dual-shadow tokens to a crisp 1px hairline ring (and drops the recessed inset to
+   a border), so cards/panels read as flat instead of raised/pressed. Scoped: only
+   descendants inherit these overrides, so applying it to the ChatWorkspace middle
+   panel flattens the page content while the sidebar + chat (siblings, outside this
+   scope) keep the neumorphic tokens. Theme-aware via --sx-hairline. */
+.flat-surface {
+  --sx-shadow-out: 0 0 0 1px var(--sx-hairline);
+  --sx-shadow-sm: 0 0 0 1px var(--sx-hairline);
+  --sx-shadow-in: inset 0 0 0 1px var(--sx-hairline);
+  --sx-chat-shadow-out: 0 0 0 1px var(--sx-hairline);
+  --sx-chat-shadow-sm: 0 0 0 1px var(--sx-hairline);
+  --sx-chat-shadow-in: inset 0 0 0 1px var(--sx-hairline);
+}
+
+/* InScope dial mark (components/inscope-neu-mark.tsx) — DARK dial palette (icon
+   v14-dark). The component carries the LIGHT values as SVG attributes; these rules
+   swap the disc gradients, neumorphic highlight/shadow tints, glow strength, and the
+   engraved label for dark mode. Set via CSS because stop-color / flood-color / fill
+   resolve as CSS properties (they don't when a var() is put in the raw attribute).
+   The animation (rotating comet spirals) is unaffected and runs in both themes. */
+.dark .isneu-bg-0 { stop-color: #232531; }
+.dark .isneu-bg-1 { stop-color: #15161e; }
+.dark .isneu-disc-0 { stop-color: #2b2d3c; }
+.dark .isneu-disc-1 { stop-color: #1c1e29; }
+.dark .isneu-inner-0 { stop-color: #20222e; }
+.dark .isneu-inner-1 { stop-color: #272935; }
+.dark .isneu-nb-hl { flood-color: #414459; flood-opacity: 0.9; }
+.dark .isneu-nb-sh { flood-color: #000000; flood-opacity: 0.6; }
+.dark .isneu-nm-hl { flood-color: #414459; flood-opacity: 0.85; }
+.dark .isneu-nm-sh { flood-color: #000000; flood-opacity: 0.55; }
+.dark .isneu-ns-hl { flood-color: #414459; flood-opacity: 0.85; }
+.dark .isneu-ns-sh { flood-color: #000000; flood-opacity: 0.5; }
+.dark .isneu-in-sh { flood-color: #000000; flood-opacity: 0.55; }
+.dark .isneu-in-hl { flood-color: #454866; flood-opacity: 0.95; }
+.dark .isneu-glow-o { flood-opacity: 0.7; }
+.dark .isneu-glow-p { flood-opacity: 0.7; }
+.dark .isneu-lbl-face { fill: #cfd4e2; }
+.dark .isneu-lbl-hi { fill: #0a0b12; fill-opacity: 0.6; }
+
+/* Neumorphic "InScope" wordmark (homepage hero, assistant-thread.tsx) — the letters
+   are the SAME surface material as the dial: a near-surface face whose form comes
+   from a built-in relief (a highlight top-left + a shadow bottom-right, in the same
+   light direction and tones as the dial's neu filters), so the word reads as extruded
+   from the surface and blends with the icon's relief rather than sitting on it as
+   flat type. Tune the shadow alphas / face for more or less relief. */
+.isneu-wordmark {
+  /* Light: a dark-GREY face (not near-black) WITH a real raised relief — a bright
+     white highlight hugging the top-left edge of each stroke + a soft cool shadow
+     bottom-right, so the word reads as legible type that is also embossed/raised out
+     of the surface (matches the dial's light direction). Verified against renders. */
+  color: #767c8a;
+  /* Shadows in em so the SAME relief scales with font-size — identical at the hero's
+     38px and proportionate at the smaller sidebar wordmark (no separate class). */
+  text-shadow:
+    -0.039em -0.039em 0.026em rgba(255, 255, 255, 1),
+    -0.053em -0.053em 0.079em rgba(255, 255, 255, 0.55),
+    0.066em 0.079em 0.132em rgba(140, 146, 178, 0.85),
+    0.039em 0.039em 0.053em rgba(110, 116, 150, 0.7);
+}
+.dark .isneu-wordmark {
+  /* Dark: readable light-slate face + the same raised relief (bluish highlight top-
+     left, black shadow bottom-right). */
+  color: #c6cddd;
+  text-shadow:
+    -0.039em -0.039em 0.026em rgba(120, 126, 160, 0.75),
+    -0.053em -0.053em 0.079em rgba(90, 96, 130, 0.4),
+    0.066em 0.079em 0.132em rgba(0, 0, 0, 0.9),
+    0.039em 0.039em 0.053em rgba(0, 0, 0, 0.75);
+}

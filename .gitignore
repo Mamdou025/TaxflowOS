@@ -47,3 +47,6 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Migration backup (old Next.js source — not part of the project)
+.migration-backup/

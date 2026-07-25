@@ -29,6 +29,14 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Auth middleware: populate req.userId for every request.
+// Currently all traffic is treated as the anonymous user.
+// When a real auth layer is added, replace this with session/JWT validation.
+app.use((req, _res, next) => {
+  req.userId = "anonymous";
+  next();
+});
+
 app.use("/api", router);
 
 export default app;
