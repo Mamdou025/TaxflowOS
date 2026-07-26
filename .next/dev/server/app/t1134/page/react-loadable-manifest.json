@@ -1,0 +1,10 @@
+{
+  "[project]/features/worksheets/legacy/pages/T1134Worksheet.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/features/worksheets/legacy/pages/T1134Worksheet.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/features_worksheets_legacy_e38739cf._.js",
+      "static/chunks/59b1d_lucide-react_dist_esm_icons_977ddab2._.js",
+      "static/chunks/features_worksheets_legacy_pages_T1134Worksheet_tsx_03b1a31f._.js"
+    ]
+  }
+}

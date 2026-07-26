@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/Mamad/Sinaxe/TaxflowOS/app/dashboard/page.tsx"],"sourcesContent":["'use client';\nimport dynamic from 'next/dynamic';\n// Client-only: this page uses `wouter`, whose hooks read `location` (undefined\n// during server render). See app/fapi/page.tsx for the same pattern.\nconst Dashboard = dynamic(() => import('@tax/pages/Dashboard'), { ssr: false });\nexport default function DashboardPage() {\n  return <Dashboard />;\n}\n"],"names":[],"mappings":";;;;;AACA;;AADA;;;AAEA,+EAA+E;AAC/E,qEAAqE;AACrE,MAAM,YAAY,IAAA,yRAAO;;;;;;IAAyC,KAAK;;AACxD,SAAS;IACtB,qBAAO,6VAAC;;;;;AACV"}}]
+}

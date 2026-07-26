@@ -1,0 +1,22 @@
+{
+  "[project]/features/assistant/workspace/document-viewer.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/features/assistant/workspace/document-viewer.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/60af3_mammoth_lib_index_5b5be8e5.js",
+      "static/chunks/a505b_xlsx_xlsx_mjs_08f6857f._.js",
+      "static/chunks/59b1d_lucide-react_dist_esm_icons_63b6e5cd._.js",
+      "static/chunks/features_assistant_workspace_document-viewer_tsx_5e375900._.js",
+      "static/chunks/features_assistant_workspace_document-viewer_tsx_cc4d96a9._.js",
+      "static/chunks/a81d7_underscore_modules_b47998ee._.js",
+      "static/chunks/48fac_bluebird_js_release_f73193c8._.js",
+      "static/chunks/60af3_mammoth_f48904e1._.js",
+      "static/chunks/a24ec_next_dist_compiled_e4d00f46._.js",
+      "static/chunks/a960d_jszip_lib_e477054f._.js",
+      "static/chunks/09734_pako_4e01b642._.js",
+      "static/chunks/f7b82_@xmldom_xmldom_lib_d8fb049d._.js",
+      "static/chunks/37559_dingbat-to-unicode_dist_5e7a745c._.js",
+      "static/chunks/node_modules__pnpm_5b128fe0._.js",
+      "static/chunks/60af3_mammoth_lib_index_3b86a9f0.js"
+    ]
+  }
+}
