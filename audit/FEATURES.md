@@ -1,8 +1,17 @@
 # Features
 
-*Last updated: 2026-07-21*
+*Last updated: 2026-07-25*
 
 Status markers: `[LIVE]` fully working · `[PARTIAL]` works but incomplete · `[STUB]` UI exists, logic missing · `[PLANNED]` domain defined, no UI/logic yet · `[DISPLAY]` interactive UI backed by scripted/mock data (not real execution)
+
+---
+
+## Web search — Sina brings results into the chat [LIVE — 2026-07-25]
+
+- **General web search [LIVE]** — new **`searchWeb`** tool: Sina searches the **whole public internet** (Firecrawl `/v1/search`, no domain lock), for current/general facts not in the worksheet, run data, or documents. Added to the SHARED tool registry (`platform/agent-tools/registry.ts`), so the Agent Lab gets it too (checkbox `searchWeb`). Needs `FIRECRAWL_API_KEY` (the same key `searchCanadianTax` already uses); fail-soft with a clear note when unset.
+- **Visible results card [LIVE]** — the fix for "search doesn't bring results": both `searchWeb` and `searchCanadianTax` now **render an inline results card** (`web-search-card.tsx`) — domain · title · snippet, each a link — instead of only feeding the model text. One fetch feeds both the card and the model's cited reply (via `web-search-store.ts`, keyed by scope+query). Previously the Agent-Lab-ported web tools had NO render, so results were invisible.
+- **Already present (context):** `fetchWebPage` (read a URL's text), `getFxRate` (live Bank of Canada), `estimateForeignIncomeTax`, `calculate`, `getCurrentDateTime` — all via the auth-gated `/api/assistant/tools` dispatcher. All read-only search/lookup tools are classified `read_nav` in the intent gate (never withheld).
+- **[PLANNED]** an @-command / composer affordance to trigger a web search directly; per-result "read in full" (auto `fetchWebPage`).
 
 ---
 

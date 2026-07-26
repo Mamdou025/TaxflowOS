@@ -82,6 +82,7 @@ function fromRegistry(id: keyof typeof AGENT_TOOL_REGISTRY) {
 
 const getFxRate = fromRegistry('getFxRate');
 const fetchWebPage = fromRegistry('fetchWebPage');
+const searchWeb = fromRegistry('searchWeb');
 const searchCanadianTax = fromRegistry('searchCanadianTax');
 const estimateForeignIncomeTax = fromRegistry('estimateForeignIncomeTax');
 
@@ -203,6 +204,7 @@ export const TOOLS: ToolSet = {
   recallNotes,
   getFxRate,
   fetchWebPage,
+  searchWeb,
   searchCanadianTax,
   estimateForeignIncomeTax,
   focusBlock,

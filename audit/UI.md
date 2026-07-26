@@ -4,6 +4,11 @@
 
 ---
 
+## Web search results card [LIVE — 2026-07-25]
+
+- **New `features/assistant/workspace/web-search-card.tsx`** — the inline card that renders Sina's web-search results in the chat thread (the visible half of "bring the results"). Header (scope icon + label + query + count), then a list of sources: **domain · title · snippet**, each an `<a target="_blank">`. Light-neumorphic (LC theme); shows a spinning "Searching the web…" state, and a plain note when unconfigured / empty / failed.
+- Rendered by two CopilotKit actions in `use-assistant.tsx`: **`searchWeb`** (`scope="web"` → "Web results") and **`searchCanadianTax`** (`scope="ca-tax"` → "Official Canadian tax sources", `Landmark` icon). Reads `webSearchResultsAtom` (`shared/stores/web-search-store.ts`) keyed by `webSearchKey(scope, query)` — the handler writes results there once; the card reads them back (no double fetch). Before this, the Agent-Lab-ported web tools had no render, so results never appeared.
+
 ## Sina identity mark [LIVE — 2026-07-25]
 
 - **New `features/assistant/ui/sina-mark.tsx`** — one on-brand identity for the unified assistant Sina: a friendly **coworker figure** (head + shoulders, the 👤 silhouette) in the brand violet, in two forms:
