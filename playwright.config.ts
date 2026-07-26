@@ -16,7 +16,15 @@ import { defineConfig, devices } from '@playwright/test';
  */
 
 const TEST_PORT = 5173;
-const BASE_URL = `http://localhost:${TEST_PORT}`;
+const API_PORT = 8080;
+// Use 127.0.0.1 (IPv4) throughout — the Replit validation environment does not
+// support IPv6, so `localhost` resolving to ::1 causes EAFNOSUPPORT errors.
+const BASE_URL = `http://127.0.0.1:${TEST_PORT}`;
+const API_URL = `http://127.0.0.1:${API_PORT}`;
+
+// Ensure api-smoke tests pick up the IPv4 address even when run in a worker
+// process that inherits this environment.
+process.env.API_BASE = process.env.API_BASE ?? API_URL;
 
 export default defineConfig({
   testDir: './e2e',
@@ -25,14 +33,25 @@ export default defineConfig({
   workers: 1,
   reporter: 'list',
 
-  webServer: {
-    // Start the Vite dev server with fixed port + base path for tests.
-    command: `PORT=${TEST_PORT} BASE_PATH=/ pnpm --filter @workspace/ai-workflow-builder run dev`,
-    url: BASE_URL,
-    // If a server is already listening on this port, reuse it rather than erroring.
-    reuseExistingServer: true,
-    timeout: 60_000,
-  },
+  webServer: [
+    {
+      // Start the Vite dev server with fixed port + base path for tests.
+      command: `PORT=${TEST_PORT} BASE_PATH=/ pnpm --filter @workspace/ai-workflow-builder run dev`,
+      url: BASE_URL,
+      // If a server is already listening on this port, reuse it rather than erroring.
+      reuseExistingServer: true,
+      timeout: 60_000,
+    },
+    {
+      // Start (or reuse) the Express API server so the api-smoke tests have a
+      // target.  reuseExistingServer lets the Replit workflow keep it running
+      // between runs without a conflict.
+      command: `PORT=${API_PORT} pnpm --filter @workspace/api-server run dev`,
+      url: `${API_URL}/api/healthz`,
+      reuseExistingServer: true,
+      timeout: 120_000,
+    },
+  ],
 
   use: {
     baseURL: BASE_URL,
@@ -57,6 +76,15 @@ export default defineConfig({
       testDir: './artifacts/ai-workflow-builder/e2e',
       testMatch: 'chunk-load-error.spec.ts',
       use: { ...devices['Desktop Chrome'] },
+    },
+    // API smoke tests — no browser required; uses Playwright's request fixture
+    // to hit the Express API directly.  Included here so API regressions are
+    // caught on every deploy alongside the route-smoke tests.
+    {
+      name: 'chromium-api',
+      testDir: './artifacts/ai-workflow-builder/e2e',
+      testMatch: 'api-smoke.spec.ts',
+      use: {},
     },
   ],
 });
