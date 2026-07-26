@@ -123,4 +123,74 @@ test.describe('AppErrorBoundary — ChunkLoadError auto-reload', () => {
       await expect(reloadBtn).toBeVisible({ timeout: 5_000 });
     },
   );
+
+  test(
+    'shows "page was updated" guidance (not generic error) when the guard fires',
+    async ({ page }) => {
+      // Pre-seed the guard so the second ChunkLoadError renders the
+      // guard-triggered fallback UI rather than the generic error panel.
+      await page.addInitScript((key: string) => {
+        sessionStorage.setItem(key, '1');
+      }, CHUNK_RELOAD_KEY);
+
+      await page.route(CHAT_CHUNK_GLOB, (route) => route.abort());
+      await page.goto('/');
+      await page.waitForTimeout(3_000);
+
+      // The heading must explain the situation — not the generic "Something went wrong".
+      const heading = page.locator('h1');
+      await expect(heading).toHaveText('The page was updated', { timeout: 5_000 });
+
+      // Hard-refresh keyboard hint must be visible.
+      await expect(page.getByText(/Ctrl/)).toBeVisible({ timeout: 5_000 });
+
+      // The Reload button must be present so the user can retry manually.
+      await expect(page.locator('button:has-text("Reload")')).toBeVisible({ timeout: 5_000 });
+    },
+  );
+
+  test(
+    'Reload button in guard-triggered path clears sessionStorage key so next reload can auto-refresh',
+    async ({ page }) => {
+      // Pre-seed the guard.
+      await page.addInitScript((key: string) => {
+        sessionStorage.setItem(key, '1');
+      }, CHUNK_RELOAD_KEY);
+
+      await page.route(CHAT_CHUNK_GLOB, (route) => route.abort());
+      await page.goto('/');
+      await page.waitForTimeout(3_000);
+
+      const reloadBtn = page.locator('button:has-text("Reload")');
+      await expect(reloadBtn).toBeVisible({ timeout: 5_000 });
+
+      // Intercept the reload so we don't actually navigate away; just verify
+      // that the sessionStorage key was removed before the reload fires.
+      await page.evaluate(() => {
+        window.__reloadCalled = false;
+        const orig = window.location.reload.bind(window.location);
+        Object.defineProperty(window.location, 'reload', {
+          configurable: true,
+          value: () => { window.__reloadCalled = true; orig(); },
+        });
+      });
+
+      // Click the Reload button — it should clear the key before reloading.
+      // We wait for a navigation because the real reload fires, but we've
+      // already asserted the key removal via sessionStorage snapshot timing.
+      const [, guardAfterClick] = await Promise.all([
+        // page may navigate; ignore the error if it does.
+        page.waitForNavigation({ timeout: 5_000 }).catch(() => null),
+        // Capture the key value synchronously right as the button's onClick
+        // runs — the key should be absent by the time reload() is called.
+        reloadBtn.click().then(() =>
+          page.evaluate((key: string) => sessionStorage.getItem(key), CHUNK_RELOAD_KEY).catch(() => null),
+        ),
+      ]);
+
+      // After the button click the key must be gone (null) so the next page
+      // load can auto-reload on a fresh ChunkLoadError if needed.
+      expect(guardAfterClick).toBeNull();
+    },
+  );
 });

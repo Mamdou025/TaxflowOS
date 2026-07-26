@@ -40,27 +40,38 @@ function isChunkLoadError(e: Error): boolean {
 /** Top-level boundary — catches any crash in providers or the shell itself */
 class AppErrorBoundary extends Component<
   { children: ReactNode },
-  { error: Error | null; chunkReloading: boolean }
+  { error: Error | null; chunkReloading: boolean; isChunkError: boolean }
 > {
-  state = { error: null as Error | null, chunkReloading: false };
+  state = { error: null as Error | null, chunkReloading: false, isChunkError: false };
 
   static getDerivedStateFromError(e: Error) {
+    const chunk = isChunkLoadError(e);
     // If it's a chunk error and we haven't reloaded yet, trigger a reload.
-    if (isChunkLoadError(e) && !sessionStorage.getItem(CHUNK_RELOAD_KEY)) {
+    if (chunk && !sessionStorage.getItem(CHUNK_RELOAD_KEY)) {
       sessionStorage.setItem(CHUNK_RELOAD_KEY, '1');
       // Defer the reload so React can finish rendering the boundary.
       setTimeout(() => window.location.reload(), 0);
-      return { error: e, chunkReloading: true };
+      return { error: e, chunkReloading: true, isChunkError: true };
     }
-    return { error: e, chunkReloading: false };
+    return { error: e, chunkReloading: false, isChunkError: chunk };
   }
 
   componentDidCatch(e: Error, info: ErrorInfo) {
-    console.error('[AppErrorBoundary]', e, info);
+    const chunk = isChunkLoadError(e);
+    const guardWasSet = !!sessionStorage.getItem(CHUNK_RELOAD_KEY);
+    // Structured log that production log aggregators (e.g. Datadog, Sentry
+    // log drain, CloudWatch) can parse and alert on.
+    console.error('[AppErrorBoundary]', {
+      type: chunk ? 'ChunkLoadError' : 'RenderError',
+      guardTriggered: chunk && guardWasSet,
+      message: e.message,
+      stack: e.stack,
+      componentStack: info.componentStack,
+    });
   }
 
   render() {
-    const { error, chunkReloading } = this.state;
+    const { error, chunkReloading, isChunkError } = this.state;
 
     if (error) {
       // Show a brief "updating" message while the reload fires.
@@ -87,6 +98,60 @@ class AppErrorBoundary extends Component<
             <p style={{ margin: 0, color: '#6b7280', fontSize: 14 }}>
               New version available — reloading…
             </p>
+          </div>
+        );
+      }
+
+      // Guard-triggered path: a chunk error after an auto-reload already fired.
+      // Explain what happened and guide the user to do a hard refresh.
+      if (isChunkError) {
+        return (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100dvh',
+            gap: 16,
+            fontFamily: 'system-ui, sans-serif',
+            padding: 24,
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 32 }}>🔄</div>
+            <h1 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>The page was updated</h1>
+            <p style={{ margin: 0, color: '#6b7280', maxWidth: 440 }}>
+              A new version of the app was deployed while you were using it.
+              Please do a <strong>hard refresh</strong> to load the latest files.
+            </p>
+            <p style={{ margin: 0, color: '#9ca3af', fontSize: 13 }}>
+              Windows / Linux: <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd>
+              &nbsp;&nbsp;·&nbsp;&nbsp;
+              Mac: <kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd>
+            </p>
+            <button
+              onClick={() => {
+                sessionStorage.removeItem(CHUNK_RELOAD_KEY);
+                window.location.reload();
+              }}
+              style={{
+                padding: '8px 20px',
+                background: '#6366f1',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 500,
+              }}
+            >
+              Reload
+            </button>
+            <details style={{ marginTop: 8, color: '#9ca3af', fontSize: 12, maxWidth: 600 }}>
+              <summary style={{ cursor: 'pointer' }}>Error details</summary>
+              <pre style={{ textAlign: 'left', whiteSpace: 'pre-wrap', marginTop: 8 }}>
+                {String(error)}{'\n'}{error.stack}
+              </pre>
+            </details>
           </div>
         );
       }
