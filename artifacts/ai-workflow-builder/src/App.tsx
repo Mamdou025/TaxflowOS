@@ -1,5 +1,81 @@
 import { Suspense, lazy, type ReactNode, Component, type ErrorInfo } from 'react';
 
+/** Full-page spinner shown while the app shell is hydrating */
+function AppSpinner() {
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '100dvh',
+      width: '100vw',
+      background: '#f5f5f5',
+    }}>
+      <div style={{
+        width: 36,
+        height: 36,
+        border: '3px solid #d1d5db',
+        borderTopColor: '#6366f1',
+        borderRadius: '50%',
+        animation: 'spin 0.8s linear infinite',
+      }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
+
+/** Top-level boundary — catches any crash in providers or the shell itself */
+class AppErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(e: Error) { return { error: e }; }
+  componentDidCatch(e: Error, info: ErrorInfo) { console.error('[AppErrorBoundary]', e, info); }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100dvh',
+          gap: 16,
+          fontFamily: 'system-ui, sans-serif',
+          padding: 24,
+          textAlign: 'center',
+        }}>
+          <div style={{ fontSize: 32 }}>⚠️</div>
+          <h1 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>Something went wrong</h1>
+          <p style={{ margin: 0, color: '#6b7280', maxWidth: 400 }}>
+            The app failed to start. Try reloading — if the problem persists, contact support.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              padding: '8px 20px',
+              background: '#6366f1',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 6,
+              cursor: 'pointer',
+              fontSize: 14,
+              fontWeight: 500,
+            }}
+          >
+            Reload
+          </button>
+          <details style={{ marginTop: 8, color: '#9ca3af', fontSize: 12, maxWidth: 600 }}>
+            <summary style={{ cursor: 'pointer' }}>Error details</summary>
+            <pre style={{ textAlign: 'left', whiteSpace: 'pre-wrap', marginTop: 8 }}>
+              {String(this.state.error)}{'\n'}{this.state.error.stack}
+            </pre>
+          </details>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 /** Catch render errors from lazy-loaded pages and show them instead of a blank spinner */
 class RouteErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null as Error | null };
@@ -162,31 +238,33 @@ function Router() {
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="light"
-        disableTransitionOnChange
-        enableSystem={false}
-      >
-        <Provider>
-          <AuthProvider>
-            <OverlayProvider>
-              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-                <Suspense fallback={null}>
-                  <GitHubStarsLoader>
-                    <AppShell>
-                      <Router />
-                    </AppShell>
-                  </GitHubStarsLoader>
-                </Suspense>
-                <Toaster />
-                <GlobalModals />
-              </WouterRouter>
-            </OverlayProvider>
-          </AuthProvider>
-        </Provider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <AppErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          disableTransitionOnChange
+          enableSystem={false}
+        >
+          <Provider>
+            <AuthProvider>
+              <OverlayProvider>
+                <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+                  <Suspense fallback={<AppSpinner />}>
+                    <GitHubStarsLoader>
+                      <AppShell>
+                        <Router />
+                      </AppShell>
+                    </GitHubStarsLoader>
+                  </Suspense>
+                  <Toaster />
+                  <GlobalModals />
+                </WouterRouter>
+              </OverlayProvider>
+            </AuthProvider>
+          </Provider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </AppErrorBoundary>
   );
 }
