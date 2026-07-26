@@ -142,7 +142,13 @@ class AppErrorBoundary extends Component<
 /** Catch render errors from lazy-loaded pages and show them instead of a blank spinner */
 class RouteErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null as Error | null };
-  static getDerivedStateFromError(e: Error) { return { error: e }; }
+  static getDerivedStateFromError(e: Error) {
+    // ChunkLoadErrors should be handled by AppErrorBoundary, which can trigger
+    // an auto-reload after a deploy.  Re-throwing here bubbles the error up to
+    // the next boundary (AppErrorBoundary) rather than showing the raw error text.
+    if (isChunkLoadError(e)) throw e;
+    return { error: e };
+  }
   componentDidCatch(e: Error, info: ErrorInfo) { console.error('[RouteErrorBoundary]', e, info); }
   render() {
     if (this.state.error) {

@@ -23,11 +23,22 @@ export default defineConfig({
     headless: true,
     screenshot: 'only-on-failure',
     trace: 'on-first-retry',
+    launchOptions: {
+      // Replit pre-installs a NixOS-compatible Chromium at this path.
+      // Falls back to Playwright's own downloaded binary in CI / local dev.
+      executablePath: process.env.REPLIT_PLAYWRIGHT_CHROMIUM_EXECUTABLE,
+    },
   },
   projects: [
-    // Full browser tests — require Chromium with system glibc (GitHub Actions,
-    // Ubuntu CI).  Run with: --project=chromium
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testMatch: '**/e2e/copilotkit-chat.spec.ts' },
+    // Full browser tests — run with: --project=chromium
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: [
+        '**/e2e/copilotkit-chat.spec.ts',
+        '**/e2e/chunk-load-error.spec.ts',
+      ],
+    },
 
     // API-only tests — no browser required, runs everywhere including NixOS.
     // Run with: --project=api  (or just run all, this project is always valid)
