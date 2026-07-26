@@ -80,6 +80,7 @@ export const TOOL_CATALOG: ToolInfo[] = [
   { id: 'recallNotes', label: 'Recall notes', category: 'template', real: true, desc: 'Lists notes saved this session.' },
   { id: 'getFxRate', label: 'FX rate (Bank of Canada)', category: 'real', real: true, desc: 'Live annual-average exchange rate — your real FAPI source.' },
   { id: 'fetchWebPage', label: 'Fetch web page', category: 'real', real: true, desc: 'Fetches a public URL and returns its readable text (up to ~15k chars).' },
+  { id: 'searchWeb', label: 'Web search (whole internet)', category: 'real', real: true, desc: 'General live web search across the whole internet. Returns titles + URLs + snippets to cite. Needs FIRECRAWL_API_KEY.' },
   { id: 'searchCanadianTax', label: 'CRA / canada.ca tax lookup', category: 'real', real: true, desc: 'Live web search restricted to official Canadian tax sources (canada.ca, CRA). Returns titles + URLs + snippets to cite. Needs FIRECRAWL_API_KEY.' },
   { id: 'searchDocuments', label: 'Search documents (keyword RAG)', category: 'retrieval', real: true, desc: 'Keyword-search your attached files and return only the most relevant passages. Lets the agent read files too big to load whole.' },
   { id: 'estimateForeignIncomeTax', label: 'Foreign-income tax estimate (3 inputs)', category: 'workflow-template', real: true, desc: 'Give income + currency + year → converts to CAD (live FX) and estimates combined corporate tax with a $500k small-business threshold.' },

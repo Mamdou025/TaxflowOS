@@ -96,6 +96,45 @@ const searchCanadianTax = defineTool(
   }
 );
 
+// ── searchWeb — general Firecrawl web search (whole internet, not domain-scoped) ─
+const searchWeb = defineTool(
+  'Search the public web / internet for CURRENT or general information that is NOT in the workspace, the open worksheet, the workflow data, or the user\'s documents. ' +
+    'Returns ranked results (title, URL, snippet) — these are shown to the user as a card, so ground your reply in them and CITE the source URL for each fact. ' +
+    'For authoritative Canadian tax rules/rates/forms specifically, prefer searchCanadianTax; use fetchWebPage to read any result URL in full.',
+  z.object({
+    query: z.string().min(1).max(500).describe('the web search query, e.g. "OECD Pillar Two effective date"'),
+    limit: z.number().int().optional().describe('max results (default 6, max 10)'),
+  }),
+  async ({ query, limit }) => {
+    const apiKey = process.env.FIRECRAWL_API_KEY;
+    if (!apiKey) {
+      return { error: 'FIRECRAWL_API_KEY is not set in .env.local — it is required for web search.' };
+    }
+    try {
+      const res = await fetch('https://api.firecrawl.dev/v1/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({ query, limit: Math.min(Math.max(limit ?? 6, 1), 10) }),
+      });
+      if (!res.ok) return { error: `Search failed: HTTP ${res.status}` };
+      const json = (await res.json()) as { success: boolean; data?: unknown[]; error?: string };
+      if (!json.success) return { error: json.error ?? 'Search failed.' };
+      const items = (json.data ?? []) as { url?: string; title?: string; description?: string }[];
+      const results = items
+        .filter((r) => typeof r.url === 'string')
+        .map((r) => ({ title: r.title ?? (r.url as string), url: r.url as string, snippet: (r.description ?? '').slice(0, 600) }));
+      return {
+        query,
+        results,
+        instruction: 'Cite the source URL for each fact you use. If the results do not answer the question, say so plainly.',
+        note: results.length === 0 ? 'No web results found — try rephrasing the query.' : undefined,
+      };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Web search failed.' };
+    }
+  }
+);
+
 // ── fetchWebPage — read a public URL's text (SSRF-guarded) ───────────────────────
 const WEB_PAGE_MAX_CHARS = 15_000;
 
@@ -237,6 +276,7 @@ const estimateForeignIncomeTax = defineTool(
 
 // ── The registry: id → shared tool definition ────────────────────────────────────
 export const AGENT_TOOL_REGISTRY = {
+  searchWeb,
   searchCanadianTax,
   fetchWebPage,
   getFxRate,

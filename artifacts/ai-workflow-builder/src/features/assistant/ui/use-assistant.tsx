@@ -50,6 +50,8 @@ import { recordWorkItemAtom, workIdFor, workKeyFromText, type WorkItemType } fro
 import { UI_CONCIERGE, UI_COMPOSER } from '@/lib/coworkers';
 import { CoworkerAvatar } from './coworker-avatar';
 import { useChatPersistence } from '@/features/assistant/runtime/chat/use-chat-persistence';
+import { webSearchResultsAtom, webSearchKey, type WebSearchScope, type WebSearchResult } from '@/shared/stores/web-search-store';
+import { WebSearchCard } from '@/features/assistant/workspace/web-search-card';
 
 
 // ── Work-item classification ────────────────────────────────────────────────────
@@ -723,15 +725,53 @@ export function useAssistant() {
     }
   };
 
+  // Run a search tool AND publish its results to the web-search store (keyed by
+  // scope+query) so the WebSearchCard can render them inline — the visible "bring the
+  // results into the chat" half. Returns the raw tool result to the model unchanged
+  // (it still gets the results + cite instruction). One fetch feeds card + reply.
+  const runWebSearch = async (scope: WebSearchScope, tool: string, query: string, limit?: number) => {
+    const trimmed = query.trim();
+    const key = webSearchKey(scope, trimmed);
+    store.set(webSearchResultsAtom, (prev) => ({ ...prev, [key]: { scope, status: 'searching', query: trimmed, results: [], at: Date.now() } }));
+    const data = (await callServerTool(tool, { query: trimmed, limit })) as { results?: WebSearchResult[]; note?: string; error?: string };
+    const results = Array.isArray(data?.results) ? data.results : [];
+    const note = data?.error ?? data?.note;
+    store.set(webSearchResultsAtom, (prev) => ({
+      ...prev,
+      [key]: { scope, status: results.length ? 'done' : note ? 'error' : 'empty', query: trimmed, results, note, at: Date.now() },
+    }));
+    pushTrail({ text: `${scope === 'ca-tax' ? 'Searched Canadian tax sources' : 'Searched the web'}: ${trimmed}`, tone: 'info' });
+    return data;
+  };
+
+  useCopilotAction({
+    name: 'searchWeb',
+    description:
+      "Search the public web / internet for CURRENT or general information that is NOT in the open worksheet, the workflow data, the attached documents, or the company's stored documents. The ranked results (title, source link, snippet) are shown to the user as a card — ground your reply in them and CITE the source link for each fact. For authoritative Canadian tax rules/rates/forms specifically, prefer searchCanadianTax; use fetchWebPage to read a result URL in full. query = a focused search query.",
+    parameters: [
+      { name: 'query', type: 'string', description: 'the web search query', required: true },
+      { name: 'limit', type: 'number', description: 'max results (default 6, max 10)', required: false },
+    ],
+    handler: async ({ query, limit }: { query: string; limit?: number }) => runWebSearch('web', 'searchWeb', query, limit),
+    render: ({ args }: { args: { query?: string } }) =>
+      args?.query
+        ? <WebSearchCard query={args.query} scope="web" />
+        : <div style={{ fontSize: 12.5, color: '#71717a', padding: '8px 0' }}>Preparing web search…</div>,
+  });
+
   useCopilotAction({
     name: 'searchCanadianTax',
     description:
-      'Search official Canadian tax sources (canada.ca and the CRA) for CURRENT rules, rates, forms, and deadlines. Use whenever the answer depends on up-to-date or authoritative Canadian tax info rather than your training data. Returns titles, URLs, and snippets — cite the source URL.',
+      'Search official Canadian tax sources (canada.ca and the CRA) for CURRENT rules, rates, forms, and deadlines. Use whenever the answer depends on up-to-date or authoritative Canadian tax info rather than your training data. Returns titles, URLs, and snippets (shown to the user as a card) — cite the source URL.',
     parameters: [
       { name: 'query', type: 'string', description: 'what to look up, e.g. "capital gains inclusion rate 2024"', required: true },
       { name: 'limit', type: 'number', description: 'max results (default 5, max 10)', required: false },
     ],
-    handler: async ({ query, limit }: { query: string; limit?: number }) => callServerTool('searchCanadianTax', { query, limit }),
+    handler: async ({ query, limit }: { query: string; limit?: number }) => runWebSearch('ca-tax', 'searchCanadianTax', query, limit),
+    render: ({ args }: { args: { query?: string } }) =>
+      args?.query
+        ? <WebSearchCard query={args.query} scope="ca-tax" />
+        : <div style={{ fontSize: 12.5, color: '#71717a', padding: '8px 0' }}>Searching Canadian tax sources…</div>,
   });
 
   useCopilotAction({
