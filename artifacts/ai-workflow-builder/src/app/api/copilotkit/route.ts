@@ -31,6 +31,24 @@ import { sinaTurnDirective } from '@/features/assistant/runtime/agents/sina';
 // assistant message always carries. See lib/copilot-orphan-repair.ts.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// GET /api/copilotkit — CopilotKit's dev-console sends a GET to /api/copilotkit/info
+// on startup to confirm the runtime is reachable. Without a GET handler Next.js returns
+// 405, which the SDK surfaces as the "Runtime info request failed" banner even when a
+// real backend is configured. The info check never calls the LLM, so no real API key is
+// needed here — the endpoint just needs a valid CopilotRuntime to respond.
+export const GET = async (req: NextRequest) => {
+  const placeholderKey = process.env.AI_GATEWAY_API_KEY ?? process.env.OPENAI_API_KEY ?? 'placeholder';
+  const openai = new OpenAI({ apiKey: placeholderKey });
+  const serviceAdapter = new OpenAIAdapter({ openai, model: 'gpt-4o' });
+  const runtime = new CopilotRuntime();
+  const { handleRequest } = copilotRuntimeNextJSAppRouterEndpoint({
+    runtime,
+    serviceAdapter,
+    endpoint: '/api/copilotkit',
+  });
+  return handleRequest(req);
+};
+
 export const POST = async (req: NextRequest) => {
   // Prefer the Vercel AI Gateway when its key is set: one key unlocks every
   // provider/model (vercel.com/ai-gateway/models). The OpenAI SDK talks to the

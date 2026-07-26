@@ -35,11 +35,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isLightPage = pathname.startsWith('/run/');
 
   return (
-    // showDevConsole={false} disables CopilotKit's error-banner overlay so the
-    // red "Runtime info request failed" toast never appears when no AI backend
-    // is configured. The inspector is controlled by the separate `enableInspector`
-    // prop and is unaffected.
-    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={false}>
+    // The GET /api/copilotkit handler (route.ts) answers the SDK's startup /info
+    // health-check, so the "Runtime info request failed" banner no longer fires.
+    // showDevConsole is intentionally omitted here (defaults to true in dev) so
+    // legitimate AI runtime errors — wrong key, rate-limit, model failure — surface
+    // as banners for developers and users.
+    <CopilotKit runtimeUrl="/api/copilotkit">
       {/* Fixed canvas layer — only active on builder/workflow pages */}
       <PersistentCanvas />
 
