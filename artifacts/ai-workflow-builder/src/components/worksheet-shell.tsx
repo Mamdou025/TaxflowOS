@@ -12,6 +12,7 @@ import { Calculator, FileText, Layers, BarChart3, LayoutDashboard, Building2, La
 import { useAtomValue } from 'jotai';
 import { NeumorphicSidebar, NeuSidebarHeader, NeuSectionLabel, NeuRow } from '@/components/neumorphic-sidebar';
 import { selectedClientAtom } from '@/shared/stores/nav-store';
+import { WorksheetErrorBoundary } from '@/components/worksheet-error-boundary';
 
 export type WorksheetMeta = {
   label: string;
@@ -54,7 +55,9 @@ export function WorksheetShell({ children }: { children: ReactNode }) {
 
       <div className="flex-1 min-w-0 overflow-auto" style={{ padding: 12 }}>
         <div className="worksheet-card" style={{ background: 'var(--sx-card)', borderRadius: 16, boxShadow: 'var(--sx-drop-panel)', overflow: 'hidden', minHeight: '100%' }}>
-          {children}
+          <WorksheetErrorBoundary>
+            {children}
+          </WorksheetErrorBoundary>
         </div>
       </div>
     </div>
