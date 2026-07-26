@@ -66,6 +66,25 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          // ── Shared runtime helpers ──────────────────────────────────────────
+          // These packages call side-effectful code (e.g. createSidecarMedium)
+          // at module-evaluation time and are imported by BOTH the copilotkit
+          // and radix chunks.  If they land inside either chunk, Rollup's
+          // circular-evaluation order leaves the other chunk's bindings
+          // uninitialised → "tt is not a function" crash on boot.
+          //
+          // Placing them in a dedicated cycle-free chunk that both copilotkit
+          // and radix import from breaks the cycle.  This chunk must be listed
+          // BEFORE the copilotkit/radix rules so the matches take priority.
+          if (
+            id.includes('/tslib/') ||
+            id.includes('/use-sidecar/') ||
+            id.includes('react-remove-scroll') ||
+            id.includes('use-callback-ref')
+          ) {
+            return 'runtime';
+          }
+
           // Core React runtime — tiny, load first
           if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
             return 'react';

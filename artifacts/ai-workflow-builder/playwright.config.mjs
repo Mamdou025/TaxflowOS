@@ -43,6 +43,22 @@ export default defineConfig({
     // API-only tests — no browser required, runs everywhere including NixOS.
     // Run with: --project=api  (or just run all, this project is always valid)
     { name: 'api', use: {}, testMatch: '**/e2e/api-smoke.spec.ts' },
+
+    // Production-build smoke test.
+    // Builds the production bundle and serves it via `vite preview` to catch
+    // module-evaluation crashes (circular chunk imports, etc.) that Vite's dev
+    // server never reveals because it does not bundle.
+    // The spec manages its own preview server on port 22180.
+    // Run with: --project=production
+    {
+      name: 'production',
+      // The beforeAll hook builds the production bundle (≈45 s) before starting
+      // the preview server.  Set a generous project-level timeout so hooks and
+      // tests both have enough headroom.
+      timeout: 180_000,
+      use: { ...devices['Desktop Chrome'] },
+      testMatch: '**/e2e/prod-boot.spec.ts',
+    },
   ],
   webServer: {
     command: 'PORT=22179 BASE_PATH=/ pnpm run dev',

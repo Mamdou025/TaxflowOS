@@ -25,6 +25,52 @@
   </head>
   <body>
     <div id="root"></div>
+    <!--
+      Pre-React boot failsafe.
+      React error boundaries only fire after React mounts.  If the production
+      bundle throws an uncaught error at module-evaluation time (before
+      createRoot runs), #root stays empty and the user sees a blank page with
+      no feedback.  This inline script catches that window of vulnerability and
+      replaces the blank root with a human-readable message + reload button.
+    -->
+    <script>
+      (function () {
+        var root = document.getElementById('root');
+        function showBootError(msg) {
+          if (!root || root.firstChild) return; // React already mounted — let its boundaries handle it
+          root.innerHTML =
+            '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+            'height:100dvh;gap:16px;font-family:system-ui,sans-serif;padding:24px;text-align:center">' +
+            '<div style="font-size:32px">⚠️</div>' +
+            '<h1 style="margin:0;font-size:18px;font-weight:600">Something went wrong</h1>' +
+            '<p style="margin:0;color:#6b7280;max-width:400px">' +
+            'The app failed to load. Try reloading — if the problem persists, contact support.' +
+            '</p>' +
+            '<button onclick="location.reload()" ' +
+            'style="padding:8px 20px;background:#6366f1;color:#fff;border:none;' +
+            'border-radius:6px;cursor:pointer;font-size:14px;font-weight:500">Reload</button>' +
+            '<details style="margin-top:8px;color:#9ca3af;font-size:12px;max-width:600px">' +
+            '<summary style="cursor:pointer">Error details</summary>' +
+            '<pre id="__boot_err" style="text-align:left;white-space:pre-wrap;margin-top:8px"></pre>' +
+            '</details></div>';
+          var pre = document.getElementById('__boot_err');
+          if (pre) pre.textContent = msg;
+        }
+        window.addEventListener('error', function (e) {
+          var msg = e.error
+            ? String(e.error) + (e.error.stack ? '\n' + e.error.stack : '')
+            : e.message;
+          showBootError(msg);
+        });
+        window.addEventListener('unhandledrejection', function (e) {
+          var reason = e.reason;
+          var msg = reason instanceof Error
+            ? String(reason) + (reason.stack ? '\n' + reason.stack : '')
+            : String(reason);
+          showBootError(msg);
+        });
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
