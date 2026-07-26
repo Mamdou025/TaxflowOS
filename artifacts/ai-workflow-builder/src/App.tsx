@@ -1,4 +1,5 @@
 import { Suspense, lazy, type ReactNode, Component, type ErrorInfo } from 'react';
+import { captureRenderError } from '@/lib/error-monitoring';
 
 /** Full-page spinner shown while the app shell is hydrating */
 function AppSpinner() {
@@ -59,15 +60,18 @@ class AppErrorBoundary extends Component<
   componentDidCatch(e: Error, info: ErrorInfo) {
     const chunk = isChunkLoadError(e);
     const guardWasSet = !!sessionStorage.getItem(CHUNK_RELOAD_KEY);
-    // Structured log that production log aggregators (e.g. Datadog, Sentry
-    // log drain, CloudWatch) can parse and alert on.
-    console.error('[AppErrorBoundary]', {
+    const event = {
       type: chunk ? 'ChunkLoadError' : 'RenderError',
       guardTriggered: chunk && guardWasSet,
       message: e.message,
       stack: e.stack,
       componentStack: info.componentStack,
-    });
+    };
+    // Structured log that production log aggregators (e.g. Datadog, Sentry
+    // log drain, CloudWatch) can parse and alert on.
+    console.error('[AppErrorBoundary]', event);
+    // Forward to the error-monitoring service (Sentry).
+    captureRenderError(e, event);
   }
 
   render() {
@@ -214,7 +218,17 @@ class RouteErrorBoundary extends Component<{ children: ReactNode }, { error: Err
     if (isChunkLoadError(e)) throw e;
     return { error: e };
   }
-  componentDidCatch(e: Error, info: ErrorInfo) { console.error('[RouteErrorBoundary]', e, info); }
+  componentDidCatch(e: Error, info: ErrorInfo) {
+    console.error('[RouteErrorBoundary]', e, info);
+    // Forward to the error-monitoring service (Sentry).
+    captureRenderError(e, {
+      type: 'RenderError',
+      guardTriggered: false,
+      message: e.message,
+      stack: e.stack,
+      componentStack: info.componentStack,
+    });
+  }
   render() {
     if (this.state.error) {
       return (

@@ -87,6 +87,7 @@
     "@openuidev/react-headless": "^0.9.3",
     "@openuidev/react-lang": "^0.2.9",
     "@openuidev/react-ui": "^0.13.1",
+    "@sentry/react": "^10.68.0",
     "@slack/web-api": "^8.0.0",
     "@xyflow/react": "^12.11.2",
     "ai": "^7.0.37",
