@@ -35,7 +35,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isLightPage = pathname.startsWith('/run/');
 
   return (
-    <CopilotKit runtimeUrl="/api/copilotkit">
+    // showDevConsole={false} disables CopilotKit's error-banner overlay so the
+    // red "Runtime info request failed" toast never appears when no AI backend
+    // is configured. The inspector is controlled by the separate `enableInspector`
+    // prop and is unaffected.
+    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={false}>
       {/* Fixed canvas layer — only active on builder/workflow pages */}
       <PersistentCanvas />
 
