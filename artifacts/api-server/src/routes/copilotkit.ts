@@ -1,38 +1,52 @@
 /**
- * CopilotKit runtime stub.
+ * CopilotKit runtime — OpenAI adapter via @copilotkit/runtime.
  *
- * Intentionally returns 404 so CopilotKit enters "Error" connection status
- * (graceful disconnected mode). In Error status the SDK returns provisional
- * agents with `isReady: false`, which prevents auto-runs and `useAgent`
- * throws — the app renders fully but AI agent features are inactive.
+ * Exposes a GraphQL endpoint that the CopilotKit React SDK streams through.
+ * The OpenAIAdapter picks up OPENAI_API_KEY from the environment automatically.
  *
- * The red "Runtime info request failed" banner is suppressed on the frontend
- * by <CopilotErrorSuppressor> (see app-shell.tsx), which dismisses banners
- * whose code is `runtime_info_fetch_failed`.
+ * Frontend mounts at: /api/copilotkit  (app-shell.tsx runtimeUrl)
+ * This router is mounted at /copilotkit inside /api — the full path is
+ * /api/copilotkit, matching the frontend config.
  *
- * To activate AI features:
- *   1. Set OPENAI_API_KEY (or your LLM provider key) in environment secrets
- *   2. Replace this file with the @copilotkit/runtime Express adapter
- *   3. See https://docs.copilotkit.ai/quickstart
+ * Note: Express strips the mount prefix from req.url before calling middleware.
+ * We restore req.url to the full path (req.baseUrl + req.url) so the yoga
+ * GraphQL server inside CopilotKit can route correctly.
  */
+import {
+  CopilotRuntime,
+  OpenAIAdapter,
+  copilotRuntimeNodeExpressEndpoint,
+} from "@copilotkit/runtime";
 import { Router } from "express";
+import type { IncomingMessage, ServerResponse } from "http";
 
 const router = Router();
 
-// GET /api/copilotkit/info — intentional 404 (disconnected mode).
-router.get("/info", (_req, res) => {
-  res.status(404).json({ error: "CopilotKit runtime not configured" });
+// Build the handler once — serviceAdapter and runtime are stateless,
+// so a single instance shared across requests is fine.
+const serviceAdapter = new OpenAIAdapter({ model: "gpt-4o" });
+const runtime = new CopilotRuntime();
+
+const handler = copilotRuntimeNodeExpressEndpoint({
+  runtime,
+  serviceAdapter,
+  endpoint: "/api/copilotkit",
 });
 
-// GET /api/copilotkit/threads
-router.get("/threads", (_req, res) => {
-  res.json({ threads: [], nextCursor: null });
-});
+router.use("/", (req, res, next) => {
+  // Express strips the mount prefix from req.url. GraphQL Yoga needs the full
+  // path to route /api/copilotkit and /api/copilotkit/info correctly.
+  req.url = (req.baseUrl || "") + (req.url === "/" ? "" : req.url);
 
-// POST /api/copilotkit — intentional 404 (covers single-endpoint info probe
-// as well as any chat messages sent before AI is configured).
-router.post("/", (_req, res) => {
-  res.status(404).json({ error: "CopilotKit runtime not configured" });
+  // The handler return type is Promise<void> | Response | Promise<Response>.
+  // Wrap in Promise.resolve() so .catch() is always valid regardless of which
+  // branch the runtime takes.
+  Promise.resolve(
+    handler(
+      req as unknown as IncomingMessage,
+      res as unknown as ServerResponse,
+    ),
+  ).catch(next);
 });
 
 export default router;

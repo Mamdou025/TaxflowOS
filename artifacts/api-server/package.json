@@ -13,6 +13,7 @@
     "@ai-sdk/openai": "^4.0.20",
     "@copilotkit/runtime": "^1.63.2",
     "@copilotkit/runtime-client-gql": "^1.63.2",
+    "@opentelemetry/api": "^1.9.1",
     "@workspace/api-zod": "workspace:*",
     "@workspace/db": "workspace:*",
     "ai": "^7.0.37",

@@ -450,6 +450,9 @@ importers:
       '@copilotkit/runtime-client-gql':
         specifier: ^1.63.2
         version: 1.63.2(@ag-ui/core@0.0.57)(graphql@16.14.2)(react@19.1.0)
+      '@opentelemetry/api':
+        specifier: ^1.9.1
+        version: 1.9.1
       '@workspace/api-zod':
         specifier: workspace:*
         version: link:../../lib/api-zod
