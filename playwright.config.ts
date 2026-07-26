@@ -45,8 +45,17 @@ export default defineConfig({
   },
 
   projects: [
+    // Root route-smoke tests (./e2e/)
     {
       name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    // Chunk-load-error guard tests — spec lives inside the artifact but is
+    // included here so it runs with every root `playwright test` invocation.
+    {
+      name: 'chromium-chunk-errors',
+      testDir: './artifacts/ai-workflow-builder/e2e',
+      testMatch: 'chunk-load-error.spec.ts',
       use: { ...devices['Desktop Chrome'] },
     },
   ],

@@ -152,45 +152,48 @@ test.describe('AppErrorBoundary — ChunkLoadError auto-reload', () => {
   test(
     'Reload button in guard-triggered path clears sessionStorage key so next reload can auto-refresh',
     async ({ page }) => {
-      // Pre-seed the guard.
-      await page.addInitScript((key: string) => {
+      // Strategy: seed the guard key via page.evaluate (not addInitScript) so
+      // it is NOT re-seeded on subsequent reloads — addInitScript runs on every
+      // navigation, which would undo the key-removal we are trying to verify.
+
+      // 1. Navigate without chunk abort so the app loads cleanly.
+      await page.goto('/');
+      await page.waitForLoadState('networkidle');
+
+      // 2. Seed the guard key directly into sessionStorage.  sessionStorage
+      //    persists across same-origin reloads, so the next page load will
+      //    see it — but only until it is explicitly removed.
+      await page.evaluate((key: string) => {
         sessionStorage.setItem(key, '1');
       }, CHUNK_RELOAD_KEY);
 
+      // 3. Abort the lazy chunk and reload — error boundary reads the guard
+      //    (already set) and shows the manual "Reload" UI instead of auto-reloading.
       await page.route(CHAT_CHUNK_GLOB, (route) => route.abort());
-      await page.goto('/');
+      await page.reload();
       await page.waitForTimeout(3_000);
 
       const reloadBtn = page.locator('button:has-text("Reload")');
       await expect(reloadBtn).toBeVisible({ timeout: 5_000 });
 
-      // Intercept the reload so we don't actually navigate away; just verify
-      // that the sessionStorage key was removed before the reload fires.
-      await page.evaluate(() => {
-        window.__reloadCalled = false;
-        const orig = window.location.reload.bind(window.location);
-        Object.defineProperty(window.location, 'reload', {
-          configurable: true,
-          value: () => { window.__reloadCalled = true; orig(); },
-        });
-      });
+      // 4. Remove the chunk-abort route so the page that loads after the
+      //    button click can fetch the chunk successfully.  This prevents the
+      //    error boundary on the reloaded page from re-setting the guard key.
+      await page.unroute(CHAT_CHUNK_GLOB);
 
-      // Click the Reload button — it should clear the key before reloading.
-      // We wait for a navigation because the real reload fires, but we've
-      // already asserted the key removal via sessionStorage snapshot timing.
-      const [, guardAfterClick] = await Promise.all([
-        // page may navigate; ignore the error if it does.
-        page.waitForNavigation({ timeout: 5_000 }).catch(() => null),
-        // Capture the key value synchronously right as the button's onClick
-        // runs — the key should be absent by the time reload() is called.
-        reloadBtn.click().then(() =>
-          page.evaluate((key: string) => sessionStorage.getItem(key), CHUNK_RELOAD_KEY).catch(() => null),
-        ),
+      // 5. Click Reload — the handler removes the key then calls reload().
+      await Promise.all([
+        page.waitForNavigation({ timeout: 8_000 }),
+        reloadBtn.click(),
       ]);
 
-      // After the button click the key must be gone (null) so the next page
-      // load can auto-reload on a fresh ChunkLoadError if needed.
-      expect(guardAfterClick).toBeNull();
+      // 6. Key must be null: the handler cleared it and the reloaded page
+      //    loaded the chunk cleanly so the error boundary never re-set it.
+      const guardAfterReload = await page.evaluate(
+        (key: string) => sessionStorage.getItem(key),
+        CHUNK_RELOAD_KEY,
+      );
+      expect(guardAfterReload).toBeNull();
     },
   );
 });
