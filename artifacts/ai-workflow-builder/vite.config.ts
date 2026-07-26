@@ -63,6 +63,36 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, 'dist/public'),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Core React runtime — tiny, load first
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+            return 'react';
+          }
+          // Heavy editor — loaded lazily in the UI
+          if (id.includes('@monaco-editor') || id.includes('monaco-editor')) {
+            return 'monaco';
+          }
+          // Workflow canvas (xyflow) — large, specific feature
+          if (id.includes('@xyflow')) {
+            return 'xyflow';
+          }
+          // CopilotKit AI runtime
+          if (id.includes('@copilotkit')) {
+            return 'copilotkit';
+          }
+          // Radix UI primitives — shared across many pages
+          if (id.includes('@radix-ui')) {
+            return 'radix';
+          }
+          // Remaining node_modules — general vendor chunk
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        },
+      },
+    },
   },
   server: {
     port,
