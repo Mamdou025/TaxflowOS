@@ -24,13 +24,73 @@ function AppSpinner() {
   );
 }
 
+const CHUNK_RELOAD_KEY = 'inscope_chunk_reload_attempted';
+
+function isChunkLoadError(e: Error): boolean {
+  // Vite / webpack both surface these patterns
+  return (
+    e.name === 'ChunkLoadError' ||
+    /loading chunk/i.test(e.message) ||
+    /failed to fetch dynamically imported module/i.test(e.message) ||
+    /error loading dynamically imported module/i.test(e.message) ||
+    /importing a module script failed/i.test(e.message)
+  );
+}
+
 /** Top-level boundary — catches any crash in providers or the shell itself */
-class AppErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
-  state = { error: null as Error | null };
-  static getDerivedStateFromError(e: Error) { return { error: e }; }
-  componentDidCatch(e: Error, info: ErrorInfo) { console.error('[AppErrorBoundary]', e, info); }
+class AppErrorBoundary extends Component<
+  { children: ReactNode },
+  { error: Error | null; chunkReloading: boolean }
+> {
+  state = { error: null as Error | null, chunkReloading: false };
+
+  static getDerivedStateFromError(e: Error) {
+    // If it's a chunk error and we haven't reloaded yet, trigger a reload.
+    if (isChunkLoadError(e) && !sessionStorage.getItem(CHUNK_RELOAD_KEY)) {
+      sessionStorage.setItem(CHUNK_RELOAD_KEY, '1');
+      // Defer the reload so React can finish rendering the boundary.
+      setTimeout(() => window.location.reload(), 0);
+      return { error: e, chunkReloading: true };
+    }
+    return { error: e, chunkReloading: false };
+  }
+
+  componentDidCatch(e: Error, info: ErrorInfo) {
+    console.error('[AppErrorBoundary]', e, info);
+  }
+
   render() {
-    if (this.state.error) {
+    const { error, chunkReloading } = this.state;
+
+    if (error) {
+      // Show a brief "updating" message while the reload fires.
+      if (chunkReloading) {
+        return (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100dvh',
+            gap: 12,
+            fontFamily: 'system-ui, sans-serif',
+          }}>
+            <div style={{
+              width: 32,
+              height: 32,
+              border: '3px solid #d1d5db',
+              borderTopColor: '#6366f1',
+              borderRadius: '50%',
+              animation: 'spin 0.8s linear infinite',
+            }} />
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            <p style={{ margin: 0, color: '#6b7280', fontSize: 14 }}>
+              New version available — reloading…
+            </p>
+          </div>
+        );
+      }
+
       return (
         <div style={{
           display: 'flex',
@@ -49,7 +109,10 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, { error: Error
             The app failed to start. Try reloading — if the problem persists, contact support.
           </p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              sessionStorage.removeItem(CHUNK_RELOAD_KEY);
+              window.location.reload();
+            }}
             style={{
               padding: '8px 20px',
               background: '#6366f1',
@@ -66,7 +129,7 @@ class AppErrorBoundary extends Component<{ children: ReactNode }, { error: Error
           <details style={{ marginTop: 8, color: '#9ca3af', fontSize: 12, maxWidth: 600 }}>
             <summary style={{ cursor: 'pointer' }}>Error details</summary>
             <pre style={{ textAlign: 'left', whiteSpace: 'pre-wrap', marginTop: 8 }}>
-              {String(this.state.error)}{'\n'}{this.state.error.stack}
+              {String(error)}{'\n'}{error.stack}
             </pre>
           </details>
         </div>
