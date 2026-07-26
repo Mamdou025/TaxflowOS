@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/Mamad/Sinaxe/TaxflowOS/plugins/v0/test.ts"],"sourcesContent":["export async function testV0(credentials: Record<string, string>) {\r\n  try {\r\n    const apiKey = credentials.V0_API_KEY;\r\n\r\n    if (!apiKey) {\r\n      return {\r\n        success: false,\r\n        error: \"API key is required\",\r\n      };\r\n    }\r\n\r\n    // Test the API key by making a request to get user info\r\n    const { createClient } = await import(\"v0-sdk\");\r\n    const client = createClient({ apiKey });\r\n    await client.user.get();\r\n\r\n    return {\r\n      success: true,\r\n    };\r\n  } catch (error) {\r\n    return {\r\n      success: false,\r\n      error: error instanceof Error ? error.message : String(error),\r\n    };\r\n  }\r\n}\r\n\r\n"],"names":[],"mappings":";;;;AAAO,eAAe,OAAO,WAAmC;IAC9D,IAAI;QACF,MAAM,SAAS,YAAY,UAAU;QAErC,IAAI,CAAC,QAAQ;YACX,OAAO;gBACL,SAAS;gBACT,OAAO;YACT;QACF;QAEA,wDAAwD;QACxD,MAAM,EAAE,YAAY,EAAE,GAAG;QACzB,MAAM,SAAS,aAAa;YAAE;QAAO;QACrC,MAAM,OAAO,IAAI,CAAC,GAAG;QAErB,OAAO;YACL,SAAS;QACX;IACF,EAAE,OAAO,OAAO;QACd,OAAO;YACL,SAAS;YACT,OAAO,iBAAiB,QAAQ,MAAM,OAAO,GAAG,OAAO;QACzD;IACF;AACF"}}]
+}

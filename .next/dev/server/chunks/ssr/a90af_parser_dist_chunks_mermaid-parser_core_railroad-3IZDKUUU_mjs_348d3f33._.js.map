@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/Mamad/Sinaxe/TaxflowOS/node_modules/.pnpm/%40mermaid-js%2Bparser%401.2.0/node_modules/%40mermaid-js/parser/dist/chunks/mermaid-parser.core/railroad-3IZDKUUU.mjs"],"sourcesContent":["import {\n  RailroadModule,\n  createRailroadServices\n} from \"./chunk-5TONJI2A.mjs\";\nimport \"./chunk-KEIR6QF5.mjs\";\nexport {\n  RailroadModule,\n  createRailroadServices\n};\n"],"names":[],"mappings":";AAAA;AAIA","ignoreList":[0]}}]
+}

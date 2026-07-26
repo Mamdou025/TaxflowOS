@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"file":"turbopack:///[project]/node_modules/.pnpm/lucide@0.525.0/node_modules/lucide/dist/esm/iconsAndAliases.js","sources":[],"sourcesContent":[],"names":[],"mappings":""}}]
+}
