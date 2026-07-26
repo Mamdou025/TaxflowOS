@@ -1,0 +1,1 @@
+- [CopilotKit Fast Refresh cascade](copilotkit-fast-refresh-cascade.md) — non-component named exports from component files silently break React.lazy caching via Vite HMR cascades.

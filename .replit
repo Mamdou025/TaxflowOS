@@ -1,29 +1,47 @@
-# Replit configuration for TaxflowOS (Next.js 16 + pnpm)
-# Docs: https://docs.replit.com/replit-workspace/configuring-repl
-#
-# The app uses pnpm, which isn't preinstalled on the Node module, so every
-# entry point bootstraps it via `corepack` (bundled with Node 22).
+modules = ["nodejs-24", "python-base-3.13", "postgresql-16"]
 
-entrypoint = "next.config.ts"
-modules = ["nodejs-22"]
-hidden = [".config", ".next", "node_modules"]
+[deployment]
+router = "application"
+deploymentTarget = "autoscale"
 
-# ── Workspace "Run" button (development) ──────────────────────────────────────
-# `pnpm dev` internally calls `pnpm discover-plugins` then `next dev`.
-run = "sh -c 'corepack enable && pnpm install && pnpm dev'"
+[deployment.postBuild]
+args = ["pnpm", "store", "prune"]
+env = { "CI" = "true" }
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "route-smoke"
+
+[[workflows.workflow]]
+name = "route-smoke"
+author = "agent"
+
+[workflows.workflow.metadata]
+isValidation = true
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx playwright test --config=playwright.config.ts --tsconfig=e2e/tsconfig.json"
+
+[agent]
+stack = "PNPM_WORKSPACE"
+expertMode = true
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 20000
 
 [nix]
-channel = "stable-24_11"
+channel = "stable-25_05"
 
-# ── Production deployment (Autoscale / Cloud Run) ─────────────────────────────
-# build: install deps + generate plugin registry + next build
-# run:   `npm run start` == `next start` (no pnpm needed at runtime)
-[deployment]
-build = ["sh", "-c", "corepack enable && pnpm install && pnpm build"]
-run = ["sh", "-c", "npm run start"]
-deploymentTarget = "cloudrun"
+[userenv]
 
-# next start listens on 0.0.0.0:3000; Replit exposes it publicly on 80/443.
-[[ports]]
-localPort = 3000
-externalPort = 80
+[userenv.shared]

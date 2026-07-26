@@ -1,0 +1,27 @@
+kind = "slides"
+previewPath = "/inscope-pitch/"
+title = "InScope Investor Pitch"
+version = "1.0.0"
+id = "artifacts/inscope-pitch"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/inscope-pitch/" ]
+localPort = 21958
+
+[services.development]
+run = "pnpm --filter @workspace/inscope-pitch run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/inscope-pitch", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/inscope-pitch/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21958"
+BASE_PATH = "/inscope-pitch/"

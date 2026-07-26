@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "AI Workflow Builder"
+version = "1.0.0"
+id = "artifacts/ai-workflow-builder"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22179
+
+[services.development]
+run = "pnpm --filter @workspace/ai-workflow-builder run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/ai-workflow-builder", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/ai-workflow-builder/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22179"
+BASE_PATH = "/"
