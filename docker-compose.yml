@@ -1,0 +1,112 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Local development stack for TaxflowOS (the WHOLE app).
+#
+# Purpose: give your Windows laptop the SAME Linux environment Replit runs, so
+# the Linux-only binaries this repo pins in pnpm-workspace.yaml (esbuild,
+# rollup, lightningcss, tailwind-oxide) work WITHOUT any code changes.
+#
+# Services:
+#   db   — Postgres 16 + pgvector (matches Replit's postgresql-16 with the vector extension)
+#   deps — installs all workspace dependencies ONCE into a shared volume, then exits
+#   api  — the Express backend  (artifacts/api-server)
+#   web  — the frontend UI       (artifacts/ai-workflow-builder)
+#
+# Everyday commands (run from this folder):
+#   docker compose up                 # start the WHOLE app (db + api + web)
+#   docker compose up -d              # ...in the background
+#   docker compose logs -f web api    # watch the frontend + backend logs
+#   docker compose restart api web    # pick up code changes (dev scripts have no watcher)
+#   docker compose down               # stop everything (your DB data is kept)
+#   docker compose down -v            # stop AND wipe DB + installed deps (fresh start)
+#
+# One-time after the first `up`, create the database tables:
+#   docker compose exec api pnpm --filter @workspace/db run push
+#
+# Open in your browser:
+#   Web UI:   http://localhost:5173
+#   API:      http://localhost:5050/api/healthz   (5050 on host; you have another container on 5000)
+#   Postgres: localhost:5433   (user: postgres / password: postgres / db: taxflowos)
+#             (5433 on the host to avoid clashing with a Postgres already on 5432)
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  # Postgres 16 + pgvector — matches Replit's `postgresql-16` module, and adds
+  # the `vector` extension the app's schema needs (RAG / searchCompanyDocuments).
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: taxflowos
+    ports:
+      - "5433:5432"                  # host 5433 -> container 5432 (GUI connects to localhost:5433)
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/db-init:/docker-entrypoint-initdb.d:ro   # auto-runs 001-extensions.sql on fresh init
+    healthcheck:                     # others wait until Postgres is actually ready
+      test: ["CMD-SHELL", "pg_isready -U postgres -d taxflowos"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # One-shot: install the whole workspace's deps into the shared node_modules
+  # volume, then exit. api + web wait for this so they never install twice or
+  # race each other on the same volume.
+  deps:
+    image: node:24-bookworm-slim
+    working_dir: /app
+    command: sh -c "npm install -g pnpm@10 && pnpm install"
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+
+  # API server — Node 24 on Debian (glibc) to match Replit's nodejs-24.
+  api:
+    # IMPORTANT: bookworm (Debian/glibc), NOT alpine. This repo excludes musl
+    # binaries in pnpm-workspace.yaml, so it needs a glibc Linux like Replit.
+    image: node:24-bookworm-slim
+    working_dir: /app
+    command: sh -c "npm install -g pnpm@10 && pnpm --filter @workspace/api-server run dev"
+    environment:
+      NODE_ENV: development
+      PORT: "5000"                   # the server throws if PORT is unset
+      DATABASE_URL: postgres://postgres:postgres@db:5432/taxflowos
+    env_file:
+      - .env.local                   # brings in OPENAI_API_KEY etc. (values above win)
+    ports:
+      - "5050:5000"                  # host 5050 -> container 5000 (open http://localhost:5050)
+    volumes:
+      - .:/app                       # your source code, live from the host
+      - node_modules:/app/node_modules  # Linux deps live HERE, isolated from your Windows node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+      deps:
+        condition: service_completed_successfully
+
+  # Frontend UI — Vite dev server.
+  web:
+    image: node:24-bookworm-slim
+    working_dir: /app
+    command: sh -c "npm install -g pnpm@10 && pnpm --filter @workspace/ai-workflow-builder run dev"
+    environment:
+      NODE_ENV: development
+      PORT: "5173"                   # the frontend also throws if PORT is unset
+      BASE_PATH: /
+      API_BASE: http://api:5000      # where server-side code reaches the backend (container network)
+    env_file:
+      - .env.local
+    ports:
+      - "5173:5173"                  # open http://localhost:5173
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    depends_on:
+      deps:
+        condition: service_completed_successfully
+      api:
+        condition: service_started
+
+volumes:
+  pgdata:            # your database data — survives `docker compose down`
+  node_modules:      # the container's Linux-installed dependencies
