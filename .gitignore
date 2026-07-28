@@ -50,3 +50,7 @@ Thumbs.db
 
 # Migration backup (old Next.js source — not part of the project)
 .migration-backup/
+
+
+.env*.local
+.pnpm-store/
