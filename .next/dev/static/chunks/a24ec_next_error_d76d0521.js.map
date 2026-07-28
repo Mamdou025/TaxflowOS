@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 3, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/Mamad/Sinaxe/TaxflowOS/node_modules/.pnpm/next%4016.0.10_%40babel%2Bcore%407._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/error.js"],"sourcesContent":["module.exports = require('./dist/pages/_error')\n"],"names":[],"mappings":"AAAA,OAAO,OAAO","ignoreList":[0]}}]
+}

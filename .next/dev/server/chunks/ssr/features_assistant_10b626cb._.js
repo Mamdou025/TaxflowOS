@@ -1,0 +1,10687 @@
+module.exports = [
+"[project]/features/assistant/ui/surface-embed.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+__turbopack_context__.s([
+    "SurfaceEmbed",
+    ()=>SurfaceEmbed
+]);
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
+// ─────────────────────────────────────────────────────────────────────────────
+// SurfaceEmbed — renders a page/panel INSIDE the chat thread.
+//
+// The render half of the Page ⇄ Chat contract (`lib/page-chat-store.ts`). The
+// assistant's `bringIntoChat` action mounts this with a pageKey. It prefers the
+// page's registered compact `Embed`; if none, it falls back to the real registered
+// page component in a bounded, scrollable card. An error boundary keeps a page
+// that misbehaves when embedded from breaking the whole thread.
+// ─────────────────────────────────────────────────────────────────────────────
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/jotai@2.15.1_@babel+core@7._5b27b7b535d6519f6427fc26ba88e66f/node_modules/jotai/esm/react.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$page$2d$chat$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/page-chat-store.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/shared/stores/resource-registry.tsx [app-ssr] (ecmascript)");
+'use client';
+;
+;
+;
+;
+;
+// Light card so the embed reads as one "artifact surface" on the dark chat — same
+// treatment GenUIRender / the run-flow get.
+const CARD = {
+    background: '#f7f7f8',
+    border: '1px solid rgba(0,0,0,0.07)',
+    borderRadius: 14,
+    width: '100%',
+    maxWidth: '100%',
+    overflow: 'hidden'
+};
+class EmbedBoundary extends __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Component"] {
+    state = {
+        failed: false
+    };
+    static getDerivedStateFromError() {
+        return {
+            failed: true
+        };
+    }
+    render() {
+        if (this.state.failed) {
+            return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    ...CARD,
+                    padding: '14px 16px',
+                    fontSize: 12.5,
+                    color: '#71717a'
+                },
+                children: [
+                    this.props.label,
+                    " can’t be shown inline here — open it as a tab instead."
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/ui/surface-embed.tsx",
+                lineNumber: 37,
+                columnNumber: 9
+            }, this);
+        }
+        return this.props.children;
+    }
+}
+function SurfaceEmbed({ pageKey }) {
+    const surfaces = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$page$2d$chat$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["pageChatSurfacesAtom"]);
+    const surface = surfaces[pageKey];
+    const page = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getPage"])(pageKey);
+    const title = surface?.title ?? page?.title ?? pageKey;
+    // 1) A page-authored compact embed — the intended, lightweight representation.
+    if (surface?.Embed) {
+        const Embed = surface.Embed;
+        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(EmbedBoundary, {
+            label: title,
+            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                "data-surface-embed": pageKey,
+                style: CARD,
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Embed, {}, void 0, false, {
+                    fileName: "[project]/features/assistant/ui/surface-embed.tsx",
+                    lineNumber: 58,
+                    columnNumber: 11
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/surface-embed.tsx",
+                lineNumber: 57,
+                columnNumber: 9
+            }, this)
+        }, void 0, false, {
+            fileName: "[project]/features/assistant/ui/surface-embed.tsx",
+            lineNumber: 56,
+            columnNumber: 7
+        }, this);
+    }
+    // 2) Fallback — the real registered page, bounded + scrollable so a full document
+    //    lives in the conversation without taking over the thread.
+    if (page) {
+        const PageComponent = page.Component;
+        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(EmbedBoundary, {
+            label: title,
+            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                "data-surface-embed": pageKey,
+                style: CARD,
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            padding: '9px 14px',
+                            borderBottom: '1px solid rgba(0,0,0,0.07)',
+                            fontSize: 12.5,
+                            fontWeight: 600,
+                            color: '#3f3f46'
+                        },
+                        children: [
+                            page.title,
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                style: {
+                                    marginLeft: 8,
+                                    fontWeight: 400,
+                                    color: '#9ca3af'
+                                },
+                                children: page.subtitle
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/surface-embed.tsx",
+                                lineNumber: 81,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/features/assistant/ui/surface-embed.tsx",
+                        lineNumber: 71,
+                        columnNumber: 11
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            maxHeight: 440,
+                            overflow: 'auto'
+                        },
+                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(PageComponent, {}, void 0, false, {
+                            fileName: "[project]/features/assistant/ui/surface-embed.tsx",
+                            lineNumber: 84,
+                            columnNumber: 13
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/ui/surface-embed.tsx",
+                        lineNumber: 83,
+                        columnNumber: 11
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/ui/surface-embed.tsx",
+                lineNumber: 70,
+                columnNumber: 9
+            }, this)
+        }, void 0, false, {
+            fileName: "[project]/features/assistant/ui/surface-embed.tsx",
+            lineNumber: 69,
+            columnNumber: 7
+        }, this);
+    }
+    // 3) Nothing registered under this key.
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            ...CARD,
+            padding: '14px 16px',
+            fontSize: 12.5,
+            color: '#71717a'
+        },
+        children: [
+            "Nothing to show for “",
+            pageKey,
+            "”. Open the page first, then bring it in."
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/ui/surface-embed.tsx",
+        lineNumber: 93,
+        columnNumber: 5
+    }, this);
+}
+}),
+"[project]/features/assistant/workspace/inline-field-card.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+__turbopack_context__.s([
+    "InlineFieldCard",
+    ()=>InlineFieldCard
+]);
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/jotai@2.15.1_@babel+core@7._5b27b7b535d6519f6427fc26ba88e66f/node_modules/jotai/esm/react.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/shared/stores/resource-registry.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/shared/stores/workspace-store.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/shared/workflow-engine/runtime/workflow-runs/index.ts [app-ssr] (ecmascript) <locals>");
+'use client';
+;
+;
+;
+;
+;
+;
+const INK = '#18181b', FAINT = '#a1a1aa', LINE = 'rgba(24,24,27,0.12)', MUTED = '#71717a';
+function InlineFieldCard({ fieldId, preset }) {
+    const ctx = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getFieldContext"])(fieldId);
+    const binding = ctx?.field.binding;
+    const [fieldValues, setFieldValues] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["fieldValuesAtom"]);
+    const runEdits = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["runEditsAtom"]);
+    const setRunInput = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["setRunInputAtom"]);
+    const applied = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRef"])(false);
+    const editing = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRef"])(false);
+    // The authoritative current value. Bound → the engine input (stored override,
+    // else the workflow's input default, else the field default). Unbound → the
+    // field store, else the field default.
+    const engineDefault = binding ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["getWorkflowConfig"])(binding.workflowId)?.editableInputs?.find((i)=>i.key === binding.inputKey)?.default : undefined;
+    const resolved = binding ? String(runEdits[binding.workflowId]?.inputs?.[binding.inputKey] ?? engineDefault ?? ctx?.field.default ?? '') : fieldValues[fieldId] ?? ctx?.field.default ?? '';
+    // Local text buffer so mid-typing states ("1." , "") don't get clobbered by the
+    // parsed-number round-trip; re-syncs from the store when not actively editing.
+    const [text, setText] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(resolved);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        if (!editing.current) setText(resolved);
+    }, [
+        resolved
+    ]);
+    const commit = (raw)=>{
+        setText(raw);
+        if (binding) {
+            const n = Number(raw.replace(/,/g, ''));
+            if (raw.trim() !== '' && Number.isFinite(n)) setRunInput({
+                id: binding.workflowId,
+                key: binding.inputKey,
+                value: n
+            });
+        } else {
+            setFieldValues((v)=>({
+                    ...v,
+                    [fieldId]: raw
+                }));
+        }
+    };
+    // Apply a preset value once (e.g. "set the FX rate to 1.4821").
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        if (!applied.current && preset && preset !== '' && ctx) {
+            applied.current = true;
+            commit(preset);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+        preset,
+        ctx
+    ]);
+    if (!ctx) return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            fontSize: 12.5,
+            color: MUTED
+        },
+        children: [
+            "No editable field “",
+            fieldId,
+            "”."
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/workspace/inline-field-card.tsx",
+        lineNumber: 61,
+        columnNumber: 20
+    }, this);
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            maxWidth: 420,
+            background: '#fff',
+            border: `1px solid ${LINE}`,
+            borderRadius: 12,
+            overflow: 'hidden',
+            margin: '2px 0'
+        },
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    padding: '7px 12px',
+                    borderBottom: `1px solid ${LINE}`,
+                    fontSize: 10.5,
+                    fontWeight: 650,
+                    letterSpacing: '0.03em',
+                    textTransform: 'uppercase',
+                    color: FAINT
+                },
+                children: "Editable field · syncs to worksheet"
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/inline-field-card.tsx",
+                lineNumber: 65,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '12px 14px'
+                },
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            fontSize: 9,
+                            fontWeight: 700,
+                            padding: '2px 6px',
+                            borderRadius: 5,
+                            color: INK,
+                            border: `1px solid ${LINE}`
+                        },
+                        children: ctx.field.tag
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/inline-field-card.tsx",
+                        lineNumber: 67,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            flex: 1,
+                            minWidth: 0
+                        },
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                style: {
+                                    fontSize: 13,
+                                    fontWeight: 550,
+                                    color: INK
+                                },
+                                children: ctx.label
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/workspace/inline-field-card.tsx",
+                                lineNumber: 69,
+                                columnNumber: 11
+                            }, this),
+                            ctx.field.hint && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                style: {
+                                    fontSize: 11,
+                                    color: FAINT
+                                },
+                                children: ctx.field.hint
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/workspace/inline-field-card.tsx",
+                                lineNumber: 70,
+                                columnNumber: 30
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/features/assistant/workspace/inline-field-card.tsx",
+                        lineNumber: 68,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                        value: text,
+                        onChange: (e)=>commit(e.target.value),
+                        onFocus: (e)=>{
+                            editing.current = true;
+                            e.currentTarget.select();
+                        },
+                        onBlur: ()=>{
+                            editing.current = false;
+                        },
+                        inputMode: "decimal",
+                        style: {
+                            width: 100,
+                            textAlign: 'right',
+                            fontSize: 13,
+                            fontVariantNumeric: 'tabular-nums',
+                            color: INK,
+                            border: `1px solid ${LINE}`,
+                            borderRadius: 7,
+                            padding: '6px 9px',
+                            outline: 'none'
+                        }
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/inline-field-card.tsx",
+                        lineNumber: 72,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            fontSize: 10,
+                            color: FAINT,
+                            width: 34
+                        },
+                        children: ctx.field.ccy
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/inline-field-card.tsx",
+                        lineNumber: 80,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/inline-field-card.tsx",
+                lineNumber: 66,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/workspace/inline-field-card.tsx",
+        lineNumber: 64,
+        columnNumber: 5
+    }, this);
+}
+}),
+"[project]/features/assistant/workspace/google-source-picker.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+__turbopack_context__.s([
+    "GoogleSourcePicker",
+    ()=>GoogleSourcePicker
+]);
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
+// ─────────────────────────────────────────────────────────────────────────────
+// GoogleSourcePicker — pull a workflow's source workbook from Google Drive or a
+// Gmail attachment, instead of a local-disk upload. It fetches RAW bytes from
+// our /api/google/* routes, wraps them in a File, and runs the SAME parser as a
+// local upload (parseUploadToRows), so the rows — and therefore every computed
+// number — are identical regardless of where the workbook came from.
+// ─────────────────────────────────────────────────────────────────────────────
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$hard$2d$drive$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__HardDrive$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/hard-drive.js [app-ssr] (ecmascript) <export default as HardDrive>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$mail$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Mail$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/mail.js [app-ssr] (ecmascript) <export default as Mail>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$search$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Search$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/search.js [app-ssr] (ecmascript) <export default as Search>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/loader-circle.js [app-ssr] (ecmascript) <export default as Loader2>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$spreadsheet$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileSpreadsheet$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/file-spreadsheet.js [app-ssr] (ecmascript) <export default as FileSpreadsheet>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$paperclip$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Paperclip$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/paperclip.js [app-ssr] (ecmascript) <export default as Paperclip>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/x.js [app-ssr] (ecmascript) <export default as X>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$platform$2f$auth$2f$auth$2d$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/platform/auth/auth-client.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$parse$2d$upload$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/shared/workflow-engine/runtime/workflow-runs/parse-upload.ts [app-ssr] (ecmascript)");
+'use client';
+;
+;
+;
+;
+;
+const INK = '#18181b', MUTED = '#71717a', FAINT = '#a1a1aa', LINE = 'rgba(24,24,27,0.10)';
+async function bytesToRows(url, fallbackName, origin) {
+    const res = await fetch(url);
+    if (!res.ok) {
+        const data = await res.json().catch(()=>null);
+        throw new Error(data?.error ?? `Download failed (${res.status}).`);
+    }
+    const headerName = res.headers.get('X-Filename');
+    const fileName = headerName ? decodeURIComponent(headerName) : fallbackName;
+    const blob = await res.blob();
+    const file = new File([
+        blob
+    ], fileName, {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+    const { rows, fileName: parsedName } = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$parse$2d$upload$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["parseUploadToRows"])(file);
+    if (!rows.length) throw new Error('No usable rows found in that workbook.');
+    return {
+        fileName: parsedName,
+        rows,
+        origin
+    };
+}
+function GoogleSourcePicker({ onPicked, onClose }) {
+    const [status, setStatus] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [tab, setTab] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('drive');
+    const [query, setQuery] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('');
+    const [driveFiles, setDriveFiles] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [gmailMessages, setGmailMessages] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [listing, setListing] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [busyId, setBusyId] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [error, setError] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    const connecting = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRef"])(false);
+    // Connection status.
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        let alive = true;
+        fetch('/api/google/status').then((r)=>r.json()).then((s)=>{
+            if (alive) setStatus(s);
+        }).catch(()=>{
+            if (alive) setStatus({
+                connected: false,
+                missingScopes: [],
+                requiredScopes: [],
+                configured: false
+            });
+        });
+        return ()=>{
+            alive = false;
+        };
+    }, []);
+    const load = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useCallback"])(async (activeTab, q)=>{
+        setListing(true);
+        setError(null);
+        try {
+            if (activeTab === 'drive') {
+                const res = await fetch(`/api/google/drive/files?q=${encodeURIComponent(q)}`);
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error ?? 'Could not list Drive files.');
+                setDriveFiles(data.files ?? []);
+            } else {
+                const res = await fetch(`/api/google/gmail/messages?q=${encodeURIComponent(q)}`);
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error ?? 'Could not search Gmail.');
+                setGmailMessages(data.messages ?? []);
+            }
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'Something went wrong.');
+        } finally{
+            setListing(false);
+        }
+    }, []);
+    // Initial + debounced search per tab, once connected.
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        if (!status?.connected) return;
+        const t = setTimeout(()=>{
+            load(tab, query);
+        }, query ? 350 : 0);
+        return ()=>clearTimeout(t);
+    }, [
+        status?.connected,
+        tab,
+        query,
+        load
+    ]);
+    const connect = async ()=>{
+        if (connecting.current) return;
+        connecting.current = true;
+        try {
+            await __TURBOPACK__imported__module__$5b$project$5d2f$platform$2f$auth$2f$auth$2d$client$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["authClient"].linkSocial({
+                provider: 'google',
+                scopes: status?.requiredScopes?.length ? status.requiredScopes : [
+                    'https://www.googleapis.com/auth/drive.readonly',
+                    'https://www.googleapis.com/auth/gmail.readonly'
+                ],
+                callbackURL: ("TURBOPACK compile-time falsy", 0) ? "TURBOPACK unreachable" : '/'
+            });
+        // linkSocial redirects to Google; on return the status effect re-runs.
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'Could not start Google connection.');
+            connecting.current = false;
+        }
+    };
+    const pickDrive = async (f)=>{
+        setBusyId(f.id);
+        setError(null);
+        try {
+            onPicked(await bytesToRows(`/api/google/drive/files/${encodeURIComponent(f.id)}/content`, f.name, 'drive'));
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'Could not import that file.');
+        } finally{
+            setBusyId(null);
+        }
+    };
+    const pickAttachment = async (m, attId, filename)=>{
+        setBusyId(attId);
+        setError(null);
+        try {
+            const url = `/api/google/gmail/messages/${encodeURIComponent(m.messageId)}/attachments/${encodeURIComponent(attId)}?filename=${encodeURIComponent(filename)}`;
+            onPicked(await bytesToRows(url, filename, 'gmail'));
+        } catch (e) {
+            setError(e instanceof Error ? e.message : 'Could not import that attachment.');
+        } finally{
+            setBusyId(null);
+        }
+    };
+    const shell = (children)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            style: {
+                marginTop: 10,
+                border: `1px solid ${LINE}`,
+                borderRadius: 11,
+                background: '#fff',
+                overflow: 'hidden'
+            },
+            children: [
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    style: {
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: '8px 11px',
+                        borderBottom: `1px solid ${LINE}`,
+                        background: '#fafafa'
+                    },
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                            style: {
+                                fontSize: 11,
+                                fontWeight: 650,
+                                letterSpacing: '0.03em',
+                                textTransform: 'uppercase',
+                                color: FAINT
+                            },
+                            children: "Import from Google"
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                            lineNumber: 139,
+                            columnNumber: 9
+                        }, this),
+                        onClose && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                            onClick: onClose,
+                            title: "Close",
+                            style: {
+                                marginLeft: 'auto',
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                color: MUTED,
+                                display: 'inline-flex'
+                            },
+                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__["X"], {
+                                size: 14
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                                lineNumber: 140,
+                                columnNumber: 185
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                            lineNumber: 140,
+                            columnNumber: 21
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                    lineNumber: 138,
+                    columnNumber: 7
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    style: {
+                        padding: '11px 12px'
+                    },
+                    children: children
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                    lineNumber: 142,
+                    columnNumber: 7
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+            lineNumber: 137,
+            columnNumber: 5
+        }, this);
+    if (!status) {
+        return shell(/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            style: {
+                display: 'flex',
+                alignItems: 'center',
+                gap: 7,
+                fontSize: 12.5,
+                color: MUTED
+            },
+            children: [
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__["Loader2"], {
+                    size: 13,
+                    className: "cwp-spin"
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                    lineNumber: 147,
+                    columnNumber: 111
+                }, this),
+                " Checking Google connection…"
+            ]
+        }, void 0, true, {
+            fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+            lineNumber: 147,
+            columnNumber: 18
+        }, this));
+    }
+    if (!status.configured) {
+        return shell(/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            style: {
+                fontSize: 12.5,
+                color: MUTED,
+                lineHeight: 1.5
+            },
+            children: [
+                "Google isn’t configured on this server yet. Add ",
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("code", {
+                    style: {
+                        fontSize: 11
+                    },
+                    children: "GOOGLE_CLIENT_ID"
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                    lineNumber: 151,
+                    columnNumber: 129
+                }, this),
+                " / ",
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("code", {
+                    style: {
+                        fontSize: 11
+                    },
+                    children: "GOOGLE_CLIENT_SECRET"
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                    lineNumber: 151,
+                    columnNumber: 186
+                }, this),
+                " (with Drive + Gmail scopes) to enable Drive/Gmail import. You can still upload a workbook from your device."
+            ]
+        }, void 0, true, {
+            fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+            lineNumber: 151,
+            columnNumber: 18
+        }, this));
+    }
+    if (!status.connected) {
+        return shell(/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            children: [
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    style: {
+                        fontSize: 12.5,
+                        color: MUTED,
+                        lineHeight: 1.5,
+                        marginBottom: 10
+                    },
+                    children: "Connect Google to pull the trial balance straight from your Drive or an email attachment. Read-only access to Drive and Gmail."
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                    lineNumber: 157,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                    onClick: connect,
+                    style: {
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        fontSize: 12.5,
+                        fontWeight: 600,
+                        padding: '8px 14px',
+                        borderRadius: 8,
+                        background: INK,
+                        color: '#fff',
+                        border: 'none',
+                        cursor: 'pointer'
+                    },
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(GoogleG, {}, void 0, false, {
+                            fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                            lineNumber: 159,
+                            columnNumber: 11
+                        }, this),
+                        " Connect Google"
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                    lineNumber: 158,
+                    columnNumber: 9
+                }, this),
+                error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    style: {
+                        fontSize: 11,
+                        color: '#b91c1c',
+                        marginTop: 9
+                    },
+                    children: error
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                    lineNumber: 161,
+                    columnNumber: 19
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+            lineNumber: 156,
+            columnNumber: 7
+        }, this));
+    }
+    const tabBtn = (id, icon, label)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+            onClick: ()=>setTab(id),
+            style: {
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: 12,
+                fontWeight: 600,
+                padding: '6px 11px',
+                borderRadius: 8,
+                cursor: 'pointer',
+                color: tab === id ? '#fff' : INK,
+                background: tab === id ? INK : '#fff',
+                border: `1px solid ${tab === id ? INK : LINE}`
+            },
+            children: [
+                icon,
+                " ",
+                label
+            ]
+        }, void 0, true, {
+            fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+            lineNumber: 167,
+            columnNumber: 5
+        }, this);
+    return shell(/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    display: 'flex',
+                    gap: 7,
+                    marginBottom: 10
+                },
+                children: [
+                    tabBtn('drive', /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$hard$2d$drive$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__HardDrive$3e$__["HardDrive"], {
+                        size: 13
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                        lineNumber: 173,
+                        columnNumber: 26
+                    }, this), 'Drive'),
+                    tabBtn('gmail', /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$mail$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Mail$3e$__["Mail"], {
+                        size: 13
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                        lineNumber: 174,
+                        columnNumber: 26
+                    }, this), 'Gmail')
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                lineNumber: 172,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 7,
+                    padding: '6px 10px',
+                    border: `1px solid ${LINE}`,
+                    borderRadius: 8,
+                    marginBottom: 10
+                },
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$search$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Search$3e$__["Search"], {
+                        size: 13,
+                        style: {
+                            color: FAINT,
+                            flexShrink: 0
+                        }
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                        lineNumber: 178,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                        value: query,
+                        onChange: (e)=>setQuery(e.target.value),
+                        placeholder: tab === 'drive' ? 'Search Drive spreadsheets…' : 'Search emails with attachments…',
+                        style: {
+                            flex: 1,
+                            border: 'none',
+                            outline: 'none',
+                            fontSize: 12.5,
+                            color: INK,
+                            background: 'transparent'
+                        }
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                        lineNumber: 179,
+                        columnNumber: 9
+                    }, this),
+                    listing && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__["Loader2"], {
+                        size: 13,
+                        className: "cwp-spin",
+                        style: {
+                            color: FAINT
+                        }
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                        lineNumber: 185,
+                        columnNumber: 21
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                lineNumber: 177,
+                columnNumber: 7
+            }, this),
+            error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    fontSize: 11.5,
+                    color: '#b91c1c',
+                    marginBottom: 9
+                },
+                children: error
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                lineNumber: 188,
+                columnNumber: 17
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    maxHeight: 240,
+                    overflowY: 'auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2
+                },
+                children: [
+                    tab === 'drive' && (driveFiles == null ? null : driveFiles.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Empty, {
+                        text: listing ? 'Searching…' : 'No spreadsheets found.'
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                        lineNumber: 193,
+                        columnNumber: 39
+                    }, this) : driveFiles.map((f)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(RowButton, {
+                            busy: busyId === f.id,
+                            onClick: ()=>pickDrive(f),
+                            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$spreadsheet$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileSpreadsheet$3e$__["FileSpreadsheet"], {
+                                size: 14,
+                                style: {
+                                    color: '#15803d'
+                                }
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                                lineNumber: 196,
+                                columnNumber: 21
+                            }, void 0),
+                            title: f.name,
+                            sub: `${f.isGoogleSheet ? 'Google Sheet' : 'Excel'}${f.modifiedTime ? ` · ${new Date(f.modifiedTime).toLocaleDateString()}` : ''}`
+                        }, f.id, false, {
+                            fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                            lineNumber: 195,
+                            columnNumber: 13
+                        }, this))),
+                    tab === 'gmail' && (gmailMessages == null ? null : gmailMessages.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Empty, {
+                        text: listing ? 'Searching…' : 'No emails with .xlsx attachments found.'
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                        lineNumber: 205,
+                        columnNumber: 42
+                    }, this) : gmailMessages.map((m)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            style: {
+                                padding: '7px 2px',
+                                borderTop: `1px solid ${LINE}`
+                            },
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    style: {
+                                        fontSize: 12.5,
+                                        color: INK,
+                                        fontWeight: 550,
+                                        lineHeight: 1.3
+                                    },
+                                    children: m.subject
+                                }, void 0, false, {
+                                    fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                                    lineNumber: 208,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    style: {
+                                        fontSize: 10.5,
+                                        color: FAINT,
+                                        marginBottom: 5
+                                    },
+                                    children: [
+                                        cleanFrom(m.from),
+                                        m.date ? ` · ${new Date(m.date).toLocaleDateString()}` : ''
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                                    lineNumber: 209,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    style: {
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: 3
+                                    },
+                                    children: m.attachments.map((a)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(RowButton, {
+                                            busy: busyId === a.attachmentId,
+                                            onClick: ()=>pickAttachment(m, a.attachmentId, a.filename),
+                                            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$paperclip$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Paperclip$3e$__["Paperclip"], {
+                                                size: 13,
+                                                style: {
+                                                    color: MUTED
+                                                }
+                                            }, void 0, false, {
+                                                fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                                                lineNumber: 213,
+                                                columnNumber: 27
+                                            }, void 0),
+                                            title: a.filename,
+                                            sub: a.size ? `${(a.size / 1024).toFixed(0)} KB` : 'attachment',
+                                            compact: true
+                                        }, a.attachmentId, false, {
+                                            fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                                            lineNumber: 212,
+                                            columnNumber: 19
+                                        }, this))
+                                }, void 0, false, {
+                                    fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                                    lineNumber: 210,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, m.messageId, true, {
+                            fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                            lineNumber: 207,
+                            columnNumber: 13
+                        }, this)))
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                lineNumber: 190,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true));
+}
+function RowButton({ icon, title, sub, busy, onClick, compact }) {
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+        onClick: onClick,
+        disabled: busy,
+        style: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 9,
+            width: '100%',
+            textAlign: 'left',
+            padding: compact ? '5px 8px' : '7px 8px',
+            borderRadius: 8,
+            background: '#fff',
+            border: `1px solid ${compact ? 'transparent' : LINE}`,
+            cursor: busy ? 'default' : 'pointer'
+        },
+        onMouseEnter: (e)=>{
+            if (!busy) e.currentTarget.style.background = '#f6f6f7';
+        },
+        onMouseLeave: (e)=>{
+            e.currentTarget.style.background = '#fff';
+        },
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                style: {
+                    flexShrink: 0,
+                    display: 'inline-flex'
+                },
+                children: icon
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                lineNumber: 234,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                style: {
+                    flex: 1,
+                    minWidth: 0
+                },
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            display: 'block',
+                            fontSize: 12.5,
+                            color: INK,
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                        },
+                        children: title
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                        lineNumber: 236,
+                        columnNumber: 9
+                    }, this),
+                    sub && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            display: 'block',
+                            fontSize: 10.5,
+                            color: FAINT
+                        },
+                        children: sub
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                        lineNumber: 237,
+                        columnNumber: 17
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                lineNumber: 235,
+                columnNumber: 7
+            }, this),
+            busy ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__["Loader2"], {
+                size: 13,
+                className: "cwp-spin",
+                style: {
+                    color: MUTED,
+                    flexShrink: 0
+                }
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                lineNumber: 239,
+                columnNumber: 15
+            }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                style: {
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: MUTED,
+                    flexShrink: 0
+                },
+                children: "Use"
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                lineNumber: 239,
+                columnNumber: 100
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+        lineNumber: 230,
+        columnNumber: 5
+    }, this);
+}
+function Empty({ text }) {
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            fontSize: 12,
+            color: FAINT,
+            padding: '10px 4px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6
+        },
+        children: text
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+        lineNumber: 245,
+        columnNumber: 10
+    }, this);
+}
+function cleanFrom(from) {
+    const m = from.match(/^\s*"?([^"<]+?)"?\s*<.*>/);
+    return (m ? m[1] : from).trim();
+}
+// A minimal Google "G" mark (inline SVG, no external asset).
+function GoogleG() {
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
+        width: "14",
+        height: "14",
+        viewBox: "0 0 48 48",
+        "aria-hidden": true,
+        style: {
+            background: '#fff',
+            borderRadius: 3,
+            padding: 1
+        },
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
+                fill: "#EA4335",
+                d: "M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                lineNumber: 257,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
+                fill: "#4285F4",
+                d: "M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                lineNumber: 258,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
+                fill: "#FBBC05",
+                d: "M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                lineNumber: 259,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
+                fill: "#34A853",
+                d: "M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+                lineNumber: 260,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/workspace/google-source-picker.tsx",
+        lineNumber: 256,
+        columnNumber: 5
+    }, this);
+}
+}),
+"[project]/features/assistant/workspace/workflow-run-flow.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+__turbopack_context__.s([
+    "RunProposalCard",
+    ()=>RunProposalCard,
+    "WorkflowElementCard",
+    ()=>WorkflowElementCard,
+    "WorkflowRunFlow",
+    ()=>WorkflowRunFlow
+]);
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/jotai@2.15.1_@babel+core@7._5b27b7b535d6519f6427fc26ba88e66f/node_modules/jotai/esm/react.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$check$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Check$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/check.js [app-ssr] (ecmascript) <export default as Check>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$upload$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Upload$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/upload.js [app-ssr] (ecmascript) <export default as Upload>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$up$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileUp$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/file-up.js [app-ssr] (ecmascript) <export default as FileUp>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$shield$2d$check$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ShieldCheck$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/shield-check.js [app-ssr] (ecmascript) <export default as ShieldCheck>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/loader-circle.js [app-ssr] (ecmascript) <export default as Loader2>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/chevron-down.js [app-ssr] (ecmascript) <export default as ChevronDown>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$external$2d$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ExternalLink$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/external-link.js [app-ssr] (ecmascript) <export default as ExternalLink>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/x.js [app-ssr] (ecmascript) <export default as X>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$git$2d$branch$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__GitBranch$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/git-branch.js [app-ssr] (ecmascript) <export default as GitBranch>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$sliders$2d$horizontal$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__SlidersHorizontal$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/sliders-horizontal.js [app-ssr] (ecmascript) <export default as SlidersHorizontal>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$triangle$2d$alert$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertTriangle$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/triangle-alert.js [app-ssr] (ecmascript) <export default as AlertTriangle>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$cloud$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Cloud$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/cloud.js [app-ssr] (ecmascript) <export default as Cloud>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$play$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Play$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/play.js [app-ssr] (ecmascript) <export default as Play>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/shared/workflow-engine/runtime/workflow-runs/index.ts [app-ssr] (ecmascript) <locals>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$engine$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/shared/workflow-engine/runtime/workflow-runs/engine.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$parse$2d$upload$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/shared/workflow-engine/runtime/workflow-runs/parse-upload.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$workspace$2f$google$2d$source$2d$picker$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/assistant/workspace/google-source-picker.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/shared/stores/workspace-store.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/coworkers.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/work-store.ts [app-ssr] (ecmascript)");
+'use client';
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+// ── Palette ─────────────────────────────────────────────────────────────────────
+// The run is themeable via CSS custom properties so the SAME component blends into
+// two surfaces: the dark LibreChat chat thread (default) and the light neumorphic
+// standalone `/run/*` page (`surface="light"`). Every token is `var(--cwp-*, <dark>)`
+// so the DARK value is the fallback — components rendered outside a run-flow root
+// (e.g. the pinned WorkflowElementCard, always on the dark chat) stay dark with no
+// var scope. The light map (below) overrides the vars on the run-flow root only.
+// Primary (filled) buttons invert per theme: light chip on dark, ink chip on light.
+const INK = 'var(--cwp-ink, #ececec)', MUTED = 'var(--cwp-muted, #9a9a9a)', FAINT = 'var(--cwp-faint, #6f6f6f)';
+const DIM = 'var(--cwp-dim, #5a5a5a)'; // pending/disabled text
+const LINE = 'var(--cwp-line, rgba(255,255,255,0.12))', HAIRLINE = 'var(--cwp-hairline, rgba(255,255,255,0.07))';
+const SURFACE = 'var(--cwp-surface, rgba(255,255,255,0.03))'; // inset detail panels
+const CARD = 'var(--cwp-card, #2f2f2f)'; // ghost buttons / chips
+const GROUND = 'var(--cwp-ground, #212121)'; // chat bg — dot centers
+const PRIMARY_BG = 'var(--cwp-primary-bg, #ececec)', PRIMARY_FG = 'var(--cwp-primary-fg, #1a1a1a)';
+const LIVE = 'var(--cwp-live, #93c5fd)'; // "live value" accent
+const AMBER = 'var(--cwp-amber, #dab06c)', AMBER_TEXT = 'var(--cwp-amber-text, #f0d9ac)', AMBER_SOFT = 'var(--cwp-amber-soft, rgba(218,176,108,0.12))', AMBER_LINE = 'var(--cwp-amber-line, rgba(218,176,108,0.32))';
+const DANGER = 'var(--cwp-danger, #f87171)';
+const SPINE_DONE = 'var(--cwp-spine-done, rgba(236,236,236,0.18))', SPINE_AHEAD = 'var(--cwp-spine-ahead, rgba(236,236,236,0.09))';
+const HOVER = 'var(--cwp-hover, rgba(255,255,255,0.04))';
+// Light overrides for the standalone `/run/*` page — restore the original neumorphic look.
+const LIGHT_VARS = {
+    '--cwp-ink': '#18181b',
+    '--cwp-muted': '#71717a',
+    '--cwp-faint': '#a1a1aa',
+    '--cwp-dim': '#c4c4cc',
+    '--cwp-line': 'rgba(24,24,27,0.10)',
+    '--cwp-hairline': 'rgba(24,24,27,0.07)',
+    '--cwp-surface': '#fafafa',
+    '--cwp-card': '#ffffff',
+    '--cwp-ground': '#ffffff',
+    '--cwp-primary-bg': '#18181b',
+    '--cwp-primary-fg': '#ffffff',
+    '--cwp-live': '#0369a1',
+    '--cwp-amber': '#b45309',
+    '--cwp-amber-text': '#92400e',
+    '--cwp-amber-soft': 'rgba(217,119,6,0.08)',
+    '--cwp-amber-line': 'rgba(217,119,6,0.30)',
+    '--cwp-danger': '#b91c1c',
+    '--cwp-spine-done': 'rgba(24,24,27,0.18)',
+    '--cwp-spine-ahead': 'rgba(24,24,27,0.09)',
+    '--cwp-hover': 'rgba(24,24,27,0.025)'
+};
+const num = (n)=>n.toLocaleString('en-CA', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+// A RATE (FX / conversion factor) is not money — show it at full precision, never
+// 2dp cents (which would display 1.3978 as "1.40"). Matches the engine's rate
+// handling + the worksheet's fmtRate, so all surfaces show the same rate.
+const numRate = (n)=>n.toLocaleString('en-CA', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 6
+    });
+const isRateKey = (key)=>/_RATE$|^FX/i.test(key);
+const fig = (key, value)=>isRateKey(key) ? numRate(value) : num(value);
+// The ONLY color in the run — each timeline dot is toned by what the step means. Pastel + discreet.
+const TONES = {
+    source: '#7fb2d9',
+    ai: '#a892d6',
+    engine: '#7cc3a6',
+    checkpoint: '#dab06c',
+    step: '#9ca3af'
+};
+function hexA(hex, a) {
+    const h = hex.replace('#', '');
+    return `rgba(${parseInt(h.slice(0, 2), 16)},${parseInt(h.slice(2, 4), 16)},${parseInt(h.slice(4, 6), 16)},${a})`;
+}
+/** Classify a step so its dot gets a meaning: source · AI suggestion · engine · checkpoint. */ function stepMeta(step) {
+    const t = `${step.label} ${step.sub ?? ''}`.toLowerCase();
+    if (/classif|categor|\bmap|suggest/.test(t)) return {
+        tone: TONES.ai,
+        kind: 'AI suggestion'
+    };
+    if (/comput|calcul|engine|rollup|aggregat|deriv/.test(t)) return {
+        tone: TONES.engine,
+        kind: 'Engine calculation'
+    };
+    if (/approv|sign[- ]?off|elect|decision/.test(t)) return {
+        tone: TONES.checkpoint,
+        kind: 'Checkpoint'
+    };
+    if (/collect|source|upload|document|trial|balance/.test(t)) return {
+        tone: TONES.source,
+        kind: 'Source'
+    };
+    return {
+        tone: TONES.step,
+        kind: 'Step'
+    };
+}
+function KV({ l, sub, v }) {
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: 12,
+            padding: '3px 0',
+            alignItems: 'baseline'
+        },
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                style: {
+                    minWidth: 0
+                },
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            fontSize: 12,
+                            color: INK
+                        },
+                        children: l
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 73,
+                        columnNumber: 9
+                    }, this),
+                    sub && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            display: 'block',
+                            fontSize: 10.5,
+                            color: FAINT,
+                            fontFamily: 'ui-monospace, monospace'
+                        },
+                        children: sub
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 74,
+                        columnNumber: 17
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 72,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                style: {
+                    fontSize: 12,
+                    color: INK,
+                    fontWeight: 600,
+                    fontVariantNumeric: 'tabular-nums',
+                    whiteSpace: 'nowrap'
+                },
+                children: v
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 76,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+        lineNumber: 71,
+        columnNumber: 5
+    }, this);
+}
+function TimelineDot({ status, tone }) {
+    const base = {
+        width: 14,
+        height: 14,
+        borderRadius: '50%',
+        boxSizing: 'border-box',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'background 200ms'
+    };
+    if (status === 'done') return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+        style: {
+            ...base,
+            background: tone
+        },
+        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$check$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Check$3e$__["Check"], {
+            className: "cwp-pop",
+            size: 9,
+            color: "#fff",
+            strokeWidth: 3
+        }, void 0, false, {
+            fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+            lineNumber: 83,
+            columnNumber: 77
+        }, this)
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+        lineNumber: 83,
+        columnNumber: 33
+    }, this);
+    if (status === 'active') return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+        className: "cwp-halo",
+        style: {
+            ...base,
+            border: `2px solid ${tone}`,
+            background: GROUND,
+            ['--tone']: tone
+        },
+        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__["Loader2"], {
+            size: 8,
+            color: tone,
+            className: "cwp-spin"
+        }, void 0, false, {
+            fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+            lineNumber: 84,
+            columnNumber: 159
+        }, this)
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+        lineNumber: 84,
+        columnNumber: 35
+    }, this);
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+        style: {
+            ...base,
+            width: 13,
+            height: 13,
+            border: `2px solid ${hexA(tone, 0.35)}`,
+            background: GROUND
+        }
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+        lineNumber: 85,
+        columnNumber: 10
+    }, this);
+}
+const detailWrap = (children)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            margin: '2px 0 10px 28px',
+            padding: '12px 14px',
+            background: SURFACE,
+            border: `1px solid ${HAIRLINE}`,
+            borderRadius: 10
+        },
+        children: children
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+        lineNumber: 88,
+        columnNumber: 51
+    }, ("TURBOPACK compile-time value", void 0));
+const hdr = (t)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            fontSize: 10.5,
+            fontWeight: 650,
+            textTransform: 'uppercase',
+            letterSpacing: '0.04em',
+            color: FAINT,
+            marginBottom: 6
+        },
+        children: t
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+        lineNumber: 89,
+        columnNumber: 28
+    }, ("TURBOPACK compile-time value", void 0));
+const smallBtnStyle = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 10,
+    marginRight: 8,
+    fontSize: 11.5,
+    fontWeight: 550,
+    color: INK,
+    background: CARD,
+    border: `1px solid ${LINE}`,
+    borderRadius: 7,
+    padding: '5px 10px',
+    cursor: 'pointer'
+};
+const openTab = (resultPage, onOpenPage)=>resultPage && onOpenPage && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+        onClick: ()=>onOpenPage(resultPage),
+        style: smallBtnStyle,
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$external$2d$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ExternalLink$3e$__["ExternalLink"], {
+                size: 11
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 91,
+                columnNumber: 173
+            }, ("TURBOPACK compile-time value", void 0)),
+            " Open worksheet in a tab"
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+        lineNumber: 91,
+        columnNumber: 104
+    }, ("TURBOPACK compile-time value", void 0));
+// config keys that are plumbing, not worth showing in a human summary
+const INTERNAL_CFG = new Set([
+    'toolId',
+    'sourceKind',
+    'sourceStatus',
+    'sourceVersion',
+    'outputs',
+    'inputs',
+    'rulebookRef',
+    'owner',
+    'blockFamily',
+    'catalogId',
+    'sourceLocator'
+]);
+function fmtCfg(v) {
+    if (v == null) return null;
+    if (typeof v === 'boolean') return v ? 'yes' : 'no';
+    if (typeof v === 'number') return String(v);
+    if (typeof v === 'string') {
+        const s = v.trim();
+        if (!s) return null;
+        return s.length > 64 ? `${s.slice(0, 61)}…` : s;
+    }
+    return null; // skip objects/arrays in the summary
+}
+function blockLineage(snapshot, blockId) {
+    const blocks = snapshot?.blocks ?? [];
+    const edges = snapshot?.edges ?? [];
+    const byId = (id)=>blocks.find((b)=>b.id === id);
+    const block = byId(blockId);
+    const upstream = edges.filter((e)=>e.targetBlockId === blockId).map((e)=>({
+            b: byId(e.sourceBlockId),
+            reason: e.reason,
+            role: e.sourceOutputRole
+        }));
+    const downstream = edges.filter((e)=>e.sourceBlockId === blockId).map((e)=>({
+            b: byId(e.targetBlockId),
+            reason: e.reason,
+            role: e.targetInputRole
+        }));
+    return {
+        block,
+        upstream,
+        downstream
+    };
+}
+function LineageRow({ arrow, name, sub }) {
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            display: 'flex',
+            gap: 7,
+            padding: '3px 0',
+            alignItems: 'baseline'
+        },
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                style: {
+                    color: FAINT,
+                    fontSize: 11,
+                    flexShrink: 0
+                },
+                children: arrow
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 120,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                style: {
+                    minWidth: 0
+                },
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            fontSize: 11.5,
+                            color: INK
+                        },
+                        children: name
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 122,
+                        columnNumber: 9
+                    }, this),
+                    sub && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            display: 'block',
+                            fontSize: 10,
+                            color: FAINT,
+                            lineHeight: 1.35
+                        },
+                        children: sub
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 123,
+                        columnNumber: 17
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 121,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+        lineNumber: 119,
+        columnNumber: 5
+    }, this);
+}
+function BlockPeek({ snapshot, blockId, onOpenBuilder, liveConfig }) {
+    const { block, upstream, downstream } = blockLineage(snapshot, blockId);
+    if (!block) return null;
+    // Merge the run's current values (edited inputs / live-fetched rate) over the template config.
+    const baseConfig = block.config ?? {};
+    const mergedConfig = {
+        ...baseConfig,
+        ...liveConfig ?? {}
+    };
+    const isLive = (k)=>liveConfig != null && k in liveConfig && fmtCfg(liveConfig[k]) !== fmtCfg(baseConfig[k]);
+    const cfg = Object.entries(mergedConfig).filter(([k, v])=>!INTERNAL_CFG.has(k) && fmtCfg(v) !== null).slice(0, 6);
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            margin: '7px 0 2px',
+            padding: '10px 12px',
+            background: SURFACE,
+            border: `1px solid ${HAIRLINE}`,
+            borderRadius: 9
+        },
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 7,
+                    marginBottom: 4
+                },
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            fontSize: 12.5,
+                            fontWeight: 650,
+                            color: INK
+                        },
+                        children: block.label ?? block.id
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 140,
+                        columnNumber: 9
+                    }, this),
+                    block.subtype && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            fontSize: 9.5,
+                            fontWeight: 600,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.03em',
+                            color: MUTED,
+                            background: 'rgba(255,255,255,0.06)',
+                            border: `1px solid ${LINE}`,
+                            borderRadius: 5,
+                            padding: '1px 5px'
+                        },
+                        children: block.subtype
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 141,
+                        columnNumber: 27
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 139,
+                columnNumber: 7
+            }, this),
+            block.description && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    fontSize: 11,
+                    color: MUTED,
+                    lineHeight: 1.45,
+                    marginBottom: cfg.length ? 7 : 4
+                },
+                children: block.description
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 143,
+                columnNumber: 29
+            }, this),
+            cfg.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    marginBottom: 7
+                },
+                children: cfg.map(([k, v])=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(KV, {
+                        l: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                            style: {
+                                fontSize: 11
+                            },
+                            children: [
+                                k,
+                                isLive(k) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                    style: {
+                                        marginLeft: 5,
+                                        fontSize: 9,
+                                        fontWeight: 600,
+                                        color: LIVE,
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.03em'
+                                    },
+                                    children: "· live"
+                                }, void 0, false, {
+                                    fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                    lineNumber: 146,
+                                    columnNumber: 95
+                                }, void 0)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                            lineNumber: 146,
+                            columnNumber: 47
+                        }, void 0),
+                        v: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                            style: {
+                                fontSize: 11,
+                                color: isLive(k) ? LIVE : INK
+                            },
+                            children: fmtCfg(v)
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                            lineNumber: 146,
+                            columnNumber: 249
+                        }, void 0)
+                    }, k, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 146,
+                        columnNumber: 32
+                    }, this))
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 145,
+                columnNumber: 9
+            }, this),
+            upstream.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    marginBottom: downstream.length ? 6 : 0
+                },
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            fontSize: 9.5,
+                            fontWeight: 650,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.04em',
+                            color: FAINT,
+                            marginBottom: 2
+                        },
+                        children: "Fed by"
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 151,
+                        columnNumber: 11
+                    }, this),
+                    upstream.map((u, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(LineageRow, {
+                            arrow: "←",
+                            name: u.b?.label ?? u.b?.id ?? 'source',
+                            sub: u.reason
+                        }, i, false, {
+                            fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                            lineNumber: 152,
+                            columnNumber: 35
+                        }, this))
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 150,
+                columnNumber: 9
+            }, this),
+            downstream.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            fontSize: 9.5,
+                            fontWeight: 650,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.04em',
+                            color: FAINT,
+                            marginBottom: 2
+                        },
+                        children: "Feeds"
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 157,
+                        columnNumber: 11
+                    }, this),
+                    downstream.map((d, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(LineageRow, {
+                            arrow: "→",
+                            name: d.b?.label ?? d.b?.id ?? 'target',
+                            sub: d.reason
+                        }, i, false, {
+                            fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                            lineNumber: 158,
+                            columnNumber: 37
+                        }, this))
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 156,
+                columnNumber: 9
+            }, this),
+            onOpenBuilder && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                onClick: ()=>onOpenBuilder(blockId),
+                style: {
+                    ...smallBtnStyle,
+                    marginTop: 8,
+                    marginRight: 0
+                },
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$git$2d$branch$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__GitBranch$3e$__["GitBranch"], {
+                        size: 11
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 161,
+                        columnNumber: 131
+                    }, this),
+                    " Open the full block in the builder"
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 161,
+                columnNumber: 25
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+        lineNumber: 138,
+        columnNumber: 5
+    }, this);
+}
+// Toggle button that reveals BlockPeek inline. `variant`: 'button' (stage) | 'link' (inline text).
+function WhereFrom({ snapshot, blockId, onOpenBuilder, label, variant = 'button', liveConfigByBlock }) {
+    const [open, setOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    if (!blockId) return null;
+    const toggle = ()=>setOpen((o)=>!o);
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+        children: [
+            variant === 'link' ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                onClick: toggle,
+                style: {
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    color: MUTED,
+                    fontSize: 10.5,
+                    cursor: 'pointer',
+                    textDecoration: 'underline'
+                },
+                children: [
+                    label,
+                    open ? ' ▴' : ' →'
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 174,
+                columnNumber: 11
+            }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                onClick: toggle,
+                style: smallBtnStyle,
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$git$2d$branch$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__GitBranch$3e$__["GitBranch"], {
+                        size: 11
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 175,
+                        columnNumber: 58
+                    }, this),
+                    " ",
+                    label,
+                    open ? ' ▴' : ''
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 175,
+                columnNumber: 11
+            }, this),
+            open && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(BlockPeek, {
+                snapshot: snapshot,
+                blockId: blockId,
+                onOpenBuilder: onOpenBuilder,
+                liveConfig: liveConfigByBlock?.[blockId]
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 176,
+                columnNumber: 16
+            }, this)
+        ]
+    }, void 0, true);
+}
+// The AI-suggested classification step — reviewable + re-mappable per row.
+function ClassifyReview({ detail, config, overrides, onOverride, onOpenBuilder, snapshot, liveConfigByBlock }) {
+    const [editing, setEditing] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    // Unmatched rows first — they're the ones needing a decision (and the target of
+    // the "Review N" banner); matched rows follow for confirmation/override.
+    const rows = [
+        ...detail.unmatched.map((u)=>({
+                rowId: u.rowId,
+                label: u.label,
+                amount: u.amount,
+                category: 'Unclassified',
+                confidence: 0,
+                unmatched: true
+            })),
+        ...detail.mapped.map((m)=>({
+                rowId: m.rowId,
+                label: m.label,
+                amount: m.amount,
+                category: m.category,
+                confidence: m.confidence,
+                unmatched: false
+            }))
+    ];
+    const opts = config.categoryOptions.filter((o)=>o.id !== '__skip__');
+    return detailWrap(/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    fontSize: 11.5,
+                    color: MUTED,
+                    lineHeight: 1.5,
+                    marginBottom: 8
+                },
+                children: [
+                    "The keyword mapper ",
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
+                        children: "suggested"
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 194,
+                        columnNumber: 104
+                    }, this),
+                    " these classifications. Click any category to override the AI — the workflow re-runs with your decision."
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 194,
+                columnNumber: 5
+            }, this),
+            rows.map((r)=>{
+                const overridden = r.rowId in overrides;
+                const isEd = editing === r.rowId;
+                return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    style: {
+                        padding: '7px 0',
+                        borderTop: `1px solid ${HAIRLINE}`
+                    },
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            style: {
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 10
+                            },
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    style: {
+                                        flex: 1,
+                                        minWidth: 0
+                                    },
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            style: {
+                                                fontSize: 12.5,
+                                                color: INK
+                                            },
+                                            children: r.label
+                                        }, void 0, false, {
+                                            fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                            lineNumber: 202,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            style: {
+                                                fontSize: 10.5,
+                                                color: FAINT,
+                                                fontVariantNumeric: 'tabular-nums'
+                                            },
+                                            children: num(r.amount)
+                                        }, void 0, false, {
+                                            fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                            lineNumber: 203,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                    lineNumber: 201,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                    onClick: ()=>setEditing(isEd ? null : r.rowId),
+                                    style: {
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 5,
+                                        fontSize: 11.5,
+                                        fontWeight: 550,
+                                        padding: '4px 9px',
+                                        borderRadius: 999,
+                                        cursor: 'pointer',
+                                        color: r.unmatched ? AMBER_TEXT : INK,
+                                        background: r.unmatched ? AMBER_SOFT : CARD,
+                                        border: `1px solid ${r.unmatched ? AMBER_LINE : LINE}`
+                                    },
+                                    children: [
+                                        r.category,
+                                        !r.unmatched && r.confidence ? ` · ${Math.round(r.confidence * 100)}%` : '',
+                                        overridden ? ' ✎' : '',
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
+                                            size: 11,
+                                            style: {
+                                                transform: isEd ? 'rotate(180deg)' : 'none'
+                                            }
+                                        }, void 0, false, {
+                                            fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                            lineNumber: 207,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                    lineNumber: 205,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                            lineNumber: 200,
+                            columnNumber: 11
+                        }, this),
+                        isEd && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            style: {
+                                display: 'flex',
+                                gap: 6,
+                                flexWrap: 'wrap',
+                                marginTop: 8,
+                                paddingLeft: 2
+                            },
+                            children: [
+                                opts.map((o)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                        onClick: ()=>{
+                                            onOverride(r.rowId, o.id);
+                                            setEditing(null);
+                                        },
+                                        style: {
+                                            fontSize: 11.5,
+                                            fontWeight: 500,
+                                            padding: '5px 10px',
+                                            borderRadius: 7,
+                                            background: o.label === r.category ? PRIMARY_BG : CARD,
+                                            color: o.label === r.category ? PRIMARY_FG : INK,
+                                            border: `1px solid ${LINE}`,
+                                            cursor: 'pointer'
+                                        },
+                                        children: o.label
+                                    }, o.id, false, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 212,
+                                        columnNumber: 32
+                                    }, this)),
+                                r.unmatched && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                    onClick: ()=>{
+                                        onOverride(r.rowId, '__skip__');
+                                        setEditing(null);
+                                    },
+                                    style: {
+                                        fontSize: 11.5,
+                                        fontWeight: 500,
+                                        padding: '5px 10px',
+                                        borderRadius: 7,
+                                        background: CARD,
+                                        color: MUTED,
+                                        border: `1px solid ${LINE}`,
+                                        cursor: 'pointer'
+                                    },
+                                    children: "Leave unmatched"
+                                }, void 0, false, {
+                                    fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                    lineNumber: 213,
+                                    columnNumber: 31
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                            lineNumber: 211,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, r.rowId, true, {
+                    fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                    lineNumber: 199,
+                    columnNumber: 9
+                }, this);
+            }),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    marginTop: 10
+                },
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(WhereFrom, {
+                    snapshot: snapshot,
+                    blockId: config.mapperBlockId,
+                    onOpenBuilder: onOpenBuilder,
+                    label: "Where these classifications come from",
+                    liveConfigByBlock: liveConfigByBlock
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                    lineNumber: 219,
+                    columnNumber: 36
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 219,
+                columnNumber: 5
+            }, this)
+        ]
+    }, void 0, true));
+}
+function StageDetail({ idx, detail, config, overrides, resultPage, onOverride, onOpenPage, onOpenBuilder, snapshot, liveConfigByBlock }) {
+    const openBtn = openTab(resultPage, onOpenPage);
+    const where = (blockId, label)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            style: {
+                marginTop: 10
+            },
+            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(WhereFrom, {
+                snapshot: snapshot,
+                blockId: blockId,
+                onOpenBuilder: onOpenBuilder,
+                label: label,
+                liveConfigByBlock: liveConfigByBlock
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 228,
+                columnNumber: 96
+            }, this)
+        }, void 0, false, {
+            fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+            lineNumber: 228,
+            columnNumber: 65
+        }, this);
+    if (!detail) return detailWrap(/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            fontSize: 11.5,
+            color: FAINT
+        },
+        children: "Nothing to review yet — this step runs once the source document is provided."
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+        lineNumber: 229,
+        columnNumber: 34
+    }, this));
+    if (idx === 0) return detailWrap(/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+        children: [
+            hdr(`Source document · ${detail.sourceRows.length} rows`),
+            detail.sourceRows.map((r)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(KV, {
+                    l: r.label,
+                    sub: r.account ? `acct ${r.account}` : undefined,
+                    v: `${num(r.amount)} ${r.currency ?? ''}`
+                }, r.rowId, false, {
+                    fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                    lineNumber: 230,
+                    columnNumber: 127
+                }, this)),
+            openBtn,
+            where(config.sourceBlockId, 'Where this source comes from')
+        ]
+    }, void 0, true));
+    if (idx === 1) return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(ClassifyReview, {
+        detail: detail,
+        config: config,
+        overrides: overrides,
+        onOverride: onOverride,
+        onOpenBuilder: onOpenBuilder,
+        snapshot: snapshot,
+        liveConfigByBlock: liveConfigByBlock
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+        lineNumber: 231,
+        columnNumber: 25
+    }, this);
+    if (idx === 2) return detailWrap(/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+        children: [
+            hdr('Deterministic — aggregated buckets'),
+            detail.buckets.map((b)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(KV, {
+                    l: b.key,
+                    v: num(b.value)
+                }, b.key, false, {
+                    fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                    lineNumber: 232,
+                    columnNumber: 108
+                }, this)),
+            where(config.rollupBlockId, 'Where this aggregation comes from'),
+            hdr2('Computed lines (formula → value)'),
+            detail.lines.filter((l)=>l.value !== 0).map((l)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(KV, {
+                    l: l.label,
+                    sub: l.formula,
+                    v: fig(l.key, l.value)
+                }, l.key, false, {
+                    fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                    lineNumber: 232,
+                    columnNumber: 317
+                }, this)),
+            openBtn,
+            where(config.linesBlockId, 'Where this calculation comes from')
+        ]
+    }, void 0, true));
+    if (idx === 3) return detailWrap(/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+        children: [
+            hdr('Result — every figure traced'),
+            detail.summary.map((s)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(KV, {
+                    l: s.label,
+                    sub: s.formula,
+                    v: fig(s.key, s.value)
+                }, s.key, false, {
+                    fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                    lineNumber: 233,
+                    columnNumber: 102
+                }, this)),
+            openBtn,
+            where(config.summaryBlockId, 'Where this result comes from')
+        ]
+    }, void 0, true));
+    return null;
+}
+const hdr2 = (t)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            fontSize: 10.5,
+            fontWeight: 650,
+            textTransform: 'uppercase',
+            letterSpacing: '0.04em',
+            color: FAINT,
+            margin: '10px 0 6px'
+        },
+        children: t
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+        lineNumber: 236,
+        columnNumber: 29
+    }, ("TURBOPACK compile-time value", void 0));
+function ghostBtn(props) {
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+        ...props,
+        style: {
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: 12.5,
+            fontWeight: 500,
+            padding: '7px 13px',
+            borderRadius: 8,
+            background: CARD,
+            color: INK,
+            border: `1px solid ${LINE}`,
+            cursor: 'pointer',
+            ...props.style
+        }
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+        lineNumber: 239,
+        columnNumber: 10
+    }, this);
+}
+function WorkflowElementCard({ config, element, onOpenPage, onOpenBuilder }) {
+    const uploaded = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["uploadedRowsAtom"]);
+    const allEdits = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["runEditsAtom"]);
+    const isSource = element === 'source';
+    // Use the SAME live data the run + worksheet use (uploaded rows + the shared run
+    // edits), NOT the static sample config — so this summoned card can never disagree
+    // with the worksheet/run for the same workflow. Mirrors fapi-worksheet's compute.
+    const sourceRows = uploaded[config.id]?.rows?.length ? uploaded[config.id].rows : config.sampleRows;
+    const outcome = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMemo"])(()=>{
+        if (element !== 'output') return null;
+        const edits = allEdits[config.id] ?? __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["EMPTY_RUN_EDITS"];
+        const defaults = Object.fromEntries((config.editableInputs ?? []).filter((i)=>!i.classificationFed).map((i)=>[
+                i.key,
+                i.default
+            ]));
+        const inputs = {
+            ...defaults,
+            ...edits.inputs
+        };
+        try {
+            const core = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$engine$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["runTemplateCore"])(config, {
+                rows: sourceRows,
+                overrides: (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$engine$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["buildOverrideRules"])(config, sourceRows, edits.overrides),
+                inputs
+            });
+            const value = core.summaryValues[config.headlineKey] ?? core.lineValues[config.headlineKey] ?? 0;
+            const label = config.summaryRules.find((r)=>r.resultKey === config.headlineKey)?.label ?? config.headlineKey;
+            return {
+                detail: core.detail,
+                headline: {
+                    label,
+                    value
+                }
+            };
+        } catch  {
+            return null;
+        }
+    }, [
+        config,
+        element,
+        sourceRows,
+        allEdits
+    ]);
+    const blockId = isSource ? config.sourceBlockId : config.summaryBlockId;
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            maxWidth: 460,
+            background: CARD,
+            border: `1px solid ${LINE}`,
+            borderRadius: 12,
+            overflow: 'hidden',
+            margin: '2px 0'
+        },
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '9px 13px',
+                    borderBottom: `1px solid ${HAIRLINE}`,
+                    background: SURFACE
+                },
+                children: [
+                    isSource ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$up$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileUp$3e$__["FileUp"], {
+                        size: 13,
+                        style: {
+                            color: MUTED
+                        }
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 272,
+                        columnNumber: 21
+                    }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$git$2d$branch$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__GitBranch$3e$__["GitBranch"], {
+                        size: 13,
+                        style: {
+                            color: MUTED
+                        }
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 272,
+                        columnNumber: 69
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            fontSize: 10.5,
+                            fontWeight: 650,
+                            letterSpacing: '0.03em',
+                            textTransform: 'uppercase',
+                            color: FAINT
+                        },
+                        children: [
+                            config.name,
+                            " · ",
+                            isSource ? 'Source document' : 'Output'
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 273,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            marginLeft: 'auto',
+                            fontSize: 10.5,
+                            color: FAINT
+                        },
+                        children: "from workflow builder"
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 276,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 271,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    padding: '10px 13px'
+                },
+                children: [
+                    isSource ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                style: {
+                                    fontSize: 12.5,
+                                    fontWeight: 550,
+                                    color: INK,
+                                    marginBottom: 6
+                                },
+                                children: config.documentLabel
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                lineNumber: 281,
+                                columnNumber: 13
+                            }, this),
+                            sourceRows.map((r)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(KV, {
+                                    l: r.label,
+                                    sub: r.account ? `acct ${r.account}` : undefined,
+                                    v: `${num(r.amount)} ${r.currency ?? ''}`
+                                }, r.rowId, false, {
+                                    fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                    lineNumber: 282,
+                                    columnNumber: 36
+                                }, this))
+                        ]
+                    }, void 0, true) : outcome?.detail ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+                        children: [
+                            outcome.detail.summary.map((s)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(KV, {
+                                    l: s.label,
+                                    sub: s.formula,
+                                    v: isRateKey(s.key) ? numRate(s.value) : `${num(s.value)} ${config.currency}`
+                                }, s.key, false, {
+                                    fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                    lineNumber: 286,
+                                    columnNumber: 48
+                                }, this)),
+                            outcome.headline && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                style: {
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    marginTop: 8,
+                                    paddingTop: 8,
+                                    borderTop: `1px solid ${HAIRLINE}`
+                                },
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        style: {
+                                            fontSize: 12,
+                                            color: MUTED
+                                        },
+                                        children: outcome.headline.label
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 287,
+                                        columnNumber: 165
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        style: {
+                                            fontSize: 15,
+                                            fontWeight: 650,
+                                            color: INK
+                                        },
+                                        children: [
+                                            num(outcome.headline.value),
+                                            " ",
+                                            config.currency
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 287,
+                                        columnNumber: 241
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                lineNumber: 287,
+                                columnNumber: 34
+                            }, this)
+                        ]
+                    }, void 0, true) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            fontSize: 12,
+                            color: FAINT
+                        },
+                        children: "No output yet."
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 289,
+                        columnNumber: 13
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            display: 'flex',
+                            gap: 8,
+                            marginTop: 10
+                        },
+                        children: [
+                            !isSource && onOpenPage && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                onClick: ()=>onOpenPage('fapi'),
+                                style: btnGhost,
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$external$2d$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ExternalLink$3e$__["ExternalLink"], {
+                                        size: 11
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 291,
+                                        columnNumber: 99
+                                    }, this),
+                                    " Open worksheet"
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                lineNumber: 291,
+                                columnNumber: 39
+                            }, this),
+                            onOpenBuilder && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                onClick: ()=>onOpenBuilder(blockId),
+                                style: btnGhost,
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$git$2d$branch$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__GitBranch$3e$__["GitBranch"], {
+                                        size: 11
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 292,
+                                        columnNumber: 93
+                                    }, this),
+                                    " Open in builder"
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                lineNumber: 292,
+                                columnNumber: 29
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 290,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 278,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+        lineNumber: 270,
+        columnNumber: 5
+    }, this);
+}
+const btnGhost = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 5,
+    fontSize: 11.5,
+    fontWeight: 550,
+    color: INK,
+    background: CARD,
+    border: `1px solid ${LINE}`,
+    borderRadius: 7,
+    padding: '5px 10px',
+    cursor: 'pointer'
+};
+// ── Editable inputs (change a rate / assumption → the run recomputes) ──────────
+function InputRow({ label, hint, value, onCommit, blockId, onOpenBuilder, live, snapshot, liveConfigByBlock }) {
+    const [draft, setDraft] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(String(value));
+    const [fetching, setFetching] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [note, setNote] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        setDraft(String(value));
+    }, [
+        value
+    ]);
+    const commit = ()=>{
+        const n = Number(draft.replace(/,/g, ''));
+        if (Number.isFinite(n) && n !== value) onCommit(n);
+    };
+    const fetchLive = async ()=>{
+        if (!live) return;
+        setFetching(true);
+        setNote(null);
+        try {
+            const res = await fetch(`/api/fx-rate?from=${live.from}&to=${live.to}&year=${live.year}`);
+            const data = await res.json();
+            if (data?.ok && Number.isFinite(data.rate)) {
+                const rate = Math.round(data.rate * 10000) / 10000;
+                onCommit(rate);
+                setNote(`Live: ${rate} · Bank of Canada ${data.seriesName ?? `FX${live.from}${live.to}`} · ${live.year} avg`);
+            } else {
+                setNote(`Live fetch unavailable — keeping ${value}${data?.reason ? ` (${data.reason})` : ''}`);
+            }
+        } catch  {
+            setNote(`Live fetch failed — keeping ${value}`);
+        } finally{
+            setFetching(false);
+        }
+    };
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10
+        },
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    flex: 1,
+                    minWidth: 0
+                },
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            fontSize: 12.5,
+                            color: INK
+                        },
+                        children: label
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 329,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            fontSize: 10.5,
+                            color: FAINT
+                        },
+                        children: [
+                            hint,
+                            blockId && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+                                children: [
+                                    " · ",
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(WhereFrom, {
+                                        snapshot: snapshot,
+                                        blockId: blockId,
+                                        onOpenBuilder: onOpenBuilder,
+                                        label: "where it comes from",
+                                        variant: "link",
+                                        liveConfigByBlock: liveConfigByBlock
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 332,
+                                        columnNumber: 28
+                                    }, this)
+                                ]
+                            }, void 0, true),
+                            live && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+                                children: [
+                                    " · ",
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                        onClick: fetchLive,
+                                        disabled: fetching,
+                                        style: {
+                                            background: 'none',
+                                            border: 'none',
+                                            padding: 0,
+                                            color: fetching ? FAINT : LIVE,
+                                            fontSize: 10.5,
+                                            cursor: fetching ? 'default' : 'pointer',
+                                            textDecoration: 'underline'
+                                        },
+                                        children: fetching ? 'fetching…' : '↻ fetch live rate'
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 333,
+                                        columnNumber: 25
+                                    }, this)
+                                ]
+                            }, void 0, true),
+                            note && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                style: {
+                                    marginTop: 2,
+                                    color: MUTED
+                                },
+                                children: note
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                lineNumber: 334,
+                                columnNumber: 20
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 330,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 328,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                value: draft,
+                onChange: (e)=>setDraft(e.target.value),
+                onBlur: commit,
+                onKeyDown: (e)=>{
+                    if (e.key === 'Enter') e.target.blur();
+                },
+                onFocus: (e)=>e.currentTarget.select(),
+                inputMode: "decimal",
+                style: {
+                    width: 110,
+                    textAlign: 'right',
+                    fontSize: 12.5,
+                    fontVariantNumeric: 'tabular-nums',
+                    color: INK,
+                    background: GROUND,
+                    border: `1px solid ${LINE}`,
+                    borderRadius: 7,
+                    padding: '5px 9px',
+                    outline: 'none'
+                }
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 337,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+        lineNumber: 327,
+        columnNumber: 5
+    }, this);
+}
+function EditableInputs({ config, inputs, onCommit, onOpenBuilder, snapshot, liveConfigByBlock }) {
+    if (!config.editableInputs?.length) return null;
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            margin: '10px 0 2px',
+            padding: '11px 14px',
+            background: SURFACE,
+            border: `1px solid ${HAIRLINE}`,
+            borderRadius: 10
+        },
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    fontSize: 10.5,
+                    fontWeight: 650,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                    color: FAINT,
+                    marginBottom: 9,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 5
+                },
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$sliders$2d$horizontal$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__SlidersHorizontal$3e$__["SlidersHorizontal"], {
+                        size: 12
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 354,
+                        columnNumber: 187
+                    }, this),
+                    " Inputs — edit any and the workflow recomputes"
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 354,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 9
+                },
+                children: config.editableInputs.map((inp)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(InputRow, {
+                        label: inp.label,
+                        hint: inp.hint,
+                        value: inputs[inp.key] ?? inp.default,
+                        onCommit: (v)=>onCommit(inp.key, v),
+                        blockId: inp.block?.blockId,
+                        onOpenBuilder: onOpenBuilder,
+                        snapshot: snapshot,
+                        liveConfigByBlock: liveConfigByBlock,
+                        live: inp.key === 'fxRate' ? {
+                            from: config.currency ?? 'USD',
+                            to: 'CAD',
+                            year: 2025
+                        } : undefined
+                    }, inp.key, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 357,
+                        columnNumber: 11
+                    }, this))
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 355,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+        lineNumber: 353,
+        columnNumber: 5
+    }, this);
+}
+function RunProposalCard({ config, agent, onStart }) {
+    const [dismissed, setDismissed] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    if (dismissed) return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            fontSize: 12.5,
+            color: MUTED,
+            padding: '4px 0'
+        },
+        children: "Okay — I won’t start it yet. Say the word when you’re ready."
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+        lineNumber: 368,
+        columnNumber: 25
+    }, this);
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            maxWidth: 470,
+            background: SURFACE,
+            border: `1px solid ${LINE}`,
+            borderRadius: 14,
+            padding: '14px 15px'
+        },
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 9,
+                    marginBottom: 10
+                },
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            display: 'grid',
+                            placeItems: 'center',
+                            width: 28,
+                            height: 28,
+                            borderRadius: 9,
+                            background: hexA(TONES.ai, 0.16),
+                            flexShrink: 0
+                        },
+                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$play$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Play$3e$__["Play"], {
+                            size: 13,
+                            style: {
+                                color: INK
+                            }
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                            lineNumber: 372,
+                            columnNumber: 154
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 372,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            minWidth: 0
+                        },
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                style: {
+                                    fontSize: 13.5,
+                                    fontWeight: 650,
+                                    color: INK
+                                },
+                                children: [
+                                    "Run ",
+                                    config.name
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                lineNumber: 374,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                style: {
+                                    fontSize: 11,
+                                    color: FAINT
+                                },
+                                children: agent ? `${agent.name} · ${agent.role}` : 'Workflow'
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                lineNumber: 375,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 373,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 371,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    fontSize: 12.5,
+                    color: MUTED,
+                    lineHeight: 1.5,
+                    marginBottom: 12
+                },
+                children: [
+                    "I’ll need the ",
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
+                        style: {
+                            color: INK,
+                            fontWeight: 600
+                        },
+                        children: config.documentLabel
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 379,
+                        columnNumber: 23
+                    }, this),
+                    ", then walk these steps and stop for your approval:"
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 378,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 7,
+                    marginBottom: 14
+                },
+                children: config.steps.map((s, i)=>{
+                    const meta = stepMeta(s);
+                    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 9
+                        },
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                style: {
+                                    width: 8,
+                                    height: 8,
+                                    borderRadius: '50%',
+                                    background: meta.tone,
+                                    flexShrink: 0
+                                }
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                lineNumber: 386,
+                                columnNumber: 15
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                style: {
+                                    fontSize: 12,
+                                    color: INK
+                                },
+                                children: s.label
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                lineNumber: 387,
+                                columnNumber: 15
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                style: {
+                                    fontSize: 9,
+                                    fontWeight: 650,
+                                    letterSpacing: '0.05em',
+                                    textTransform: 'uppercase',
+                                    color: MUTED,
+                                    border: `1px solid ${HAIRLINE}`,
+                                    borderRadius: 5,
+                                    padding: '1px 5px',
+                                    whiteSpace: 'nowrap'
+                                },
+                                children: meta.kind
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                lineNumber: 388,
+                                columnNumber: 15
+                            }, this)
+                        ]
+                    }, i, true, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 385,
+                        columnNumber: 13
+                    }, this);
+                })
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 381,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    display: 'flex',
+                    gap: 8
+                },
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                        onClick: onStart,
+                        style: {
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            fontSize: 12.5,
+                            fontWeight: 600,
+                            padding: '8px 15px',
+                            borderRadius: 8,
+                            background: PRIMARY_BG,
+                            color: PRIMARY_FG,
+                            border: 'none',
+                            cursor: 'pointer'
+                        },
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$play$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Play$3e$__["Play"], {
+                                size: 13
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                lineNumber: 394,
+                                columnNumber: 249
+                            }, this),
+                            " Start ",
+                            config.name,
+                            " run"
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 394,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                        onClick: ()=>setDismissed(true),
+                        style: {
+                            fontSize: 12.5,
+                            fontWeight: 500,
+                            padding: '8px 13px',
+                            borderRadius: 8,
+                            background: 'transparent',
+                            color: MUTED,
+                            border: `1px solid ${LINE}`,
+                            cursor: 'pointer'
+                        },
+                        children: "Not now"
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 395,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 393,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+        lineNumber: 370,
+        columnNumber: 5
+    }, this);
+}
+function WorkflowRunFlow({ config, onComplete, agent, onOpenPage, onOpenBuilder, onStop, surface = 'dark' }) {
+    // Flow gates (upload / elect / approve) + the working rows stay component-local.
+    // The run's two OTHER decision surfaces — edited inputs and category overrides —
+    // live in the SHARED runEditsAtom (keyed by workflow id) so the worksheet computes
+    // on the exact same values, and an edit in either surface flows to the other.
+    const [flow, setFlow] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(()=>{
+        const s = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$engine$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["initialRunState"])();
+        return {
+            uploaded: s.uploaded,
+            elected: s.elected,
+            approved: s.approved,
+            rows: s.rows
+        };
+    });
+    const edits = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["runEditsAtom"])[config.id] ?? __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["EMPTY_RUN_EDITS"];
+    const setRunInput = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["setRunInputAtom"]);
+    const setRunOverride = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["setRunOverrideAtom"]);
+    const setRunEdits = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["setRunEditsAtom"]);
+    // Recompose the full RunState the engine + all existing reads below expect.
+    const state = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMemo"])(()=>({
+            uploaded: flow.uploaded,
+            elected: flow.elected,
+            approved: flow.approved,
+            rows: flow.rows,
+            inputs: edits.inputs,
+            overrides: edits.overrides
+        }), [
+        flow,
+        edits
+    ]);
+    const [expanded, setExpanded] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    const classifyStepRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRef"])(null);
+    const pushTrail = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["pushTrailAtom"]);
+    // "Review N unmatched" (the amber banner, rendered far below the steps) opens the
+    // classify step AND scrolls it into view — otherwise the step expands off-screen
+    // above the button and it reads as "nothing happened". Double rAF so the expanded
+    // content is committed before we measure/scroll.
+    const reviewUnmatched = ()=>{
+        setExpanded(1);
+        requestAnimationFrame(()=>requestAnimationFrame(()=>classifyStepRef.current?.scrollIntoView({
+                    block: 'start',
+                    behavior: 'smooth'
+                })));
+    };
+    const setActiveRun = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["activeRunAtom"]);
+    const setActiveCoworker = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["setActiveCoworkerAtom"]);
+    const recordWork = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["recordWorkItemAtom"]);
+    const [uploadedRows, setUploadedRows] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["uploadedRowsAtom"]);
+    const [parsing, setParsing] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [parseError, setParseError] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [showGoogle, setShowGoogle] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [origin, setOrigin] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('upload');
+    const doneRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRef"])(false);
+    const fileName = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRef"])(null);
+    // One-time intro: the step timeline "draws" (staggered CSS reveal), then the
+    // interaction panel (upload / approve / result) fades in AFTER — so the run reads
+    // as "here's the plan, now let's work through it" instead of everything at once.
+    // No re-run guard ref here: under React Strict Mode the setup/cleanup/setup cycle
+    // would clear the first timer and skip the second, leaving the panel hidden — the
+    // stable dep list already keeps this to one schedule per mount.
+    const [introReady, setIntroReady] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        const reduce = ("TURBOPACK compile-time value", "undefined") !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
+        ;
+        const t = setTimeout(()=>setIntroReady(true), config.steps.length * 70 + 260);
+        return ()=>clearTimeout(t);
+    }, [
+        config.steps.length
+    ]);
+    // The shared store is the SINGLE source of truth for the rows this run computes
+    // on — exactly what the worksheet reads. Read it LIVE (not a one-time hydration)
+    // so a workbook imported ANYWHERE — the chat's own upload, the builder, or the
+    // worksheet's Import button — is reflected here immediately, keeping the run and
+    // the worksheet on identical numbers. When the store has rows the upload step is
+    // already satisfied (the document exists), so the run proceeds on them; when it's
+    // empty the run falls back to the sample (same fallback the worksheet uses).
+    const storedSource = uploadedRows[config.id];
+    const storeRows = storedSource?.rows;
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        if (storedSource?.fileName) fileName.current = storedSource.fileName;
+    }, [
+        storedSource?.fileName
+    ]);
+    // A cached workbook (from a prior run / the worksheet / the builder) supplies the
+    // DATA, but must NOT silently satisfy the upload gate — otherwise a fresh run
+    // skips straight past "provide your document" to the computed figures. So we only
+    // fold in the store rows once the user has actually started THIS run (state.uploaded),
+    // e.g. by picking "Use loaded workbook" in the upload step. A brand-new run always
+    // asks first; continuity is one click, not automatic.
+    const effectiveState = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMemo"])(()=>state.uploaded && !state.rows && storeRows && storeRows.length ? {
+            ...state,
+            rows: storeRows
+        } : state, [
+        state,
+        storeRows
+    ]);
+    const outcome = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMemo"])(()=>{
+        try {
+            return (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$engine$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["runTemplateLoop"])(config, effectiveState);
+        } catch  {
+            return null;
+        }
+    }, [
+        config,
+        effectiveState
+    ]);
+    // Full workflow snapshot (blocks + edges) — powers the inline "where it comes from" peek without a page load.
+    const snapshot = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMemo"])(()=>{
+        try {
+            return config.buildSnapshot();
+        } catch  {
+            return undefined;
+        }
+    }, [
+        config
+    ]);
+    // Current run values mapped to their target block/config key, so the peek shows the LIVE value (edited / fetched), not just the template default.
+    const liveConfigByBlock = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMemo"])(()=>{
+        const map = {};
+        for (const inp of config.editableInputs ?? []){
+            if (inp.block?.blockId && inp.block?.configKey) {
+                (map[inp.block.blockId] ??= {})[inp.block.configKey] = state.inputs[inp.key] ?? inp.default;
+            }
+        }
+        return map;
+    }, [
+        config,
+        state.inputs
+    ]);
+    const blocker = outcome?.blocker;
+    const done = !!outcome?.done;
+    const activeIdx = outcome?.activeStage ?? 0;
+    const detail = outcome?.detail ?? null;
+    const cur = config.currency;
+    const hasCached = !!(storeRows && storeRows.length); // a workbook is already loaded for this workflow
+    // ── Live sub-status on the active step ────────────────────────────────────────
+    // The engine is synchronous, so we don't fake "computing…"; instead the active
+    // step narrates what it's waiting on (upload / categorize / elect / approve) or,
+    // once the run is done, shows the traced result. This is what makes the timeline
+    // read as the assistant working THROUGH the steps rather than a static checklist.
+    const liveSub = (i)=>{
+        if (i !== activeIdx || done) return null;
+        if (!blocker) return 'Working…';
+        if (blocker.kind === 'upload') return `Waiting for the ${config.documentLabel}`;
+        if (blocker.kind === 'approval') return 'Ready for your approval';
+        if (blocker.kind === 'choice') return blocker.choiceId === '__elect__' ? 'Waiting for you to elect an amount' : 'Waiting for your decision';
+        return 'Working…';
+    };
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        if (done && outcome?.summaryText && !doneRef.current) {
+            doneRef.current = true;
+            pushTrail({
+                text: outcome.summaryText,
+                tone: 'calculation',
+                actor: {
+                    kind: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["WORKFLOW_ENGINE"].kind,
+                    id: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["WORKFLOW_ENGINE"].id,
+                    name: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["WORKFLOW_ENGINE"].name
+                }
+            });
+            onComplete(outcome.summaryText);
+        }
+    }, [
+        done,
+        outcome,
+        onComplete,
+        pushTrail
+    ]);
+    // Compact, LLM-facing snapshot of the run's REAL figures — published so the
+    // assistant can answer questions and generate UI from the actual numbers (not
+    // just step/phase). Undefined until a source is loaded (no detail yet).
+    const runData = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMemo"])(()=>{
+        if (!detail) return undefined;
+        const byCat = new Map();
+        for (const m of detail.mapped){
+            const e = byCat.get(m.category) ?? {
+                amount: 0,
+                rowCount: 0
+            };
+            e.amount += m.amount;
+            e.rowCount += 1;
+            byCat.set(m.category, e);
+        }
+        const categories = [
+            ...byCat.entries()
+        ].map(([category, v])=>({
+                category,
+                amount: Math.round(v.amount),
+                rowCount: v.rowCount
+            })).sort((a, b)=>Math.abs(b.amount) - Math.abs(a.amount));
+        const topRows = [
+            ...detail.mapped
+        ].sort((a, b)=>Math.abs(b.amount) - Math.abs(a.amount)).slice(0, 8).map((m)=>({
+                label: m.label,
+                amount: Math.round(m.amount),
+                category: m.category
+            }));
+        return {
+            fileName: fileName.current ?? undefined,
+            currency: config.currency,
+            sourceRowCount: detail.sourceRows.length,
+            categories,
+            // Keep the engine's real precision — money is already 2dp and rates are full
+            // precision, so DON'T Math.round here (that turned FX_RATE into "1" and dropped
+            // cents, making the AI's figures disagree with the run/worksheet).
+            lines: detail.lines.filter((l)=>l.value !== 0).map((l)=>({
+                    key: l.key,
+                    label: l.label,
+                    value: l.value
+                })),
+            summary: detail.summary.map((s)=>({
+                    key: s.key,
+                    label: s.label,
+                    value: s.value
+                })),
+            unmatchedCount: detail.unmatched.length,
+            topRows
+        };
+    }, [
+        detail,
+        config.currency
+    ]);
+    // Publish where we are + the live figures so the LLM (via useCopilotReadable)
+    // and UI can see it.
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        const phase = done ? 'done' : blocker?.kind === 'upload' ? 'upload' : blocker?.kind === 'approval' ? 'approve' : blocker?.kind === 'choice' && blocker.choiceId === '__elect__' ? 'elect' : 'categorize';
+        const awaiting = {
+            upload: `waiting for you to upload the ${config.documentLabel}`,
+            categorize: 'waiting for you to categorize an unmatched row',
+            elect: 'waiting for you to elect an amount',
+            approve: 'waiting for your approval of the computed figures',
+            done: 'complete'
+        }[phase];
+        setActiveRun({
+            workflowId: config.id,
+            workflowName: config.name,
+            agentName: agent?.name,
+            documentLabel: config.documentLabel,
+            totalSteps: config.steps.length,
+            stepIndex: activeIdx,
+            stepLabel: config.steps[Math.min(activeIdx, config.steps.length - 1)].label,
+            phase,
+            awaiting,
+            headline: outcome?.headline,
+            data: runData
+        });
+        // Who is visibly working right now: the specialist while awaiting a human
+        // decision, the DETERMINISTIC Workflow Engine while computing, nobody once done.
+        const specialist = (agent ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["coworkerForAgent"])(agent) : (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["coworkerForWorkflow"])(config.id)) ?? __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["WORKSPACE_ASSISTANT"];
+        // Record/update this run in the durable Work registry (the Work menu reads it;
+        // never cleared on unmount, so it's preserved after completion).
+        recordWork({
+            id: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["workIdFor"])('workflow-run', config.id),
+            type: 'workflow-run',
+            title: config.name,
+            status: done ? 'done' : blocker ? 'awaiting' : 'running',
+            detail: done ? outcome?.headline ? `${outcome.headline.label} ${Math.round(outcome.headline.value).toLocaleString()} ${outcome.headline.currency}` : 'Completed' : `Step ${Math.min(activeIdx + 1, config.steps.length)}/${config.steps.length} · ${awaiting}`,
+            by: specialist,
+            open: {
+                kind: 'workflow',
+                workflowId: config.id
+            }
+        });
+        if (done) {
+            setActiveCoworker(null);
+        } else if (blocker) {
+            const status = blocker.kind === 'upload' ? `Waiting for the ${config.documentLabel}` : blocker.kind === 'approval' ? 'Ready for your approval' : blocker.kind === 'choice' ? blocker.choiceId === '__elect__' ? 'Waiting for you to elect an amount' : 'Waiting for your decision' : 'Reviewing…';
+            setActiveCoworker({
+                coworker: specialist,
+                status
+            });
+        } else {
+            setActiveCoworker({
+                coworker: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["WORKFLOW_ENGINE"],
+                status: `Calculating ${config.documentLabel}…`
+            });
+        }
+        return ()=>{
+            setActiveRun(null);
+            setActiveCoworker(null);
+        };
+    }, [
+        config,
+        agent,
+        activeIdx,
+        done,
+        blocker,
+        outcome,
+        runData,
+        setActiveRun,
+        setActiveCoworker,
+        recordWork
+    ]);
+    const resolve = (choiceId)=>{
+        if (!blocker) return;
+        const next = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$engine$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["resolveBlocker"])(state, blocker, choiceId);
+        setFlow({
+            uploaded: next.uploaded,
+            elected: next.elected,
+            approved: next.approved,
+            rows: next.rows
+        });
+        setRunEdits({
+            id: config.id,
+            edits: {
+                inputs: next.inputs,
+                overrides: next.overrides
+            }
+        });
+    };
+    // Load parsed rows into the run — the SINGLE path every source (disk upload,
+    // Drive, Gmail) funnels through, so the rows + numbers are identical.
+    const applyRows = (name, rows, from)=>{
+        fileName.current = name;
+        setOrigin(from);
+        setParseError(null);
+        setShowGoogle(false);
+        setUploadedRows((prev)=>({
+                ...prev,
+                [config.id]: {
+                    fileName: name,
+                    rows,
+                    at: Date.now()
+                }
+            }));
+        setFlow((f)=>({
+                ...f,
+                rows,
+                uploaded: true
+            }));
+    };
+    // Parse the real workbook (shared parser) → store it (shared with the builder) → run on it.
+    const onUploadFile = async (e)=>{
+        const f = e.target.files?.[0];
+        e.target.value = '';
+        if (!f) return;
+        setParsing(true);
+        setParseError(null);
+        try {
+            const { rows, fileName: name } = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$parse$2d$upload$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["parseUploadToRows"])(f);
+            if (!rows.length) {
+                setParseError('No usable rows found in that workbook. Check the trial-balance sheet has label + amount columns.');
+                return;
+            }
+            applyRows(name, rows, 'upload');
+        } catch (err) {
+            setParseError(err instanceof Error ? err.message : 'Could not read that file.');
+        } finally{
+            setParsing(false);
+        }
+    };
+    const onGooglePicked = (picked)=>applyRows(picked.fileName, picked.rows, picked.origin);
+    const money = (v)=>v == null ? '—' : `${num(v)} ${cur}`;
+    // The interaction panel fades in once the timeline has finished drawing.
+    const revealStyle = {
+        opacity: introReady ? 1 : 0,
+        transform: introReady ? 'none' : 'translateY(6px)',
+        transition: 'opacity .35s ease, transform .35s ease'
+    };
+    return(// Chat-native: no card chrome — this renders inline in the aside thread,
+    // indented under Sofi's step, so it reads as part of the conversation.
+    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        "data-run-flow": config.id,
+        style: {
+            width: '100%',
+            maxWidth: '100%',
+            ...surface === 'light' ? LIGHT_VARS : null
+        },
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("style", {
+                children: `
+        @keyframes cwpspin{to{transform:rotate(360deg)}}
+        .cwp-spin{animation:cwpspin .9s linear infinite}
+        @keyframes cwp-stepin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+        @keyframes cwp-pop{from{transform:scale(0)}to{transform:scale(1)}}
+        @keyframes cwp-nodehalo{0%{box-shadow:0 0 0 0 color-mix(in srgb, var(--tone) 55%, transparent)}70%{box-shadow:0 0 0 6px transparent}100%{box-shadow:0 0 0 0 transparent}}
+        @keyframes cwp-livepulse{0%,100%{opacity:.55}50%{opacity:1}}
+        .cwp-halo{animation:cwp-nodehalo 1.7s ease-out infinite}
+        .cwp-pop{animation:cwp-pop .25s cubic-bezier(.34,1.56,.64,1) both}
+        .cwp-live{animation:cwp-livepulse 1.6s ease-in-out infinite}
+        @media (prefers-reduced-motion:reduce){
+          .cwp-halo,.cwp-pop,.cwp-live,[data-run-flow] .cwp-step{animation:none!important}
+        }
+      `
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 663,
+                columnNumber: 7
+            }, this),
+            onStop && !done && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    marginBottom: 2
+                },
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                    onClick: onStop,
+                    title: "Stop this run",
+                    style: {
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        fontSize: 11,
+                        fontWeight: 550,
+                        color: MUTED,
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer'
+                    },
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__["X"], {
+                            size: 12
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                            lineNumber: 679,
+                            columnNumber: 230
+                        }, this),
+                        " Stop"
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                    lineNumber: 679,
+                    columnNumber: 11
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 678,
+                columnNumber: 9
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("style", {
+                children: `.cwp-step-row:hover{background:${HOVER}} .cwp-step-row:hover .cwp-review{color:${INK}}`
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 683,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    paddingTop: 4
+                },
+                children: config.steps.map((s, i)=>{
+                    const status = i < activeIdx ? 'done' : i === activeIdx ? 'active' : 'pending';
+                    const isOpen = expanded === i;
+                    const meta = stepMeta(s);
+                    const reviewLabel = i === 1 ? 'Review AI mappings' : i === 2 ? 'Review calculations' : i === 3 ? 'Review result' : 'Review';
+                    const notLast = i < config.steps.length - 1;
+                    const live = liveSub(i);
+                    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        ref: i === 1 ? classifyStepRef : undefined,
+                        className: "cwp-step",
+                        style: {
+                            animation: `cwp-stepin .42s cubic-bezier(.23,1,.32,1) ${i * 70}ms both`
+                        },
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "cwp-step-row",
+                                onClick: ()=>setExpanded(isOpen ? null : i),
+                                style: {
+                                    display: 'flex',
+                                    gap: 14,
+                                    minHeight: 50,
+                                    cursor: 'pointer',
+                                    borderRadius: 10,
+                                    padding: '7px 9px',
+                                    margin: '0 -9px',
+                                    transition: 'background 150ms'
+                                },
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        style: {
+                                            position: 'relative',
+                                            width: 16,
+                                            flexShrink: 0,
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            paddingTop: 1
+                                        },
+                                        children: [
+                                            notLast && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                style: {
+                                                    position: 'absolute',
+                                                    left: '50%',
+                                                    top: 23,
+                                                    bottom: -15,
+                                                    transform: 'translateX(-50%)',
+                                                    width: 0,
+                                                    borderLeft: `2px ${status === 'done' ? 'solid' : 'dashed'} ${status === 'done' ? SPINE_DONE : SPINE_AHEAD}`
+                                                }
+                                            }, void 0, false, {
+                                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                lineNumber: 696,
+                                                columnNumber: 31
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(TimelineDot, {
+                                                status: status,
+                                                tone: meta.tone
+                                            }, void 0, false, {
+                                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                lineNumber: 697,
+                                                columnNumber: 19
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 695,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        style: {
+                                            flex: 1,
+                                            minWidth: 0
+                                        },
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                style: {
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 8
+                                                },
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        style: {
+                                                            fontSize: 13,
+                                                            fontWeight: status === 'pending' ? 400 : 600,
+                                                            color: status === 'pending' ? FAINT : INK,
+                                                            lineHeight: 1.3
+                                                        },
+                                                        children: s.label
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                        lineNumber: 701,
+                                                        columnNumber: 21
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        style: {
+                                                            fontSize: 9,
+                                                            fontWeight: 650,
+                                                            letterSpacing: '0.05em',
+                                                            textTransform: 'uppercase',
+                                                            color: status === 'pending' ? DIM : MUTED,
+                                                            border: `1px solid ${HAIRLINE}`,
+                                                            borderRadius: 5,
+                                                            padding: '1.5px 5px',
+                                                            whiteSpace: 'nowrap',
+                                                            flexShrink: 0
+                                                        },
+                                                        children: meta.kind
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                        lineNumber: 702,
+                                                        columnNumber: 21
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "cwp-review",
+                                                        style: {
+                                                            marginLeft: 'auto',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: 3,
+                                                            fontSize: 11,
+                                                            fontWeight: 550,
+                                                            color: isOpen ? INK : FAINT,
+                                                            flexShrink: 0
+                                                        },
+                                                        children: [
+                                                            isOpen ? 'Hide' : reviewLabel,
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
+                                                                size: 12,
+                                                                style: {
+                                                                    transform: isOpen ? 'rotate(180deg)' : 'none',
+                                                                    transition: 'transform 150ms'
+                                                                }
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                                lineNumber: 705,
+                                                                columnNumber: 23
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                        lineNumber: 703,
+                                                        columnNumber: 21
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                lineNumber: 700,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                style: {
+                                                    fontSize: 11.5,
+                                                    color: status === 'pending' ? DIM : MUTED,
+                                                    lineHeight: 1.4,
+                                                    marginTop: 1
+                                                },
+                                                children: s.sub
+                                            }, void 0, false, {
+                                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                lineNumber: 708,
+                                                columnNumber: 19
+                                            }, this),
+                                            live && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                className: "cwp-live",
+                                                style: {
+                                                    fontSize: 11,
+                                                    color: meta.tone,
+                                                    marginTop: 3,
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: 5
+                                                },
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        style: {
+                                                            width: 5,
+                                                            height: 5,
+                                                            borderRadius: '50%',
+                                                            background: meta.tone,
+                                                            display: 'inline-block'
+                                                        }
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                        lineNumber: 709,
+                                                        columnNumber: 165
+                                                    }, this),
+                                                    live
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                lineNumber: 709,
+                                                columnNumber: 28
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 699,
+                                        columnNumber: 17
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                lineNumber: 694,
+                                columnNumber: 15
+                            }, this),
+                            isOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(StageDetail, {
+                                idx: i,
+                                detail: detail,
+                                config: config,
+                                overrides: state.overrides,
+                                resultPage: config.resultPage,
+                                onOverride: (rowId, catId)=>setRunOverride({
+                                        id: config.id,
+                                        rowId,
+                                        categoryId: catId
+                                    }),
+                                onOpenPage: onOpenPage,
+                                onOpenBuilder: onOpenBuilder,
+                                snapshot: snapshot,
+                                liveConfigByBlock: liveConfigByBlock
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                lineNumber: 712,
+                                columnNumber: 26
+                            }, this)
+                        ]
+                    }, i, true, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 693,
+                        columnNumber: 13
+                    }, this);
+                })
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 684,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: revealStyle,
+                children: [
+                    effectiveState.uploaded && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(EditableInputs, {
+                        config: config,
+                        inputs: state.inputs,
+                        onCommit: (key, value)=>setRunInput({
+                                id: config.id,
+                                key,
+                                value
+                            }),
+                        onOpenBuilder: onOpenBuilder,
+                        snapshot: snapshot,
+                        liveConfigByBlock: liveConfigByBlock
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 719,
+                        columnNumber: 35
+                    }, this),
+                    outcome?.needsReview && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            marginTop: 10,
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: 9,
+                            padding: '9px 11px',
+                            borderRadius: 9,
+                            background: AMBER_SOFT,
+                            border: `1px solid ${AMBER_LINE}`
+                        },
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$triangle$2d$alert$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertTriangle$3e$__["AlertTriangle"], {
+                                size: 14,
+                                style: {
+                                    color: AMBER,
+                                    flexShrink: 0,
+                                    marginTop: 1
+                                }
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                lineNumber: 724,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                style: {
+                                    flex: 1,
+                                    minWidth: 0
+                                },
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        style: {
+                                            fontSize: 12,
+                                            fontWeight: 600,
+                                            color: AMBER_TEXT,
+                                            lineHeight: 1.4
+                                        },
+                                        children: [
+                                            outcome.needsReview.count,
+                                            " ",
+                                            outcome.needsReview.count === 1 ? 'row was' : 'rows were',
+                                            " left out of the calculation"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 726,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        style: {
+                                            fontSize: 11.5,
+                                            color: AMBER,
+                                            lineHeight: 1.45,
+                                            marginTop: 1
+                                        },
+                                        children: [
+                                            "The mapper couldn’t classify ",
+                                            outcome.needsReview.count === 1 ? 'it' : 'them',
+                                            ", so ",
+                                            outcome.needsReview.count === 1 ? "it isn’t" : "they aren’t",
+                                            " included. ",
+                                            done ? 'Categorize to fold into the figures.' : 'Approve as-is, or categorize to include.'
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 729,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                lineNumber: 725,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                onClick: reviewUnmatched,
+                                style: {
+                                    flexShrink: 0,
+                                    fontSize: 11.5,
+                                    fontWeight: 600,
+                                    color: AMBER_TEXT,
+                                    background: 'rgba(255,255,255,0.04)',
+                                    border: `1px solid ${AMBER_LINE}`,
+                                    borderRadius: 7,
+                                    padding: '5px 10px',
+                                    cursor: 'pointer'
+                                },
+                                children: [
+                                    "Review ",
+                                    outcome.needsReview.count
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                lineNumber: 733,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 723,
+                        columnNumber: 9
+                    }, this),
+                    !done && blocker && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            marginTop: 6,
+                            paddingTop: 12,
+                            borderTop: `1px solid ${HAIRLINE}`
+                        },
+                        children: [
+                            blocker.kind === 'upload' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        style: {
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 7,
+                                            fontSize: 12.5,
+                                            fontWeight: 600,
+                                            color: INK,
+                                            marginBottom: 5
+                                        },
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$up$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileUp$3e$__["FileUp"], {
+                                                size: 14
+                                            }, void 0, false, {
+                                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                lineNumber: 741,
+                                                columnNumber: 140
+                                            }, this),
+                                            " Document needed"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 741,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        style: {
+                                            fontSize: 12.5,
+                                            color: MUTED,
+                                            lineHeight: 1.5,
+                                            marginBottom: 11
+                                        },
+                                        children: blocker.message
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 742,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        style: {
+                                            display: 'flex',
+                                            gap: 8,
+                                            flexWrap: 'wrap',
+                                            alignItems: 'center'
+                                        },
+                                        children: [
+                                            hasCached && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                onClick: ()=>setFlow((f)=>({
+                                                            ...f,
+                                                            uploaded: true
+                                                        })),
+                                                style: {
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: 6,
+                                                    fontSize: 12.5,
+                                                    fontWeight: 550,
+                                                    padding: '7px 13px',
+                                                    borderRadius: 8,
+                                                    background: PRIMARY_BG,
+                                                    color: PRIMARY_FG,
+                                                    border: 'none',
+                                                    cursor: 'pointer'
+                                                },
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$check$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Check$3e$__["Check"], {
+                                                        size: 13
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                        lineNumber: 748,
+                                                        columnNumber: 21
+                                                    }, this),
+                                                    " Use loaded workbook",
+                                                    fileName.current ? ` · ${fileName.current}` : '',
+                                                    " (",
+                                                    storeRows.length,
+                                                    " rows)"
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                lineNumber: 747,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                                style: {
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: 6,
+                                                    fontSize: 12.5,
+                                                    fontWeight: 550,
+                                                    padding: '7px 13px',
+                                                    borderRadius: 8,
+                                                    background: parsing ? MUTED : hasCached ? CARD : PRIMARY_BG,
+                                                    color: hasCached ? INK : PRIMARY_FG,
+                                                    border: hasCached ? `1px solid ${LINE}` : 'none',
+                                                    cursor: parsing ? 'default' : 'pointer'
+                                                },
+                                                children: [
+                                                    parsing ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__["Loader2"], {
+                                                        size: 13,
+                                                        className: "cwp-spin"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                        lineNumber: 752,
+                                                        columnNumber: 30
+                                                    }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$upload$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Upload$3e$__["Upload"], {
+                                                        size: 13
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                        lineNumber: 752,
+                                                        columnNumber: 75
+                                                    }, this),
+                                                    " ",
+                                                    parsing ? 'Parsing…' : hasCached ? 'Upload a different workbook' : 'Upload workbook',
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                                        type: "file",
+                                                        accept: ".xlsx,.xls",
+                                                        disabled: parsing,
+                                                        style: {
+                                                            display: 'none'
+                                                        },
+                                                        onChange: onUploadFile
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                        lineNumber: 753,
+                                                        columnNumber: 19
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                lineNumber: 751,
+                                                columnNumber: 17
+                                            }, this),
+                                            ghostBtn({
+                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+                                                    children: [
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$cloud$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Cloud$3e$__["Cloud"], {
+                                                            size: 13
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                            lineNumber: 755,
+                                                            columnNumber: 41
+                                                        }, this),
+                                                        " Import from Google"
+                                                    ]
+                                                }, void 0, true),
+                                                onClick: ()=>setShowGoogle((v)=>!v)
+                                            }),
+                                            ghostBtn({
+                                                children: 'Use sample workbook',
+                                                onClick: ()=>{
+                                                    fileName.current = null;
+                                                    setUploadedRows((prev)=>{
+                                                        const next = {
+                                                            ...prev
+                                                        };
+                                                        delete next[config.id];
+                                                        return next;
+                                                    });
+                                                    setFlow((f)=>({
+                                                            ...f,
+                                                            rows: undefined,
+                                                            uploaded: true
+                                                        }));
+                                                }
+                                            })
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 743,
+                                        columnNumber: 15
+                                    }, this),
+                                    showGoogle && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$workspace$2f$google$2d$source$2d$picker$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["GoogleSourcePicker"], {
+                                        onPicked: onGooglePicked,
+                                        onClose: ()=>setShowGoogle(false)
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 758,
+                                        columnNumber: 30
+                                    }, this),
+                                    parseError && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        style: {
+                                            fontSize: 11,
+                                            color: DANGER,
+                                            marginTop: 8
+                                        },
+                                        children: parseError
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 759,
+                                        columnNumber: 30
+                                    }, this),
+                                    !parseError && fileName.current && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        style: {
+                                            fontSize: 11,
+                                            color: FAINT,
+                                            marginTop: 8
+                                        },
+                                        children: [
+                                            "Loaded ",
+                                            fileName.current,
+                                            origin === 'drive' ? ' from Google Drive' : origin === 'gmail' ? ' from a Gmail attachment' : '',
+                                            " · ",
+                                            (storeRows ?? state.rows)?.length ?? 0,
+                                            " rows — the run uses these exact rows (same as the builder)."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 760,
+                                        columnNumber: 51
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                lineNumber: 740,
+                                columnNumber: 13
+                            }, this),
+                            blocker.kind === 'choice' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        style: {
+                                            fontSize: 12.5,
+                                            fontWeight: 600,
+                                            color: INK,
+                                            marginBottom: 5
+                                        },
+                                        children: "Your decision"
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 765,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        style: {
+                                            fontSize: 12.5,
+                                            color: MUTED,
+                                            lineHeight: 1.5,
+                                            marginBottom: 11
+                                        },
+                                        children: blocker.message
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 766,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        style: {
+                                            display: 'flex',
+                                            gap: 8,
+                                            flexWrap: 'wrap'
+                                        },
+                                        children: blocker.options.map((o)=>{
+                                            const skip = o.id === '__skip__';
+                                            return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                onClick: ()=>resolve(o.id),
+                                                style: {
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: 6,
+                                                    fontSize: 12.5,
+                                                    fontWeight: skip ? 500 : 550,
+                                                    padding: '7px 13px',
+                                                    borderRadius: 8,
+                                                    background: skip ? CARD : PRIMARY_BG,
+                                                    color: skip ? INK : PRIMARY_FG,
+                                                    border: skip ? `1px solid ${LINE}` : 'none',
+                                                    cursor: 'pointer'
+                                                },
+                                                children: o.label
+                                            }, o.id, false, {
+                                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                lineNumber: 770,
+                                                columnNumber: 26
+                                            }, this);
+                                        })
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 767,
+                                        columnNumber: 15
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                lineNumber: 764,
+                                columnNumber: 13
+                            }, this),
+                            blocker.kind === 'approval' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        style: {
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 7,
+                                            fontSize: 12.5,
+                                            fontWeight: 600,
+                                            color: INK,
+                                            marginBottom: 3
+                                        },
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$shield$2d$check$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ShieldCheck$3e$__["ShieldCheck"], {
+                                                size: 14
+                                            }, void 0, false, {
+                                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                lineNumber: 777,
+                                                columnNumber: 140
+                                            }, this),
+                                            " Approve — every figure traced"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 777,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        style: {
+                                            fontSize: 11.5,
+                                            color: MUTED,
+                                            marginBottom: 9
+                                        },
+                                        children: "Each number shows how it was derived. Expand a step above to see the source rows and classification."
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 778,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        style: {
+                                            padding: '4px 2px',
+                                            marginBottom: 11
+                                        },
+                                        children: blocker.figures.map((row)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(KV, {
+                                                l: row.label,
+                                                sub: row.formula,
+                                                v: num(row.value)
+                                            }, row.key, false, {
+                                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                lineNumber: 780,
+                                                columnNumber: 47
+                                            }, this))
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 779,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                        onClick: ()=>resolve(),
+                                        style: {
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: 6,
+                                            fontSize: 12.5,
+                                            fontWeight: 550,
+                                            padding: '7px 13px',
+                                            borderRadius: 8,
+                                            background: PRIMARY_BG,
+                                            color: PRIMARY_FG,
+                                            border: 'none',
+                                            cursor: 'pointer'
+                                        },
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$shield$2d$check$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ShieldCheck$3e$__["ShieldCheck"], {
+                                                size: 13
+                                            }, void 0, false, {
+                                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                                lineNumber: 782,
+                                                columnNumber: 263
+                                            }, this),
+                                            " Approve & finalize"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 782,
+                                        columnNumber: 15
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                lineNumber: 776,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 738,
+                        columnNumber: 9
+                    }, this),
+                    done && outcome?.headline && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            marginTop: 6,
+                            paddingTop: 12,
+                            borderTop: `1px solid ${HAIRLINE}`
+                        },
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                style: {
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'baseline',
+                                    marginBottom: onOpenPage ? 8 : 0
+                                },
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        style: {
+                                            fontSize: 12.5,
+                                            color: MUTED
+                                        },
+                                        children: outcome.headline.label
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 791,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        style: {
+                                            fontSize: 18,
+                                            fontWeight: 650,
+                                            color: INK,
+                                            letterSpacing: '-0.01em'
+                                        },
+                                        children: money(outcome.headline.value)
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 792,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                lineNumber: 790,
+                                columnNumber: 11
+                            }, this),
+                            onOpenPage && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                onClick: ()=>onOpenPage('fapi'),
+                                style: {
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 5,
+                                    fontSize: 11.5,
+                                    fontWeight: 550,
+                                    color: INK,
+                                    background: CARD,
+                                    border: `1px solid ${LINE}`,
+                                    borderRadius: 7,
+                                    padding: '5px 10px',
+                                    cursor: 'pointer'
+                                },
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$external$2d$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ExternalLink$3e$__["ExternalLink"], {
+                                        size: 11
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                        lineNumber: 794,
+                                        columnNumber: 283
+                                    }, this),
+                                    " Open worksheet"
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                                lineNumber: 794,
+                                columnNumber: 26
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                        lineNumber: 789,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+                lineNumber: 718,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/workspace/workflow-run-flow.tsx",
+        lineNumber: 662,
+        columnNumber: 5
+    }, this));
+}
+}),
+"[project]/features/assistant/ui/use-assistant.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+__turbopack_context__.s([
+    "HIT_ICON",
+    ()=>HIT_ICON,
+    "RunWorkflowRender",
+    ()=>RunWorkflowRender,
+    "useAssistant",
+    ()=>useAssistant
+]);
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
+// ─────────────────────────────────────────────────────────────────────────────
+// useAssistant — the shared brain of the assistant surface.
+//
+// It registers the workspace tools + readable context with CopilotKit, owns the
+// conversation-launch state (say / newChat / hero), the composer's search +
+// tools + file-attach handlers, and the launcher actions. Both surfaces consume
+// it: the full-screen **focus mode** (`ChatWorkspace`, on `/`) and the global
+// **docked panel** (`AssistantPanel`, everywhere else). They never mount at the
+// same time (the panel returns null on `/`), so the CopilotKit actions register
+// exactly once.
+// ─────────────────────────────────────────────────────────────────────────────
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$framer$2d$motion$40$12$2e$23$2e$24_reac_e6ac141a008652e0ae322977309b4a48$2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/framer-motion@12.23.24_reac_e6ac141a008652e0ae322977309b4a48/node_modules/framer-motion/dist/es/components/AnimatePresence/index.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$framer$2d$motion$40$12$2e$23$2e$24_reac_e6ac141a008652e0ae322977309b4a48$2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/framer-motion@12.23.24_reac_e6ac141a008652e0ae322977309b4a48/node_modules/framer-motion/dist/es/render/components/motion/proxy.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$framer$2d$motion$40$12$2e$23$2e$24_reac_e6ac141a008652e0ae322977309b4a48$2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$utils$2f$reduced$2d$motion$2f$use$2d$reduced$2d$motion$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/framer-motion@12.23.24_reac_e6ac141a008652e0ae322977309b4a48/node_modules/framer-motion/dist/es/utils/reduced-motion/use-reduced-motion.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/jotai@2.15.1_@babel+core@7._5b27b7b535d6519f6427fc26ba88e66f/node_modules/jotai/esm/react.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/navigation.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$globe$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Globe$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/globe.js [app-ssr] (ecmascript) <export default as Globe>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/file-text.js [app-ssr] (ecmascript) <export default as FileText>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$workflow$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Workflow$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/workflow.js [app-ssr] (ecmascript) <export default as Workflow>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$bot$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Bot$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/bot.js [app-ssr] (ecmascript) <export default as Bot>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$git$2d$branch$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__GitBranch$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/git-branch.js [app-ssr] (ecmascript) <export default as GitBranch>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$square$2d$pen$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__SquarePen$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/square-pen.js [app-ssr] (ecmascript) <export default as SquarePen>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$play$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Play$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/play.js [app-ssr] (ecmascript) <export default as Play>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$sparkles$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Sparkles$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/sparkles.js [app-ssr] (ecmascript) <export default as Sparkles>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/@copilotkit+react-core@1.62_2b5035863a1cfdc26d5a4a9b28e91607/node_modules/@copilotkit/react-core/dist/index.mjs [app-ssr] (ecmascript) <locals>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$runtime$2d$client$2d$_5e8b47a518e506d2fdf369f9e6a68d19$2f$node_modules$2f40$copilotkit$2f$runtime$2d$client$2d$gql$2f$dist$2f$client$2f$types$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/@copilotkit+runtime-client-_5e8b47a518e506d2fdf369f9e6a68d19/node_modules/@copilotkit/runtime-client-gql/dist/client/types.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/shared/stores/workspace-store.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$page$2d$chat$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/page-chat-store.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$surface$2d$embed$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/assistant/ui/surface-embed.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$parse$2d$upload$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/shared/workflow-engine/runtime/workflow-runs/parse-upload.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$state$2f$workflow$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/shared/workflow-engine/state/workflow-store.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/shared/stores/resource-registry.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$workspace$2f$inline$2d$field$2d$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/assistant/workspace/inline-field-card.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$workspace$2f$workflow$2d$run$2d$flow$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/assistant/workspace/workflow-run-flow.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/shared/workflow-engine/runtime/workflow-runs/index.ts [app-ssr] (ecmascript) <locals>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$templates$2f$portfolio$2f$portfolio$2d$workflows$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/shared/workflow-engine/templates/portfolio/portfolio-workflows.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$agents$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/agents.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$worksheets$2f$intel$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/features/worksheets/intel/index.ts [app-ssr] (ecmascript) <locals>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$worksheets$2f$intel$2f$registry$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/worksheets/intel/registry.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$worksheets$2f$intel$2f$template$2d$adapter$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/worksheets/intel/template-adapter.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$genui$2f$genui$2d$render$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/genui/genui-render.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/work-store.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/coworkers.ts [app-ssr] (ecmascript)");
+'use client';
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+// ── Work-item classification ────────────────────────────────────────────────────
+const WORKSHEET_KEYS = new Set([
+    'fapi',
+    't1134',
+    'surplus',
+    'bu-overview',
+    'expense'
+]);
+function pageWorkType(pageKey) {
+    return WORKSHEET_KEYS.has(pageKey) ? 'worksheet' : 'page';
+}
+function shortWorkTitle(text, max = 46) {
+    const t = text.trim().replace(/\s+/g, ' ');
+    return t.length > max ? `${t.slice(0, max)}…` : t;
+}
+function searchWorkspace(q) {
+    const t = q.toLowerCase().trim();
+    if (!t) return [];
+    const cat = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["buildAgentCatalog"])();
+    const hits = [];
+    for (const w of __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$agents$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["WORKFLOWS"])if (`${w.name} ${w.sub}`.toLowerCase().includes(t)) hits.push({
+        kind: 'workflow',
+        id: w.id,
+        label: w.name,
+        sub: w.sub,
+        ready: w.ready
+    });
+    // Sinaxe portfolio blueprints — openable in the builder (not runnable).
+    for (const w of __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$templates$2f$portfolio$2f$portfolio$2d$workflows$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["PORTFOLIO_WORKFLOWS"])if (`${w.name} ${w.sub} ${w.group}`.toLowerCase().includes(t)) hits.push({
+        kind: 'blueprint',
+        id: w.id,
+        label: w.name,
+        sub: w.sub
+    });
+    for (const a of __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$agents$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AGENTS"])if (`${a.name} ${a.role}`.toLowerCase().includes(t)) hits.push({
+        kind: 'agent',
+        id: a.id,
+        label: a.name,
+        sub: a.role,
+        live: a.live
+    });
+    // Workflow elements — summon a source/output into the chat without the builder.
+    for (const c of Object.values(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["WORKFLOW_CONFIGS"])){
+        if (`${c.name} source document ${c.documentLabel}`.toLowerCase().includes(t)) hits.push({
+            kind: 'element',
+            id: `${c.id}:source`,
+            label: `${c.name} — source`,
+            sub: c.documentLabel,
+            workflowId: c.id,
+            element: 'source'
+        });
+        if (`${c.name} output result`.toLowerCase().includes(t)) hits.push({
+            kind: 'element',
+            id: `${c.id}:output`,
+            label: `${c.name} — output`,
+            sub: 'Computed result',
+            workflowId: c.id,
+            element: 'output'
+        });
+    }
+    for (const p of cat.pages)if (`${p.title} ${p.subtitle} ${p.key}`.toLowerCase().includes(t)) hits.push({
+        kind: 'page',
+        id: p.key,
+        label: p.title,
+        sub: p.subtitle
+    });
+    for (const f of cat.fields)if (`${f.label} ${f.fieldId}`.toLowerCase().includes(t)) hits.push({
+        kind: 'field',
+        id: f.fieldId,
+        label: f.label,
+        sub: 'Editable field'
+    });
+    return hits.slice(0, 9);
+}
+const HIT_ICON = {
+    page: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$globe$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Globe$3e$__["Globe"],
+    field: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__["FileText"],
+    workflow: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$workflow$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Workflow$3e$__["Workflow"],
+    blueprint: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$workflow$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Workflow$3e$__["Workflow"],
+    agent: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$bot$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Bot$3e$__["Bot"],
+    element: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$git$2d$branch$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__GitBranch$3e$__["GitBranch"]
+};
+// Sinaxe portfolio blueprints — structural workflow graphs (Canadian Corporate
+// Tax Workflow Portfolio + Platform Services). Openable in the builder; NOT
+// runnable via runWorkflow (no deterministic engine yet). Published to the
+// assistant so it knows they exist and can offer to open them.
+const PORTFOLIO_BLUEPRINTS = __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$templates$2f$portfolio$2f$portfolio$2d$workflows$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["PORTFOLIO_WORKFLOWS"].map((w)=>({
+        workflowId: w.id,
+        name: w.name,
+        group: w.group,
+        summary: w.sub
+    }));
+// Human label for the current route — what the assistant reports as "where we are".
+function describeRoute(pathname) {
+    const map = {
+        '/': 'Assistant — full-screen focus mode',
+        '/builder': 'Workflow Builder — the visual node canvas',
+        '/dashboard': 'Dashboard — client & workflow overview',
+        '/fapi': 'FAPI worksheet',
+        '/t1134': 'T1134 worksheet',
+        '/surplus': 'Surplus worksheet',
+        '/bu-overview': 'Executive Overview'
+    };
+    if (map[pathname]) return {
+        route: pathname,
+        label: map[pathname]
+    };
+    if (pathname.startsWith('/client')) return {
+        route: pathname,
+        label: 'Client workspace'
+    };
+    if (pathname.startsWith('/workflows')) return {
+        route: pathname,
+        label: 'Saved workflow (database)'
+    };
+    return {
+        route: pathname,
+        label: pathname
+    };
+}
+function RunWorkflowRender({ config, agent, onOpenPage, onOpenBuilder }) {
+    const [started, setStarted] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [stopped, setStopped] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const reduce = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$framer$2d$motion$40$12$2e$23$2e$24_reac_e6ac141a008652e0ae322977309b4a48$2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$utils$2f$reduced$2d$motion$2f$use$2d$reduced$2d$motion$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useReducedMotion"])();
+    if (stopped) return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            fontSize: 12,
+            color: '#71717a',
+            padding: '4px 0'
+        },
+        children: "Run stopped."
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+        lineNumber: 139,
+        columnNumber: 23
+    }, this);
+    // Smooth swap: the proposal fades/lifts out, the run fades/rises in (then its own
+    // steps stagger via WorkflowRunFlow's intro) — one continuous motion, not a cut.
+    const ease = [
+        0.23,
+        1,
+        0.32,
+        1
+    ];
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$framer$2d$motion$40$12$2e$23$2e$24_reac_e6ac141a008652e0ae322977309b4a48$2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AnimatePresence"], {
+        mode: "wait",
+        initial: false,
+        children: !started ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$framer$2d$motion$40$12$2e$23$2e$24_reac_e6ac141a008652e0ae322977309b4a48$2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].div, {
+            // Rise in a beat AFTER the agent's reply — so the run card reads as the
+            // agent presenting a plan, not an instant menu popping onto the screen.
+            initial: reduce ? {
+                opacity: 0
+            } : {
+                opacity: 0,
+                y: 8
+            },
+            animate: {
+                opacity: 1,
+                y: 0
+            },
+            exit: reduce ? {
+                opacity: 0
+            } : {
+                opacity: 0,
+                y: -6,
+                scale: 0.985
+            },
+            transition: {
+                duration: reduce ? 0 : 0.32,
+                ease,
+                delay: reduce ? 0 : 0.25
+            },
+            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$workspace$2f$workflow$2d$run$2d$flow$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["RunProposalCard"], {
+                config: config,
+                agent: agent,
+                onStart: ()=>setStarted(true)
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 155,
+                columnNumber: 11
+            }, this)
+        }, "proposal", false, {
+            fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+            lineNumber: 146,
+            columnNumber: 9
+        }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$framer$2d$motion$40$12$2e$23$2e$24_reac_e6ac141a008652e0ae322977309b4a48$2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].div, {
+            initial: reduce ? {
+                opacity: 0
+            } : {
+                opacity: 0,
+                y: 8
+            },
+            animate: {
+                opacity: 1,
+                y: 0
+            },
+            transition: {
+                duration: reduce ? 0 : 0.3,
+                ease
+            },
+            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$workspace$2f$workflow$2d$run$2d$flow$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["WorkflowRunFlow"], {
+                config: config,
+                agent: agent,
+                onOpenPage: onOpenPage,
+                onOpenBuilder: onOpenBuilder,
+                onStop: ()=>setStopped(true),
+                onComplete: ()=>{}
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 164,
+                columnNumber: 11
+            }, this)
+        }, "run", false, {
+            fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+            lineNumber: 158,
+            columnNumber: 9
+        }, this)
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+        lineNumber: 144,
+        columnNumber: 5
+    }, this);
+}
+function useAssistant() {
+    const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRouter"])();
+    const pathname = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["usePathname"])();
+    const windows = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["workspaceWindowsAtom"]);
+    const openWindow = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["openWorkspaceWindowAtom"]);
+    const closeWindow = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["closeWorkspaceWindowAtom"]);
+    const closeAll = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["closeAllWorkspaceWindowsAtom"]);
+    const pushTrail = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["pushTrailAtom"]);
+    const recordWork = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["recordWorkItemAtom"]);
+    const setBuilderFocus = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$state$2f$workflow$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["builderFocusTargetAtom"]);
+    const setUploadedRows = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["uploadedRowsAtom"]);
+    const setAttachedDocs = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["attachedDocsAtom"]);
+    const attachedDocs = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["attachedDocsAtom"]);
+    const activeRun = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["activeRunAtom"]);
+    // Pages open next to the chat that opted into the Page ⇄ Chat contract. Subscribed
+    // so the "commandable surfaces" readable stays live; each surface is rebuilt only
+    // on its own meaningful changes (its usePageChat deps), so this stays quiet.
+    const surfaces = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$page$2d$chat$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["pageChatSurfacesAtom"]);
+    // Read the worksheet-intel registry at call time (not via subscription) so these
+    // handlers see the latest live intel without re-rendering this heavy hook.
+    const store = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useStore"])();
+    // Live grounding data — subscribed so the readables below refresh the instant the
+    // user uploads a source, edits a field/input, or re-categorizes a row. These feed
+    // the GENERIC field-values + live-workflow readables (any workflow, no per-sheet code).
+    const fieldValues = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["fieldValuesAtom"]);
+    const allRunEdits = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["runEditsAtom"]);
+    const uploaded = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["uploadedRowsAtom"]);
+    // ── CopilotKit context + tools ───────────────────────────────────────────────
+    // Where the user is right now. Registered here so it's live on EVERY route (the
+    // docked panel on non-"/" pages, focus mode on "/"). Pages that want to expose
+    // their own selection/detail add further readables locally (e.g. BuilderCopilot).
+    const here = describeRoute(pathname);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotReadable"])({
+        description: 'The page the user is currently looking at (their current location in the app). Use this to ground answers in where they are.',
+        value: here
+    });
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotReadable"])({
+        description: 'Pages currently open in the workspace',
+        value: windows.map((w)=>({
+                pageKey: w.pageKey,
+                title: w.title
+            }))
+    });
+    // ── Page ⇄ Chat contract: command the adjacent page + summon any page inline ──
+    // The general pattern. Every page that opts in (usePageChat) publishes a surface
+    // here: a live context snapshot, the commands the chat can run on it, and whether
+    // it can be brought into the chat. Two generic actions below act on ANY of them.
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotReadable"])({
+        description: "Pages/panels open next to the chat that it can act on. For each: pageKey, title, a live context snapshot of what's on that page, and the commands you can run on it (id, label, description, parameters). To DO something to the page the user is looking at, call commandPage with its commandId. To show a page inside the conversation, call bringIntoChat with its pageKey.",
+        value: Object.values(surfaces).map((s)=>({
+                pageKey: s.pageKey,
+                title: s.title,
+                context: s.context ?? null,
+                commands: (s.commands ?? []).map((c)=>({
+                        id: c.id,
+                        label: c.label,
+                        description: c.description,
+                        parameters: c.parameters ?? []
+                    })),
+                canBringIntoChat: true
+            }))
+    });
+    // Run a named command on an open page. pageKey defaults to the page the user is
+    // looking at (the active tab), then to the only open surface — so "add a block"
+    // just works when one page is open. args are JSON.
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotAction"])({
+        name: 'commandPage',
+        description: 'Run a command on a page/panel open next to the chat (see the commandable-surfaces context for each page\'s commandId list + parameters). Use this to ACT on the page the user is looking at — e.g. its checks, edits, or actions. pageKey is optional: it defaults to the active page, then to the only open one. argsJson is a JSON object of the command\'s parameters.',
+        followUp: false,
+        parameters: [
+            {
+                name: 'commandId',
+                type: 'string',
+                description: 'the command id to run (from the commandable-surfaces context)',
+                required: true
+            },
+            {
+                name: 'pageKey',
+                type: 'string',
+                description: 'which page (optional — defaults to the active/only page)',
+                required: false
+            },
+            {
+                name: 'argsJson',
+                type: 'string',
+                description: 'JSON object of the command arguments (optional)',
+                required: false
+            }
+        ],
+        handler: async ({ commandId, pageKey, argsJson })=>{
+            const reg = store.get(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$page$2d$chat$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["pageChatSurfacesAtom"]);
+            const keys = Object.keys(reg);
+            // Explicit pageKey must exist — never silently fall back to another page.
+            if (pageKey && !reg[pageKey]) {
+                return {
+                    error: `"${pageKey}" is not an open commandable page.`,
+                    commandablePages: keys
+                };
+            }
+            const activeWin = store.get(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["activeWorkspaceWindowAtom"]);
+            const surface = (pageKey ? reg[pageKey] : undefined) ?? (activeWin ? reg[activeWin.pageKey] : undefined) ?? (keys.length === 1 ? reg[keys[0]] : undefined);
+            if (!surface) {
+                return keys.length ? {
+                    error: 'More than one page is open — pass pageKey.',
+                    commandablePages: keys
+                } : {
+                    error: 'No commandable page is open. Open one first.'
+                };
+            }
+            const command = surface.commands?.find((c)=>c.id === commandId);
+            if (!command) {
+                return {
+                    error: `No command "${commandId}" on ${surface.title}.`,
+                    available: (surface.commands ?? []).map((c)=>c.id)
+                };
+            }
+            let args = {};
+            if (argsJson) {
+                try {
+                    args = JSON.parse(argsJson);
+                } catch  {
+                    return {
+                        error: 'argsJson must be valid JSON.'
+                    };
+                }
+            }
+            const result = await command.run(args);
+            pushTrail({
+                text: `${surface.title}: ${command.label}`,
+                tone: 'calculation'
+            });
+            return result;
+        }
+    });
+    // Bring a page/panel INTO the chat — render it inline in the conversation.
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotAction"])({
+        name: 'bringIntoChat',
+        description: 'Bring a page or panel INTO the chat — render it inline in the conversation so the user can see/work with it without leaving the chat. Use for "show me X here", "bring the dashboard into the chat", "pull the workflow in". pageKey is one of the open commandable surfaces (see that context) or any registered page key. Prefer this over openPage when the user wants it "here" / "in the chat".',
+        followUp: false,
+        parameters: [
+            {
+                name: 'pageKey',
+                type: 'string',
+                description: 'the page/panel to bring into the chat',
+                required: true
+            }
+        ],
+        handler: async ({ pageKey })=>{
+            const title = store.get(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$page$2d$chat$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["pageChatSurfacesAtom"])[pageKey]?.title ?? (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getPage"])(pageKey)?.title ?? pageKey;
+            pushTrail({
+                text: `Brought ${title} into the chat`,
+                tone: 'info'
+            });
+            recordWork({
+                id: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["workIdFor"])(pageWorkType(pageKey), pageKey),
+                type: pageWorkType(pageKey),
+                title,
+                status: 'open',
+                by: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["UI_CONCIERGE"],
+                open: {
+                    kind: 'page',
+                    pageKey
+                }
+            });
+            return `Showing ${title} inline in the chat.`;
+        },
+        render: ({ args })=>args?.pageKey ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                "data-work-id": (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["workIdFor"])(pageWorkType(args.pageKey), args.pageKey),
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$surface$2d$embed$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SurfaceEmbed"], {
+                    pageKey: args.pageKey
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                    lineNumber: 303,
+                    columnNumber: 95
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 303,
+                columnNumber: 23
+            }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {}, void 0, false)
+    });
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotReadable"])({
+        description: 'The workflow run currently in the chat (null if none), INCLUDING its live figures once a source is loaded. Use this to tell the user where we are and what it is waiting for, to answer questions about the run ("what is my biggest income category", "how much is net FAPI"), and to feed generateUI with the run\'s ACTUAL numbers (categories, lines, summary) — even while the run is still active/unapproved. Amounts are in `data.currency`.',
+        value: activeRun ? {
+            workflow: activeRun.workflowName,
+            document: activeRun.documentLabel,
+            step: `${activeRun.stepIndex + 1}/${activeRun.totalSteps} — ${activeRun.stepLabel}`,
+            phase: activeRun.phase,
+            awaiting: activeRun.awaiting,
+            result: activeRun.headline,
+            figures: activeRun.data ?? 'No figures yet — the source document has not been provided.'
+        } : 'No workflow is currently running.'
+    });
+    // ── Attached documents (PDF / plain-text) ────────────────────────────────────
+    // The user can attach a document in the composer; its extracted text lands here so
+    // the assistant can ANSWER questions about it ("what is this document about?",
+    // "summarize section 3") from the ACTUAL content — not just the filename. `text`
+    // is the extracted text layer (no OCR); `truncated: true` means the file was longer
+    // than the cap and the tail was cut, so say so rather than claiming completeness.
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotReadable"])({
+        description: 'Documents in context — attached in the chat OR opened in the Document Viewer next to it (which auto-adds every open file here) — with their extracted text content. When the user asks about "this document", "the attachment", "the PDF", or "the file", ANSWER from the `text` here — it is the real content, not a guess. Each doc: fileName, kind, pages (for PDFs), and text. `truncated: true` means the document was cut at a length cap — answer from what is present and note the tail was not included. Empty list = no document is currently open or attached.',
+        value: attachedDocs.length ? attachedDocs.map((d)=>({
+                fileName: d.fileName,
+                kind: d.kind,
+                pages: d.pages,
+                truncated: d.truncated,
+                text: d.text
+            })) : 'No documents have been attached to the chat.'
+    });
+    // ── Editable field values (GLOBAL, always live) ──────────────────────────────
+    // Every editable field + its CURRENT value, so the assistant answers value
+    // questions from the real number instead of guessing. Bound fields resolve to the
+    // engine input the worksheet/run/engine share; `isDefault` flags a value the user
+    // hasn't set yet (still the template default) so the model can say so honestly.
+    const fieldValueContext = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMemo"])(()=>{
+        return (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["buildAgentCatalog"])().fields.map((f)=>{
+            const ctx = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getFieldContext"])(f.fieldId);
+            const binding = ctx?.field.binding;
+            let value;
+            let isDefault;
+            if (binding) {
+                const stored = allRunEdits[binding.workflowId]?.inputs?.[binding.inputKey];
+                const engineDefault = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["getWorkflowConfig"])(binding.workflowId)?.editableInputs?.find((i)=>i.key === binding.inputKey)?.default;
+                isDefault = stored === undefined;
+                value = String(stored ?? engineDefault ?? ctx?.field.default ?? '');
+            } else {
+                const stored = fieldValues[f.fieldId];
+                isDefault = stored === undefined;
+                value = stored ?? ctx?.field.default ?? '';
+            }
+            return {
+                fieldId: f.fieldId,
+                label: f.label,
+                worksheet: f.pageKey,
+                value,
+                unit: ctx?.field.ccy,
+                hint: ctx?.field.hint,
+                isDefault,
+                boundToWorkflow: binding?.workflowId
+            };
+        });
+    }, [
+        fieldValues,
+        allRunEdits
+    ]);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotReadable"])({
+        description: 'Every editable worksheet field and its CURRENT live value — the real number the user sees and edits (bound fields share the exact engine input the worksheet and the workflow run use). ANSWER value questions from this ("what is the FX rate?", "what inclusion rate are we using?") — do NOT guess or state a value that is not here. `isDefault: true` means the user has not set it yet (still the template default), so say it is unset rather than asserting it as chosen. To change one, call editField with the exact `fieldId` shown here.',
+        value: fieldValueContext
+    });
+    // ── Live workflow data (GENERIC across every registered workflow) ────────────
+    // For any workflow the user is actually working on — uploaded a source, edited an
+    // input/override, or has an active run — publish the SAME computed snapshot the
+    // worksheet renders (lines, summary+CAD, FX, classification). So the assistant knows
+    // the real numbers even with no worksheet page open. Zero per-workflow code: adding
+    // a TemplateConfig to WORKFLOW_CONFIGS makes it grounded here automatically.
+    const liveWorkflowContext = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMemo"])(()=>{
+        const activeId = activeRun?.workflowId;
+        return Object.values(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["WORKFLOW_CONFIGS"]).flatMap((cfg)=>{
+            const up = uploaded[cfg.id];
+            const edits = allRunEdits[cfg.id];
+            const hasData = Boolean(up?.rows?.length) || edits && (Object.keys(edits.inputs).length > 0 || Object.keys(edits.overrides).length > 0) || cfg.id === activeId;
+            if (!hasData) return [];
+            let snapshot = null;
+            try {
+                snapshot = (0, __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$worksheets$2f$intel$2f$template$2d$adapter$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["createTemplateIntel"])(cfg, {
+                    rows: up?.rows,
+                    inputs: edits?.inputs,
+                    overrides: edits?.overrides
+                }).describe();
+            } catch  {
+                snapshot = null;
+            }
+            return [
+                {
+                    workflowId: cfg.id,
+                    name: cfg.name,
+                    isActiveRun: cfg.id === activeId,
+                    source: up ? {
+                        fileName: up.fileName,
+                        rowCount: up.rows.length
+                    } : 'sample data (nothing uploaded yet)',
+                    snapshot
+                }
+            ];
+        });
+    }, [
+        uploaded,
+        allRunEdits,
+        activeRun?.workflowId
+    ]);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotReadable"])({
+        description: 'The workflows you are actually working on and their REAL current data — any workflow with an uploaded source, an edited input/override, or an active run. Each `snapshot` is computed by the same engine the worksheet renders (lines, summary with CAD, FX rate, classification buckets), so these ARE the on-screen numbers even when no worksheet page is open. Answer figure questions from here; for a formula or operand breakdown call whyWorksheetValue / explainWorksheetLine with the workflowId. Workflows NOT listed have no live data yet (they would run on sample data).',
+        value: liveWorkflowContext.length ? liveWorkflowContext : 'No workflow has live data yet — nothing has been uploaded, edited, or run.'
+    });
+    // Sinaxe portfolio blueprints — the assistant knows these exist so it can list
+    // them and offer to open them, WITHOUT treating them as runnable.
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotReadable"])({
+        description: 'The Sinaxe portfolio blueprints — 15 pre-built workflow templates covering the Canadian Corporate Tax Workflow Portfolio (ownership graph, T1134, FAPI, foreign-affiliate surplus, T106, EIFEL, the T2 compliance suite, corporate tax provision, tax-attribute ledgers, Part XIII withholding, portfolio operations) PLUS the shared Platform Services (Universal Execution Sequence, Scope, Tax Position Summary, Data Readiness). These are STRUCTURAL blueprints: the user can OPEN them in the Workflow Builder to view/edit their block graph — call openWorkflowBuilder with the workflowId (e.g. "pf-t1134", "pf-scope-service"). They are NOT runnable via runWorkflow yet — only the four runnable workflows (fapi, roulement, expense, campaign) execute. When asked what workflows exist, list BOTH these blueprints and the runnable ones, and make clear which are which (blueprints = open in the builder; runnable = can be executed).',
+        value: PORTFOLIO_BLUEPRINTS
+    });
+    const pageEnum = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["listPages"])().map((p)=>p.key).join(', ');
+    const workflowEnum = Object.keys(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["WORKFLOW_CONFIGS"]).join(', ');
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotAction"])({
+        name: 'openPage',
+        description: `Open a registered worksheet as a tab. Valid pageKey: ${pageEnum}.`,
+        followUp: false,
+        parameters: [
+            {
+                name: 'pageKey',
+                type: 'string',
+                description: 'one of: ' + pageEnum,
+                required: true
+            }
+        ],
+        handler: async ({ pageKey })=>{
+            const def = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getPage"])(pageKey);
+            if (!def) return `No page "${pageKey}".`;
+            openWindow({
+                pageKey,
+                title: def.title
+            });
+            pushTrail({
+                text: `Opened ${def.title}`,
+                tone: 'navigation'
+            });
+            recordWork({
+                id: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["workIdFor"])(pageWorkType(pageKey), pageKey),
+                type: pageWorkType(pageKey),
+                title: def.title,
+                status: 'open',
+                by: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["UI_CONCIERGE"],
+                open: {
+                    kind: 'page',
+                    pageKey
+                }
+            });
+            return `Opened ${def.title}.`;
+        }
+    });
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotAction"])({
+        name: 'focusAnchor',
+        description: 'Open a page and scroll to + highlight one specific part of it (an anchor id like "fapi:fx").',
+        followUp: false,
+        parameters: [
+            {
+                name: 'anchor',
+                type: 'string',
+                description: 'the anchor id',
+                required: true
+            }
+        ],
+        handler: async ({ anchor })=>{
+            const pk = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["anchorToPage"])(anchor);
+            if (!pk) return `No anchor "${anchor}".`;
+            const def = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getPage"])(pk);
+            openWindow({
+                pageKey: pk,
+                title: def?.title ?? pk
+            });
+            window.dispatchEvent(new CustomEvent('cwp-focus-anchor', {
+                detail: {
+                    pageKey: pk,
+                    anchor
+                }
+            }));
+            pushTrail({
+                text: `Focused ${def?.title ?? pk}`,
+                tone: 'navigation'
+            });
+            recordWork({
+                id: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["workIdFor"])(pageWorkType(pk), pk),
+                type: pageWorkType(pk),
+                title: def?.title ?? pk,
+                status: 'open',
+                detail: `Focused ${anchor}`,
+                by: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["UI_CONCIERGE"],
+                open: {
+                    kind: 'page',
+                    pageKey: pk
+                }
+            });
+            return `Highlighted ${anchor} on ${def?.title ?? pk}.`;
+        }
+    });
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotAction"])({
+        name: 'editField',
+        description: 'Bring an editable worksheet field INTO the chat so the user can view/modify it inline (it syncs to the worksheet AND the workflow run — one shared value). Use for "show me the FX rate", "let me change the dividend", etc. Do NOT open the worksheet. Prefer the exact fieldId from the editable-fields context (e.g. "fx"), but a loose reference ("fx rate", the line key) is resolved too.',
+        followUp: false,
+        parameters: [
+            {
+                name: 'fieldId',
+                type: 'string',
+                description: 'the field id (exact id preferred; loose names are resolved)',
+                required: true
+            },
+            {
+                name: 'value',
+                type: 'string',
+                description: 'optional value to pre-fill',
+                required: false
+            }
+        ],
+        handler: async ({ fieldId })=>{
+            const id = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["resolveFieldId"])(fieldId);
+            if (!id) return {
+                error: `No editable field matches "${fieldId}".`,
+                availableFields: (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["buildAgentCatalog"])().fields.map((f)=>({
+                        fieldId: f.fieldId,
+                        label: f.label
+                    }))
+            };
+            const ctx = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getFieldContext"])(id);
+            pushTrail({
+                text: `Brought ${ctx.label} inline`,
+                tone: 'info'
+            });
+            return `Here is ${ctx.label} — editable right here.`;
+        },
+        render: ({ args })=>{
+            const id = args?.fieldId ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["resolveFieldId"])(args.fieldId) : null;
+            if (id) return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$workspace$2f$inline$2d$field$2d$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["InlineFieldCard"], {
+                fieldId: id,
+                preset: args?.value
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 463,
+                columnNumber: 22
+            }, this);
+            return args?.fieldId ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    fontSize: 12.5,
+                    color: '#71717a'
+                },
+                children: [
+                    "No editable field matches “",
+                    args.fieldId,
+                    "”."
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 464,
+                columnNumber: 30
+            }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {}, void 0, false);
+        }
+    });
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotAction"])({
+        name: 'closePage',
+        description: 'Close an open page by pageKey (or the last one if omitted).',
+        followUp: false,
+        parameters: [
+            {
+                name: 'pageKey',
+                type: 'string',
+                description: 'page to close',
+                required: false
+            }
+        ],
+        handler: async ({ pageKey })=>{
+            const target = pageKey ? windows.find((w)=>w.pageKey === pageKey) : windows[windows.length - 1];
+            if (!target) return 'Nothing open to close.';
+            closeWindow(target.id);
+            return `Closed ${target.title}.`;
+        }
+    });
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotAction"])({
+        name: 'closeAll',
+        description: 'Close every open page.',
+        followUp: false,
+        parameters: [],
+        handler: async ()=>{
+            closeAll();
+            return 'Closed all pages.';
+        }
+    });
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotAction"])({
+        name: 'openWorkflowBuilder',
+        description: 'Navigate to the visual workflow builder canvas. Optionally pass a workflowId to open a specific workflow OR a Sinaxe portfolio blueprint onto the canvas (e.g. "pf-t1134", "pf-scope-service", "pf-eifel", or a runnable id like "fapi"). Use this when the user wants to see/open/edit a blueprint.',
+        followUp: false,
+        parameters: [
+            {
+                name: 'workflowId',
+                type: 'string',
+                description: 'optional — a workflow or blueprint id to open on the canvas',
+                required: false
+            }
+        ],
+        handler: async ({ workflowId })=>{
+            if (workflowId && ((0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["getWorkflowConfig"])(workflowId) || __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$templates$2f$portfolio$2f$portfolio$2d$workflows$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["PORTFOLIO_WORKFLOWS"].some((w)=>w.id === workflowId))) {
+                launchOpenBuilder(workflowId);
+                return `Opening ${workflowId} in the workflow builder.`;
+            }
+            router.push('/builder');
+            return 'Opening the workflow builder.';
+        }
+    });
+    // Non-blocking: the handler resolves the tool call the instant the run starts,
+    // so the thread never carries a dangling runWorkflow tool call. The live run is
+    // long-lived + human-in-the-loop (upload, categorize, elect, approve), and its
+    // state/result reach the LLM through the activeRun readable + the trail — not
+    // by holding the tool result open until completion (which broke follow-ups mid
+    // run with "Tool result is missing for tool call …").
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotAction"])({
+        name: 'runWorkflow',
+        description: `OFFER to run a workflow. This renders a PROPOSAL card (what the run will do + the document it needs) with a Start button — the live step-by-step run begins only when the user clicks Start, then it pauses for them (upload, categorize, elect, approve). So in your reply, OFFER to run it (briefly say what it does and what it needs) — do NOT claim it is already running. Its live state, figures, and result are exposed in the active-run context once started — read that for follow-ups. workflowId is one of: ${workflowEnum}. Use for "run/compute FAPI" (workflowId "fapi"), "run the rollover / roulement art. 85" ("roulement"), "run the expense report / reimbursement" ("expense"), "run the campaign budget / allocate the marketing budget" ("campaign"). Never openPage for a run.`,
+        followUp: false,
+        parameters: [
+            {
+                name: 'workflowId',
+                type: 'string',
+                description: `which workflow: one of ${workflowEnum}`,
+                required: true
+            }
+        ],
+        handler: async ({ workflowId })=>{
+            const config = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["getWorkflowConfig"])(workflowId ?? 'fapi');
+            if (!config) return `Unknown workflow “${workflowId}”.`;
+            return `Offered the ${config.name} run — the user sees a Start card. It begins when they click Start; then track its step, what it's waiting for, its figures, and result via the active-run context.`;
+        },
+        render: ({ args })=>{
+            const config = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["getWorkflowConfig"])(args?.workflowId ?? 'fapi');
+            if (!config) return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    fontSize: 12.5,
+                    color: '#71717a'
+                },
+                children: [
+                    "Unknown workflow “",
+                    args?.workflowId,
+                    "”."
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 522,
+                columnNumber: 27
+            }, this);
+            const agent = config.agentId ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$agents$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getAgent"])(config.agentId) ?? undefined : undefined;
+            return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                "data-work-id": (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["workIdFor"])('workflow-run', config.id),
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(RunWorkflowRender, {
+                    config: config,
+                    agent: agent,
+                    onOpenPage: (pk)=>{
+                        const def = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getPage"])(pk);
+                        if (def) openWindow({
+                            pageKey: pk,
+                            title: def.title
+                        });
+                    },
+                    onOpenBuilder: (blockId)=>{
+                        setBuilderFocus({
+                            workflowId: config.id,
+                            blockId
+                        });
+                        router.push('/builder');
+                    }
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                    lineNumber: 526,
+                    columnNumber: 11
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 525,
+                columnNumber: 9
+            }, this);
+        }
+    });
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotAction"])({
+        name: 'showWorkflowElement',
+        description: `Summon a specific element of a workflow INTO the chat without opening the builder — its source document or its output. Use for "show me the source / the trial balance / the biens", "show me the output / the result / the T2057". workflowId: ${workflowEnum}. element: "source" or "output".`,
+        followUp: false,
+        parameters: [
+            {
+                name: 'workflowId',
+                type: 'string',
+                description: workflowEnum,
+                required: true
+            },
+            {
+                name: 'element',
+                type: 'string',
+                description: '"source" or "output"',
+                required: true
+            }
+        ],
+        handler: async ({ workflowId, element })=>{
+            const c = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["getWorkflowConfig"])(workflowId);
+            if (!c) return `Unknown workflow “${workflowId}”.`;
+            const el = element === 'output' ? 'output' : 'source';
+            recordWork({
+                id: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["workIdFor"])('source-review', `${c.id}:${el}`),
+                type: 'source-review',
+                title: `${c.name} — ${el}`,
+                status: 'open',
+                by: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["coworkerForWorkflow"])(c.id) ?? __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["UI_CONCIERGE"],
+                open: {
+                    kind: 'workflow',
+                    workflowId: c.id
+                }
+            });
+            return `Here is the ${element} of ${c.name}.`;
+        },
+        render: ({ args })=>{
+            const c = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["getWorkflowConfig"])(args?.workflowId ?? '');
+            if (!c) return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {}, void 0, false);
+            const el = args?.element === 'output' ? 'output' : 'source';
+            return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                "data-work-id": (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["workIdFor"])('source-review', `${c.id}:${el}`),
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$workspace$2f$workflow$2d$run$2d$flow$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["WorkflowElementCard"], {
+                    config: c,
+                    element: el,
+                    onOpenPage: (pk)=>{
+                        const d = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getPage"])(pk);
+                        if (d) openWindow({
+                            pageKey: pk,
+                            title: d.title
+                        });
+                    },
+                    onOpenBuilder: (blockId)=>{
+                        setBuilderFocus({
+                            workflowId: c.id,
+                            blockId
+                        });
+                        router.push('/builder');
+                    }
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                    lineNumber: 556,
+                    columnNumber: 78
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 556,
+                columnNumber: 14
+            }, this);
+        }
+    });
+    // Generate a CUSTOM, one-off view inline in the chat (OpenUI). This is the
+    // open-ended counterpart to the fixed-render actions above: the model composes
+    // any layout from the registered genuiLibrary vocabulary — not a hardwired
+    // component. Non-blocking (handler resolves immediately); the render owns the
+    // fetch/stream lifecycle and only mounts once the tool args are complete, so we
+    // never fire on a half-streamed prompt.
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotAction"])({
+        name: 'generateUI',
+        description: 'Generate a CUSTOM, one-off view inline in the chat from a description — a quick dashboard, chart, KPI tiles, table, or a small form for ad-hoc values that are NOT a registered worksheet. Use for "generate/create/mock/show me a dashboard|chart|table|form of …" and for a "Generate this view: …" request. The prompt MUST be a complete, self-contained description INCLUDING the concrete data/numbers to display. Do NOT use for opening a real worksheet (openPage) or running a workflow (runWorkflow).',
+        followUp: false,
+        parameters: [
+            {
+                name: 'prompt',
+                type: 'string',
+                description: 'a complete description of the UI to generate, including the data to display',
+                required: true
+            }
+        ],
+        handler: async ({ prompt })=>{
+            recordWork({
+                id: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["workIdFor"])('generated-view', (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["workKeyFromText"])(prompt)),
+                type: 'generated-view',
+                title: shortWorkTitle(prompt),
+                status: 'open',
+                by: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["UI_COMPOSER"],
+                open: {
+                    kind: 'genui',
+                    prompt
+                }
+            });
+            return `Generated a custom view for: ${prompt}`;
+        },
+        // Mount as soon as a prompt begins streaming; GenUIRender debounces the fetch
+        // until the prompt settles, so we don't gate on `status` (which can leave the
+        // view stuck if it never reports 'complete' in this setup).
+        render: ({ args })=>{
+            if (!args?.prompt) return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    fontSize: 12.5,
+                    color: '#71717a',
+                    padding: '10px 0'
+                },
+                children: "Reading your request…"
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 580,
+                columnNumber: 33
+            }, this);
+            return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                "data-work-id": (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["workIdFor"])('generated-view', (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["workKeyFromText"])(args.prompt)),
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$genui$2f$genui$2d$render$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["GenUIRender"], {
+                    prompt: args.prompt
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                    lineNumber: 581,
+                    columnNumber: 92
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 581,
+                columnNumber: 14
+            }, this);
+        }
+    });
+    // ── Worksheet intelligence (any template-driven worksheet) ───────────────────
+    // Registered ONCE, globally; they dispatch to whichever worksheet(s) are open
+    // via the worksheet-intel registry. Each open worksheet publishes its snapshot
+    // (a WorksheetCopilot readable) so the model knows the ids; `worksheet` selects
+    // one (omit if only one is open). Backed by the SAME engine the sheet renders.
+    const noWorksheet = (worksheet)=>{
+        const open = (0, __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$worksheets$2f$intel$2f$registry$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["listIntel"])(store.get(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$worksheets$2f$intel$2f$registry$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["worksheetIntelRegistryAtom"]));
+        const workflows = Object.entries(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["WORKFLOW_CONFIGS"]).map(([id, c])=>({
+                id,
+                name: c.name
+            }));
+        return {
+            error: worksheet ? `No worksheet or workflow matches "${worksheet}".` : 'Which one? No worksheet is open and several workflows exist — pass `worksheet` (a workflow id).',
+            openWorksheets: open,
+            workflows
+        };
+    };
+    // Resolve the WorksheetIntel a retrieval action should use. Prefers a mounted,
+    // live worksheet (its exact on-screen state); otherwise BUILDS intel from the
+    // workflow's live data (uploaded rows + run edits) — or its sample data when a
+    // workflow is named explicitly — so explain/why/search work from the bare chat
+    // with no worksheet page open. Generic across every workflow in WORKFLOW_CONFIGS.
+    const resolveIntelFor = (worksheet)=>{
+        const live = (0, __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$worksheets$2f$intel$2f$registry$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["pickIntel"])(store.get(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$worksheets$2f$intel$2f$registry$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["worksheetIntelRegistryAtom"]), worksheet);
+        if (live) return live;
+        const uploadedNow = store.get(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["uploadedRowsAtom"]);
+        const editsNow = store.get(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["runEditsAtom"]);
+        const activeId = store.get(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["activeRunAtom"])?.workflowId;
+        const hasData = (cfg)=>{
+            const up = uploadedNow[cfg.id];
+            const e = editsNow[cfg.id];
+            return Boolean(up?.rows?.length) || e && (Object.keys(e.inputs).length > 0 || Object.keys(e.overrides).length > 0) || cfg.id === activeId;
+        };
+        let cfg = null;
+        if (worksheet) {
+            const q = worksheet.toLowerCase();
+            cfg = __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["WORKFLOW_CONFIGS"][worksheet] ?? Object.values(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["WORKFLOW_CONFIGS"]).find((c)=>c.name.toLowerCase().includes(q)) ?? null;
+        }
+        if (!cfg) {
+            const withData = Object.values(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["WORKFLOW_CONFIGS"]).filter(hasData);
+            cfg = withData.length === 1 ? withData[0] : activeId ? __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["WORKFLOW_CONFIGS"][activeId] ?? null : null;
+        }
+        if (!cfg) return null;
+        const up = uploadedNow[cfg.id];
+        const e = editsNow[cfg.id];
+        return (0, __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$worksheets$2f$intel$2f$template$2d$adapter$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["createTemplateIntel"])(cfg, {
+            rows: up?.rows,
+            inputs: e?.inputs,
+            overrides: e?.overrides
+        });
+    };
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotAction"])({
+        name: 'explainWorksheetLine',
+        description: 'Explain ONE line of an open worksheet: its current value, the exact formula, the current value of every operand in that formula, the CAD equivalent where applicable, and (for classified lines) the source rows mapped into it with keyword + confidence. Use for "what is line C", "explain the 95(2) line", "what feeds property income", "how is the FAT deduction computed". query = a line code or a description. worksheet = the worksheet id (from a worksheet snapshot, e.g. "fapi"); omit if only one worksheet is open.',
+        parameters: [
+            {
+                name: 'query',
+                type: 'string',
+                description: 'a line code or a description of the line',
+                required: true
+            },
+            {
+                name: 'worksheet',
+                type: 'string',
+                description: 'which open worksheet id (optional if only one is open)',
+                required: false
+            }
+        ],
+        handler: async ({ query, worksheet })=>{
+            const intel = resolveIntelFor(worksheet);
+            return intel ? intel.explainLine(query) : noWorksheet(worksheet);
+        }
+    });
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotAction"])({
+        name: 'whyWorksheetValue',
+        description: 'Trace HOW a worksheet figure was derived — a step-by-step expansion of its formula down to the underlying lines, classified buckets, and inputs, each with its current value (e.g. Net FAPI → FAPI brut − FAT deduction → FAT paid × RTF). Use for "why is Net FAPI 4200", "break down Gross". query = a line code or summary name. worksheet = the worksheet id (optional if only one is open).',
+        parameters: [
+            {
+                name: 'query',
+                type: 'string',
+                description: 'the line code or summary name to trace',
+                required: true
+            },
+            {
+                name: 'worksheet',
+                type: 'string',
+                description: 'which open worksheet id (optional if only one is open)',
+                required: false
+            }
+        ],
+        handler: async ({ query, worksheet })=>{
+            const intel = resolveIntelFor(worksheet);
+            return intel ? intel.why(query) : noWorksheet(worksheet);
+        }
+    });
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotAction"])({
+        name: 'searchWorksheet',
+        description: 'Search an open worksheet\'s lines and formulas by keyword to find which line/figure handles a concept ("which line handles capital gains", "where do dividends go", "find the FAT calculation"). Returns matching lines with their formula. query = the concept. worksheet = the worksheet id (optional if only one is open).',
+        parameters: [
+            {
+                name: 'query',
+                type: 'string',
+                description: 'the concept to look up',
+                required: true
+            },
+            {
+                name: 'worksheet',
+                type: 'string',
+                description: 'which open worksheet id (optional if only one is open)',
+                required: false
+            }
+        ],
+        handler: async ({ query, worksheet })=>{
+            const intel = resolveIntelFor(worksheet);
+            return intel ? intel.search(query) : noWorksheet(worksheet);
+        }
+    });
+    // ── Conversation-launch state ────────────────────────────────────────────────
+    const { appendMessage, visibleMessages, reset } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotChat"])();
+    const setThinkingCoworker = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["setThinkingCoworkerAtom"]);
+    const [sent, setSent] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false); // flips the hero → conversation the instant you send
+    const [pinnedFields, setPinnedFields] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]); // fields brought in via search
+    const [pinnedElements, setPinnedElements] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]); // workflow source/output summoned in
+    const [pinnedRuns, setPinnedRuns] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]); // workflow ids launched deterministically (no LLM routing)
+    const [addressedAgent, setAddressedAgent] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null); // the agent you're "talking to" (click → greet → type → send)
+    const say = (content)=>{
+        appendMessage(new __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$runtime$2d$client$2d$_5e8b47a518e506d2fdf369f9e6a68d19$2f$node_modules$2f40$copilotkit$2f$runtime$2d$client$2d$gql$2f$dist$2f$client$2f$types$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["TextMessage"]({
+            content,
+            role: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$runtime$2d$client$2d$_5e8b47a518e506d2fdf369f9e6a68d19$2f$node_modules$2f40$copilotkit$2f$runtime$2d$client$2d$gql$2f$dist$2f$client$2f$types$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Role"].User
+        }));
+        setSent(true);
+    };
+    const threadEmpty = (visibleMessages?.length ?? 0) === 0;
+    const showHero = threadEmpty && !sent; // centered composer until the first message
+    const newChat = ()=>{
+        reset();
+        setSent(false);
+        setAddressedAgent(null);
+        setThinkingCoworker(null);
+    };
+    // ── Launcher handlers ────────────────────────────────────────────────────────
+    const launchOpenPage = (pageKey)=>{
+        const def = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getPage"])(pageKey);
+        if (def) openWindow({
+            pageKey,
+            title: def.title
+        });
+    };
+    const launchPinField = (fieldId)=>setPinnedFields((prev)=>prev.includes(fieldId) ? prev : [
+                ...prev,
+                fieldId
+            ]);
+    const launchPinElement = (workflowId, element)=>setPinnedElements((prev)=>prev.some((e)=>e.workflowId === workflowId && e.element === element) ? prev : [
+                ...prev,
+                {
+                    workflowId,
+                    element
+                }
+            ]);
+    // Start a workflow DETERMINISTICALLY — pin its run card into the thread directly,
+    // bypassing the LLM. (Previously this dropped a `say("Run the X workflow")` turn
+    // and relied on the model routing it to the runWorkflow action; that silently
+    // failed for any workflow the instructions didn't enumerate — e.g. expense,
+    // campaign — leaving the click dead. Pinning the same RunWorkflowRender the action
+    // renders makes every launcher click reliable regardless of model behavior.)
+    const launchStartWorkflow = (workflowId)=>{
+        const config = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["getWorkflowConfig"])(workflowId);
+        if (!config) return;
+        setSent(true); // flip hero → conversation so the pinned run card is visible
+        setPinnedRuns((prev)=>prev.includes(config.id) ? prev : [
+                ...prev,
+                config.id
+            ]);
+    };
+    const launchStartAgent = (agentId)=>{
+        const a = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$agents$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getAgent"])(agentId);
+        if (a?.live && a.workflow) launchStartWorkflow(a.workflow);
+    };
+    // Open a workflow OR a Sinaxe portfolio blueprint on the builder canvas. Sets
+    // the builder focus target (resolved by app/builder/page.tsx — run-config OR
+    // portfolio blueprint) and navigates there. Blueprints aren't runnable, so this
+    // is how the chat surfaces them: view/edit in the builder, not execute.
+    const launchOpenBuilder = (workflowId)=>{
+        setBuilderFocus({
+            workflowId,
+            blockId: ''
+        });
+        router.push('/builder');
+    };
+    // Clicking an agent no longer starts their workflow — it ADDRESSES them: the agent
+    // greets in the thread, the composer is addressed to them, and you type instructions
+    // before sending. (The run, if any, comes from the agent's real reply once you send.)
+    const addressAgent = (agentId)=>{
+        const a = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$agents$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getAgent"])(agentId);
+        if (!a?.live) return;
+        setAddressedAgent(a);
+        setSent(true); // leave the hero → show the thread with the greeting + composer
+        setThinkingCoworker(null); // drop any stale narration from a prior agent
+        // Focus the composer so you can start typing right away.
+        if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
+        ;
+    };
+    const clearAddressedAgent = ()=>setAddressedAgent(null);
+    // Fired on send while an agent is addressed: play that agent's SCRIPTED "thinking"
+    // narration (revealed line-by-line) while the real reply streams — the run/answer
+    // then arrives with human timing instead of an instant proposal card. Auto-clears
+    // as a safety if the reply stalls (the reply itself clears it on arrival).
+    const beginAgentThinking = ()=>{
+        if (!addressedAgent) return;
+        setThinkingCoworker({
+            coworker: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["coworkerForAgent"])(addressedAgent),
+            lines: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$agents$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["agentThinking"])(addressedAgent)
+        });
+        if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
+        ;
+    };
+    // Tell the model who the user is talking to right now (they clicked this agent),
+    // so it replies in that persona's voice and offers THEIR workflow — without us
+    // mangling the user's message. Complements the server-side specialist injection.
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotReadable"])({
+        description: 'The specialist the user has addressed in the chat right now (they clicked this agent to talk to them). Reply in this persona\'s voice, stay in their domain, and if the user asks to run/compute something, offer THIS specialist\'s workflow (runWorkflow with the workflow id below). When null, you are the general coordinating assistant.',
+        value: addressedAgent ? {
+            name: addressedAgent.name,
+            role: addressedAgent.role,
+            workflow: addressedAgent.workflow ?? null
+        } : 'No specific agent addressed — general assistant.'
+    });
+    // Scroll the thread to the live run when the status chip is clicked.
+    const scrollToRun = ()=>{
+        const nodes = document.querySelectorAll('[data-run-flow]');
+        nodes[nodes.length - 1]?.scrollIntoView({
+            block: 'center',
+            behavior: 'smooth'
+        });
+    };
+    // ── @-command catalog ────────────────────────────────────────────────────────
+    // A curated, tag-pickable list of the assistant's "build functions" so you can
+    // invoke a capability without knowing the vocabulary: type "@" in the composer
+    // and choose. Each command calls the most reliable path — a launcher directly
+    // where one exists (deterministic, no LLM), else say() with a canned phrase the
+    // LLM routes. `kind` is the family shown as a chip. GenUI commands generate a
+    // custom view INLINE via the generateUI action — the "Generate this view:"
+    // prefix routes the LLM straight to it (see INSTRUCTIONS). /genui-lab remains
+    // the standalone lab.
+    const genui = (prompt)=>say(`Generate this view: ${prompt}`);
+    const composerCommands = [
+        // Navigation — open a real worksheet / the builder
+        {
+            key: 'cmd:open-fapi',
+            title: 'Open FAPI worksheet',
+            sub: 'Foreign Accrual Property Income',
+            kind: 'open',
+            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$globe$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Globe$3e$__["Globe"], {
+                size: 14
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 771,
+                columnNumber: 119
+            }, this),
+            run: ()=>launchOpenPage('fapi')
+        },
+        {
+            key: 'cmd:open-t1134',
+            title: 'Open T1134 worksheet',
+            sub: 'Foreign affiliate reporting',
+            kind: 'open',
+            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$globe$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Globe$3e$__["Globe"], {
+                size: 14
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 772,
+                columnNumber: 117
+            }, this),
+            run: ()=>launchOpenPage('t1134')
+        },
+        {
+            key: 'cmd:open-surplus',
+            title: 'Open Surplus worksheet',
+            sub: 'Surplus account balances',
+            kind: 'open',
+            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$globe$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Globe$3e$__["Globe"], {
+                size: 14
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 773,
+                columnNumber: 118
+            }, this),
+            run: ()=>launchOpenPage('surplus')
+        },
+        {
+            key: 'cmd:open-overview',
+            title: 'Open Executive overview',
+            sub: 'Business-unit summary',
+            kind: 'open',
+            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$globe$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Globe$3e$__["Globe"], {
+                size: 14
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 774,
+                columnNumber: 117
+            }, this),
+            run: ()=>launchOpenPage('bu-overview')
+        },
+        {
+            key: 'cmd:open-builder',
+            title: 'Open workflow builder',
+            sub: 'The visual node canvas',
+            kind: 'open',
+            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$workflow$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Workflow$3e$__["Workflow"], {
+                size: 14
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 775,
+                columnNumber: 115
+            }, this),
+            run: ()=>router.push('/builder')
+        },
+        // Bring a live element into the chat (synced to the worksheet)
+        {
+            key: 'cmd:edit-fx',
+            title: 'Edit the FX rate inline',
+            sub: 'Live field, synced to the worksheet',
+            kind: 'inline',
+            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$square$2d$pen$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__SquarePen$3e$__["SquarePen"], {
+                size: 14
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 777,
+                columnNumber: 127
+            }, this),
+            run: ()=>launchPinField('fx')
+        },
+        {
+            key: 'cmd:fapi-source',
+            title: 'Show FAPI source document',
+            sub: 'The trial balance feeding the run',
+            kind: 'inline',
+            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$git$2d$branch$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__GitBranch$3e$__["GitBranch"], {
+                size: 14
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 778,
+                columnNumber: 131
+            }, this),
+            run: ()=>launchPinElement('fapi', 'source')
+        },
+        {
+            key: 'cmd:fapi-output',
+            title: 'Show FAPI output',
+            sub: 'The computed result',
+            kind: 'inline',
+            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$git$2d$branch$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__GitBranch$3e$__["GitBranch"], {
+                size: 14
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 779,
+                columnNumber: 108
+            }, this),
+            run: ()=>launchPinElement('fapi', 'output')
+        },
+        // Run a workflow live in the chat
+        {
+            key: 'cmd:run-fapi',
+            title: 'Run the FAPI workflow',
+            sub: 'Live, step-by-step run in the chat',
+            kind: 'run',
+            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$play$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Play$3e$__["Play"], {
+                size: 14
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 781,
+                columnNumber: 122
+            }, this),
+            run: ()=>launchStartWorkflow('fapi')
+        },
+        {
+            key: 'cmd:run-roulement',
+            title: 'Run the art. 85 rollover',
+            sub: 'Roulement — section 85 workflow',
+            kind: 'run',
+            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$play$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Play$3e$__["Play"], {
+                size: 14
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 782,
+                columnNumber: 127
+            }, this),
+            run: ()=>launchStartWorkflow('roulement')
+        },
+        // Generate UI (OpenUI) — opens the GenUI Lab with the prompt preset
+        {
+            key: 'cmd:gen-dashboard',
+            title: 'Generate a KPI dashboard',
+            sub: '3 tiles + a dividends bar chart',
+            kind: 'genui',
+            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$sparkles$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Sparkles$3e$__["Sparkles"], {
+                size: 14
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 784,
+                columnNumber: 129
+            }, this),
+            run: ()=>genui('A dashboard: 3 KPI tiles (FAPI $1.24M +12%, Surplus $860k, Tax payable $310k) above a bar chart of dividends by year 2021–2025.')
+        },
+        {
+            key: 'cmd:gen-table',
+            title: 'Generate a data table',
+            sub: 'Foreign affiliates with columns',
+            kind: 'genui',
+            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$sparkles$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Sparkles$3e$__["Sparkles"], {
+                size: 14
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 785,
+                columnNumber: 122
+            }, this),
+            run: ()=>genui('A table of 4 foreign affiliates with columns Name, Jurisdiction, Ownership %, Surplus balance.')
+        },
+        {
+            key: 'cmd:gen-form',
+            title: 'Generate an input form',
+            sub: 'FX rate + dividend amount',
+            kind: 'genui',
+            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$sparkles$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Sparkles$3e$__["Sparkles"], {
+                size: 14
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 786,
+                columnNumber: 116
+            }, this),
+            run: ()=>genui('A short form to enter an FX rate and a dividend amount, with a submit button.')
+        },
+        {
+            key: 'cmd:gen-pie',
+            title: 'Generate a pie chart + callout',
+            sub: 'Income by category',
+            kind: 'genui',
+            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$sparkles$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Sparkles$3e$__["Sparkles"], {
+                size: 14
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                lineNumber: 787,
+                columnNumber: 116
+            }, this),
+            run: ()=>genui('A pie chart breaking down income by category, and a callout summarizing the largest slice.')
+        }
+    ];
+    // ── Composer wiring ──────────────────────────────────────────────────────────
+    const composerSearch = (q)=>searchWorkspace(q).map((h)=>{
+            const Icon = HIT_ICON[h.kind];
+            const dim = h.kind === 'workflow' && !h.ready || h.kind === 'agent' && !h.live;
+            return {
+                key: `${h.kind}:${h.id}`,
+                title: h.label,
+                sub: h.sub,
+                kind: h.kind,
+                dim,
+                icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
+                    size: 14
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                    lineNumber: 798,
+                    columnNumber: 15
+                }, this),
+                run: ()=>{
+                    if (h.kind === 'page') launchOpenPage(h.id);
+                    else if (h.kind === 'field') launchPinField(h.id);
+                    else if (h.kind === 'workflow') launchStartWorkflow(h.id);
+                    else if (h.kind === 'blueprint') launchOpenBuilder(h.id);
+                    else if (h.kind === 'element') launchPinElement(h.workflowId, h.element);
+                    else launchStartAgent(h.id); // an "agent" hit now just starts that domain's workflow
+                }
+            };
+        });
+    const composerTools = [
+        ...__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$agents$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["WORKFLOWS"].map((w)=>({
+                key: `wf:${w.id}`,
+                title: w.name,
+                sub: w.sub,
+                kind: 'workflow',
+                dim: !w.ready,
+                icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$workflow$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Workflow$3e$__["Workflow"], {
+                    size: 14
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/ui/use-assistant.tsx",
+                    lineNumber: 813,
+                    columnNumber: 46
+                }, this),
+                run: ()=>{
+                    if (w.ready) launchStartWorkflow(w.id);
+                }
+            }))
+    ];
+    // File attach. Two paths, both make the file's CONTENT available to the assistant
+    // (never just the filename): workbooks parse into the shared upload store as rows
+    // (the exact rows the engine + builder use); other documents (PDF, plain-text) get
+    // their text extracted server-side and stored as readable context so the model can
+    // answer questions about them. The returned string is a SHORT note appended to the
+    // message — the full text rides in the attachedDocs readable, not the chat bubble.
+    const onAttach = async (files)=>{
+        const notes = [];
+        for (const f of files){
+            if (/\.(xlsx|xls)$/i.test(f.name)) {
+                try {
+                    const { rows, fileName } = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$parse$2d$upload$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["parseUploadToRows"])(f);
+                    const wfId = activeRun?.workflowId ?? 'fapi';
+                    setUploadedRows((prev)=>({
+                            ...prev,
+                            [wfId]: {
+                                fileName,
+                                rows,
+                                at: Date.now()
+                            }
+                        }));
+                    notes.push(`[Attached ${fileName} — ${rows.length} rows, loaded for ${(0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["getWorkflowConfig"])(wfId)?.name ?? wfId}]`);
+                } catch  {
+                    notes.push(`[Attached ${f.name} — couldn't parse it as a workbook]`);
+                }
+                continue;
+            }
+            // PDF / plain-text → extract text via the server route and publish as context.
+            try {
+                const body = new FormData();
+                body.append('file', f);
+                const res = await fetch('/api/assistant/extract', {
+                    method: 'POST',
+                    body
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    notes.push(`[Attached ${f.name} — couldn't read it: ${data?.error ?? res.statusText}]`);
+                    continue;
+                }
+                const doc = {
+                    id: `${f.name}-${f.size}`,
+                    fileName: data.fileName ?? f.name,
+                    kind: data.kind,
+                    text: data.text,
+                    chars: data.chars,
+                    pages: data.pages,
+                    truncated: !!data.truncated,
+                    at: Date.now()
+                };
+                // Replace any prior attachment of the same file; newest last.
+                setAttachedDocs((prev)=>[
+                        ...prev.filter((d)=>d.id !== doc.id),
+                        doc
+                    ]);
+                const size = doc.pages ? `${doc.pages} pages` : `${doc.chars.toLocaleString()} chars`;
+                notes.push(`[Attached ${doc.fileName} — ${size} of text extracted${doc.truncated ? ' (truncated)' : ''}; full text available to the assistant]`);
+            } catch (err) {
+                notes.push(`[Attached ${f.name} — couldn't read it: ${err instanceof Error ? err.message : 'extraction failed'}]`);
+            }
+        }
+        return notes.join('\n');
+    };
+    return {
+        // conversation
+        say,
+        newChat,
+        showHero,
+        threadEmpty,
+        // pinned inline cards
+        pinnedFields,
+        pinnedElements,
+        setPinnedFields,
+        setPinnedElements,
+        pinnedRuns,
+        setPinnedRuns,
+        // composer
+        composerSearch,
+        composerTools,
+        composerCommands,
+        onAttach,
+        // run
+        activeRun,
+        scrollToRun,
+        // launcher
+        launchOpenPage,
+        launchPinField,
+        launchPinElement,
+        launchStartWorkflow,
+        launchStartAgent,
+        // agent addressing (click agent → greet → type → send; scripted thinking on send)
+        addressedAgent,
+        addressAgent,
+        clearAddressedAgent,
+        beginAgentThinking,
+        // navigation helpers (for inline card "open in builder")
+        setBuilderFocus,
+        router
+    };
+}
+;
+}),
+"[project]/features/assistant/ui/coworker-avatar.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+__turbopack_context__.s([
+    "CoworkerAvatar",
+    ()=>CoworkerAvatar
+]);
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
+'use client';
+;
+function CoworkerAvatar({ coworker, size = 26, pulse = false, dim = false }) {
+    const round = coworker.kind === 'agent' || coworker.kind === 'human';
+    const radius = round ? '50%' : Math.round(size * 0.28);
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+        style: {
+            position: 'relative',
+            flexShrink: 0,
+            display: 'inline-flex',
+            opacity: dim ? 0.45 : 1
+        },
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                style: {
+                    width: size,
+                    height: size,
+                    borderRadius: radius,
+                    background: coworker.accent,
+                    border: '1px solid rgba(255,255,255,0.16)',
+                    color: '#fff',
+                    fontSize: coworker.initials.length > 2 ? Math.round(size * 0.34) : Math.round(size * 0.42),
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    letterSpacing: '0.02em'
+                },
+                children: coworker.initials
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/coworker-avatar.tsx",
+                lineNumber: 27,
+                columnNumber: 7
+            }, this),
+            pulse ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                className: "cwp-run-halo",
+                style: {
+                    position: 'absolute',
+                    inset: -2,
+                    borderRadius: round ? '50%' : Math.round(size * 0.36)
+                }
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/coworker-avatar.tsx",
+                lineNumber: 46,
+                columnNumber: 9
+            }, this) : null
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/ui/coworker-avatar.tsx",
+        lineNumber: 26,
+        columnNumber: 5
+    }, this);
+}
+}),
+"[project]/features/assistant/ui/message-specialists.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+__turbopack_context__.s([
+    "MessageSpecialistContext",
+    ()=>MessageSpecialistContext,
+    "buildMessageSpecialistMap",
+    ()=>buildMessageSpecialistMap,
+    "messageSignature",
+    ()=>messageSignature
+]);
+// ─────────────────────────────────────────────────────────────────────────────
+// Per-message assistant attribution.
+//
+// RETIRED (2026-07-24): there used to be four specialist personas (Sofi/Théo/Mira/
+// Nova), so a past plain reply was attributed to the domain specialist of its
+// preceding user turn. There is now ONE unified agent — Sina — so every plain reply
+// is simply Sina, which `coworkerForMessage` returns directly. This map is therefore
+// always empty; the context + exports are kept so `AsideAssistantMessage` /
+// `ThreadMessages` keep working (empty map → they fall back to `coworkerForMessage`).
+// ─────────────────────────────────────────────────────────────────────────────
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
+'use client';
+;
+const MessageSpecialistContext = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["createContext"])({});
+function buildMessageSpecialistMap(_messages) {
+    return {};
+}
+function messageSignature(messages) {
+    return messages.map((m)=>`${m.id ?? ''}:${m.role ?? ''}`).join('|');
+}
+}),
+"[project]/features/assistant/workspace/aside-thread.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+__turbopack_context__.s([
+    "AsideAssistantMessage",
+    ()=>AsideAssistantMessage,
+    "AsideComposerContext",
+    ()=>AsideComposerContext,
+    "AsideInput",
+    ()=>AsideInput,
+    "AsideThreadStyles",
+    ()=>AsideThreadStyles,
+    "AsideUserMessage",
+    ()=>AsideUserMessage
+]);
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
+// ─────────────────────────────────────────────────────────────────────────────
+// Aside thread — light NEUMORPHIC chat as CopilotKit render slots.
+//
+// CopilotKit keeps ALL real capabilities (streaming, tool-call rendering via
+// `subComponent`, actions). We only replace the visuals: a light neumorphic
+// thread (raised user bubble on the right, assistant full-width on the left) + a
+// raised neumorphic composer that doubles as the workspace search / launcher.
+// The chat is neumorphic everywhere it appears (Scope focus + docked panel); the
+// other pages keep their dark background. Palette lives in lib/librechat-theme.ts.
+// ─────────────────────────────────────────────────────────────────────────────
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/jotai@2.15.1_@babel+core@7._5b27b7b535d6519f6427fc26ba88e66f/node_modules/jotai/esm/react.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$plus$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Plus$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/plus.js [app-ssr] (ecmascript) <export default as Plus>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/chevron-down.js [app-ssr] (ecmascript) <export default as ChevronDown>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/x.js [app-ssr] (ecmascript) <export default as X>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$square$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Square$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/square.js [app-ssr] (ecmascript) <export default as Square>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$play$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Play$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/play.js [app-ssr] (ecmascript) <export default as Play>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$sparkles$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Sparkles$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/sparkles.js [app-ssr] (ecmascript) <export default as Sparkles>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$right$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowRight$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/arrow-right.js [app-ssr] (ecmascript) <export default as ArrowRight>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$up$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowUp$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/arrow-up.js [app-ssr] (ecmascript) <export default as ArrowUp>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$external$2d$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ExternalLink$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/external-link.js [app-ssr] (ecmascript) <export default as ExternalLink>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$search$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Search$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/search.js [app-ssr] (ecmascript) <export default as Search>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$paperclip$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Paperclip$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/paperclip.js [app-ssr] (ecmascript) <export default as Paperclip>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$workflow$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Workflow$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/workflow.js [app-ssr] (ecmascript) <export default as Workflow>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$table$2d$2$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Table2$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/table-2.js [app-ssr] (ecmascript) <export default as Table2>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/librechat-theme.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$scope$2d$orb$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/scope-orb.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$coworker$2d$avatar$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/assistant/ui/coworker-avatar.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/coworkers.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$message$2d$specialists$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/assistant/ui/message-specialists.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$composer$2d$intent$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/composer-intent.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/shared/stores/workspace-store.ts [app-ssr] (ecmascript)");
+'use client';
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+// Accent + the reference's soft focus ring (rgba of --is-accent-ring). The composer
+// bar mirrors the tax-workspace-UI reference: a plain raised pill that lifts a soft
+// lilac ring on focus (no animated aura).
+const ACCENT = 'var(--sx-accent)';
+const FOCUS_RING = 'rgba(124,110,174,0.28)';
+const AsideComposerContext = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["createContext"])(null);
+// Minimum on-screen time for an addressed agent's scripted "thinking" narration
+// before the real reply is revealed — so the answer lands with a human beat instead
+// of instantly. Kept short enough to stay snappy, long enough to read as deliberate.
+const AGENT_THINK_MIN_MS = 2200;
+function md(text) {
+    return text.split(/(\*\*[^*]+\*\*)/g).map((part, i)=>part.startsWith('**') && part.endsWith('**') ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("strong", {
+            style: {
+                fontWeight: 650
+            },
+            children: part.slice(2, -2)
+        }, i, false, {
+            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+            lineNumber: 56,
+            columnNumber: 9
+        }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+            children: part
+        }, i, false, {
+            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+            lineNumber: 57,
+            columnNumber: 9
+        }, this));
+}
+function AsideUserMessage(props) {
+    const content = typeof props.message === 'string' ? props.message : props.message?.content ?? '';
+    if (!content) return null;
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        className: "lc-row",
+        "data-message-id": typeof props.message === 'object' ? props.message?.id : undefined,
+        style: {
+            justifyContent: 'flex-end'
+        },
+        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            style: {
+                maxWidth: 'min(85%, 560px)',
+                background: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surface,
+                color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].text,
+                borderRadius: 20,
+                padding: '10px 16px',
+                fontSize: 14.5,
+                lineHeight: 1.55,
+                whiteSpace: 'pre-wrap',
+                boxShadow: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].shadowSm
+            },
+            children: content
+        }, void 0, false, {
+            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+            lineNumber: 68,
+            columnNumber: 7
+        }, this)
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+        lineNumber: 67,
+        columnNumber: 5
+    }, this);
+}
+function AsideAssistantMessage(props) {
+    const content = typeof props.message === 'string' ? props.message : props.message?.content ?? '';
+    // Avatar: a tool call attributes the message (runWorkflow → specialist, generateUI →
+    // UI Composer, page ops → UI Concierge). For a plain reply (generic Workspace
+    // Assistant), fall back to the specialist of the preceding user turn, so a past FAPI
+    // answer shows Sofi. Never overrides a specific tool attribution.
+    const specialistMap = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useContext"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$message$2d$specialists$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["MessageSpecialistContext"]);
+    const own = (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["coworkerForMessage"])(props.message);
+    const msgId = typeof props.message === 'object' ? props.message?.id : undefined;
+    const specialist = msgId ? specialistMap[msgId] : undefined;
+    const coworker = specialist && own.id === __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["WORKSPACE_ASSISTANT"].id ? specialist : own;
+    // Scripted agent narration (set on send while an agent is addressed). The narration
+    // row itself is rendered once at the bottom of the thread by ThreadMessages; here we
+    // (a) HIDE this in-flight reply while the narration plays, so the answer doesn't pop
+    // in instantly, and (b) clear the narration once the reply has arrived AND the
+    // narration has had its minimum on-screen time — revealing the reply with a beat.
+    const thinking = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["thinkingCoworkerAtom"]);
+    const setThinking = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["setThinkingCoworkerAtom"]);
+    const arrived = !!content || !!props.subComponent;
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        if (!thinking || !arrived) return;
+        const wait = Math.max(0, AGENT_THINK_MIN_MS - (Date.now() - thinking.since));
+        const id = setTimeout(()=>setThinking(null), wait);
+        return ()=>clearTimeout(id);
+    }, [
+        arrived,
+        thinking,
+        setThinking
+    ]);
+    // Hold the current reply behind the narration until it clears (past messages stay).
+    if (thinking && props.isCurrentMessage) return null;
+    if (props.isLoading && !content && !props.subComponent) {
+        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "lc-row",
+            children: [
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "lc-avatar",
+                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$coworker$2d$avatar$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CoworkerAvatar"], {
+                        coworker: coworker,
+                        size: 26
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                        lineNumber: 115,
+                        columnNumber: 36
+                    }, this)
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                    lineNumber: 115,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    style: {
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        paddingTop: 9
+                    },
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                            className: "lc-typing",
+                            style: {
+                                animationDelay: '0ms'
+                            }
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                            lineNumber: 117,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                            className: "lc-typing",
+                            style: {
+                                animationDelay: '180ms'
+                            }
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                            lineNumber: 118,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                            className: "lc-typing",
+                            style: {
+                                animationDelay: '360ms'
+                            }
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                            lineNumber: 119,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                    lineNumber: 116,
+                    columnNumber: 9
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+            lineNumber: 114,
+            columnNumber: 7
+        }, this);
+    }
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        className: "lc-row",
+        "data-message-id": typeof props.message === 'object' ? props.message?.id : undefined,
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "lc-avatar",
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$coworker$2d$avatar$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CoworkerAvatar"], {
+                    coworker: coworker,
+                    size: 26
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                    lineNumber: 127,
+                    columnNumber: 34
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                lineNumber: 127,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    minWidth: 0,
+                    flex: 1,
+                    paddingTop: 2
+                },
+                children: [
+                    content && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            fontSize: 14.5,
+                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].body,
+                            lineHeight: 1.65,
+                            whiteSpace: 'pre-wrap',
+                            maxWidth: 760
+                        },
+                        children: md(content)
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                        lineNumber: 129,
+                        columnNumber: 21
+                    }, this),
+                    props.subComponent && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            marginTop: content ? 10 : 0
+                        },
+                        children: props.subComponent
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                        lineNumber: 130,
+                        columnNumber: 32
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                lineNumber: 128,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+        lineNumber: 126,
+        columnNumber: 5
+    }, this);
+}
+function AsideInput(props) {
+    const [text, setText] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('');
+    const [active, setActive] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(-1);
+    const [mode, setMode] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])('ask');
+    const [showTools, setShowTools] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [showAgents, setShowAgents] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [openSection, setOpenSection] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [files, setFiles] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]);
+    const [attaching, setAttaching] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [focused, setFocused] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    const ref = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRef"])(null);
+    const fileRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRef"])(null);
+    const busy = !!props.inProgress;
+    const ready = (!!text.trim() || files.length > 0) && !busy && !attaching;
+    // Live PREVIEW of what Scope will do (advisory — see lib/composer-intent). Only
+    // in Ask mode and never for the "@" command palette or Search mode.
+    const intent = mode === 'ask' && !text.startsWith('@') ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$composer$2d$intent$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["detectComposerIntent"])(text) : null;
+    const isAction = !!intent && intent.action !== 'answer';
+    const runCoworker = intent?.action === 'run' && intent.workflowId ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["coworkerForWorkflow"])(intent.workflowId) : null;
+    const VerbIcon = intent?.action === 'run' ? __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$play$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Play$3e$__["Play"] : intent?.action === 'open' ? __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$external$2d$link$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ExternalLink$3e$__["ExternalLink"] : __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$sparkles$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Sparkles$3e$__["Sparkles"];
+    const showAction = ready && isAction;
+    const ctx = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useContext"])(AsideComposerContext);
+    // "@" opens the command menu (pick a build function by name); otherwise the
+    // typed text searches the workspace. Both feed one `palette` for keyboard nav.
+    const commandMode = text.startsWith('@');
+    const commandQuery = commandMode ? text.slice(1).trim().toLowerCase() : '';
+    const commands = commandMode && ctx?.commands ? ctx.commands.filter((c)=>!commandQuery || `${c.title} ${c.sub} ${c.kind}`.toLowerCase().includes(commandQuery)) : [];
+    const suggestions = !commandMode && text.trim() && ctx?.search ? ctx.search(text) : [];
+    const palette = commandMode ? commands : suggestions;
+    const showPalette = palette.length > 0;
+    const addressedAgent = ctx?.addressedAgent ?? null;
+    const send = async ()=>{
+        if (!ready) return;
+        const t = text.trim();
+        const pending = files;
+        setText('');
+        setActive(-1);
+        setFiles([]);
+        // Talking to an agent → play their scripted "thinking" narration while the real
+        // reply streams, so the answer/run arrives with human timing (not an instant card).
+        if (addressedAgent) ctx?.onAddressedSend?.();
+        let note = '';
+        if (pending.length && ctx?.onAttach) {
+            setAttaching(true);
+            try {
+                note = await ctx.onAttach(pending);
+            } finally{
+                setAttaching(false);
+            }
+        }
+        props.onSend?.([
+            t,
+            note
+        ].filter(Boolean).join('\n\n'));
+        ref.current?.focus();
+    };
+    const pick = (s)=>{
+        setText('');
+        setActive(-1);
+        setShowTools(false);
+        s.run();
+        ref.current?.focus();
+    };
+    const onKeyDown = (e)=>{
+        if (showPalette && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+            e.preventDefault();
+            setActive((i)=>{
+                const n = palette.length;
+                return e.key === 'ArrowDown' ? (i + 1) % n : (i - 1 + n) % n;
+            });
+            return;
+        }
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (showPalette && active >= 0) pick(palette[active]);
+            else if (showPalette && (commandMode || mode === 'search')) pick(palette[0]);
+            else send();
+        }
+        if (e.key === 'Escape') {
+            setActive(-1);
+            setShowTools(false);
+        }
+    };
+    const addFiles = (list)=>{
+        if (list?.length) setFiles((prev)=>[
+                ...prev,
+                ...Array.from(list)
+            ]);
+    };
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        const el = ref.current;
+        if (!el) return;
+        el.style.height = 'auto';
+        el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+    }, [
+        text
+    ]);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        setActive(-1);
+    }, [
+        text
+    ]);
+    // Focus the composer when an agent is addressed (click Sofi → start typing).
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        const onFocus = ()=>{
+            setMode('ask');
+            ref.current?.focus();
+        };
+        window.addEventListener('cwp-focus-composer', onFocus);
+        return ()=>window.removeEventListener('cwp-focus-composer', onFocus);
+    }, []);
+    const sqBtn = {
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        border: `1px solid ${__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].borderSubtle}`,
+        background: 'transparent',
+        color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+        cursor: 'pointer',
+        flexShrink: 0,
+        transition: 'background 140ms, color 140ms'
+    };
+    const suggList = (items, withActive)=>items.map((s, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                onMouseDown: (e)=>{
+                    e.preventDefault();
+                    pick(s);
+                },
+                onMouseEnter: ()=>withActive && setActive(i),
+                className: "w-full flex items-center gap-2.5 text-left",
+                style: {
+                    padding: '10px 14px',
+                    border: 'none',
+                    background: withActive && i === active ? __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surfaceHover : 'transparent',
+                    cursor: 'pointer',
+                    opacity: s.dim ? 0.5 : 1
+                },
+                children: [
+                    s.icon && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                            flexShrink: 0,
+                            display: 'flex'
+                        },
+                        children: s.icon
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                        lineNumber: 235,
+                        columnNumber: 18
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        className: "flex-1 min-w-0",
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                style: {
+                                    display: 'block',
+                                    fontSize: 13,
+                                    fontWeight: 550,
+                                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].title
+                                },
+                                children: [
+                                    s.title,
+                                    s.dim && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        style: {
+                                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                                            fontWeight: 400
+                                        },
+                                        children: " · soon"
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                        lineNumber: 237,
+                                        columnNumber: 111
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                lineNumber: 237,
+                                columnNumber: 9
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                style: {
+                                    display: 'block',
+                                    fontSize: 11.5,
+                                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted
+                                },
+                                children: s.sub
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                lineNumber: 238,
+                                columnNumber: 9
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                        lineNumber: 236,
+                        columnNumber: 7
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            fontSize: 9.5,
+                            fontWeight: 600,
+                            letterSpacing: '0.04em',
+                            textTransform: 'uppercase',
+                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                            flexShrink: 0
+                        },
+                        children: s.kind
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                        lineNumber: 240,
+                        columnNumber: 7
+                    }, this)
+                ]
+            }, s.key, true, {
+                fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                lineNumber: 228,
+                columnNumber: 5
+            }, this));
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            padding: '8px 16px 16px',
+            position: 'relative'
+        },
+        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            style: {
+                position: 'relative'
+            },
+            children: [
+                showPalette && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    style: {
+                        position: 'absolute',
+                        left: 0,
+                        right: 0,
+                        bottom: 'calc(100% + 8px)',
+                        zIndex: 20,
+                        background: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surface,
+                        border: `1px solid ${__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].border}`,
+                        borderRadius: 14,
+                        boxShadow: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].shadowOut,
+                        overflow: 'hidden',
+                        maxHeight: 320,
+                        overflowY: 'auto'
+                    },
+                    children: [
+                        commandMode && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            style: {
+                                padding: '9px 14px 4px',
+                                fontSize: 10,
+                                fontWeight: 650,
+                                letterSpacing: '0.05em',
+                                textTransform: 'uppercase',
+                                color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted
+                            },
+                            children: "Commands · type to filter"
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                            lineNumber: 250,
+                            columnNumber: 15
+                        }, this),
+                        suggList(palette, true)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                    lineNumber: 248,
+                    columnNumber: 11
+                }, this),
+                showTools && !showPalette && (()=>{
+                    const workflows = (ctx?.tools ?? []).filter((t)=>t.kind === 'workflow');
+                    const worksheets = (ctx?.commands ?? []).filter((c)=>c.kind === 'open' && c.key !== 'cmd:open-builder');
+                    const closeMenu = ()=>{
+                        setShowTools(false);
+                        setOpenSection(null);
+                    };
+                    const runItem = (s)=>{
+                        if (s.dim) return;
+                        s.run();
+                        closeMenu();
+                    };
+                    const renderSection = (id, icon, title, sub, items)=>{
+                        const open = openSection === id;
+                        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                    onMouseDown: (e)=>{
+                                        e.preventDefault();
+                                        setOpenSection(open ? null : id);
+                                    },
+                                    className: "w-full flex items-center gap-2.5 text-left hover:bg-black/5",
+                                    style: {
+                                        padding: '11px 14px',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        background: open ? __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surfaceHover : 'transparent'
+                                    },
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            style: {
+                                                color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                                                flexShrink: 0,
+                                                display: 'flex'
+                                            },
+                                            children: icon
+                                        }, void 0, false, {
+                                            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                            lineNumber: 267,
+                                            columnNumber: 19
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "flex-1 min-w-0",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                    style: {
+                                                        display: 'block',
+                                                        fontSize: 13,
+                                                        fontWeight: 550,
+                                                        color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].title
+                                                    },
+                                                    children: title
+                                                }, void 0, false, {
+                                                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                                    lineNumber: 269,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                    style: {
+                                                        display: 'block',
+                                                        fontSize: 11.5,
+                                                        color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted
+                                                    },
+                                                    children: sub
+                                                }, void 0, false, {
+                                                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                                    lineNumber: 270,
+                                                    columnNumber: 21
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                            lineNumber: 268,
+                                            columnNumber: 19
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
+                                            size: 14,
+                                            style: {
+                                                color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                                                flexShrink: 0,
+                                                transform: open ? 'rotate(180deg)' : 'none',
+                                                transition: 'transform 160ms'
+                                            }
+                                        }, void 0, false, {
+                                            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                            lineNumber: 272,
+                                            columnNumber: 19
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                    lineNumber: 266,
+                                    columnNumber: 17
+                                }, this),
+                                open && items.map((s)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                        onMouseDown: (e)=>{
+                                            e.preventDefault();
+                                            runItem(s);
+                                        },
+                                        className: "w-full flex items-center gap-2.5 text-left hover:bg-black/5",
+                                        style: {
+                                            padding: '8px 14px 8px 40px',
+                                            border: 'none',
+                                            background: 'transparent',
+                                            cursor: s.dim ? 'default' : 'pointer',
+                                            opacity: s.dim ? 0.5 : 1
+                                        },
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                style: {
+                                                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                                                    flexShrink: 0,
+                                                    display: 'flex'
+                                                },
+                                                children: s.icon
+                                            }, void 0, false, {
+                                                fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                                lineNumber: 276,
+                                                columnNumber: 21
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                style: {
+                                                    flex: 1,
+                                                    minWidth: 0,
+                                                    fontSize: 12.5,
+                                                    fontWeight: 500,
+                                                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].title,
+                                                    whiteSpace: 'nowrap',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis'
+                                                },
+                                                children: [
+                                                    s.title,
+                                                    s.dim && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        style: {
+                                                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                                                            fontWeight: 400
+                                                        },
+                                                        children: " · soon"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                                        lineNumber: 277,
+                                                        columnNumber: 197
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                                lineNumber: 277,
+                                                columnNumber: 21
+                                            }, this)
+                                        ]
+                                    }, s.key, true, {
+                                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                        lineNumber: 275,
+                                        columnNumber: 19
+                                    }, this)),
+                                open && items.length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    style: {
+                                        padding: '8px 14px 8px 40px',
+                                        fontSize: 12,
+                                        color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted
+                                    },
+                                    children: "None available"
+                                }, void 0, false, {
+                                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                    lineNumber: 280,
+                                    columnNumber: 48
+                                }, this)
+                            ]
+                        }, id, true, {
+                            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                            lineNumber: 265,
+                            columnNumber: 15
+                        }, this);
+                    };
+                    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                onMouseDown: closeMenu,
+                                style: {
+                                    position: 'fixed',
+                                    inset: 0,
+                                    zIndex: 19
+                                }
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                lineNumber: 286,
+                                columnNumber: 15
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                style: {
+                                    position: 'absolute',
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 'calc(100% + 8px)',
+                                    zIndex: 20,
+                                    background: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surface,
+                                    border: `1px solid ${__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].border}`,
+                                    borderRadius: 14,
+                                    boxShadow: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].shadowOut,
+                                    overflow: 'hidden',
+                                    maxHeight: 380,
+                                    overflowY: 'auto'
+                                },
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                        onMouseDown: (e)=>{
+                                            e.preventDefault();
+                                            setMode((m)=>m === 'search' ? 'ask' : 'search');
+                                            closeMenu();
+                                            ref.current?.focus();
+                                        },
+                                        className: "w-full flex items-center gap-2.5 text-left hover:bg-black/5",
+                                        style: {
+                                            padding: '11px 14px',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            background: mode === 'search' ? __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surfaceHover : 'transparent'
+                                        },
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                style: {
+                                                    color: mode === 'search' ? ACCENT : __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                                                    flexShrink: 0,
+                                                    display: 'flex'
+                                                },
+                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$search$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Search$3e$__["Search"], {
+                                                    size: 16
+                                                }, void 0, false, {
+                                                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                                    lineNumber: 290,
+                                                    columnNumber: 114
+                                                }, this)
+                                            }, void 0, false, {
+                                                fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                                lineNumber: 290,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "flex-1 min-w-0",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        style: {
+                                                            display: 'block',
+                                                            fontSize: 13,
+                                                            fontWeight: 550,
+                                                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].title
+                                                        },
+                                                        children: mode === 'search' ? 'Stop searching' : 'Search'
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                                        lineNumber: 292,
+                                                        columnNumber: 21
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        style: {
+                                                            display: 'block',
+                                                            fontSize: 11.5,
+                                                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted
+                                                        },
+                                                        children: mode === 'search' ? 'Back to asking Scope' : 'Search worksheets, workflows & agents'
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                                        lineNumber: 293,
+                                                        columnNumber: 21
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                                lineNumber: 291,
+                                                columnNumber: 19
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                        lineNumber: 289,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                        onMouseDown: (e)=>{
+                                            e.preventDefault();
+                                            fileRef.current?.click();
+                                            closeMenu();
+                                        },
+                                        className: "w-full flex items-center gap-2.5 text-left hover:bg-black/5",
+                                        style: {
+                                            padding: '11px 14px',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            background: 'transparent'
+                                        },
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                style: {
+                                                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                                                    flexShrink: 0,
+                                                    display: 'flex'
+                                                },
+                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$paperclip$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Paperclip$3e$__["Paperclip"], {
+                                                    size: 16
+                                                }, void 0, false, {
+                                                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                                    lineNumber: 298,
+                                                    columnNumber: 85
+                                                }, this)
+                                            }, void 0, false, {
+                                                fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                                lineNumber: 298,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "flex-1 min-w-0",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        style: {
+                                                            display: 'block',
+                                                            fontSize: 13,
+                                                            fontWeight: 550,
+                                                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].title
+                                                        },
+                                                        children: "Attach files"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                                        lineNumber: 300,
+                                                        columnNumber: 21
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        style: {
+                                                            display: 'block',
+                                                            fontSize: 11.5,
+                                                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted
+                                                        },
+                                                        children: "Add a document or workbook Scope can read"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                                        lineNumber: 301,
+                                                        columnNumber: 21
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                                lineNumber: 299,
+                                                columnNumber: 19
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                        lineNumber: 297,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        style: {
+                                            height: 1,
+                                            background: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].borderSubtle,
+                                            margin: '2px 0'
+                                        }
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                        lineNumber: 304,
+                                        columnNumber: 17
+                                    }, this),
+                                    renderSection('workflows', /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$workflow$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Workflow$3e$__["Workflow"], {
+                                        size: 16
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                        lineNumber: 305,
+                                        columnNumber: 45
+                                    }, this), 'Workflows', 'Start a workflow run', workflows),
+                                    renderSection('worksheets', /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$table$2d$2$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Table2$3e$__["Table2"], {
+                                        size: 16
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                        lineNumber: 306,
+                                        columnNumber: 46
+                                    }, this), 'Worksheets', 'Open a worksheet', worksheets)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                lineNumber: 287,
+                                columnNumber: 15
+                            }, this)
+                        ]
+                    }, void 0, true);
+                })(),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("style", {
+                    children: `
+          .lc-ribbon { animation: lc-rise 240ms cubic-bezier(0.23,1,0.32,1) both; }
+          @keyframes lc-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+          @media (prefers-reduced-motion: reduce) { .lc-ribbon { animation: none; } }
+        `
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                    lineNumber: 320,
+                    columnNumber: 9
+                }, this),
+                isAction && intent && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "lc-ribbon",
+                    style: {
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        margin: '0 8px 12px',
+                        padding: '9px 13px',
+                        background: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surface,
+                        boxShadow: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].shadowSm,
+                        borderRadius: 14
+                    },
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                            style: {
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                fontSize: 12,
+                                fontWeight: 700,
+                                color: ACCENT,
+                                flexShrink: 0
+                            },
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(VerbIcon, {
+                                    size: 15
+                                }, void 0, false, {
+                                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                    lineNumber: 330,
+                                    columnNumber: 15
+                                }, this),
+                                " ",
+                                intent.verb
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                            lineNumber: 329,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$right$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowRight$3e$__["ArrowRight"], {
+                            size: 14,
+                            style: {
+                                color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].faint,
+                                flexShrink: 0
+                            }
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                            lineNumber: 332,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                            style: {
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                minWidth: 0
+                            },
+                            children: [
+                                runCoworker ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$coworker$2d$avatar$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CoworkerAvatar"], {
+                                    coworker: runCoworker,
+                                    size: 22
+                                }, void 0, false, {
+                                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                    lineNumber: 334,
+                                    columnNumber: 30
+                                }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$scope$2d$orb$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ScopeMark"], {
+                                    size: 22
+                                }, void 0, false, {
+                                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                    lineNumber: 334,
+                                    columnNumber: 84
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                    style: {
+                                        fontSize: 12.5,
+                                        color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].body,
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap'
+                                    },
+                                    children: intent.action === 'run' ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
+                                                style: {
+                                                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].title,
+                                                    fontWeight: 650
+                                                },
+                                                children: runCoworker?.name ?? 'Scope'
+                                            }, void 0, false, {
+                                                fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                                lineNumber: 337,
+                                                columnNumber: 21
+                                            }, this),
+                                            " runs ",
+                                            intent.target ?? 'it'
+                                        ]
+                                    }, void 0, true) : intent.action === 'open' ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
+                                                style: {
+                                                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].title,
+                                                    fontWeight: 650
+                                                },
+                                                children: "Scope"
+                                            }, void 0, false, {
+                                                fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                                lineNumber: 339,
+                                                columnNumber: 21
+                                            }, this),
+                                            " opens it beside the chat"
+                                        ]
+                                    }, void 0, true) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("b", {
+                                                style: {
+                                                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].title,
+                                                    fontWeight: 650
+                                                },
+                                                children: "Scope"
+                                            }, void 0, false, {
+                                                fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                                lineNumber: 341,
+                                                columnNumber: 21
+                                            }, this),
+                                            " builds it in the chat"
+                                        ]
+                                    }, void 0, true)
+                                }, void 0, false, {
+                                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                    lineNumber: 335,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                            lineNumber: 333,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                            style: {
+                                flex: 1
+                            }
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                            lineNumber: 345,
+                            columnNumber: 13
+                        }, this),
+                        intent.action === 'run' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                            style: {
+                                fontSize: 11,
+                                color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                                flexShrink: 0
+                            },
+                            children: "you Start it before it runs"
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                            lineNumber: 346,
+                            columnNumber: 41
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                    lineNumber: 328,
+                    columnNumber: 11
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "lc-console",
+                    onFocus: ()=>setFocused(true),
+                    onBlur: (e)=>{
+                        if (!e.currentTarget.contains(e.relatedTarget)) setFocused(false);
+                    },
+                    style: {
+                        position: 'relative',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 10,
+                        background: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surface,
+                        borderRadius: 24,
+                        border: `1px solid ${__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].border}`,
+                        boxShadow: focused ? `${__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].shadowOut}, 0 0 0 2px ${FOCUS_RING}` : __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].shadowOut,
+                        padding: '15px 16px 12px',
+                        transition: 'box-shadow 200ms cubic-bezier(0.23,1,0.32,1)'
+                    },
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                            ref: fileRef,
+                            type: "file",
+                            multiple: true,
+                            style: {
+                                display: 'none'
+                            },
+                            onChange: (e)=>{
+                                addFiles(e.target.files);
+                                e.target.value = '';
+                            }
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                            lineNumber: 364,
+                            columnNumber: 11
+                        }, this),
+                        addressedAgent && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                            style: {
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 7,
+                                alignSelf: 'flex-start',
+                                padding: '4px 8px 4px 5px',
+                                borderRadius: 999,
+                                background: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surfaceHover,
+                                border: `1px solid ${__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].border}`
+                            },
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$coworker$2d$avatar$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CoworkerAvatar"], {
+                                    coworker: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["coworkerForAgent"])(addressedAgent),
+                                    size: 18
+                                }, void 0, false, {
+                                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                    lineNumber: 369,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                    style: {
+                                        fontSize: 12,
+                                        fontWeight: 600,
+                                        color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].title
+                                    },
+                                    children: [
+                                        "To ",
+                                        addressedAgent.name
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                    lineNumber: 370,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                    onClick: ()=>ctx?.onClearAddress?.(),
+                                    title: "Talk to Scope instead",
+                                    style: {
+                                        display: 'flex',
+                                        border: 'none',
+                                        background: 'none',
+                                        color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                                        cursor: 'pointer',
+                                        padding: 0
+                                    },
+                                    "aria-label": `Stop talking to ${addressedAgent.name}`,
+                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__["X"], {
+                                        size: 13
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                        lineNumber: 371,
+                                        columnNumber: 259
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                    lineNumber: 371,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                            lineNumber: 368,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
+                            ref: ref,
+                            value: text,
+                            onChange: (e)=>setText(e.target.value),
+                            onKeyDown: onKeyDown,
+                            rows: 1,
+                            placeholder: mode === 'search' ? 'Search worksheets, workflows, agents…' : addressedAgent ? `Message ${addressedAgent.name}, your ${addressedAgent.role.toLowerCase()}…` : 'Ask Scope, or describe a task…',
+                            className: "lc-textarea",
+                            style: {
+                                width: '100%',
+                                minWidth: 0,
+                                display: 'block',
+                                resize: 'none',
+                                fontSize: 16,
+                                color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].text,
+                                background: 'transparent',
+                                outline: 'none',
+                                border: 'none',
+                                lineHeight: 1.5,
+                                minHeight: 30,
+                                maxHeight: 200,
+                                overflowY: 'auto',
+                                fontFamily: 'inherit',
+                                fontWeight: 400,
+                                padding: '2px 2px'
+                            }
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                            lineNumber: 375,
+                            columnNumber: 11
+                        }, this),
+                        files.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            style: {
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: 6
+                            },
+                            children: files.map((f, i)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                    style: {
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 6,
+                                        background: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surfaceHover,
+                                        border: `1px solid ${__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].border}`,
+                                        borderRadius: 999,
+                                        padding: '4px 7px 4px 11px',
+                                        fontSize: 11.5,
+                                        color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].text,
+                                        maxWidth: 220
+                                    },
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            style: {
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap'
+                                            },
+                                            children: f.name
+                                        }, void 0, false, {
+                                            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                            lineNumber: 391,
+                                            columnNumber: 19
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                            onClick: ()=>setFiles((p)=>p.filter((_, j)=>j !== i)),
+                                            style: {
+                                                display: 'flex',
+                                                border: 'none',
+                                                background: 'none',
+                                                color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                                                cursor: 'pointer',
+                                                padding: 0
+                                            },
+                                            "aria-label": "Remove attachment",
+                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__["X"], {
+                                                size: 13
+                                            }, void 0, false, {
+                                                fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                                lineNumber: 392,
+                                                columnNumber: 231
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                            lineNumber: 392,
+                                            columnNumber: 19
+                                        }, this)
+                                    ]
+                                }, `${f.name}-${i}`, true, {
+                                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                    lineNumber: 390,
+                                    columnNumber: 17
+                                }, this))
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                            lineNumber: 388,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            style: {
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 7
+                            },
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                    onClick: ()=>{
+                                        setShowTools((o)=>!o);
+                                        setShowAgents(false);
+                                        setOpenSection(null);
+                                    },
+                                    style: {
+                                        ...sqBtn,
+                                        background: showTools ? __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surfaceHover : 'transparent',
+                                        color: mode === 'search' ? ACCENT : showTools ? __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].title : __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted
+                                    },
+                                    className: "hover:bg-black/5",
+                                    title: mode === 'search' ? 'Search mode on — Enter searches the workspace. Click for options.' : 'Add — search, attach files, run a workflow, open a worksheet',
+                                    "aria-label": "Add — search, attach, workflows, worksheets",
+                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$plus$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Plus$3e$__["Plus"], {
+                                        size: 18
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                        lineNumber: 401,
+                                        columnNumber: 504
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                    lineNumber: 401,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                    onClick: ()=>fileRef.current?.click(),
+                                    style: sqBtn,
+                                    className: "hover:bg-black/5",
+                                    title: "Attach a document or workbook Scope can read",
+                                    "aria-label": "Attach files",
+                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$paperclip$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Paperclip$3e$__["Paperclip"], {
+                                        size: 16
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                        lineNumber: 403,
+                                        columnNumber: 184
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                    lineNumber: 403,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                    style: {
+                                        flex: 1
+                                    }
+                                }, void 0, false, {
+                                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                    lineNumber: 404,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                    onClick: busy && props.onStop ? props.onStop : send,
+                                    disabled: !busy && !ready,
+                                    "aria-label": busy ? 'Stop' : showAction && intent ? intent.sendLabel : 'Send',
+                                    title: busy ? 'Stop' : showAction && intent ? intent.sendLabel : 'Send',
+                                    style: {
+                                        width: 40,
+                                        height: 40,
+                                        borderRadius: 12,
+                                        flexShrink: 0,
+                                        background: ready || busy ? __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].text : __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surfaceHover,
+                                        boxShadow: ready || busy ? '0 4px 14px rgba(32,39,53,0.22)' : __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].shadowIn,
+                                        border: 'none',
+                                        cursor: ready || busy && props.onStop ? 'pointer' : 'default',
+                                        display: 'grid',
+                                        placeItems: 'center',
+                                        transition: 'all 160ms cubic-bezier(0.23,1,0.32,1)',
+                                        color: ready || busy ? '#fff' : __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].faint
+                                    },
+                                    children: busy && props.onStop ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$square$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Square$3e$__["Square"], {
+                                        size: 14,
+                                        fill: "currentColor"
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                        lineNumber: 421,
+                                        columnNumber: 39
+                                    }, this) : showAction ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(VerbIcon, {
+                                        size: 16
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                        lineNumber: 421,
+                                        columnNumber: 95
+                                    }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$up$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowUp$3e$__["ArrowUp"], {
+                                        size: 17
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                        lineNumber: 421,
+                                        columnNumber: 120
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                                    lineNumber: 407,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                            lineNumber: 399,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+                    lineNumber: 353,
+                    columnNumber: 9
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+            lineNumber: 246,
+            columnNumber: 7
+        }, this)
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+        lineNumber: 245,
+        columnNumber: 5
+    }, this);
+}
+function AsideThreadStyles() {
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("style", {
+        children: `
+      /* Light-theme the in-chat run-flow (workflow-run-flow reads these --cwp-*
+         vars; unset → its dark fallbacks). Mirrors that file's LIGHT_VARS. */
+      .aside-thread {
+        --cwp-ink:#18181b; --cwp-muted:#71717a; --cwp-faint:#a1a1aa; --cwp-dim:#c4c4cc;
+        --cwp-line:rgba(24,24,27,0.10); --cwp-hairline:rgba(24,24,27,0.07);
+        --cwp-surface:#ffffff; --cwp-card:#ffffff; --cwp-ground:#F4F5F8;
+        --cwp-primary-bg:#18181b; --cwp-primary-fg:#ffffff; --cwp-live:#0369a1;
+        --cwp-amber:#b45309; --cwp-amber-text:#92400e; --cwp-amber-soft:rgba(217,119,6,0.08); --cwp-amber-line:rgba(217,119,6,0.30);
+        --cwp-danger:#b91c1c; --cwp-spine-done:rgba(24,24,27,0.18); --cwp-spine-ahead:rgba(24,24,27,0.09);
+        --cwp-hover:rgba(24,24,27,0.03);
+      }
+      /* Dark theme — the run-flow's --cwp-* palette flips with the .dark class. */
+      .dark .aside-thread {
+        --cwp-ink:#ececec; --cwp-muted:#9a9a9a; --cwp-faint:#6f6f6f; --cwp-dim:#55555c;
+        --cwp-line:rgba(255,255,255,0.10); --cwp-hairline:rgba(255,255,255,0.07);
+        --cwp-surface:rgba(255,255,255,0.04); --cwp-card:#1c1c24; --cwp-ground:#17171c;
+        --cwp-primary-bg:#ececec; --cwp-primary-fg:#18181b; --cwp-live:#38bdf8;
+        --cwp-amber:#f59e0b; --cwp-amber-text:#fbbf24; --cwp-amber-soft:rgba(245,158,11,0.12); --cwp-amber-line:rgba(245,158,11,0.35);
+        --cwp-danger:#f87171; --cwp-spine-done:rgba(255,255,255,0.20); --cwp-spine-ahead:rgba(255,255,255,0.09);
+        --cwp-hover:rgba(255,255,255,0.05);
+      }
+      /* ONE centered column for the whole conversation. Force every direct child
+         of the scroll area (the messages container AND any action/tool render that
+         CopilotKit drops in as a sibling) to the same max-width + centering, so a
+         run-flow card can't break out wider/left of the text bubbles. */
+      .aside-thread .copilotKitMessages {
+        background: transparent !important;
+        display: flex !important; flex-direction: column; align-items: center;
+        flex: 1 1 auto; padding: 24px 16px 10px !important;
+      }
+      /* Wider column so generated dashboards/tables have room; prose + bubbles are
+         capped narrower inline (AsideAssistantMessage / AsideUserMessage) so text
+         stays readable while artifacts use the full width. max-width adapts down
+         in the narrow docked panel. */
+      .aside-thread .copilotKitMessages > * { width: 100%; max-width: 1040px; }
+      .aside-thread .copilotKitMessagesContainer { padding: 0 !important; width: 100%; max-width: 1040px; margin: 0 auto; }
+      .aside-thread .copilotKitMessages::before { display: none; }
+      .aside-thread .copilotKitMessage {
+        background: transparent !important; border: none !important;
+        padding: 0 !important; margin: 0 !important; box-shadow: none !important;
+        max-width: none !important; width: 100% !important; color: inherit !important;
+      }
+      /* The run flow blends INTO the dark thread — no light card, no border. It
+         reads as part of what the assistant is saying: a vertical timeline on the
+         chat's own ground, connected by its internal step spine. Kept narrower
+         than generated UI so the timeline stays readable. */
+      .aside-thread [data-run-flow] {
+        width: 100%; max-width: 860px;
+        background: transparent; border: none;
+        border-radius: 0; padding: 2px 0;
+      }
+      .aside-thread [data-genui] { width: 100%; }
+      .aside-thread .copilotKitInputContainer, .aside-thread .copilotKitInput {
+        border: none !important; background: transparent !important; box-shadow: none !important; padding: 0 !important;
+      }
+      .lc-textarea::placeholder { color: ${__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted}; }
+
+      /* A message row: [avatar | content] — fills the column (no per-row centering). */
+      .aside-thread .lc-row {
+        display: flex; gap: 14px; align-items: flex-start;
+        width: 100%; margin: 0 0 22px;
+        animation: lc-in 260ms cubic-bezier(0.23,1,0.32,1) both;
+      }
+      @keyframes lc-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+      /* Positioning marker only — the coworker avatar (CoworkerAvatar) paints itself. */
+      .aside-thread .lc-avatar { flex-shrink: 0; margin-top: 2px; display: inline-flex; }
+      .aside-thread .lc-typing {
+        width: 7px; height: 7px; border-radius: 50%; background: ${__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted};
+        display: inline-block; animation: lc-typing 1.2s infinite;
+      }
+      @keyframes lc-typing { 0%,60%,100% { transform: translateY(0);} 30% { transform: translateY(-5px);} }
+    `
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/workspace/aside-thread.tsx",
+        lineNumber: 433,
+        columnNumber: 5
+    }, this);
+}
+}),
+"[project]/features/assistant/ui/work-menu.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+__turbopack_context__.s([
+    "WorkMenu",
+    ()=>WorkMenu,
+    "WorkMenuStyles",
+    ()=>WorkMenuStyles
+]);
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
+// ─────────────────────────────────────────────────────────────────────────────
+// WorkMenu — the "current work" switcher in the RIGHT zone of the thread header.
+//
+// It plays two roles that used to be split between the old "Work" dropdown and the
+// separate CoworkerActivity strip (now consolidated here):
+//  1. TRIGGER — shows the work you're on RIGHT NOW: the live workflow + the coworker
+//     running it (avatar + name) + a status ("Running / Needs you / Done"). When idle
+//     it falls back to the most recent work item, or a plain "Work" label when empty.
+//  2. DROPDOWN — every workflow run, worksheet, source review, and generated view the
+//     assistant has produced, in strict reverse-chronological order (current on top,
+//     previous below). Click a row to SWITCH to that work (reopen its current state);
+//     "Jump" scrolls back to where it first appeared. The current item is marked.
+//
+// Reads the durable Work registry (lib/work-store) + the live run/coworker atoms
+// (lib/workspace-store). Light neumorphic language (LC.* tokens).
+// ─────────────────────────────────────────────────────────────────────────────
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/jotai@2.15.1_@babel+core@7._5b27b7b535d6519f6427fc26ba88e66f/node_modules/jotai/esm/react.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$layout$2d$grid$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__LayoutGrid$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/layout-grid.js [app-ssr] (ecmascript) <export default as LayoutGrid>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$workflow$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Workflow$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/workflow.js [app-ssr] (ecmascript) <export default as Workflow>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$spreadsheet$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileSpreadsheet$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/file-spreadsheet.js [app-ssr] (ecmascript) <export default as FileSpreadsheet>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$search$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileSearch$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/file-search.js [app-ssr] (ecmascript) <export default as FileSearch>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$sparkles$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Sparkles$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/sparkles.js [app-ssr] (ecmascript) <export default as Sparkles>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__File$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/file.js [app-ssr] (ecmascript) <export default as File>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$corner$2d$up$2d$left$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__CornerUpLeft$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/corner-up-left.js [app-ssr] (ecmascript) <export default as CornerUpLeft>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/chevron-down.js [app-ssr] (ecmascript) <export default as ChevronDown>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/work-store.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/shared/stores/workspace-store.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$coworker$2d$avatar$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/assistant/ui/coworker-avatar.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/librechat-theme.ts [app-ssr] (ecmascript)");
+'use client';
+;
+;
+;
+;
+;
+;
+;
+;
+const TYPE_ICON = {
+    'workflow-run': __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$workflow$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Workflow$3e$__["Workflow"],
+    worksheet: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$spreadsheet$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileSpreadsheet$3e$__["FileSpreadsheet"],
+    'source-review': __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$search$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileSearch$3e$__["FileSearch"],
+    'generated-view': __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$sparkles$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Sparkles$3e$__["Sparkles"],
+    page: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__File$3e$__["File"]
+};
+const TYPE_LABEL = {
+    'workflow-run': 'Workflow',
+    worksheet: 'Worksheet',
+    'source-review': 'Source',
+    'generated-view': 'View',
+    page: 'Page'
+};
+const STATUS = {
+    running: {
+        label: 'Running',
+        color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].accent
+    },
+    awaiting: {
+        label: 'Needs you',
+        color: '#dab06c'
+    },
+    done: {
+        label: 'Done',
+        color: '#6b9b7a'
+    },
+    open: {
+        label: 'Open',
+        color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted
+    }
+};
+// Trigger-only status styling (the header "current work" bar) — a running workflow
+// reads as "Active"; each state gets a tinted pill so the state is legible at a glance.
+const ST_TRIGGER = {
+    running: {
+        label: 'Active',
+        color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].accent,
+        tint: 'rgba(167,139,250,0.14)'
+    },
+    awaiting: {
+        label: 'Needs you',
+        color: '#c68a3e',
+        tint: 'rgba(218,176,108,0.18)'
+    },
+    done: {
+        label: 'Done',
+        color: '#5f9173',
+        tint: 'rgba(107,155,122,0.16)'
+    },
+    open: {
+        label: 'Open',
+        color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+        tint: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surfaceHover
+    }
+};
+/** Compact "how long ago" for the switcher timeline. */ function relTime(ts) {
+    const s = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+    if (s < 45) return 'just now';
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+}
+// Run the stale-status reconcile exactly once per app session (the first WorkMenu mount
+// = app load), so re-mounting the menu mid-run can't wipe a live run's status.
+let didReconcileStaleWork = false;
+function WorkMenu({ onOpen, compact = false, bare = false, align = 'right' }) {
+    const items = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["workItemsChronoAtom"]);
+    const active = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["activeCoworkerAtom"]);
+    const run = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["activeRunAtom"]);
+    const clear = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["clearWorkItemsAtom"]);
+    const reconcile = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["reconcileStaleWorkAtom"]);
+    const [open, setOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        if (didReconcileStaleWork) return;
+        didReconcileStaleWork = true;
+        reconcile();
+    }, [
+        reconcile
+    ]);
+    // The work you're on now: the live run's item if there is one, else the most recent.
+    const currentId = run ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["workIdFor"])('workflow-run', run.workflowId) : null;
+    const current = (currentId ? items.find((i)=>i.id === currentId) : undefined) ?? items[0] ?? null;
+    const hasCurrent = !!current || !!run;
+    // Is a run live (someone actively working / not finished)? Drives the avatar pulse.
+    const live = !!active || !!run && run.phase !== 'done';
+    // What / who / state of the current work. Prefer the work item's explicit status
+    // (done ? done : blocker ? awaiting : running) — the honest active-vs-needs-you signal.
+    const workflowName = run?.workflowName ?? current?.title ?? null;
+    const who = active?.coworker?.name ?? current?.by?.name ?? null;
+    const triggerCoworker = active?.coworker ?? current?.by ?? null;
+    const status = current?.status ?? (run ? run.phase === 'done' ? 'done' : run.awaiting ? 'awaiting' : 'running' : null);
+    const st = status ? ST_TRIGGER[status] : null;
+    // The state DETAIL line — WHAT is needed (+ which step) while awaiting, the current
+    // step while active, or the headline figure once done.
+    let detail = null;
+    if (run) {
+        if (run.phase === 'done') {
+            detail = run.headline ? `${run.headline.label} ${Math.round(run.headline.value).toLocaleString()} ${run.headline.currency}` : 'Complete';
+        } else {
+            const step = `Step ${Math.min(run.stepIndex + 1, run.totalSteps)}/${run.totalSteps}`;
+            const needed = run.phase === 'upload' ? `Upload the ${run.documentLabel}` : run.phase === 'categorize' ? 'Categorize a row' : run.phase === 'elect' ? 'Elect an amount' : run.phase === 'approve' ? 'Approve the figures' : 'Your input';
+            detail = status === 'awaiting' ? `${needed} · ${step}` : `${run.stepLabel || 'Working'} · ${step}`;
+        }
+    } else if (current) {
+        detail = current.detail ?? relTime(current.updatedAt);
+    }
+    const avatarSize = compact ? 22 : 26;
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            position: 'relative',
+            minWidth: 0,
+            maxWidth: '100%'
+        },
+        children: [
+            !hasCurrent ? // Empty — nothing worked on yet: a plain "Work" button.
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                "data-testid": "work-menu",
+                onClick: ()=>setOpen((o)=>!o),
+                className: "hover:bg-black/5",
+                title: "Work — everything the assistant has done",
+                style: {
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 7,
+                    height: compact ? 32 : 38,
+                    padding: '0 12px',
+                    borderRadius: 999,
+                    border: `1px solid ${open ? __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].border : __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].borderSubtle}`,
+                    background: open ? __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surface : 'transparent',
+                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].body,
+                    cursor: 'pointer',
+                    fontSize: 12.5,
+                    fontWeight: 550
+                },
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$layout$2d$grid$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__LayoutGrid$3e$__["LayoutGrid"], {
+                        size: 14,
+                        style: {
+                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted
+                        }
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                        lineNumber: 153,
+                        columnNumber: 11
+                    }, this),
+                    "Work",
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
+                        size: 13,
+                        style: {
+                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                            transform: open ? 'rotate(180deg)' : 'none',
+                            transition: 'transform 160ms'
+                        }
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                        lineNumber: 155,
+                        columnNumber: 11
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                lineNumber: 142,
+                columnNumber: 9
+            }, this) : // The current-work bar — WHAT you're on + who + state, and a second line saying
+            // what's needed / which step / the result. Wider; truncates to fit its zone.
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                "data-testid": "work-menu",
+                onClick: ()=>setOpen((o)=>!o),
+                className: bare ? 'hover:bg-black/5' : 'hover:brightness-[0.99]',
+                title: "Current work — click to switch between what you're working on",
+                style: {
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 9,
+                    minWidth: 0,
+                    maxWidth: '100%',
+                    height: compact ? 36 : 48,
+                    padding: '0 10px 0 7px',
+                    borderRadius: bare ? 10 : 14,
+                    background: bare ? 'transparent' : __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surface,
+                    border: `1px solid ${bare ? 'transparent' : __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].border}`,
+                    boxShadow: bare ? 'none' : __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].shadowSm,
+                    cursor: 'pointer',
+                    transition: 'box-shadow 160ms'
+                },
+                children: [
+                    triggerCoworker ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$coworker$2d$avatar$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CoworkerAvatar"], {
+                        coworker: triggerCoworker,
+                        size: avatarSize,
+                        pulse: live
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                        lineNumber: 175,
+                        columnNumber: 13
+                    }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            width: avatarSize,
+                            height: avatarSize,
+                            borderRadius: 8,
+                            background: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surfaceHover,
+                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                            display: 'grid',
+                            placeItems: 'center',
+                            flexShrink: 0
+                        },
+                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$workflow$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Workflow$3e$__["Workflow"], {
+                            size: 14
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                            lineNumber: 178,
+                            columnNumber: 15
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                        lineNumber: 177,
+                        columnNumber: 13
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            minWidth: 0,
+                            flex: '1 1 auto',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'flex-start',
+                            gap: 2,
+                            lineHeight: 1.15
+                        },
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                style: {
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 6,
+                                    minWidth: 0,
+                                    maxWidth: '100%'
+                                },
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        style: {
+                                            flex: '0 1 auto',
+                                            minWidth: 0,
+                                            fontSize: compact ? 12.5 : 13.5,
+                                            fontWeight: 650,
+                                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].text,
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            whiteSpace: 'nowrap'
+                                        },
+                                        children: workflowName ?? 'Work'
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                                        lineNumber: 185,
+                                        columnNumber: 15
+                                    }, this),
+                                    who && !compact && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        style: {
+                                            flexShrink: 0,
+                                            fontSize: 12,
+                                            fontWeight: 500,
+                                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                                            whiteSpace: 'nowrap'
+                                        },
+                                        children: [
+                                            "· ",
+                                            who
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                                        lineNumber: 189,
+                                        columnNumber: 17
+                                    }, this),
+                                    st && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        style: {
+                                            flexShrink: 0,
+                                            fontSize: 9.5,
+                                            fontWeight: 700,
+                                            letterSpacing: '0.03em',
+                                            textTransform: 'uppercase',
+                                            color: st.color,
+                                            background: st.tint,
+                                            borderRadius: 6,
+                                            padding: '1px 6px'
+                                        },
+                                        children: st.label
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                                        lineNumber: 192,
+                                        columnNumber: 17
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                                lineNumber: 184,
+                                columnNumber: 13
+                            }, this),
+                            detail && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                style: {
+                                    minWidth: 0,
+                                    maxWidth: '100%',
+                                    fontSize: compact ? 11 : 12,
+                                    fontWeight: status === 'awaiting' ? 600 : 500,
+                                    color: status === 'awaiting' ? '#b07d38' : __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap'
+                                },
+                                children: detail
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                                lineNumber: 197,
+                                columnNumber: 15
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                        lineNumber: 182,
+                        columnNumber: 11
+                    }, this),
+                    items.length > 1 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            flexShrink: 0,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].faint
+                        },
+                        title: `${items.length} work items`,
+                        children: items.length
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                        lineNumber: 211,
+                        columnNumber: 13
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
+                        size: 15,
+                        style: {
+                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                            flexShrink: 0,
+                            transform: open ? 'rotate(180deg)' : 'none',
+                            transition: 'transform 160ms'
+                        }
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                        lineNumber: 213,
+                        columnNumber: 11
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                lineNumber: 160,
+                columnNumber: 9
+            }, this),
+            open && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        onClick: ()=>setOpen(false),
+                        style: {
+                            position: 'fixed',
+                            inset: 0,
+                            zIndex: 40
+                        }
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                        lineNumber: 219,
+                        columnNumber: 11
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        "data-testid": "work-menu-panel",
+                        style: {
+                            position: 'absolute',
+                            top: 'calc(100% + 6px)',
+                            ...align === 'left' ? {
+                                left: 0
+                            } : {
+                                right: 0
+                            },
+                            zIndex: 41,
+                            width: 360,
+                            maxHeight: 440,
+                            overflowY: 'auto',
+                            background: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surface,
+                            border: `1px solid ${__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].border}`,
+                            borderRadius: 14,
+                            boxShadow: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].shadowOut
+                        },
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                style: {
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    padding: '10px 14px 6px'
+                                },
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        style: {
+                                            fontSize: 11,
+                                            fontWeight: 650,
+                                            letterSpacing: '0.05em',
+                                            textTransform: 'uppercase',
+                                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted
+                                        },
+                                        children: [
+                                            "Work ",
+                                            items.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                style: {
+                                                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].faint
+                                                },
+                                                children: [
+                                                    "· ",
+                                                    items.length
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                                                lineNumber: 230,
+                                                columnNumber: 43
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                                        lineNumber: 229,
+                                        columnNumber: 15
+                                    }, this),
+                                    items.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                        onClick: ()=>clear(),
+                                        className: "hover:brightness-125",
+                                        style: {
+                                            fontSize: 11,
+                                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].faint,
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer'
+                                        },
+                                        children: "Clear"
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                                        lineNumber: 233,
+                                        columnNumber: 17
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                                lineNumber: 228,
+                                columnNumber: 13
+                            }, this),
+                            items.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                style: {
+                                    padding: '18px 14px 22px',
+                                    fontSize: 12.5,
+                                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                                    lineHeight: 1.5
+                                },
+                                children: "Nothing yet. Runs, worksheets, source reviews, and generated views will collect here as the assistant works."
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                                lineNumber: 238,
+                                columnNumber: 15
+                            }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                style: {
+                                    padding: '0 6px 6px'
+                                },
+                                children: items.map((item)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(WorkRow, {
+                                        item: item,
+                                        isCurrent: item.id === current?.id,
+                                        onOpen: ()=>{
+                                            setOpen(false);
+                                            onOpen(item);
+                                        },
+                                        onJump: ()=>{
+                                            setOpen(false);
+                                            if (!(0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jumpToWork"])(item.id)) onOpen(item);
+                                        }
+                                    }, item.id, false, {
+                                        fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                                        lineNumber: 244,
+                                        columnNumber: 19
+                                    }, this))
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                                lineNumber: 242,
+                                columnNumber: 15
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                        lineNumber: 220,
+                        columnNumber: 11
+                    }, this)
+                ]
+            }, void 0, true)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/ui/work-menu.tsx",
+        lineNumber: 139,
+        columnNumber: 5
+    }, this);
+}
+function WorkRow({ item, isCurrent, onOpen, onJump }) {
+    const Icon = TYPE_ICON[item.type];
+    const status = STATUS[item.status];
+    const by = item.by;
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        className: "lc-workrow",
+        "data-testid": "work-row",
+        style: {
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 10,
+            padding: '9px 10px',
+            borderRadius: 10,
+            background: isCurrent ? __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surfaceHover : undefined,
+            boxShadow: isCurrent ? `inset 2px 0 0 ${__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].accent}` : undefined
+        },
+        children: [
+            by ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                style: {
+                    width: 26,
+                    height: 26,
+                    flexShrink: 0,
+                    borderRadius: by.kind === 'agent' || by.kind === 'human' ? '50%' : 7,
+                    background: by.accent,
+                    border: '1px solid rgba(255,255,255,0.16)',
+                    color: '#fff',
+                    fontSize: by.initials.length > 2 ? 8.5 : 10.5,
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                },
+                title: `${by.name}${by.role ? ` · ${by.role}` : ''}`,
+                children: by.initials
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                lineNumber: 277,
+                columnNumber: 9
+            }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                style: {
+                    width: 26,
+                    height: 26,
+                    flexShrink: 0,
+                    borderRadius: 7,
+                    background: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surfaceHover,
+                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                },
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
+                    size: 13
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                    lineNumber: 289,
+                    columnNumber: 11
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                lineNumber: 288,
+                columnNumber: 9
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                onClick: onOpen,
+                title: isCurrent ? 'This is your current work' : 'Switch to this work',
+                style: {
+                    minWidth: 0,
+                    flex: 1,
+                    textAlign: 'left',
+                    border: 'none',
+                    background: 'transparent',
+                    padding: 0,
+                    cursor: 'pointer'
+                },
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 6
+                        },
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
+                                size: 12,
+                                style: {
+                                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].faint,
+                                    flexShrink: 0
+                                }
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                                lineNumber: 300,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                style: {
+                                    fontSize: 13,
+                                    fontWeight: 550,
+                                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].text,
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap'
+                                },
+                                children: item.title
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                                lineNumber: 301,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                style: {
+                                    flexShrink: 0,
+                                    fontSize: 9,
+                                    fontWeight: 700,
+                                    letterSpacing: '0.04em',
+                                    textTransform: 'uppercase',
+                                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].faint
+                                },
+                                children: TYPE_LABEL[item.type]
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                                lineNumber: 302,
+                                columnNumber: 11
+                            }, this),
+                            isCurrent && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                style: {
+                                    flexShrink: 0,
+                                    fontSize: 9,
+                                    fontWeight: 700,
+                                    letterSpacing: '0.04em',
+                                    textTransform: 'uppercase',
+                                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].accent,
+                                    background: 'rgba(167,139,250,0.12)',
+                                    borderRadius: 5,
+                                    padding: '1px 5px'
+                                },
+                                children: "Current"
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                                lineNumber: 304,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                        lineNumber: 299,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            marginTop: 2
+                        },
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                style: {
+                                    width: 6,
+                                    height: 6,
+                                    borderRadius: '50%',
+                                    background: status.color,
+                                    flexShrink: 0
+                                }
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                                lineNumber: 308,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                style: {
+                                    fontSize: 11,
+                                    fontWeight: 550,
+                                    color: status.color
+                                },
+                                children: status.label
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                                lineNumber: 309,
+                                columnNumber: 11
+                            }, this),
+                            item.detail && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                style: {
+                                    fontSize: 11,
+                                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap'
+                                },
+                                children: [
+                                    "· ",
+                                    item.detail
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                                lineNumber: 311,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                style: {
+                                    fontSize: 11,
+                                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].faint,
+                                    flexShrink: 0
+                                },
+                                children: [
+                                    "· ",
+                                    relTime(item.updatedAt)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                                lineNumber: 313,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                        lineNumber: 307,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                lineNumber: 294,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "lc-workrow-actions",
+                style: {
+                    display: 'flex',
+                    gap: 2,
+                    flexShrink: 0
+                },
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                    onClick: onJump,
+                    className: "hover:bg-black/5",
+                    title: "Jump to where it appeared",
+                    style: rowBtn,
+                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$corner$2d$up$2d$left$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__CornerUpLeft$3e$__["CornerUpLeft"], {
+                        size: 14
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                        lineNumber: 318,
+                        columnNumber: 112
+                    }, this)
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                    lineNumber: 318,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/work-menu.tsx",
+                lineNumber: 317,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/ui/work-menu.tsx",
+        lineNumber: 266,
+        columnNumber: 5
+    }, this);
+}
+const rowBtn = {
+    display: 'grid',
+    placeItems: 'center',
+    width: 26,
+    height: 26,
+    borderRadius: 7,
+    border: 'none',
+    background: 'transparent',
+    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+    cursor: 'pointer'
+};
+function WorkMenuStyles() {
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("style", {
+        children: `
+      .lc-workrow:hover { background: ${__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surfaceHover}; }
+      /* Jump-to-origin highlight — also defined by the workspace, redeclared here so
+         it works in the docked panel (where ChatWorkspace isn't mounted). */
+      @keyframes cwp-anchor-flash { 0% { background: rgba(107,33,168,0.12);} 100% { background: transparent;} }
+      .cwp-anchor-flash { animation: cwp-anchor-flash 1.7s ease-out; border-radius: 8px; }
+    `
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/ui/work-menu.tsx",
+        lineNumber: 331,
+        columnNumber: 5
+    }, this);
+}
+}),
+"[project]/features/assistant/ui/agent-greeting.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+__turbopack_context__.s([
+    "AgentGreeting",
+    ()=>AgentGreeting
+]);
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$agents$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/agents.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/coworkers.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/librechat-theme.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$coworker$2d$avatar$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/assistant/ui/coworker-avatar.tsx [app-ssr] (ecmascript)");
+'use client';
+;
+;
+;
+;
+;
+function AgentGreeting({ agent }) {
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        className: "lc-row",
+        "data-agent-greeting": true,
+        style: {
+            marginBottom: 6
+        },
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("style", {
+                children: `
+        @keyframes ag-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+        [data-agent-greeting] { animation: ag-in 360ms cubic-bezier(0.23,1,0.32,1) both; }
+        @media (prefers-reduced-motion: reduce) { [data-agent-greeting] { animation: none; } }
+      `
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/agent-greeting.tsx",
+                lineNumber: 21,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "lc-avatar",
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$coworker$2d$avatar$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CoworkerAvatar"], {
+                    coworker: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["coworkerForAgent"])(agent),
+                    size: 26
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/ui/agent-greeting.tsx",
+                    lineNumber: 26,
+                    columnNumber: 34
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/agent-greeting.tsx",
+                lineNumber: 26,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    minWidth: 0,
+                    flex: 1,
+                    paddingTop: 1
+                },
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            display: 'flex',
+                            alignItems: 'baseline',
+                            gap: 8,
+                            marginBottom: 3
+                        },
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                style: {
+                                    fontSize: 13.5,
+                                    fontWeight: 650,
+                                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].title
+                                },
+                                children: agent.name
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/agent-greeting.tsx",
+                                lineNumber: 29,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                style: {
+                                    fontSize: 11.5,
+                                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted
+                                },
+                                children: agent.role
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/agent-greeting.tsx",
+                                lineNumber: 30,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/features/assistant/ui/agent-greeting.tsx",
+                        lineNumber: 28,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            fontSize: 14.5,
+                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].body,
+                            lineHeight: 1.6,
+                            maxWidth: 620
+                        },
+                        children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$agents$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["agentGreeting"])(agent)
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/ui/agent-greeting.tsx",
+                        lineNumber: 32,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/ui/agent-greeting.tsx",
+                lineNumber: 27,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/ui/agent-greeting.tsx",
+        lineNumber: 20,
+        columnNumber: 5
+    }, this);
+}
+}),
+"[project]/features/assistant/ui/agent-thinking.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+__turbopack_context__.s([
+    "AgentThinking",
+    ()=>AgentThinking
+]);
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
+// ─────────────────────────────────────────────────────────────────────────────
+// AgentThinking — the scripted "thinking" narration that plays in place of the
+// plain typing dots while an addressed agent's reply streams. It reads the
+// thinkingCoworkerAtom (set the instant you send an instruction to an agent) and
+// reveals that agent's narration lines ONE AT A TIME with human timing, so a
+// handoff reads as the agent working THROUGH steps — not an instant proposal card.
+//
+// Rendered as a full message row (avatar + narration) at two call sites: the
+// CopilotKit activity fallback (before the assistant message object exists) and
+// the AsideAssistantMessage loading branch (once it does). Only one is mounted at
+// a time, and both read the same atom, so the narration is seamless across the two
+// phases. The atom is cleared by AsideAssistantMessage once real content arrives.
+// ─────────────────────────────────────────────────────────────────────────────
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/jotai@2.15.1_@babel+core@7._5b27b7b535d6519f6427fc26ba88e66f/node_modules/jotai/esm/react.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/shared/stores/workspace-store.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/librechat-theme.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$coworker$2d$avatar$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/assistant/ui/coworker-avatar.tsx [app-ssr] (ecmascript)");
+'use client';
+;
+;
+;
+;
+;
+;
+const STEP_MS = 1200; // cadence between narration lines — paced to feel deliberate
+function prefersReducedMotion() {
+    return ("TURBOPACK compile-time value", "undefined") !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+}
+/** Progressive reveal: `visible` climbs from 1 → total on a timer (all at once if
+ *  reduced motion). Stops at the last line and holds — the real reply unmounts us. */ function useTimedReveal(total) {
+    const [visible, setVisible] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(()=>prefersReducedMotion() ? "TURBOPACK unreachable" : 1);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        if (prefersReducedMotion() || total <= 1) {
+            setVisible(total);
+            return;
+        }
+        setVisible(1);
+        const id = setInterval(()=>{
+            setVisible((n)=>{
+                if (n >= total) {
+                    clearInterval(id);
+                    return n;
+                }
+                return n + 1;
+            });
+        }, STEP_MS);
+        return ()=>clearInterval(id);
+    }, [
+        total
+    ]);
+    return visible;
+}
+function AgentThinking() {
+    const thinking = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["thinkingCoworkerAtom"]);
+    if (!thinking) return null;
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(AgentThinkingRow, {
+        lines: thinking.lines,
+        coworker: thinking.coworker
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/ui/agent-thinking.tsx",
+        lineNumber: 51,
+        columnNumber: 10
+    }, this);
+}
+function AgentThinkingRow({ lines, coworker }) {
+    const steps = lines.length ? lines : [
+        'Thinking…'
+    ];
+    const visible = useTimedReveal(steps.length);
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        className: "lc-row",
+        "data-agent-thinking": true,
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("style", {
+                children: `
+        @keyframes at-rise { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+        .at-line { animation: at-rise 320ms cubic-bezier(0.23,1,0.32,1) both; }
+        @keyframes at-pulse { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
+        .at-cursor { animation: at-pulse 1.2s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) { .at-line { animation: none; } .at-cursor { animation: none; } }
+      `
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/agent-thinking.tsx",
+                lineNumber: 59,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "lc-avatar",
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$coworker$2d$avatar$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["CoworkerAvatar"], {
+                    coworker: coworker,
+                    size: 26
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/ui/agent-thinking.tsx",
+                    lineNumber: 66,
+                    columnNumber: 34
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/agent-thinking.tsx",
+                lineNumber: 66,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                style: {
+                    minWidth: 0,
+                    flex: 1,
+                    paddingTop: 3,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 3
+                },
+                children: steps.slice(0, visible).map((line, i)=>{
+                    const isLast = i === visible - 1;
+                    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "at-line",
+                        style: {
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 7,
+                            fontSize: 14,
+                            lineHeight: 1.5,
+                            color: isLast ? __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].body : __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                            transition: 'color 300ms'
+                        },
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                children: line
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/agent-thinking.tsx",
+                                lineNumber: 76,
+                                columnNumber: 15
+                            }, this),
+                            isLast && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                className: "at-cursor",
+                                style: {
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 3
+                                },
+                                "aria-hidden": true,
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        style: {
+                                            width: 4,
+                                            height: 4,
+                                            borderRadius: '50%',
+                                            background: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted
+                                        }
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/ui/agent-thinking.tsx",
+                                        lineNumber: 79,
+                                        columnNumber: 19
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        style: {
+                                            width: 4,
+                                            height: 4,
+                                            borderRadius: '50%',
+                                            background: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted
+                                        }
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/ui/agent-thinking.tsx",
+                                        lineNumber: 80,
+                                        columnNumber: 19
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        style: {
+                                            width: 4,
+                                            height: 4,
+                                            borderRadius: '50%',
+                                            background: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted
+                                        }
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/ui/agent-thinking.tsx",
+                                        lineNumber: 81,
+                                        columnNumber: 19
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/features/assistant/ui/agent-thinking.tsx",
+                                lineNumber: 78,
+                                columnNumber: 17
+                            }, this)
+                        ]
+                    }, i, true, {
+                        fileName: "[project]/features/assistant/ui/agent-thinking.tsx",
+                        lineNumber: 71,
+                        columnNumber: 13
+                    }, this);
+                })
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/agent-thinking.tsx",
+                lineNumber: 67,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/ui/agent-thinking.tsx",
+        lineNumber: 58,
+        columnNumber: 5
+    }, this);
+}
+}),
+"[project]/features/assistant/ui/thread-messages.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+__turbopack_context__.s([
+    "PinnedThreadContext",
+    ()=>PinnedThreadContext,
+    "ThreadMessages",
+    ()=>ThreadMessages
+]);
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
+// ─────────────────────────────────────────────────────────────────────────────
+// ThreadMessages — a custom CopilotChat `Messages` slot that renders pinned work
+// (deterministically-launched runs + summoned fields/elements) INSIDE the same scroll
+// as the conversation. This makes a launched run part of ONE scrollable thread with the
+// composer fixed at the bottom — instead of a separate 70%-tall pane stacked ABOVE the
+// chat (which read as "two chats").
+//
+// The default Messages isn't exported, so this reimplements it faithfully: the same
+// .copilotKitMessages / .copilotKitMessagesContainer structure + auto-scroll-to-bottom
+// and the same per-message RenderMessage call — plus the pinned node (via
+// PinnedThreadContext) rendered at the top of the message container.
+// ─────────────────────────────────────────────────────────────────────────────
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/jotai@2.15.1_@babel+core@7._5b27b7b535d6519f6427fc26ba88e66f/node_modules/jotai/esm/react.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/@copilotkit+react-core@1.62_2b5035863a1cfdc26d5a4a9b28e91607/node_modules/@copilotkit/react-core/dist/index.mjs [app-ssr] (ecmascript) <locals>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$ui$40$1$2e$62$2e$3_08c7b045c14dc018161baa9ba8adb371$2f$node_modules$2f40$copilotkit$2f$react$2d$ui$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/@copilotkit+react-ui@1.62.3_08c7b045c14dc018161baa9ba8adb371/node_modules/@copilotkit/react-ui/dist/index.mjs [app-ssr] (ecmascript) <locals>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$message$2d$specialists$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/assistant/ui/message-specialists.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/shared/stores/workspace-store.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$agent$2d$thinking$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/assistant/ui/agent-thinking.tsx [app-ssr] (ecmascript)");
+'use client';
+;
+;
+;
+;
+;
+;
+;
+;
+const PinnedThreadContext = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["createContext"])(null);
+// Faithful copy of CopilotKit's internal useScrollToBottom: auto-scroll on new user
+// turns / streamed content, but stop following once the user scrolls up.
+function useScrollToBottom(userMessageCount) {
+    const messagesEndRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRef"])(null);
+    const messagesContainerRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRef"])(null);
+    const isProgrammaticScrollRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRef"])(false);
+    const isUserScrollUpRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRef"])(false);
+    const scrollToBottom = ()=>{
+        const c = messagesContainerRef.current;
+        if (c && messagesEndRef.current) {
+            isProgrammaticScrollRef.current = true;
+            c.scrollTop = c.scrollHeight;
+        }
+    };
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        const c = messagesContainerRef.current;
+        if (!c) return;
+        const onScroll = ()=>{
+            if (isProgrammaticScrollRef.current) {
+                isProgrammaticScrollRef.current = false;
+                return;
+            }
+            const { scrollTop, scrollHeight, clientHeight } = c;
+            isUserScrollUpRef.current = scrollTop + clientHeight < scrollHeight;
+        };
+        c.addEventListener('scroll', onScroll);
+        return ()=>c.removeEventListener('scroll', onScroll);
+    }, []);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        const c = messagesContainerRef.current;
+        if (!c) return;
+        const mo = new MutationObserver(()=>{
+            if (!isUserScrollUpRef.current) scrollToBottom();
+        });
+        mo.observe(c, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
+        return ()=>mo.disconnect();
+    }, []);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        isUserScrollUpRef.current = false;
+        scrollToBottom();
+    }, [
+        userMessageCount
+    ]);
+    return {
+        messagesEndRef,
+        messagesContainerRef
+    };
+}
+function ThreadMessages(props) {
+    const { inProgress, children, RenderMessage, AssistantMessage, UserMessage, ErrorMessage, ImageRenderer, onRegenerate, onCopy, onThumbsUp, onThumbsDown, messageFeedback, markdownTagRenderers, chatError } = props;
+    const { icons } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$ui$40$1$2e$62$2e$3_08c7b045c14dc018161baa9ba8adb371$2f$node_modules$2f40$copilotkit$2f$react$2d$ui$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useChatContext"])();
+    const internal = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotChatInternal"])();
+    const messages = internal.messages ?? [];
+    const interrupt = internal.interrupt ?? null;
+    const pinned = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useContext"])(PinnedThreadContext);
+    const thinking = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["thinkingCoworkerAtom"]);
+    const { messagesContainerRef, messagesEndRef } = useScrollToBottom(messages.filter((m)=>m?.role === 'user').length);
+    const last = messages[messages.length - 1];
+    // Per-message specialist avatars: map each assistant turn to the specialist of its
+    // preceding user turn. Recomputes only when the message set changes (not per stream tick).
+    const sig = (0, __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$message$2d$specialists$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["messageSignature"])(messages);
+    // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the message id/role signature
+    const specialistMap = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useMemo"])(()=>(0, __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$message$2d$specialists$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["buildMessageSpecialistMap"])(messages), [
+        sig
+    ]);
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$message$2d$specialists$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["MessageSpecialistContext"].Provider, {
+        value: specialistMap,
+        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "copilotKitMessages",
+            ref: messagesContainerRef,
+            children: [
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "copilotKitMessagesContainer",
+                    children: [
+                        pinned,
+                        messages.map((message, index)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(RenderMessage, {
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                message: message,
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                messages: messages,
+                                inProgress: inProgress,
+                                index: index,
+                                isCurrentMessage: index === messages.length - 1,
+                                AssistantMessage: AssistantMessage,
+                                UserMessage: UserMessage,
+                                ImageRenderer: ImageRenderer,
+                                onRegenerate: onRegenerate,
+                                onCopy: onCopy,
+                                onThumbsUp: onThumbsUp,
+                                onThumbsDown: onThumbsDown,
+                                messageFeedback: messageFeedback,
+                                markdownTagRenderers: markdownTagRenderers
+                            }, index, false, {
+                                fileName: "[project]/features/assistant/ui/thread-messages.tsx",
+                                lineNumber: 100,
+                                columnNumber: 11
+                            }, this)),
+                        inProgress && (last?.role === 'user' || last?.role === 'tool') && !thinking && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                            "data-testid": "copilot-loading-cursor",
+                            children: icons?.activityIcon
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/ui/thread-messages.tsx",
+                            lineNumber: 122,
+                            columnNumber: 11
+                        }, this),
+                        thinking && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$agent$2d$thinking$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AgentThinking"], {}, void 0, false, {
+                            fileName: "[project]/features/assistant/ui/thread-messages.tsx",
+                            lineNumber: 128,
+                            columnNumber: 22
+                        }, this),
+                        interrupt,
+                        chatError && ErrorMessage ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(ErrorMessage, {
+                            error: chatError,
+                            isCurrentMessage: true
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/ui/thread-messages.tsx",
+                            lineNumber: 130,
+                            columnNumber: 38
+                        }, this) : null
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/features/assistant/ui/thread-messages.tsx",
+                    lineNumber: 96,
+                    columnNumber: 7
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("footer", {
+                    className: "copilotKitMessagesFooter",
+                    ref: messagesEndRef,
+                    children: children
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/ui/thread-messages.tsx",
+                    lineNumber: 132,
+                    columnNumber: 7
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "[project]/features/assistant/ui/thread-messages.tsx",
+            lineNumber: 95,
+            columnNumber: 5
+        }, this)
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/ui/thread-messages.tsx",
+        lineNumber: 94,
+        columnNumber: 5
+    }, this);
+}
+}),
+"[project]/features/assistant/ui/assistant-thread.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+__turbopack_context__.s([
+    "AssistantThread",
+    ()=>AssistantThread,
+    "AssistantThreadStyles",
+    ()=>AssistantThreadStyles,
+    "CHAT_THEME",
+    ()=>CHAT_THEME
+]);
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
+// ─────────────────────────────────────────────────────────────────────────────
+// AssistantThread — the presentational chat column (light neumorphic). Shared by
+// the Scope focus mode (ChatWorkspace) and the docked AssistantPanel. Renders the
+// live-run pill, the empty → conversation transition, the pinned inline cards, and
+// CopilotChat with the Aside (LibreChat) render slots. Logic/state come in via the
+// `assistant` object (see useAssistant). Palette: lib/librechat-theme.ts.
+// ─────────────────────────────────────────────────────────────────────────────
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$framer$2d$motion$40$12$2e$23$2e$24_reac_e6ac141a008652e0ae322977309b4a48$2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/framer-motion@12.23.24_reac_e6ac141a008652e0ae322977309b4a48/node_modules/framer-motion/dist/es/components/AnimatePresence/index.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$framer$2d$motion$40$12$2e$23$2e$24_reac_e6ac141a008652e0ae322977309b4a48$2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/framer-motion@12.23.24_reac_e6ac141a008652e0ae322977309b4a48/node_modules/framer-motion/dist/es/render/components/motion/proxy.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/jotai@2.15.1_@babel+core@7._5b27b7b535d6519f6427fc26ba88e66f/node_modules/jotai/esm/react.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/x.js [app-ssr] (ecmascript) <export default as X>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/chevron-down.js [app-ssr] (ecmascript) <export default as ChevronDown>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$calendar$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Calendar$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/calendar.js [app-ssr] (ecmascript) <export default as Calendar>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$ui$40$1$2e$62$2e$3_08c7b045c14dc018161baa9ba8adb371$2f$node_modules$2f40$copilotkit$2f$react$2d$ui$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/@copilotkit+react-ui@1.62.3_08c7b045c14dc018161baa9ba8adb371/node_modules/@copilotkit/react-ui/dist/index.mjs [app-ssr] (ecmascript) <locals>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$workspace$2f$aside$2d$thread$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/assistant/workspace/aside-thread.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$workspace$2f$inline$2d$field$2d$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/assistant/workspace/inline-field-card.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$workspace$2f$workflow$2d$run$2d$flow$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/assistant/workspace/workflow-run-flow.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/shared/workflow-engine/runtime/workflow-runs/index.ts [app-ssr] (ecmascript) <locals>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$agents$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/agents.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/shared/stores/resource-registry.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/librechat-theme.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$nav$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/shared/stores/nav-store.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$inscope$2d$neu$2d$mark$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/inscope-neu-mark.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$work$2d$menu$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/assistant/ui/work-menu.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$agent$2d$greeting$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/assistant/ui/agent-greeting.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/work-store.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$thread$2d$messages$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/assistant/ui/thread-messages.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$use$2d$assistant$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/assistant/ui/use-assistant.tsx [app-ssr] (ecmascript)");
+'use client';
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+;
+const CHAT_THEME = {
+    ['--copilot-kit-primary-color']: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].text,
+    ['--copilot-kit-contrast-color']: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].bg,
+    ['--copilot-kit-background-color']: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].bg,
+    ['--copilot-kit-secondary-color']: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surface,
+    ['--copilot-kit-secondary-contrast-color']: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].text,
+    ['--copilot-kit-separator-color']: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].borderSubtle,
+    ['--copilot-kit-muted-color']: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+    ['--copilot-kit-input-background-color']: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].bg,
+    height: '100%'
+};
+const HERO_SUGGESTIONS = [
+    'Calculate FAPI for Northstar',
+    'Open the dashboard',
+    'Run the art. 85 rollover',
+    'Review FAPI exceptions'
+];
+const INSTRUCTIONS = ()=>{
+    const c = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$resource$2d$registry$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["buildAgentCatalog"])();
+    const pages = c.pages.map((p)=>`- ${p.key}: ${p.title} — ${p.subtitle}`).join('\n');
+    const fields = c.fields.map((f)=>`- ${f.fieldId} (${f.pageKey}): ${f.label}`).join('\n');
+    return `You are Sina, the assistant inside InScope, a fiscalist's workspace. You help by talking AND by acting through tools.
+
+Style: ALWAYS reply with a short, natural sentence FIRST — acknowledge the request and say what you're about to do — then call the tool(s). Never act silently. Keep replies concise and professional.
+
+INTENT — ask vs. do (read this first):
+- A workflow NAME is not a command. Someone mentioning FAPI, or asking what it is / how it works / what inputs it needs, wants an ANSWER — explain it, do NOT call runWorkflow.
+- Only START a workflow (runWorkflow) when the user gives a clear instruction to act: "start/run/launch/calculate the FAPI workflow", "démarre la FAPI", or an equivalent imperative. When they explicitly ask to start a specific workflow, actually call runWorkflow — don't just talk about it.
+- Hypotheticals ("what if…", "roughly", "could we", "we may have FAPI", "I'm considering") and negations/holds ("don't run it", "not yet", "only explain", "sans lancer", "pas encore") are NEVER a reason to start or modify anything — answer or offer, don't act.
+- If a message you receive contains a routing note in [assistant-routing] brackets, treat it as an authoritative instruction about what to do this turn (it is added by the system, not the user).
+- When unsure whether the user wants an answer or an action, ANSWER or OFFER — never start, finalize, or change a protected value on a guess. In this workspace a wrong action is worse than an extra question.
+
+CRITICAL tool routing:
+- To RUN / START / EXECUTE a workflow → call **runWorkflow** with the workflowId. Valid ids: "fapi" for "compute/run FAPI"; "roulement" for "run the rollover / roulement art. 85 / section 85"; "expense" for "run the expense report / (employee) expense reimbursement"; "campaign" for "run the campaign budget / marketing budget allocation". This renders a PROPOSAL card (with a Start button); the live run begins only when the user clicks Start, then it pauses for them (upload a document, categorize a row, elect an amount, approve). So OFFER to run it — briefly say what it does and what it needs — do NOT say it is already running. NEVER open a worksheet to "run" a workflow — the worksheet is only the static end result.
+- To open/show a worksheet for viewing → openPage.
+- To highlight a specific figure/section on a page → focusAnchor.
+- When the user asks to SEE or EDIT a value (e.g. "show me the FX rate", "let me change the FX rate") → call **editField**. This brings the editable field directly INTO the chat; do NOT open the worksheet for this.
+- To GENERATE a custom, one-off view that is NOT a registered worksheet — a quick dashboard, chart, KPI tiles, table, or a small form for ad-hoc values → call **generateUI** with a COMPLETE description of the UI *including the concrete data/numbers to show*. Use this for "generate/create/mock/show me a dashboard|chart|table|form of …" and whenever the message starts with "Generate this view:". Do NOT use openPage or runWorkflow for these — those are for real worksheets and workflows only.
+  - GenUI rules (it does NOT have access to any data — it only shows what you put in the prompt, and it must not invent numbers): (a) include the REAL figures — pull them from the active-run context, an open worksheet, or what the user gave you; if you don't have a number, don't ask GenUI to show it. NEVER instruct it to invent, estimate, or calculate. (b) Ask for the SIMPLEST fitting view: a few figures → KPI tiles or a table; a chart ONLY for a real comparison or trend; do NOT request a pie chart unless it's genuinely parts-of-a-whole, and don't tack on extra charts. (c) Keep it on-topic (tax/finance) — no images or decorative components. If you have no real data to show, don't call generateUI — just say what you'd need.
+
+Working WITH a running workflow: a run can be in progress AND you can still help alongside it — the user may ask questions or want a view WITHOUT finishing/approving the run. The active-run context carries the run's live figures (categories, computed lines, summary, top rows) as soon as a source is loaded. Use those ACTUAL numbers to answer questions about the run ("what's my biggest income category?", "how much is net FAPI so far?") and to feed **generateUI** (e.g. "chart my FAPI by category") — pull the real figures from the active-run context into the generateUI prompt. Never invent numbers when the run already has them.
+
+GROUNDING — where your facts come from (NEVER invent a value):
+- "Editable worksheet fields" context: every field + its CURRENT value. Read FX rate, inclusion rate, and other field values from HERE. If a field's \`isDefault\` is true it has NOT been set yet — say "it's still the default (X)" or "not set yet", do NOT assert it as a chosen figure.
+- "Workflows you are actually working on" context: each active workflow's live \`snapshot\` (lines, summary with CAD, FX rate, classification) computed by the real engine — these ARE the on-screen numbers even with no worksheet open. Answer figure questions ("net FAPI?", "biggest income category?") from here; for a formula/operand breakdown call whyWorksheetValue or explainWorksheetLine.
+- If NONE of these contexts contains the value the user asks for, SAY you don't have it yet and offer to open the worksheet or run/upload the workflow — do NOT guess. Never state a number you cannot point to in one of these contexts. It is better to say "I don't have that value yet" than to invent one.
+- When calling editField, copy the exact \`fieldId\` from the editable-fields context (e.g. "fx"); do not invent ids like "FX_RATE".
+
+MEMORY — durable facts you can save:
+- The "Remembered facts and preferences" context holds things the user asked you to remember in earlier sessions (already filtered to the current client). Treat them as trusted grounding and USE them (e.g. a saved reporting currency or default client), but never invent or assume one that isn't listed.
+- When the user EXPLICITLY asks you to remember / save / note something for later ("remember that…", "always…", "my default … is…"), call **rememberFact** with a short self-contained sentence; use global=true only for a preference that applies to every client, otherwise it is saved for the current client. Do NOT auto-save things the user didn't ask you to remember.
+- To remove a saved item when asked to forget it, call **forgetFact** with its id from the remembered-facts context.
+
+YOUR EXPERTISE — one unified specialist:
+- You are Sina, a single tax specialist who carries deep domain expertise across FAPI (foreign accrual property income), the section 85 rollover (roulement, art. 85), employee expense reimbursement, and marketing campaign budgets. There are NO separate agents — you handle all of it yourself.
+- Some turns include a "DOMAIN FOCUS FOR THIS TURN" note in context. When present, apply that domain's expertise for the turn. When the topic shifts, apply the other domain's expertise; on general or navigation turns, act as the coordinating workspace assistant. It is one you, one conversation — the domain focus is a lens, not a separate agent.
+
+Registered pages:
+${pages}
+
+Editable fields:
+${fields}
+
+Only ever reference page keys, anchors, and field ids that exist above.`;
+};
+function AssistantThreadStyles() {
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("style", {
+        children: `
+      @keyframes cwp-run-halo { 0% { box-shadow: 0 0 0 0 rgba(167,139,250,0.4);} 70% { box-shadow: 0 0 0 7px rgba(167,139,250,0);} 100% { box-shadow: 0 0 0 0 rgba(167,139,250,0);} }
+      .cwp-run-halo { animation: cwp-run-halo 1.8s ease-out infinite; }
+      .cwp-launch { transition: transform 160ms cubic-bezier(0.23,1,0.32,1); }
+      .cwp-launch:hover { transform: translateY(-2px); }
+    `
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+        lineNumber: 112,
+        columnNumber: 5
+    }, this);
+}
+// The Scope orb as a shared-element (framer `layoutId`) so it can FLY between the
+// homepage hero (centred, in the "InScope" lockup) and the header cluster (top-left)
+// when a chat starts/stops. Pass the SAME layoutId in both places; framer tweens the
+// position + size. `label=''` renders the bare orb (docked); 'Scope' engraves the word.
+function ScopeOrbButton({ size, layoutId, onClick, label = 'Scope', style }) {
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$framer$2d$motion$40$12$2e$23$2e$24_reac_e6ac141a008652e0ae322977309b4a48$2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].button, {
+        layoutId: layoutId,
+        onClick: onClick,
+        "aria-label": "Choose client — Scope reads their worksheets & documents",
+        title: "Choose client — Scope reads their worksheets & documents",
+        whileHover: {
+            scale: 1.05
+        },
+        transition: {
+            type: 'spring',
+            stiffness: 300,
+            damping: 30
+        },
+        style: {
+            position: 'relative',
+            zIndex: 2,
+            flexShrink: 0,
+            display: 'grid',
+            placeItems: 'center',
+            width: size,
+            height: size,
+            borderRadius: '50%',
+            padding: 0,
+            border: 'none',
+            background: 'transparent',
+            cursor: 'pointer',
+            ...style
+        },
+        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$inscope$2d$neu$2d$mark$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["InScopeNeuMark"], {
+            size: size,
+            animate: true,
+            label: label
+        }, void 0, false, {
+            fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+            lineNumber: 136,
+            columnNumber: 7
+        }, this)
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+        lineNumber: 127,
+        columnNumber: 5
+    }, this);
+}
+// The header SCOPE CLUSTER — a big Scope orb on the LEFT that visually CONTROLS a
+// raised tray of scope tags beside it: the company (client), the year, and the current
+// workflow. The orb + the company tag open the client switcher; the workflow tag opens
+// the work switcher. Reads as: [ ORB ]→[ Northstar Inc · 2025 · FAPI · Needs you ].
+// The tray tucks under the orb (negative margin) so the orb looks plugged into it.
+function ScopeCluster({ compact = false, onOpenWork }) {
+    const client = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$nav$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["selectedClientAtom"]);
+    const year = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$nav$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["scopeYearAtom"]);
+    const openClientSwitcher = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$nav$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["showClientSwitcherAtom"]);
+    const orbSize = compact ? 32 : 96;
+    const divider = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+        style: {
+            width: 1,
+            height: compact ? 16 : 22,
+            background: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].borderSubtle,
+            flexShrink: 0
+        }
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+        lineNumber: 151,
+        columnNumber: 19
+    }, this);
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            display: 'flex',
+            alignItems: 'center',
+            minWidth: 0,
+            maxWidth: '100%'
+        },
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(ScopeOrbButton, {
+                size: orbSize,
+                layoutId: compact ? undefined : 'scope-orb',
+                onClick: ()=>openClientSwitcher(true),
+                label: ""
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                lineNumber: 157,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$framer$2d$motion$40$12$2e$23$2e$24_reac_e6ac141a008652e0ae322977309b4a48$2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].div, {
+                initial: compact ? false : {
+                    clipPath: 'inset(0 100% 0 0)',
+                    opacity: 0
+                },
+                animate: {
+                    clipPath: 'inset(0 0% 0 0)',
+                    opacity: 1
+                },
+                transition: {
+                    delay: 0.14,
+                    duration: 0.42,
+                    ease: [
+                        0.23,
+                        1,
+                        0.32,
+                        1
+                    ]
+                },
+                style: {
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: compact ? 6 : 3,
+                    minWidth: 0,
+                    marginLeft: compact ? 6 : -16,
+                    paddingLeft: compact ? 0 : 28,
+                    paddingRight: compact ? 0 : 10,
+                    height: compact ? undefined : 56,
+                    borderRadius: compact ? 0 : '0 16px 16px 0',
+                    background: compact ? 'transparent' : __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surface,
+                    boxShadow: compact ? 'none' : __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].shadowSm
+                },
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                        onClick: ()=>openClientSwitcher(true),
+                        className: "hover:bg-black/5",
+                        title: "Choose client — Scope reads their worksheets & documents",
+                        style: {
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 7,
+                            minWidth: 0,
+                            maxWidth: compact ? 150 : 210,
+                            height: 32,
+                            padding: '0 8px',
+                            borderRadius: 9,
+                            border: 'none',
+                            background: 'transparent',
+                            cursor: 'pointer'
+                        },
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                style: {
+                                    width: 20,
+                                    height: 20,
+                                    flexShrink: 0,
+                                    borderRadius: '50%',
+                                    display: 'grid',
+                                    placeItems: 'center',
+                                    background: 'var(--sx-accent-soft)',
+                                    color: 'var(--sx-accent-strong)',
+                                    fontSize: 9.5,
+                                    fontWeight: 800
+                                },
+                                children: client.charAt(0)
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                lineNumber: 179,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                style: {
+                                    minWidth: 0,
+                                    fontSize: 13,
+                                    fontWeight: 650,
+                                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].text,
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap'
+                                },
+                                children: client.replace(/\.$/, '')
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                lineNumber: 180,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
+                                size: 12,
+                                style: {
+                                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                                    opacity: 0.6,
+                                    flexShrink: 0
+                                }
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                lineNumber: 181,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                        lineNumber: 173,
+                        columnNumber: 9
+                    }, this),
+                    !compact && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Fragment"], {
+                        children: [
+                            divider,
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                style: {
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 6,
+                                    height: 32,
+                                    padding: '0 9px',
+                                    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].body,
+                                    flexShrink: 0
+                                },
+                                title: "Fiscal year in scope",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$calendar$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Calendar$3e$__["Calendar"], {
+                                        size: 13,
+                                        style: {
+                                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted
+                                        }
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                        lineNumber: 189,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        style: {
+                                            fontSize: 13,
+                                            fontWeight: 600
+                                        },
+                                        children: year
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                        lineNumber: 190,
+                                        columnNumber: 15
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                lineNumber: 188,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true),
+                    divider,
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$work$2d$menu$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["WorkMenu"], {
+                        onOpen: onOpenWork,
+                        compact: compact,
+                        bare: true,
+                        align: "left"
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                        lineNumber: 197,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                lineNumber: 161,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+        lineNumber: 154,
+        columnNumber: 5
+    }, this);
+}
+// ── Hero launchpad ─────────────────────────────────────────────────────────────
+// Three richer entry cards below the quick-suggestion pills — the product's core
+// verbs: BUILD a workflow, RESUME the last piece of work, DELEGATE to a specialist.
+// Build/Delegate are evergreen; RESUME is live (the most-recent reopenable work
+// item, from the Work registry) and hides itself when there is nothing to resume.
+// Focus variant only — the docked drawer is too narrow. Illustrations are inline
+// SVG (self-contained, theme-aware via currentColor + the accent token).
+function timeAgo(ts) {
+    const s = Math.max(1, Math.round((Date.now() - ts) / 1000));
+    if (s < 60) return 'just now';
+    const m = Math.round(s / 60);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.round(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.round(h / 24)}d ago`;
+}
+const launchWell = {
+    height: 76,
+    borderRadius: 12,
+    background: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].bg,
+    boxShadow: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].shadowIn,
+    display: 'grid',
+    placeItems: 'center',
+    overflow: 'hidden',
+    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted
+};
+const launchCard = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10,
+    flex: '1 1 168px',
+    minWidth: 158,
+    maxWidth: 224,
+    padding: 14,
+    textAlign: 'left',
+    border: 'none',
+    background: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surface,
+    boxShadow: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].shadowSm,
+    borderRadius: 16,
+    cursor: 'pointer'
+};
+const launchTitle = {
+    fontSize: 13.5,
+    fontWeight: 650,
+    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].title,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap'
+};
+const launchSub = {
+    fontSize: 11.5,
+    color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+    marginTop: 2,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap'
+};
+// A small workflow node-graph: two inputs merge into a step, then the accent output.
+function BuildArt() {
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
+        width: "72",
+        height: "44",
+        viewBox: "0 0 72 44",
+        fill: "none",
+        "aria-hidden": true,
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
+                d: "M18 11 C24 11 24 22 28 22 M18 33 C24 33 24 22 28 22 M44 22 H54",
+                stroke: "currentColor",
+                strokeWidth: "1.5",
+                opacity: "0.35"
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                lineNumber: 227,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("rect", {
+                x: "2",
+                y: "6",
+                width: "16",
+                height: "10",
+                rx: "3",
+                fill: "currentColor",
+                opacity: "0.16"
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                lineNumber: 228,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("rect", {
+                x: "2",
+                y: "28",
+                width: "16",
+                height: "10",
+                rx: "3",
+                fill: "currentColor",
+                opacity: "0.16"
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                lineNumber: 229,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("rect", {
+                x: "28",
+                y: "17",
+                width: "16",
+                height: "10",
+                rx: "3",
+                fill: "currentColor",
+                opacity: "0.16"
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                lineNumber: 230,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("rect", {
+                x: "54",
+                y: "17",
+                width: "16",
+                height: "10",
+                rx: "3",
+                fill: "var(--sx-accent)"
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                lineNumber: 231,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+        lineNumber: 226,
+        columnNumber: 5
+    }, this);
+}
+// A worksheet: a document with an accent header bar and a few data rows.
+function SheetArt() {
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("svg", {
+        width: "52",
+        height: "44",
+        viewBox: "0 0 52 44",
+        fill: "none",
+        "aria-hidden": true,
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("rect", {
+                x: "4",
+                y: "4",
+                width: "44",
+                height: "36",
+                rx: "5",
+                fill: "currentColor",
+                opacity: "0.10"
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                lineNumber: 239,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("path", {
+                d: "M4 9 a5 5 0 0 1 5 -5 h34 a5 5 0 0 1 5 5 v3 h-44 z",
+                fill: "var(--sx-accent)",
+                opacity: "0.9"
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                lineNumber: 240,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("line", {
+                x1: "11",
+                y1: "21",
+                x2: "41",
+                y2: "21",
+                stroke: "currentColor",
+                strokeWidth: "1.6",
+                opacity: "0.28"
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                lineNumber: 241,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("line", {
+                x1: "11",
+                y1: "28",
+                x2: "41",
+                y2: "28",
+                stroke: "currentColor",
+                strokeWidth: "1.6",
+                opacity: "0.28"
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                lineNumber: 242,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("line", {
+                x1: "11",
+                y1: "35",
+                x2: "30",
+                y2: "35",
+                stroke: "currentColor",
+                strokeWidth: "1.6",
+                opacity: "0.28"
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                lineNumber: 243,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+        lineNumber: 238,
+        columnNumber: 5
+    }, this);
+}
+function HeroLaunchpad({ onBuild, onResume, onStartWorkflow }) {
+    const recent = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["workItemsChronoAtom"]);
+    const resumeItem = recent.find((w)=>w.open.kind !== 'none');
+    const tasks = __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$agents$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["WORKFLOWS"].filter((w)=>w.ready);
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            gap: 12,
+            marginTop: 16,
+            padding: '0 16px'
+        },
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                onClick: onBuild,
+                className: "cwp-launch hover:brightness-[0.98]",
+                style: launchCard,
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: launchWell,
+                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(BuildArt, {}, void 0, false, {
+                            fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                            lineNumber: 256,
+                            columnNumber: 33
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                        lineNumber: 256,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            minWidth: 0
+                        },
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                style: launchTitle,
+                                children: "Build a workflow"
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                lineNumber: 258,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                style: launchSub,
+                                children: "Design an automation on the canvas"
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                lineNumber: 259,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                        lineNumber: 257,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                lineNumber: 255,
+                columnNumber: 7
+            }, this),
+            resumeItem && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                onClick: ()=>onResume(resumeItem),
+                className: "cwp-launch hover:brightness-[0.98]",
+                style: launchCard,
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: launchWell,
+                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(SheetArt, {}, void 0, false, {
+                            fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                            lineNumber: 266,
+                            columnNumber: 35
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                        lineNumber: 266,
+                        columnNumber: 11
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            minWidth: 0
+                        },
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                style: launchTitle,
+                                children: resumeItem.title
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                lineNumber: 268,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                style: launchSub,
+                                children: [
+                                    "Resume · ",
+                                    timeAgo(resumeItem.updatedAt)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                lineNumber: 269,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                        lineNumber: 267,
+                        columnNumber: 11
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                lineNumber: 265,
+                columnNumber: 9
+            }, this),
+            tasks.map((w)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                    onClick: ()=>onStartWorkflow(w.id),
+                    className: "cwp-launch hover:brightness-[0.98]",
+                    style: launchCard,
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            style: launchWell,
+                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(SheetArt, {}, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                lineNumber: 278,
+                                columnNumber: 35
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                            lineNumber: 278,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            style: {
+                                minWidth: 0
+                            },
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    style: launchTitle,
+                                    children: w.name
+                                }, void 0, false, {
+                                    fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                    lineNumber: 280,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    style: launchSub,
+                                    children: w.sub
+                                }, void 0, false, {
+                                    fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                    lineNumber: 281,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                            lineNumber: 279,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, w.id, true, {
+                    fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                    lineNumber: 277,
+                    columnNumber: 9
+                }, this))
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+        lineNumber: 253,
+        columnNumber: 5
+    }, this);
+}
+function AssistantThread({ assistant, variant = 'focus' }) {
+    const { say, showHero, pinnedFields, pinnedElements, setPinnedFields, setPinnedElements, pinnedRuns, setPinnedRuns, composerSearch, composerTools, composerCommands, onAttach, launchOpenPage, launchStartWorkflow, setBuilderFocus, router, addressedAgent, addressAgent, clearAddressedAgent, beginAgentThinking } = assistant;
+    const docked = variant === 'docked';
+    const openClientSwitcher = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$nav$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["showClientSwitcherAtom"]);
+    // Time-based hero greeting. Pre-mount (SSR + first client render) both use the
+    // evening bucket so there's no hydration mismatch; after mount we read the real
+    // client hour and the heading re-renders to the correct part of day.
+    const [mounted, setMounted] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])(false);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>setMounted(true), []);
+    const hour = mounted ? new Date().getHours() : 18;
+    const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    // "Open current state" from the Work menu: reopen each item where it lives.
+    const onOpenWork = (item)=>{
+        if (item.open.kind === 'page') launchOpenPage(item.open.pageKey);
+        else if (item.open.kind === 'workflow') launchStartWorkflow(item.open.workflowId);
+        else if (item.open.kind === 'genui') say(`Generate this view: ${item.open.prompt}`);
+    };
+    // Pinned work (the addressed-agent greeting + deterministically-launched runs +
+    // summoned elements/fields). Rendered INSIDE the message scroll by ThreadMessages,
+    // so it's part of ONE scrollable conversation (composer fixed at the bottom). The
+    // greeting sits first — it's the conversation's opener (click agent → greet → type).
+    const hasPinned = !!addressedAgent || pinnedRuns.length > 0 || pinnedElements.length > 0 || pinnedFields.length > 0;
+    const pinnedNode = hasPinned ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        style: {
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            marginBottom: 12
+        },
+        children: [
+            addressedAgent && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$agent$2d$greeting$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AgentGreeting"], {
+                agent: addressedAgent
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                lineNumber: 322,
+                columnNumber: 26
+            }, this),
+            pinnedRuns.map((wid)=>{
+                const cfg = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["getWorkflowConfig"])(wid);
+                if (!cfg) return null;
+                const agent = cfg.agentId ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$agents$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["getAgent"])(cfg.agentId) ?? undefined : undefined;
+                return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "flex items-start gap-2",
+                    "data-work-id": (0, __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$work$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["workIdFor"])('workflow-run', wid),
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "flex-1",
+                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$use$2d$assistant$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["RunWorkflowRender"], {
+                                config: cfg,
+                                agent: agent,
+                                onOpenPage: (pk)=>launchOpenPage(pk),
+                                onOpenBuilder: (blockId)=>{
+                                    setBuilderFocus({
+                                        workflowId: cfg.id,
+                                        blockId
+                                    });
+                                    router.push('/builder');
+                                }
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                lineNumber: 330,
+                                columnNumber: 15
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                            lineNumber: 329,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                            onClick: ()=>setPinnedRuns((p)=>p.filter((x)=>x !== wid)),
+                            className: "rounded hover:bg-black/5",
+                            style: {
+                                width: 22,
+                                height: 22,
+                                color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                                border: 'none',
+                                background: 'none',
+                                cursor: 'pointer',
+                                marginTop: 4
+                            },
+                            title: "Remove",
+                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__["X"], {
+                                size: 13
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                lineNumber: 332,
+                                columnNumber: 258
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                            lineNumber: 332,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, `run:${wid}`, true, {
+                    fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                    lineNumber: 328,
+                    columnNumber: 11
+                }, this);
+            }),
+            pinnedElements.map((el)=>{
+                const cfg = (0, __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$workflow$2d$engine$2f$runtime$2f$workflow$2d$runs$2f$index$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["getWorkflowConfig"])(el.workflowId);
+                if (!cfg) return null;
+                return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "flex items-start gap-2",
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "flex-1",
+                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$workspace$2f$workflow$2d$run$2d$flow$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["WorkflowElementCard"], {
+                                config: cfg,
+                                element: el.element,
+                                onOpenPage: (pk)=>launchOpenPage(pk),
+                                onOpenBuilder: (blockId)=>{
+                                    setBuilderFocus({
+                                        workflowId: cfg.id,
+                                        blockId
+                                    });
+                                    router.push('/builder');
+                                }
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                lineNumber: 341,
+                                columnNumber: 37
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                            lineNumber: 341,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                            onClick: ()=>setPinnedElements((p)=>p.filter((x)=>!(x.workflowId === el.workflowId && x.element === el.element))),
+                            className: "rounded hover:bg-black/5",
+                            style: {
+                                width: 22,
+                                height: 22,
+                                color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                                border: 'none',
+                                background: 'none',
+                                cursor: 'pointer',
+                                marginTop: 4
+                            },
+                            title: "Remove",
+                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__["X"], {
+                                size: 13
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                lineNumber: 342,
+                                columnNumber: 314
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                            lineNumber: 342,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, `${el.workflowId}:${el.element}`, true, {
+                    fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                    lineNumber: 340,
+                    columnNumber: 11
+                }, this);
+            }),
+            pinnedFields.map((fid)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                    className: "flex items-start gap-2",
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "flex-1",
+                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$workspace$2f$inline$2d$field$2d$card$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["InlineFieldCard"], {
+                                fieldId: fid
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                lineNumber: 348,
+                                columnNumber: 35
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                            lineNumber: 348,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                            onClick: ()=>setPinnedFields((p)=>p.filter((x)=>x !== fid)),
+                            className: "rounded hover:bg-black/5",
+                            style: {
+                                width: 22,
+                                height: 22,
+                                color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                                border: 'none',
+                                background: 'none',
+                                cursor: 'pointer',
+                                marginTop: 4
+                            },
+                            title: "Remove",
+                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__["X"], {
+                                size: 13
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                lineNumber: 349,
+                                columnNumber: 258
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                            lineNumber: 349,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, fid, true, {
+                    fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                    lineNumber: 347,
+                    columnNumber: 9
+                }, this))
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+        lineNumber: 321,
+        columnNumber: 5
+    }, this) : null;
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        className: "h-full flex flex-col",
+        style: {
+            ...CHAT_THEME,
+            background: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].bg /* match the sidebar surface (#F4F5F8) */ 
+        },
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$workspace$2f$aside$2d$thread$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AsideThreadStyles"], {}, void 0, false, {
+                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                lineNumber: 357,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(AssistantThreadStyles, {}, void 0, false, {
+                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                lineNumber: 358,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$work$2d$menu$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["WorkMenuStyles"], {}, void 0, false, {
+                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                lineNumber: 359,
+                columnNumber: 7
+            }, this),
+            (docked || !showHero) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "shrink-0 relative flex items-center gap-3",
+                style: {
+                    height: docked ? 44 : 104,
+                    padding: '0 12px',
+                    borderBottom: `1px solid ${__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].borderSubtle}`
+                },
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(ScopeCluster, {
+                        compact: docked,
+                        onOpenWork: onOpenWork
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                        lineNumber: 368,
+                        columnNumber: 11
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            flex: 1
+                        }
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                        lineNumber: 369,
+                        columnNumber: 11
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                lineNumber: 367,
+                columnNumber: 9
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "flex-1 min-h-0 flex flex-col",
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$workspace$2f$aside$2d$thread$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AsideComposerContext"].Provider, {
+                    value: {
+                        search: composerSearch,
+                        tools: composerTools,
+                        commands: composerCommands,
+                        onAttach,
+                        onAssignAgent: addressAgent,
+                        addressedAgent,
+                        onClearAddress: clearAddressedAgent,
+                        onAddressedSend: beginAgentThinking
+                    },
+                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$framer$2d$motion$40$12$2e$23$2e$24_reac_e6ac141a008652e0ae322977309b4a48$2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$components$2f$AnimatePresence$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AnimatePresence"], {
+                        mode: "wait",
+                        initial: false,
+                        children: showHero ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$framer$2d$motion$40$12$2e$23$2e$24_reac_e6ac141a008652e0ae322977309b4a48$2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].div, {
+                            className: "flex-1 min-h-0 flex flex-col",
+                            style: {
+                                padding: docked ? '10px' : '20px'
+                            },
+                            initial: {
+                                opacity: 0
+                            },
+                            animate: {
+                                opacity: 1
+                            },
+                            exit: {
+                                opacity: 0
+                            },
+                            transition: {
+                                duration: 0.22,
+                                ease: [
+                                    0.23,
+                                    1,
+                                    0.32,
+                                    1
+                                ]
+                            },
+                            children: [
+                                !docked && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    style: {
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: 6,
+                                        paddingTop: 12,
+                                        flexShrink: 0
+                                    },
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$framer$2d$motion$40$12$2e$23$2e$24_reac_e6ac141a008652e0ae322977309b4a48$2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].span, {
+                                            className: "isneu-wordmark",
+                                            initial: {
+                                                opacity: 0,
+                                                x: 8
+                                            },
+                                            animate: {
+                                                opacity: 1,
+                                                x: 0
+                                            },
+                                            exit: {
+                                                opacity: 0,
+                                                x: -12
+                                            },
+                                            transition: {
+                                                duration: 0.3,
+                                                ease: [
+                                                    0.23,
+                                                    1,
+                                                    0.32,
+                                                    1
+                                                ]
+                                            },
+                                            style: {
+                                                fontSize: 38,
+                                                fontWeight: 400,
+                                                letterSpacing: '-0.02em'
+                                            },
+                                            children: "InScope"
+                                        }, void 0, false, {
+                                            fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                            lineNumber: 391,
+                                            columnNumber: 21
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(ScopeOrbButton, {
+                                            size: 116,
+                                            layoutId: "scope-orb",
+                                            onClick: ()=>openClientSwitcher(true),
+                                            label: ""
+                                        }, void 0, false, {
+                                            fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                            lineNumber: 397,
+                                            columnNumber: 21
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                    lineNumber: 390,
+                                    columnNumber: 19
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "flex-1 min-h-0 flex items-center justify-center",
+                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        style: {
+                                            width: '100%',
+                                            maxWidth: docked ? 'none' : 720
+                                        },
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                style: {
+                                                    textAlign: 'center',
+                                                    marginBottom: docked ? 10 : 20
+                                                },
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        style: {
+                                                            fontSize: docked ? 22 : 34,
+                                                            fontWeight: 700,
+                                                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].title,
+                                                            letterSpacing: '-0.02em'
+                                                        },
+                                                        children: [
+                                                            greeting,
+                                                            ", Sophia"
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                                        lineNumber: 404,
+                                                        columnNumber: 23
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        style: {
+                                                            fontSize: docked ? 13 : 16,
+                                                            fontWeight: 400,
+                                                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                                                            marginTop: 6
+                                                        },
+                                                        children: "How can I help you drive impact today?"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                                        lineNumber: 405,
+                                                        columnNumber: 23
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                                lineNumber: 403,
+                                                columnNumber: 21
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$workspace$2f$aside$2d$thread$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AsideInput"], {
+                                                onSend: (t)=>say(String(t))
+                                            }, void 0, false, {
+                                                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                                lineNumber: 407,
+                                                columnNumber: 21
+                                            }, this),
+                                            !docked && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                style: {
+                                                    display: 'flex',
+                                                    flexWrap: 'wrap',
+                                                    justifyContent: 'center',
+                                                    gap: 8,
+                                                    marginTop: 6,
+                                                    padding: '0 16px'
+                                                },
+                                                children: HERO_SUGGESTIONS.map((s)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                        onClick: ()=>say(s),
+                                                        className: "hover:brightness-[0.98]",
+                                                        style: {
+                                                            background: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].surface,
+                                                            border: 'none',
+                                                            boxShadow: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].shadowSm,
+                                                            borderRadius: 999,
+                                                            padding: '8px 15px',
+                                                            fontSize: 13,
+                                                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].body,
+                                                            cursor: 'pointer',
+                                                            fontWeight: 500
+                                                        },
+                                                        children: s
+                                                    }, s, false, {
+                                                        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                                        lineNumber: 411,
+                                                        columnNumber: 27
+                                                    }, this))
+                                            }, void 0, false, {
+                                                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                                lineNumber: 409,
+                                                columnNumber: 23
+                                            }, this),
+                                            !docked && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(HeroLaunchpad, {
+                                                onBuild: ()=>launchOpenPage('workflows'),
+                                                onResume: onOpenWork,
+                                                onStartWorkflow: launchStartWorkflow
+                                            }, void 0, false, {
+                                                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                                lineNumber: 421,
+                                                columnNumber: 23
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                        lineNumber: 402,
+                                        columnNumber: 19
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                    lineNumber: 401,
+                                    columnNumber: 17
+                                }, this)
+                            ]
+                        }, "hero", true, {
+                            fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                            lineNumber: 377,
+                            columnNumber: 15
+                        }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$framer$2d$motion$40$12$2e$23$2e$24_reac_e6ac141a008652e0ae322977309b4a48$2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["motion"].div, {
+                            className: "flex-1 min-h-0 flex flex-col aside-thread",
+                            initial: {
+                                opacity: 0
+                            },
+                            animate: {
+                                opacity: 1
+                            },
+                            transition: {
+                                duration: 0.24
+                            },
+                            style: {
+                                overflow: 'hidden'
+                            },
+                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "flex-1 min-h-0",
+                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$thread$2d$messages$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["PinnedThreadContext"].Provider, {
+                                    value: pinnedNode,
+                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$ui$40$1$2e$62$2e$3_08c7b045c14dc018161baa9ba8adb371$2f$node_modules$2f40$copilotkit$2f$react$2d$ui$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["CopilotChat"], {
+                                        className: "h-full",
+                                        instructions: INSTRUCTIONS(),
+                                        labels: {
+                                            title: 'Assistant',
+                                            initial: '',
+                                            placeholder: 'Message Scope…'
+                                        },
+                                        AssistantMessage: __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$workspace$2f$aside$2d$thread$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AsideAssistantMessage"],
+                                        UserMessage: __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$workspace$2f$aside$2d$thread$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AsideUserMessage"],
+                                        Input: __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$workspace$2f$aside$2d$thread$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AsideInput"],
+                                        Messages: __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$thread$2d$messages$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ThreadMessages"]
+                                    }, void 0, false, {
+                                        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                        lineNumber: 441,
+                                        columnNumber: 21
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                    lineNumber: 440,
+                                    columnNumber: 19
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                                lineNumber: 437,
+                                columnNumber: 17
+                            }, this)
+                        }, "thread", false, {
+                            fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                            lineNumber: 431,
+                            columnNumber: 15
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                        lineNumber: 375,
+                        columnNumber: 11
+                    }, this)
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                    lineNumber: 374,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+                lineNumber: 373,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/ui/assistant-thread.tsx",
+        lineNumber: 356,
+        columnNumber: 5
+    }, this);
+}
+}),
+"[project]/features/assistant/ui/assistant-panel.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+__turbopack_context__.s([
+    "AssistantPanel",
+    ()=>AssistantPanel
+]);
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.js [app-ssr] (ecmascript)");
+// ─────────────────────────────────────────────────────────────────────────────
+// AssistantPanel — the ambient, follow-you-everywhere assistant. A docked card
+// on the right edge that overlays whatever page you're on (chat-as-layer). The
+// ActionOrb toggles it via assistantOpenAtom.
+//
+// It reuses the SAME useAssistant() brain + AssistantThread as the full-screen
+// focus mode (ChatWorkspace on "/"). To keep only ONE registration of the
+// CopilotKit tools, this panel renders null on "/" — focus mode owns the
+// assistant there. On every other route the panel stays MOUNTED even while
+// closed (it just slides off-screen), so the tools stay registered, the page
+// context keeps flowing to the model, and reopening is instant.
+// ─────────────────────────────────────────────────────────────────────────────
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/jotai@2.15.1_@babel+core@7._5b27b7b535d6519f6427fc26ba88e66f/node_modules/jotai/esm/react.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/navigation.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/x.js [app-ssr] (ecmascript) <export default as X>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$maximize$2d$2$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Maximize2$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/lucide-react@0.552.0_react@19.2.1/node_modules/lucide-react/dist/esm/icons/maximize-2.js [app-ssr] (ecmascript) <export default as Maximize2>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$chat$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/shared/stores/chat-store.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$use$2d$assistant$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/assistant/ui/use-assistant.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$assistant$2d$thread$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/features/assistant/ui/assistant-thread.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$scope$2d$orb$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/scope-orb.tsx [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/librechat-theme.ts [app-ssr] (ecmascript)");
+'use client';
+;
+;
+;
+;
+;
+;
+;
+;
+;
+const PANEL_W = 420;
+function AssistantPanel() {
+    const pathname = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["usePathname"])();
+    const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useRouter"])();
+    const [open, setOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$chat$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["assistantOpenAtom"]);
+    // Focus mode owns the assistant on "/", so don't double-mount there (it would
+    // register the CopilotKit tools twice). Hooks must run unconditionally, so the
+    // early return happens before useAssistant is called — this component simply
+    // isn't rendered by the shell logic on "/", but guard anyway for safety.
+    if (pathname === '/') return null;
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(AssistantPanelInner, {
+        open: open,
+        onClose: ()=>setOpen(false),
+        onExpand: ()=>router.push('/'),
+        panelW: PANEL_W
+    }, void 0, false, {
+        fileName: "[project]/features/assistant/ui/assistant-panel.tsx",
+        lineNumber: 38,
+        columnNumber: 10
+    }, this);
+}
+function AssistantPanelInner({ open, onClose, onExpand, panelW }) {
+    // Registers tools + context on every page the panel lives on (even closed).
+    const a = (0, __TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$use$2d$assistant$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAssistant"])();
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        className: "fixed",
+        style: {
+            top: 64,
+            bottom: 16,
+            right: 16,
+            width: `min(${panelW}px, 94vw)`,
+            zIndex: 45,
+            transform: open ? 'translateX(0) scale(1)' : 'translateX(calc(100% + 24px)) scale(0.97)',
+            transformOrigin: 'bottom right',
+            opacity: open ? 1 : 0,
+            pointerEvents: open ? 'auto' : 'none',
+            transition: 'transform 360ms cubic-bezier(0.22,1,0.36,1), opacity 260ms ease',
+            display: 'flex',
+            flexDirection: 'column',
+            background: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].bg,
+            borderRadius: 16,
+            border: `1px solid ${__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].border}`,
+            boxShadow: 'var(--sx-drop-panel)',
+            overflow: 'hidden'
+        },
+        "aria-hidden": !open,
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "shrink-0 flex items-center gap-2",
+                style: {
+                    height: 46,
+                    padding: '0 8px 0 14px',
+                    borderBottom: `1px solid ${__TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].borderSubtle}`
+                },
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$scope$2d$orb$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["ScopeMark"], {
+                        size: 22
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/ui/assistant-panel.tsx",
+                        lineNumber: 67,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        style: {
+                            fontSize: 13,
+                            fontWeight: 650,
+                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].text
+                        },
+                        children: "Scope"
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/ui/assistant-panel.tsx",
+                        lineNumber: 68,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        style: {
+                            flex: 1
+                        }
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/ui/assistant-panel.tsx",
+                        lineNumber: 69,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                        onClick: onExpand,
+                        title: "Open full-screen focus mode",
+                        className: "hover:bg-black/5 dark:hover:bg-white/10",
+                        style: {
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 30,
+                            height: 30,
+                            borderRadius: 9,
+                            border: 'none',
+                            background: 'transparent',
+                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                            cursor: 'pointer'
+                        },
+                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$maximize$2d$2$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Maximize2$3e$__["Maximize2"], {
+                            size: 15
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/ui/assistant-panel.tsx",
+                            lineNumber: 71,
+                            columnNumber: 11
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/ui/assistant-panel.tsx",
+                        lineNumber: 70,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                        onClick: onClose,
+                        title: "Close",
+                        className: "hover:bg-black/5 dark:hover:bg-white/10",
+                        style: {
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 30,
+                            height: 30,
+                            borderRadius: 9,
+                            border: 'none',
+                            background: 'transparent',
+                            color: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$librechat$2d$theme$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["LC"].muted,
+                            cursor: 'pointer'
+                        },
+                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$lucide$2d$react$40$0$2e$552$2e$0_react$40$19$2e$2$2e$1$2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__["X"], {
+                            size: 16
+                        }, void 0, false, {
+                            fileName: "[project]/features/assistant/ui/assistant-panel.tsx",
+                            lineNumber: 74,
+                            columnNumber: 11
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "[project]/features/assistant/ui/assistant-panel.tsx",
+                        lineNumber: 73,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/features/assistant/ui/assistant-panel.tsx",
+                lineNumber: 66,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "flex-1 min-h-0",
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$features$2f$assistant$2f$ui$2f$assistant$2d$thread$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["AssistantThread"], {
+                    assistant: a,
+                    variant: "docked"
+                }, void 0, false, {
+                    fileName: "[project]/features/assistant/ui/assistant-panel.tsx",
+                    lineNumber: 80,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/features/assistant/ui/assistant-panel.tsx",
+                lineNumber: 79,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/features/assistant/ui/assistant-panel.tsx",
+        lineNumber: 46,
+        columnNumber: 5
+    }, this);
+}
+}),
+"[project]/features/assistant/ui/memory-copilot.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+__turbopack_context__.s([
+    "MemoryCopilot",
+    ()=>MemoryCopilot
+]);
+// ─────────────────────────────────────────────────────────────────────────────
+// MemoryCopilot — headless durable-memory instrument for the AI chat.
+//
+// Mounted ONCE in app-shell (inside the CopilotKit provider), it:
+//   • fetches the user's relevant remembered facts for the active client and
+//     publishes them as grounding context (useCopilotReadable), and
+//   • registers rememberFact / forgetFact so the assistant can persist a fact the
+//     user EXPLICITLY asks it to remember (never auto-inferred).
+//
+// Memory is stored server-side in Postgres, scoped to the authenticated user and
+// (optionally) the active client, so it survives refresh/reload without cross-
+// client bleed. Fail-soft: no session or no DB → memories are simply empty and the
+// chat is unaffected. Renders nothing.
+// ─────────────────────────────────────────────────────────────────────────────
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/jotai@2.15.1_@babel+core@7._5b27b7b535d6519f6427fc26ba88e66f/node_modules/jotai/esm/react.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/@copilotkit+react-core@1.62_2b5035863a1cfdc26d5a4a9b28e91607/node_modules/@copilotkit/react-core/dist/index.mjs [app-ssr] (ecmascript) <locals>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$sonner$40$2$2e$0$2e$7_react$2d$dom$40$19$2e$2$2e$1_react$40$19$2e$2$2e$1_$5f$react$40$19$2e$2$2e$1$2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/sonner@2.0.7_react-dom@19.2.1_react@19.2.1__react@19.2.1/node_modules/sonner/dist/index.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$nav$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/shared/stores/nav-store.ts [app-ssr] (ecmascript)");
+'use client';
+;
+;
+;
+;
+;
+function MemoryCopilot() {
+    const client = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$nav$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["selectedClientAtom"]);
+    const [memories, setMemories] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useState"])([]);
+    const refresh = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useCallback"])(async (activeClient)=>{
+        try {
+            const res = await fetch(`/api/assistant/memory?clientId=${encodeURIComponent(activeClient)}`);
+            if (!res.ok) {
+                setMemories([]);
+                return;
+            }
+            const data = await res.json();
+            setMemories(Array.isArray(data?.memories) ? data.memories : []);
+        } catch  {
+            setMemories([]); // fail-soft
+        }
+    }, []);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        void refresh(client);
+    }, [
+        client,
+        refresh
+    ]);
+    // Grounding: the model sees the remembered facts relevant to the active client.
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotReadable"])({
+        description: 'Remembered facts and preferences the user previously asked you to save (durable across sessions), already filtered to the active client. Use the relevant ones as grounding; never invent. Empty means nothing has been saved yet.',
+        value: memories.map((m)=>({
+                id: m.id,
+                scope: m.clientId ?? 'all clients',
+                subject: m.subject,
+                content: m.content
+            }))
+    });
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotAction"])({
+        name: 'rememberFact',
+        description: 'Save a durable fact or preference the user EXPLICITLY asked you to remember (e.g. "remember Acme\'s 2025 FX is 1.3978", "always report in CAD", "my default client is Northstar"). Do NOT call this unless the user asked you to remember / save / note something for later — never auto-save. By default the memory is scoped to the CURRENT client; set global=true for a preference that applies to every client.',
+        parameters: [
+            {
+                name: 'content',
+                type: 'string',
+                description: 'The fact/preference to remember, as a short self-contained sentence.',
+                required: true
+            },
+            {
+                name: 'subject',
+                type: 'string',
+                description: 'Optional short label, e.g. "FX rate" or "reporting currency".',
+                required: false
+            },
+            {
+                name: 'global',
+                type: 'boolean',
+                description: 'True if this applies to ALL clients (a general preference); omit/false to scope it to the current client.',
+                required: false
+            }
+        ],
+        handler: async ({ content, subject, global })=>{
+            try {
+                const res = await fetch('/api/assistant/memory', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        content,
+                        subject,
+                        clientId: global ? null : client,
+                        kind: 'fact',
+                        source: 'user'
+                    })
+                });
+                const data = await res.json().catch(()=>({}));
+                if (!res.ok || !data?.ok) {
+                    const why = data?.error === 'AUTH_REQUIRED' ? 'you need to be signed in' : data?.error === 'STORAGE_UNAVAILABLE' ? 'the database is not available' : 'it could not be saved';
+                    return `I could not remember that — ${why}.`;
+                }
+                await refresh(client);
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$sonner$40$2$2e$0$2e$7_react$2d$dom$40$19$2e$2$2e$1_react$40$19$2e$2$2e$1_$5f$react$40$19$2e$2$2e$1$2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["toast"].success('Saved to memory');
+                return `Saved to memory${global ? ' (all clients)' : ` for ${client}`}: "${content}".`;
+            } catch  {
+                return 'I could not remember that (network error).';
+            }
+        }
+    });
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotAction"])({
+        name: 'forgetFact',
+        description: 'Delete a previously remembered fact/preference by its id (ids are listed in the remembered-facts context). Use when the user asks you to forget or remove something you saved.',
+        parameters: [
+            {
+                name: 'id',
+                type: 'string',
+                description: 'The id of the memory to forget (from the remembered-facts context).',
+                required: true
+            }
+        ],
+        handler: async ({ id })=>{
+            try {
+                const res = await fetch(`/api/assistant/memory?id=${encodeURIComponent(id)}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json().catch(()=>({}));
+                if (!res.ok || !data?.ok) return 'I could not forget that.';
+                await refresh(client);
+                return 'Done — I forgot that.';
+            } catch  {
+                return 'I could not forget that (network error).';
+            }
+        }
+    });
+    return null;
+}
+}),
+"[project]/features/assistant/ui/specialist-presence.tsx [app-ssr] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+__turbopack_context__.s([
+    "SpecialistPresence",
+    ()=>SpecialistPresence
+]);
+// ─────────────────────────────────────────────────────────────────────────────
+// SinaPresence — shows that Sina is answering (the "face" of the chat). Headless;
+// mounted once in app-shell.
+//
+// There is ONE unified agent now (Sina), so while a reply is streaming this simply
+// sets the live coworker indicator to Sina. Purely COSMETIC: it only writes the
+// presence atom the CoworkerActivity chip reads — never touches the message thread or
+// the model. It yields entirely to a live workflow run, which owns the indicator.
+// ─────────────────────────────────────────────────────────────────────────────
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/next@16.0.10_@babel+core@7._bc0e796ca3d7ea4640f9d74c95225eb3/node_modules/next/dist/server/route-modules/app-page/vendored/ssr/react.js [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/jotai@2.15.1_@babel+core@7._5b27b7b535d6519f6427fc26ba88e66f/node_modules/jotai/esm/react.mjs [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/@copilotkit+react-core@1.62_2b5035863a1cfdc26d5a4a9b28e91607/node_modules/@copilotkit/react-core/dist/index.mjs [app-ssr] (ecmascript) <locals>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/shared/stores/workspace-store.ts [app-ssr] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/lib/coworkers.ts [app-ssr] (ecmascript)");
+'use client';
+;
+;
+;
+;
+;
+function SpecialistPresence() {
+    const { isLoading } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f40$copilotkit$2b$react$2d$core$40$1$2e$62_2b5035863a1cfdc26d5a4a9b28e91607$2f$node_modules$2f40$copilotkit$2f$react$2d$core$2f$dist$2f$index$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$locals$3e$__["useCopilotChat"])();
+    const run = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["activeRunAtom"]);
+    const active = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useAtomValue"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["activeCoworkerAtom"]);
+    const setCoworker = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$jotai$40$2$2e$15$2e$1_$40$babel$2b$core$40$7$2e$_5b27b7b535d6519f6427fc26ba88e66f$2f$node_modules$2f$jotai$2f$esm$2f$react$2e$mjs__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useSetAtom"])(__TURBOPACK__imported__module__$5b$project$5d2f$shared$2f$stores$2f$workspace$2d$store$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["setActiveCoworkerAtom"]);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$next$40$16$2e$0$2e$10_$40$babel$2b$core$40$7$2e$_bc0e796ca3d7ea4640f9d74c95225eb3$2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
+        // A live run owns the presence indicator — never fight it.
+        if (run && run.phase !== 'done') return;
+        // Only ever touch the Sina hat WE set — never clear the engine/other actors.
+        const mine = active?.coworker.id === __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SINA"].id;
+        if (isLoading) {
+            if (!mine) {
+                setCoworker({
+                    coworker: __TURBOPACK__imported__module__$5b$project$5d2f$lib$2f$coworkers$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SINA"],
+                    status: 'Reviewing your question…'
+                });
+            }
+        } else if (mine) {
+            setCoworker(null); // reply finished → clear our hat
+        }
+    }, [
+        isLoading,
+        run,
+        active,
+        setCoworker
+    ]);
+    return null;
+}
+}),
+];
+
+//# sourceMappingURL=features_assistant_10b626cb._.js.map
