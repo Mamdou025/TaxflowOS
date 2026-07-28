@@ -148,6 +148,22 @@ export default defineConfig({
     fs: {
       strict: true,
     },
+    // Dev-only bridge: forward the frontend's relative `/api/*` calls — including
+    // the CopilotKit runtime at `/api/copilotkit` (app-shell.tsx runtimeUrl) — to
+    // the Express api-server. docker-compose sets API_BASE=http://api:5000;
+    // bare-metal falls back to localhost:5000. Without this, `/api/*` hits the
+    // Vite dev server (which has no such route) and 404s → "Runtime info request
+    // failed with status 404".
+    //
+    // Inert on Replit: its path router forwards `/api` to the api-server before
+    // requests reach Vite, and the production build is served statically (no dev
+    // server, so no proxy).
+    proxy: {
+      '/api': {
+        target: process.env.API_BASE || 'http://localhost:5000',
+        changeOrigin: true,
+      },
+    },
   },
   preview: {
     port,
