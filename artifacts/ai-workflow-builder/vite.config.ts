@@ -150,17 +150,21 @@ export default defineConfig({
     },
     // Dev-only bridge: forward the frontend's relative `/api/*` calls — including
     // the CopilotKit runtime at `/api/copilotkit` (app-shell.tsx runtimeUrl) — to
-    // the Express api-server. docker-compose sets API_BASE=http://api:5000;
-    // bare-metal falls back to localhost:5000. Without this, `/api/*` hits the
-    // Vite dev server (which has no such route) and 404s → "Runtime info request
-    // failed with status 404".
+    // the Express api-server.
     //
-    // Inert on Replit: its path router forwards `/api` to the api-server before
-    // requests reach Vite, and the production build is served statically (no dev
-    // server, so no proxy).
+    // Port resolution order:
+    //   1. API_BASE        — full override (e.g. http://api:8080 in docker-compose)
+    //   2. API_SERVER_PORT — just the port number (set alongside PORT for each artifact)
+    //   3. 8080            — matches the api-server artifact.toml localPort default
+    //
+    // In the Replit preview pane the platform's own path-router forwards /api
+    // directly to the api-server process before requests ever reach Vite, so the
+    // proxy is only exercised by local curl / e2e tests that hit Vite directly
+    // (localhost:PORT/api/...). The proxy must still point at the correct port so
+    // those callers don't hit ECONNREFUSED.
     proxy: {
       '/api': {
-        target: process.env.API_BASE || 'http://localhost:5000',
+        target: process.env.API_BASE ?? `http://localhost:${process.env.API_SERVER_PORT ?? 8080}`,
         changeOrigin: true,
       },
     },
