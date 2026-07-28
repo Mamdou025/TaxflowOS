@@ -88,6 +88,32 @@ function buildKnowledge(documents: AgentLabDoc[]): { block: string; context: Age
   return { block, context: { count: names.length, chars, names } };
 }
 
+// Prepend the documents block as a cacheable text part on the FIRST user message, so
+// Anthropic caches the stable prefix (tools + system + docs). We merge into the existing
+// user message (rather than adding a new one) to keep user/assistant roles alternating, and
+// place the docs FIRST so the cached prefix is identical on every turn → a cache hit on
+// turns 2+. The `cacheControl` marker is Anthropic-namespaced; the AI SDK ignores it for
+// other providers, so callers gate this to Anthropic anyway (see `cacheDocs`).
+function prependDocPart(messages: ModelMessage[], docBlock: string): ModelMessage[] {
+  const docPart = {
+    type: 'text' as const,
+    text: docBlock,
+    providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' as const } } },
+  };
+  const idx = messages.findIndex((m) => m.role === 'user');
+  // No user message yet (shouldn't happen — a turn always has one): send the docs alone.
+  if (idx === -1) {
+    return [{ role: 'user', content: [docPart] }, ...messages];
+  }
+  const target = messages[idx];
+  const existing =
+    typeof target.content === 'string'
+      ? [{ type: 'text' as const, text: target.content }]
+      : target.content;
+  const merged = { ...target, content: [docPart, ...existing] } as ModelMessage;
+  return [...messages.slice(0, idx), merged, ...messages.slice(idx + 1)];
+}
+
 export async function runAgent(opts: {
   model: string;
   system: string;
@@ -110,11 +136,14 @@ export async function runAgent(opts: {
     }
   }
 
-  // Build the system prompt. In "full" mode the whole documents are injected; in
-  // "retrieval" mode they are NOT (that's the point) — we tell the model they exist
-  // and to call searchDocuments to read only the relevant passages.
+  // Build the system prompt + the "full"-mode documents block. In "full" mode the whole
+  // documents are loaded; in "retrieval" mode they are NOT (that's the point) — we just tell
+  // the model they exist and to call searchDocuments to read only the relevant passages.
+  // The documents block is kept SEPARATE from `system` (not concatenated) so it can be placed
+  // as a cacheable message part for Anthropic below — see the placement note near generateText.
   let system = opts.system || DEFAULT_SYSTEM_PROMPT;
   let docContext: AgentLabDocContext;
+  let docBlock = ''; // the "full"-mode documents block ('' when retrieval mode or no docs)
   if (opts.docMode === 'retrieval' && opts.documents.length > 0) {
     const names = opts.documents.map((d) => d.name);
     system +=
@@ -126,7 +155,7 @@ export async function runAgent(opts: {
     docContext = { count: names.length, chars: 0, names };
   } else {
     const knowledge = buildKnowledge(opts.documents);
-    system += knowledge.block;
+    docBlock = knowledge.block;
     docContext = knowledge.context;
   }
 
@@ -141,22 +170,29 @@ export async function runAgent(opts: {
   // Model router: decide the provider knobs for the EFFECTIVE model (features/agent-lab/model-router.ts).
   //   • sendTemperature=false → omit it (the Opus 4.7/4.8 · Sonnet 5 · Fable 5 family 400s on it)
   //   • providerOptions       → Anthropic `effort` (thinking depth), when the model supports it
-  //   • cacheSystem           → cache the big system/doc block so re-runs read it at ~10% price
   const plan = planForModel(effectiveModel, { effort: effectiveEffort });
 
-  // Prompt caching attaches to a message part, so when caching we move the system prompt
-  // (which carries the attached documents in "full" mode) into a cached system MESSAGE and
-  // drop the top-level `system` string. Non-cached models keep the plain `system` param.
-  const messages: ModelMessage[] = plan.cacheSystem
-    ? [
-        { role: 'system', content: system, providerOptions: { anthropic: { cacheControl: { type: 'ephemeral' } } } },
-        ...opts.messages,
-      ]
-    : opts.messages;
+  // Place the "full"-mode documents block + apply Anthropic prompt caching.
+  //
+  // AI SDK v6+ forbids a system-role MESSAGE inside `messages` (AI_InvalidPromptError:
+  // "System messages are not allowed…"), which is the ONLY place a cache breakpoint could be
+  // attached to the system — so we can no longer cache via the system prompt. Instead the
+  // cache breakpoint goes on a MESSAGE PART:
+  //   • Anthropic → move the documents into a CACHED text part on the first user message.
+  //     Anthropic caches the whole stable prefix BEFORE the breakpoint (tools + system + docs),
+  //     so repeat turns over the same documents read that block at ~10% input price. Only a
+  //     block ≥1024 tokens is cached (Haiku ≥2048); a smaller "rules" doc is silently uncached
+  //     (no error, no marker effect).
+  //   • Everyone else → append the documents to the top-level `system` string (OpenAI
+  //     auto-caches long prefixes with no marker; other providers just receive them as context).
+  // This restores the caching the model-router intends without an illegal system message.
+  const cacheDocs = plan.cachePrefix && docBlock.length > 0;
+  const finalSystem = docBlock && !cacheDocs ? system + docBlock : system;
+  const messages: ModelMessage[] = cacheDocs ? prependDocPart(opts.messages, docBlock) : opts.messages;
 
   const result = await generateText({
     model: resolveModel(effectiveModel),
-    ...(plan.cacheSystem ? {} : { system }),
+    system: finalSystem,
     ...(plan.sendTemperature ? { temperature: opts.temperature } : {}),
     ...(plan.providerOptions ? { providerOptions: plan.providerOptions } : {}),
     tools: activeTools,
@@ -180,7 +216,14 @@ export async function runAgent(opts: {
       inputTokens: result.usage.inputTokens,
       outputTokens: result.usage.outputTokens,
       totalTokens: result.usage.totalTokens,
-      cachedInputTokens: result.usage.cachedInputTokens,
+      // Cache-read tokens surface differently by route: the direct providers set
+      // `usage.cachedInputTokens`, but the Vercel AI Gateway reports them under
+      // `usage.inputTokenDetails.cacheReadTokens` (and leaves cachedInputTokens undefined).
+      // Read both so the UI's "cache: hit (N tok)" indicator is correct either way.
+      cachedInputTokens:
+        result.usage.cachedInputTokens ??
+        (result.usage as { inputTokenDetails?: { cacheReadTokens?: number } }).inputTokenDetails
+          ?.cacheReadTokens,
     },
     applied: {
       model: effectiveModel,
@@ -189,7 +232,7 @@ export async function runAgent(opts: {
       reason: auto?.reason,
       provider: plan.provider,
       effort: plan.effort,
-      cache: plan.cacheSystem,
+      cache: cacheDocs,
       temperatureSent: plan.sendTemperature,
     },
   };
