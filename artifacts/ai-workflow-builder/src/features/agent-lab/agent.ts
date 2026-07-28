@@ -40,14 +40,21 @@ function lastUserText(messages: ModelMessage[]): string {
 }
 
 // Turn a model id into a model the AI SDK understands.
-//   • "gpt-4o"                 → direct OpenAI provider  (OPENAI_API_KEY)
 //   • "openai/gpt-5.1-instant" → Vercel AI Gateway string (AI_GATEWAY_API_KEY)
-// The "/" is the signal: gateway model strings are "provider/model".
+//   • "gpt-4o" + gateway key   → normalized to "openai/gpt-4o" → still the Gateway
+//   • "gpt-4o" + no gateway    → direct OpenAI provider        (OPENAI_API_KEY)
+// The "/" marks an explicit gateway "provider/model" id. When AI_GATEWAY_API_KEY
+// is set we route bare OpenAI ids through the gateway too, so OPENAI_API_KEY is
+// OPTIONAL — one key (the gateway) reaches OpenAI and every other provider. We
+// only fall back to the direct OpenAI provider when no gateway key is present.
 export function resolveModel(modelId: string): LanguageModel {
   if (modelId.includes('/')) {
-    return modelId; // a bare string routes through the AI Gateway
+    return modelId; // already a gateway "provider/model" string
   }
-  return openai(modelId);
+  if (process.env.AI_GATEWAY_API_KEY) {
+    return `openai/${modelId}`; // bare OpenAI id → gateway (no direct key needed)
+  }
+  return openai(modelId); // no gateway key → direct OpenAI (OPENAI_API_KEY)
 }
 
 // Cap how much attached-document text we inject. The whole thing is sent on EVERY
