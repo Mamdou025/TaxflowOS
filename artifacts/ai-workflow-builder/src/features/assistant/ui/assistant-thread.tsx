@@ -131,11 +131,13 @@ function ScopeCluster({ compact = false, onOpenWork }: { compact?: boolean; onOp
   const client = useAtomValue(selectedClientAtom);
   const year = useAtomValue(scopeYearAtom);
   const openClientSwitcher = useSetAtom(showClientSwitcherAtom);
-  const orbSize = compact ? 32 : 96;
+  const orbSize = compact ? 32 : 54; // compact chat-header orb — smaller than the homepage hero orb (116) so the header stays a thin strip
   const divider = <span style={{ width: 1, height: compact ? 16 : 22, background: LC.borderSubtle, flexShrink: 0 }} />;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', minWidth: 0, maxWidth: '100%' }}>
+    // Cap the cluster width (focus header) so the long work-status line truncates to an
+    // ellipsis inside its zone instead of stretching the whole bar edge-to-edge.
+    <div style={{ display: 'flex', alignItems: 'center', minWidth: 0, maxWidth: compact ? '100%' : 600 }}>
       {/* The orb — the control. Opens the client switcher. Shares layoutId with the
           homepage hero orb so it FLIES between the two on chat start/stop (focus only). */}
       <ScopeOrbButton size={orbSize} layoutId={compact ? undefined : 'scope-orb'} onClick={() => openClientSwitcher(true)} label="" />
@@ -143,13 +145,17 @@ function ScopeCluster({ compact = false, onOpenWork }: { compact?: boolean; onOp
       {/* The scope tray — the tags the orb controls (company · year · current workflow).
           It "pulls out" of the orb on reveal: a clip-path wipe from the orb's edge. */}
       <motion.div
-        initial={compact ? false : { clipPath: 'inset(0 100% 0 0)', opacity: 0 }}
-        animate={{ clipPath: 'inset(0 0% 0 0)', opacity: 1 }}
+        // Only the RIGHT inset animates (the horizontal "pull-out" wipe). Top/bottom are
+        // held far negative so the clip-path never clips VERTICAL overflow — otherwise it
+        // would hide the WorkMenu dropdown that opens below the tray (it was, so the work
+        // switcher looked dead). Left stays 0.
+        initial={compact ? false : { clipPath: 'inset(-1000px 100% -1000px 0px)', opacity: 0 }}
+        animate={{ clipPath: 'inset(-1000px 0% -1000px 0px)', opacity: 1 }}
         transition={{ delay: 0.14, duration: 0.42, ease: [0.23, 1, 0.32, 1] }}
         style={{
           display: 'flex', alignItems: 'center', gap: compact ? 6 : 3, minWidth: 0,
           marginLeft: compact ? 6 : -16, paddingLeft: compact ? 0 : 28, paddingRight: compact ? 0 : 10,
-          height: compact ? undefined : 56, borderRadius: compact ? 0 : '0 16px 16px 0',
+          height: compact ? undefined : 46, borderRadius: compact ? 0 : '0 16px 16px 0',
           background: compact ? 'transparent' : LC.surface, boxShadow: compact ? 'none' : LC.shadowSm,
         }}
       >
@@ -345,9 +351,11 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
           way; on the FOCUS homepage it's hidden and the orb lives centred in the hero
           below as the "InScope" lockup — the orb then FLIES up here (shared-element
           layoutId="scope-orb") and the tag tray pulls out of it when the chat starts.
-          Docked always shows the compact cluster. */}
+          Docked always shows the compact cluster. In focus mode there's NO full-width
+          bar — the cluster floats on the chat surface (no bottom divider); the docked
+          panel keeps its divider to separate the header from the drawer thread. */}
       {(docked || !showHero) && (
-        <div className="shrink-0 relative flex items-center gap-3" style={{ height: docked ? 44 : 104, padding: '0 12px', borderBottom: `1px solid ${LC.borderSubtle}` }}>
+        <div className="shrink-0 relative flex items-center gap-3" style={{ height: docked ? 44 : 68, padding: '0 12px', borderBottom: docked ? `1px solid ${LC.borderSubtle}` : 'none', zIndex: 20 }}>
           <ScopeCluster compact={docked} onOpenWork={onOpenWork} />
           <span style={{ flex: 1 }} />
         </div>
@@ -381,9 +389,12 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
                     <ScopeOrbButton size={116} layoutId="scope-orb" onClick={() => openClientSwitcher(true)} label="" />
                   </div>
                 )}
-                {/* Greeting + composer + suggestions — centred in the space below the orb. */}
-                <div className="flex-1 min-h-0 flex items-center justify-center">
-                  <div style={{ width: '100%', maxWidth: docked ? 'none' : 720 }}>
+                {/* Greeting + composer + suggestions — centred in the space below the orb.
+                    `overflow-y-auto` + `margin:auto` (not items-center) so that when the
+                    content is taller than the viewport (short/small windows) it SCROLLS
+                    from the top instead of overflowing UPWARD into the orb/wordmark lockup. */}
+                <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
+                  <div style={{ width: '100%', maxWidth: docked ? 'none' : 720, margin: 'auto' }}>
                     <div style={{ textAlign: 'center', marginBottom: docked ? 10 : 20 }}>
                       <div style={{ fontSize: docked ? 22 : 34, fontWeight: 700, color: LC.title, letterSpacing: '-0.02em' }}>{greeting}, Sophia</div>
                       <div style={{ fontSize: docked ? 13 : 16, fontWeight: 400, color: LC.muted, marginTop: 6 }}>How can I help you drive impact today?</div>

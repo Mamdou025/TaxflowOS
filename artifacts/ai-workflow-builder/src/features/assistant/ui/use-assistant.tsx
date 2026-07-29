@@ -18,7 +18,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useRouter, usePathname } from '@/lib/router';
 import { Globe, FileText, Workflow, Bot, GitBranch, SquarePen, Play, Sparkles } from 'lucide-react';
-import { useCopilotAction, useCopilotReadable, useCopilotChat } from '@copilotkit/react-core';
+import { useCopilotAction, useCopilotReadable, useCopilotChat, useCopilotChatInternal } from '@copilotkit/react-core';
 import { TextMessage, Role } from '@copilotkit/runtime-client-gql';
 import {
   workspaceWindowsAtom,
@@ -834,7 +834,10 @@ export function useAssistant() {
   });
 
   // ── Conversation-launch state ────────────────────────────────────────────────
-  const { appendMessage, visibleMessages } = useCopilotChat();
+  const { appendMessage } = useCopilotChat();
+  // Read the live messages from the AG-UI store (CopilotKit 1.63). The legacy
+  // useCopilotChat().visibleMessages is undefined here — see use-chat-persistence.
+  const { messages: visibleMessages } = useCopilotChatInternal() as unknown as { messages: unknown[] };
   // Server-side persistence: autosaves each turn + restores saved threads. Additive
   // — it observes CopilotKit, doesn't change how the chat runs. See use-chat-persistence.
   const persistence = useChatPersistence();
@@ -846,12 +849,19 @@ export function useAssistant() {
   const say = (content: string) => { appendMessage(new TextMessage({ content, role: Role.User })); setSent(true); };
   const threadEmpty = (visibleMessages?.length ?? 0) === 0;
   const showHero = threadEmpty && !sent; // centered composer until the first message
-  // New chat: clear the store + start a fresh (unsaved-until-first-message) thread.
-  const newChat = () => { persistence.startNewThread(); setSent(false); };
-  // Restore a saved conversation from history, then show it (not the hero).
+  // Clear the parts of a conversation that live OUTSIDE the CopilotKit message store:
+  // deterministically-pinned run cards + summoned fields/elements. These are per-chat
+  // UI state, so switching chats (new or restored) must wipe them or the previous
+  // chat's cards bleed into the next one (they were never part of "the same chat").
+  const clearPinned = () => { setPinnedRuns([]); setPinnedElements([]); setPinnedFields([]); };
+  // New chat: clear the store + pinned cards, and start a fresh (unsaved-until-first-
+  // message) thread — genuinely blank, distinct from the one you were in.
+  const newChat = () => { persistence.startNewThread(); clearPinned(); setSent(false); };
+  // Restore a saved conversation from history, then show it (not the hero). Wipe the
+  // outgoing chat's pinned cards so only the restored transcript shows.
   const openThread = async (id: string) => {
     const ok = await persistence.loadThread(id);
-    if (ok) setSent(true);
+    if (ok) { clearPinned(); setSent(true); }
     return ok;
   };
 
