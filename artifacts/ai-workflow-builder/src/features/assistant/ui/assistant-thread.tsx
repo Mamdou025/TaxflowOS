@@ -133,6 +133,11 @@ function ScopeCluster({ compact = false, onOpenWork }: { compact?: boolean; onOp
   const openClientSwitcher = useSetAtom(showClientSwitcherAtom);
   const orbSize = compact ? 32 : 54; // compact chat-header orb — smaller than the homepage hero orb (116) so the header stays a thin strip
   const divider = <span style={{ width: 1, height: compact ? 16 : 22, background: LC.borderSubtle, flexShrink: 0 }} />;
+  // The tray reveal uses a clip-path wipe, but clip-path also clips DESCENDANTS —
+  // so while it's applied the WorkMenu dropdown (opens below-right of the tray) gets
+  // cut off. Once the wipe has played we expand the clip region on every side so it
+  // stops clipping anything. Compact never wipes → starts already revealed.
+  const [revealed, setRevealed] = useState(compact);
 
   return (
     // Cap the cluster width (focus header) so the long work-status line truncates to an
@@ -145,12 +150,16 @@ function ScopeCluster({ compact = false, onOpenWork }: { compact?: boolean; onOp
       {/* The scope tray — the tags the orb controls (company · year · current workflow).
           It "pulls out" of the orb on reveal: a clip-path wipe from the orb's edge. */}
       <motion.div
-        // Only the RIGHT inset animates (the horizontal "pull-out" wipe). Top/bottom are
-        // held far negative so the clip-path never clips VERTICAL overflow — otherwise it
-        // would hide the WorkMenu dropdown that opens below the tray (it was, so the work
-        // switcher looked dead). Left stays 0.
+        // The RIGHT inset animates the horizontal "pull-out" wipe (100% → 0%); top/bottom
+        // stay far negative so vertical overflow is never clipped. THE CATCH: at 0% the
+        // right edge still clips to the tray's border, cutting off the WorkMenu dropdown
+        // that opens below-right. So once the wipe finishes (`revealed`) we push every
+        // inset far negative — the clip region no longer clips the dropdown on any side.
         initial={compact ? false : { clipPath: 'inset(-1000px 100% -1000px 0px)', opacity: 0 }}
-        animate={{ clipPath: 'inset(-1000px 0% -1000px 0px)', opacity: 1 }}
+        animate={revealed
+          ? { clipPath: 'inset(-1000px -1000px -1000px -1000px)', opacity: 1 }
+          : { clipPath: 'inset(-1000px 0% -1000px 0px)', opacity: 1 }}
+        onAnimationComplete={() => setRevealed(true)}
         transition={{ delay: 0.14, duration: 0.42, ease: [0.23, 1, 0.32, 1] }}
         style={{
           display: 'flex', alignItems: 'center', gap: compact ? 6 : 3, minWidth: 0,
