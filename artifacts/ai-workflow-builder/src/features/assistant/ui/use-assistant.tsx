@@ -42,7 +42,8 @@ import { InlineFieldCard } from '@/features/assistant/workspace/inline-field-car
 import { WorkflowRunFlow, WorkflowElementCard, RunProposalCard } from '@/features/assistant/workspace/workflow-run-flow';
 import type { ComposerSuggestion } from '@/features/assistant/workspace/aside-thread';
 import { getWorkflowConfig, WORKFLOW_CONFIGS, type TemplateConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
-import { PORTFOLIO_WORKFLOWS } from '@/shared/workflow-engine/templates/portfolio/portfolio-workflows';
+import { PORTFOLIO_WORKFLOWS, getPortfolioWorkflowDef } from '@/shared/workflow-engine/templates/portfolio/portfolio-workflows';
+import { selectedWorkflowIdAtom, workflowTabAtom } from '@/features/workflows-hub/workflows-store';
 import { WORKFLOWS } from '@/lib/agents';
 import { worksheetIntelRegistryAtom, pickIntel, listIntel, createTemplateIntel } from '@/features/worksheets/intel';
 import { GenUIRender } from '@/features/genui/genui-render';
@@ -185,6 +186,8 @@ export function useAssistant() {
   const pushTrail = useSetAtom(pushTrailAtom);
   const recordWork = useSetAtom(recordWorkItemAtom);
   const setBuilderFocus = useSetAtom(builderFocusTargetAtom);
+  const setSelectedWorkflow = useSetAtom(selectedWorkflowIdAtom);
+  const setWorkflowTab = useSetAtom(workflowTabAtom);
   const setUploadedRows = useSetAtom(uploadedRowsAtom);
   const setAttachedDocs = useSetAtom(attachedDocsAtom);
   const attachedDocs = useAtomValue(attachedDocsAtom);
@@ -203,6 +206,28 @@ export function useAssistant() {
   const fieldValues = useAtomValue(fieldValuesAtom);
   const allRunEdits = useAtomValue(runEditsAtom);
   const uploaded = useAtomValue(uploadedRowsAtom);
+
+  // Open a workflow (or Sinaxe blueprint) in the NEW builder: the Workflows surface's
+  // Build tab (InlineBuilder), docked beside the chat — NOT the legacy standalone
+  // /builder page (the older UI). The surface selects by PORTFOLIO id, so we map a
+  // runnable-config id ("fapi") to its blueprint ("pf-fapi"); blockId (when given) is
+  // focused on the canvas via builderFocusTargetAtom (InlineBuilder honors it). A
+  // workflow with no portfolio surface yet falls back to the legacy canvas so the
+  // click still works rather than landing on an empty "Select a workflow" state.
+  const openInlineBuilder = (workflowId: string, blockId = '') => {
+    const baseId = workflowId.replace(/^pf-/, '');
+    const def = getPortfolioWorkflowDef(`pf-${baseId}`) ?? getPortfolioWorkflowDef(workflowId);
+    if (def) {
+      setBuilderFocus({ workflowId: def.id, blockId });
+      setSelectedWorkflow(def.id);
+      setWorkflowTab('build');
+      const page = getPage('workflows');
+      openWindow({ pageKey: 'workflows', title: page?.title ?? 'Workflows' });
+    } else {
+      setBuilderFocus({ workflowId, blockId });
+      router.push('/builder');
+    }
+  };
 
   // ── CopilotKit context + tools ───────────────────────────────────────────────
   // Where the user is right now. Registered here so it's live on EVERY route (the
@@ -491,10 +516,10 @@ export function useAssistant() {
     parameters: [{ name: 'workflowId', type: 'string', description: 'optional — a workflow or blueprint id to open on the canvas', required: false }],
     handler: async ({ workflowId }: { workflowId?: string }) => {
       if (workflowId && (getWorkflowConfig(workflowId) || PORTFOLIO_WORKFLOWS.some((w) => w.id === workflowId))) {
-        launchOpenBuilder(workflowId);
+        openInlineBuilder(workflowId);
         return `Opening ${workflowId} in the workflow builder.`;
       }
-      router.push('/builder');
+      launchOpenPage('workflows');
       return 'Opening the workflow builder.';
     },
   });
@@ -523,7 +548,7 @@ export function useAssistant() {
           <RunWorkflowRender
             config={config}
             onOpenPage={(pk) => { const def = getPage(pk); if (def) openWindow({ pageKey: pk, title: def.title }); }}
-            onOpenBuilder={(blockId) => { setBuilderFocus({ workflowId: config.id, blockId }); router.push('/builder'); }}
+            onOpenBuilder={(blockId) => openInlineBuilder(config.id, blockId)}
           />
         </div>
       );
@@ -549,7 +574,7 @@ export function useAssistant() {
       const c = getWorkflowConfig(args?.workflowId ?? '');
       if (!c) return <></>;
       const el = args?.element === 'output' ? 'output' : 'source';
-      return <div data-work-id={workIdFor('source-review', `${c.id}:${el}`)}><WorkflowElementCard config={c} element={el} onOpenPage={(pk) => { const d = getPage(pk); if (d) openWindow({ pageKey: pk, title: d.title }); }} onOpenBuilder={(blockId) => { setBuilderFocus({ workflowId: c.id, blockId }); router.push('/builder'); }} /></div>;
+      return <div data-work-id={workIdFor('source-review', `${c.id}:${el}`)}><WorkflowElementCard config={c} element={el} onOpenPage={(pk) => { const d = getPage(pk); if (d) openWindow({ pageKey: pk, title: d.title }); }} onOpenBuilder={(blockId) => openInlineBuilder(c.id, blockId)} /></div>;
     },
   });
 
@@ -885,14 +910,11 @@ export function useAssistant() {
     setPinnedRuns((prev) => (prev.includes(config.id) ? prev : [...prev, config.id]));
   };
 
-  // Open a workflow OR a Sinaxe portfolio blueprint on the builder canvas. Sets
-  // the builder focus target (resolved by app/builder/page.tsx — run-config OR
-  // portfolio blueprint) and navigates there. Blueprints aren't runnable, so this
-  // is how the chat surfaces them: view/edit in the builder, not execute.
-  const launchOpenBuilder = (workflowId: string) => {
-    setBuilderFocus({ workflowId, blockId: '' });
-    router.push('/builder');
-  };
+  // Open a workflow OR a Sinaxe portfolio blueprint in the builder. Delegates to
+  // openInlineBuilder → the Workflows surface's Build tab (InlineBuilder), docked
+  // beside the chat. Blueprints aren't runnable, so this is how the chat surfaces
+  // them: view/edit in the builder, not execute.
+  const launchOpenBuilder = (workflowId: string) => openInlineBuilder(workflowId);
 
   // Scroll the thread to the live run when the status chip is clicked.
   const scrollToRun = () => {
@@ -916,7 +938,7 @@ export function useAssistant() {
     { key: 'cmd:open-t1134', title: 'Open T1134 worksheet', sub: 'Foreign affiliate reporting', kind: 'open', icon: <Globe size={14} />, run: () => launchOpenPage('t1134') },
     { key: 'cmd:open-surplus', title: 'Open Surplus worksheet', sub: 'Surplus account balances', kind: 'open', icon: <Globe size={14} />, run: () => launchOpenPage('surplus') },
     { key: 'cmd:open-overview', title: 'Open Executive overview', sub: 'Business-unit summary', kind: 'open', icon: <Globe size={14} />, run: () => launchOpenPage('bu-overview') },
-    { key: 'cmd:open-builder', title: 'Open workflow builder', sub: 'The visual node canvas', kind: 'open', icon: <Workflow size={14} />, run: () => router.push('/builder') },
+    { key: 'cmd:open-builder', title: 'Open workflow builder', sub: 'The visual node canvas', kind: 'open', icon: <Workflow size={14} />, run: () => launchOpenPage('workflows') },
     // Bring a live element into the chat (synced to the worksheet)
     { key: 'cmd:edit-fx', title: 'Edit the FX rate inline', sub: 'Live field, synced to the worksheet', kind: 'inline', icon: <SquarePen size={14} />, run: () => launchPinField('fx') },
     { key: 'cmd:fapi-source', title: 'Show FAPI source document', sub: 'The trial balance feeding the run', kind: 'inline', icon: <GitBranch size={14} />, run: () => launchPinElement('fapi', 'source') },
@@ -1025,7 +1047,7 @@ export function useAssistant() {
     // launcher
     launchOpenPage, launchPinField, launchPinElement, launchStartWorkflow,
     // navigation helpers (for inline card "open in builder")
-    setBuilderFocus, router,
+    openInlineBuilder, setBuilderFocus, router,
   };
 }
 

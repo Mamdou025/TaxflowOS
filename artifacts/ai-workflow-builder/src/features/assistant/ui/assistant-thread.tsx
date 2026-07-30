@@ -133,11 +133,6 @@ function ScopeCluster({ compact = false, onOpenWork }: { compact?: boolean; onOp
   const openClientSwitcher = useSetAtom(showClientSwitcherAtom);
   const orbSize = compact ? 32 : 54; // compact chat-header orb — smaller than the homepage hero orb (116) so the header stays a thin strip
   const divider = <span style={{ width: 1, height: compact ? 16 : 22, background: LC.borderSubtle, flexShrink: 0 }} />;
-  // The tray reveal uses a clip-path wipe, but clip-path also clips DESCENDANTS —
-  // so while it's applied the WorkMenu dropdown (opens below-right of the tray) gets
-  // cut off. Once the wipe has played we expand the clip region on every side so it
-  // stops clipping anything. Compact never wipes → starts already revealed.
-  const [revealed, setRevealed] = useState(compact);
 
   return (
     // Cap the cluster width (focus header) so the long work-status line truncates to an
@@ -148,18 +143,13 @@ function ScopeCluster({ compact = false, onOpenWork }: { compact?: boolean; onOp
       <ScopeOrbButton size={orbSize} layoutId={compact ? undefined : 'scope-orb'} onClick={() => openClientSwitcher(true)} label="" />
 
       {/* The scope tray — the tags the orb controls (company · year · current workflow).
-          It "pulls out" of the orb on reveal: a clip-path wipe from the orb's edge. */}
+          It eases out from behind the orb on reveal with a fade + small slide. We
+          deliberately AVOID clip-path here: clip-path also clips a container's
+          DESCENDANTS, which was slicing off the WorkMenu dropdown that opens
+          below-right of the tray. A transform/opacity reveal can never clip it. */}
       <motion.div
-        // The RIGHT inset animates the horizontal "pull-out" wipe (100% → 0%); top/bottom
-        // stay far negative so vertical overflow is never clipped. THE CATCH: at 0% the
-        // right edge still clips to the tray's border, cutting off the WorkMenu dropdown
-        // that opens below-right. So once the wipe finishes (`revealed`) we push every
-        // inset far negative — the clip region no longer clips the dropdown on any side.
-        initial={compact ? false : { clipPath: 'inset(-1000px 100% -1000px 0px)', opacity: 0 }}
-        animate={revealed
-          ? { clipPath: 'inset(-1000px -1000px -1000px -1000px)', opacity: 1 }
-          : { clipPath: 'inset(-1000px 0% -1000px 0px)', opacity: 1 }}
-        onAnimationComplete={() => setRevealed(true)}
+        initial={compact ? false : { opacity: 0, x: -14 }}
+        animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.14, duration: 0.42, ease: [0.23, 1, 0.32, 1] }}
         style={{
           display: 'flex', alignItems: 'center', gap: compact ? 6 : 3, minWidth: 0,
@@ -290,7 +280,7 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
     say, showHero,
     pinnedFields, pinnedElements, setPinnedFields, setPinnedElements,
     pinnedRuns, setPinnedRuns,
-    composerSearch, composerTools, composerCommands, onAttach, launchOpenPage, launchStartWorkflow, setBuilderFocus, router,
+    composerSearch, composerTools, composerCommands, onAttach, launchOpenPage, launchStartWorkflow, openInlineBuilder,
   } = assistant;
   const docked = variant === 'docked';
   const openClientSwitcher = useSetAtom(showClientSwitcherAtom);
@@ -325,7 +315,7 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
         return (
           <div key={`run:${wid}`} className="flex items-start gap-2" data-work-id={workIdFor('workflow-run', wid)}>
             <div className="flex-1">
-              <RunWorkflowRender config={cfg} onOpenPage={(pk) => launchOpenPage(pk)} onOpenBuilder={(blockId) => { setBuilderFocus({ workflowId: cfg.id, blockId }); router.push('/builder'); }} />
+              <RunWorkflowRender config={cfg} onOpenPage={(pk) => launchOpenPage(pk)} onOpenBuilder={(blockId) => openInlineBuilder(cfg.id, blockId)} />
             </div>
             <button onClick={() => setPinnedRuns((p) => p.filter((x) => x !== wid))} className="rounded hover:bg-black/5" style={{ width: 22, height: 22, color: LC.muted, border: 'none', background: 'none', cursor: 'pointer', marginTop: 4 }} title="Remove"><X size={13} /></button>
           </div>
@@ -336,7 +326,7 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
         if (!cfg) return null;
         return (
           <div key={`${el.workflowId}:${el.element}`} className="flex items-start gap-2">
-            <div className="flex-1"><WorkflowElementCard config={cfg} element={el.element} onOpenPage={(pk) => launchOpenPage(pk)} onOpenBuilder={(blockId) => { setBuilderFocus({ workflowId: cfg.id, blockId }); router.push('/builder'); }} /></div>
+            <div className="flex-1"><WorkflowElementCard config={cfg} element={el.element} onOpenPage={(pk) => launchOpenPage(pk)} onOpenBuilder={(blockId) => openInlineBuilder(cfg.id, blockId)} /></div>
             <button onClick={() => setPinnedElements((p) => p.filter((x) => !(x.workflowId === el.workflowId && x.element === el.element)))} className="rounded hover:bg-black/5" style={{ width: 22, height: 22, color: LC.muted, border: 'none', background: 'none', cursor: 'pointer', marginTop: 4 }} title="Remove"><X size={13} /></button>
           </div>
         );

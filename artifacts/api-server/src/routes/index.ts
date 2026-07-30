@@ -9,10 +9,13 @@ import copilotKitRouter from "./copilotkit";
 import agentLabRouter from "./agent-lab";
 import genuiRouter from "./genui";
 import documentsRouter from "./documents";
+import fxRateRouter from "./fx-rate";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+// Live Bank of Canada FX rate for the FAPI run card's "fetch live rate" button.
+router.use(fxRateRouter);
 router.use("/workflows", workflowsRouter);
 router.use("/chat", chatRouter);
 // Both mounted at /assistant: memoryRouter owns /memory, assistantToolsRouter owns
