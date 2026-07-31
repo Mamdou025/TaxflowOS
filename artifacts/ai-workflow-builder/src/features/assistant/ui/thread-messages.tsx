@@ -13,10 +13,11 @@
 // PinnedThreadContext) rendered at the top of the message container.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { Fragment, createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { useCopilotChatInternal } from '@copilotkit/react-core';
 import { useChatContext, type MessagesProps } from '@copilotkit/react-ui';
 import { MessageSpecialistContext, buildMessageSpecialistMap, messageSignature } from './message-specialists';
+import { ToolReceipt, buildToolCallInfo, receiptLabelFor } from '../workspace/tool-receipt';
 
 /** Pinned work (runs / fields / elements) to render atop the message scroll. */
 export const PinnedThreadContext = createContext<ReactNode>(null);
@@ -86,34 +87,51 @@ export function ThreadMessages(props: MessagesProps) {
   // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the message id/role signature
   const specialistMap = useMemo(() => buildMessageSpecialistMap(messages), [sig]);
 
+  // callId → { name, args } so a tool RESULT message can recover what was called
+  // and render a verifiable "tools used" receipt beneath the answer it supports.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the message id/role signature
+  const toolCallInfo = useMemo(() => buildToolCallInfo(messages), [sig]);
+
   return (
     <MessageSpecialistContext.Provider value={specialistMap}>
     <div className="copilotKitMessages" ref={messagesContainerRef}>
       <div className="copilotKitMessagesContainer">
         {/* Pinned work — runs/cards — scroll WITH the conversation (one thread). */}
         {pinned}
-        {messages.map((message, index) => (
-          <RenderMessage
+        {messages.map((message, index) => {
+          // Attach a receipt to a tool RESULT message whose tool warrants one — so
+          // every data/research call the AI makes is shown, with its inputs + result,
+          // right where it happened. Existing rich cards (web search, runWorkflow)
+          // are left to RenderMessage; the receipt fills in the cardless tools.
+          const call = message?.role === 'tool' ? toolCallInfo.get(message.toolCallId) : undefined;
+          const receiptLabel = call ? receiptLabelFor(call.name) : null;
+          return (
             // eslint-disable-next-line react/no-array-index-key
-            key={index}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            message={message as any}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            messages={messages as any}
-            inProgress={inProgress}
-            index={index}
-            isCurrentMessage={index === messages.length - 1}
-            AssistantMessage={AssistantMessage}
-            UserMessage={UserMessage}
-            ImageRenderer={ImageRenderer}
-            onRegenerate={onRegenerate}
-            onCopy={onCopy}
-            onThumbsUp={onThumbsUp}
-            onThumbsDown={onThumbsDown}
-            messageFeedback={messageFeedback}
-            markdownTagRenderers={markdownTagRenderers}
-          />
-        ))}
+            <Fragment key={index}>
+              <RenderMessage
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                message={message as any}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                messages={messages as any}
+                inProgress={inProgress}
+                index={index}
+                isCurrentMessage={index === messages.length - 1}
+                AssistantMessage={AssistantMessage}
+                UserMessage={UserMessage}
+                ImageRenderer={ImageRenderer}
+                onRegenerate={onRegenerate}
+                onCopy={onCopy}
+                onThumbsUp={onThumbsUp}
+                onThumbsDown={onThumbsDown}
+                messageFeedback={messageFeedback}
+                markdownTagRenderers={markdownTagRenderers}
+              />
+              {receiptLabel && call && (
+                <ToolReceipt label={receiptLabel} args={call.args} result={message.content} />
+              )}
+            </Fragment>
+          );
+        })}
         {inProgress && (last?.role === 'user' || last?.role === 'tool') && (
           <span data-testid="copilot-loading-cursor">{icons?.activityIcon}</span>
         )}

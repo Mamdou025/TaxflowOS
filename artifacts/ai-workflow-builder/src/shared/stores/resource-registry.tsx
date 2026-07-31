@@ -144,7 +144,7 @@ export const RESOURCES: Resource[] = [
     token: 'WORKFLOW-BUILDER',
     mentions: ['workflow-builder', 'workflow builder', 'the builder'],
     note: 'Visual workflow canvas',
-    open: { as: 'route', href: '/builder' },
+    open: { as: 'route', href: '/workflows-hub' },
   },
   {
     id: 'viewer',

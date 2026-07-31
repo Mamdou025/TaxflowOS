@@ -8,7 +8,9 @@ export const fapiInputsDefinition: ToolDefinition = {
     fapiYear: 2025,
     inclusionRate: 0.5,
     reportingCurrency: "CAD",
-    rtf: 1.9,
+    // Corporate relevant tax factor (s.248(1)) — the default for this corporate-tax
+    // workspace. 1.9 (individual/trust) is selectable per-case on the worksheet.
+    rtf: 4,
     sourceKind: "fapi_inputs",
   },
   description:
@@ -25,7 +27,7 @@ export const fapiInputsDefinition: ToolDefinition = {
       label: "FAPI inputs",
       outputKey: "fapiInputs",
       outputType: "fapi_inputs",
-      samplePreview: "inclusion 0.5, RTF 1.9, FAT paid 100",
+      samplePreview: "inclusion 0.5, RTF 4, FAT paid 100",
     },
     {
       canRouteToFamilies: ["Review / Validation", "Output"],

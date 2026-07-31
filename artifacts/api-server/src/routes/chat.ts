@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, chatThreads, chatMessages, desc, eq, asc, and } from "@workspace/db";
+import { db, chatThreads, chatMessages, desc, eq, asc, and, sql } from "@workspace/db";
 import { customAlphabet } from "nanoid";
 
 const generateId = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 21);
@@ -196,13 +196,36 @@ router.post("/threads/:threadId/messages", async (req, res) => {
           createdAt: new Date(),
         }));
 
+      // CopilotKit can re-emit a message `id` within one projected transcript
+      // (e.g. a synthetic tool-result injected by orphan-repair), and `id` is a
+      // GLOBAL primary key while the delete below is only thread-scoped — either
+      // path can make the batch insert violate chat_messages_pkey and 500 the
+      // whole save. Dedup by id (last wins) and upsert so a reused id can never
+      // fail the transcript replace.
+      const deduped = Array.from(new Map(rows.map((r) => [r.id, r])).values());
+
       // Replace atomically so a save can never leave a half-written transcript.
       await db.transaction(async (tx) => {
         await tx.delete(chatMessages).where(eq(chatMessages.threadId, threadId));
-        if (rows.length > 0) await tx.insert(chatMessages).values(rows);
+        if (deduped.length > 0) {
+          await tx
+            .insert(chatMessages)
+            .values(deduped)
+            .onConflictDoUpdate({
+              target: chatMessages.id,
+              set: {
+                threadId,
+                userId: req.userId,
+                role: sql`excluded.role`,
+                seq: sql`excluded.seq`,
+                content: sql`excluded.content`,
+                createdAt: sql`excluded.created_at`,
+              },
+            });
+        }
       });
 
-      res.json({ ok: true, count: rows.length });
+      res.json({ ok: true, count: deduped.length });
       return;
     }
 

@@ -22,14 +22,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     return <div className="h-dvh overflow-y-auto bg-white dark:bg-neutral-950">{children}</div>;
   }
 
-  const isCanvasPage = pathname === '/builder' || pathname.startsWith('/workflows/');
+  const isCanvasPage = pathname.startsWith('/workflows/');
   // Scope (/) is now the full-height LibreChat shell — flat dark, its own sidebar
   // for nav, so no global grid and no top navbar there.
   const isScope = pathname === '/';
-  const isGridPage =
-    pathname === '/dashboard' ||
-    ['/fapi', '/t1134', '/surplus', '/bu-overview', '/worksheets'].includes(pathname) ||
-    pathname.startsWith('/client');
   // Light neumorphic pages paint a full-viewport light bg so the floating navbar
   // sits on the page colour (no white strip behind the transparent nav row).
   const isLightPage = pathname.startsWith('/run/');
@@ -43,17 +39,6 @@ export function AppShell({ children }: { children: ReactNode }) {
     <CopilotKit runtimeUrl="/api/copilotkit">
       {/* Fixed canvas layer — only active on builder/workflow pages */}
       <PersistentCanvas />
-
-      {/* Fixed page background — a flat darker gray (no grid) that reads as the
-          recessed space behind the neumorphic menus. Tuned to the neumorphic
-          shadow tone (rgba(158,158,178)), a shade darker than the #eaeaef
-          surface. Chat/Scope keep their own dark-grid canvas. */}
-      {isGridPage && (
-        <div
-          className="fixed inset-0"
-          style={{ zIndex: 0, backgroundColor: 'var(--sx-ground)' }}
-        />
-      )}
 
       {/* Full-viewport light background for neumorphic pages (behind the nav) */}
       {isLightPage && <div className="fixed inset-0" style={{ zIndex: 0, background: 'var(--sx-ground-run)' }} />}

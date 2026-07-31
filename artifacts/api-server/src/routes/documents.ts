@@ -25,7 +25,7 @@ import {
   listDocuments,
   updateDocument,
 } from "../lib/rag/documents-repo";
-import { ingestDocument } from "../lib/rag/ingest";
+import { enqueueIngest } from "../lib/rag/ingest-queue";
 import { searchChunks } from "../lib/rag/retrieve";
 import {
   createSignedDownloadUrl,
@@ -142,7 +142,7 @@ router.post("/search", async (req, res) => {
   res.json({ ok: true, passages });
 });
 
-// POST /api/documents/:id/complete — bytes landed → mark processing + ingest.
+// POST /api/documents/:id/complete — bytes landed → enqueue durable processing.
 router.post("/:documentId/complete", async (req, res) => {
   const { documentId } = req.params;
   const doc = await getDocument(req.userId, documentId);
@@ -151,14 +151,22 @@ router.post("/:documentId/complete", async (req, res) => {
     return;
   }
 
-  // Mark processing now; ingest AFTER responding (fire-and-forget) so the client
-  // isn't blocked — it polls GET /api/documents until the status settles.
-  await updateDocument(req.userId, documentId, { status: "processing", error: null });
-  res.json({ ok: true, status: "processing" });
-
-  void ingestDocument(req.userId, documentId).catch((err) => {
-    req.log.error({ err, documentId }, "[documents] background ingestion failed");
-  });
+  // Durably enqueue processing, then mark the document `processing`. The ingest
+  // worker (in-process, or a separate dyno) claims the job and survives restarts —
+  // the old fire-and-forget path lost the work on any deploy/crash. The client
+  // keeps polling GET /api/documents until the status settles.
+  try {
+    await enqueueIngest(req.userId, documentId);
+    await updateDocument(req.userId, documentId, { status: "processing", error: null });
+    res.json({ ok: true, status: "processing" });
+  } catch (err) {
+    req.log.error({ err, documentId }, "[documents] failed to enqueue ingestion");
+    await updateDocument(req.userId, documentId, {
+      status: "failed",
+      error: "Could not queue processing — please retry.",
+    });
+    res.status(503).json({ ok: false, error: "ENQUEUE_FAILED" });
+  }
 });
 
 // GET /api/documents/:id — the row + a short-lived signed download URL.

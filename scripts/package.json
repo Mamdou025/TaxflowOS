@@ -13,7 +13,7 @@
     "tsx": "catalog:"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.115.0",
+    "ai": "^7.0.37",
     "playwright": "^1.62.0"
   }
 }

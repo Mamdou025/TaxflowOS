@@ -7,6 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import OpenAI from "openai";
+import { withRetry } from "../retry";
 
 const MODEL = process.env.EMBEDDING_MODEL || "text-embedding-3-small";
 const BATCH_SIZE = 96;
@@ -43,7 +44,20 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
   const out: number[][] = [];
   for (let i = 0; i < texts.length; i += BATCH_SIZE) {
     const batch = texts.slice(i, i + BATCH_SIZE);
-    const res = await c.openai.embeddings.create({ model: c.model, input: batch });
+    // Retry a rate-limited / transient batch in-place before giving up to the
+    // job queue (backpressure, not collapse). Terminal errors rethrow at once.
+    const res = await withRetry(
+      () => c.openai.embeddings.create({ model: c.model, input: batch }),
+      {
+        attempts: 4,
+        baseMs: 2_000,
+        onRetry: (err, attempt) =>
+          console.warn(
+            `[rag] embeddings batch retry ${attempt}:`,
+            err instanceof Error ? err.message : err,
+          ),
+      },
+    );
     for (const d of res.data) out.push(d.embedding as number[]);
   }
   return out;

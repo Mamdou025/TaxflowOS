@@ -31,6 +31,8 @@ import { LC } from '@/lib/librechat-theme';
 import { selectedClientAtom, showClientSwitcherAtom, scopeYearAtom } from '@/shared/stores/nav-store';
 import { InScopeNeuMark } from '@/components/inscope-neu-mark';
 import { WorkMenu, WorkMenuStyles } from './work-menu';
+import { ToolsMenu, ToolsMenuStyles } from './tools-menu';
+import { DataFilesPanel, DataFilesPanelStyles } from './data-files-panel';
 import { workIdFor, workItemsChronoAtom, type WorkItem } from '@/lib/work-store';
 import { ThreadMessages, PinnedThreadContext } from './thread-messages';
 import { RunWorkflowRender, type Assistant } from './use-assistant';
@@ -83,6 +85,10 @@ MEMORY — durable facts you can save:
 YOUR EXPERTISE — one unified specialist:
 - You are Sina, a single tax specialist who carries deep domain expertise across FAPI (foreign accrual property income), the section 85 rollover (roulement, art. 85), employee expense reimbursement, and marketing campaign budgets. There are NO separate agents — you handle all of it yourself.
 - Some turns include a "DOMAIN FOCUS FOR THIS TURN" note in context. When present, apply that domain's expertise for the turn. When the topic shifts, apply the other domain's expertise; on general or navigation turns, act as the coordinating workspace assistant. It is one you, one conversation — the domain focus is a lens, not a separate agent.
+
+TAX FACTS — state these exactly (this is a Canadian CORPORATE-tax workspace):
+- Relevant tax factor (RTF, s.248(1)): for a CORPORATION it is 4.0; for an individual or trust it is 1.9. Default to the CORPORATE 4.0 unless the taxpayer is explicitly an individual/trust. NEVER tell a user the corporate RTF is 1.9 — that is the individual/trust factor and it understates the deduction.
+- ss.91(4) FAT deduction = min(FAT paid × RTF, FAPI). On the FAPI worksheet the RTF is a Corporation (4.0) / Individual·trust (1.9) selector; read the chosen value from context rather than assuming, and if it isn't set, treat it as the corporate 4.0.
 
 Registered pages:
 ${pages}
@@ -345,6 +351,8 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
       <AsideThreadStyles />
       <AssistantThreadStyles />
       <WorkMenuStyles />
+      <ToolsMenuStyles />
+      <DataFilesPanelStyles />
 
       {/* Header = the SCOPE CLUSTER (big orb + scope tags). Shown once a chat is under
           way; on the FOCUS homepage it's hidden and the orb lives centred in the hero
@@ -357,6 +365,8 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
         <div className="shrink-0 relative flex items-center gap-3" style={{ height: docked ? 44 : 68, padding: '0 12px', borderBottom: docked ? `1px solid ${LC.borderSubtle}` : 'none', zIndex: 20 }}>
           <ScopeCluster compact={docked} onOpenWork={onOpenWork} />
           <span style={{ flex: 1 }} />
+          <DataFilesPanel compact={docked} />
+          <ToolsMenu compact={docked} />
         </div>
       )}
       <div className="flex-1 min-h-0 flex flex-col">

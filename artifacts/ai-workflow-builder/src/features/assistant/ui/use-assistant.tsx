@@ -108,7 +108,6 @@ const PORTFOLIO_BLUEPRINTS = PORTFOLIO_WORKFLOWS.map((w) => ({
 function describeRoute(pathname: string): { route: string; label: string } {
   const map: Record<string, string> = {
     '/': 'Assistant — full-screen focus mode',
-    '/builder': 'Workflow Builder — the visual node canvas',
     '/dashboard': 'Dashboard — client & workflow overview',
     '/fapi': 'FAPI worksheet',
     '/t1134': 'T1134 worksheet',
@@ -225,7 +224,7 @@ export function useAssistant() {
       openWindow({ pageKey: 'workflows', title: page?.title ?? 'Workflows' });
     } else {
       setBuilderFocus({ workflowId, blockId });
-      router.push('/builder');
+      openWindow({ pageKey: 'workflow-builder', title: 'Workflow Builder' });
     }
   };
 
@@ -713,14 +712,23 @@ export function useAssistant() {
         });
         if (!res.ok) return { passages: [], note: 'Document search is unavailable.' };
         const data = (await res.json()) as {
-          passages?: { fileName: string; content: string; chunkIndex: number }[];
+          passages?: { fileName: string; content: string; chunkIndex: number; documentId?: string; similarity?: number }[];
         };
         const passages = data.passages ?? [];
         if (passages.length === 0) {
           return { passages: [], note: 'No relevant passages found in the stored documents.' };
         }
+        // Keep the provenance the retrieval already computed (documentId, chunkIndex,
+        // similarity) instead of narrowing to just the file name — the receipt UI
+        // shows it so the fiscalist can see WHICH passage, and how strong the match.
         return {
-          passages: passages.map((p) => ({ source: p.fileName, excerpt: p.content })),
+          passages: passages.map((p) => ({
+            source: p.fileName,
+            documentId: p.documentId,
+            chunkIndex: p.chunkIndex,
+            similarity: typeof p.similarity === 'number' ? Number(p.similarity.toFixed(3)) : undefined,
+            excerpt: p.content,
+          })),
           instruction:
             'Answer using these passages and CITE the source file name for each fact. If they do not answer the question, say so plainly.',
         };
@@ -778,9 +786,9 @@ export function useAssistant() {
       { name: 'limit', type: 'number', description: 'max results (default 6, max 10)', required: false },
     ],
     handler: async ({ query, limit }: { query: string; limit?: number }) => runWebSearch('web', 'searchWeb', query, limit),
-    render: ({ args }: { args: { query?: string } }) =>
+    render: ({ args, result }: { args: { query?: string }; result?: unknown }) =>
       args?.query
-        ? <WebSearchCard query={args.query} scope="web" />
+        ? <WebSearchCard query={args.query} scope="web" result={result} />
         : <div style={{ fontSize: 12.5, color: '#71717a', padding: '8px 0' }}>Preparing web search…</div>,
   });
 
@@ -793,9 +801,9 @@ export function useAssistant() {
       { name: 'limit', type: 'number', description: 'max results (default 5, max 10)', required: false },
     ],
     handler: async ({ query, limit }: { query: string; limit?: number }) => runWebSearch('ca-tax', 'searchCanadianTax', query, limit),
-    render: ({ args }: { args: { query?: string } }) =>
+    render: ({ args, result }: { args: { query?: string }; result?: unknown }) =>
       args?.query
-        ? <WebSearchCard query={args.query} scope="ca-tax" />
+        ? <WebSearchCard query={args.query} scope="ca-tax" result={result} />
         : <div style={{ fontSize: 12.5, color: '#71717a', padding: '8px 0' }}>Searching Canadian tax sources…</div>,
   });
 

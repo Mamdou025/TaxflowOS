@@ -27,7 +27,7 @@ const NAV_ITEMS: NavItem[] = [
   { icon: LayoutDashboard,label: 'Practitioner Dashboard', href: '/dashboard' },
   { icon: Building2,      label: 'Client Workspace',       href: '/client/northstar', badge: 8,  badgeColor: 'amber' },
   { icon: FileText,       label: 'Workflow Execution',     href: '/workflow/fapi',    badge: 2,  badgeColor: 'red' },
-  { icon: Wrench,         label: 'Workflow Builder',       href: '/builder' },
+  { icon: Wrench,         label: 'Workflow Builder',       href: '/workflows-hub' },
 ];
 
 const BOTTOM_NAV: NavItem[] = [
