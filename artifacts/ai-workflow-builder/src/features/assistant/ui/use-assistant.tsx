@@ -56,7 +56,7 @@ import { WebSearchCard } from '@/features/assistant/workspace/web-search-card';
 
 
 // ── Work-item classification ────────────────────────────────────────────────────
-const WORKSHEET_KEYS = new Set(['fapi', 't1134', 'surplus', 'bu-overview', 'expense']);
+const WORKSHEET_KEYS = new Set(['fapi', 't1134', 'surplus', 'expense']);
 function pageWorkType(pageKey: string): WorkItemType {
   return WORKSHEET_KEYS.has(pageKey) ? 'worksheet' : 'page';
 }
@@ -108,14 +108,11 @@ const PORTFOLIO_BLUEPRINTS = PORTFOLIO_WORKFLOWS.map((w) => ({
 function describeRoute(pathname: string): { route: string; label: string } {
   const map: Record<string, string> = {
     '/': 'Assistant — full-screen focus mode',
-    '/dashboard': 'Dashboard — client & workflow overview',
     '/fapi': 'FAPI worksheet',
     '/t1134': 'T1134 worksheet',
     '/surplus': 'Surplus worksheet',
-    '/bu-overview': 'Executive Overview',
   };
   if (map[pathname]) return { route: pathname, label: map[pathname] };
-  if (pathname.startsWith('/client')) return { route: pathname, label: 'Client workspace' };
   if (pathname.startsWith('/workflows')) return { route: pathname, label: 'Saved workflow (database)' };
   return { route: pathname, label: pathname };
 }
@@ -945,7 +942,6 @@ export function useAssistant() {
     { key: 'cmd:open-fapi', title: 'Open FAPI worksheet', sub: 'Foreign Accrual Property Income', kind: 'open', icon: <Globe size={14} />, run: () => launchOpenPage('fapi') },
     { key: 'cmd:open-t1134', title: 'Open T1134 worksheet', sub: 'Foreign affiliate reporting', kind: 'open', icon: <Globe size={14} />, run: () => launchOpenPage('t1134') },
     { key: 'cmd:open-surplus', title: 'Open Surplus worksheet', sub: 'Surplus account balances', kind: 'open', icon: <Globe size={14} />, run: () => launchOpenPage('surplus') },
-    { key: 'cmd:open-overview', title: 'Open Executive overview', sub: 'Business-unit summary', kind: 'open', icon: <Globe size={14} />, run: () => launchOpenPage('bu-overview') },
     { key: 'cmd:open-builder', title: 'Open workflow builder', sub: 'The visual node canvas', kind: 'open', icon: <Workflow size={14} />, run: () => launchOpenPage('workflows') },
     // Bring a live element into the chat (synced to the worksheet)
     { key: 'cmd:edit-fx', title: 'Edit the FX rate inline', sub: 'Live field, synced to the worksheet', kind: 'inline', icon: <SquarePen size={14} />, run: () => launchPinField('fx') },

@@ -4,12 +4,9 @@ import dynamic from '@/lib/next-dynamic-shim';
 import type { ComponentType, CSSProperties } from 'react';
 import { atomWithStorage } from 'jotai/utils';
 import {
-  LayoutDashboard,
-  BarChart3,
   Globe,
   Layers,
   FileText,
-  Building2,
   Receipt,
   Files,
   LayoutGrid,
@@ -291,44 +288,6 @@ export const RESOURCES: Resource[] = [
 
   // ── Other registered pages ─────────────────────────────────────────────────
   {
-    id: 'dashboard',
-    kind: 'worksheet',
-    keywords: ['dashboard', 'portfolio', 'work items', 'review queue', 'kpi', 'my work'],
-    open: { as: 'page', pageKey: 'dashboard' },
-    page: {
-      title: 'Practitioner Dashboard',
-      subtitle: 'Portfolio · work items · review queue',
-      icon: LayoutDashboard,
-      Component: lazyPage(() => import('@/features/worksheets/legacy/pages/Dashboard')),
-    },
-    anchors: [
-      { anchor: 'dashboard:ai-summary', label: 'AI Workspace Summary', keywords: ['ai summary', 'workspace summary'] },
-      { anchor: 'dashboard:review-queue', label: 'Review Queue', keywords: ['review queue'] },
-      { anchor: 'dashboard:work-items', label: 'My Work Items', keywords: ['work items', 'my work', 'sign-off', 'sign off'] },
-      { anchor: 'dashboard:portfolio', label: 'Client Portfolio', keywords: ['client portfolio', 'portfolio'] },
-      { anchor: 'dashboard:deadlines', label: 'Upcoming Deadlines', keywords: ['deadlines', 'upcoming deadlines'] },
-      { anchor: 'dashboard:activity', label: 'Recent Activity', keywords: ['recent activity', 'activity feed'] },
-      { anchor: 'dashboard:kpis', label: 'KPI metrics', keywords: ['kpi', 'key metrics', 'pending reviews', 'at risk', 'at-risk', 'completed', 'metrics'] },
-    ],
-  },
-  {
-    id: 'bu-overview',
-    kind: 'worksheet',
-    keywords: ['overview', 'executive', 'business unit', 'bu overview', 'executive overview'],
-    open: { as: 'page', pageKey: 'bu-overview' },
-    page: {
-      title: 'Executive Overview',
-      subtitle: 'Business-unit tax overview',
-      icon: BarChart3,
-      Component: lazyPage(() => import('@/features/worksheets/legacy/pages/ExecutiveOverview')),
-    },
-    anchors: [
-      { anchor: 'bu:revenue', label: 'Revenue Attainment by LOS', keywords: ['revenue attainment', 'attainment', 'revenue by los'] },
-      { anchor: 'bu:lines-of-service', label: 'Lines of Service', keywords: ['lines of service', 'control tower'] },
-      { anchor: 'bu:kpis', label: 'Executive KPIs', keywords: ['executive kpi', 'executive metrics', 'revenue ytd'] },
-    ],
-  },
-  {
     id: 'surplus',
     kind: 'worksheet',
     keywords: ['surplus', 'exempt surplus', 'taxable surplus'],
@@ -367,18 +326,6 @@ export const RESOURCES: Resource[] = [
       { anchor: 't1134:part3-fapi', label: 'Part III · Section 3 — FAPI / FAPL / FACL', keywords: ['facl', 'fapl', 'fapi section', 'part iii section 3'] },
       { anchor: 't1134:part4', label: 'Part IV — Disclosure', keywords: ['disclosure', 'part iv', 'part 4'] },
     ],
-  },
-  {
-    id: 'client',
-    kind: 'worksheet',
-    keywords: ['client workspace', 'client file', 'northstar', 'client overview'],
-    open: { as: 'page', pageKey: 'client' },
-    page: {
-      title: 'Client Workspace',
-      subtitle: 'Client file overview',
-      icon: Building2,
-      Component: lazyPage(() => import('@/features/worksheets/legacy/pages/ClientWorkspace')),
-    },
   },
 ];
 
