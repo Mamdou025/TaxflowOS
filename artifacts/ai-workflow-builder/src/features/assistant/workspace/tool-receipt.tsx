@@ -1,49 +1,28 @@
 'use client';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ToolReceipt — the per-answer "receipt" that makes Sina verifiable. When the AI
-// uses a data/research tool, the AG-UI thread already records the call (name +
-// args) and its result; this renders that record inline under the answer so a
-// fiscalist can SEE which tool ran, with what inputs, and what came back — instead
-// of trusting the prose. Collapsed by default (a subtle chip); expand for the full
-// inputs + result, with document sources / match scores where the tool returns them.
+// Tool provenance — the per-answer "receipt" that makes Sina verifiable. When the
+// AI uses a tool, the AG-UI thread records the call (name + args) and its result;
+// `ToolsUsed` renders that record as a compact "Tools used" bar under every reply,
+// each chip expanding to the call's inputs + result — so a fiscalist can SEE which
+// tools ran, with what inputs and what came back, instead of trusting the prose.
 //
-// Only tools in TOOL_RECEIPT_LABELS get a receipt. Tools that already render their
-// own rich card (searchWeb / searchCanadianTax → WebSearchCard, runWorkflow,
-// generateUI) are intentionally excluded — the card IS their receipt, and a second
-// one would just duplicate. Add a tool here when it fetches or derives data the
-// user must be able to check. See ui/thread-messages.tsx for the wiring.
+// `buildToolCallInfo` threads results back onto their calls; `ToolCallDetail` is the
+// shared expand body. See ui/thread-messages.tsx for the per-turn wiring.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, type ReactNode } from 'react';
 import { Wrench, ChevronRight, ChevronDown, FileText, AlertTriangle } from 'lucide-react';
 import { LC } from '@/lib/librechat-theme';
+import { toolLabel } from '@/features/assistant/ui/tool-labels';
 
-/** Data/research tools worth an audit receipt → their human label. */
-export const TOOL_RECEIPT_LABELS: Record<string, string> = {
-  fetchWebPage: 'Read web page',
-  getFxRate: 'Exchange rate · Bank of Canada',
-  estimateForeignIncomeTax: 'Foreign-income tax estimate',
-  searchCompanyDocuments: 'Document search',
-  calculate: 'Calculator',
-  explainWorksheetLine: 'Explain worksheet line',
-  whyWorksheetValue: 'Worksheet value trace',
-  searchWorksheet: 'Worksheet search',
-  getCurrentDateTime: 'Current date & time',
-};
-
-/** The label for a tool name, or null if that tool doesn't get a receipt. */
-export function receiptLabelFor(name: string | undefined | null): string | null {
-  if (!name) return null;
-  return TOOL_RECEIPT_LABELS[name] ?? null;
-}
-
-type ToolCallInfo = { name: string; args: unknown };
+export type ToolCallInfo = { name: string; args: unknown; result?: unknown };
 
 /**
- * Build callId → { name, args } from the AG-UI assistant messages. A tool RESULT
- * message carries only a toolCallId, so we recover what was called from the
- * matching assistant tool call (mirrors the persistence codec's nameByCallId).
+ * Build callId → { name, args, result } from the AG-UI messages. Assistant messages
+ * carry the tool CALLS (name + args); the later tool-role message carries only a
+ * toolCallId + its result content — so we thread the result back onto its call
+ * (mirrors the persistence codec's nameByCallId). Both feed the "Tools used" bar.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function buildToolCallInfo(messages: any[]): Map<string, ToolCallInfo> {
@@ -54,6 +33,10 @@ export function buildToolCallInfo(messages: any[]): Map<string, ToolCallInfo> {
         const name = tc?.function?.name;
         if (tc?.id && name) map.set(tc.id, { name, args: safeParse(tc.function?.arguments) });
       }
+    } else if (m?.role === 'tool' && m.toolCallId) {
+      // The call always precedes its result in a valid thread, so the entry exists.
+      const existing = map.get(m.toolCallId);
+      if (existing) existing.result = m.content;
     }
   }
   return map;
@@ -87,21 +70,6 @@ function asObject(result: unknown): Record<string, unknown> | null {
 
 function truncate(s: string, n: number): string {
   return s.length > n ? `${s.slice(0, n).trimEnd()}…` : s;
-}
-
-/** A one-line summary of the call args for the collapsed chip. */
-function argSummary(args: unknown): string {
-  if (!args || typeof args !== 'object') return '';
-  const a = args as Record<string, unknown>;
-  if (typeof a.query === 'string') return `"${truncate(a.query, 80)}"`;
-  if (typeof a.url === 'string') return truncate(a.url, 80);
-  if (typeof a.from === 'string' && typeof a.to === 'string') return `${a.from} → ${a.to}${a.year ? ` · ${a.year}` : ''}`;
-  if (typeof a.expression === 'string') return truncate(a.expression, 80);
-  return Object.entries(a)
-    .filter(([, v]) => v != null)
-    .slice(0, 2)
-    .map(([k, v]) => `${k}: ${truncate(String(v), 40)}`)
-    .join(' · ');
 }
 
 function formatValue(v: unknown): string {
@@ -170,77 +138,97 @@ function PassagesView({ passages, note }: { passages: any[]; note?: string }) {
   );
 }
 
-export function ToolReceipt({ label, args, result }: { label: string; args: unknown; result: unknown }) {
-  const [open, setOpen] = useState(false);
+/** The expandable Inputs + Result body — shared by the receipt chip and the
+ *  per-answer "Tools used" bar. No outer container; the caller wraps it. */
+export function ToolCallDetail({ args, result }: { args: unknown; result: unknown }) {
   const obj = asObject(result);
-  const summary = argSummary(args);
   const errorText = obj && typeof obj.error === 'string' ? obj.error : null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const passages = obj && Array.isArray((obj as any).passages) ? ((obj as any).passages as any[]) : null;
   const hasArgs = args != null && typeof args === 'object' && Object.keys(args as object).length > 0;
+  return (
+    <>
+      {hasArgs && (
+        <ReceiptSection title="Inputs">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {Object.entries(args as Record<string, unknown>).map(([k, v]) => (
+              <KeyVal key={k} label={k} value={formatValue(v)} />
+            ))}
+          </div>
+        </ReceiptSection>
+      )}
+
+      <ReceiptSection title="Result">
+        {errorText ? (
+          <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start', color: '#c2410c', fontSize: 12 }}>
+            <AlertTriangle size={13} style={{ flexShrink: 0, marginTop: 1 }} />
+            <span>{errorText}</span>
+          </div>
+        ) : passages ? (
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          <PassagesView passages={passages} note={(obj as any)?.note as string | undefined} />
+        ) : obj ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {Object.entries(obj)
+              .filter(([k]) => k !== 'instruction')
+              .map(([k, v]) => (
+                <KeyVal key={k} label={k} value={formatValue(v)} />
+              ))}
+          </div>
+        ) : (
+          <span style={{ fontSize: 12, color: LC.muted }}>No result recorded.</span>
+        )}
+      </ReceiptSection>
+    </>
+  );
+}
+
+// ── ToolsUsed — the per-answer receipt the user sees under every reply ──────────
+// A compact "Tools used" bar naming every tool that ran to produce this answer.
+// Each chip expands to that call's inputs + result — so the fiscalist can verify
+// the reply against what actually executed, not the prose. Empty turns render null.
+export type ToolUsage = { id: string; name: string; args: unknown; result: unknown };
+
+export function ToolsUsed({ calls }: { calls: ToolUsage[] }) {
+  const [openId, setOpenId] = useState<string | null>(null);
+  if (!calls.length) return null;
+  const openCall = openId ? calls.find((c) => c.id === openId) : null;
 
   return (
-    <div style={{ maxWidth: 660, margin: '2px 0 8px' }}>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 7, width: '100%',
-          padding: '6px 10px', background: LC.surface,
-          border: `1px solid ${LC.borderSubtle}`,
-          borderRadius: open ? '9px 9px 0 0' : 9,
-          cursor: 'pointer', textAlign: 'left', color: LC.muted, fontSize: 12,
-        }}
-      >
-        <Wrench size={12} style={{ color: errorText ? '#c2410c' : LC.accent, flexShrink: 0 }} />
-        <span style={{ fontWeight: 650, color: LC.text, flexShrink: 0 }}>{label}</span>
-        {summary && (
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{summary}</span>
-        )}
-        <span style={{ marginLeft: 'auto', display: 'inline-flex', flexShrink: 0 }}>
-          {open ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+    <div data-testid="tools-used" style={{ maxWidth: 760, margin: '2px 0 12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: LC.faint, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          <Wrench size={12} /> Tools used
         </span>
-      </button>
-
-      {open && (
-        <div
-          style={{
-            border: `1px solid ${LC.borderSubtle}`, borderTop: 'none',
-            borderRadius: '0 0 9px 9px', padding: '9px 10px', background: LC.surface,
-          }}
-        >
-          {hasArgs && (
-            <ReceiptSection title="Inputs">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {Object.entries(args as Record<string, unknown>).map(([k, v]) => (
-                  <KeyVal key={k} label={k} value={formatValue(v)} />
-                ))}
-              </div>
-            </ReceiptSection>
-          )}
-
-          <ReceiptSection title="Result">
-            {errorText ? (
-              <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start', color: '#c2410c', fontSize: 12 }}>
-                <AlertTriangle size={13} style={{ flexShrink: 0, marginTop: 1 }} />
-                <span>{errorText}</span>
-              </div>
-            ) : passages ? (
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              <PassagesView passages={passages} note={(obj as any)?.note as string | undefined} />
-            ) : obj ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {Object.entries(obj)
-                  .filter(([k]) => k !== 'instruction')
-                  .map(([k, v]) => (
-                    <KeyVal key={k} label={k} value={formatValue(v)} />
-                  ))}
-              </div>
-            ) : (
-              <span style={{ fontSize: 12, color: LC.muted }}>No result recorded.</span>
-            )}
-          </ReceiptSection>
+        {calls.map((c) => {
+          const active = openId === c.id;
+          const obj = asObject(c.result);
+          const isError = !!(obj && typeof obj.error === 'string');
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => setOpenId(active ? null : c.id)}
+              aria-expanded={active}
+              title="Show inputs & result"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 9px',
+                fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
+                color: isError ? '#c2410c' : active ? LC.text : LC.body,
+                background: active ? LC.surfaceHover : LC.surface,
+                border: `1px solid ${active ? LC.border : LC.borderSubtle}`, borderRadius: 999,
+              }}
+            >
+              <Wrench size={11} style={{ color: isError ? '#c2410c' : LC.accent }} />
+              {toolLabel(c.name)}
+              {active ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+            </button>
+          );
+        })}
+      </div>
+      {openCall && (
+        <div style={{ marginTop: 7, border: `1px solid ${LC.borderSubtle}`, borderRadius: 9, padding: '9px 10px', background: LC.surface }}>
+          <ToolCallDetail args={openCall.args} result={openCall.result} />
         </div>
       )}
     </div>

@@ -17,13 +17,38 @@ import { Fragment, createContext, useContext, useEffect, useMemo, useRef, type R
 import { useCopilotChatInternal } from '@copilotkit/react-core';
 import { useChatContext, type MessagesProps } from '@copilotkit/react-ui';
 import { MessageSpecialistContext, buildMessageSpecialistMap, messageSignature } from './message-specialists';
-import { ToolReceipt, buildToolCallInfo, receiptLabelFor } from '../workspace/tool-receipt';
+import { ToolsUsed, buildToolCallInfo, type ToolCallInfo, type ToolUsage } from '../workspace/tool-receipt';
 
 /** Pinned work (runs / fields / elements) to render atop the message scroll. */
 export const PinnedThreadContext = createContext<ReactNode>(null);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyMessage = { role?: string;[k: string]: any };
+
+/**
+ * The tools that ran to produce the answer at `index` — i.e. every tool call made
+ * since the previous user message, up to and including this one, threaded to its
+ * result. Feeds the "Tools used" bar under the reply.
+ */
+function toolsUsedForTurn(messages: AnyMessage[], index: number, info: Map<string, ToolCallInfo>): ToolUsage[] {
+  let start = index;
+  while (start >= 0 && messages[start]?.role !== 'user') start--;
+  const seen = new Set<string>();
+  const out: ToolUsage[] = [];
+  for (let j = start + 1; j <= index; j++) {
+    const m = messages[j];
+    if (m?.role === 'assistant' && Array.isArray(m.toolCalls)) {
+      for (const tc of m.toolCalls) {
+        const id = tc?.id as string | undefined;
+        if (!id || seen.has(id)) continue;
+        seen.add(id);
+        const c = info.get(id);
+        if (c) out.push({ id, name: c.name, args: c.args, result: c.result });
+      }
+    }
+  }
+  return out;
+}
 
 // Faithful copy of CopilotKit's internal useScrollToBottom: auto-scroll on new user
 // turns / streamed content, but stop following once the user scrolls up.
@@ -99,12 +124,11 @@ export function ThreadMessages(props: MessagesProps) {
         {/* Pinned work — runs/cards — scroll WITH the conversation (one thread). */}
         {pinned}
         {messages.map((message, index) => {
-          // Attach a receipt to a tool RESULT message whose tool warrants one — so
-          // every data/research call the AI makes is shown, with its inputs + result,
-          // right where it happened. Existing rich cards (web search, runWorkflow)
-          // are left to RenderMessage; the receipt fills in the cardless tools.
-          const call = message?.role === 'tool' ? toolCallInfo.get(message.toolCallId) : undefined;
-          const receiptLabel = call ? receiptLabelFor(call.name) : null;
+          // Under each assistant reply, a "Tools used" bar naming every tool that ran
+          // to produce it (since the previous user turn) — each chip expands to that
+          // call's inputs + result, so the answer can be checked against what executed.
+          const hasText = message?.role === 'assistant' && typeof message.content === 'string' && message.content.trim().length > 0;
+          const used = hasText ? toolsUsedForTurn(messages, index, toolCallInfo) : [];
           return (
             // eslint-disable-next-line react/no-array-index-key
             <Fragment key={index}>
@@ -126,9 +150,7 @@ export function ThreadMessages(props: MessagesProps) {
                 messageFeedback={messageFeedback}
                 markdownTagRenderers={markdownTagRenderers}
               />
-              {receiptLabel && call && (
-                <ToolReceipt label={receiptLabel} args={call.args} result={message.content} />
-              )}
+              {used.length > 0 && <ToolsUsed calls={used} />}
             </Fragment>
           );
         })}

@@ -37,9 +37,12 @@ export async function searchChunks(
     // then cast to `vector` so the `<=>` (cosine distance) operator applies.
     const qvLiteral = `[${qv.join(",")}]`;
     const distance = sql<number>`${documentChunks.embedding} <=> ${qvLiteral}::vector`;
-    const where = clientId
+    const scope = clientId
       ? and(eq(documentChunks.userId, userId), eq(documentChunks.clientId, clientId))
       : eq(documentChunks.userId, userId);
+    // Only retrieve from documents currently in the Library (active context). Dormant
+    // repository files stay stored + chunked but excluded until switched back on.
+    const where = and(scope, eq(documents.inLibrary, true));
 
     return await db
       .select({

@@ -31,7 +31,8 @@ import { LC } from '@/lib/librechat-theme';
 import { selectedClientAtom, showClientSwitcherAtom, scopeYearAtom } from '@/shared/stores/nav-store';
 import { InScopeNeuMark } from '@/components/inscope-neu-mark';
 import { WorkMenu, WorkMenuStyles } from './work-menu';
-import { ToolsMenu, ToolsMenuStyles } from './tools-menu';
+import { ToolsMenu, ToolsMenuStyles, type ArmedTool } from './tools-menu';
+import { ToolResultCard } from './tool-result-card';
 import { DataFilesPanel, DataFilesPanelStyles } from './data-files-panel';
 import { workIdFor, workItemsChronoAtom, type WorkItem } from '@/lib/work-store';
 import { ThreadMessages, PinnedThreadContext } from './thread-messages';
@@ -286,9 +287,14 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
     say, showHero,
     pinnedFields, pinnedElements, setPinnedFields, setPinnedElements,
     pinnedRuns, setPinnedRuns,
+    pinnedToolResults, setPinnedToolResults, launchPinToolResult,
     composerSearch, composerTools, composerCommands, onAttach, launchOpenPage, launchStartWorkflow, openInlineBuilder,
   } = assistant;
   const docked = variant === 'docked';
+  // A search tool "armed" from the Tools menu — the composer shows a chip and routes
+  // the next message to it. Lives here so both the ToolsMenu (arms it) and the
+  // composer (reads it) share one source of truth, via AsideComposerContext.
+  const [armedTool, setArmedTool] = useState<ArmedTool | null>(null);
   const openClientSwitcher = useSetAtom(showClientSwitcherAtom);
   // Live-agent config (Build tab writes it): fiscal guardrails + operator additions
   // are layered over the base system prompt for the live chat.
@@ -312,7 +318,7 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
   // Pinned work (deterministically-launched runs + summoned elements/fields).
   // Rendered INSIDE the message scroll by ThreadMessages, so it's part of ONE
   // scrollable conversation (composer fixed at the bottom).
-  const hasPinned = pinnedRuns.length > 0 || pinnedElements.length > 0 || pinnedFields.length > 0;
+  const hasPinned = pinnedRuns.length > 0 || pinnedElements.length > 0 || pinnedFields.length > 0 || pinnedToolResults.length > 0;
   const pinnedNode = hasPinned ? (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
       {pinnedRuns.map((wid) => {
@@ -343,6 +349,13 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
           <button onClick={() => setPinnedFields((p) => p.filter((x) => x !== fid))} className="rounded hover:bg-black/5" style={{ width: 22, height: 22, color: LC.muted, border: 'none', background: 'none', cursor: 'pointer', marginTop: 4 }} title="Remove"><X size={13} /></button>
         </div>
       ))}
+      {/* Tools-menu Run ▸ results — the value retrieved directly (no LLM), pinned here. */}
+      {pinnedToolResults.map((r) => (
+        <div key={r.id} className="flex items-start gap-2" data-testid="tool-result">
+          <div className="flex-1"><ToolResultCard toolName={r.toolName} args={r.args} result={r.result} /></div>
+          <button onClick={() => setPinnedToolResults((p) => p.filter((x) => x.id !== r.id))} className="rounded hover:bg-black/5" style={{ width: 22, height: 22, color: LC.muted, border: 'none', background: 'none', cursor: 'pointer', marginTop: 4 }} title="Remove"><X size={13} /></button>
+        </div>
+      ))}
     </div>
   ) : null;
 
@@ -366,11 +379,11 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
           <ScopeCluster compact={docked} onOpenWork={onOpenWork} />
           <span style={{ flex: 1 }} />
           <DataFilesPanel compact={docked} />
-          <ToolsMenu compact={docked} />
+          <ToolsMenu compact={docked} onRunResult={launchPinToolResult} onAsk={say} onArm={setArmedTool} />
         </div>
       )}
       <div className="flex-1 min-h-0 flex flex-col">
-        <AsideComposerContext.Provider value={{ search: composerSearch, tools: composerTools, commands: composerCommands, onAttach }}>
+        <AsideComposerContext.Provider value={{ search: composerSearch, tools: composerTools, commands: composerCommands, onAttach, armedTool, setArmedTool }}>
           <AnimatePresence mode="wait" initial={false}>
           {showHero ? (
               <motion.div

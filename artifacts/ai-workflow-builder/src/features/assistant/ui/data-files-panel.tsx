@@ -18,7 +18,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { useCopilotChatInternal } from '@copilotkit/react-core';
-import { FileText, Globe, Database, X, ExternalLink, Layers, Paperclip } from 'lucide-react';
+import { FileText, Globe, Database, X, ExternalLink, Layers, Paperclip, Check, Plus } from 'lucide-react';
 import { LC } from '@/lib/librechat-theme';
 import { attachedDocsAtom } from '@/shared/stores/workspace-store';
 import { buildToolCallInfo } from '../workspace/tool-receipt';
@@ -31,6 +31,7 @@ type DocRow = {
   status: 'uploading' | 'processing' | 'ready' | 'failed';
   extractedChars: number | null;
   error: string | null;
+  inLibrary: boolean;
   createdAt: string;
 };
 
@@ -165,6 +166,65 @@ export function DataFilesPanel({ compact = false }: { compact?: boolean }) {
 
   const usedIds = useMemo(() => new Set(trace.docs.map((d) => d.documentId).filter(Boolean) as string[]), [trace]);
   const usedNames = useMemo(() => new Set(trace.docs.map((d) => d.fileName)), [trace]);
+
+  // The Library = the documents in Sina's active context. The full repository (upload
+  // / delete) lives on the Documents page; here you CURATE — add docs into context or
+  // drop them out (they stay stored either way, just searchable or not).
+  const libraryDocs = useMemo(() => libDocs.filter((d) => d.inLibrary !== false), [libDocs]);
+  const availableDocs = useMemo(() => libDocs.filter((d) => d.inLibrary === false), [libDocs]);
+  const setInLibrary = async (id: string, next: boolean) => {
+    setLibDocs((prev) => prev.map((d) => (d.id === id ? { ...d, inLibrary: next } : d)));
+    try {
+      await fetch(`/api/documents/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inLibrary: next }),
+      });
+    } catch {
+      // optimistic — the next open re-syncs from the server
+    }
+  };
+
+  // One document row for the Library tab — the in/out toggle reflects and flips its
+  // context membership. Used by both the "In Library" and "Not in Library" sections.
+  const renderLibRow = (d: DocRow) => {
+    const inLib = d.inLibrary !== false;
+    const s = STATUS_STYLE[d.status];
+    const used = usedIds.has(d.id) || usedNames.has(d.fileName);
+    return (
+      <SourceRow
+        key={d.id}
+        icon={<FileText size={14} style={{ color: LC.faint, flexShrink: 0 }} />}
+        title={d.fileName}
+        subtitle={`${formatSize(d.sizeBytes)}${d.extractedChars ? ` · ${(d.extractedChars / 1000).toFixed(0)}k chars` : ''}`}
+        onOpen={() => void openDocument(d.id)}
+        badge={
+          <span style={{ display: 'inline-flex', gap: 5, alignItems: 'center', flexShrink: 0 }}>
+            {used && (
+              <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.03em', textTransform: 'uppercase', color: LC.accent, background: 'rgba(167,139,250,0.12)', borderRadius: 5, padding: '1px 5px' }}>Used here</span>
+            )}
+            {d.status !== 'ready' && (
+              <span style={{ fontSize: 10.5, fontWeight: 600, padding: '2px 8px', borderRadius: 999, color: s.color, background: s.bg }} title={d.error ?? undefined}>{s.label}</span>
+            )}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); void setInLibrary(d.id, !inLib); }}
+              title={inLib ? "In Sina's Library — click to remove from its searchable context" : "Add to Sina's Library so it can search this document"}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 650,
+                padding: '2px 8px', borderRadius: 999, cursor: 'pointer',
+                color: inLib ? '#6d28d9' : LC.muted,
+                background: inLib ? 'rgba(139,92,246,0.14)' : 'transparent',
+                border: `1px solid ${inLib ? 'transparent' : LC.borderSubtle}`,
+              }}
+            >
+              {inLib ? <><Check size={11} /> In Library</> : <><Plus size={11} /> Add</>}
+            </button>
+          </span>
+        }
+      />
+    );
+  };
   const height = compact ? 32 : 38;
 
   return (
@@ -216,7 +276,7 @@ export function DataFilesPanel({ compact = false }: { compact?: boolean }) {
               {/* Tabs */}
               <div style={{ display: 'flex', gap: 4, marginTop: 10 }}>
                 <TabButton active={tab === 'chat'} onClick={() => setTab('chat')} label="This chat" count={traceCount} />
-                <TabButton active={tab === 'library'} onClick={() => setTab('library')} label="Library" count={libLoaded ? libDocs.length : undefined} />
+                <TabButton active={tab === 'library'} onClick={() => setTab('library')} label="Library" count={libLoaded ? libraryDocs.length : undefined} />
               </div>
             </div>
 
@@ -279,31 +339,27 @@ export function DataFilesPanel({ compact = false }: { compact?: boolean }) {
               ) : !libLoaded ? (
                 <EmptyNote text="Loading your documents…" />
               ) : libDocs.length === 0 ? (
-                <EmptyNote text="No documents uploaded yet. Upload company files on the Documents page and Sina can search them." />
+                <EmptyNote text="No documents uploaded yet. Upload company files on the Documents page, then add them to the Library so Sina can search them." />
               ) : (
-                <Section title={`Your documents · ${libDocs.length}`}>
-                  {libDocs.map((d) => {
-                    const s = STATUS_STYLE[d.status];
-                    const used = usedIds.has(d.id) || usedNames.has(d.fileName);
-                    return (
-                      <SourceRow
-                        key={d.id}
-                        icon={<FileText size={14} style={{ color: LC.faint, flexShrink: 0 }} />}
-                        title={d.fileName}
-                        subtitle={`${formatSize(d.sizeBytes)}${d.extractedChars ? ` · ${(d.extractedChars / 1000).toFixed(0)}k chars` : ''}`}
-                        onOpen={() => void openDocument(d.id)}
-                        badge={
-                          <span style={{ display: 'inline-flex', gap: 5, alignItems: 'center', flexShrink: 0 }}>
-                            {used && (
-                              <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.03em', textTransform: 'uppercase', color: LC.accent, background: 'rgba(167,139,250,0.12)', borderRadius: 5, padding: '1px 5px' }}>Used here</span>
-                            )}
-                            <span style={{ fontSize: 10.5, fontWeight: 600, padding: '2px 8px', borderRadius: 999, color: s.color, background: s.bg }} title={d.error ?? undefined}>{s.label}</span>
-                          </span>
-                        }
-                      />
-                    );
-                  })}
-                </Section>
+                <>
+                  <div style={{ fontSize: 11, color: LC.muted, lineHeight: 1.45, padding: '2px 6px 8px' }}>
+                    Choose which documents Sina can search. Everything you upload lives on the Documents page; the Library is the subset it uses as context.
+                  </div>
+                  <Section title={`In Sina's Library · ${libraryDocs.length}`}>
+                    {libraryDocs.length === 0 ? (
+                      <div style={{ fontSize: 12, color: LC.muted, padding: '4px 8px 8px' }}>
+                        Nothing in context yet — add a document from below.
+                      </div>
+                    ) : (
+                      libraryDocs.map((d) => renderLibRow(d))
+                    )}
+                  </Section>
+                  {availableDocs.length > 0 && (
+                    <Section title={`Not in Library · ${availableDocs.length}`}>
+                      {availableDocs.map((d) => renderLibRow(d))}
+                    </Section>
+                  )}
+                </>
               )}
             </div>
           </div>

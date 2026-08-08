@@ -53,6 +53,7 @@ import { CoworkerAvatar } from './coworker-avatar';
 import { useChatPersistence } from '@/features/assistant/runtime/chat/use-chat-persistence';
 import { webSearchResultsAtom, webSearchKey, type WebSearchScope, type WebSearchResult } from '@/shared/stores/web-search-store';
 import { WebSearchCard } from '@/features/assistant/workspace/web-search-card';
+import type { ToolResult } from './tool-result-card';
 
 
 // ── Work-item classification ────────────────────────────────────────────────────
@@ -875,6 +876,7 @@ export function useAssistant() {
   const [pinnedFields, setPinnedFields] = useState<string[]>([]); // fields brought in via search
   const [pinnedElements, setPinnedElements] = useState<PinnedElement[]>([]); // workflow source/output summoned in
   const [pinnedRuns, setPinnedRuns] = useState<string[]>([]); // workflow ids launched deterministically (no LLM routing)
+  const [pinnedToolResults, setPinnedToolResults] = useState<ToolResult[]>([]); // tools run by hand from the Tools menu
 
   const say = (content: string) => { appendMessage(new TextMessage({ content, role: Role.User })); setSent(true); };
   const threadEmpty = (visibleMessages?.length ?? 0) === 0;
@@ -883,7 +885,7 @@ export function useAssistant() {
   // deterministically-pinned run cards + summoned fields/elements. These are per-chat
   // UI state, so switching chats (new or restored) must wipe them or the previous
   // chat's cards bleed into the next one (they were never part of "the same chat").
-  const clearPinned = () => { setPinnedRuns([]); setPinnedElements([]); setPinnedFields([]); };
+  const clearPinned = () => { setPinnedRuns([]); setPinnedElements([]); setPinnedFields([]); setPinnedToolResults([]); };
   // New chat: clear the store + pinned cards, and start a fresh (unsaved-until-first-
   // message) thread — genuinely blank, distinct from the one you were in.
   const newChat = () => { persistence.startNewThread(); clearPinned(); setSent(false); };
@@ -901,6 +903,13 @@ export function useAssistant() {
     if (def) openWindow({ pageKey, title: def.title });
   };
   const launchPinField = (fieldId: string) => setPinnedFields((prev) => (prev.includes(fieldId) ? prev : [...prev, fieldId]));
+  // Pin the result of a tool run-by-hand (Tools menu → Run ▸) into the thread. Flips
+  // the hero → conversation so the value card is visible. Deterministic, no LLM.
+  const launchPinToolResult = (r: { toolName: string; args: Record<string, unknown>; result: unknown }) => {
+    setSent(true);
+    const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${r.toolName}-${Date.now()}`;
+    setPinnedToolResults((prev) => [...prev, { id, at: Date.now(), ...r }]);
+  };
   const launchPinElement = (workflowId: string, element: 'source' | 'output') => setPinnedElements((prev) => (prev.some((e) => e.workflowId === workflowId && e.element === element) ? prev : [...prev, { workflowId, element }]));
   // Start a workflow DETERMINISTICALLY — pin its run card into the thread directly,
   // bypassing the LLM. (Previously this dropped a `say("Run the X workflow")` turn
@@ -1044,12 +1053,13 @@ export function useAssistant() {
     // pinned inline cards
     pinnedFields, pinnedElements, setPinnedFields, setPinnedElements,
     pinnedRuns, setPinnedRuns,
+    pinnedToolResults, setPinnedToolResults,
     // composer
     composerSearch, composerTools, composerCommands, onAttach,
     // run
     activeRun, scrollToRun,
     // launcher
-    launchOpenPage, launchPinField, launchPinElement, launchStartWorkflow,
+    launchOpenPage, launchPinField, launchPinElement, launchStartWorkflow, launchPinToolResult,
     // navigation helpers (for inline card "open in builder")
     openInlineBuilder, setBuilderFocus, router,
   };

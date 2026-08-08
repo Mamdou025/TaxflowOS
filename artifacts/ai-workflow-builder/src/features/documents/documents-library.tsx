@@ -10,7 +10,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { FileText, Trash2, UploadCloud } from "lucide-react";
+import { FileText, Trash2, UploadCloud, Check, Plus } from "lucide-react";
 import { uploadDocument } from "./upload-client";
 
 type DocRow = {
@@ -21,6 +21,7 @@ type DocRow = {
   status: "uploading" | "processing" | "ready" | "failed";
   extractedChars: number | null;
   error: string | null;
+  inLibrary: boolean;
   createdAt: string;
 };
 
@@ -111,13 +112,34 @@ export function DocumentsLibrary() {
     [refresh]
   );
 
+  // Toggle whether a document is in Sina's Library (the searchable active context).
+  // Optimistic — flip locally, then persist; on failure re-sync from the server.
+  const setInLibrary = useCallback(
+    async (id: string, next: boolean) => {
+      setDocs((prev) => prev.map((d) => (d.id === id ? { ...d, inLibrary: next } : d)));
+      try {
+        const res = await fetch(`/api/documents/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ inLibrary: next }),
+        });
+        if (!res.ok) void refresh();
+      } catch {
+        void refresh();
+      }
+    },
+    [refresh]
+  );
+
   return (
     <div style={{ maxWidth: 860, margin: "0 auto", padding: "24px 20px" }}>
       <h1 style={{ fontSize: 22, fontWeight: 600, color: "var(--sx-text, #1a1a1a)", margin: "0 0 4px" }}>
         Company documents
       </h1>
       <p style={{ fontSize: 13, color: "var(--sx-muted, #6b7280)", margin: "0 0 18px" }}>
-        Stored securely and searchable by Sina once processed.
+        Your full document repository. Everything is stored here; use{" "}
+        <b style={{ color: "var(--sx-text, #1a1a1a)", fontWeight: 600 }}>In&nbsp;Library</b> to choose
+        which ones Sina can actually search — the rest stay stored but out of context.
       </p>
 
       {/* Dropzone */}
@@ -234,6 +256,38 @@ export function DocumentsLibrary() {
                     {d.extractedChars ? ` · ${(d.extractedChars / 1000).toFixed(0)}k chars` : ""}
                   </div>
                 </button>
+                {/* In-Library toggle — is this doc in Sina's searchable context? */}
+                {(() => {
+                  const inLib = d.inLibrary !== false;
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => setInLibrary(d.id, !inLib)}
+                      title={
+                        inLib
+                          ? "In Sina's Library — click to remove from its searchable context"
+                          : "Add to Sina's Library so it can search this document"
+                      }
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 5,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        padding: "4px 10px",
+                        borderRadius: 999,
+                        cursor: "pointer",
+                        flexShrink: 0,
+                        color: inLib ? "#6d28d9" : "var(--sx-muted, #9ca3af)",
+                        background: inLib ? "rgba(139,92,246,0.14)" : "transparent",
+                        border: `1px solid ${inLib ? "transparent" : "var(--sx-divider, #d4d4d8)"}`,
+                      }}
+                    >
+                      {inLib ? <Check size={13} /> : <Plus size={13} />}
+                      {inLib ? "In Library" : "Add"}
+                    </button>
+                  );
+                })()}
                 <span
                   style={{
                     fontSize: 11,

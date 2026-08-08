@@ -188,6 +188,24 @@ router.get("/:documentId", async (req, res) => {
   res.json({ ok: true, document: serialize(document), downloadUrl });
 });
 
+// PATCH /api/documents/:id — toggle whether the doc is in Sina's Library (the
+// searchable active context). Only `inLibrary` is patchable here; the row still
+// lives in the repository either way — this just controls what the RAG tool sees.
+router.patch("/:documentId", async (req, res) => {
+  const { documentId } = req.params;
+  const body = (req.body ?? {}) as { inLibrary?: unknown };
+  if (typeof body.inLibrary !== "boolean") {
+    res.status(400).json({ ok: false, error: "INVALID_INPUT" });
+    return;
+  }
+  const row = await updateDocument(req.userId, documentId, { inLibrary: body.inLibrary });
+  if (!row) {
+    res.status(404).json({ ok: false, error: "NOT_FOUND" });
+    return;
+  }
+  res.json({ ok: true, document: serialize(row) });
+});
+
 // DELETE /api/documents/:id — remove the row (+ chunks by cascade) + the object.
 router.delete("/:documentId", async (req, res) => {
   const { documentId } = req.params;

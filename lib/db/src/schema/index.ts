@@ -294,6 +294,11 @@ export const documents = pgTable(
     storageBucket: text("storage_bucket").notNull(),
     storageKey: text("storage_key").notNull(),
     status: text("status").notNull().default("uploading").$type<DocumentStatus>(),
+    // Whether this document is in Sina's active "Library" (searchable context). The
+    // Documents page is the full repository; a doc is only retrieved by the RAG tool
+    // when in_library is true, so the big dormant reference files can sit in storage
+    // without polluting results until they're switched on. Defaults on for new uploads.
+    inLibrary: boolean("in_library").notNull().default(true),
     extractedChars: integer("extracted_chars"),
     pageCount: integer("page_count"),
     error: text("error"),

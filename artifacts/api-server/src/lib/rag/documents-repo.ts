@@ -71,7 +71,7 @@ export async function getDocument(
   }
 }
 
-/** Patch a document's processing fields (user-scoped). Returns the row or null. */
+/** Patch a document's processing / library fields (user-scoped). Row or null. */
 export async function updateDocument(
   userId: string,
   id: string,
@@ -80,6 +80,7 @@ export async function updateDocument(
     extractedChars: number | null;
     pageCount: number | null;
     error: string | null;
+    inLibrary: boolean;
   }>,
 ): Promise<DocumentRow | null> {
   try {
