@@ -1,0 +1,58 @@
+{
+  "persona": "builder",
+  "meta": {
+    "base": "http://localhost:5173",
+    "model": "anthropic/claude-opus-4-8",
+    "effort": "medium",
+    "stepsUsed": 40,
+    "maxSteps": 40,
+    "startedAt": "2026-07-30T19:38:02.294Z",
+    "finishedAt": "2026-07-30T19:40:53.895Z",
+    "summary": ""
+  },
+  "findings": [
+    {
+      "id": 1,
+      "severity": "low",
+      "category": "crash",
+      "title": "Nested-button hydration error when opening the \"Compute FAPI\" block config overlay",
+      "detail": "On /workflows-hub → FAPI Calculation (portfolio) → Build, clicking the \"Compute FAPI\" node opens the ConfigurationOverlay (CalculationEngineWorkspace). The console logs a React DOM validation error: \"In HTML, <button> cannot be a descendant of <button>. This will cause a hydration error.\" originating in the CalculationEngineWorkspace inside ConfigurationOverlay.",
+      "expected": "A block's configuration overlay should render without invalid nested-button DOM / hydration errors.",
+      "screenshot": "finding-1.png"
+    }
+  ],
+  "errors": [
+    {
+      "kind": "network",
+      "detail": "404 GET http://localhost:5173/api/auth/get-session"
+    },
+    {
+      "kind": "console",
+      "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "kind": "network",
+      "detail": "404 GET http://localhost:5173/api/auth/get-session"
+    },
+    {
+      "kind": "console",
+      "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "kind": "network",
+      "detail": "404 GET http://localhost:5173/api/auth/get-session"
+    },
+    {
+      "kind": "console",
+      "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "kind": "console",
+      "detail": "In HTML, %s cannot be a descendant of <%s>.\nThis will cause a hydration error.%s <button> button \n\n  ...\n    <ConfigurationOverlay overlayId=\"overlay-17...\">\n      <div className=\"flex h-[85...\">\n        <SmartOverlayHeader>\n        <div className=\"flex min-h...\">\n          <CalculationEngineWorkspace block={{id:\"pf-fap...\", ...}} createTermRequest={0} disabled={false} edges={[...]} ...>\n         … [truncated 1827 chars]"
+    },
+    {
+      "kind": "console",
+      "detail": "<%s> cannot contain a nested %s.\nSee this log for the ancestor stack trace. button <button>"
+    }
+  ]
+}
