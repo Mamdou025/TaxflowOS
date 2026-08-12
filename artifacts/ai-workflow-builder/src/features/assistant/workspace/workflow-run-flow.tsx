@@ -1,12 +1,13 @@
 
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSetAtom, useAtom, useAtomValue } from 'jotai';
 import { Check, Upload, FileUp, ShieldCheck, Loader2, ChevronDown, ExternalLink, X, GitBranch, SlidersHorizontal, AlertTriangle, Cloud, Play } from 'lucide-react';
-import { runTemplateLoop, runTemplateCore, buildOverrideRules, initialRunState, resolveBlocker, type TemplateConfig, type RunState, type RunDetail, type SourceRow } from '@/shared/workflow-engine/runtime/workflow-runs';
+import { runTemplateLoop, runTemplateCore, buildOverrideRules, resolveBlocker, type TemplateConfig, type RunState, type RunDetail, type SourceRow } from '@/shared/workflow-engine/runtime/workflow-runs';
 import { parseUploadToRows } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
 import { GoogleSourcePicker, type PickedSource } from '@/features/assistant/workspace/google-source-picker';
-import { pushTrailAtom, activeRunAtom, setActiveCoworkerAtom, uploadedRowsAtom, runEditsAtom, setRunInputAtom, setRunOverrideAtom, setRunEditsAtom, EMPTY_RUN_EDITS } from '@/shared/stores/workspace-store';
+import { pushTrailAtom, activeRunAtom, setActiveCoworkerAtom, uploadedRowsAtom, runEditsAtom, setRunInputAtom, setRunOverrideAtom, setRunEditsAtom, EMPTY_RUN_EDITS, runFlowAtom, setRunFlowAtom, INITIAL_RUN_FLOW, type RunFlow } from '@/shared/stores/workspace-store';
+import { scopeYearAtom } from '@/shared/stores/nav-store';
 import { WORKFLOW_ENGINE, SINA } from '@/lib/coworkers';
 import { recordWorkItemAtom, workIdFor } from '@/lib/work-store';
 
@@ -48,6 +49,13 @@ const num = (n: number) => n.toLocaleString('en-CA', { minimumFractionDigits: 2,
 const numRate = (n: number) => n.toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 6 });
 const isRateKey = (key: string) => /_RATE$|^FX/i.test(key);
 const fig = (key: string, value: number) => (isRateKey(key) ? numRate(value) : num(value));
+// A summary/line label often states its own currency, e.g. "Net surplus movement (CAD)".
+// Trust that over the workflow's document currency — post-FX reporting figures are in CAD
+// even when the source document is in USD, so a CAD-labelled figure must not read "USD".
+const unitFor = (label: string, fallback: string) => {
+  const m = label.toUpperCase().match(/\b(CAD|USD|EUR|GBP)\b/);
+  return m ? m[1] : fallback;
+};
 
 // The ONLY color in the run — each timeline dot is toned by what the step means. Pastel + discreet.
 const TONES = { source: '#7fb2d9', ai: '#a892d6', engine: '#7cc3a6', checkpoint: '#dab06c', step: '#9ca3af' } as const;
@@ -282,8 +290,8 @@ export function WorkflowElementCard({ config, element, onOpenPage, onOpenBuilder
           </>
         ) : outcome?.detail ? (
           <>
-            {outcome.detail.summary.map((s) => <KV key={s.key} l={s.label} sub={s.formula} v={isRateKey(s.key) ? numRate(s.value) : `${num(s.value)} ${config.currency}`} />)}
-            {outcome.headline && <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, paddingTop: 8, borderTop: `1px solid ${HAIRLINE}` }}><span style={{ fontSize: 12, color: MUTED }}>{outcome.headline.label}</span><span style={{ fontSize: 15, fontWeight: 650, color: INK }}>{num(outcome.headline.value)} {config.currency}</span></div>}
+            {outcome.detail.summary.map((s) => <KV key={s.key} l={s.label} sub={s.formula} v={isRateKey(s.key) ? numRate(s.value) : `${num(s.value)} ${unitFor(s.label, config.currency)}`} />)}
+            {outcome.headline && <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, paddingTop: 8, borderTop: `1px solid ${HAIRLINE}` }}><span style={{ fontSize: 12, color: MUTED }}>{outcome.headline.label}</span><span style={{ fontSize: 15, fontWeight: 650, color: INK }}>{num(outcome.headline.value)} {unitFor(outcome.headline.label, config.currency)}</span></div>}
           </>
         ) : <div style={{ fontSize: 12, color: FAINT }}>No output yet.</div>}
         <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
@@ -347,13 +355,16 @@ function InputRow({ label, hint, value, onCommit, blockId, onOpenBuilder, live, 
 }
 
 function EditableInputs({ config, inputs, onCommit, onOpenBuilder, snapshot, liveConfigByBlock }: { config: TemplateConfig; inputs: Record<string, number>; onCommit: (key: string, value: number) => void; onOpenBuilder?: (blockId: string) => void; snapshot?: PeekSnapshot; liveConfigByBlock?: Record<string, Record<string, unknown>> }) {
+  // The fiscal year in scope drives the live FX lookup (Bank of Canada annual average
+  // for that year), instead of a hardcoded year. Read before any early return.
+  const scopeYear = useAtomValue(scopeYearAtom);
   if (!config.editableInputs?.length) return null;
   return (
     <div style={{ margin: '10px 0 2px', padding: '11px 14px', background: SURFACE, border: `1px solid ${HAIRLINE}`, borderRadius: 10 }}>
       <div style={{ fontSize: 10.5, fontWeight: 650, textTransform: 'uppercase', letterSpacing: '0.04em', color: FAINT, marginBottom: 9, display: 'flex', alignItems: 'center', gap: 5 }}><SlidersHorizontal size={12} /> Inputs — edit any and the workflow recomputes</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
         {config.editableInputs.map((inp) => (
-          <InputRow key={inp.key} label={inp.label} hint={inp.hint} value={inputs[inp.key] ?? inp.default} onCommit={(v) => onCommit(inp.key, v)} blockId={inp.block?.blockId} onOpenBuilder={onOpenBuilder} snapshot={snapshot} liveConfigByBlock={liveConfigByBlock} live={inp.key === 'fxRate' ? { from: config.currency ?? 'USD', to: 'CAD', year: 2025 } : undefined} />
+          <InputRow key={inp.key} label={inp.label} hint={inp.hint} value={inputs[inp.key] ?? inp.default} onCommit={(v) => onCommit(inp.key, v)} blockId={inp.block?.blockId} onOpenBuilder={onOpenBuilder} snapshot={snapshot} liveConfigByBlock={liveConfigByBlock} live={inp.key === 'fxRate' ? { from: config.currency ?? 'USD', to: 'CAD', year: scopeYear } : undefined} />
         ))}
       </div>
     </div>
@@ -412,8 +423,16 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
   // The run's two OTHER decision surfaces — edited inputs and category overrides —
   // live in the SHARED runEditsAtom (keyed by workflow id) so the worksheet computes
   // on the exact same values, and an edit in either surface flows to the other.
-  const [flow, setFlow] = useState<{ uploaded: boolean; elected: number | null; approved: boolean; rows?: SourceRow[] }>(
-    () => { const s = initialRunState(); return { uploaded: s.uploaded, elected: s.elected, approved: s.approved, rows: s.rows }; }
+  // Run gate state (source provided / elected / approved) lives in a SHARED, persisted atom
+  // keyed by workflow id — NOT component-local — so leaving the Run tab and returning (or
+  // reloading) restores an in-progress run instead of resetting it to "Document needed". A
+  // workflow never advanced has no entry, so a brand-new run still asks for its source.
+  const flowMap = useAtomValue(runFlowAtom);
+  const setFlowMap = useSetAtom(setRunFlowAtom);
+  const flow = flowMap[config.id] ?? INITIAL_RUN_FLOW;
+  const setFlow = useCallback(
+    (next: RunFlow | ((f: RunFlow) => RunFlow)) => setFlowMap({ id: config.id, flow: next }),
+    [config.id, setFlowMap],
   );
   const edits = useAtomValue(runEditsAtom)[config.id] ?? EMPTY_RUN_EDITS;
   const setRunInput = useSetAtom(setRunInputAtom);

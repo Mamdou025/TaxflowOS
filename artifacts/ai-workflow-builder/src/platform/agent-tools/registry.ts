@@ -57,6 +57,63 @@ function hostMatches(url: string, host: string): boolean {
   }
 }
 
+// ── AI-Gateway web-search fallback (Perplexity `sonar`) ──────────────────────
+// When no dedicated search key (FIRECRAWL_API_KEY) is configured but the Vercel
+// AI Gateway key IS (the same credential the chat already uses), route live
+// search through Perplexity `sonar` — so research works with NO extra signup.
+// `sonar` is an answer engine: it returns a synthesized, source-grounded answer.
+// The gateway strips Perplexity's structured citations, so we extract the source
+// URLs from the answer text for the results card. Each call costs ~$0.005.
+const GATEWAY_CHAT_URL = 'https://ai-gateway.vercel.sh/v1/chat/completions';
+
+function extractUrls(text: string): string[] {
+  const raw = text.match(/https?:\/\/[^\s)\]}"'<>]+/g) ?? [];
+  return Array.from(new Set(raw.map((u) => u.replace(/[.,;:]+$/, ''))));
+}
+
+async function gatewaySonarSearch(
+  query: string,
+  opts: { officialCanadaTax?: boolean; limit: number },
+): Promise<{ answer: string; results: { title: string; url: string; snippet: string }[] }> {
+  const key = process.env.AI_GATEWAY_API_KEY;
+  if (!key) throw new Error('gateway key not set');
+  const system = opts.officialCanadaTax
+    ? 'You are a research assistant for a Canadian corporate-tax professional. Rely on CURRENT, authoritative Government of Canada / CRA sources (canada.ca, cra-arc.gc.ca) and the Income Tax Act. Be concise and precise.'
+    : 'You are a web research assistant. Answer concisely and accurately from current, reputable web sources.';
+  const user = `${query}\n\nAfter your answer, add a line "SOURCES:" and list each source you used on its own line as a full https:// URL.`;
+  const res = await fetch(GATEWAY_CHAT_URL, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'perplexity/sonar',
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: user },
+      ],
+    }),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+  const answer = json.choices?.[0]?.message?.content ?? '';
+  let urls = extractUrls(answer);
+  if (opts.officialCanadaTax) {
+    const official = urls.filter((u) => OFFICIAL_CA_TAX_HOSTS.some((h) => hostMatches(u, h)));
+    if (official.length) urls = official;
+  }
+  const results = urls.slice(0, opts.limit).map((u) => ({
+    title: (() => {
+      try {
+        return new URL(u).hostname.replace(/^www\./, '');
+      } catch {
+        return u;
+      }
+    })(),
+    url: u,
+    snippet: '',
+  }));
+  return { answer, results };
+}
+
 const searchCanadianTax = defineTool(
   'Search official Canadian tax sources (canada.ca and the CRA) for CURRENT rules, rates, forms, and deadlines. ' +
     'Use whenever the answer depends on up-to-date or authoritative Canadian tax info rather than training data. ' +
@@ -68,7 +125,39 @@ const searchCanadianTax = defineTool(
   async ({ query, limit }) => {
     const apiKey = process.env.FIRECRAWL_API_KEY;
     if (!apiKey) {
-      return { error: 'FIRECRAWL_API_KEY is not set in .env.local — it is required for Canadian tax lookups.' };
+      // No dedicated search key (Firecrawl). Fall back to the Vercel AI Gateway
+      // (Perplexity `sonar`) using the key the chat already uses — live research
+      // with no extra signup. Only truly "unavailable" if neither key exists.
+      if (process.env.AI_GATEWAY_API_KEY) {
+        try {
+          const { answer, results } = await gatewaySonarSearch(query, {
+            officialCanadaTax: true,
+            limit: Math.min(Math.max(limit ?? 5, 1), 10),
+          });
+          return {
+            query,
+            answer,
+            results,
+            instruction:
+              'Ground your reply in the ANSWER above (from a live, source-grounded search) and cite the source URLs. If it does not answer the question, say so plainly.',
+            note:
+              results.length === 0
+                ? 'Searched live, but found no citable official-source URL — verify manually.'
+                : undefined,
+          };
+        } catch (error) {
+          return { error: error instanceof Error ? `Search failed: ${error.message}` : 'Canadian tax lookup failed.' };
+        }
+      }
+      // Neither key set — degrade gracefully; never surface internal config/env
+      // details, and don't let the model pretend it searched.
+      return {
+        unavailable: true,
+        // Shown to the user in the results card — must be clean and non-technical.
+        note: 'Live lookup of official Canadian tax sources is not available in this environment.',
+        // Model-facing only (the card ignores `instruction`).
+        instruction: 'Answer from your own knowledge. Do NOT claim to have searched official sources or cite a page you did not read, and briefly tell the user you could not verify this against live CRA / canada.ca sources.',
+      };
     }
     const scopedQuery = `${query} (site:canada.ca OR site:cra-arc.gc.ca)`;
     try {
@@ -108,7 +197,33 @@ const searchWeb = defineTool(
   async ({ query, limit }) => {
     const apiKey = process.env.FIRECRAWL_API_KEY;
     if (!apiKey) {
-      return { error: 'FIRECRAWL_API_KEY is not set in .env.local — it is required for web search.' };
+      // Fall back to the AI Gateway (Perplexity `sonar`) — see searchCanadianTax.
+      if (process.env.AI_GATEWAY_API_KEY) {
+        try {
+          const { answer, results } = await gatewaySonarSearch(query, {
+            limit: Math.min(Math.max(limit ?? 6, 1), 10),
+          });
+          return {
+            query,
+            answer,
+            results,
+            instruction:
+              'Ground your reply in the ANSWER above (from a live web search) and cite the source URLs. If it does not answer the question, say so plainly.',
+            note:
+              results.length === 0
+                ? 'Searched the web, but could not extract citable source URLs — mention that to the user.'
+                : undefined,
+          };
+        } catch (error) {
+          return { error: error instanceof Error ? `Search failed: ${error.message}` : 'Web search failed.' };
+        }
+      }
+      // See searchCanadianTax — same graceful-degradation contract; never leak env details.
+      return {
+        unavailable: true,
+        note: 'Live web search is not available in this environment.',
+        instruction: 'Answer from your own knowledge and tell the user you could not check live web sources.',
+      };
     }
     try {
       const res = await fetch('https://api.firecrawl.dev/v1/search', {

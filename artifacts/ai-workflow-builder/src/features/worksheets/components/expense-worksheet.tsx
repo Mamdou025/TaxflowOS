@@ -91,7 +91,7 @@ export default function ExpenseWorksheet() {
   const bucket = (key: string) => core?.detail.buckets.find((b) => b.key === key)?.value ?? 0;
   const val = (key: string) => core ? (core.lineValues[key] ?? core.summaryValues[key] ?? 0) : 0;
   const setInput = (key: string, v: number) => setRunInput({ id: EXPENSE_CONFIG.id, key, value: v });
-  const openBuilder = (blockId: string) => { setBuilderFocus({ workflowId: EXPENSE_CONFIG.id, blockId }); router.push('/builder'); };
+  const openBuilder = (blockId: string) => { setBuilderFocus({ workflowId: EXPENSE_CONFIG.id, blockId }); router.push('/workflows-hub'); };
 
   const onFile = async (file: File | undefined) => {
     if (!file) return;
@@ -230,6 +230,7 @@ function InputCard({ label, value, onCommit, isRate, prefix }: { label: string; 
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 3, marginTop: 3 }}>
         {prefix && <span style={{ fontSize: 12, color: FAINT }}>{prefix}</span>}
         <input
+          aria-label={label}
           value={draft ?? text}
           onChange={(e) => setDraft(e.target.value)}
           onFocus={(e) => { setDraft(String(value)); e.currentTarget.select(); }}

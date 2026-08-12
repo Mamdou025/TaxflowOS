@@ -13,16 +13,42 @@
 // PinnedThreadContext) rendered at the top of the message container.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { Fragment, createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { useCopilotChatInternal } from '@copilotkit/react-core';
 import { useChatContext, type MessagesProps } from '@copilotkit/react-ui';
 import { MessageSpecialistContext, buildMessageSpecialistMap, messageSignature } from './message-specialists';
+import { ToolsUsed, buildToolCallInfo, type ToolCallInfo, type ToolUsage } from '../workspace/tool-receipt';
 
 /** Pinned work (runs / fields / elements) to render atop the message scroll. */
 export const PinnedThreadContext = createContext<ReactNode>(null);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyMessage = { role?: string;[k: string]: any };
+
+/**
+ * The tools that ran to produce the answer at `index` — i.e. every tool call made
+ * since the previous user message, up to and including this one, threaded to its
+ * result. Feeds the "Tools used" bar under the reply.
+ */
+function toolsUsedForTurn(messages: AnyMessage[], index: number, info: Map<string, ToolCallInfo>): ToolUsage[] {
+  let start = index;
+  while (start >= 0 && messages[start]?.role !== 'user') start--;
+  const seen = new Set<string>();
+  const out: ToolUsage[] = [];
+  for (let j = start + 1; j <= index; j++) {
+    const m = messages[j];
+    if (m?.role === 'assistant' && Array.isArray(m.toolCalls)) {
+      for (const tc of m.toolCalls) {
+        const id = tc?.id as string | undefined;
+        if (!id || seen.has(id)) continue;
+        seen.add(id);
+        const c = info.get(id);
+        if (c) out.push({ id, name: c.name, args: c.args, result: c.result });
+      }
+    }
+  }
+  return out;
+}
 
 // Faithful copy of CopilotKit's internal useScrollToBottom: auto-scroll on new user
 // turns / streamed content, but stop following once the user scrolls up.
@@ -86,34 +112,48 @@ export function ThreadMessages(props: MessagesProps) {
   // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the message id/role signature
   const specialistMap = useMemo(() => buildMessageSpecialistMap(messages), [sig]);
 
+  // callId → { name, args } so a tool RESULT message can recover what was called
+  // and render a verifiable "tools used" receipt beneath the answer it supports.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the message id/role signature
+  const toolCallInfo = useMemo(() => buildToolCallInfo(messages), [sig]);
+
   return (
     <MessageSpecialistContext.Provider value={specialistMap}>
     <div className="copilotKitMessages" ref={messagesContainerRef}>
       <div className="copilotKitMessagesContainer">
         {/* Pinned work — runs/cards — scroll WITH the conversation (one thread). */}
         {pinned}
-        {messages.map((message, index) => (
-          <RenderMessage
+        {messages.map((message, index) => {
+          // Under each assistant reply, a "Tools used" bar naming every tool that ran
+          // to produce it (since the previous user turn) — each chip expands to that
+          // call's inputs + result, so the answer can be checked against what executed.
+          const hasText = message?.role === 'assistant' && typeof message.content === 'string' && message.content.trim().length > 0;
+          const used = hasText ? toolsUsedForTurn(messages, index, toolCallInfo) : [];
+          return (
             // eslint-disable-next-line react/no-array-index-key
-            key={index}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            message={message as any}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            messages={messages as any}
-            inProgress={inProgress}
-            index={index}
-            isCurrentMessage={index === messages.length - 1}
-            AssistantMessage={AssistantMessage}
-            UserMessage={UserMessage}
-            ImageRenderer={ImageRenderer}
-            onRegenerate={onRegenerate}
-            onCopy={onCopy}
-            onThumbsUp={onThumbsUp}
-            onThumbsDown={onThumbsDown}
-            messageFeedback={messageFeedback}
-            markdownTagRenderers={markdownTagRenderers}
-          />
-        ))}
+            <Fragment key={index}>
+              <RenderMessage
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                message={message as any}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                messages={messages as any}
+                inProgress={inProgress}
+                index={index}
+                isCurrentMessage={index === messages.length - 1}
+                AssistantMessage={AssistantMessage}
+                UserMessage={UserMessage}
+                ImageRenderer={ImageRenderer}
+                onRegenerate={onRegenerate}
+                onCopy={onCopy}
+                onThumbsUp={onThumbsUp}
+                onThumbsDown={onThumbsDown}
+                messageFeedback={messageFeedback}
+                markdownTagRenderers={markdownTagRenderers}
+              />
+              {used.length > 0 && <ToolsUsed calls={used} />}
+            </Fragment>
+          );
+        })}
         {inProgress && (last?.role === 'user' || last?.role === 'tool') && (
           <span data-testid="copilot-loading-cursor">{icons?.activityIcon}</span>
         )}
