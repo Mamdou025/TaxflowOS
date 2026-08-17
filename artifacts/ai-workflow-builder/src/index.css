@@ -628,3 +628,13 @@
     0.066em 0.079em 0.132em rgba(0, 0, 0, 0.9),
     0.039em 0.039em 0.053em rgba(0, 0, 0, 0.75);
 }
+
+/* CopilotKit mounts a <cpk-web-inspector> launcher — a floating button pinned
+   top-right at z-index 2147483646 — on its own, independent of `showDevConsole`.
+   It sits over the header controls, intercepts clicks there, and carries the
+   vendor's product announcements, none of which belong in front of a customer.
+   AppShell sets data-copilot-devtools on <html> when VITE_COPILOT_DEV_CONSOLE=1;
+   without that flag, keep the widget out of the app. */
+html:not([data-copilot-devtools]) cpk-web-inspector {
+  display: none !important;
+}

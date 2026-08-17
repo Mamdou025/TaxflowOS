@@ -2002,6 +2002,7 @@ export function BlockDataFlowColumn({
       }
     : undefined;
   const isCalculationInputPane = Boolean(calculationInputTerms);
+  const showSearch = isCalculationInputPane || groups.length >= 8;
   const largeGroup = groups.find((group) => group.id === largeGroupId);
   const filterGroupKind = side === "inputs" ? "input" : "output";
   const emptyFilteredMessage = tool
@@ -2024,12 +2025,18 @@ export function BlockDataFlowColumn({
             : "Source evidence is view-only after use or publish. Corrections should be modeled downstream in Logic."}
         </div>
       )}
-      <Input
-        className="h-8 bg-background/70 text-xs"
-        onChange={(event) => setSearch(event.target.value)}
-        placeholder={`Search ${displaySide === "source" ? "source" : side}`}
-        value={search}
-      />
+      {/* Most blocks expose two to six roles. A permanent search field over four
+          rows is chrome that earns nothing and pushes the actual values down the
+          pane, so it only appears once there is enough to be worth filtering.
+          Calculation inputs are the exception — those panes really can run long. */}
+      {showSearch && (
+        <Input
+          className="h-8 bg-background/70 text-xs"
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder={`Search ${displaySide === "source" ? "source" : side}`}
+          value={search}
+        />
+      )}
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
         {isCalculationInputPane && groupedCalculationInputs ? (
           <>

@@ -18,7 +18,7 @@ import { runTemplateCore, buildOverrideRules, type SourceRow, type MappedRow } f
 import { FAPI_CONFIG } from '@/shared/workflow-engine/runtime/workflow-runs/fapi';
 import { parseUploadToRows } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
 import { uploadedRowsAtom, runEditsAtom, setRunInputAtom, EMPTY_RUN_EDITS } from '@/shared/stores/workspace-store';
-import { builderFocusTargetAtom } from '@/shared/workflow-engine/state/workflow-store';
+import { aimBuilderAtWorkflowAtom } from '@/features/workflows-hub/workflows-store';
 import { useInlinePage } from '@/shared/stores/inline-page-context';
 import { usePageMenu } from '@/shared/stores/page-menu-store';
 import { WorksheetCopilot } from '@/features/assistant/ui/worksheet-copilot';
@@ -104,7 +104,7 @@ function AmountCell({ value, edit, onCommit, isRate, label }: { value: number; e
 export default function FapiWorksheet() {
   const router = useRouter();
   const [uploaded, setUploaded] = useAtom(uploadedRowsAtom);
-  const setBuilderFocus = useSetAtom(builderFocusTargetAtom);
+  const aimBuilder = useSetAtom(aimBuilderAtWorkflowAtom);
   const [parsing, setParsing] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -141,7 +141,7 @@ export default function FapiWorksheet() {
   const val = (key: string) => core ? (core.lineValues[key] ?? core.summaryValues[key] ?? 0) : 0;
   const setInput = (key: string, v: number) => setRunInput({ id: FAPI_CONFIG.id, key, value: v });
 
-  const openBuilder = (blockId: string) => { setBuilderFocus({ workflowId: FAPI_CONFIG.id, blockId }); router.push('/workflows-hub'); };
+  const openBuilder = (blockId: string) => { aimBuilder({ workflowId: FAPI_CONFIG.id, blockId }); router.push('/workflows-hub'); };
 
   // Inline in the Scope panel → publish the toolbar into the shared header instead
   // of drawing it in the worksheet body (which shares width with the chat).

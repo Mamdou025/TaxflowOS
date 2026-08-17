@@ -18,7 +18,7 @@ import { runTemplateCore, buildOverrideRules, type SourceRow } from '@/shared/wo
 import { EXPENSE_CONFIG } from '@/shared/workflow-engine/runtime/workflow-runs/expense';
 import { parseUploadToRows } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
 import { uploadedRowsAtom, runEditsAtom, setRunInputAtom, EMPTY_RUN_EDITS } from '@/shared/stores/workspace-store';
-import { builderFocusTargetAtom } from '@/shared/workflow-engine/state/workflow-store';
+import { aimBuilderAtWorkflowAtom } from '@/features/workflows-hub/workflows-store';
 import { WorksheetCopilot } from '@/features/assistant/ui/worksheet-copilot';
 
 const INK = '#18181b', MUTED = '#71717a', FAINT = '#a1a1aa';
@@ -64,7 +64,7 @@ const SUMMARY_ROWS: { key: string; label: string; strong?: boolean }[] = [
 export default function ExpenseWorksheet() {
   const router = useRouter();
   const [uploaded, setUploaded] = useAtom(uploadedRowsAtom);
-  const setBuilderFocus = useSetAtom(builderFocusTargetAtom);
+  const aimBuilder = useSetAtom(aimBuilderAtWorkflowAtom);
   const [parsing, setParsing] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -91,7 +91,7 @@ export default function ExpenseWorksheet() {
   const bucket = (key: string) => core?.detail.buckets.find((b) => b.key === key)?.value ?? 0;
   const val = (key: string) => core ? (core.lineValues[key] ?? core.summaryValues[key] ?? 0) : 0;
   const setInput = (key: string, v: number) => setRunInput({ id: EXPENSE_CONFIG.id, key, value: v });
-  const openBuilder = (blockId: string) => { setBuilderFocus({ workflowId: EXPENSE_CONFIG.id, blockId }); router.push('/workflows-hub'); };
+  const openBuilder = (blockId: string) => { aimBuilder({ workflowId: EXPENSE_CONFIG.id, blockId }); router.push('/workflows-hub'); };
 
   const onFile = async (file: File | undefined) => {
     if (!file) return;

@@ -35,7 +35,9 @@ router.get("/fx-rate", async (req, res) => {
       reportingCurrency,
       year,
       provider: "bank_of_canada",
-      endpoint: `https://www.bankofcanada.ca/valet/observations/FX${documentCurrency}${reportingCurrency}/json?start_date=${year}-01-01&end_date=${year}-12-31`,
+      // `result.endpoint` is the URL the shared fetcher actually called. This
+      // route used to template the Valet URL a second time, which meant the
+      // "endpoint" it reported could drift from the request it described.
       ...result,
     });
   } catch (error) {

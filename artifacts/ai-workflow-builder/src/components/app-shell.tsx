@@ -1,7 +1,7 @@
 
 
 import { usePathname } from '@/lib/router';
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { CopilotKit } from '@copilotkit/react-core';
 import { GlobalTopNav } from '@/components/global-top-nav';
 import { GlobalClientSwitcher } from '@/components/global-client-switcher';
@@ -10,8 +10,19 @@ import { AssistantPanel } from '@/features/assistant/ui/assistant-panel';
 import { MemoryCopilot } from '@/features/assistant/ui/memory-copilot';
 import { SpecialistPresence } from '@/features/assistant/ui/specialist-presence';
 
+/** One switch for CopilotKit's developer surfaces — see the note on <CopilotKit> below. */
+const COPILOT_DEVTOOLS = import.meta.env.VITE_COPILOT_DEV_CONSOLE === '1';
+
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+
+  // The SDK mounts its <cpk-web-inspector> launcher (a floating 48px button pinned
+  // top-right at the maximum z-index) on its own, regardless of `showDevConsole`.
+  // It overlaps the header controls and swallows clicks there. Mark the document so
+  // globals.css can hide it unless devtools were explicitly asked for.
+  useEffect(() => {
+    document.documentElement.toggleAttribute('data-copilot-devtools', COPILOT_DEVTOOLS);
+  }, []);
 
   // The Agent Lab (/agent-lab) is a standalone, isolated surface: no global nav,
   // no CopilotKit chat overlay, its own scroll. `body` is locked to `overflow:hidden`
@@ -33,10 +44,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     // The GET /api/copilotkit handler (route.ts) answers the SDK's startup /info
     // health-check, so the "Runtime info request failed" banner no longer fires.
-    // showDevConsole is intentionally omitted here (defaults to true in dev) so
-    // legitimate AI runtime errors — wrong key, rate-limit, model failure — surface
-    // as banners for developers and users.
-    <CopilotKit runtimeUrl="/api/copilotkit">
+    //
+    // The dev console surfaces legitimate AI runtime errors (wrong key, rate-limit,
+    // model failure) — useful while building. But it also mounts a <cpk-web-inspector>
+    // overlay that swallows pointer events over the app and shows CopilotKit's own
+    // product announcements ("Slack early access…") on top of the UI, which is not
+    // something to hand a customer mid-demo. So it is opt-in: set
+    // VITE_COPILOT_DEV_CONSOLE=1 when you want the banners back.
+    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={COPILOT_DEVTOOLS}>
       {/* Fixed canvas layer — only active on builder/workflow pages */}
       <PersistentCanvas />
 

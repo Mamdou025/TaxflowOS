@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSetAtom, useAtom, useAtomValue } from 'jotai';
-import { Check, Upload, FileUp, ShieldCheck, Loader2, ChevronDown, ExternalLink, X, GitBranch, SlidersHorizontal, AlertTriangle, Cloud, Play } from 'lucide-react';
+import { Check, Upload, FileUp, ShieldCheck, Loader2, ChevronDown, ExternalLink, X, GitBranch, SlidersHorizontal, AlertTriangle, Cloud, Play, RotateCcw } from 'lucide-react';
 import { runTemplateLoop, runTemplateCore, buildOverrideRules, resolveBlocker, type TemplateConfig, type RunState, type RunDetail, type SourceRow } from '@/shared/workflow-engine/runtime/workflow-runs';
+import { buildApiRequest, getApiConnector, withParamDefaults } from '@/shared/workflow-engine/execution/blocks/source/http-json/connectors';
 import { parseUploadToRows } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
 import { GoogleSourcePicker, type PickedSource } from '@/features/assistant/workspace/google-source-picker';
 import { pushTrailAtom, activeRunAtom, setActiveCoworkerAtom, uploadedRowsAtom, runEditsAtom, setRunInputAtom, setRunOverrideAtom, setRunEditsAtom, EMPTY_RUN_EDITS, runFlowAtom, setRunFlowAtom, INITIAL_RUN_FLOW, type RunFlow } from '@/shared/stores/workspace-store';
@@ -63,10 +64,15 @@ function hexA(hex: string, a: number) {
   const h = hex.replace('#', '');
   return `rgba(${parseInt(h.slice(0, 2), 16)},${parseInt(h.slice(2, 4), 16)},${parseInt(h.slice(4, 6), 16)},${a})`;
 }
-/** Classify a step so its dot gets a meaning: source · AI suggestion · engine · checkpoint. */
+/** Classify a step so its dot gets a meaning: source · rule match · engine · checkpoint. */
 function stepMeta(step: { label: string; sub?: string }): { tone: string; kind: string } {
   const t = `${step.label} ${step.sub ?? ''}`.toLowerCase();
-  if (/classif|categor|\bmap|suggest/.test(t)) return { tone: TONES.ai, kind: 'AI suggestion' };
+  // NOT "AI suggestion". The classification step is the keyword mapper: it matches
+  // terms from a rulebook you can open and edit, and its "confidence" is a number
+  // written in that rulebook, not a model's uncertainty. Calling a deterministic
+  // rule match an AI suggestion misrepresents where the figure came from — the one
+  // thing this whole run view exists to make honest.
+  if (/classif|categor|\bmap|suggest/.test(t)) return { tone: TONES.ai, kind: 'Rule match' };
   if (/comput|calcul|engine|rollup|aggregat|deriv/.test(t)) return { tone: TONES.engine, kind: 'Engine calculation' };
   if (/approv|sign[- ]?off|elect|decision/.test(t)) return { tone: TONES.checkpoint, kind: 'Checkpoint' };
   if (/collect|source|upload|document|trial|balance/.test(t)) return { tone: TONES.source, kind: 'Source' };
@@ -198,7 +204,7 @@ function ClassifyReview({ detail, config, overrides, onOverride, onOpenBuilder, 
   ];
   const opts = config.categoryOptions.filter((o) => o.id !== '__skip__');
   return detailWrap(<>
-    <div style={{ fontSize: 11.5, color: MUTED, lineHeight: 1.5, marginBottom: 8 }}>The keyword mapper <b>suggested</b> these classifications. Click any category to override the AI — the workflow re-runs with your decision.</div>
+    <div style={{ fontSize: 11.5, color: MUTED, lineHeight: 1.5, marginBottom: 8 }}>The <b>keyword rulebook</b> matched these classifications — no model was involved, and each confidence is the score written in the rule. Click any category to override it; the workflow re-runs with your decision.</div>
     {rows.map((r) => {
       const overridden = r.rowId in overrides;
       const isEd = editing === r.rowId;
@@ -295,7 +301,7 @@ export function WorkflowElementCard({ config, element, onOpenPage, onOpenBuilder
           </>
         ) : <div style={{ fontSize: 12, color: FAINT }}>No output yet.</div>}
         <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-          {!isSource && onOpenPage && <button onClick={() => onOpenPage('fapi')} style={btnGhost}><ExternalLink size={11} /> Open worksheet</button>}
+          {!isSource && onOpenPage && config.resultPage && <button onClick={() => onOpenPage(config.resultPage!)} style={btnGhost}><ExternalLink size={11} /> Open worksheet</button>}
           {onOpenBuilder && <button onClick={() => onOpenBuilder(blockId)} style={btnGhost}><GitBranch size={11} /> Open in builder</button>}
         </div>
       </div>
@@ -386,7 +392,11 @@ export function RunProposalCard({ config, onStart }: { config: TemplateConfig; o
         </div>
       </div>
       <div style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5, marginBottom: 12 }}>
-        I’ll need the <b style={{ color: INK, fontWeight: 600 }}>{config.documentLabel}</b>, then walk these steps and stop for your approval:
+        {config.apiSource ? (
+          <>I’ll pull the <b style={{ color: INK, fontWeight: 600 }}>{config.apiSource.recordLabel}</b> live from <b style={{ color: INK, fontWeight: 600 }}>{config.apiSource.provider}</b>, then walk these steps and stop for your approval:</>
+        ) : (
+          <>I’ll need the <b style={{ color: INK, fontWeight: 600 }}>{config.documentLabel}</b>, then walk these steps and stop for your approval:</>
+        )}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 14 }}>
         {config.steps.map((s, i) => {
@@ -464,8 +474,23 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
   const [parsing, setParsing] = useState(false);
   const [parseError, setParseError] = useState<string | null>(null);
   const [showGoogle, setShowGoogle] = useState(false);
-  const [origin, setOrigin] = useState<'upload' | 'drive' | 'gmail'>('upload');
-  const doneRef = useRef(false);
+  const [origin, setOrigin] = useState<'upload' | 'drive' | 'gmail' | 'api'>('upload');
+  const [fetching, setFetching] = useState(false);
+  const [apiMeta, setApiMeta] = useState<{ count: number; at: string } | null>(null);
+  // Business parameters for a connector-backed API source (year, currency, …).
+  // Seeded from the template, then editable in the run — so the run can be
+  // completed by answering "2024, EUR" instead of by supplying an endpoint.
+  const apiConnector = getApiConnector(config.apiSource?.connectorId);
+  const [apiParams, setApiParams] = useState<Record<string, string | number>>(() =>
+    apiConnector ? withParamDefaults(apiConnector, config.apiSource?.connectorParams) : {}
+  );
+  // `null` until the completion effect's first pass, then the done-ness this mount
+  // STARTED at. onComplete must announce the *transition* to done, never a run that
+  // was already finished when we mounted — the gates persist (runFlowAtom), so an
+  // approved run is `done` on its very first render, and firing there re-triggers
+  // the host's completion action (the Workflows page jumps to Results, making the
+  // Run tab unreachable for any finished workflow).
+  const doneRef = useRef<boolean | null>(null);
   const fileName = useRef<string | null>(null);
 
   // One-time intro: the step timeline "draws" (staggered CSS reveal), then the
@@ -531,14 +556,24 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
   const liveSub = (i: number): string | null => {
     if (i !== activeIdx || done) return null;
     if (!blocker) return 'Working…';
-    if (blocker.kind === 'upload') return `Waiting for the ${config.documentLabel}`;
+    if (blocker.kind === 'upload') {
+      return config.apiSource
+        ? `Fetching from ${config.apiSource.provider}…`
+        : `Waiting for the ${config.documentLabel}`;
+    }
     if (blocker.kind === 'approval') return 'Ready for your approval';
     if (blocker.kind === 'choice') return blocker.choiceId === '__elect__' ? 'Waiting for you to elect an amount' : 'Waiting for your decision';
     return 'Working…';
   };
 
   useEffect(() => {
-    if (done && outcome?.summaryText && !doneRef.current) {
+    // Not (or no longer) done — arm for the next completion, so a restarted run
+    // announces itself again.
+    if (!done) { doneRef.current = false; return; }
+    // Done on this mount's FIRST pass = a run restored complete from the persisted
+    // gates. Adopt it silently; it has nothing new to announce.
+    if (doneRef.current === null) { doneRef.current = true; return; }
+    if (outcome?.summaryText && !doneRef.current) {
       doneRef.current = true;
       pushTrail({
         text: outcome.summaryText,
@@ -590,7 +625,7 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
       : blocker?.kind === 'approval' ? 'approve'
       : blocker?.kind === 'choice' && blocker.choiceId === '__elect__' ? 'elect'
       : 'categorize';
-    const awaiting = { upload: `waiting for you to upload the ${config.documentLabel}`, categorize: 'waiting for you to categorize an unmatched row', elect: 'waiting for you to elect an amount', approve: 'waiting for your approval of the computed figures', done: 'complete' }[phase];
+    const awaiting = { upload: config.apiSource ? `fetching ${config.apiSource.recordLabel} from ${config.apiSource.provider}` : `waiting for you to upload the ${config.documentLabel}`, categorize: 'waiting for you to categorize an unmatched row', elect: 'waiting for you to elect an amount', approve: 'waiting for your approval of the computed figures', done: 'complete' }[phase];
     setActiveRun({
       workflowId: config.id, workflowName: config.name, agentName: SINA.name, documentLabel: config.documentLabel,
       totalSteps: config.steps.length, stepIndex: activeIdx, stepLabel: config.steps[Math.min(activeIdx, config.steps.length - 1)].label,
@@ -619,7 +654,7 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
       setActiveCoworker(null);
     } else if (blocker) {
       const status =
-        blocker.kind === 'upload' ? `Waiting for the ${config.documentLabel}`
+        blocker.kind === 'upload' ? (config.apiSource ? `Fetching from ${config.apiSource.provider}…` : `Waiting for the ${config.documentLabel}`)
         : blocker.kind === 'approval' ? 'Ready for your approval'
         : blocker.kind === 'choice'
           ? (blocker.choiceId === '__elect__' ? 'Waiting for you to elect an amount' : 'Waiting for your decision')
@@ -641,7 +676,7 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
 
   // Load parsed rows into the run — the SINGLE path every source (disk upload,
   // Drive, Gmail) funnels through, so the rows + numbers are identical.
-  const applyRows = (name: string, rows: SourceRow[], from: 'upload' | 'drive' | 'gmail') => {
+  const applyRows = (name: string, rows: SourceRow[], from: 'upload' | 'drive' | 'gmail' | 'api') => {
     fileName.current = name;
     setOrigin(from);
     setParseError(null);
@@ -668,6 +703,110 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
   };
 
   const onGooglePicked = (picked: PickedSource) => applyRows(picked.fileName, picked.rows, picked.origin);
+
+  // Live API source: fetch the rows server-side (POST /api/http-source keeps the
+  // call off the browser — no CORS, no key exposure, one SSRF guard) and funnel
+  // them through the same applyRows path every other source uses, so the figures
+  // are produced identically however the rows arrived.
+  //
+  // When the template names a connector, the request is REBUILT from the run's
+  // current parameters (year, currency…) rather than using the template's fixed
+  // URL — that is what makes "run this for 2024 in EUR" answerable from the chat
+  // without anyone touching an endpoint.
+  const onFetchApi = async (paramsOverride?: Record<string, string | number>) => {
+    const api = config.apiSource;
+    if (!api) return;
+    const params = paramsOverride ?? apiParams;
+    const built = api.connectorId
+      ? buildApiRequest(api.connectorId, params)
+      : null;
+
+    if (built && !built.ok) {
+      setParseError(built.errors.join(' '));
+      return;
+    }
+    const spec = built?.ok ? built.spec : null;
+
+    setFetching(true);
+    setParseError(null);
+    try {
+      const res = await fetch('/api/http-source', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: spec?.url ?? api.url,
+          method: spec?.method ?? api.method ?? 'GET',
+          body: spec ? spec.body : api.body,
+          resultsPath: spec?.resultsPath ?? api.resultsPath,
+          fieldMap: spec?.fieldMap ?? api.fieldMap,
+          currency: spec?.currency ?? api.currency,
+          maxRows: spec?.maxRows ?? api.maxRows,
+        }),
+      });
+      const data = (await res.json()) as {
+        ok?: boolean;
+        reason?: string;
+        rows?: SourceRow[];
+        responseMeta?: { status?: number; recordCount?: number; fetchedAt?: string };
+      };
+      if (!data.ok || !data.rows?.length) {
+        setParseError(
+          data.reason
+            ? `${api.provider} fetch failed: ${data.reason}`
+            : `${api.provider} returned no usable ${api.recordLabel}.`
+        );
+        return;
+      }
+      setApiMeta({ count: data.rows.length, at: data.responseMeta?.fetchedAt ?? new Date().toISOString() });
+      applyRows(api.provider, data.rows, 'api');
+    } catch (err) {
+      setParseError(err instanceof Error ? err.message : `Could not reach ${api.provider}.`);
+    } finally {
+      setFetching(false);
+    }
+  };
+
+  // A fixed-URL API source has no document to wait for and nothing to decide —
+  // fetch as soon as the run opens so the first step just runs. The user only sees
+  // a choice if it fails (retry, or fall back to the offline sample).
+  //
+  // A CONNECTOR-backed source is different: its parameters (which year? which
+  // currency?) are exactly what the run needs from you, so it asks first rather
+  // than quietly fetching a default year and presenting it as the answer.
+  const autoFetched = useRef(false);
+  useEffect(() => {
+    if (!config.apiSource || apiConnector || autoFetched.current) return;
+    if (effectiveState.uploaded || fetching || parseError) return;
+    autoFetched.current = true;
+    void onFetchApi();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config.apiSource, apiConnector, effectiveState.uploaded]);
+  // Start over. Clears only the run's GATES (source provided / elected / approved) —
+  // the loaded workbook, the edited inputs and the category overrides survive, since
+  // those are the user's decisions and are shared with the worksheet. An API-sourced
+  // run re-arms its auto-fetch so it pulls fresh rows instead of landing on the
+  // "couldn't reach the provider" panel with nothing in flight.
+  const restart = () => {
+    autoFetched.current = false;
+    setApiMeta(null);
+    setParseError(null);
+    setFlow(INITIAL_RUN_FLOW);
+  };
+
+  // The request the current parameters resolve to — surfaced next to the form so
+  // the run never hides what it is about to call. Falls back to the template's
+  // fixed URL for a non-connector source.
+  const apiRequestPreview = useMemo(() => {
+    const api = config.apiSource;
+    if (!api) return { host: '', line: '' };
+    const built = api.connectorId ? buildApiRequest(api.connectorId, apiParams) : null;
+    const url = built?.ok ? built.spec.url : api.url;
+    const method = built?.ok ? built.spec.method : (api.method ?? 'GET');
+    let host = '';
+    try { host = new URL(url).host; } catch { host = url; }
+    return { host, line: `${method} ${url}` };
+  }, [config.apiSource, apiParams]);
+
   const money = (v: number | undefined) => (v == null ? '—' : `${num(v)} ${cur}`);
   // The interaction panel fades in once the timeline has finished drawing.
   const revealStyle: React.CSSProperties = { opacity: introReady ? 1 : 0, transform: introReady ? 'none' : 'translateY(6px)', transition: 'opacity .35s ease, transform .35s ease' };
@@ -732,6 +871,18 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
       </div>
 
       <div style={revealStyle}>
+      {/* Provenance for a live-API run: what was fetched, from where, when. Stays
+          visible for the whole run — it is the claim the evidence pack rests on. */}
+      {config.apiSource && origin === 'api' && apiMeta && (
+        <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 7, padding: '7px 10px', borderRadius: 8, background: CARD, border: `1px solid ${LINE}`, fontSize: 11.5, color: MUTED }}>
+          <Cloud size={13} style={{ color: MUTED, flexShrink: 0 }} />
+          <span>
+            <b style={{ color: INK, fontWeight: 600 }}>{apiMeta.count.toLocaleString()}</b> {config.apiSource.recordLabel} fetched live from{' '}
+            <b style={{ color: INK, fontWeight: 600 }}>{config.apiSource.provider}</b> · {new Date(apiMeta.at).toLocaleString()} — pinned into this run, so the figures are reproducible.
+          </span>
+        </div>
+      )}
+
       {effectiveState.uploaded && <EditableInputs config={config} inputs={state.inputs} onCommit={(key, value) => setRunInput({ id: config.id, key, value })} onOpenBuilder={onOpenBuilder} snapshot={snapshot} liveConfigByBlock={liveConfigByBlock} />}
 
       {/* Non-blocking review notice — unmatched rows were left out of the calc. */}
@@ -752,7 +903,81 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
 
       {!done && blocker && (
         <div style={{ marginTop: 6, paddingTop: 12, borderTop: `1px solid ${HAIRLINE}` }}>
-          {blocker.kind === 'upload' && (
+          {/* API-sourced: no document, no upload prompt. It fetches itself; this
+              panel only ever appears while that is in flight or after it failed. */}
+          {blocker.kind === 'upload' && config.apiSource && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 600, color: INK, marginBottom: 5 }}>
+                {fetching ? <Loader2 size={14} className="cwp-spin" /> : <Cloud size={14} />}
+                {fetching
+                  ? `Fetching ${config.apiSource.recordLabel} from ${config.apiSource.provider}…`
+                  : apiConnector && !parseError
+                    ? `What should I pull from ${config.apiSource.provider}?`
+                    : `Could not reach ${config.apiSource.provider}`}
+              </div>
+              {fetching ? (
+                <div style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5 }}>
+                  Reading live from <code style={{ fontSize: 11.5 }}>{apiRequestPreview.host}</code> — the response is pinned into this run so the figures stay reproducible.
+                </div>
+              ) : (
+                <>
+                  {/* Connector-backed: ask for the BUSINESS parameters. No URL, no
+                      JSON body — a year and a currency, which is all the run
+                      actually needs to know, and all chat has to supply. */}
+                  {apiConnector ? (
+                    <>
+                      <div style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5, marginBottom: 11 }}>
+                        {parseError ?? `${apiConnector.description} Set what you need and I'll pull it.`}
+                      </div>
+                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+                        {apiConnector.params.map((param) => (
+                          <label key={param.key} style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 130 }}>
+                            <span style={{ fontSize: 10.5, fontWeight: 650, textTransform: 'uppercase', letterSpacing: '0.04em', color: FAINT }}>{param.label}</span>
+                            {param.kind === 'enum' && param.options ? (
+                              <select
+                                value={String(apiParams[param.key] ?? '')}
+                                onChange={(e) => setApiParams((p) => ({ ...p, [param.key]: e.target.value }))}
+                                style={{ fontSize: 12.5, color: INK, background: GROUND, border: `1px solid ${LINE}`, borderRadius: 7, padding: '6px 9px', outline: 'none' }}
+                              >
+                                {param.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                              </select>
+                            ) : (
+                              <input
+                                value={String(apiParams[param.key] ?? '')}
+                                onChange={(e) => setApiParams((p) => ({ ...p, [param.key]: param.kind === 'year' || param.kind === 'number' ? (e.target.value === '' ? '' : Number(e.target.value)) : e.target.value }))}
+                                inputMode={param.kind === 'year' || param.kind === 'number' ? 'numeric' : undefined}
+                                style={{ fontSize: 12.5, color: INK, background: GROUND, border: `1px solid ${LINE}`, borderRadius: 7, padding: '6px 9px', outline: 'none', width: param.kind === 'text' ? 260 : 110 }}
+                              />
+                            )}
+                          </label>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5, marginBottom: 11 }}>{parseError ?? blocker.message}</div>
+                  )}
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <button
+                      onClick={() => { setParseError(null); void onFetchApi(); }}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 550, padding: '7px 13px', borderRadius: 8, background: PRIMARY_BG, color: PRIMARY_FG, border: 'none', cursor: 'pointer' }}
+                    >
+                      <Cloud size={13} /> {apiConnector ? `Pull from ${config.apiSource.provider}` : `Try ${config.apiSource.provider} again`}
+                    </button>
+                    {ghostBtn({ children: 'Continue with the offline sample', onClick: () => { setParseError(null); fileName.current = null; setFlow((f) => ({ ...f, rows: undefined, uploaded: true })); } })}
+                  </div>
+                  {/* The request those parameters resolve to — shown, not hidden.
+                      The point of the parameter form is convenience, not opacity. */}
+                  {apiConnector && (
+                    <div style={{ marginTop: 11, fontSize: 10.5, color: FAINT, fontFamily: 'ui-monospace, monospace', wordBreak: 'break-all', lineHeight: 1.5 }}>
+                      {apiRequestPreview.line}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {blocker.kind === 'upload' && !config.apiSource && (
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 600, color: INK, marginBottom: 5 }}><FileUp size={14} /> Document needed</div>
               <div style={{ fontSize: 12.5, color: MUTED, lineHeight: 1.5, marginBottom: 11 }}>{blocker.message}</div>
@@ -764,7 +989,7 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
                     <Check size={13} /> Use loaded workbook{fileName.current ? ` · ${fileName.current}` : ''} ({storeRows!.length} rows)
                   </button>
                 )}
-                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 550, padding: '7px 13px', borderRadius: 8, background: parsing ? MUTED : (hasCached ? CARD : PRIMARY_BG), color: hasCached ? INK : PRIMARY_FG, border: hasCached ? `1px solid ${LINE}` : 'none', cursor: parsing ? 'default' : 'pointer' }}>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 550, padding: '7px 13px', borderRadius: 8, background: parsing ? MUTED : (hasCached || config.apiSource ? CARD : PRIMARY_BG), color: hasCached || config.apiSource ? INK : PRIMARY_FG, border: hasCached || config.apiSource ? `1px solid ${LINE}` : 'none', cursor: parsing ? 'default' : 'pointer' }}>
                   {parsing ? <Loader2 size={13} className="cwp-spin" /> : <Upload size={13} />} {parsing ? 'Parsing…' : hasCached ? 'Upload a different workbook' : 'Upload workbook'}
                   <input type="file" accept=".xlsx,.xls" disabled={parsing} style={{ display: 'none' }} onChange={onUploadFile} />
                 </label>
@@ -803,11 +1028,19 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
 
       {done && outcome?.headline && (
         <div style={{ marginTop: 6, paddingTop: 12, borderTop: `1px solid ${HAIRLINE}` }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: onOpenPage ? 8 : 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
             <span style={{ fontSize: 12.5, color: MUTED }}>{outcome.headline.label}</span>
             <span style={{ fontSize: 18, fontWeight: 650, color: INK, letterSpacing: '-0.01em' }}>{money(outcome.headline.value)}</span>
           </div>
-          {onOpenPage && <button onClick={() => onOpenPage('fapi')} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 550, color: INK, background: CARD, border: `1px solid ${LINE}`, borderRadius: 7, padding: '5px 10px', cursor: 'pointer' }}><ExternalLink size={11} /> Open worksheet</button>}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {/* Only workflows that HAVE a bespoke worksheet page get this button. It
+                used to be hardcoded to 'fapi', so every other workflow opened the FAPI
+                worksheet — the wrong figures under a confident heading. */}
+            {onOpenPage && config.resultPage && <button onClick={() => onOpenPage(config.resultPage!)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 550, color: INK, background: CARD, border: `1px solid ${LINE}`, borderRadius: 7, padding: '5px 10px', cursor: 'pointer' }}><ExternalLink size={11} /> Open worksheet</button>}
+            {/* A finished run persists, so without this the Run tab is read-only
+                forever — no way back to the source step for a fresh pass. */}
+            <button onClick={restart} title="Clear the run's gates and walk the steps again — your workbook, inputs and overrides are kept" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 550, color: INK, background: CARD, border: `1px solid ${LINE}`, borderRadius: 7, padding: '5px 10px', cursor: 'pointer' }}><RotateCcw size={11} /> Run again</button>
+          </div>
         </div>
       )}
       </div>

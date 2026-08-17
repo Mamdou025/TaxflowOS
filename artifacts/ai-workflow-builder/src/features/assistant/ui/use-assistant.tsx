@@ -42,8 +42,8 @@ import { InlineFieldCard } from '@/features/assistant/workspace/inline-field-car
 import { WorkflowRunFlow, WorkflowElementCard, RunProposalCard } from '@/features/assistant/workspace/workflow-run-flow';
 import type { ComposerSuggestion } from '@/features/assistant/workspace/aside-thread';
 import { getWorkflowConfig, WORKFLOW_CONFIGS, type TemplateConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
-import { PORTFOLIO_WORKFLOWS, getPortfolioWorkflowDef } from '@/shared/workflow-engine/templates/portfolio/portfolio-workflows';
-import { selectedWorkflowIdAtom, workflowTabAtom } from '@/features/workflows-hub/workflows-store';
+import { PORTFOLIO_WORKFLOWS } from '@/shared/workflow-engine/templates/portfolio/portfolio-workflows';
+import { aimBuilderAtWorkflowAtom } from '@/features/workflows-hub/workflows-store';
 import { WORKFLOWS } from '@/lib/agents';
 import { worksheetIntelRegistryAtom, pickIntel, listIntel, createTemplateIntel } from '@/features/worksheets/intel';
 import { GenUIRender } from '@/features/genui/genui-render';
@@ -183,8 +183,7 @@ export function useAssistant() {
   const pushTrail = useSetAtom(pushTrailAtom);
   const recordWork = useSetAtom(recordWorkItemAtom);
   const setBuilderFocus = useSetAtom(builderFocusTargetAtom);
-  const setSelectedWorkflow = useSetAtom(selectedWorkflowIdAtom);
-  const setWorkflowTab = useSetAtom(workflowTabAtom);
+  const aimBuilder = useSetAtom(aimBuilderAtWorkflowAtom);
   const setUploadedRows = useSetAtom(uploadedRowsAtom);
   const setAttachedDocs = useSetAtom(attachedDocsAtom);
   const attachedDocs = useAtomValue(attachedDocsAtom);
@@ -206,22 +205,15 @@ export function useAssistant() {
 
   // Open a workflow (or Sinaxe blueprint) in the NEW builder: the Workflows surface's
   // Build tab (InlineBuilder), docked beside the chat — NOT the legacy standalone
-  // /builder page (the older UI). The surface selects by PORTFOLIO id, so we map a
-  // runnable-config id ("fapi") to its blueprint ("pf-fapi"); blockId (when given) is
-  // focused on the canvas via builderFocusTargetAtom (InlineBuilder honors it). A
+  // /builder page (the older UI). aimBuilder points the surface at the workflow +
+  // block (see aimBuilderAtWorkflowAtom); this only has to bring the surface up. A
   // workflow with no portfolio surface yet falls back to the legacy canvas so the
   // click still works rather than landing on an empty "Select a workflow" state.
   const openInlineBuilder = (workflowId: string, blockId = '') => {
-    const baseId = workflowId.replace(/^pf-/, '');
-    const def = getPortfolioWorkflowDef(`pf-${baseId}`) ?? getPortfolioWorkflowDef(workflowId);
-    if (def) {
-      setBuilderFocus({ workflowId: def.id, blockId });
-      setSelectedWorkflow(def.id);
-      setWorkflowTab('build');
+    if (aimBuilder({ workflowId, blockId })) {
       const page = getPage('workflows');
       openWindow({ pageKey: 'workflows', title: page?.title ?? 'Workflows' });
     } else {
-      setBuilderFocus({ workflowId, blockId });
       openWindow({ pageKey: 'workflow-builder', title: 'Workflow Builder' });
     }
   };
@@ -836,6 +828,20 @@ export function useAssistant() {
     ],
     handler: async ({ grossIncome, currency, taxYear }: { grossIncome: number; currency: string; taxYear: number }) =>
       callServerTool('estimateForeignIncomeTax', { grossIncome, currency, taxYear }),
+  });
+
+  useCopilotAction({
+    name: 'callApi',
+    description:
+      "Call a public JSON HTTP API and return what it responds with. Use it to try an endpoint the user names, inspect its shape, or pull live data no other tool covers. Only public http(s) URLs work — private/internal addresses are refused. When the response is a list you get the record count, the field names and a few example records; otherwise a truncated JSON preview. NEVER invent a response: if the call fails, report the error. If the user wants this endpoint in a workflow, tell them to add an 'API / HTTP Request' Source block with the same url and resultsPath.",
+    parameters: [
+      { name: 'url', type: 'string', description: 'the full public http(s) URL to call', required: true },
+      { name: 'method', type: 'string', description: '"GET" (default) or "POST"', required: false },
+      { name: 'body', type: 'string', description: 'request body for POST, as a JSON string', required: false },
+      { name: 'resultsPath', type: 'string', description: 'dotted path to the array of records, e.g. "results" or "data.items". Omit to auto-detect.', required: false },
+    ],
+    handler: async ({ url, method, body, resultsPath }: { url: string; method?: string; body?: string; resultsPath?: string }) =>
+      callServerTool('callApi', { url, method, body, resultsPath }),
   });
 
   useCopilotAction({

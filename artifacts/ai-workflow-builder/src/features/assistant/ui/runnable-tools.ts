@@ -92,6 +92,18 @@ export const RUNNABLE_TOOLS: Record<string, RunnableTool> = {
     ],
     askMessage: (a) => `Estimate Canadian corporate tax on ${a.grossIncome || '?'} ${a.currency || ''} of foreign income for tax year ${a.taxYear || '?'}.`,
   },
+  callApi: {
+    mode: 'form',
+    runLabel: 'Call endpoint',
+    fields: [
+      { name: 'url', label: 'Endpoint URL', kind: 'text', required: true, placeholder: 'https://api.example.com/v1/items', width: 'full' },
+      { name: 'method', label: 'Method', kind: 'text', placeholder: 'GET', default: 'GET', width: 'half' },
+      { name: 'resultsPath', label: 'Path to records', kind: 'text', placeholder: 'auto-detect, e.g. results', width: 'half' },
+      { name: 'body', label: 'Request body (JSON, for POST)', kind: 'text', placeholder: '{ "limit": 10 }', width: 'full' },
+    ],
+    askMessage: (a) =>
+      `Call this API and tell me what it returns: ${a.method && a.method !== 'GET' ? `${a.method} ` : ''}${a.url}${a.resultsPath ? ` (records are at "${a.resultsPath}")` : ''}${a.body ? ` with body ${a.body}` : ''}`,
+  },
   calculate: {
     mode: 'form',
     runLabel: 'Calculate',

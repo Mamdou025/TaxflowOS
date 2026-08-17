@@ -26,6 +26,13 @@ import {
 type FiscalBlockConfigProps = {
   config: Record<string, unknown>;
   disabled: boolean;
+  /**
+   * The block's source evidence is frozen — it has been published or already
+   * consumed by a run. Source blocks used to be disabled purely for BEING sources,
+   * which froze every one of them at birth (they are stamped immutable on creation),
+   * so a draft Manual Entry could never be configured at all.
+   */
+  locked?: boolean;
   onUpdateConfig: (key: string, value: string) => void;
   onUpdateStage?: (stage: FiscalStage) => void;
   visualRole?: string;
@@ -54,6 +61,7 @@ function StageIcon({ stage }: { stage: FiscalStage }) {
 export function FiscalBlockConfig({
   config,
   disabled,
+  locked = false,
   onUpdateConfig,
   onUpdateStage,
   visualRole,
@@ -64,7 +72,11 @@ export function FiscalBlockConfig({
   const blockFamily = config.blockFamily as string | undefined;
   const isSourceEvidence =
     blockFamily === "Source" || stage === "source" || visualRole === "source";
-  const fieldsDisabled = disabled || isSourceEvidence;
+  // A block's FAMILY is structural identity, owned by the catalog entry it was
+  // created from — not a setting. It stays read-only for sources whatever their
+  // draft state; only the block's configuration below opens up.
+  const familyDisabled = disabled || locked || isSourceEvidence;
+  const fieldsDisabled = disabled || locked;
 
   const handleStageChange = (value: string) => {
     const nextStage = value as FiscalStage;
@@ -79,7 +91,7 @@ export function FiscalBlockConfig({
           Workflow Family
         </Label>
         <Select
-          disabled={fieldsDisabled}
+          disabled={familyDisabled}
           onValueChange={handleStageChange}
           value={stage}
         >
@@ -105,7 +117,7 @@ export function FiscalBlockConfig({
             Source Locator
           </Label>
           <Input
-            disabled={isSourceEvidence || disabled}
+            disabled={fieldsDisabled}
             id="sourceLocator"
             onChange={(event) =>
               onUpdateConfig("sourceLocator", event.target.value)

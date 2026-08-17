@@ -15,6 +15,7 @@ export const TOOL_LABELS: Record<string, string> = {
   // Live data & calculators
   getFxRate: 'Exchange rate',
   estimateForeignIncomeTax: 'Foreign-income tax estimate',
+  callApi: 'Call an API',
   calculate: 'Calculator',
   getCurrentDateTime: 'Current date & time',
   // Worksheet reasoning

@@ -85,6 +85,7 @@ const fetchWebPage = fromRegistry('fetchWebPage');
 const searchWeb = fromRegistry('searchWeb');
 const searchCanadianTax = fromRegistry('searchCanadianTax');
 const estimateForeignIncomeTax = fromRegistry('estimateForeignIncomeTax');
+const callApi = fromRegistry('callApi');
 
 // ── WORKFLOW-BUILDER ACTIONS (demo echoes on this page) ──────────────────────
 // These mirror your real useCopilotAction tools. On the Agent Lab page there is no
@@ -207,6 +208,7 @@ export const TOOLS: ToolSet = {
   searchWeb,
   searchCanadianTax,
   estimateForeignIncomeTax,
+  callApi,
   focusBlock,
   addBlock,
   editBlockConfig,

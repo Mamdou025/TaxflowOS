@@ -13,5 +13,11 @@ declare module "@/shared/workflow-engine/execution/blocks/source/currency-rate/s
     rateType: string;
     rateYear: number;
     seriesName?: string;
+    endpoint?: string;
+    observationCount?: number;
+    firstObservation?: string;
+    lastObservation?: string;
+    minRate?: number;
+    maxRate?: number;
   }>;
 }

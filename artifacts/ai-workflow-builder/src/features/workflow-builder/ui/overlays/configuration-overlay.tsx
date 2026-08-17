@@ -112,6 +112,11 @@ import { generateNodeCode } from "@/features/workflow-builder/ui/utils/code-gene
 import { WorkflowRuns } from "@/features/workflow-builder/ui/workflow-runs";
 import { BlockDataFlowColumn } from "@/features/workflow-builder/ui/workspace/block-data-flow-pane";
 import { getLatestLocalRunForBlock } from "@/features/workflow-builder/ui/workspace/latest-local-run";
+import { BlockRunPanel } from "@/features/workflow-builder/ui/workspace/block-run-panel";
+import {
+  getToolIdForBlock,
+  type ToolRunResult,
+} from "@/shared/workflow-engine/local-tool-registry";
 import {
   getWorkspaceGridColumns,
   useWorkspacePaneSizing,
@@ -472,6 +477,11 @@ function CollapsibleDataFlow({
 }) {
   const [open, setOpen] = useState(false);
   const [panelHeight, setPanelHeight] = useState(260);
+  // Has THIS block produced output in the run being shown? The record can exist
+  // from a whole-workflow run that never touched this block.
+  const hasRun = Boolean(
+    lastRun?.logs.some((log) => log.nodeId === block.id && log.output)
+  );
 
   const onResizePointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
@@ -494,21 +504,51 @@ function CollapsibleDataFlow({
 
   return (
     <div className="shrink-0 border-t bg-background">
-      <button
-        className="flex w-full items-center gap-2 px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"
-        onClick={() => setOpen((v) => !v)}
-        type="button"
-      >
-        {open ? (
-          <ChevronDown className="size-3 shrink-0" />
-        ) : (
-          <ChevronRight className="size-3 shrink-0" />
+      <div className="flex w-full items-center gap-2 px-3 py-2 text-muted-foreground text-xs">
+        <button
+          className="flex min-w-0 flex-1 items-center gap-2 transition-colors hover:text-foreground"
+          onClick={() => setOpen((v) => !v)}
+          type="button"
+        >
+          {open ? (
+            <ChevronDown className="size-3 shrink-0" />
+          ) : (
+            <ChevronRight className="size-3 shrink-0" />
+          )}
+          <span className="font-medium">Connected I/O</span>
+          {/* Says whether the values below are real yet. The panes can show each
+              output role's ACTUAL value, but only once the block has run — before
+              that every row reads "not executed", which looks like a broken panel
+              rather than a prompt. */}
+          <span className="text-[10px] opacity-60">
+            {hasRun ? "showing the last run" : "not run yet"}
+          </span>
+        </button>
+        {/* Run lives HERE, next to the values it fills in — so pressing it turns
+            this section into a before/after of the block, instead of making you
+            leave for the Runs tab and come back. */}
+        {onExecuteStep && (
+          <Button
+            className="h-6 shrink-0 px-2 text-[11px]"
+            onClick={() => {
+              setOpen(true);
+              onExecuteStep();
+            }}
+            size="sm"
+            variant="ghost"
+          >
+            <Play className="mr-1 size-3" />
+            Run block
+          </Button>
         )}
-        <span className="font-medium">Connected I/O</span>
-        <span className="ml-auto text-[10px] opacity-60">
+        <button
+          className="shrink-0 text-[10px] opacity-60 transition-colors hover:text-foreground"
+          onClick={() => setOpen((v) => !v)}
+          type="button"
+        >
           {open ? "collapse" : "expand"}
-        </span>
-      </button>
+        </button>
+      </div>
       {open && (
         <>
           {/* Drag handle — drag up to make panel taller */}
@@ -981,15 +1021,13 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
     });
   };
 
-  // Determine which tabs to show (only for node view)
-  const showCodeTab = Boolean(
-    selectedNode &&
-      (selectedNode.data.block?.family === "Logic" ||
-        ((selectedNode.data.type !== "trigger" ||
-          (selectedNode.data.config?.triggerType as string) !== "Manual" ||
-          selectedNode.data.config?.fiscalStage) &&
-          selectedNode.data.config?.actionType !== "Condition"))
-  );
+  // The Code tab is gone. It rendered GENERATED code — a plausible-looking
+  // rendering of what a block might do, which is not what the engine executes.
+  // In a product whose whole claim is that a figure can be traced to what actually
+  // ran, a second, non-executing description of a block is worse than no
+  // description: it is the thing a reviewer would reasonably trust. The Runs tab
+  // now answers the same question with the block's REAL output.
+  const showCodeTab = false;
 
   // Get current tab title
   const getTabTitle = () => {
@@ -1162,6 +1200,11 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
   };
 
   const selectedBlock = selectedNode?.data.block;
+  // The ToolRunResult for the block the user just ran — what the Runs tab shows.
+  // The run record kept in executionLogs is per-step UI status, not the tool's
+  // actual output, so the result is taken straight off the runner.
+  const [blockRunResult, setBlockRunResult] = useState<ToolRunResult | null>(null);
+  useEffect(() => { setBlockRunResult(null); }, [selectedBlock?.id]);
   const handleExecuteSelectedStep = useCallback(() => {
     if (!(selectedNode && selectedBlock)) {
       return;
@@ -1174,6 +1217,9 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
       selectedBlockId: selectedBlock.id,
       workflowName: currentWorkflowName,
     });
+    setBlockRunResult(
+      localRun.result.results.find((r) => r.blockId === selectedBlock.id) ?? null
+    );
     saveLocalRunRecord(localRun.record);
     setSelectedExecutionId(localRun.record.execution.id);
     setExecutionLogs(createExecutionLogsMap(localRun.record.logs));
@@ -1231,11 +1277,10 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
 
   // If no node is selected, show workflow-level configuration
   if (!selectedNode) {
-    // For workflow view, only properties, code, and runs (if owner) are valid tabs
+    // Workflow view: properties, and runs (if owner). The Code tab was removed —
+    // see showCodeTab.
     const validWorkflowTab =
-      activeTab === "properties" ||
-      activeTab === "code" ||
-      (activeTab === "runs" && isOwner)
+      activeTab === "properties" || (activeTab === "runs" && isOwner)
         ? activeTab
         : "properties";
 
@@ -1286,42 +1331,6 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
             </div>
           )}
 
-          {validWorkflowTab === "code" && (
-            <div className="flex flex-col">
-              <div className="flex shrink-0 items-center justify-between border-b bg-muted/30 px-3 py-2">
-                <div className="flex items-center gap-2">
-                  <FileCode className="size-3.5 text-muted-foreground" />
-                  <code className="text-muted-foreground text-xs">
-                    workflow.ts
-                  </code>
-                </div>
-                <Button
-                  className="h-7 text-xs"
-                  onClick={handleCopyWorkflowCode}
-                  size="sm"
-                  variant="ghost"
-                >
-                  <Copy className="mr-1 size-3" />
-                  Copy
-                </Button>
-              </div>
-              <div className="h-[400px]">
-                <CodeEditor
-                  defaultLanguage="typescript"
-                  height="100%"
-                  options={{
-                    readOnly: true,
-                    minimap: { enabled: false },
-                    lineNumbers: "on",
-                    scrollBeyondLastLine: false,
-                    fontSize: 12,
-                    wordWrap: "on",
-                  }}
-                  value={workflowCode}
-                />
-              </div>
-            </div>
-          )}
 
           {validWorkflowTab === "runs" && isOwner && (
             <div className="flex h-full flex-col">
@@ -1370,18 +1379,6 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
             <Settings2 className="size-5" />
             Workflow
           </button>
-          <button
-            className={`flex flex-1 flex-col items-center gap-1 py-3 font-medium text-xs transition-colors ${
-              validWorkflowTab === "code"
-                ? "text-foreground"
-                : "text-muted-foreground"
-            }`}
-            onClick={() => setActiveTab("code")}
-            type="button"
-          >
-            <Code className="size-5" />
-            Code
-          </button>
           {isOwner && (
             <button
               className={`flex flex-1 flex-col items-center gap-1 py-3 font-medium text-xs transition-colors ${
@@ -1428,8 +1425,6 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
     selectedNode.data.block?.governance?.requiresUnlockToEdit &&
       !selectedNode.data.config?.protectedEditIntent
   );
-  const identityFieldsDisabled =
-    isGenerating || !isOwner || sourceEvidenceLocked || protectedNeedsUnlock;
   const showDataFlowWorkspace = Boolean(
     selectedBlock && !selectedNode.data.config?.blockCandidate
   );
@@ -1469,6 +1464,15 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
           sourceHasLockableEvidence &&
           (sourceUsedInRun || selectedBlock.config.sourceUsedInRun === true)))
   );
+  // Evidence immutability only bites once the source is COMMITTED. Every source is
+  // stamped immutable at creation, so requiring `sourceEvidenceLocked` alone froze
+  // brand-new draft blocks — a Manual Entry arrived with its label, description and
+  // whole config greyed out, before it held any evidence to protect.
+  const identityFieldsDisabled =
+    isGenerating ||
+    !isOwner ||
+    (sourceEvidenceLocked && sourceLocked) ||
+    protectedNeedsUnlock;
   const handleCreateRulebookItem = () => {
     if (selectedBlockIsCalculationRuleSource) {
       setSelectedRulebookItemId(NEW_CALCULATION_RULE_ID);
@@ -1812,6 +1816,7 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
                   <FiscalBlockConfig
                     config={selectedNode.data.config || {}}
                     disabled={isGenerating || !isOwner}
+                    locked={sourceLocked || protectedNeedsUnlock}
                     onUpdateConfig={handleUpdateConfig}
                     onUpdateStage={handleUpdateFiscalStage}
                     visualRole={selectedNode.data.visualRole}
@@ -1942,7 +1947,22 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
 
           {activeTab === "runs" && isOwner && (
             <div className="flex h-full flex-col">
-              <div className="flex shrink-0 items-center gap-2 border-b px-4 py-2">
+              {/* THIS block's own run comes first — "what does this block do?" is
+                  the question the tab is opened with. The workflow's run history
+                  stays available underneath. */}
+              {selectedBlock && (
+                <BlockRunPanel
+                  block={selectedBlock}
+                  disabled={isGenerating || !isOwner}
+                  lastRun={blockRunResult}
+                  onRun={handleExecuteSelectedStep}
+                  toolId={getToolIdForBlock(selectedBlock)}
+                />
+              )}
+              <div className="flex shrink-0 items-center gap-2 border-t border-b px-4 py-2">
+                <span className="mr-auto font-medium text-muted-foreground text-xs">
+                  Workflow run history
+                </span>
                 <Button
                   className="text-muted-foreground"
                   disabled={isRefreshing}
@@ -1965,7 +1985,7 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
                   Clear All
                 </Button>
               </div>
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="max-h-64 shrink-0 overflow-y-auto p-4">
                 <WorkflowRuns
                   isActive={activeTab === "runs"}
                   onRefreshRef={refreshRunsRef}

@@ -12,14 +12,14 @@ import { useTheme } from 'next-themes';
 import { ArrowLeft } from 'lucide-react';
 import { getWorkflowConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
 import { WorkflowRunFlow } from '@/features/assistant/workspace/workflow-run-flow';
-import { builderFocusTargetAtom } from '@/shared/workflow-engine/state/workflow-store';
+import { aimBuilderAtWorkflowAtom } from '@/features/workflows-hub/workflows-store';
 import { openWorkspaceWindowAtom } from '@/shared/stores/workspace-store';
 import { getPage } from '@/shared/stores/resource-registry';
 
 export default function RunPage() {
   const params = useParams();
   const router = useRouter();
-  const setBuilderFocus = useSetAtom(builderFocusTargetAtom);
+  const aimBuilder = useSetAtom(aimBuilderAtWorkflowAtom);
   const openWindow = useSetAtom(openWorkspaceWindowAtom);
   const { resolvedTheme } = useTheme();
   const workflowId = String(params?.workflowId ?? '');
@@ -53,7 +53,7 @@ export default function RunPage() {
             surface={resolvedTheme === 'dark' ? 'dark' : 'light'}
             onComplete={() => { /* run stays on screen showing the result */ }}
             onOpenPage={(pk) => { openWindow({ pageKey: pk, title: getPage(pk)?.title ?? pk }); router.push('/'); }}
-            onOpenBuilder={(blockId) => { setBuilderFocus({ workflowId: config.id, blockId }); router.push('/workflows-hub'); }}
+            onOpenBuilder={(blockId) => { aimBuilder({ workflowId: config.id, blockId }); router.push('/workflows-hub'); }}
             onStop={() => router.push('/home')}
           />
         </div>
