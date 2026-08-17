@@ -22,6 +22,7 @@ export type Agent = {
 
 /** The workspace's workflow domains (Sina applies the matching one per turn). */
 export const AGENTS: Agent[] = [
+  { id: 'holiday-payroll', name: 'Statutory holiday accrual', role: 'Payroll accrual for public holidays on live calendar data', workflow: 'holiday-payroll', live: true },
   { id: 'fapi', name: 'FAPI', role: 'Foreign accrual property income', workflow: 'fapi', live: true },
   { id: 'roulement', name: 'Section 85 rollover', role: 'Roulement fiscal (art. 85)', workflow: 'roulement', live: true },
   { id: 'expense', name: 'Expense reimbursement', role: 'Employee expense reimbursement', workflow: 'expense', live: true },
@@ -38,6 +39,7 @@ export type WorkflowSuggestion = {
 
 /** Runnable procedures surfaced as suggestions in the composer + sidebar. */
 export const WORKFLOWS: WorkflowSuggestion[] = [
+  { id: 'holiday-payroll', name: 'Statutory holiday payroll accrual', sub: 'Live holiday API → classify → day counts → accrual', ready: true },
   { id: 'fapi', name: 'Calculate FAPI', sub: 'Foreign accrual property income', ready: true },
   { id: 'roulement', name: 'Roulement fiscal (art. 85)', sub: 'Rollover election → T2057', ready: true },
   { id: 'expense', name: 'Expense reimbursement', sub: 'Receipts → policy caps → net payable', ready: true },

@@ -94,6 +94,9 @@ function makeConfig(spec: Spec): TemplateConfig {
     id: spec.id,
     name: spec.name,
     documentLabel: spec.documentLabel,
+    // A shared demo income/expense engine stands in for each blueprint's real
+    // domain math — the worksheet must say so.
+    representative: true,
     steps: STEPS,
     buildSnapshot: (() => createPortfolioWorkflow(def)) as unknown as TemplateConfig['buildSnapshot'],
     sampleRows: sampleRows(spec.scale ?? 1, currency),

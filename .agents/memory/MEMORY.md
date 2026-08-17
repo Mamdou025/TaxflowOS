@@ -1,1 +1,2 @@
 - [CopilotKit Fast Refresh cascade](copilotkit-fast-refresh-cascade.md) — non-component named exports from component files silently break React.lazy caching via Vite HMR cascades.
+- [CopilotKit orphaned tool calls](copilotkit-orphaned-tool-calls.md) — "Tool result is missing for tool call <id>" when replying after the AI; fixed by server-side orphan repair on the LIVE Express api-server route (the Next.js route is dead in the 3-service dev stack).

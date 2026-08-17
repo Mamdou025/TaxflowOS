@@ -929,7 +929,7 @@ function Provenance({ msg }: { msg: ChatMessage }) {
     msg.applied ??
     (() => {
       const p = planForModel(ctx.model, { effort: ctx.effort === 'auto' ? undefined : ctx.effort });
-      return { model: ctx.model, auto: false, provider: p.provider, effort: p.effort, cache: p.cacheSystem, temperatureSent: p.sendTemperature };
+      return { model: ctx.model, auto: false, provider: p.provider, effort: p.effort, cache: p.cachePrefix, temperatureSent: p.sendTemperature };
     })();
 
   return (

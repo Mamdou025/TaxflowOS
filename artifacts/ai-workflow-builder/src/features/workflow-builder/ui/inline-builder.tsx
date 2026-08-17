@@ -10,8 +10,8 @@
 // container. Workflow load mirrors app/builder/page.tsx (the plain, non-deep-link
 // branch).
 
-import { useEffect } from 'react';
-import { useSetAtom } from 'jotai';
+import { useEffect, useRef } from 'react';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { ReactFlowProvider } from '@xyflow/react';
 import { toast } from 'sonner';
 import { WorkflowCanvas } from '@/features/workflow-builder/ui/workflow-canvas';
@@ -19,6 +19,7 @@ import { RightPanelShell } from '@/features/workflow-builder/ui/right-panel-shel
 import { BuilderCopilot } from '@/features/assistant/ui/builder-copilot';
 import { BuilderPageMenu } from '@/features/workflow-builder/ui/builder-page-menu';
 import { builderEmbeddedAtom } from '@/lib/builder-bridge';
+import { getPortfolioWorkflowDef } from '@/shared/workflow-engine/templates/portfolio/portfolio-workflows';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   createBlankWorkflow,
@@ -43,6 +44,9 @@ import {
   selectedExecutionIdAtom,
   selectedNodeAtom,
   workflowNotFoundAtom,
+  builderFocusTargetAtom,
+  focusNodeIdAtom,
+  openBlockConfigIdAtom,
 } from '@/shared/workflow-engine/state/workflow-store';
 
 export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blank?: boolean } = {}) {
@@ -60,6 +64,13 @@ export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blan
   const setSelectedNode = useSetAtom(selectedNodeAtom);
   const setSelectedEdge = useSetAtom(selectedEdgeAtom);
   const setSelectedExecutionId = useSetAtom(selectedExecutionIdAtom);
+  const setFocusNodeId = useSetAtom(focusNodeIdAtom);
+  const setOpenBlockConfig = useSetAtom(openBlockConfigIdAtom);
+  const setBuilderFocus = useSetAtom(builderFocusTargetAtom);
+  // Chat "open in builder" deep-link: the chat sets builderFocusTargetAtom (workflow
+  // + block) before switching to this Build tab. Captured once at mount — mirrors
+  // app/builder/page.tsx — so we can select + centre that block on the canvas.
+  const focusRef = useRef(useAtomValue(builderFocusTargetAtom));
 
   // Tell the toolbar to hide its floating rail; the chrome lives in the header.
   useEffect(() => {
@@ -68,6 +79,16 @@ export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blan
   }, [setEmbedded]);
 
   useEffect(() => {
+    // A deep-link focus target for THIS workflow (compare ignoring the pf- prefix, as
+    // the surface selects by portfolio id) — resolved BEFORE the graph is chosen,
+    // because which graph to load depends on where that block actually lives.
+    const focus = focusRef.current;
+    const focusBlockId =
+      focus && focus.blockId && workflowId &&
+      focus.workflowId.replace(/^pf-/, '') === workflowId.replace(/^pf-/, '')
+        ? focus.blockId
+        : '';
+
     // A specific workflow (the Build tab of a workflow page) loads THAT graph —
     // a portfolio blueprint (pf-*) or a runnable config — WITHOUT clobbering the
     // user's saved local workflow. No workflowId → the usual saved-local load.
@@ -76,9 +97,27 @@ export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blan
       snapshot = createBlankWorkflow();
     } else if (workflowId) {
       const cfg = getWorkflowConfig(workflowId.replace(/^pf-/, ''));
+      const def = getPortfolioWorkflowDef(workflowId);
+      const runnableSnapshot = cfg
+        ? (cfg.buildSnapshot() as ReturnType<typeof createWorkingSourceRulesDemoWorkflow>)
+        : null;
+      const blueprint = createPortfolioWorkflowById(workflowId);
+      const holds = (s: { blocks?: { id: string }[] } | null | undefined) =>
+        Boolean(focusBlockId && s?.blocks?.some((b) => b.id === focusBlockId));
+      // A def flagged `canvasFromRunnable` is an outline of a workflow that is
+      // actually BUILT — load the runnable config's real configured graph instead,
+      // so the Build tab shows the rulebooks/API config the run uses. Blueprints
+      // (no flag) keep showing their structural outline, which is their point —
+      // EXCEPT when we were deep-linked to a specific block: the chat/worksheets
+      // address blocks by their RUNNABLE id ("fapi-source-inputs"), which exists
+      // only on the configured graph, so loading the outline would land on a canvas
+      // that cannot contain the block the user asked to see.
+      const preferRunnable =
+        Boolean(def?.canvasFromRunnable) || (holds(runnableSnapshot) && !holds(blueprint));
       snapshot =
-        createPortfolioWorkflowById(workflowId) ||
-        (cfg ? (cfg.buildSnapshot() as ReturnType<typeof createWorkingSourceRulesDemoWorkflow>) : null) ||
+        (preferRunnable ? runnableSnapshot : null) ||
+        blueprint ||
+        runnableSnapshot ||
         createWorkingSourceRulesDemoWorkflow();
     } else {
       const loadResult = loadLocalWorkflowSnapshotResult();
@@ -88,7 +127,12 @@ export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blan
       snapshot = loadResult.snapshot || createWorkingSourceRulesDemoWorkflow();
     }
     const canvas = workflowDefinitionToCanvas(snapshot);
-    const selectedNode = canvas.nodes.find((n) => n.selected) || canvas.nodes[0];
+    // The deep-linked block (resolved above) → select + centre it.
+    const focusedNode = focusBlockId ? canvas.nodes.find((n) => n.id === focusBlockId) : undefined;
+    const selectedNode =
+      focusedNode ||
+      canvas.nodes.find((n) => n.selected) ||
+      canvas.nodes[0];
     setNodes(
       canvas.nodes.map((node) => ({
         ...node,
@@ -107,6 +151,13 @@ export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blan
     setSelectedNode(selectedNode?.id ?? null);
     setSelectedEdge(null);
     setSelectedExecutionId(null);
+    // Centre the canvas on the deep-linked block (WorkflowCanvas scrolls to it once
+    // the node exists) and open its configuration, so "open the full block in the
+    // builder" lands ON the block's real setup instead of a canvas the user still
+    // has to hunt through. Only when the block was actually found; otherwise clear
+    // any stale focus from a prior visit.
+    setFocusNodeId(focusedNode ? focusBlockId : null);
+    setOpenBlockConfig(focusedNode ? focusBlockId : null);
     // Only the default (saved-local) load persists; a specific/blank workflow loaded
     // into Build is transient so it doesn't overwrite the user's saved local workflow
     // (they persist it with the Save button when ready).
@@ -116,7 +167,17 @@ export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blan
     setCurrentWorkflowId, setCurrentWorkflowName, setCurrentWorkflowVisibility,
     setEdges, setHasSidebarBeenShown, setHasUnsavedChanges, setIsWorkflowOwner,
     setNodes, setSelectedEdge, setSelectedExecutionId, setSelectedNode, setWorkflowNotFound,
+    setFocusNodeId, setOpenBlockConfig,
   ]);
+
+  // Clear the deep-link target shortly after mount — late enough to survive a
+  // StrictMode dev double-mount, so a later plain visit loads normally (mirrors
+  // app/builder/page.tsx).
+  useEffect(() => {
+    if (!focusRef.current) return;
+    const t = window.setTimeout(() => setBuilderFocus(null), 1200);
+    return () => window.clearTimeout(t);
+  }, [setBuilderFocus]);
 
   return (
     <div className="relative h-full w-full overflow-hidden" style={{ background: 'var(--sx-canvas-ground)' }}>

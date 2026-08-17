@@ -145,8 +145,38 @@ export default defineConfig({
     strictPort: true,
     host: '0.0.0.0',
     allowedHosts: true,
+    // File-watching over a Docker Desktop *Windows* bind mount: native inotify
+    // events don't propagate from the host into the Linux container, so Vite
+    // never sees source edits and keeps serving the module transforms it cached
+    // at boot (symptom: committed UI changes just don't appear until you manually
+    // `docker compose restart web`). Polling restores HMR there. Gated on an env
+    // var (set for the `web` service in docker-compose.yml) so native, event-based
+    // watching is kept everywhere it actually works (Replit, macOS, bare-metal).
+    watch: process.env.VITE_USE_POLLING
+      ? { usePolling: true, interval: 300 }
+      : undefined,
     fs: {
       strict: true,
+    },
+    // Dev-only bridge: forward the frontend's relative `/api/*` calls — including
+    // the CopilotKit runtime at `/api/copilotkit` (app-shell.tsx runtimeUrl) — to
+    // the Express api-server.
+    //
+    // Port resolution order:
+    //   1. API_BASE        — full override (e.g. http://api:8080 in docker-compose)
+    //   2. API_SERVER_PORT — just the port number (set alongside PORT for each artifact)
+    //   3. 8080            — matches the api-server artifact.toml localPort default
+    //
+    // In the Replit preview pane the platform's own path-router forwards /api
+    // directly to the api-server process before requests ever reach Vite, so the
+    // proxy is only exercised by local curl / e2e tests that hit Vite directly
+    // (localhost:PORT/api/...). The proxy must still point at the correct port so
+    // those callers don't hit ECONNREFUSED.
+    proxy: {
+      '/api': {
+        target: process.env.API_BASE ?? `http://localhost:${process.env.API_SERVER_PORT ?? 8080}`,
+        changeOrigin: true,
+      },
     },
   },
   preview: {

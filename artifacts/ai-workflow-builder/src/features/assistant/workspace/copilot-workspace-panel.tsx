@@ -14,7 +14,7 @@ import dynamic from '@/lib/next-dynamic-shim';
 import { useEffect, useRef, useState, type ReactNode, type CSSProperties, type ComponentType, type PointerEvent as ReactPointerEvent } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-import { X, Plus, LayoutDashboard, Workflow, PanelRightClose, Maximize2, Minimize2, Files, ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { X, Plus, Workflow, PanelRightClose, Maximize2, Minimize2, Files, ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { chatPanelModeAtom } from '@/shared/stores/chat-store';
 import {
   workspaceWindowsAtom,
@@ -76,7 +76,6 @@ const PORTAL_BORDER = 'var(--sx-divider)';
 const WORKSPACE_ITEMS: { key: string; title: string; Icon: ComponentType<{ size?: number | string }> }[] = [
   { key: 'workflows', title: 'Workflows', Icon: Workflow },
   { key: 'agent', title: 'Agent', Icon: SinaMarkIcon },
-  { key: 'dashboard', title: 'Dashboard', Icon: LayoutDashboard },
   { key: 'viewer', title: 'Documents', Icon: Files },
 ];
 

@@ -1,3 +1,10 @@
+import { buildApiRequest } from "../http-json/connectors";
+import {
+  extractAtPath,
+  fetchJsonPayload,
+  mapRecordsToRows,
+} from "../http-json/schema";
+
 export type CurrencyRateConfig = {
   documentCurrency: string;
   reportingCurrency: string;
@@ -82,41 +89,67 @@ export async function fetchAnnualAverageExchangeRate({
     );
   }
 
-  const seriesName = `FX${documentCurrency}CAD`;
-  const response = await fetch(
-    `https://www.bankofcanada.ca/valet/observations/${encodeURIComponent(
-      seriesName
-    )}/json?start_date=${year}-01-01&end_date=${year}-12-31`
-  );
-  if (!response.ok) {
-    throw new Error(`FX lookup failed with HTTP ${response.status}.`);
+  // An API is an API: this goes through the SAME path as every other API source.
+  // The `boc.fx_observations` connector builds the URL and the field map, and
+  // fetchJsonPayload performs the call — so the SSRF guard, the 30s timeout and
+  // the 8MB response cap apply here too. This used to be a bare `fetch()` with
+  // none of those, against a URL templated a second time, which is exactly the
+  // drift two code paths to one upstream produce.
+  //
+  // What is genuinely different about FX is not the transport — it is the SHAPE:
+  // the block emits one scalar, not rows. So the only bespoke part left is the
+  // reduction below (average the year's daily observations), applied to rows the
+  // shared mapper produced.
+  const built = buildApiRequest("boc.fx_observations", {
+    currency: documentCurrency,
+    year,
+  });
+  if (!built.ok) {
+    throw new Error(built.errors.join(" "));
   }
+  const seriesName = `FX${documentCurrency}CAD`;
 
-  const payload = (await response.json()) as {
-    observations?: Record<string, { v?: string } | string>[];
-  };
-  const values =
-    payload.observations
-      ?.map((observation) => {
-        const seriesValue = observation[seriesName];
-        const rawValue =
-          typeof seriesValue === "object" && seriesValue !== null
-            ? seriesValue.v
-            : seriesValue;
-        return typeof rawValue === "string" ? Number(rawValue) : Number.NaN;
-      })
-      .filter((value) => Number.isFinite(value)) || [];
-  if (values.length === 0) {
+  const { payload } = await fetchJsonPayload({
+    url: built.spec.url,
+    method: built.spec.method,
+    headers: {},
+  });
+
+  const records = extractAtPath(payload, built.spec.resultsPath);
+  const { rows } = mapRecordsToRows({
+    currency: built.spec.currency,
+    fieldMap: built.spec.fieldMap ?? {},
+    maxRows: built.spec.maxRows ?? 400,
+    records: Array.isArray(records) ? records : [],
+  });
+
+  const observations = rows.map((row) => ({
+    date: row.label,
+    value: row.amount,
+  }));
+  if (observations.length === 0) {
     throw new Error("FX lookup response did not include a usable rate.");
   }
+  const values = observations.map((observation) => observation.value);
   const rate =
     values.reduce((total, value) => total + value, 0) / values.length;
 
+  // The averaged inputs, not just the average — a reviewer asked to trust an FX
+  // figure wants to see how many daily observations it rests on and over what
+  // window, and the min/max says whether an annual mean is even representative.
   return {
     rate,
     rateSource: "bank_of_canada_valet",
     rateType: "annual_average",
     rateYear: year,
     seriesName,
+    // The URL that was ACTUALLY called, so callers echo it instead of rebuilding
+    // it — one more place the two paths could have disagreed.
+    endpoint: built.spec.url,
+    observationCount: observations.length,
+    firstObservation: observations[0]?.date,
+    lastObservation: observations.at(-1)?.date,
+    minRate: Math.min(...values),
+    maxRate: Math.max(...values),
   };
 }

@@ -84,6 +84,7 @@ export const TOOL_CATALOG: ToolInfo[] = [
   { id: 'searchCanadianTax', label: 'CRA / canada.ca tax lookup', category: 'real', real: true, desc: 'Live web search restricted to official Canadian tax sources (canada.ca, CRA). Returns titles + URLs + snippets to cite. Needs FIRECRAWL_API_KEY.' },
   { id: 'searchDocuments', label: 'Search documents (keyword RAG)', category: 'retrieval', real: true, desc: 'Keyword-search your attached files and return only the most relevant passages. Lets the agent read files too big to load whole.' },
   { id: 'estimateForeignIncomeTax', label: 'Foreign-income tax estimate (3 inputs)', category: 'workflow-template', real: true, desc: 'Give income + currency + year → converts to CAD (live FX) and estimates combined corporate tax with a $500k small-business threshold.' },
+  { id: 'callApi', label: 'Call any JSON API', category: 'real', real: true, desc: 'Give a public http(s) endpoint (and optionally a POST body) → returns the record count, field names and sample records. Private addresses are refused.' },
   { id: 'focusBlock', label: 'focusBlock', category: 'workflow-action', real: false, desc: 'Builder action — echoes the call here (acts for real on the canvas).' },
   { id: 'addBlock', label: 'addBlock', category: 'workflow-action', real: false, desc: 'Builder action — echoes the call so you can see the agent choose it.' },
   { id: 'editBlockConfig', label: 'editBlockConfig', category: 'workflow-action', real: false, desc: 'Builder action — echoes the call.' },

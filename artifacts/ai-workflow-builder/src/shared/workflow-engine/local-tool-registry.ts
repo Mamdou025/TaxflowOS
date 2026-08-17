@@ -14,6 +14,10 @@ import {
   type WorkflowDefinition,
 } from "./local-fiscal-workflow";
 import { isGovernedValueBlock } from "@/shared/workflow-engine/domain/workflow/protected-rules";
+// Executors for the catalog entries that previously had none, or that aliased
+// another tool. See missing-tools.ts / output-tools.ts for the audit that found them.
+import { MISSING_TOOLS } from "./missing-tools";
+import { OUTPUT_TOOLS } from "./output-tools";
 
 export type ToolRunStatus =
   | "error"
@@ -2234,6 +2238,101 @@ function buildZCanonicalJson({
 
 function dedupeRowsById(rows: FiscalRow[]) {
   return [...new Map(rows.map((row) => [row.rowId, row])).values()];
+}
+
+// ── Export helpers (CSV / Excel output tools) ────────────────────────────────
+
+/** Column order that reads well in a spreadsheet; anything else is appended. */
+const EXPORT_COLUMN_PRIORITY = [
+  "rowId",
+  "label",
+  "description",
+  "account",
+  "category",
+  "categoryLabel",
+  "amount",
+  "currency",
+  "confidence",
+  "status",
+];
+
+const EXPORT_COLUMN_DENYLIST = new Set([
+  "evidenceRefs",
+  "sourceTrace",
+  "ruleSourceTrace",
+  "raw",
+  "sourceRow",
+  "metadata",
+]);
+
+function slugify(value: string) {
+  return (
+    value
+      .toLowerCase()
+      .replaceAll(/[^a-z0-9]+/g, "-")
+      .replaceAll(/(^-|-$)/g, "") || "workflow-export"
+  );
+}
+
+/** Prefer classified rows when a mapper ran; fall back to raw source rows. */
+function collectExportRows(
+  context: ToolExecutionContext
+): Record<string, unknown>[] {
+  const mapped = collectRowsByOutputKey(context.upstreamResults, "mappedRows");
+  const rows = mapped.length > 0 ? mapped : collectRows(context);
+  return rows.map((row) => asRecord(row) || {});
+}
+
+function resolveExportColumns(
+  rows: Record<string, unknown>[],
+  configured: unknown
+): string[] {
+  if (Array.isArray(configured) && configured.length > 0) {
+    return configured.map(String);
+  }
+
+  const seen = new Set<string>();
+  for (const row of rows) {
+    for (const key of Object.keys(row)) {
+      if (EXPORT_COLUMN_DENYLIST.has(key)) {
+        continue;
+      }
+      const value = row[key];
+      // Keep the sheet flat — nested objects/arrays don't belong in a cell.
+      if (value !== null && typeof value === "object") {
+        continue;
+      }
+      seen.add(key);
+    }
+  }
+
+  const present = [...seen];
+  const ordered = EXPORT_COLUMN_PRIORITY.filter((key) => seen.has(key));
+  return [
+    ...ordered,
+    ...present.filter((key) => !ordered.includes(key)).sort(),
+  ];
+}
+
+function pickColumns(row: Record<string, unknown>, columns: string[]) {
+  return Object.fromEntries(columns.map((key) => [key, row[key] ?? ""]));
+}
+
+/** RFC 4180 escaping — quote when the value holds a comma, quote, or newline. */
+function escapeCsvCell(value: unknown): string {
+  if (value === null || value === undefined) {
+    return "";
+  }
+  const text = String(value);
+  return /[",\n\r]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+function toCsv(rows: Record<string, unknown>[], columns: string[]): string {
+  const header = columns.map(escapeCsvCell).join(",");
+  const body = rows.map((row) =>
+    columns.map((key) => escapeCsvCell(row[key])).join(",")
+  );
+  return [header, ...body].join("\n");
 }
 
 function collectRowsByOutputKey(results: ToolRunResult[], key: string) {
@@ -4959,6 +5058,160 @@ const localTools: ToolDefinition[] = [
     toolId: "output.canonical_json",
   },
   {
+    defaultConfig: { fileName: "workflow-rows.csv" },
+    description:
+      "Serialises the workflow's rows to CSV text. Pure — the browser turns the text into a download.",
+    displayName: "CSV Export",
+    execute: (context) => {
+      const rows = collectExportRows(context);
+      const columns = resolveExportColumns(rows, context.config.columns);
+      const csv = toCsv(rows, columns);
+      const fileName = String(
+        context.config.fileName || `${slugify(context.workflow.name)}.csv`
+      );
+      const warnings = rows.length === 0 ? ["No rows reached the CSV export."] : [];
+
+      return completeResult({
+        context,
+        evidenceRefs: collectEvidence(context),
+        logs: [
+          makeLog({
+            blockId: context.block.id,
+            details: { columns: columns.length, rowCount: rows.length },
+            level: warnings.length > 0 ? "warning" : "info",
+            message: "CSV export generated locally.",
+          }),
+        ],
+        output: {
+          columns,
+          csv,
+          exportFormat: "csv",
+          fileName,
+          generatedAt: new Date().toISOString(),
+          mimeType: "text/csv;charset=utf-8",
+          preview: csv.split("\n").slice(0, 12).join("\n"),
+          rowCount: rows.length,
+          warnings,
+        },
+        sourceTrace: collectSourceTrace(context),
+        status: warnings.length > 0 ? "warning" : "success",
+        warnings,
+      });
+    },
+    family: "Output",
+    inputRoles: [MAPPED_ROWS_INPUT_ROLE, SOURCE_TRACE_INPUT_ROLE],
+    inputSchema: getToolInputSchema([{ key: "mappedRows", type: "array" }]),
+    outputRoles: [
+      {
+        ...OUTPUT_PACKAGE_ROLE,
+        description: "CSV text ready for download.",
+        id: "csv_file",
+        label: "CSV file",
+        outputKey: "csv",
+        outputType: "csv_file",
+      },
+    ],
+    outputSchema: getToolOutputSchema([
+      { key: "csv", type: "string" },
+      { key: "fileName", type: "string" },
+    ]),
+    runMode: "local_mock",
+    subtype: "CSV Export",
+    toolGroup: "output",
+    toolId: "output.csv_export",
+  },
+  {
+    defaultConfig: { fileName: "workflow-export.xlsx" },
+    description:
+      "Builds a multi-sheet workbook spec (rows + category totals + run summary) for the browser to write as .xlsx.",
+    displayName: "Excel Export",
+    execute: (context) => {
+      const rows = collectExportRows(context);
+      const columns = resolveExportColumns(rows, context.config.columns);
+      const fileName = String(
+        context.config.fileName || `${slugify(context.workflow.name)}.xlsx`
+      );
+
+      // Category totals, when a rollup ran upstream.
+      const totals = context.upstreamResults.flatMap((result) => {
+        const named = asRecord(result.output.namedValues);
+        return named
+          ? Object.entries(named).flatMap(([key, value]) =>
+              typeof value === "number"
+                ? [{ Key: key, Value: value }]
+                : []
+            )
+          : [];
+      });
+
+      const summary = [
+        { Field: "Workflow", Value: context.workflow.name },
+        { Field: "Run ID", Value: context.runId },
+        { Field: "Generated", Value: new Date().toISOString() },
+        { Field: "Rows exported", Value: rows.length },
+      ];
+
+      const sheets = [
+        { columns, name: "Rows", rows: rows.map((row) => pickColumns(row, columns)) },
+        ...(totals.length > 0
+          ? [{ columns: ["Key", "Value"], name: "Totals", rows: totals }]
+          : []),
+        { columns: ["Field", "Value"], name: "Run summary", rows: summary },
+      ];
+      const warnings =
+        rows.length === 0 ? ["No rows reached the Excel export."] : [];
+
+      return completeResult({
+        context,
+        evidenceRefs: collectEvidence(context),
+        logs: [
+          makeLog({
+            blockId: context.block.id,
+            details: { rowCount: rows.length, sheets: sheets.length },
+            level: warnings.length > 0 ? "warning" : "info",
+            message: "Excel workbook spec generated locally.",
+          }),
+        ],
+        output: {
+          exportFormat: "xlsx",
+          fileName,
+          generatedAt: new Date().toISOString(),
+          mimeType:
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          rowCount: rows.length,
+          sheetNames: sheets.map((sheet) => sheet.name),
+          sheets,
+          warnings,
+          workbookSpec: { fileName, sheets },
+        },
+        sourceTrace: collectSourceTrace(context),
+        status: warnings.length > 0 ? "warning" : "success",
+        warnings,
+      });
+    },
+    family: "Output",
+    inputRoles: [MAPPED_ROWS_INPUT_ROLE, SOURCE_TRACE_INPUT_ROLE],
+    inputSchema: getToolInputSchema([{ key: "mappedRows", type: "array" }]),
+    outputRoles: [
+      {
+        ...OUTPUT_PACKAGE_ROLE,
+        description: "Workbook spec ready for the browser to write as .xlsx.",
+        id: "workbook_file",
+        label: "Workbook",
+        outputKey: "workbookSpec",
+        outputType: "workbook_file",
+      },
+    ],
+    outputSchema: getToolOutputSchema([
+      { key: "sheets", type: "array" },
+      { key: "fileName", type: "string" },
+    ]),
+    runMode: "local_mock",
+    subtype: "Excel Export",
+    toolGroup: "output",
+    toolId: "output.excel_export",
+  },
+  {
     defaultConfig: {},
     description: "Creates a local evidence pack preview payload.",
     displayName: "Evidence Pack Preview",
@@ -5218,6 +5471,7 @@ const BACKEND_ADAPTED_TOOL_IDS = [
   "source.calculation_rules",
   "source.fapi_inputs",
   "source.currency_rate",
+  "source.http_json",
   "logic.keyword_mapper",
   "logic.category_rollup_aggregator",
   "logic.calculation_engine",
@@ -5759,7 +6013,10 @@ function createBackendAdaptedTool(toolId: string): ToolDefinition | null {
 }
 
 const LOCAL_TOOLS_BY_ID: Record<string, ToolDefinition> = Object.fromEntries(
-  localTools.map((tool) => [tool.toolId, tool])
+  [...localTools, ...MISSING_TOOLS, ...OUTPUT_TOOLS].map((tool) => [
+    tool.toolId,
+    tool,
+  ])
 );
 
 const BACKEND_ADAPTED_TOOL_ENTRIES: [string, ToolDefinition][] =
@@ -5814,6 +6071,21 @@ const REVIEW_TOOL_BY_SUBTYPE: Partial<Record<BlockSubtype, string>> = {
 
 const OUTPUT_TOOL_BY_SUBTYPE: Partial<Record<BlockSubtype, string>> = {
   "Canonical JSON": "output.canonical_json",
+  "CSV Export": "output.csv_export",
+  "Excel Export": "output.excel_export",
+  // These three used to fall through to the evidence-pack preview, so three
+  // differently-named blocks emitted byte-identical output. They now write their
+  // own artifact — a real PDF, and a documented handoff with a manifest.
+  "PDF Report": "output.pdf_report",
+  "Taxprep Handoff": "output.taxprep_handoff",
+  "ONESOURCE Handoff": "output.onesource_handoff",
+};
+
+/** Triggers state how a run began; they used to resolve to an unregistered tool. */
+const TRIGGER_TOOL_BY_SUBTYPE: Partial<Record<BlockSubtype, string>> = {
+  "Manual / On Demand": "trigger.manual",
+  "Schedule / Cron": "trigger.schedule",
+  "Webhook / API Event": "trigger.webhook",
 };
 
 function getSourceToolId(block: WorkflowBlock) {
@@ -5829,6 +6101,16 @@ function getSourceToolId(block: WorkflowBlock) {
     block.catalogId === "source:currency-rate"
   ) {
     return "source.currency_rate";
+  }
+
+  // Live JSON endpoints. Checked before the table-source fallback so an
+  // API block resolves to the real fetching source, not manual_table.
+  if (
+    block.config.sourceKind === "http_json" ||
+    block.config.toolId === "source.http_json" ||
+    block.catalogId === "source:api-http-request"
+  ) {
+    return "source.http_json";
   }
 
   if (
@@ -5859,6 +6141,22 @@ function getSourceToolId(block: WorkflowBlock) {
     return "source.keyword_rules";
   }
 
+  // Sources that used to fall through to the generic manual_value/manual_table
+  // holders — a fetch, a parse and a query all silently became a placeholder
+  // scalar. Each now has its own executor that replays what was captured, or
+  // reports that nothing was.
+  const SPECIALISED: [string, BlockSubtype, string][] = [
+    ["web_url", "Web / URL", "source.web_url"],
+    ["pdf_document", "PDF / Document", "source.pdf_document"],
+    ["database_query", "Database Query", "source.database_query"],
+    ["ai_search", "AI Search Result", "source.ai_search"],
+  ];
+  for (const [sourceKind, subtype, toolId] of SPECIALISED) {
+    if (block.config.sourceKind === sourceKind || block.subtype === subtype) {
+      return toolId;
+    }
+  }
+
   if (
     TABLE_SOURCE_CATALOG_IDS.has(block.catalogId || "") ||
     TABLE_SOURCE_SUBTYPES.has(block.subtype)
@@ -5884,6 +6182,8 @@ const TOOL_RESOLVERS_BY_FAMILY: Partial<
   "Review / Validation": (block) =>
     REVIEW_TOOL_BY_SUBTYPE[block.subtype] || "review.required_input_check",
   Source: getSourceToolId,
+  Trigger: (block) =>
+    TRIGGER_TOOL_BY_SUBTYPE[block.subtype] || "trigger.manual",
 };
 
 export function getToolIdForBlock(block: WorkflowBlock): string {

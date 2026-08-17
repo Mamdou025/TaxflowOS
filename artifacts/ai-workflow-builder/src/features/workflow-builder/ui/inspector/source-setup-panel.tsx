@@ -5,6 +5,8 @@ import {
   FapiInputsSourcePanel,
 } from "@/features/workflow-builder/ui/source-viewers/currency-rate-source-panel";
 import { ExcelUploadPanel } from "@/features/workflow-builder/ui/source-viewers/excel-upload-panel";
+import { HttpJsonSourcePanel } from "@/features/workflow-builder/ui/source-viewers/http-json-source-panel";
+import { ManualValueSourcePanel } from "@/features/workflow-builder/ui/source-viewers/manual-value-source-panel";
 import { AggregationRulebookEditor } from "@/features/workflow-builder/ui/source-viewers/aggregation-rulebook-editor";
 import { RuleSourceEditor } from "@/features/workflow-builder/ui/source-viewers/rule-source-editor";
 import {
@@ -68,6 +70,30 @@ function isAggregationRuleSource(
   );
 }
 
+function isHttpJsonSource(
+  block: WorkflowBlock,
+  config: Record<string, unknown>
+) {
+  const sourceKind = String(config.sourceKind || "").toLowerCase();
+  return (
+    block.subtype === "API / HTTP Request" ||
+    config.toolId === "source.http_json" ||
+    sourceKind.includes("http_json")
+  );
+}
+
+function isManualValueSource(
+  block: WorkflowBlock,
+  config: Record<string, unknown>
+) {
+  const sourceKind = String(config.sourceKind || "").toLowerCase();
+  return (
+    block.subtype === "Manual Entry" ||
+    config.toolId === "source.manual_value" ||
+    sourceKind.includes("manual_value")
+  );
+}
+
 function isExcelSource(block: WorkflowBlock, config: Record<string, unknown>) {
   const sourceKind = String(config.sourceKind || "").toLowerCase();
   return (
@@ -116,6 +142,14 @@ export function SourceSetupPanel(props: SourceSetupPanelProps) {
         showRulebookOverview={props.showRulebookOverview}
       />
     );
+  }
+
+  if (isHttpJsonSource(props.block, props.config)) {
+    return <HttpJsonSourcePanel {...props} />;
+  }
+
+  if (isManualValueSource(props.block, props.config)) {
+    return <ManualValueSourcePanel {...props} />;
   }
 
   if (isExcelSource(props.block, props.config)) {

@@ -261,44 +261,11 @@ const WorkflowsPage = lazy(() =>
 const WorkflowPage = lazy(() =>
   import('@/app/workflows/[workflowId]/page').then((m) => ({ default: m.default })),
 );
-const BuilderPage = lazy(() =>
-  import('@/app/builder/page').then((m) => ({ default: m.default })),
-);
-const AgentPage = lazy(() =>
-  import('@/app/agent/page').then((m) => ({ default: m.default })),
-);
 const AgentLabPage = lazy(() =>
   import('@/app/agent-lab/page').then((m) => ({ default: m.default })),
 );
-const DashboardPage = lazy(() =>
-  import('@/app/dashboard/page').then((m) => ({ default: m.default })),
-);
 const DocumentsPage = lazy(() =>
   import('@/app/documents/page').then((m) => ({ default: m.default })),
-);
-const ViewerPage = lazy(() =>
-  import('@/app/viewer/page').then((m) => ({ default: m.default })),
-);
-const WorksheetsPage = lazy(() =>
-  import('@/app/worksheets/page').then((m) => ({ default: m.default })),
-);
-const FapiPage = lazy(() =>
-  import('@/app/fapi/page').then((m) => ({ default: m.default })),
-);
-const T1134Page = lazy(() =>
-  import('@/app/t1134/page').then((m) => ({ default: m.default })),
-);
-const SurplusPage = lazy(() =>
-  import('@/app/surplus/page').then((m) => ({ default: m.default })),
-);
-const BuOverviewPage = lazy(() =>
-  import('@/app/bu-overview/page').then((m) => ({ default: m.default })),
-);
-const GenuiLabPage = lazy(() =>
-  import('@/app/genui-lab/page').then((m) => ({ default: m.default })),
-);
-const ClientPage = lazy(() =>
-  import('@/app/client/[id]/page').then((m) => ({ default: m.default })),
 );
 const WorkflowsHubPage = lazy(() =>
   import('@/app/workflows-hub/page').then((m) => ({ default: m.default })),
@@ -341,35 +308,18 @@ function Router() {
       <Route path="/home"><Redirect to="/" /></Route>
       <Route path="/chat"><Redirect to="/" /></Route>
 
-      {/* Workflow builder */}
-      <Route path="/builder" component={() => <PageLoader><BuilderPage /></PageLoader>} />
+      {/* Workflow builder + workflows surface */}
       <Route path="/workflows" component={() => <PageLoader><WorkflowsPage /></PageLoader>} />
       <Route path="/workflows/:workflowId" component={() => <PageLoader><WorkflowPage /></PageLoader>} />
       <Route path="/w/:workflowId" component={() => <PageLoader><WPage /></PageLoader>} />
       <Route path="/run/:workflowId" component={() => <PageLoader><RunPage /></PageLoader>} />
       <Route path="/workflows-hub" component={() => <PageLoader><WorkflowsHubPage /></PageLoader>} />
 
-      {/* Agent surfaces */}
-      <Route path="/agent" component={() => <PageLoader><AgentPage /></PageLoader>} />
+      {/* Agent lab */}
       <Route path="/agent-lab" component={() => <PageLoader><AgentLabPage /></PageLoader>} />
 
-      {/* Dashboard / analytics */}
-      <Route path="/dashboard" component={() => <PageLoader><DashboardPage /></PageLoader>} />
-      <Route path="/bu-overview" component={() => <PageLoader><BuOverviewPage /></PageLoader>} />
-      <Route path="/t1134" component={() => <PageLoader><T1134Page /></PageLoader>} />
-      <Route path="/surplus" component={() => <PageLoader><SurplusPage /></PageLoader>} />
-      <Route path="/fapi" component={() => <PageLoader><FapiPage /></PageLoader>} />
-
-      {/* Documents & viewer */}
+      {/* Documents */}
       <Route path="/documents" component={() => <PageLoader><DocumentsPage /></PageLoader>} />
-      <Route path="/viewer" component={() => <PageLoader><ViewerPage /></PageLoader>} />
-
-      {/* Worksheets */}
-      <Route path="/worksheets" component={() => <PageLoader><WorksheetsPage /></PageLoader>} />
-      <Route path="/client/:id" component={() => <PageLoader><ClientPage /></PageLoader>} />
-
-      {/* GenUI Lab */}
-      <Route path="/genui-lab" component={() => <PageLoader><GenuiLabPage /></PageLoader>} />
 
       {/* 404 */}
       <Route>

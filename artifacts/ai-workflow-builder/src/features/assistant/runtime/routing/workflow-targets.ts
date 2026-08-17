@@ -18,6 +18,21 @@ export type WorkflowTarget = {
 
 export const WORKFLOW_TARGETS: WorkflowTarget[] = [
   {
+    id: 'holiday-payroll',
+    name: 'Statutory holiday payroll accrual',
+    aliases: [
+      'holiday accrual',
+      'statutory holiday',
+      'stat holiday',
+      'public holiday',
+      'holiday payroll',
+      'holiday pay',
+      'payroll accrual',
+      'jours fériés',
+      'congé férié',
+    ],
+  },
+  {
     id: 'fapi',
     name: 'FAPI',
     aliases: ['fapi', 'foreign accrual property income', 'revenu étranger accumulé', 'reaimp', 'reatb'],
