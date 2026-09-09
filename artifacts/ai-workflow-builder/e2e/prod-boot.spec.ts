@@ -20,6 +20,7 @@ import { fileURLToPath } from 'url';
 import * as http from 'http';
 import * as path from 'path';
 import * as fs from 'fs';
+import { canReuseProductionBundle } from './prod-build-freshness';
 
 // ---------------------------------------------------------------------------
 // Config
@@ -28,8 +29,24 @@ import * as fs from 'fs';
 // path.dirname converts the file URL to its containing directory first, so
 // '..' correctly resolves to the artifact root (artifacts/ai-workflow-builder/).
 const ARTIFACT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const WORKSPACE_DIR = path.resolve(ARTIFACT_DIR, '..', '..');
 const PROD_PORT = 22180;
 const PROD_BASE = `http://localhost:${PROD_PORT}`;
+const PROD_INDEX = path.join(ARTIFACT_DIR, 'dist', 'public', 'index.html');
+const BUILD_INPUTS = [
+  path.join(ARTIFACT_DIR, 'src'),
+  path.join(ARTIFACT_DIR, 'public'),
+  path.join(ARTIFACT_DIR, 'index.html'),
+  path.join(ARTIFACT_DIR, 'package.json'),
+  path.join(ARTIFACT_DIR, 'tsconfig.json'),
+  path.join(ARTIFACT_DIR, 'vite.config.ts'),
+  path.join(WORKSPACE_DIR, 'attached_assets'),
+  path.join(WORKSPACE_DIR, 'lib', 'api-client-react', 'src'),
+  path.join(WORKSPACE_DIR, 'lib', 'api-client-react', 'package.json'),
+  path.join(WORKSPACE_DIR, 'package.json'),
+  path.join(WORKSPACE_DIR, 'pnpm-lock.yaml'),
+  path.join(WORKSPACE_DIR, 'pnpm-workspace.yaml'),
+];
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -107,22 +124,27 @@ test.describe('Production bundle boot', () => {
     }
 
     if (!serverAlreadyRunning) {
-      console.log('[prod-boot] Building production bundle…');
-      execSync('pnpm run build', {
-        cwd: ARTIFACT_DIR,
-        env: {
-          ...process.env,
-          // PORT is required by vite.config.ts validation; value is only used
-          // during `vite dev` / `vite preview`, not during the build itself.
-          PORT: '22179',
-          BASE_PATH: '/',
-          NODE_ENV: 'production',
-        },
-        stdio: 'inherit',
-        // Give the build up to 3 min; it's ~45 s in normal conditions.
-        timeout: 180_000,
-      });
-      console.log('[prod-boot] Build done. Starting preview server…');
+      if (canReuseProductionBundle(PROD_INDEX, BUILD_INPUTS, process.env.PROD_SMOKE_SKIP_BUILD)) {
+        console.log('[prod-boot] Existing production bundle is current; skipping build.');
+      } else {
+        console.log('[prod-boot] Building production bundle…');
+        execSync('pnpm run build', {
+          cwd: ARTIFACT_DIR,
+          env: {
+            ...process.env,
+            // PORT is required by vite.config.ts validation; value is only used
+            // during `vite dev` / `vite preview`, not during the build itself.
+            PORT: '22179',
+            BASE_PATH: '/',
+            NODE_ENV: 'production',
+          },
+          stdio: 'inherit',
+          // Give the build up to 3 min; it's ~45 s in normal conditions.
+          timeout: 180_000,
+        });
+        console.log('[prod-boot] Build done.');
+      }
+      console.log('[prod-boot] Starting preview server…');
 
       previewProcess = spawn('pnpm', ['run', 'serve'], {
         cwd: ARTIFACT_DIR,

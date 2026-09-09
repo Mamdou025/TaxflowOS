@@ -8,8 +8,9 @@
     "build": "NODE_OPTIONS=--max-old-space-size=4096 vite build --config vite.config.ts",
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:prod-freshness": "node --experimental-strip-types --test e2e/prod-build-freshness.test.mjs",
     "test:e2e": "playwright test --config=playwright.config.mjs",
-    "test:prod": "playwright test --config=playwright.config.mjs --project=production",
+    "test:prod": "PROD_SMOKE_SKIP_BUILD=${PROD_SMOKE_SKIP_BUILD:-1} playwright test --config=playwright.config.mjs --project=production",
     "test:e2e:ui": "playwright test --config=playwright.config.mjs --ui"
   },
   "devDependencies": {
