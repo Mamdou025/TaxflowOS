@@ -944,9 +944,14 @@ export function runWorkflowCommand(
       }
 
       const oldLabel = oldNode.data.label;
+      // Must match getUpdatedNodeData's `sourceLabelLocked` exactly — including the
+      // isSourceLockedByConfig check. Without it a DRAFT source's rename is applied
+      // to the node but treated here as "no label change", so the old label stays
+      // baked into every other block's templates.
       const newLabel =
         oldNode.data.block?.source?.treatedAsEvidence &&
         oldNode.data.block.source.labelLocked &&
+        isSourceLockedByConfig(oldNode.data.block, oldNode.data.config) &&
         command.data.label !== undefined
           ? oldNode.data.label
           : command.data.label;

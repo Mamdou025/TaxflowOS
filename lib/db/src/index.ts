@@ -18,4 +18,4 @@ export * from "./schema";
 // Re-export commonly-used drizzle-orm operators so dependents share
 // the same drizzle-orm instance (avoids "shouldInlineParams" type conflicts
 // when pnpm peer-dep resolution creates multiple drizzle-orm instances).
-export { eq, and, or, desc, asc, isNull, sql } from "drizzle-orm";
+export { eq, and, or, desc, asc, isNull, inArray, sql } from "drizzle-orm";

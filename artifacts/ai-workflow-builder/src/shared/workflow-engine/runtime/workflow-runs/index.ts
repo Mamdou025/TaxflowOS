@@ -1,4 +1,5 @@
 import type { TemplateConfig } from './engine';
+import { HOLIDAY_PAYROLL_CONFIG } from './holiday-payroll';
 import { FAPI_CONFIG } from './fapi';
 import { ROULEMENT_CONFIG } from './roulement';
 import { EXPENSE_CONFIG } from './expense';
@@ -7,6 +8,8 @@ import { BLUEPRINT_RUN_CONFIGS } from './blueprint-runs';
 
 // Registry of runnable workflows. Add a workflow = add a TemplateConfig here.
 export const WORKFLOW_CONFIGS: Record<string, TemplateConfig> = {
+  // Non-tax demo on live public API data — see holiday-payroll.ts.
+  'holiday-payroll': HOLIDAY_PAYROLL_CONFIG,
   fapi: FAPI_CONFIG,
   roulement: ROULEMENT_CONFIG,
   expense: EXPENSE_CONFIG,

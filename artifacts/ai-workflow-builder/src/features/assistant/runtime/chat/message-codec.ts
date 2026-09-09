@@ -1,23 +1,20 @@
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Chat message codec — projects CopilotKit's live GraphQL messages to the
-// serializable shape we persist, and reconstructs them on restore.
+// Chat message codec — projects the live chat's messages to the serializable shape
+// we persist, and reconstructs them on restore.
 //
-// Why a projection and not the raw objects: a generative-UI assistant message
-// carries a non-serializable `render` CLOSURE (structuredClone throws — see
-// app/api/copilotkit/route.ts). We store only plain data — text + tool
-// name/args/result — and on restore CopilotKit re-associates each tool call's
-// render by matching its `name` against the live useCopilotAction registry.
+// CopilotKit 1.63 moved the message store onto the AG-UI agent: the messages
+// exposed by `useCopilotChatInternal().messages` are plain AG-UI objects
+// (`{ id, role, content, toolCalls?, toolCallId? }`) — NOT the old GraphQL
+// `Message` class instances with `.isTextMessage()`. This codec speaks AG-UI in
+// both directions. The persisted `ProjectedMessage` shape is unchanged, so the
+// server contract (chat_messages.content) is untouched.
+//
+// On restore we hand the reconstructed AG-UI messages to
+// `useCopilotChatInternal().setMessages`, which writes them straight onto the
+// agent (it only runs the gql→AG-UI conversion when the input is gql instances).
 // ─────────────────────────────────────────────────────────────────────────────
-
-import {
-  ActionExecutionMessage,
-  type Message,
-  ResultMessage,
-  Role,
-  TextMessage,
-} from "@copilotkit/runtime-client-gql";
 
 export type ChatMsgRole = "user" | "assistant" | "tool" | "system";
 
@@ -36,123 +33,159 @@ export type ProjectedMessage = {
   };
 };
 
-function roleToString(role: unknown): ChatMsgRole {
-  const r = String(role).toLowerCase();
+// Minimal view of an AG-UI message (see @ag-ui/core Message schemas).
+export type AguiMessage = {
+  id?: string;
+  role: string; // "user" | "assistant" | "system" | "developer" | "tool"
+  content?: unknown; // string, or (user) an array of content parts
+  toolCalls?: Array<{
+    id?: string;
+    type?: string;
+    function?: { name?: string; arguments?: string };
+  }>;
+  toolCallId?: string;
+};
+
+/** AG-UI content may be a plain string or (multimodal user turns) an array of parts. */
+function extractText(content: unknown): string {
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content
+      .map((p) => (typeof p === "string" ? p : (p as { text?: string })?.text ?? ""))
+      .join("");
+  }
+  return "";
+}
+
+/** AG-UI role → the persisted role vocabulary (developer folds into system). */
+function normRole(r: string): ChatMsgRole {
   if (r === "user") return "user";
-  if (r === "system" || r === "developer") return "system";
   if (r === "tool") return "tool";
+  if (r === "system" || r === "developer") return "system";
   return "assistant";
 }
 
-function stringToRole(role: ChatMsgRole) {
-  switch (role) {
-    case "user":
-      return Role.User;
-    case "system":
-      return Role.System;
-    default:
-      // Restored tool/assistant text renders as an assistant turn.
-      return Role.Assistant;
+/** Persisted role → AG-UI role. */
+function aguiRole(r: ChatMsgRole): string {
+  return r; // user/assistant/system/tool are all valid AG-UI roles
+}
+
+function safeParseArgs(args: unknown): unknown {
+  if (typeof args !== "string") return args ?? {};
+  try {
+    return JSON.parse(args);
+  } catch {
+    return args;
   }
 }
 
 /**
- * Project a CopilotKit message array into serializable rows. AgentState/Image
- * messages and empty text turns are dropped; `seq` is re-numbered densely so the
- * stored order matches the visible order.
+ * Project the live AG-UI message array into serializable rows. Empty text turns
+ * are dropped; `seq` is re-numbered densely so stored order matches visible order.
+ * An assistant turn may contribute BOTH a text row and one row per tool call.
  */
-export function projectMessages(messages: Message[]): ProjectedMessage[] {
+export function projectMessages(messages: AguiMessage[]): ProjectedMessage[] {
+  const list = messages ?? [];
+
+  // Tool RESULT messages carry only a toolCallId, not the tool name — recover the
+  // name from the matching assistant tool call so restore can re-attach its render.
+  const nameByCallId = new Map<string, string>();
+  for (const m of list) {
+    if (m?.role === "assistant" && Array.isArray(m.toolCalls)) {
+      for (const tc of m.toolCalls) {
+        if (tc?.id && tc.function?.name) nameByCallId.set(tc.id, tc.function.name);
+      }
+    }
+  }
+
   const out: ProjectedMessage[] = [];
   let seq = 0;
-  for (const m of messages) {
-    if (m.isTextMessage()) {
-      const text = m.content ?? "";
-      if (!text.trim()) continue; // skip empty streamed placeholders
+  for (const m of list) {
+    if (!m || !m.role) continue;
+    const role = m.role;
+
+    if (role === "user" || role === "assistant" || role === "system" || role === "developer") {
+      const text = extractText(m.content);
+      if (text.trim()) {
+        out.push({ id: m.id ?? `m${seq}`, role: normRole(role), seq: seq++, content: { text } });
+      }
+      if (role === "assistant" && Array.isArray(m.toolCalls)) {
+        for (const tc of m.toolCalls) {
+          const name = tc?.function?.name;
+          if (!name) continue;
+          out.push({
+            id: tc.id ?? `m${seq}`,
+            role: "assistant",
+            seq: seq++,
+            content: { toolCall: { name, args: safeParseArgs(tc.function?.arguments), callId: tc.id } },
+          });
+        }
+      }
+    } else if (role === "tool") {
       out.push({
-        id: m.id,
-        role: roleToString(m.role),
-        seq: seq++,
-        content: { text },
-      });
-    } else if (m.isActionExecutionMessage()) {
-      out.push({
-        id: m.id,
-        role: "assistant",
-        seq: seq++,
-        content: {
-          toolCall: { name: m.name, args: m.arguments ?? {}, callId: m.id },
-        },
-      });
-    } else if (m.isResultMessage()) {
-      out.push({
-        id: m.id,
+        id: m.id ?? `m${seq}`,
         role: "tool",
         seq: seq++,
         content: {
           toolCall: {
-            name: m.actionName,
-            result: m.result,
-            callId: m.actionExecutionId,
+            name: (m.toolCallId && nameByCallId.get(m.toolCallId)) || "",
+            result: extractText(m.content),
+            callId: m.toolCallId,
           },
         },
       });
     }
-    // AgentStateMessage / ImageMessage are intentionally not persisted.
   }
   return out;
 }
 
 /**
- * Rebuild CopilotKit message instances from stored rows (ordered by seq). The
- * client feeds these to setMessages() to restore a conversation; renders are
- * re-attached by CopilotKit from the live action registry via the tool `name`.
+ * Rebuild AG-UI message objects from stored rows (ordered by seq), ready to hand to
+ * `useCopilotChatInternal().setMessages`. Tool renders re-attach by the tool `name`
+ * via the live action registry, as before.
  */
-export function reconstructMessages(rows: ProjectedMessage[]): Message[] {
+export function reconstructMessages(rows: ProjectedMessage[]): AguiMessage[] {
   const ordered = [...rows].sort((a, b) => a.seq - b.seq);
-  const out: Message[] = [];
+  const out: AguiMessage[] = [];
   for (const row of ordered) {
     const tc = row.content.toolCall;
     if (tc && tc.result !== undefined) {
-      out.push(
-        new ResultMessage({
-          id: row.id,
-          actionExecutionId: tc.callId ?? row.id,
-          actionName: tc.name,
-          result:
-            typeof tc.result === "string"
-              ? tc.result
-              : ResultMessage.encodeResult(tc.result),
-        })
-      );
+      out.push({
+        id: row.id,
+        role: "tool",
+        content: typeof tc.result === "string" ? tc.result : JSON.stringify(tc.result),
+        toolCallId: tc.callId ?? row.id,
+      });
     } else if (tc) {
-      out.push(
-        new ActionExecutionMessage({
-          id: tc.callId ?? row.id,
-          name: tc.name,
-          arguments: (tc.args ?? {}) as Record<string, unknown>,
-        })
-      );
+      const callId = tc.callId ?? row.id;
+      out.push({
+        id: callId,
+        role: "assistant",
+        toolCalls: [
+          {
+            id: callId,
+            type: "function",
+            function: {
+              name: tc.name,
+              arguments: typeof tc.args === "string" ? tc.args : JSON.stringify(tc.args ?? {}),
+            },
+          },
+        ],
+      });
     } else if (row.content.text !== undefined) {
-      out.push(
-        new TextMessage({
-          id: row.id,
-          role: stringToRole(row.role),
-          content: row.content.text,
-        })
-      );
+      out.push({ id: row.id, role: aguiRole(row.role), content: row.content.text });
     }
   }
   return out;
 }
 
 /** A stable signature of the message set — cheap change detection for autosave. */
-export function messagesSignature(messages: Message[]): string {
-  return messages
+export function messagesSignature(messages: AguiMessage[]): string {
+  return (messages ?? [])
     .map((m) => {
-      if (m.isTextMessage()) return `t:${m.id}:${m.content?.length ?? 0}`;
-      if (m.isActionExecutionMessage()) return `a:${m.id}`;
-      if (m.isResultMessage()) return `r:${m.id}`;
-      return `x:${m.id}`;
+      const textLen = extractText(m.content).length;
+      const tcs = Array.isArray(m.toolCalls) ? m.toolCalls.length : 0;
+      return `${m.role}:${m.id ?? ""}:${textLen}:${tcs}${m.role === "tool" ? ":r" : ""}`;
     })
     .join("|");
 }

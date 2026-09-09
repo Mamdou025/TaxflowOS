@@ -1,3 +1,7 @@
+import {
+  HOLIDAY_TEMPLATE_BLOCK_SPECS,
+  HOLIDAY_TEMPLATE_EDGE_SPECS,
+} from "@/shared/workflow-engine/templates/sample-workflows/holiday-payroll-template";
 // ─────────────────────────────────────────────────────────────────────────────
 // Sinaxe — Canadian Corporate Tax Workflow Portfolio (declarative specs)
 //
@@ -48,7 +52,11 @@ export type PortfolioEdgeSpec = {
   toRole?: string;
 };
 
-export type PortfolioWorkflowGroup = "foundation" | "tier1" | "platform";
+export type PortfolioWorkflowGroup =
+  | "foundation"
+  | "tier1"
+  | "platform"
+  | "demo";
 
 export type PortfolioWorkflowDef = {
   id: string;
@@ -59,6 +67,14 @@ export type PortfolioWorkflowDef = {
   sub: string;
   blocks: PortfolioBlockSpec[];
   edges: PortfolioEdgeSpec[];
+  /**
+   * This workflow's canvas is owned by its runnable TemplateConfig, not by the
+   * `blocks`/`edges` below. Set on workflows that are fully built and executable:
+   * the Build tab then loads the REAL configured graph (with its rulebooks, API
+   * config and FX settings) instead of the structural outline. The blueprints
+   * leave this unset — their outline IS the deliverable.
+   */
+  canvasFromRunnable?: boolean;
 };
 
 // Compact constructors so the graphs below stay readable.
@@ -845,10 +861,64 @@ const DATA_READINESS: PortfolioWorkflowDef = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Demo · Statutory Holiday Payroll Accrual (non-tax, fully runnable)
+//
+// Blocks and edges are DERIVED from the runnable template so the outline can
+// never drift from what actually runs; `canvasFromRunnable` sends the Build tab
+// to the real configured graph.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const HOLIDAY_COLUMNS = [...new Set(HOLIDAY_TEMPLATE_BLOCK_SPECS.map((s) => s.position.x))].sort(
+  (left, right) => left - right
+);
+const HOLIDAY_ROWS_BY_COLUMN = new Map<number, number[]>();
+for (const spec of HOLIDAY_TEMPLATE_BLOCK_SPECS) {
+  const rows = HOLIDAY_ROWS_BY_COLUMN.get(spec.position.x) ?? [];
+  if (!rows.includes(spec.position.y)) {
+    rows.push(spec.position.y);
+    rows.sort((left, right) => left - right);
+  }
+  HOLIDAY_ROWS_BY_COLUMN.set(spec.position.x, rows);
+}
+
+const HOLIDAY_PAYROLL: PortfolioWorkflowDef = {
+  id: "pf-holiday-payroll",
+  name: "Statutory Holiday Payroll Accrual",
+  group: "demo",
+  sub: "Demo · live holiday API → classify scope → day counts → payroll accrual (non-tax)",
+  description:
+    "A non-tax workflow anyone can follow, running on live public data. Pulls the published public-holiday calendar from Nager.Date (free, no key), classifies every holiday as national or specific to one province, counts the days and rolls them up Country → Province → Holiday, then accrues the payroll cost from headcount, hourly rate and the statutory premium. The reviewer elects how many hours are accrued per holiday, between nothing and a full work day. Ends in four review gates and four outputs — accrual schedule, workbook, canonical JSON and an evidence pack pinning the exact holiday list the figures came from.",
+  canvasFromRunnable: true,
+  blocks: HOLIDAY_TEMPLATE_BLOCK_SPECS.map((spec) =>
+    b(
+      spec.catalogId,
+      spec.id,
+      spec.label,
+      spec.description,
+      HOLIDAY_COLUMNS.indexOf(spec.position.x),
+      (HOLIDAY_ROWS_BY_COLUMN.get(spec.position.x) ?? []).indexOf(spec.position.y),
+      spec.config as Record<string, unknown>
+    )
+  ),
+  edges: HOLIDAY_TEMPLATE_EDGE_SPECS.map((spec) =>
+    e(
+      spec.sourceBlockId,
+      spec.targetBlockId,
+      spec.bindingLabel,
+      spec.reason,
+      spec.relationshipType,
+      spec.sourceOutputRole,
+      spec.targetInputRole
+    )
+  ),
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Registry — ordered for the builder's template menu (platform first, then
 // foundation, then Tier 1).
 // ─────────────────────────────────────────────────────────────────────────────
 export const PORTFOLIO_WORKFLOWS: PortfolioWorkflowDef[] = [
+  HOLIDAY_PAYROLL,
   PLATFORM_SEQUENCE,
   SCOPE_SERVICE,
   TAX_POSITION_SUMMARY,

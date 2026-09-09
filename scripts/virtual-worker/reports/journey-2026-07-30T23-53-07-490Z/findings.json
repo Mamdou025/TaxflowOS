@@ -1,0 +1,243 @@
+{
+  "persona": "journey",
+  "meta": {
+    "base": "http://localhost:5173",
+    "model": "anthropic/claude-opus-4-8",
+    "effort": "medium",
+    "stepsUsed": 97,
+    "maxSteps": 120,
+    "startedAt": "2026-07-30T23:53:07.490Z",
+    "finishedAt": "2026-07-31T00:02:29.960Z",
+    "summary": "Run errored: A positive credit balance is required for all requests, including BYOK, so fallback providers remain available. Add credits at https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai%3Fmodal%3Dtop-up to continue."
+  },
+  "findings": [
+    {
+      "id": 1,
+      "severity": "medium",
+      "category": "dead-button",
+      "title": "\"New workflow\" button does nothing on Workflows hub",
+      "detail": "On /workflows-hub, clicking \"New workflow\" produced no navigation, dialog, or content change on two attempts. A 404 GET /api/auth/get-session appeared in console.",
+      "expected": "Clicking \"New workflow\" should open a blank workflow canvas in the builder.",
+      "screenshot": "finding-1.png"
+    },
+    {
+      "id": 2,
+      "severity": "low",
+      "category": "console-error",
+      "title": "React hydration warning: nested &lt;button&gt; in block config overlay",
+      "detail": "Opening the \"Process dividends & UFT\" block config (ConfigurationOverlay → CalculationEngineWorkspace) logs: \"In HTML, <button> cannot be a descendant of <button>. This will cause a hydration error.\" A nested-button DOM structure can break click handling and accessibility.",
+      "expected": "No nested interactive elements; clean DOM without hydration warnings.",
+      "screenshot": "finding-2.png"
+    },
+    {
+      "id": 3,
+      "severity": "medium",
+      "category": "ux",
+      "title": "Block config overlay shows a centered empty-state instead of editable inputs",
+      "detail": "On the Foreign Affiliate Surplus workflow Build canvas, clicking blocks like \"Process dividends & UFT\" and \"Opening surplus balances\" opens a modal (ConfigurationOverlay/CalculationEngineWorkspace) whose body is a centered \"flex-col items-center justify-center ... text-center\" placeholder — no visible form fields to enter real numeric inputs (opening exempt/taxable surplus, dividend amount, UFT). A fiscalist cannot configure real inputs at the block level here.",
+      "expected": "Clicking a calculation block should expose editable input fields to configure its calculation with real values.",
+      "screenshot": "finding-3.png"
+    },
+    {
+      "id": 4,
+      "severity": "high",
+      "category": "persistence",
+      "title": "Uploaded document not persisted server-side (/api/documents empty)",
+      "detail": "Uploaded sample-company-tax-document.txt via Documents. The UI shows it listed, previews its full content, and labels it \"In Scope's context\". But GET /api/documents returns {\"documents\": []}. The file only exists as a client-side blob (blob: download URL). It is not stored on the backend, so RAG/context and traceability cannot be trusted to persist across sessions.",
+      "expected": "An uploaded document should be persisted server-side and appear in /api/documents so the assistant's context and lineage survive reloads.",
+      "screenshot": "finding-4.png"
+    },
+    {
+      "id": 5,
+      "severity": "medium",
+      "category": "ai-accuracy",
+      "title": "Sina first returns a malformed keyword-dump answer, then \"Searching the web…\" with no result",
+      "detail": "Asked for the federal SBD limit and full grind threshold. Sina replied with an incoherent fragment: \"Official Canadian tax sources / CCPC small business deduction $500,000 taxable capital employed in Canada fully eliminated $50 million current rules / Searching the web…\" — no coherent answer, and the \"Searching the web…\" state never resolved. A re-ask produced the correct answer ($500,000; $10M–$50M grind). Also every Sina reply echoes the user's question verbatim before answering.",
+      "expected": "A single coherent answer on the first ask; the \"Searching the web…\" state should resolve; the assistant should not echo the prompt back.",
+      "screenshot": "finding-5.png"
+    },
+    {
+      "id": 6,
+      "severity": "medium",
+      "category": "validation",
+      "title": "FAPI workflow accepts absurd FX rate (12,000) with no validation, producing $300M output",
+      "detail": "In the FAPI Calculation Run tab, entering 12000 into the FX rate (USD→CAD) field is accepted without warning. Outputs recompute to Gross CAD 300,000,000.00 and Net FAPI CAD 297,720,000.00. No sanity bounds on the FX rate (a plausible range is ~1.0–1.7).",
+      "expected": "FX rate should be range-validated (or at least flagged) so a clearly impossible rate doesn't silently produce a nine-figure result.",
+      "screenshot": "finding-6.png"
+    },
+    {
+      "id": 7,
+      "severity": "medium",
+      "category": "accessibility",
+      "title": "FAPI Run inputs have no accessible label association — can't target fields reliably",
+      "detail": "The FAPI Run tab has ~15 numeric inputs (FX rate, inclusion rate, Line A–H, FAT) but each is a bare textbox with no linked &lt;label for&gt;/aria-label — the descriptive text is a separate sibling node. As a result, typing addressed to a specific label (\"FAT · Foreign accrual tax paid\", \"FX rate (USD → CAD)\", \"Feeds FAT deduction\") all resolve to the FIRST textbox (FX rate). Screen-reader users and automation cannot distinguish the fields.",
+      "expected": "Each input should have a programmatically associated label so it is individually addressable and accessible.",
+      "screenshot": "finding-7.png"
+    },
+    {
+      "id": 8,
+      "severity": "medium",
+      "category": "feature-gap",
+      "title": "No mechanism to feed one workflow's output as input to another",
+      "detail": "Workflow A (Foreign Affiliate Surplus) has an input block \"FAPI & T1134 results — Cross-workflow reconciliation inputs\", implying it should consume workflow B's (FAPI Calculation) output. But in the Run UIs there is no way to select/link workflow B's computed Net FAPI as an input to workflow A. Each workflow only accepts a sample/uploaded workbook; the cross-workflow linkage described in the overview is not operable.",
+      "expected": "A way to pipe workflow B's approved output into workflow A's \"FAPI & T1134 results\" input, preserving lineage.",
+      "screenshot": "finding-8.png"
+    },
+    {
+      "id": 9,
+      "severity": "high",
+      "category": "persistence",
+      "title": "Workflow A Run state lost after navigating away and returning",
+      "detail": "In workflow A (Foreign Affiliate Surplus) I ran with the sample workbook, got a full computed result (net 172,900; FX changed to 1.40 → 242,060 CAD). After visiting workflow B and the Build tab and returning to Run, the tab reverted to the initial \"Document needed / Upload the workbook\" empty state — the run inputs and computed outputs were discarded, forcing a re-run. Work-in-progress is not retained across tab/workflow navigation.",
+      "expected": "A run in progress (source loaded, inputs edited, figures computed) should persist when navigating between tabs/workflows and back.",
+      "screenshot": "finding-9.png"
+    },
+    {
+      "id": 10,
+      "severity": "low",
+      "category": "ui",
+      "title": "Results worksheet labels the CAD converted figure with \"USD\" suffix",
+      "detail": "Workflow A Results shows \"Net surplus movement (CAD) 242,060.00USD\" — the value is the CAD conversion (172,900 × 1.4) but is suffixed \"USD\". All figures carry a \"USD\" unit even the FX-converted CAD line, which is misleading for a currency-sensitive surplus computation.",
+      "expected": "The CAD line should be labeled CAD.",
+      "screenshot": "finding-10.png"
+    },
+    {
+      "id": 11,
+      "severity": "high",
+      "category": "traceability",
+      "title": "After reload, app cannot trace the exempt surplus (1,250,000) back to its source document",
+      "detail": "Traceability test: I uploaded sample-company-tax-document.txt (exempt surplus CAD 1,250,000) and Sina cited it correctly during the session. After a reload, asking \"which uploaded document contains the exempt surplus of 1,250,000\" returns \"No uploaded document is currently available in the chat to substantiate an exempt-surplus balance of CAD 1,250,000, so I can't identify or cite its source.\" The document/context did not persist (consistent with /api/documents being empty), so provenance of document-sourced values is lost across sessions. By contrast the workflow-derived 172,900 IS traced (371,000 − 198,100). My ledger has 1,250,000 = document:sample; the app cannot reproduce that lineage after reload.",
+      "expected": "Uploaded documents and their extracted values should persist so the assistant can always trace a value like exempt surplus 1,250,000 back to its source document.",
+      "screenshot": "finding-11.png"
+    },
+    {
+      "id": 12,
+      "severity": "medium",
+      "category": "ai-accuracy",
+      "title": "Sina sometimes returns a raw dump of the page DOM instead of an answer",
+      "detail": "Asking a two-part provenance question caused Sina to reply with the entire page's text content (sidebar nav, worksheet lines, chat list) followed by an echo of my prompt — no actual answer. Re-asking a simpler version worked. The assistant occasionally leaks page scaffolding into its response.",
+      "expected": "Sina should answer the question, never emit the surrounding page DOM.",
+      "screenshot": "finding-12.png"
+    }
+  ],
+  "ledger": [
+    {
+      "label": "Net surplus movement (pre-FX)",
+      "value": "172,900.00",
+      "source": "workflow A (Foreign Affiliate Surplus) Run output: max(income 371,000 − expense 198,100, 0)"
+    },
+    {
+      "label": "Net surplus movement (CAD)",
+      "value": "233,415.00",
+      "source": "workflow A Run output: net 172,900 × FX 1.35 (verified correct)"
+    },
+    {
+      "label": "Workflow A recompute verified",
+      "value": "FX 1.40 → 242,060.00",
+      "source": "workflow A Run: changed FX from 1.35 to 1.40, output recomputed correctly (172,900×1.4)"
+    },
+    {
+      "label": "Exempt surplus (Northwind Ireland Ltd.)",
+      "value": "1,250,000",
+      "source": "document:sample (sample-company-tax-document.txt)",
+      "note": "deductible under 113(1)(a) when paid to parent"
+    },
+    {
+      "label": "FAPI 2024",
+      "value": "87,500",
+      "source": "document:sample"
+    },
+    {
+      "label": "Taxable surplus",
+      "value": "340,000",
+      "source": "document:sample"
+    },
+    {
+      "label": "Exempt surplus deductibility (chat)",
+      "value": "1,250,000 deductible under 113(1)(a)",
+      "source": "chat:reply (Sina) referencing uploaded document"
+    },
+    {
+      "label": "Net FAPI inclusion after 91(4) deduction",
+      "value": "39,500",
+      "source": "chat:reply (Sina); 87,500 − (12,000×4.0=48,000); verified correct"
+    },
+    {
+      "label": "Workflow B FAPI Brut (sample)",
+      "value": "25,000 (Net FAPI 24,810)",
+      "source": "workflow B (FAPI Calculation) Run output, sample workbook",
+      "note": "intended to feed net FAPI back into workflow A surplus reconciliation"
+    },
+    {
+      "label": "FX rate provenance (workflow B)",
+      "value": "overrideRate 12000; rateProvider bank_of_canada; feeds FAPI Summary Engine",
+      "source": "workflow B \"where it comes from\" drill-down (traceability feature works)"
+    },
+    {
+      "label": "Chat workflow-awareness verified",
+      "value": "Sina correctly described workflow A steps + data lineage (matches read_workflow: 20 blocks/19 edges)",
+      "source": "chat:reply describing builder workflow A"
+    },
+    {
+      "label": "Generated UI relevance",
+      "value": "Dashboard shows net 172,900 USD / 242,060 CAD / FX 1.4 — matches workflow A",
+      "source": "chat:reply (Sina generated UI)"
+    }
+  ],
+  "goals": [
+    {
+      "text": "workflow A: determine deductible portion of dividend from foreign affiliate (exempt vs taxable surplus)",
+      "done": true
+    },
+    {
+      "text": "workflow B: FAPI calculation (net inclusion) to feed back into workflow A surplus/dividend planning",
+      "done": true
+    }
+  ],
+  "errors": [
+    {
+      "kind": "network",
+      "detail": "404 GET http://localhost:5173/api/auth/get-session"
+    },
+    {
+      "kind": "console",
+      "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "kind": "network",
+      "detail": "404 GET http://localhost:5173/api/auth/get-session"
+    },
+    {
+      "kind": "console",
+      "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "kind": "console",
+      "detail": "In HTML, %s cannot be a descendant of <%s>.\nThis will cause a hydration error.%s <button> button \n\n  ...\n    <ConfigurationOverlay overlayId=\"overlay-17...\">\n      <div className=\"flex h-[85...\">\n        <SmartOverlayHeader>\n        <div className=\"flex min-h...\">\n          <CalculationEngineWorkspace block={{id:\"pf-sur...\", ...}} createTermRequest={0} disabled={false} edges={[...]} ...>\n         … [truncated 1827 chars]"
+    },
+    {
+      "kind": "console",
+      "detail": "<%s> cannot contain a nested %s.\nSee this log for the ancestor stack trace. button <button>"
+    },
+    {
+      "kind": "network",
+      "detail": "404 GET http://localhost:5173/api/auth/get-session"
+    },
+    {
+      "kind": "console",
+      "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "kind": "console",
+      "detail": "[CopilotKit] Agent error: A positive credit balance is required for all requests, including BYOK, so fallback providers remain available. Add credits at https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai%3Fmodal%3Dtop-up to continue. \n  Code: agent_run_error_event \n  Context: {source: onRunErrorEvent, event: Object, runtimeErrorCode: undefined, agentId: default} \n  Stack: Error: A positive credit ba… [truncated 583 chars]"
+    },
+    {
+      "kind": "console",
+      "detail": "[CopilotKit] sendMessage error: A positive credit balance is required for all requests, including BYOK, so fallback providers remain available. Add credits at https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai%3Fmodal%3Dtop-up to continue. Error: A positive credit balance is required for all requests, including BYOK, so fallback providers remain available. Add credits at https://vercel.com/d?to=%2F%… [truncated 448 chars]"
+    },
+    {
+      "kind": "console",
+      "detail": "[CopilotKit] Error (agent_run_error_event): Error: A positive credit balance is required for all requests, including BYOK, so fallback providers remain available. Add credits at https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai%3Fmodal%3Dtop-up to continue.\n    at Object.onRunErrorEvent (http://localhost:5173/node_modules/.vite/deps/chunk-KEZBGZH5.js?v=488ebfb6:5903:40)\n    at http://localhost:5173… [truncated 342 chars]"
+    }
+  ]
+}

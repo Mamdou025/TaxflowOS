@@ -18,7 +18,7 @@ import { runTemplateCore, buildOverrideRules, type SourceRow, type MappedRow } f
 import { FAPI_CONFIG } from '@/shared/workflow-engine/runtime/workflow-runs/fapi';
 import { parseUploadToRows } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
 import { uploadedRowsAtom, runEditsAtom, setRunInputAtom, EMPTY_RUN_EDITS } from '@/shared/stores/workspace-store';
-import { builderFocusTargetAtom } from '@/shared/workflow-engine/state/workflow-store';
+import { aimBuilderAtWorkflowAtom } from '@/features/workflows-hub/workflows-store';
 import { useInlinePage } from '@/shared/stores/inline-page-context';
 import { usePageMenu } from '@/shared/stores/page-menu-store';
 import { WorksheetCopilot } from '@/features/assistant/ui/worksheet-copilot';
@@ -46,10 +46,10 @@ const SECTIONS: WSection[] = [
     { code: 'FX', key: 'FX_RATE', label: 'Annual average FX rate (USD → CAD)', tone: 'source', block: SRC, edit: { key: 'fxRate' }, isRate: true },
   ] },
   { title: 'Property income', lines: [
-    { code: 'A', key: 'A', label: 'Property income', tone: 'engine', block: LINES, sub: 'income' },
+    { code: 'A', key: 'A', label: 'Property income (net of deductible expenses)', tone: 'engine', block: LINES, sub: 'income' },
   ] },
   { title: 'Deductible expenses', lines: [
-    { code: 'EXP', key: 'EXPENSES', label: 'Deductible expenses', tone: 'engine', block: LINES, sub: 'expense' },
+    { code: 'EXP', key: 'EXPENSES', label: 'Deductible expenses — already subtracted within line A', tone: 'engine', block: LINES, sub: 'expense' },
   ] },
   { title: 'Component B', lines: [
     { code: 'B', key: 'B', label: 'Gains on disposition (derived)', tone: 'engine', block: LINES, sub: 'capgains' },
@@ -81,12 +81,13 @@ function Dot({ tone }: { tone: Tone }) {
   return <span style={{ width: 4, height: 4, borderRadius: '50%', background: TONES[tone], flexShrink: 0 }} />;
 }
 
-function AmountCell({ value, edit, onCommit, isRate }: { value: number; edit?: Edit; onCommit: (v: number) => void; isRate?: boolean }) {
+function AmountCell({ value, edit, onCommit, isRate, label }: { value: number; edit?: Edit; onCommit: (v: number) => void; isRate?: boolean; label?: string }) {
   const [draft, setDraft] = useState<string | null>(null);
   const text = isRate ? rate(value) : money(value);
   if (!edit) return <span style={{ fontSize: 12.5, color: INK, fontVariantNumeric: 'tabular-nums' }}>{text}</span>;
   return (
     <input
+      aria-label={label}
       value={draft ?? text}
       onChange={(e) => setDraft(e.target.value)}
       onFocus={(e) => { setDraft(String(value)); e.currentTarget.select(); }}
@@ -103,7 +104,7 @@ function AmountCell({ value, edit, onCommit, isRate }: { value: number; edit?: E
 export default function FapiWorksheet() {
   const router = useRouter();
   const [uploaded, setUploaded] = useAtom(uploadedRowsAtom);
-  const setBuilderFocus = useSetAtom(builderFocusTargetAtom);
+  const aimBuilder = useSetAtom(aimBuilderAtWorkflowAtom);
   const [parsing, setParsing] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -140,7 +141,7 @@ export default function FapiWorksheet() {
   const val = (key: string) => core ? (core.lineValues[key] ?? core.summaryValues[key] ?? 0) : 0;
   const setInput = (key: string, v: number) => setRunInput({ id: FAPI_CONFIG.id, key, value: v });
 
-  const openBuilder = (blockId: string) => { setBuilderFocus({ workflowId: FAPI_CONFIG.id, blockId }); router.push('/builder'); };
+  const openBuilder = (blockId: string) => { aimBuilder({ workflowId: FAPI_CONFIG.id, blockId }); router.push('/workflows-hub'); };
 
   // Inline in the Scope panel → publish the toolbar into the shared header instead
   // of drawing it in the worksheet body (which shares width with the chat).
@@ -173,8 +174,8 @@ export default function FapiWorksheet() {
   };
 
   const summaryRows = [
-    { key: 'GROSS', label: 'Gross', bold: false },
-    { key: 'DEDUCTIONS', label: 'Deductions', bold: false },
+    { key: 'GROSS', label: 'Gross (property income net of expenses + gains)', bold: false },
+    { key: 'DEDUCTIONS', label: 'Deductions (lines D–H — excludes operating expenses)', bold: false },
     { key: 'FAPI_BRUT', label: 'FAPI brut', bold: true },
     { key: 'FAT_DEDUCTION', label: 'FAT deduction', bold: false },
     { key: 'NET_FAPI', label: 'Net FAPI', bold: true },
@@ -250,7 +251,7 @@ export default function FapiWorksheet() {
                         <button className="ws-trace" onClick={(e) => { e.stopPropagation(); openBuilder(ln.block); }} title={`Trace ${ln.code} in the builder`} style={{ opacity: 0, transition: 'opacity 140ms', display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, color: FAINT, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><GitBranch size={10} /> trace</button>
                       </div>
                       <div style={{ width: 130, display: 'flex', justifyContent: 'flex-end' }} onClick={(e) => e.stopPropagation()}>
-                        <AmountCell value={v} edit={ln.edit} isRate={ln.isRate} onCommit={(n) => setInput(ln.edit!.key, ln.edit!.toInput ? ln.edit!.toInput(n) : n)} />
+                        <AmountCell value={v} edit={ln.edit} isRate={ln.isRate} label={ln.label} onCommit={(n) => setInput(ln.edit!.key, ln.edit!.toInput ? ln.edit!.toInput(n) : n)} />
                       </div>
                       <div style={{ width: 48, textAlign: 'right', fontSize: 10.5, fontWeight: 600, color: FAINT }}>{ln.isRate ? 'RATE' : cur}</div>
                     </div>
@@ -279,6 +280,9 @@ export default function FapiWorksheet() {
                   </div>
                 );
               })}
+              {section.title === 'FAT calculation' && (
+                <RtfSelectorRow value={inputs.rtf ?? 4} onCommit={(v) => setInput('rtf', v)} />
+              )}
             </div>
           ))}
 
@@ -407,6 +411,48 @@ function SourcesPanel({ rows, mapped, unmatched, fileName, cur, onClose, onTrace
           <button onClick={onTrace} style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 550, color: INK, background: 'var(--sx-card)', border: `1px solid ${LINE}`, borderRadius: 7, padding: '5px 10px', cursor: 'pointer' }}><GitBranch size={11} /> See the mapper in the builder</button>
         </div>
       )}
+    </div>
+  );
+}
+
+// The relevant tax factor (s.248(1)) is a taxpayer-type CHOICE, not a free number:
+// corporation → 4.0, individual/trust → 1.9. Rendered as an explicit labeled toggle
+// (never a silent default) so the preparer consciously picks it; committing re-runs
+// the engine, so the FAT deduction (= min(FAT × RTF, FAPI brut)) recomputes live.
+function RtfSelectorRow({ value, onCommit }: { value: number; onCommit: (v: number) => void }) {
+  const options = [
+    { v: 4, label: 'Corporation', factor: '4.0' },
+    { v: 1.9, label: 'Individual / trust', factor: '1.9' },
+  ];
+  // Anything that isn't the individual factor is treated as the corporate one.
+  const isIndividual = Math.abs(value - 1.9) < 1e-7;
+  return (
+    <div className="ws-row" style={{ display: 'flex', alignItems: 'center', padding: '9px 20px', borderTop: `1px solid ${HAIRLINE}` }}>
+      <div style={{ width: 74, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ width: 13, flexShrink: 0 }} />
+        <Dot tone="manual" />
+        <span style={{ fontSize: 10.5, fontWeight: 650, color: MUTED, background: 'var(--sx-panel)', border: `1px solid ${HAIRLINE}`, borderRadius: 5, padding: '1px 6px', fontVariantNumeric: 'tabular-nums' }}>RTF</span>
+      </div>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <span style={{ fontSize: 12.5, color: INK }}>Relevant tax factor · s.248(1)</span>
+        <span style={{ fontSize: 10.5, color: FAINT }}>Taxpayer type sets the ss.91(4) FAT-deduction multiplier</span>
+      </div>
+      <div style={{ display: 'flex', gap: 4 }}>
+        {options.map((o) => {
+          const active = o.v === 1.9 ? isIndividual : !isIndividual;
+          return (
+            <button
+              key={o.v}
+              onClick={() => onCommit(o.v)}
+              title={`Use RTF ${o.factor} — ${o.label}`}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 550, cursor: 'pointer', color: active ? '#fff' : MUTED, background: active ? INK : 'transparent', border: `1px solid ${active ? INK : LINE}`, borderRadius: 8, padding: '5px 10px', transition: 'background 140ms, color 140ms' }}
+            >
+              {o.label}
+              <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 700, opacity: active ? 1 : 0.7 }}>{o.factor}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

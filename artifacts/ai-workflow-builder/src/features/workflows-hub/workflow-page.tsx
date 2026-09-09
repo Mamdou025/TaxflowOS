@@ -38,6 +38,8 @@ const TAB_LABELS: { id: WorkflowTab; label: string }[] = [
 ];
 
 const GROUPS: { id: PortfolioWorkflowGroup; label: string; Icon: typeof Boxes }[] = [
+  // Runnable end-to-end, listed first so a demo is one click away.
+  { id: 'demo', label: 'Runnable demos', Icon: Play },
   { id: 'platform', label: 'Platform services', Icon: Boxes },
   { id: 'foundation', label: 'Foundation', Icon: Database },
   { id: 'tier1', label: 'Tier 1', Icon: FileText },
@@ -154,7 +156,7 @@ function WorkflowDetail({ def }: { def: PortfolioWorkflowDef }) {
             // (the representative blueprint runs).
             return (
               <div style={{ borderRadius: 16, overflow: 'hidden', boxShadow: NEU.shadowSm, background: 'var(--sx-card)' }}>
-                <GenericWorksheet config={runnable} representative />
+                <GenericWorksheet config={runnable} representative={runnable.representative ?? false} />
               </div>
             );
           }

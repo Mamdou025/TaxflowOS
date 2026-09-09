@@ -281,7 +281,9 @@ export const FAPI_TEMPLATE_BLOCK_SPECS = [
       inclusionRate: 0.5,
       outputs: "fapi_inputs, input_metadata",
       reportingCurrency: "CAD",
-      rtf: 1.9,
+      // Corporate relevant tax factor (s.248(1)); individual/trust 1.9 is chosen
+      // per-case via the worksheet RTF selector. See fapi-inputs/schema.ts.
+      rtf: 4,
       // Line-driving workbook assumptions (feed A2/F–H and the 95(2) line).
       // NOTE: cfaIncome (C), debtForgiveness (A1), businessLosses (D) and
       // faclCarryforward (E) are intentionally NOT defaulted here — they come from

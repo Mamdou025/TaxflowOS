@@ -145,6 +145,16 @@ export default defineConfig({
     strictPort: true,
     host: '0.0.0.0',
     allowedHosts: true,
+    // File-watching over a Docker Desktop *Windows* bind mount: native inotify
+    // events don't propagate from the host into the Linux container, so Vite
+    // never sees source edits and keeps serving the module transforms it cached
+    // at boot (symptom: committed UI changes just don't appear until you manually
+    // `docker compose restart web`). Polling restores HMR there. Gated on an env
+    // var (set for the `web` service in docker-compose.yml) so native, event-based
+    // watching is kept everywhere it actually works (Replit, macOS, bare-metal).
+    watch: process.env.VITE_USE_POLLING
+      ? { usePolling: true, interval: 300 }
+      : undefined,
     fs: {
       strict: true,
     },

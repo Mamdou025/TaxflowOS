@@ -31,6 +31,9 @@ import { LC } from '@/lib/librechat-theme';
 import { selectedClientAtom, showClientSwitcherAtom, scopeYearAtom } from '@/shared/stores/nav-store';
 import { InScopeNeuMark } from '@/components/inscope-neu-mark';
 import { WorkMenu, WorkMenuStyles } from './work-menu';
+import { ToolsMenu, ToolsMenuStyles, type ArmedTool } from './tools-menu';
+import { ToolResultCard } from './tool-result-card';
+import { DataFilesPanel, DataFilesPanelStyles } from './data-files-panel';
 import { workIdFor, workItemsChronoAtom, type WorkItem } from '@/lib/work-store';
 import { ThreadMessages, PinnedThreadContext } from './thread-messages';
 import { RunWorkflowRender, type Assistant } from './use-assistant';
@@ -84,6 +87,10 @@ YOUR EXPERTISE — one unified specialist:
 - You are Sina, a single tax specialist who carries deep domain expertise across FAPI (foreign accrual property income), the section 85 rollover (roulement, art. 85), employee expense reimbursement, and marketing campaign budgets. There are NO separate agents — you handle all of it yourself.
 - Some turns include a "DOMAIN FOCUS FOR THIS TURN" note in context. When present, apply that domain's expertise for the turn. When the topic shifts, apply the other domain's expertise; on general or navigation turns, act as the coordinating workspace assistant. It is one you, one conversation — the domain focus is a lens, not a separate agent.
 
+TAX FACTS — state these exactly (this is a Canadian CORPORATE-tax workspace):
+- Relevant tax factor (RTF, s.248(1)): for a CORPORATION it is 4.0; for an individual or trust it is 1.9. Default to the CORPORATE 4.0 unless the taxpayer is explicitly an individual/trust. NEVER tell a user the corporate RTF is 1.9 — that is the individual/trust factor and it understates the deduction.
+- ss.91(4) FAT deduction = min(FAT paid × RTF, FAPI). On the FAPI worksheet the RTF is a Corporation (4.0) / Individual·trust (1.9) selector; read the chosen value from context rather than assuming, and if it isn't set, treat it as the corporate 4.0.
+
 Registered pages:
 ${pages}
 
@@ -131,25 +138,30 @@ function ScopeCluster({ compact = false, onOpenWork }: { compact?: boolean; onOp
   const client = useAtomValue(selectedClientAtom);
   const year = useAtomValue(scopeYearAtom);
   const openClientSwitcher = useSetAtom(showClientSwitcherAtom);
-  const orbSize = compact ? 32 : 96;
+  const orbSize = compact ? 32 : 54; // compact chat-header orb — smaller than the homepage hero orb (116) so the header stays a thin strip
   const divider = <span style={{ width: 1, height: compact ? 16 : 22, background: LC.borderSubtle, flexShrink: 0 }} />;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', minWidth: 0, maxWidth: '100%' }}>
+    // Cap the cluster width (focus header) so the long work-status line truncates to an
+    // ellipsis inside its zone instead of stretching the whole bar edge-to-edge.
+    <div style={{ display: 'flex', alignItems: 'center', minWidth: 0, maxWidth: compact ? '100%' : 600 }}>
       {/* The orb — the control. Opens the client switcher. Shares layoutId with the
           homepage hero orb so it FLIES between the two on chat start/stop (focus only). */}
       <ScopeOrbButton size={orbSize} layoutId={compact ? undefined : 'scope-orb'} onClick={() => openClientSwitcher(true)} label="" />
 
       {/* The scope tray — the tags the orb controls (company · year · current workflow).
-          It "pulls out" of the orb on reveal: a clip-path wipe from the orb's edge. */}
+          It eases out from behind the orb on reveal with a fade + small slide. We
+          deliberately AVOID clip-path here: clip-path also clips a container's
+          DESCENDANTS, which was slicing off the WorkMenu dropdown that opens
+          below-right of the tray. A transform/opacity reveal can never clip it. */}
       <motion.div
-        initial={compact ? false : { clipPath: 'inset(0 100% 0 0)', opacity: 0 }}
-        animate={{ clipPath: 'inset(0 0% 0 0)', opacity: 1 }}
+        initial={compact ? false : { opacity: 0, x: -14 }}
+        animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.14, duration: 0.42, ease: [0.23, 1, 0.32, 1] }}
         style={{
           display: 'flex', alignItems: 'center', gap: compact ? 6 : 3, minWidth: 0,
           marginLeft: compact ? 6 : -16, paddingLeft: compact ? 0 : 28, paddingRight: compact ? 0 : 10,
-          height: compact ? undefined : 56, borderRadius: compact ? 0 : '0 16px 16px 0',
+          height: compact ? undefined : 46, borderRadius: compact ? 0 : '0 16px 16px 0',
           background: compact ? 'transparent' : LC.surface, boxShadow: compact ? 'none' : LC.shadowSm,
         }}
       >
@@ -275,9 +287,14 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
     say, showHero,
     pinnedFields, pinnedElements, setPinnedFields, setPinnedElements,
     pinnedRuns, setPinnedRuns,
-    composerSearch, composerTools, composerCommands, onAttach, launchOpenPage, launchStartWorkflow, setBuilderFocus, router,
+    pinnedToolResults, setPinnedToolResults, launchPinToolResult,
+    composerSearch, composerTools, composerCommands, onAttach, launchOpenPage, launchStartWorkflow, openInlineBuilder,
   } = assistant;
   const docked = variant === 'docked';
+  // A search tool "armed" from the Tools menu — the composer shows a chip and routes
+  // the next message to it. Lives here so both the ToolsMenu (arms it) and the
+  // composer (reads it) share one source of truth, via AsideComposerContext.
+  const [armedTool, setArmedTool] = useState<ArmedTool | null>(null);
   const openClientSwitcher = useSetAtom(showClientSwitcherAtom);
   // Live-agent config (Build tab writes it): fiscal guardrails + operator additions
   // are layered over the base system prompt for the live chat.
@@ -301,7 +318,7 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
   // Pinned work (deterministically-launched runs + summoned elements/fields).
   // Rendered INSIDE the message scroll by ThreadMessages, so it's part of ONE
   // scrollable conversation (composer fixed at the bottom).
-  const hasPinned = pinnedRuns.length > 0 || pinnedElements.length > 0 || pinnedFields.length > 0;
+  const hasPinned = pinnedRuns.length > 0 || pinnedElements.length > 0 || pinnedFields.length > 0 || pinnedToolResults.length > 0;
   const pinnedNode = hasPinned ? (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
       {pinnedRuns.map((wid) => {
@@ -310,7 +327,7 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
         return (
           <div key={`run:${wid}`} className="flex items-start gap-2" data-work-id={workIdFor('workflow-run', wid)}>
             <div className="flex-1">
-              <RunWorkflowRender config={cfg} onOpenPage={(pk) => launchOpenPage(pk)} onOpenBuilder={(blockId) => { setBuilderFocus({ workflowId: cfg.id, blockId }); router.push('/builder'); }} />
+              <RunWorkflowRender config={cfg} onOpenPage={(pk) => launchOpenPage(pk)} onOpenBuilder={(blockId) => openInlineBuilder(cfg.id, blockId)} />
             </div>
             <button onClick={() => setPinnedRuns((p) => p.filter((x) => x !== wid))} className="rounded hover:bg-black/5" style={{ width: 22, height: 22, color: LC.muted, border: 'none', background: 'none', cursor: 'pointer', marginTop: 4 }} title="Remove"><X size={13} /></button>
           </div>
@@ -321,7 +338,7 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
         if (!cfg) return null;
         return (
           <div key={`${el.workflowId}:${el.element}`} className="flex items-start gap-2">
-            <div className="flex-1"><WorkflowElementCard config={cfg} element={el.element} onOpenPage={(pk) => launchOpenPage(pk)} onOpenBuilder={(blockId) => { setBuilderFocus({ workflowId: cfg.id, blockId }); router.push('/builder'); }} /></div>
+            <div className="flex-1"><WorkflowElementCard config={cfg} element={el.element} onOpenPage={(pk) => launchOpenPage(pk)} onOpenBuilder={(blockId) => openInlineBuilder(cfg.id, blockId)} /></div>
             <button onClick={() => setPinnedElements((p) => p.filter((x) => !(x.workflowId === el.workflowId && x.element === el.element)))} className="rounded hover:bg-black/5" style={{ width: 22, height: 22, color: LC.muted, border: 'none', background: 'none', cursor: 'pointer', marginTop: 4 }} title="Remove"><X size={13} /></button>
           </div>
         );
@@ -332,6 +349,13 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
           <button onClick={() => setPinnedFields((p) => p.filter((x) => x !== fid))} className="rounded hover:bg-black/5" style={{ width: 22, height: 22, color: LC.muted, border: 'none', background: 'none', cursor: 'pointer', marginTop: 4 }} title="Remove"><X size={13} /></button>
         </div>
       ))}
+      {/* Tools-menu Run ▸ results — the value retrieved directly (no LLM), pinned here. */}
+      {pinnedToolResults.map((r) => (
+        <div key={r.id} className="flex items-start gap-2" data-testid="tool-result">
+          <div className="flex-1"><ToolResultCard toolName={r.toolName} args={r.args} result={r.result} /></div>
+          <button onClick={() => setPinnedToolResults((p) => p.filter((x) => x.id !== r.id))} className="rounded hover:bg-black/5" style={{ width: 22, height: 22, color: LC.muted, border: 'none', background: 'none', cursor: 'pointer', marginTop: 4 }} title="Remove"><X size={13} /></button>
+        </div>
+      ))}
     </div>
   ) : null;
 
@@ -340,20 +364,26 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
       <AsideThreadStyles />
       <AssistantThreadStyles />
       <WorkMenuStyles />
+      <ToolsMenuStyles />
+      <DataFilesPanelStyles />
 
       {/* Header = the SCOPE CLUSTER (big orb + scope tags). Shown once a chat is under
           way; on the FOCUS homepage it's hidden and the orb lives centred in the hero
           below as the "InScope" lockup — the orb then FLIES up here (shared-element
           layoutId="scope-orb") and the tag tray pulls out of it when the chat starts.
-          Docked always shows the compact cluster. */}
+          Docked always shows the compact cluster. In focus mode there's NO full-width
+          bar — the cluster floats on the chat surface (no bottom divider); the docked
+          panel keeps its divider to separate the header from the drawer thread. */}
       {(docked || !showHero) && (
-        <div className="shrink-0 relative flex items-center gap-3" style={{ height: docked ? 44 : 104, padding: '0 12px', borderBottom: `1px solid ${LC.borderSubtle}` }}>
+        <div className="shrink-0 relative flex items-center gap-3" style={{ height: docked ? 44 : 68, padding: '0 12px', borderBottom: docked ? `1px solid ${LC.borderSubtle}` : 'none', zIndex: 20 }}>
           <ScopeCluster compact={docked} onOpenWork={onOpenWork} />
           <span style={{ flex: 1 }} />
+          <DataFilesPanel compact={docked} />
+          <ToolsMenu compact={docked} onRunResult={launchPinToolResult} onAsk={say} onArm={setArmedTool} />
         </div>
       )}
       <div className="flex-1 min-h-0 flex flex-col">
-        <AsideComposerContext.Provider value={{ search: composerSearch, tools: composerTools, commands: composerCommands, onAttach }}>
+        <AsideComposerContext.Provider value={{ search: composerSearch, tools: composerTools, commands: composerCommands, onAttach, armedTool, setArmedTool }}>
           <AnimatePresence mode="wait" initial={false}>
           {showHero ? (
               <motion.div
@@ -381,9 +411,12 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
                     <ScopeOrbButton size={116} layoutId="scope-orb" onClick={() => openClientSwitcher(true)} label="" />
                   </div>
                 )}
-                {/* Greeting + composer + suggestions — centred in the space below the orb. */}
-                <div className="flex-1 min-h-0 flex items-center justify-center">
-                  <div style={{ width: '100%', maxWidth: docked ? 'none' : 720 }}>
+                {/* Greeting + composer + suggestions — centred in the space below the orb.
+                    `overflow-y-auto` + `margin:auto` (not items-center) so that when the
+                    content is taller than the viewport (short/small windows) it SCROLLS
+                    from the top instead of overflowing UPWARD into the orb/wordmark lockup. */}
+                <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
+                  <div style={{ width: '100%', maxWidth: docked ? 'none' : 720, margin: 'auto' }}>
                     <div style={{ textAlign: 'center', marginBottom: docked ? 10 : 20 }}>
                       <div style={{ fontSize: docked ? 22 : 34, fontWeight: 700, color: LC.title, letterSpacing: '-0.02em' }}>{greeting}, Sophia</div>
                       <div style={{ fontSize: docked ? 13 : 16, fontWeight: 400, color: LC.muted, marginTop: 6 }}>How can I help you drive impact today?</div>

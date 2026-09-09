@@ -52,6 +52,7 @@ import {
   showMinimapAtom,
   triggerFitViewAtom,
   focusNodeIdAtom,
+  openBlockConfigIdAtom,
   updateNodeDataAtom,
   type WorkflowNode,
 } from "@/shared/workflow-engine/state/workflow-store";
@@ -125,6 +126,7 @@ export function WorkflowCanvas() {
   const updateNodeData = useSetAtom(updateNodeDataAtom);
   const [triggerFitView, setTriggerFitView] = useAtom(triggerFitViewAtom);
   const [focusNodeId, setFocusNodeId] = useAtom(focusNodeIdAtom);
+  const [openBlockConfigId, setOpenBlockConfigId] = useAtom(openBlockConfigIdAtom);
   const { open: openOverlay } = useOverlay();
   const { screenToFlowPosition, fitView, getViewport, setViewport } =
     useReactFlow();
@@ -167,6 +169,33 @@ export function WorkflowCanvas() {
     }, 260);
     return () => window.clearTimeout(t);
   }, [focusNodeId, nodes, fitView, setFocusNodeId]);
+
+  // Open a specific block's configuration (chat/worksheet "open the full block in
+  // the builder"). Does exactly what clicking the node does — select it, pick its
+  // family's default inspector tab, open the workspace overlay — so the deep-link
+  // ends on the block's real setup rather than a canvas to hunt through.
+  useEffect(() => {
+    if (!openBlockConfigId) return;
+    const node = nodes.find((n) => n.id === openBlockConfigId) as WorkflowNode | undefined;
+    if (!node) return; // wait until the node exists
+    // Behind the fitView above, so the block is already centred when it opens.
+    const t = window.setTimeout(() => {
+      setSelectedNode(node.id);
+      setSelectedEdge(null);
+      setActiveTab(getDefaultInspectorTabForFamily(node.data.block?.family));
+      openOverlay(ConfigurationOverlay, {}, { size: "wide" });
+      setOpenBlockConfigId(null);
+    }, 700);
+    return () => window.clearTimeout(t);
+  }, [
+    openBlockConfigId,
+    nodes,
+    openOverlay,
+    setActiveTab,
+    setOpenBlockConfigId,
+    setSelectedEdge,
+    setSelectedNode,
+  ]);
 
   // Pre-shift viewport when transitioning from homepage (before sidebar animates)
   const hasPreShiftedRef = useRef(false);

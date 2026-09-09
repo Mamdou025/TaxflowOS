@@ -1,0 +1,163 @@
+{
+  "persona": "deadclick",
+  "meta": {
+    "base": "http://localhost:5173",
+    "model": "anthropic/claude-opus-4-8",
+    "effort": "medium",
+    "stepsUsed": 70,
+    "maxSteps": 70,
+    "startedAt": "2026-07-30T19:29:25.181Z",
+    "finishedAt": "2026-07-30T19:34:02.353Z",
+    "summary": "Also the \"Assistant\" button is disabled on this page. Let me test the FAPI action buttons: Import, Builder, Sources, Export."
+  },
+  "findings": [
+    {
+      "id": 1,
+      "severity": "medium",
+      "category": "ux",
+      "title": "\"Open the dashboard\" quick action creates a chat instead of opening the dashboard",
+      "detail": "On the home page, clicking the \"Open the dashboard\" suggestion button created a new chat titled \"Open the dashboard\" instead of navigating to the dashboard page.",
+      "expected": "Clicking \"Open the dashboard\" should navigate to /dashboard.",
+      "actual": "A chat entry \"Open the dashboard now\" appeared in Recent chats; no navigation occurred.",
+      "screenshot": "finding-1.png"
+    },
+    {
+      "id": 2,
+      "severity": "medium",
+      "category": "dead-button",
+      "title": "Dashboard \"Ask the assistant\" button does nothing",
+      "detail": "On the Practitioner Dashboard for Northstar Inc., clicking \"Ask the assistant\" (top-right of the client header) twice produced no navigation, dialog, or content change.",
+      "expected": "It should open/focus the Sina chat, ideally pre-scoped to the client.",
+      "actual": "No visible change on either click.",
+      "screenshot": "finding-2.png"
+    },
+    {
+      "id": 3,
+      "severity": "medium",
+      "category": "dead-button",
+      "title": "Dashboard \"Ask for a full review →\" button does nothing",
+      "detail": "On the Practitioner Dashboard \"At a glance\" panel, clicking \"Ask for a full review →\" twice produced no navigation, dialog, or content change.",
+      "expected": "It should trigger a chat/review request for the client's at-risk deliverables.",
+      "actual": "No visible change on either click.",
+      "screenshot": "finding-3.png"
+    },
+    {
+      "id": 4,
+      "severity": "medium",
+      "category": "dead-button",
+      "title": "Builder \"Ask Scope on this page\" button does nothing",
+      "detail": "On /builder, clicking \"Ask Scope on this page\" twice produced no navigation, dialog, or content change.",
+      "expected": "It should open the Scope chat panel scoped to the builder page.",
+      "actual": "No visible change on either click.",
+      "screenshot": "finding-4.png"
+    },
+    {
+      "id": 5,
+      "severity": "high",
+      "category": "dead-button",
+      "title": "Workflows hub \"New workflow\" button does nothing",
+      "detail": "On the Workflows hub (/workflows-hub, sidebar), clicking \"New workflow\" twice produced no navigation, dialog, or content change. This is a primary creation action.",
+      "expected": "It should open the builder with a new/blank workflow or a template picker.",
+      "actual": "No visible change on either click.",
+      "screenshot": "finding-5.png"
+    },
+    {
+      "id": 6,
+      "severity": "medium",
+      "category": "dead-button",
+      "title": "T1134 \"Generate Client Link\" button does nothing",
+      "detail": "In the T1134 Client Portal View, clicking \"Generate Client Link\" twice produced no visible change. A shareable link is already shown statically above it, but the generate button gives no feedback (e.g. copy confirmation or new token).",
+      "expected": "It should generate/regenerate or copy the secure client link and show a confirmation.",
+      "actual": "No visible change on either click.",
+      "screenshot": "finding-6.png"
+    },
+    {
+      "id": 7,
+      "severity": "medium",
+      "category": "dead-button",
+      "title": "T1134 client confirmation \"Confirmed\" buttons do nothing",
+      "detail": "In the T1134 Client Portal View, the \"Confirmed\" button under \"Questions awaiting client confirmation\" produces no visible change on repeated clicks — no state change, checkmark, or item removal.",
+      "expected": "Clicking \"Confirmed\" should mark that confirmation question as answered/resolved.",
+      "actual": "No visible change on either click.",
+      "screenshot": "finding-7.png"
+    },
+    {
+      "id": 8,
+      "severity": "question",
+      "category": "ai-accuracy",
+      "title": "FAPI worksheet FAT deduction uses a relevant tax factor of 1.9 (FAT 100 → deduction 190)",
+      "detail": "On /fapi, with Foreign accrual tax paid (FAT) = 100.00 USD, the \"FAT deduction\" line shows 190.00 USD (256.50 CAD @ 1.35). This implies a relevant tax factor (RTF) of 1.9 under s.91(4). The RTF for a corporation is 1 divided by its general corporate income tax rate; since 2016 that is 1/0.3867 ≈ 2.585, and historically it has been values like 4, 3, 2.2 — but not 1.9. Net FAPI (24,810 = 25,000 − 190) is internally consistent, but the 1.9 multiplier should be verified against the intended tax year/jurisdiction, as an incorrect RTF over- or under-states the s.91(4) deduction.",
+      "expected": "FAT deduction = FAT × relevant tax factor, using the correct RTF for the tax year (≈2.585 for a corporation post-2016).",
+      "actual": "FAT deduction = 100 × 1.9 = 190, implying RTF = 1.9.",
+      "screenshot": "finding-8.png"
+    },
+    {
+      "id": 9,
+      "severity": "medium",
+      "category": "ux",
+      "title": "FAPI worksheet FAT input field does not accept edits / does not recalc",
+      "detail": "On /fapi, I typed 1000.00 into the \"Foreign accrual tax paid\" (FAT) textbox and pressed Enter. The field reverted to 100.00 and the Results summary (FAT deduction 190, Net FAPI 24,810) did not change.",
+      "expected": "Editing the FAT input should update the field and recompute the FAT deduction and Net FAPI.",
+      "actual": "Value reverted to 100.00; no recalculation occurred.",
+      "screenshot": "finding-9.png"
+    }
+  ],
+  "errors": [
+    {
+      "kind": "network",
+      "detail": "500 POST http://localhost:5173/api/chat/threads/k1jgiwx584s5joud53jqp/messages"
+    },
+    {
+      "kind": "console",
+      "detail": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+    },
+    {
+      "kind": "network",
+      "detail": "FAILED POST http://localhost:5173/api/copilotkit (net::ERR_ABORTED)"
+    },
+    {
+      "kind": "network",
+      "detail": "FAILED POST http://localhost:5173/api/copilotkit (net::ERR_ABORTED)"
+    },
+    {
+      "kind": "network",
+      "detail": "404 GET http://localhost:5173/api/auth/get-session"
+    },
+    {
+      "kind": "console",
+      "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "kind": "network",
+      "detail": "404 GET http://localhost:5173/api/auth/get-session"
+    },
+    {
+      "kind": "console",
+      "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "kind": "network",
+      "detail": "FAILED POST http://localhost:5173/api/copilotkit (net::ERR_ABORTED)"
+    },
+    {
+      "kind": "network",
+      "detail": "FAILED POST http://localhost:5173/api/copilotkit (net::ERR_ABORTED)"
+    },
+    {
+      "kind": "network",
+      "detail": "404 GET http://localhost:5173/api/auth/get-session"
+    },
+    {
+      "kind": "console",
+      "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "kind": "network",
+      "detail": "404 GET http://localhost:5173/api/auth/get-session"
+    },
+    {
+      "kind": "console",
+      "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    }
+  ]
+}

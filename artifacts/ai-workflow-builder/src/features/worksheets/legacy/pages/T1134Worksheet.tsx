@@ -792,6 +792,9 @@ function T1134Toolbar({
 export default function T1134Worksheet() {
   const [activeTab, setActiveTab] = useState<'part1' | 'part2' | 'client'>('part2');
   const [activePanel, setActivePanel] = useState<MilestoneId | null>(null);
+  // Client Portal View — local interaction state (was a static mock: dead buttons).
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [clientResponses, setClientResponses] = useState<Record<string, 'confirmed' | 'change'>>({});
 
   const handleMilestoneSelect = useCallback((id: MilestoneId) => {
     setActivePanel(prev => prev === id ? null : id);
@@ -907,21 +910,32 @@ export default function T1134Worksheet() {
                 <div style={{ fontFamily: 'monospace', background: 'var(--sx-card)', padding: '6px 10px', borderRadius: 6, color: 'var(--sx-body)', marginBottom: 10 }}>
                   https://inscope.sinaxe.com/client/northstar/t1134/2024?token=abc123
                 </div>
-                <button style={{ padding: '8px 16px', background: PURPLE, color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
-                  Generate Client Link
+                <button
+                  onClick={() => {
+                    void navigator.clipboard?.writeText('https://inscope.sinaxe.com/client/northstar/t1134/2024?token=abc123');
+                    setLinkCopied(true);
+                  }}
+                  style={{ padding: '8px 16px', background: PURPLE, color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
+                >
+                  {linkCopied ? 'Link copied ✓ — copy again' : 'Generate Client Link'}
                 </button>
               </div>
               <div style={{ marginTop: 20 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--sx-body)', marginBottom: 10 }}>Questions awaiting client confirmation</div>
-                {SOPHIA_IRL_QUESTIONS.flatMap(g => g.questions).filter(q => q.priority === 'high').slice(0, 5).map(q => (
+                {SOPHIA_IRL_QUESTIONS.flatMap(g => g.questions).filter(q => q.priority === 'high').slice(0, 5).map(q => {
+                  const response = clientResponses[q.id];
+                  const setResponse = (r: 'confirmed' | 'change') => setClientResponses(prev => ({ ...prev, [q.id]: r }));
+                  return (
                   <div key={q.id} style={{ padding: '10px 12px', background: 'var(--sx-card)', border: '1px solid var(--sx-hairline)', borderRadius: 8, marginBottom: 8, fontSize: 12 }}>
                     <div style={{ color: 'var(--sx-body)', lineHeight: 1.5 }}>{q.text}</div>
-                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                      <button style={{ padding: '4px 12px', background: 'rgba(34,197,94,0.15)', color: '#166534', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: 11, cursor: 'pointer' }}>Confirmed</button>
-                      <button style={{ padding: '4px 12px', background: 'rgba(239,68,68,0.15)', color: '#991b1b', border: 'none', borderRadius: 6, fontWeight: 700, fontSize: 11, cursor: 'pointer' }}>Change needed</button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                      <button onClick={() => setResponse('confirmed')} style={{ padding: '4px 12px', background: 'rgba(34,197,94,0.15)', color: '#166534', border: response === 'confirmed' ? '1px solid #166534' : '1px solid transparent', borderRadius: 6, fontWeight: 700, fontSize: 11, cursor: 'pointer', opacity: response && response !== 'confirmed' ? 0.5 : 1 }}>Confirmed</button>
+                      <button onClick={() => setResponse('change')} style={{ padding: '4px 12px', background: 'rgba(239,68,68,0.15)', color: '#991b1b', border: response === 'change' ? '1px solid #991b1b' : '1px solid transparent', borderRadius: 6, fontWeight: 700, fontSize: 11, cursor: 'pointer', opacity: response && response !== 'change' ? 0.5 : 1 }}>Change needed</button>
+                      {response && <span style={{ fontSize: 11, fontWeight: 600, color: response === 'confirmed' ? '#166534' : '#991b1b' }}>{response === 'confirmed' ? '✓ Confirmed' : 'Change requested'}</span>}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

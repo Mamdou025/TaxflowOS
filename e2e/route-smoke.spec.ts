@@ -15,7 +15,6 @@ import { test, expect, Page } from '@playwright/test';
 // All static routes declared in artifacts/ai-workflow-builder/src/App.tsx
 const STATIC_ROUTES = [
   '/',
-  '/builder',
   '/workflows',
   '/workflows-hub',
   '/agent',

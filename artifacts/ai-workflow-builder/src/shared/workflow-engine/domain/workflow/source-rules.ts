@@ -52,6 +52,25 @@ export function hasExcelSourceEvidence(config: Record<string, unknown>) {
   );
 }
 
+/**
+ * Has this Source been COMMITTED — published, or already consumed by a run?
+ *
+ * Every Source block is born `treatedAsEvidence` + `immutable` (getSourceMetadata
+ * stamps both the moment it is created from the catalog), so gating edits on those
+ * flags alone freezes a brand-new, still-empty block — a Manual Entry you just
+ * dropped had no editable field to type its value into. The product rule the UI
+ * itself states is narrower: "Source evidence is view-only AFTER USE OR PUBLISH."
+ * This is that rule. Until a source is committed it is a draft you configure; after,
+ * it freezes and corrections belong downstream in Logic.
+ */
+export function isSourceCommitted(block?: WorkflowBlock | null): boolean {
+  return Boolean(
+    block?.family === "Source" &&
+      (block.config.sourceStatus === "published" ||
+        block.config.sourceUsedInRun === true)
+  );
+}
+
 export function sourceHasLockableEvidence(block?: WorkflowBlock | null) {
   if (!block) {
     return false;

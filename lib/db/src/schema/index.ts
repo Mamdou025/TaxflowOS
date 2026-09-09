@@ -294,6 +294,11 @@ export const documents = pgTable(
     storageBucket: text("storage_bucket").notNull(),
     storageKey: text("storage_key").notNull(),
     status: text("status").notNull().default("uploading").$type<DocumentStatus>(),
+    // Whether this document is in Sina's active "Library" (searchable context). The
+    // Documents page is the full repository; a doc is only retrieved by the RAG tool
+    // when in_library is true, so the big dormant reference files can sit in storage
+    // without polluting results until they're switched on. Defaults on for new uploads.
+    inLibrary: boolean("in_library").notNull().default(true),
     extractedChars: integer("extracted_chars"),
     pageCount: integer("page_count"),
     error: text("error"),
@@ -340,6 +345,50 @@ export const documentChunks = pgTable(
       "hnsw",
       t.embedding.op("vector_cosine_ops")
     ),
+  ]
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Ingest jobs — the DURABLE work queue for RAG document processing. Replaces the
+// old fire-and-forget ingest, which was lost whenever the api-server restarted or
+// redeployed mid-processing (the document was then stuck in `processing` forever).
+// One row per queued/in-flight ingestion of a `documents` row. A worker claims the
+// next runnable job with `FOR UPDATE SKIP LOCKED`; on a transient failure (a
+// rate-limited embedding call, a network blip) it reschedules the job with
+// exponential backoff via `runAfter` instead of failing the document. A crash
+// mid-processing leaves the row `active` — the worker's reaper requeues rows whose
+// `claimedAt` has gone stale, so no document is silently abandoned. Cascade-deleted
+// with its parent document.
+// ─────────────────────────────────────────────────────────────────────────────
+export type IngestJobStatus = "queued" | "active" | "done" | "failed";
+
+export const ingestJobs = pgTable(
+  "ingest_jobs",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => generateId()),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => documents.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    status: text("status").notNull().default("queued").$type<IngestJobStatus>(),
+    attempts: integer("attempts").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull().default(5),
+    // When the job becomes eligible to run. Bumped forward for backoff on retry.
+    runAfter: timestamp("run_after").notNull().defaultNow(),
+    // Set when a worker claims the job; used by the reaper to detect stalls.
+    claimedAt: timestamp("claimed_at"),
+    lastError: text("last_error"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    // The worker's claim query scans by (status, runAfter) for the next job.
+    index("ingest_jobs_claim_idx").on(t.status, t.runAfter),
+    index("ingest_jobs_document_idx").on(t.documentId),
   ]
 );
 
@@ -398,3 +447,5 @@ export type DocumentRow = typeof documents.$inferSelect;
 export type NewDocumentRow = typeof documents.$inferInsert;
 export type DocumentChunk = typeof documentChunks.$inferSelect;
 export type NewDocumentChunk = typeof documentChunks.$inferInsert;
+export type IngestJob = typeof ingestJobs.$inferSelect;
+export type NewIngestJob = typeof ingestJobs.$inferInsert;

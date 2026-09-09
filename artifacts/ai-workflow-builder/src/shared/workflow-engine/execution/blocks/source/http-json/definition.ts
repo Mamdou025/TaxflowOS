@@ -1,0 +1,78 @@
+import type { ToolDefinition } from "../../../runtime/types";
+
+export const httpJsonDefinition: ToolDefinition = {
+  defaultConfig: {
+    fieldMap: {},
+    maxRows: 250,
+    method: "GET",
+    resultsPath: "",
+    sourceKind: "http_json",
+    url: "",
+  },
+  description:
+    "Calls a public JSON API and exposes the response as immutable Source rows. The live call is made server-side; the run replays the pinned payload deterministically.",
+  displayName: "API / HTTP Request Source",
+  family: "Source",
+  inputRoles: [],
+  outputRoles: [
+    {
+      canRouteToFamilies: ["Logic"],
+      description: "Immutable rows mapped from the API response.",
+      id: "rows",
+      label: "Rows",
+      outputKey: "rows",
+      outputType: "rows",
+      samplePreview: "100 API rows",
+    },
+    {
+      canRouteToFamilies: ["Logic"],
+      description: "Selected immutable API rows exposed downstream.",
+      id: "selected_rows",
+      label: "Selected rows",
+      outputKey: "rows",
+      outputType: "table_rows",
+      samplePreview: "selected API rows",
+    },
+    {
+      canRouteToFamilies: ["Logic", "Output"],
+      description: "Original API records before local normalization.",
+      id: "raw_rows",
+      label: "Raw rows",
+      outputKey: "rawRows",
+      outputType: "raw_rows",
+      samplePreview: "raw API records",
+    },
+    {
+      canRouteToFamilies: ["Logic", "Review / Validation", "Output"],
+      description:
+        "HTTP status, endpoint, fetch timestamp and record count for the pinned response.",
+      id: "response_metadata",
+      label: "Response metadata",
+      outputKey: "responseMetadata",
+      outputType: "response_metadata",
+      samplePreview: "HTTP 200 · 100 records",
+    },
+    {
+      canRouteToFamilies: ["Logic", "Output"],
+      description: "Local Source metadata for the API slice.",
+      id: "source_metadata",
+      label: "Source metadata",
+      outputKey: "sourceMetadata",
+      outputType: "source_metadata",
+      samplePreview: "source metadata",
+    },
+    {
+      canRouteToFamilies: ["Logic", "Output"],
+      description: "The endpoint the evidence was captured from.",
+      id: "source_locator",
+      label: "Source locator",
+      outputKey: "sourceLocator",
+      outputType: "source_locator",
+      samplePreview: "https://api.example.gov/v2/awards",
+    },
+  ],
+  runMode: "local_mock",
+  subtype: "API / HTTP Request",
+  toolGroup: "source",
+  toolId: "source.http_json",
+};

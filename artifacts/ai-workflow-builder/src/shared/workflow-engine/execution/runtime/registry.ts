@@ -6,6 +6,7 @@ import { aggregationRulesToolModule } from "../blocks/source/aggregation-rules";
 import { calculationRulesToolModule } from "../blocks/source/calculation-rules";
 import { currencyRateToolModule } from "../blocks/source/currency-rate";
 import { fapiInputsToolModule } from "../blocks/source/fapi-inputs";
+import { httpJsonToolModule } from "../blocks/source/http-json";
 import { keywordRulesToolModule } from "../blocks/source/keyword-rules";
 import { manualTableToolModule } from "../blocks/source/manual-table";
 import { rollupRulesToolModule } from "../blocks/source/rollup-rules";
@@ -30,6 +31,7 @@ for (const module of [
   calculationRulesToolModule,
   fapiInputsToolModule,
   currencyRateToolModule,
+  httpJsonToolModule,
   keywordMapperToolModule,
   categoryRollupAggregatorToolModule,
   calculationEngineToolModule,
