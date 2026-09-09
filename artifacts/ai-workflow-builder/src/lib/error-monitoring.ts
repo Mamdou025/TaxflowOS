@@ -60,3 +60,21 @@ export function captureRenderError(
     Sentry.captureException(error);
   });
 }
+
+/** Forward an unhandled promise rejection to Sentry. */
+export function captureUnhandledRejection(reason: unknown): void {
+  const error =
+    reason instanceof Error
+      ? reason
+      : new Error(
+          `Unhandled promise rejection: ${
+            typeof reason === 'string' ? reason : String(reason)
+          }`,
+        );
+
+  Sentry.withScope((scope) => {
+    scope.setTag('error.type', 'UnhandledPromiseRejection');
+    scope.setTag('error.source', 'window.unhandledrejection');
+    Sentry.captureException(error);
+  });
+}
