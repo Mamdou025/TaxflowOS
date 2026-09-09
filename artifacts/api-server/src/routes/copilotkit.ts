@@ -3,12 +3,10 @@
  *
  * Exposes a GraphQL endpoint that the CopilotKit React SDK streams through.
  *
- * Model routing: prefer the Vercel AI Gateway when AI_GATEWAY_API_KEY is set —
- * one key reaches every provider/model, so OPENAI_API_KEY is OPTIONAL. The
- * OpenAI SDK points at the gateway's OpenAI-compatible endpoint, where models
- * must be "provider/model", so a bare OPENAI_CHAT_MODEL (e.g. "gpt-5.6-terra")
- * is normalized to "openai/…". With no gateway key we fall back to a direct
- * OpenAI client, which reads OPENAI_API_KEY from the environment.
+ * Model routing: prefer the Replit AI Integrations OpenAI-compatible endpoint.
+ * Existing environments that have not provisioned that integration yet use the
+ * Vercel AI Gateway instead. Both paths are independent of OPENAI_API_KEY, so
+ * chat stays available when a direct OpenAI key changes, expires, or is removed.
  *
  * Orphan safety — the "can't send a follow-up after the AI replied" fix:
  * The chat runs through a CopilotKit BuiltInAgent that hands the whole persisted
@@ -51,10 +49,6 @@ import { repairOrphanToolCalls } from "../lib/copilot-orphan-repair";
 
 const router = Router();
 
-// Gateway model ids are "provider/model"; a bare OpenAI id gets an "openai/" prefix.
-const normalizeModelSpec = (spec: string): string =>
-  spec.includes("/") ? spec : `openai/${spec}`;
-
 /**
  * Detect models that are served exclusively via the Responses API and therefore
  * reject "system" role messages in the messages array (demanding `instructions`
@@ -78,17 +72,31 @@ function needsStrictSystemHandling(model: string): boolean {
 
 // Build the handler once — serviceAdapter, agent and runtime are stateless,
 // so a single instance shared across requests is fine.
-const gatewayKey = process.env.AI_GATEWAY_API_KEY;
+const replitGatewayBaseUrl = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
+const replitGatewayApiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+const vercelGatewayApiKey = process.env.AI_GATEWAY_API_KEY;
+const gatewayBaseUrl =
+  replitGatewayBaseUrl ??
+  (vercelGatewayApiKey ? "https://ai-gateway.vercel.sh/v1" : undefined);
+const gatewayApiKey = replitGatewayApiKey ?? vercelGatewayApiKey;
 const configuredModel = process.env.OPENAI_CHAT_MODEL ?? "gpt-4o";
-const serviceAdapter = gatewayKey
-  ? new OpenAIAdapter({
-      openai: new OpenAI({
-        apiKey: gatewayKey,
-        baseURL: "https://ai-gateway.vercel.sh/v1",
-      }),
-      model: normalizeModelSpec(configuredModel),
-    })
-  : new OpenAIAdapter({ model: configuredModel });
+
+if (!gatewayBaseUrl || !gatewayApiKey) {
+  throw new Error(
+    "CopilotKit requires Replit AI Integrations or AI_GATEWAY_API_KEY; OPENAI_API_KEY is not used",
+  );
+}
+
+const serviceAdapter = new OpenAIAdapter({
+  openai: new OpenAI({
+    apiKey: gatewayApiKey,
+    baseURL: gatewayBaseUrl,
+  }),
+  model:
+    replitGatewayBaseUrl || configuredModel.includes("/")
+      ? configuredModel
+      : `openai/${configuredModel}`,
+});
 
 // Explicit default agent + middleware pipeline. Middleware runs before the
 // BuiltInAgent converts input.messages for the AI SDK, so the exact thread
