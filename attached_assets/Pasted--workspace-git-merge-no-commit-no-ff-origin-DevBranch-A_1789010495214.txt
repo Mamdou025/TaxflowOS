@@ -1,0 +1,171 @@
+~/workspace$ git merge --no-commit --no-ff origin/DevBranch
+Auto-merging artifacts/ai-workflow-builder/package.json
+Automatic merge went well; stopped before committing as requested
+~/workspace$ git status
+On branch DevReplit
+Your branch is ahead of 'origin/DevReplit' by 7 commits.
+  (use "git push" to publish your local commits)
+
+All conflicts fixed but you are still merging.
+  (use "git commit" to conclude merge)
+
+Changes to be committed:
+    new file:   artifacts/ai-workflow-builder/build/runtime-error-overlay.ts
+    modified:   artifacts/ai-workflow-builder/package.json
+    modified:   artifacts/ai-workflow-builder/src/App.tsx
+    modified:   artifacts/ai-workflow-builder/src/features/assistant/workspace/document-viewer.tsx
+    modified:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/ai-elements/canvas.tsx
+    modified:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/ai-elements/edge.tsx
+    new file:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/config/trigger-readiness-panel.tsx
+    modified:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/inline-builder.tsx
+    modified:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/inspector/data-preview-card.tsx
+    modified:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/inspector/source-setup-panel.tsx
+    modified:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/logic-viewers/aggregator-workspace.tsx
+    new file:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/logic-viewers/available-calculation-values.ts
+    modified:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/logic-viewers/calculation-engine-editor.tsx
+    modified:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/logic-viewers/calculation-engine-panel.tsx
+    modified:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/logic-viewers/calculation-engine-workspace.tsx
+    new file:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/logic-viewers/calculation-settings.tsx
+    new file:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/logic-viewers/calculation-source-picker.tsx
+    modified:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/logic-viewers/field-block-workspace.tsx
+    modified:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/logic-viewers/keyword-mapper-workspace.tsx
+    modified:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/nodes/trigger-node.tsx
+    modified:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/overlays/configuration-overlay.tsx
+    modified:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/source-viewers/currency-rate-source-panel.tsx
+    modified:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/source-viewers/http-json-source-panel.tsx
+    modified:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/source-viewers/rollup-rulebook-editor.tsx
+    modified:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/workflow-canvas.tsx
+    modified:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/workflow-toolbar.tsx
+    modified:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/workspace/block-data-flow-pane.tsx
+    new file:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/workspace/block-io-panel.tsx
+    modified:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/workspace/block-run-panel.tsx
+    new file:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/workspace/block-test-result.tsx
+    modified:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/workspace/latest-local-run.ts
+    new file:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/workspace/lazy-details.tsx
+    new file:   artifacts/ai-workflow-builder/src/features/workflow-builder/ui/workspace/readable-data.tsx
+    new file:   artifacts/ai-workflow-builder/src/features/workflows-hub/document-records.ts
+    new file:   artifacts/ai-workflow-builder/src/features/workflows-hub/document-review-table.tsx
+    new file:   artifacts/ai-workflow-builder/src/features/workflows-hub/document-worker.ts
+    new file:   artifacts/ai-workflow-builder/src/features/workflows-hub/saved-workflow-run.tsx
+    new file:   artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-api-status.tsx
+    new file:   artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-library.ts
+    modified:   artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-page.tsx
+    new file:   artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-result-summary.tsx
+    new file:   artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-storage-panel.tsx
+    new file:   artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-sync.ts
+    new file:   artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-test-data.tsx
+    modified:   artifacts/ai-workflow-builder/src/lib/builder-bridge.ts
+    modified:   artifacts/ai-workflow-builder/src/platform/db/schema.ts
+    new file:   artifacts/ai-workflow-builder/src/shared/workflow-engine/api-snapshot.ts
+    new file:   artifacts/ai-workflow-builder/src/shared/workflow-engine/calculation-values.ts
+    modified:   artifacts/ai-workflow-builder/src/shared/workflow-engine/domain/workflow/inspector-rules.ts
+    modified:   artifacts/ai-workflow-builder/src/shared/workflow-engine/execution/blocks/logic/calculation-engine/definition.ts
+    modified:   artifacts/ai-workflow-builder/src/shared/workflow-engine/execution/blocks/logic/calculation-engine/run.ts
+    modified:   artifacts/ai-workflow-builder/src/shared/workflow-engine/execution/blocks/logic/calculation-engine/schema.ts
+    modified:   artifacts/ai-workflow-builder/src/shared/workflow-engine/execution/blocks/logic/category-rollup-aggregator/run.ts
+    modified:   artifacts/ai-workflow-builder/src/shared/workflow-engine/execution/blocks/logic/hierarchy-aggregator/schema.ts
+    modified:   artifacts/ai-workflow-builder/src/shared/workflow-engine/execution/blocks/logic/keyword-mapper/schema.ts
+    modified:   artifacts/ai-workflow-builder/src/shared/workflow-engine/execution/blocks/source/calculation-rules/schema.ts
+    modified:   artifacts/ai-workflow-builder/src/shared/workflow-engine/execution/blocks/source/currency-rate/run.ts
+    modified:   artifacts/ai-workflow-builder/src/shared/workflow-engine/execution/blocks/source/http-json/run.ts
+    modified:   artifacts/ai-workflow-builder/src/shared/workflow-engine/execution/blocks/source/manual-table/run.ts
+    modified:   artifacts/ai-workflow-builder/src/shared/workflow-engine/execution/blocks/source/manual-table/schema.ts
+    modified:   artifacts/ai-workflow-builder/src/shared/workflow-engine/execution/blocks/source/rollup-rules/schema.ts
+    modified:   artifacts/ai-workflow-builder/src/shared/workflow-engine/local-fiscal-workflow.ts
+    modified:   artifacts/ai-workflow-builder/src/shared/workflow-engine/local-tool-registry.ts
+    modified:   artifacts/ai-workflow-builder/src/shared/workflow-engine/local-tool-runner.ts
+    new file:   artifacts/ai-workflow-builder/src/shared/workflow-engine/numeric-input.ts
+    new file:   artifacts/ai-workflow-builder/src/shared/workflow-engine/present-tool-output.ts
+    new file:   artifacts/ai-workflow-builder/src/shared/workflow-engine/rollup-evaluation.ts
+    new file:   artifacts/ai-workflow-builder/src/shared/workflow-engine/shared-json.ts
+    new file:   artifacts/ai-workflow-builder/src/shared/workflow-engine/templates/portfolio/document-calculator.ts
+    modified:   artifacts/ai-workflow-builder/src/shared/workflow-engine/templates/portfolio/portfolio-workflows.ts
+    new file:   artifacts/ai-workflow-builder/src/shared/workflow-engine/trigger-readiness.ts
+    new file:   artifacts/ai-workflow-builder/src/types/pako.d.ts
+    modified:   artifacts/ai-workflow-builder/vite.config.ts
+    modified:   artifacts/api-server/src/app.ts
+    modified:   artifacts/api-server/src/lib/rag/ocr.ts
+    modified:   artifacts/api-server/src/routes/index.ts
+    new file:   artifacts/api-server/src/routes/workflow-extract.ts
+    new file:   artifacts/api-server/src/routes/workflow-library.ts
+    new file:   docker/db-init/002-workflow-libraries.sql
+    new file:   docs/demo-audit-evidence/development-test-report.json
+    new file:   docs/demo-audit-evidence/production-final-result.png
+    new file:   docs/demo-audit-evidence/production-load-test-report.json
+    new file:   docs/demo-readiness-audit-2026-09-09.md
+    new file:   docs/workflow-catalog-audit-2026-09-09.md
+    new file:   docs/workflow-catalog-evidence/arithmetic-and-expense-export.json
+    new file:   docs/workflow-catalog-evidence/completion-claims.json
+    new file:   docs/workflow-catalog-evidence/configured-builder-examples.json
+    new file:   docs/workflow-catalog-evidence/deep-checks-first-attempt.json
+    new file:   docs/workflow-catalog-evidence/engine-inventory.json
+    new file:   docs/workflow-catalog-evidence/holiday-live-execution.json
+    new file:   docs/workflow-catalog-evidence/holiday-live-failure.png
+    new file:   docs/workflow-catalog-evidence/holiday-live-response.json
+    new file:   docs/workflow-catalog-evidence/holiday-live-test-report.json
+    new file:   docs/workflow-catalog-evidence/pf-document-calculator.png
+    new file:   docs/workflow-catalog-evidence/pf-fapi.png
+    new file:   docs/workflow-catalog-evidence/pf-holiday-payroll.png
+    new file:   docs/workflow-catalog-evidence/pf-platform-sequence.png
+    new file:   docs/workflow-catalog-evidence/pf-t1134.png
+    new file:   docs/workflow-catalog-evidence/release-gate-report.json
+    new file:   docs/workflow-catalog-evidence/test-report.json
+    new file:   docs/workflow-catalog-evidence/ui-pf-attribute-ledgers.json
+    new file:   docs/workflow-catalog-evidence/ui-pf-data-readiness.json
+    new file:   docs/workflow-catalog-evidence/ui-pf-document-calculator.json
+    new file:   docs/workflow-catalog-evidence/ui-pf-eifel.json
+    new file:   docs/workflow-catalog-evidence/ui-pf-fapi.json
+    new file:   docs/workflow-catalog-evidence/ui-pf-holiday-payroll.json
+    new file:   docs/workflow-catalog-evidence/ui-pf-ownership-graph.json
+    new file:   docs/workflow-catalog-evidence/ui-pf-part-xiii.json
+    new file:   docs/workflow-catalog-evidence/ui-pf-platform-sequence.json
+    new file:   docs/workflow-catalog-evidence/ui-pf-portfolio-ops.json
+    new file:   docs/workflow-catalog-evidence/ui-pf-scope-service.json
+    new file:   docs/workflow-catalog-evidence/ui-pf-surplus.json
+    new file:   docs/workflow-catalog-evidence/ui-pf-t106.json
+    new file:   docs/workflow-catalog-evidence/ui-pf-t1134.json
+    new file:   docs/workflow-catalog-evidence/ui-pf-t2-suite.json
+    new file:   docs/workflow-catalog-evidence/ui-pf-tax-position-summary.json
+    new file:   docs/workflow-catalog-evidence/ui-pf-tax-provision.json
+    new file:   docs/workflow-catalog-evidence/ui-test-report.json
+    new file:   docs/workflow-remediation-2026-09-09.md
+    new file:   docs/workflow-remediation-evidence/development-test-report.json
+    new file:   docs/workflow-remediation-evidence/neutral-pdf-final-result.png
+    new file:   docs/workflow-remediation-evidence/output-finality-test-report.json
+    new file:   docs/workflow-remediation-evidence/production-final-result.png
+    new file:   docs/workflow-remediation-evidence/production-test-report.json
+    new file:   e2e/calculation-audit.spec.ts
+    new file:   e2e/calculation-inputs.spec.ts
+    new file:   e2e/demo-readiness.spec.ts
+    new file:   e2e/document-to-result.spec.ts
+    new file:   e2e/fixtures/demo/no-text.pdf
+    new file:   e2e/fixtures/demo/sales-check.csv
+    new file:   e2e/fixtures/demo/sales-check.docx
+    new file:   e2e/fixtures/demo/sales-check.pdf
+    new file:   e2e/fixtures/demo/sales-check.xlsx
+    new file:   e2e/panel-resize.spec.ts
+    new file:   e2e/production-demo.spec.ts
+    modified:   e2e/route-smoke.spec.ts
+    new file:   e2e/serve-production.py
+    new file:   e2e/workflow-audit-isolation.ts
+    new file:   e2e/workflow-builder-roundtrip.spec.ts
+    new file:   e2e/workflow-catalog-audit.spec.ts
+    new file:   e2e/workflow-catalog-deep-checks.spec.ts
+    new file:   e2e/workflow-catalog-release-gates.spec.ts
+    new file:   e2e/workflow-remediation.spec.ts
+    modified:   e2e/workflow-run-persistence.spec.ts
+    new file:   e2e/workflow-storage-recovery.spec.ts
+    new file:   e2e/workspace-dataflow.spec.ts
+    modified:   lib/db/src/schema/index.ts
+    modified:   package.json
+    new file:   playwright.catalog-audit.config.mjs
+    new file:   playwright.production-audit.config.mjs
+    new file:   playwright.workflow.config.mjs
+    modified:   pnpm-lock.yaml
+    new file:   test-results/catalog-execution/.last-run.json
+    new file:   test-results/catalog-execution/workflow-catalog-release-g-1bde9-er-its-document-is-supplied/error-context.md
+    new file:   test-results/catalog-execution/workflow-catalog-release-g-32af8-port-must-include-data-rows/error-context.md
+    new file:   test-results/catalog-execution/workflow-catalog-release-g-4d16b-s-must-not-claim-completion/error-context.md
+    new file:   test-results/production-audit-report.json
+    new file:   test-results/production-demo-production-6e298--the-UI-and-survives-reload/production-final-result.png
+    new file:   test-results/production-demo-production-be18b-ing-document-parser-bundles/neutral-pdf-final-result.png
