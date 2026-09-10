@@ -49,3 +49,18 @@ If fast-forward fails, inspect local commits before continuing; do not reset or 
 ## Rollback
 
 Before changing DevReplit, keep its previous commit recorded (1811610 for this preparation). If the integration must be undone, revert the PR's merge commit with `git revert -m 1 <merge-commit>` on a separate branch and review it before merging the rollback. Reinstall dependencies and restart/redeploy the appropriate environment. A code revert does not undo database writes; retain the additive workflow library table and its data unless a separate database rollback is explicitly required.
+
+## Local validation of merge 8f18189 (2026-09-10)
+
+Passed:
+- Frozen-lockfile dependency installation (lifecycle scripts skipped locally).
+- Full workspace typecheck.
+- Frontend production build and API build.
+- Six production bundle freshness unit tests.
+- Four browser tests against the freshly built frontend: home, dashboard, workflows, and the production individual-block input/output scenario. The individual-block test recorded no page errors.
+
+The repository intentionally excludes Windows native build packages. Matching Rollup, esbuild, Tailwind oxide, and Lightning CSS binaries were installed in a separate local tools directory and supplied through NODE_PATH, without changing tracked manifests or the lockfile. A local-only Playwright configuration starts the preview port itself to accommodate Windows shell differences.
+
+The browser preview had no API server attached, and emitted connection-refused messages for backend requests. Live Replit authentication, managed AI, database persistence, database schema application, Sentry upload, and deployment were not verified. The production build emitted source-map, browser externalization, and chunk-size warnings but completed successfully. The Windows preview server required explicit shutdown after the four browser assertions passed.
+
+Keep the PR in draft until the Replit development checks above pass. No database or deployed application was changed during local validation.
