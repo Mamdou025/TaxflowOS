@@ -64,3 +64,11 @@ The repository intentionally excludes Windows native build packages. Matching Ro
 The browser preview had no API server attached, and emitted connection-refused messages for backend requests. Live Replit authentication, managed AI, database persistence, database schema application, Sentry upload, and deployment were not verified. The production build emitted source-map, browser externalization, and chunk-size warnings but completed successfully. The Windows preview server required explicit shutdown after the four browser assertions passed.
 
 Keep the PR in draft until the Replit development checks above pass. No database or deployed application was changed during local validation.
+
+## Replit development validation (2026-09-10)
+
+Validated d0bbfd5 in the actual Replit development workspace. Dependency installation with the frozen lockfile, full workspace typecheck, API build, frontend production build, six freshness tests, and three production browser startup tests passed. The production browser tests overlapped the API restart and logged connection-refused messages; separate API health, AI, and storage checks passed.
+
+Restarting the API workflow was necessary: the old process returned HTML for the new workflow-library route. After restart, health returned HTTP 200 and the UI showed Ready to save to server. A synthetic one-megabyte workflow-library payload saved and loaded identically with HTTP 200; its isolated test record was deleted successfully. A neutral AI smoke prompt returned READY, and its chat remained available after browser reload. No fresh sign-in flow was tested.
+
+The live Document Calculator individual-block test produced RESULT 251 from item_total 125.5. No saved workflow template was edited. The original Replit test-output changes were preserved in a stash named Before DevBranch integration validation 2026-09-10; they are not application code and are intentionally left stashed. Logs are in /tmp/devreplit-*.log in Replit. The production deployment was not republished.
