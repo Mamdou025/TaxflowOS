@@ -1,3 +1,4 @@
+import { WorkflowStoragePanel } from './workflow-storage-panel';
 
 
 // WorkflowPage — the Workflows surface, built for maximum canvas room:
@@ -11,6 +12,8 @@
 // Selection + active tab live in shared atoms so the sidebar list, the header, and
 // the body stay in sync. The engine — not the page — gates Run/Results.
 
+import { SavedWorkflowRun } from './saved-workflow-run';
+import { workflowLibraryAtom, saveVersion, definitionFingerprint } from './workflow-library';
 import { useEffect } from 'react';
 import { useRouter } from '@/lib/router';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
@@ -38,6 +41,8 @@ const TAB_LABELS: { id: WorkflowTab; label: string }[] = [
 ];
 
 const GROUPS: { id: PortfolioWorkflowGroup; label: string; Icon: typeof Boxes }[] = [
+  // Runnable end-to-end, listed first so a demo is one click away.
+  { id: 'demo', label: 'Runnable demos', Icon: Play },
   { id: 'platform', label: 'Platform services', Icon: Boxes },
   { id: 'foundation', label: 'Foundation', Icon: Database },
   { id: 'tier1', label: 'Tier 1', Icon: FileText },
@@ -63,10 +68,12 @@ function StubCard({ title, body, action }: { title: string; body: string; action
 export function WorkflowSidebarList() {
   const [selectedId, setSelected] = useAtom(selectedWorkflowIdAtom);
   const setTab = useSetAtom(workflowTabAtom);
+  const library = useAtomValue(workflowLibraryAtom);
   const isNew = selectedId === NEW_WORKFLOW_ID;
   const select = (id: string) => { setSelected(id); setTab('overview'); };
   return (
     <div>
+      <WorkflowStoragePanel />
       <button
         onClick={() => { setSelected(NEW_WORKFLOW_ID); setTab('build'); }}
         className="neu-row"
@@ -74,6 +81,7 @@ export function WorkflowSidebarList() {
       >
         <Plus size={13} /> New workflow
       </button>
+      {Object.values(library).length > 0 && <div><div style={{ padding: '9px 8px 4px', fontSize: 10, color: NEU.muted }}>MY WORKFLOWS</div>{Object.values(library).map(entry => <button key={entry.id} onClick={() => select(entry.id)} className="neu-row" style={{ width: '100%', textAlign: 'left', padding: '7px 8px', border: 'none', borderRadius: 9, background: selectedId === entry.id ? 'var(--sx-accent-soft)' : 'transparent', color: NEU.text, fontSize: 12 }}>{entry.draft.name}</button>)}</div>}
       {GROUPS.map(({ id, label, Icon }) => {
         const items = PORTFOLIO_WORKFLOWS.filter((w) => w.group === id);
         if (items.length === 0) return null;
@@ -101,6 +109,7 @@ function WorkflowDetail({ def }: { def: PortfolioWorkflowDef }) {
   const router = useRouter();
   const { resolvedTheme } = useTheme();
   const tab = useAtomValue(workflowTabAtom);
+  const library = useAtomValue(workflowLibraryAtom);
   const setTab = useSetAtom(workflowTabAtom);
   const runnable = getWorkflowConfig(def.id.replace(/^pf-/, ''));
   const resultPage = runnable?.resultPage;
@@ -115,59 +124,12 @@ function WorkflowDetail({ def }: { def: PortfolioWorkflowDef }) {
     );
   }
 
-  return (
-    <div style={{ position: 'absolute', inset: 0, overflowY: 'auto' }}>
-      <div style={{ maxWidth: 820, margin: '0 auto', padding: '24px 28px 56px' }}>
-        {tab === 'overview' && <WorkflowOverview def={def} />}
+  if (tab === 'run' || tab === 'results') {
+    const content = <SavedWorkflowRun key={def.id} id={def.id} resultsOnly={tab === 'results'} />;
+    return <div className="absolute inset-0 overflow-auto p-6"><div className="mx-auto max-w-5xl">{content}</div></div>;
+  }
 
-        {tab === 'run' && (
-          runnable ? (
-            <div style={{ background: NEU.surface, borderRadius: 18, boxShadow: NEU.shadowSm, padding: '16px 16px 12px' }}>
-              <WorkflowRunFlow
-                config={runnable}
-                surface={surface}
-                onComplete={() => setTab('results')}
-                onOpenPage={(pk) => { if (resultPage && pk === resultPage) setTab('results'); else router.push(`/${pk}`); }}
-                onOpenBuilder={() => setTab('build')}
-              />
-            </div>
-          ) : (
-            <StubCard
-              title="Run — engine not built yet"
-              body="This workflow is a structural blueprint: it maps the standardized process, but its calculation engine hasn't been built. Once it is, you'll run it right here and the result lands in Results. Use the Build tab to view or edit the graph."
-              action={{ label: 'Open the Build tab', icon: <ArrowRight size={15} />, onClick: () => setTab('build') }}
-            />
-          )
-        )}
-
-        {tab === 'results' && (() => {
-          const ResultComp = resultPage ? getPage(resultPage)?.Component : null;
-          if (ResultComp) {
-            return (
-              <div style={{ borderRadius: 16, overflow: 'hidden', boxShadow: NEU.shadowSm, background: 'var(--sx-card)' }}>
-                <ResultComp />
-              </div>
-            );
-          }
-          if (runnable) {
-            // Config-driven worksheet for runnable workflows without a bespoke one
-            // (the representative blueprint runs).
-            return (
-              <div style={{ borderRadius: 16, overflow: 'hidden', boxShadow: NEU.shadowSm, background: 'var(--sx-card)' }}>
-                <GenericWorksheet config={runnable} representative />
-              </div>
-            );
-          }
-          return (
-            <StubCard
-              title="Results appear here after a run"
-              body="Once this workflow runs and is approved, its manager-reviewable worksheet — the deliverable — shows up right here (and in the Worksheets library)."
-            />
-          );
-        })()}
-      </div>
-    </div>
-  );
+  return <div className="absolute inset-0 overflow-auto p-6"><div className="mx-auto max-w-5xl"><WorkflowOverview def={def} /></div></div>;
 }
 
 // A brand-new blank workflow being built in the surface — empty modes, a fresh
@@ -216,7 +178,9 @@ export function WorkflowPage({ workflowId }: { workflowId?: string }) {
   usePageSidebar('workflows', WorkflowSidebarList);
 
   const isNew = selectedId === NEW_WORKFLOW_ID;
-  const def = !isNew && selectedId ? getPortfolioWorkflowDef(selectedId) : null;
+  const [library, setLibrary] = useAtom(workflowLibraryAtom);
+  const personal = selectedId ? library[selectedId] : undefined;
+  const def = personal ? { ...(getPortfolioWorkflowDef(personal.templateId) ?? { group: 'foundation' as const, sub: 'Personal', blocks: [], edges: [] }), id: personal.id, name: personal.draft.name, description: personal.draft.description ?? 'Personal workflow' } : !isNew && selectedId ? getPortfolioWorkflowDef(selectedId) : null;
   const hasSelection = isNew || !!def;
   const headerName = isNew ? 'New workflow' : def ? short(def.name) : null;
   const isBuild = tab === 'build';
@@ -227,6 +191,7 @@ export function WorkflowPage({ workflowId }: { workflowId?: string }) {
         // Fixed-width title slot so the tabs after it always start at the same x
         // (consistent across workflows AND across Build/Run/… for one workflow).
         { kind: 'label', id: 'wf-name', text: headerName, strong: true, width: 210 },
+        { kind: 'label', id: 'wf-version', text: personal ? (!personal.versions.length || definitionFingerprint(personal.draft) !== definitionFingerprint(personal.versions.at(-1)!.definition) ? 'Unsaved changes' : `Version ${personal.versions.at(-1)!.number}`) : 'Template' },
         { kind: 'separator', id: 'sep' },
         ...TAB_LABELS.map((t): PageMenuItem => ({
           kind: 'button', id: `tab-${t.id}`, label: t.label, active: tab === t.id, onClick: () => setTab(t.id),
@@ -241,11 +206,11 @@ export function WorkflowPage({ workflowId }: { workflowId?: string }) {
         { kind: 'button', id: 'redo', icon: <Redo2 size={14} />, title: 'Redo', onClick: () => bridge?.redo(), disabled: !bridge?.canRedo },
         { kind: 'button', id: 'fit', icon: <Maximize2 size={14} />, title: 'Fit', onClick: () => setFit(true), disabled: !bridge },
         { kind: 'separator', id: 'sep2' },
-        { kind: 'button', id: 'save', icon: <Save size={14} />, label: bridge?.isSaving ? 'Saving…' : 'Save', onClick: () => bridge?.save(), disabled: !bridge || bridge?.isSaving },
-        { kind: 'button', id: 'run', icon: <Play size={14} />, label: bridge?.isExecuting ? 'Running…' : 'Run', primary: true, onClick: () => bridge?.run(), disabled: !bridge || bridge?.isExecuting },
+        { kind: 'button', id: 'save', icon: <Save size={14} />, label: bridge?.isSaving ? 'Saving…' : 'Save', onClick: () => { if (personal) setLibrary(previous => ({ ...previous, [personal.id]: saveVersion(previous[personal.id]) })); bridge?.save(); }, disabled: !bridge || bridge?.isSaving },
+        { kind: 'button', id: 'run', icon: <Play size={14} />, label: bridge?.isExecuting ? 'Running…' : 'Run', primary: true, onClick: () => setTab('run'), disabled: !bridge || bridge?.isExecuting },
       ]
     : [];
-  usePageMenu('workflows', { left, right }, [selectedId, tab, !!bridge, bridge?.canUndo, bridge?.canRedo, bridge?.isSaving, bridge?.isExecuting]);
+  usePageMenu('workflows', { left, right }, [selectedId, tab, !!bridge, bridge?.canUndo, bridge?.canRedo, bridge?.isSaving, bridge?.isExecuting, personal]);
 
   return (
     <div style={{ position: 'relative', height: '100%', background: NEU.bg, fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif" }}>

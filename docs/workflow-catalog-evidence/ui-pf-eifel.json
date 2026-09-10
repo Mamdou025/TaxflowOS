@@ -1,0 +1,357 @@
+{
+  "id": "pf-eifel",
+  "inputKind": "bundled sample records",
+  "inputRows": 6,
+  "openMs": 6741,
+  "runMs": 416,
+  "totalMs": 15222,
+  "browserErrors": [],
+  "first": {
+    "id": "custom:362e3082-7d57-4256-85b2-3003614915a4",
+    "name": "EIFEL — My workflow",
+    "version": 1,
+    "runCount": 1,
+    "runId": "local-tool-workflow-1789009262974-8n2jd6",
+    "status": "error",
+    "errors": [
+      "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "warnings": [
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "sources": [
+      {
+        "id": "bp-run-eifel--src",
+        "connected": true,
+        "consumedBy": [
+          "bp-run-eifel--classify"
+        ]
+      }
+    ],
+    "results": [
+      {
+        "blockId": "bp-run-eifel--start",
+        "label": "Start",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "triggerPayload",
+          "blockId",
+          "firedAt",
+          "mode",
+          "runId",
+          "workflowId",
+          "startedBy",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-eifel--src",
+        "label": "Source data",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "rawRows",
+          "rawRowsCount",
+          "selectedRows",
+          "selectedRowsCount",
+          "workbookFile",
+          "selectedSheet",
+          "selectedRange",
+          "sourceMetadata",
+          "sourceLocator",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-eifel--classify",
+        "label": "Classify",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "mappedRows",
+          "mappedRowsCount",
+          "unmatchedRows",
+          "unmatchedRowsCount",
+          "lowConfidenceRows",
+          "lowConfidenceRowsCount",
+          "conflictCount",
+          "conflicts",
+          "mappingSummary",
+          "rulesUsed",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-eifel--rollup",
+        "label": "Aggregate",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "categoryTotalDetails",
+          "categoryTotals",
+          "rollupTotalDetails",
+          "rollupTotals",
+          "namedValues",
+          "namedValuesSourceKind",
+          "excludedRows",
+          "excludedRowsCount",
+          "includedRowsByCategory",
+          "includedRowsByRollup",
+          "rollupFormulaTrace",
+          "rollupSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-eifel--lines",
+        "label": "Compute",
+        "status": "error",
+        "errors": [
+          "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source."
+        ],
+        "warnings": [],
+        "calculated": {},
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "namedValues",
+          "formulaTrace",
+          "calculatedResults",
+          "resultDetails",
+          "calculationSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-eifel--summary",
+        "label": "Summary",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-eifel--out",
+        "label": "Result",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      }
+    ]
+  },
+  "second": {
+    "id": "custom:362e3082-7d57-4256-85b2-3003614915a4",
+    "name": "EIFEL — My workflow",
+    "version": 1,
+    "runCount": 2,
+    "runId": "local-tool-workflow-1789009270383-kdsorv",
+    "status": "error",
+    "errors": [
+      "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "warnings": [
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "sources": [
+      {
+        "id": "bp-run-eifel--src",
+        "connected": true,
+        "consumedBy": [
+          "bp-run-eifel--classify"
+        ]
+      }
+    ],
+    "results": [
+      {
+        "blockId": "bp-run-eifel--start",
+        "label": "Start",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "triggerPayload",
+          "blockId",
+          "firedAt",
+          "mode",
+          "runId",
+          "workflowId",
+          "startedBy",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-eifel--src",
+        "label": "Source data",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "rawRows",
+          "rawRowsCount",
+          "selectedRows",
+          "selectedRowsCount",
+          "workbookFile",
+          "selectedSheet",
+          "selectedRange",
+          "sourceMetadata",
+          "sourceLocator",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-eifel--classify",
+        "label": "Classify",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "mappedRows",
+          "mappedRowsCount",
+          "unmatchedRows",
+          "unmatchedRowsCount",
+          "lowConfidenceRows",
+          "lowConfidenceRowsCount",
+          "conflictCount",
+          "conflicts",
+          "mappingSummary",
+          "rulesUsed",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-eifel--rollup",
+        "label": "Aggregate",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "categoryTotalDetails",
+          "categoryTotals",
+          "rollupTotalDetails",
+          "rollupTotals",
+          "namedValues",
+          "namedValuesSourceKind",
+          "excludedRows",
+          "excludedRowsCount",
+          "includedRowsByCategory",
+          "includedRowsByRollup",
+          "rollupFormulaTrace",
+          "rollupSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-eifel--lines",
+        "label": "Compute",
+        "status": "error",
+        "errors": [
+          "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source."
+        ],
+        "warnings": [],
+        "calculated": {},
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "namedValues",
+          "formulaTrace",
+          "calculatedResults",
+          "resultDetails",
+          "calculationSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-eifel--summary",
+        "label": "Summary",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-eifel--out",
+        "label": "Result",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      }
+    ]
+  }
+}

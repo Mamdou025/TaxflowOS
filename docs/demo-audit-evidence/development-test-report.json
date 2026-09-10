@@ -1,0 +1,1926 @@
+{
+  "config": {
+    "argv": [
+      "C:\\nvm4w\\nodejs\\node.exe",
+      "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\node_modules\\.pnpm\\@playwright+test@1.62.0\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config",
+      "playwright.workflow.config.mjs",
+      "--tsconfig",
+      "e2e/tsconfig.json"
+    ],
+    "configFile": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\playwright.workflow.config.mjs",
+    "rootDir": "C:/Users/Mamad/Sinaxe/TaxflowOS/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/Mamad/Sinaxe/TaxflowOS/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/Mamad/Sinaxe/TaxflowOS/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "workflow-builder-roundtrip.spec.ts",
+          "panel-resize.spec.ts",
+          "calculation-inputs.spec.ts",
+          "workspace-dataflow.spec.ts",
+          "document-to-result.spec.ts",
+          "demo-readiness.spec.ts",
+          "calculation-audit.spec.ts",
+          "route-smoke.spec.ts",
+          "workflow-run-persistence.spec.ts"
+        ],
+        "timeout": 90000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/demo-audit-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.62.0",
+    "workers": 1,
+    "webServer": {
+      "command": "pnpm --filter @workspace/ai-workflow-builder dev",
+      "env": {
+        "PORT": "5173",
+        "BASE_PATH": "/"
+      },
+      "url": "http://localhost:5173",
+      "reuseExistingServer": true,
+      "timeout": 90000
+    }
+  },
+  "suites": [
+    {
+      "title": "calculation-audit.spec.ts",
+      "file": "calculation-audit.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "constant and explicit numeric-field formulas do not require a generic amount field",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10412,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"constant\":{\"status\":\"success\",\"errors\":[],\"value\":{\"RESULT\":250}},\"field\":{\"status\":\"success\",\"errors\":[],\"value\":{\"RESULT\":24}}}\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "(node:46460) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:00:16.962Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "07f8e5c24d29e06a9880-b3ec8e3113b9b9adf3a6",
+          "file": "calculation-audit.spec.ts",
+          "line": 3,
+          "column": 5
+        },
+        {
+          "title": "invalid arithmetic and malformed formulas cannot publish a numeric result",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5722,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[{\"expression\":\"500 / 0\",\"status\":\"error\",\"errors\":[\"Divide by zero in BAD.\"],\"warnings\":[],\"output\":{\"calculatedResults\":{},\"resultDetails\":{}}},{\"expression\":\"500 +\",\"status\":\"error\",\"errors\":[\"Formula expression in BAD is missing a value.\"],\"warnings\":[],\"output\":{\"calculatedResults\":{},\"resultDetails\":{}}},{\"expression\":\"(500 / 2\",\"status\":\"error\",\"errors\":[\"Formula expression in BAD has an unmatched parenthesis.\"],\"warnings\":[],\"output\":{\"calculatedResults\":{},\"resultDetails\":{}}},{\"expression\":\"2 ** 3\",\"status\":\"error\",\"errors\":[\"Unexpected token \\\"*\\\" in BAD.\",\"Formula expression in BAD has unused tokens.\"],\"warnings\":[],\"output\":{\"calculatedResults\":{},\"resultDetails\":{}}}]\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:00:27.617Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "07f8e5c24d29e06a9880-7bc996dbd26a9bec22b5",
+          "file": "calculation-audit.spec.ts",
+          "line": 29,
+          "column": 5
+        },
+        {
+          "title": "aggregation operations and nested groups agree with the editor",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5535,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"status\":\"success\",\"errors\":[],\"totals\":{\"rollupTotalDetails\":{\"sum\":{\"includedCategoryIds\":[\"a\",\"b\"],\"label\":\"sum\",\"operation\":\"sum\",\"result\":8,\"rollupId\":\"sum\",\"warnings\":[]},\"sum_abs\":{\"includedCategoryIds\":[\"a\",\"b\"],\"label\":\"sum_abs\",\"operation\":\"sum_abs\",\"result\":8,\"rollupId\":\"sum_abs\",\"warnings\":[]},\"subtract\":{\"includedCategoryIds\":[\"a\",\"b\"],\"label\":\"subtract\",\"operation\":\"subtract\",\"result\":4,\"rollupId\":\"subtract\",\"warnings\":[]},\"multiply\":{\"includedCategoryIds\":[\"a\",\"b\"],\"label\":\"multiply\",\"operation\":\"multiply\",\"result\":12,\"rollupId\":\"multiply\",\"warnings\":[]},\"divide\":{\"includedCategoryIds\":[\"a\",\"b\"],\"label\":\"divide\",\"operation\":\"divide\",\"result\":3,\"rollupId\":\"divide\",\"warnings\":[]},\"pass_through\":{\"includedCategoryIds\":[\"a\",\"b\"],\"label\":\"pass_through\",\"operation\":\"pass_through\",\"result\":6,\"rollupId\":\"pass_through\",\"warnings\":[]},\"nested\":{\"includedCategoryIds\":[\"sum\",\"a\"],\"label\":\"Nested\",\"operation\":\"sum\",\"result\":14,\"rollupId\":\"nested\",\"warnings\":[]},\"a\":{\"includedCategoryIds\":[\"a\"],\"label\":\"Same name as category\",\"operation\":\"sum\",\"result\":6,\"rollupId\":\"a\",\"warnings\":[]}},\"rollupTotals\":{\"sum\":8,\"sum_abs\":8,\"subtract\":4,\"multiply\":12,\"divide\":3,\"pass_through\":6,\"nested\":14,\"a\":6}},\"warnings\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:00:33.372Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "07f8e5c24d29e06a9880-775c65a1de4f824e1ce8",
+          "file": "calculation-audit.spec.ts",
+          "line": 45,
+          "column": 5
+        },
+        {
+          "title": "compact storage preserves old saves and all snapshots without truncation",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5412,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"equal\":true,\"legacy\":true,\"rawBytes\":976396,\"packedBytes\":14143}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:00:38.934Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "07f8e5c24d29e06a9880-3229aa46b8e98235ebe0",
+          "file": "calculation-audit.spec.ts",
+          "line": 66,
+          "column": 5
+        },
+        {
+          "title": "duplicate keys and circular calculation or rollup references fail clearly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4882,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:00:44.375Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "07f8e5c24d29e06a9880-644f7a620465157647f9",
+          "file": "calculation-audit.spec.ts",
+          "line": 83,
+          "column": 5
+        },
+        {
+          "title": "FX override precedence and clearing agree with the editor",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4543,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:00:49.284Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "07f8e5c24d29e06a9880-043e0debadfbcc388f4b",
+          "file": "calculation-audit.spec.ts",
+          "line": 106,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "calculation-inputs.spec.ts",
+      "file": "calculation-inputs.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "formulas combine constants with API fields and retain source identity",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6070,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:00:53.865Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a91cee09b65399ded147-1bf4a8eac59e50b0cd28",
+          "file": "calculation-inputs.spec.ts",
+          "line": 3,
+          "column": 5
+        },
+        {
+          "title": "Compute exposes number entry beside the formula and allows expected source fields",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12694,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:00:59.981Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a91cee09b65399ded147-a7163b15a844f9e9258b",
+          "file": "calculation-inputs.spec.ts",
+          "line": 50,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "demo-readiness.spec.ts",
+      "file": "demo-readiness.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "demo upload xlsx preserves extracted records",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8726,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"format\":\"xlsx\",\"previewMs\":575,\"rows\":3,\"structuredNumbers\":true,\"errors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:01:12.740Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "upload-result",
+                      "contentType": "application/json",
+                      "body": "ewogICJmb3JtYXQiOiAieGxzeCIsCiAgInByZXZpZXdNcyI6IDU3NSwKICAicm93cyI6IFsKICAgIHsKICAgICAgImxhYmVsIjogIldpZGdldCBvcmRlciBvbmUiLAogICAgICAiYW1vdW50IjogMTIwLAogICAgICAicXVhbnRpdHkiOiAiMyIsCiAgICAgICJhY2NvdW50IjogIiIsCiAgICAgICJjdXJyZW5jeSI6ICJVU0QiLAogICAgICAiZGVzY3JpcHRpb24iOiAiV2lkZ2V0IG9yZGVyIG9uZSIsCiAgICAgICJtZXRhZGF0YSI6IHsKICAgICAgICAiYWNjb3VudFR5cGUiOiAiIiwKICAgICAgICAiaGFzTWFwcGVkQW1vdW50IjogdHJ1ZSwKICAgICAgICAiaXNCYWxhbmNlU2hlZXRSb3ciOiBmYWxzZSwKICAgICAgICAiaXNUb3RhbFJvdyI6IGZhbHNlLAogICAgICAgICJyYXciOiB7CiAgICAgICAgICAibGFiZWwiOiAiV2lkZ2V0IG9yZGVyIG9uZSIsCiAgICAgICAgICAiYW1vdW50IjogIjEyMCIsCiAgICAgICAgICAicXVhbnRpdHkiOiAiMyIKICAgICAgICB9LAogICAgICAgICJyb3dJbmRleCI6IDAsCiAgICAgICAgInJvd051bWJlciI6IDIsCiAgICAgICAgInNoZWV0TmFtZSI6ICJPcmRlcnMiLAogICAgICAgICJ3b3JrYm9va0lkIjogIndvcmtib29rLW10dXJpNXdjIgogICAgICB9LAogICAgICAicmF3IjogewogICAgICAgICJsYWJlbCI6ICJXaWRnZXQgb3JkZXIgb25lIiwKICAgICAgICAiYW1vdW50IjogIjEyMCIsCiAgICAgICAgInF1YW50aXR5IjogIjMiCiAgICAgIH0sCiAgICAgICJyb3dJZCI6ICJvcmRlcnMtcm93LTAwMiIsCiAgICAgICJyb3dOdW1iZXIiOiAyCiAgICB9LAogICAgewogICAgICAibGFiZWwiOiAiV2lkZ2V0IG9yZGVyIHR3byIsCiAgICAgICJhbW91bnQiOiA4MCwKICAgICAgInF1YW50aXR5IjogIjIiLAogICAgICAiYWNjb3VudCI6ICIiLAogICAgICAiY3VycmVuY3kiOiAiVVNEIiwKICAgICAgImRlc2NyaXB0aW9uIjogIldpZGdldCBvcmRlciB0d28iLAogICAgICAibWV0YWRhdGEiOiB7CiAgICAgICAgImFjY291bnRUeXBlIjogIiIsCiAgICAgICAgImhhc01hcHBlZEFtb3VudCI6IHRydWUsCiAgICAgICAgImlzQmFsYW5jZVNoZWV0Um93IjogZmFsc2UsCiAgICAgICAgImlzVG90YWxSb3ciOiBmYWxzZSwKICAgICAgICAicmF3IjogewogICAgICAgICAgImxhYmVsIjogIldpZGdldCBvcmRlciB0d28iLAogICAgICAgICAgImFtb3VudCI6ICI4MCIsCiAgICAgICAgICAicXVhbnRpdHkiOiAiMiIKICAgICAgICB9LAogICAgICAgICJyb3dJbmRleCI6IDEsCiAgICAgICAgInJvd051bWJlciI6IDMsCiAgICAgICAgInNoZWV0TmFtZSI6ICJPcmRlcnMiLAogICAgICAgICJ3b3JrYm9va0lkIjogIndvcmtib29rLW10dXJpNXdjIgogICAgICB9LAogICAgICAicmF3IjogewogICAgICAgICJsYWJlbCI6ICJXaWRnZXQgb3JkZXIgdHdvIiwKICAgICAgICAiYW1vdW50IjogIjgwIiwKICAgICAgICAicXVhbnRpdHkiOiAiMiIKICAgICAgfSwKICAgICAgInJvd0lkIjogIm9yZGVycy1yb3ctMDAzIiwKICAgICAgInJvd051bWJlciI6IDMKICAgIH0sCiAgICB7CiAgICAgICJsYWJlbCI6ICJDb25zdWx0aW5nIHNlcnZpY2UiLAogICAgICAiYW1vdW50IjogNTAsCiAgICAgICJxdWFudGl0eSI6ICIxIiwKICAgICAgImFjY291bnQiOiAiIiwKICAgICAgImN1cnJlbmN5IjogIlVTRCIsCiAgICAgICJkZXNjcmlwdGlvbiI6ICJDb25zdWx0aW5nIHNlcnZpY2UiLAogICAgICAibWV0YWRhdGEiOiB7CiAgICAgICAgImFjY291bnRUeXBlIjogIiIsCiAgICAgICAgImhhc01hcHBlZEFtb3VudCI6IHRydWUsCiAgICAgICAgImlzQmFsYW5jZVNoZWV0Um93IjogZmFsc2UsCiAgICAgICAgImlzVG90YWxSb3ciOiBmYWxzZSwKICAgICAgICAicmF3IjogewogICAgICAgICAgImxhYmVsIjogIkNvbnN1bHRpbmcgc2VydmljZSIsCiAgICAgICAgICAiYW1vdW50IjogIjUwIiwKICAgICAgICAgICJxdWFudGl0eSI6ICIxIgogICAgICAgIH0sCiAgICAgICAgInJvd0luZGV4IjogMiwKICAgICAgICAicm93TnVtYmVyIjogNCwKICAgICAgICAic2hlZXROYW1lIjogIk9yZGVycyIsCiAgICAgICAgIndvcmtib29rSWQiOiAid29ya2Jvb2stbXR1cmk1d2MiCiAgICAgIH0sCiAgICAgICJyYXciOiB7CiAgICAgICAgImxhYmVsIjogIkNvbnN1bHRpbmcgc2VydmljZSIsCiAgICAgICAgImFtb3VudCI6ICI1MCIsCiAgICAgICAgInF1YW50aXR5IjogIjEiCiAgICAgIH0sCiAgICAgICJyb3dJZCI6ICJvcmRlcnMtcm93LTAwNCIsCiAgICAgICJyb3dOdW1iZXIiOiA0CiAgICB9CiAgXSwKICAic3RydWN0dXJlZE51bWJlcnMiOiB0cnVlLAogICJlcnJvcnMiOiBbXQp9"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0ce742f1d1bac698ae14-11596e8bb4aeb43d7b4e",
+          "file": "demo-readiness.spec.ts",
+          "line": 13,
+          "column": 7
+        },
+        {
+          "title": "demo upload pdf preserves extracted records",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 17641,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"format\":\"pdf\",\"previewMs\":9139,\"rows\":3,\"structuredNumbers\":false,\"errors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:01:21.497Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "upload-result",
+                      "contentType": "application/json",
+                      "body": "ewogICJmb3JtYXQiOiAicGRmIiwKICAicHJldmlld01zIjogOTEzOSwKICAicm93cyI6IFsKICAgIHsKICAgICAgInJvd0lkIjogInJvdy0xIiwKICAgICAgImxhYmVsIjogIldpZGdldCBvcmRlciBvbmUgMTIwIiwKICAgICAgImRlc2NyaXB0aW9uIjogIldpZGdldCBvcmRlciBvbmUgMTIwIgogICAgfSwKICAgIHsKICAgICAgInJvd0lkIjogInJvdy0yIiwKICAgICAgImxhYmVsIjogIldpZGdldCBvcmRlciB0d28gODAiLAogICAgICAiZGVzY3JpcHRpb24iOiAiV2lkZ2V0IG9yZGVyIHR3byA4MCIKICAgIH0sCiAgICB7CiAgICAgICJyb3dJZCI6ICJyb3ctMyIsCiAgICAgICJsYWJlbCI6ICJDb25zdWx0aW5nIHNlcnZpY2UgNTAiLAogICAgICAiZGVzY3JpcHRpb24iOiAiQ29uc3VsdGluZyBzZXJ2aWNlIDUwIgogICAgfQogIF0sCiAgInN0cnVjdHVyZWROdW1iZXJzIjogZmFsc2UsCiAgImVycm9ycyI6IFtdCn0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0ce742f1d1bac698ae14-c9c0206d14ce1840aa2f",
+          "file": "demo-readiness.spec.ts",
+          "line": 13,
+          "column": 7
+        },
+        {
+          "title": "demo upload docx preserves extracted records",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 13143,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"format\":\"docx\",\"previewMs\":5131,\"rows\":3,\"structuredNumbers\":false,\"errors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:01:39.171Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "upload-result",
+                      "contentType": "application/json",
+                      "body": "ewogICJmb3JtYXQiOiAiZG9jeCIsCiAgInByZXZpZXdNcyI6IDUxMzEsCiAgInJvd3MiOiBbCiAgICB7CiAgICAgICJyb3dJZCI6ICJyb3ctMSIsCiAgICAgICJsYWJlbCI6ICJXaWRnZXQgb3JkZXIgb25lIDEyMCIsCiAgICAgICJkZXNjcmlwdGlvbiI6ICJXaWRnZXQgb3JkZXIgb25lIDEyMCIKICAgIH0sCiAgICB7CiAgICAgICJyb3dJZCI6ICJyb3ctMiIsCiAgICAgICJsYWJlbCI6ICJXaWRnZXQgb3JkZXIgdHdvIDgwIiwKICAgICAgImRlc2NyaXB0aW9uIjogIldpZGdldCBvcmRlciB0d28gODAiCiAgICB9LAogICAgewogICAgICAicm93SWQiOiAicm93LTMiLAogICAgICAibGFiZWwiOiAiQ29uc3VsdGluZyBzZXJ2aWNlIDUwIiwKICAgICAgImRlc2NyaXB0aW9uIjogIkNvbnN1bHRpbmcgc2VydmljZSA1MCIKICAgIH0KICBdLAogICJzdHJ1Y3R1cmVkTnVtYmVycyI6IGZhbHNlLAogICJlcnJvcnMiOiBbXQp9"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0ce742f1d1bac698ae14-d0b3a69bc674147643f9",
+          "file": "demo-readiness.spec.ts",
+          "line": 13,
+          "column": 7
+        },
+        {
+          "title": "demo upload tsv preserves extracted records",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10703,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"format\":\"tsv\",\"previewMs\":324,\"rows\":3,\"structuredNumbers\":true,\"errors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:01:52.350Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "upload-result",
+                      "contentType": "application/json",
+                      "body": "ewogICJmb3JtYXQiOiAidHN2IiwKICAicHJldmlld01zIjogMzI0LAogICJyb3dzIjogWwogICAgewogICAgICAibGFiZWwiOiAiV2lkZ2V0IG9yZGVyIG9uZSIsCiAgICAgICJhbW91bnQiOiAiMTIwIiwKICAgICAgInF1YW50aXR5IjogIjMiLAogICAgICAicm93SWQiOiAicm93LTEiCiAgICB9LAogICAgewogICAgICAibGFiZWwiOiAiV2lkZ2V0IG9yZGVyIHR3byIsCiAgICAgICJhbW91bnQiOiAiODAiLAogICAgICAicXVhbnRpdHkiOiAiMiIsCiAgICAgICJyb3dJZCI6ICJyb3ctMiIKICAgIH0sCiAgICB7CiAgICAgICJsYWJlbCI6ICJDb25zdWx0aW5nIHNlcnZpY2UiLAogICAgICAiYW1vdW50IjogIjUwIiwKICAgICAgInF1YW50aXR5IjogIjEiLAogICAgICAicm93SWQiOiAicm93LTMiCiAgICB9CiAgXSwKICAic3RydWN0dXJlZE51bWJlcnMiOiB0cnVlLAogICJlcnJvcnMiOiBbXQp9"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0ce742f1d1bac698ae14-713e124059c20697a4ea",
+          "file": "demo-readiness.spec.ts",
+          "line": 13,
+          "column": 7
+        },
+        {
+          "title": "demo upload json preserves extracted records",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 12510,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"format\":\"json\",\"previewMs\":134,\"rows\":3,\"structuredNumbers\":true,\"errors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:02:03.084Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "upload-result",
+                      "contentType": "application/json",
+                      "body": "ewogICJmb3JtYXQiOiAianNvbiIsCiAgInByZXZpZXdNcyI6IDEzNCwKICAicm93cyI6IFsKICAgIHsKICAgICAgImxhYmVsIjogIldpZGdldCBvcmRlciBvbmUiLAogICAgICAiYW1vdW50IjogMTIwLAogICAgICAicXVhbnRpdHkiOiAzLAogICAgICAicm93SWQiOiAicm93LTEiCiAgICB9LAogICAgewogICAgICAibGFiZWwiOiAiV2lkZ2V0IG9yZGVyIHR3byIsCiAgICAgICJhbW91bnQiOiA4MCwKICAgICAgInF1YW50aXR5IjogMiwKICAgICAgInJvd0lkIjogInJvdy0yIgogICAgfSwKICAgIHsKICAgICAgImxhYmVsIjogIkNvbnN1bHRpbmcgc2VydmljZSIsCiAgICAgICJhbW91bnQiOiA1MCwKICAgICAgInF1YW50aXR5IjogMSwKICAgICAgInJvd0lkIjogInJvdy0zIgogICAgfQogIF0sCiAgInN0cnVjdHVyZWROdW1iZXJzIjogdHJ1ZSwKICAiZXJyb3JzIjogW10KfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0ce742f1d1bac698ae14-c0c733bc942b7b93b4d9",
+          "file": "demo-readiness.spec.ts",
+          "line": 13,
+          "column": 7
+        },
+        {
+          "title": "demo upload txt preserves extracted records",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11683,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"format\":\"txt\",\"previewMs\":226,\"rows\":3,\"structuredNumbers\":false,\"errors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:02:15.631Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "upload-result",
+                      "contentType": "application/json",
+                      "body": "ewogICJmb3JtYXQiOiAidHh0IiwKICAicHJldmlld01zIjogMjI2LAogICJyb3dzIjogWwogICAgewogICAgICAicm93SWQiOiAicm93LTEiLAogICAgICAibGFiZWwiOiAiV2lkZ2V0IG9yZGVyIG9uZSAxMjAiLAogICAgICAiZGVzY3JpcHRpb24iOiAiV2lkZ2V0IG9yZGVyIG9uZSAxMjAiCiAgICB9LAogICAgewogICAgICAicm93SWQiOiAicm93LTIiLAogICAgICAibGFiZWwiOiAiV2lkZ2V0IG9yZGVyIHR3byA4MCIsCiAgICAgICJkZXNjcmlwdGlvbiI6ICJXaWRnZXQgb3JkZXIgdHdvIDgwIgogICAgfSwKICAgIHsKICAgICAgInJvd0lkIjogInJvdy0zIiwKICAgICAgImxhYmVsIjogIkNvbnN1bHRpbmcgc2VydmljZSA1MCIsCiAgICAgICJkZXNjcmlwdGlvbiI6ICJDb25zdWx0aW5nIHNlcnZpY2UgNTAiCiAgICB9CiAgXSwKICAic3RydWN0dXJlZE51bWJlcnMiOiBmYWxzZSwKICAiZXJyb3JzIjogW10KfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0ce742f1d1bac698ae14-5b58e7650e673a0abcae",
+          "file": "demo-readiness.spec.ts",
+          "line": 13,
+          "column": 7
+        },
+        {
+          "title": "a failed replacement upload cannot apply a stale preview",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10285,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:02:27.345Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0ce742f1d1bac698ae14-9d973f05efc69439326f",
+          "file": "demo-readiness.spec.ts",
+          "line": 46,
+          "column": 5
+        },
+        {
+          "title": "custom columns can be mapped to classification and calculation fields",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11930,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:02:37.665Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0ce742f1d1bac698ae14-b50142302fdfe52f37de",
+          "file": "demo-readiness.spec.ts",
+          "line": 56,
+          "column": 5
+        },
+        {
+          "title": "empty and malformed documents show an error without replacing saved data",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 13086,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:02:49.627Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0ce742f1d1bac698ae14-be8a41d1df3ae308a3ee",
+          "file": "demo-readiness.spec.ts",
+          "line": 69,
+          "column": 5
+        },
+        {
+          "title": "demo load 100 rows saves a real run and stays responsive",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 16085,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"count\":100,\"uploadMs\":876,\"runMs\":497,\"id\":\"custom:68bf3845-4cb9-4401-b99e-75ffa862184f\",\"runId\":\"local-tool-workflow-1788998591363-mg1qpv\",\"errors\":[],\"total\":{\"interestIncome\":100},\"storedCharacters\":91347,\"browserErrors\":[]}\n"
+                    },
+                    {
+                      "text": "{\"count\":100,\"repeat\":{\"runs\":2,\"id\":\"local-tool-workflow-1788998598425-4s11ti\",\"storedCharacters\":94275}}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:03:02.742Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "load-measurements",
+                      "contentType": "application/json",
+                      "body": "ewogICJjb3VudCI6IDEwMCwKICAidXBsb2FkTXMiOiA4NzYsCiAgInJ1bk1zIjogNDk3LAogICJpZCI6ICJjdXN0b206NjhiZjM4NDUtNGNiOS00NDAxLWI5OWUtNzVmZmE4NjIxODRmIiwKICAicnVuSWQiOiAibG9jYWwtdG9vbC13b3JrZmxvdy0xNzg4OTk4NTkxMzYzLW1nMXFwdiIsCiAgImVycm9ycyI6IFtdLAogICJ0b3RhbCI6IHsKICAgICJpbnRlcmVzdEluY29tZSI6IDEwMAogIH0sCiAgInN0b3JlZENoYXJhY3RlcnMiOiA5MTM0NywKICAiYnJvd3NlckVycm9ycyI6IFtdCn0="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0ce742f1d1bac698ae14-46bcc341b86cbf0443f0",
+          "file": "demo-readiness.spec.ts",
+          "line": 84,
+          "column": 7
+        },
+        {
+          "title": "demo load 1000 rows saves a real run and stays responsive",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 35929,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"count\":1000,\"uploadMs\":1240,\"runMs\":7184,\"id\":\"custom:87dd8319-9d90-41e3-b712-0b98d9a4f791\",\"runId\":\"local-tool-workflow-1788998613114-mo1hjw\",\"errors\":[],\"total\":{\"interestIncome\":1000},\"storedCharacters\":494287,\"browserErrors\":[]}\n"
+                    },
+                    {
+                      "text": "{\"count\":1000,\"repeat\":{\"runs\":2,\"id\":\"local-tool-workflow-1788998631754-wejgxo\",\"storedCharacters\":497539}}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:03:18.850Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "load-measurements",
+                      "contentType": "application/json",
+                      "body": "ewogICJjb3VudCI6IDEwMDAsCiAgInVwbG9hZE1zIjogMTI0MCwKICAicnVuTXMiOiA3MTg0LAogICJpZCI6ICJjdXN0b206ODdkZDgzMTktOWQ5MC00MWUzLWI3MTItMGI5OGQ5YTRmNzkxIiwKICAicnVuSWQiOiAibG9jYWwtdG9vbC13b3JrZmxvdy0xNzg4OTk4NjEzMTE0LW1vMWhqdyIsCiAgImVycm9ycyI6IFtdLAogICJ0b3RhbCI6IHsKICAgICJpbnRlcmVzdEluY29tZSI6IDEwMDAKICB9LAogICJzdG9yZWRDaGFyYWN0ZXJzIjogNDk0Mjg3LAogICJicm93c2VyRXJyb3JzIjogW10KfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0ce742f1d1bac698ae14-25655ef7dbb41c632707",
+          "file": "demo-readiness.spec.ts",
+          "line": 84,
+          "column": 7
+        },
+        {
+          "title": "live FX fetch pins a value, reports override precedence, and preserves it on failure",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 23531,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"liveFx\":1.3977622489959842,\"observations\":249,\"fetchMs\":8645,\"failurePreservedPinnedValue\":true}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:03:54.806Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "live-api-result",
+                      "contentType": "application/json",
+                      "body": "ewogICJvayI6IHRydWUsCiAgImRvY3VtZW50Q3VycmVuY3kiOiAiVVNEIiwKICAicmVwb3J0aW5nQ3VycmVuY3kiOiAiQ0FEIiwKICAieWVhciI6IDIwMjUsCiAgInByb3ZpZGVyIjogImJhbmtfb2ZfY2FuYWRhIiwKICAicmF0ZSI6IDEuMzk3NzYyMjQ4OTk1OTg0MiwKICAicmF0ZVNvdXJjZSI6ICJiYW5rX29mX2NhbmFkYV92YWxldCIsCiAgInJhdGVUeXBlIjogImFubnVhbF9hdmVyYWdlIiwKICAicmF0ZVllYXIiOiAyMDI1LAogICJzZXJpZXNOYW1lIjogIkZYVVNEQ0FEIiwKICAiZW5kcG9pbnQiOiAiaHR0cHM6Ly93d3cuYmFua29mY2FuYWRhLmNhL3ZhbGV0L29ic2VydmF0aW9ucy9GWFVTRENBRC9qc29uP3N0YXJ0X2RhdGU9MjAyNS0wMS0wMSZlbmRfZGF0ZT0yMDI1LTEyLTMxIiwKICAib2JzZXJ2YXRpb25Db3VudCI6IDI0OSwKICAiZmlyc3RPYnNlcnZhdGlvbiI6ICIyMDI1LTAxLTAyIiwKICAibGFzdE9ic2VydmF0aW9uIjogIjIwMjUtMTItMzEiLAogICJtaW5SYXRlIjogMS4zNTU4LAogICJtYXhSYXRlIjogMS40NjAzLAogICJmZXRjaE1zIjogODY0NQp9"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0ce742f1d1bac698ae14-0a41e9c9f582d7eb1fb1",
+          "file": "demo-readiness.spec.ts",
+          "line": 125,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "document-to-result.spec.ts",
+      "file": "document-to-result.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "uploaded CSV to new keyword rule, rollup, calculation and saved final output",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 65375,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "Opening Keyword Mapper\n"
+                    },
+                    {
+                      "text": "Opening Category Rollup\n"
+                    },
+                    {
+                      "text": "Opening FAPI Lines Engine\n"
+                    },
+                    {
+                      "text": "Opening FAPI Summary Engine\n"
+                    },
+                    {
+                      "text": "{\"repeat\":1,\"runsPersisted\":2,\"storedCharacters\":44151,\"expandedCharacters\":5430310,\"timings\":{\"initialBuildMs\":9707,\"Keyword MapperOpenMs\":688,\"Category RollupOpenMs\":557,\"FAPI Lines EngineOpenMs\":479,\"FAPI Summary EngineOpenMs\":409,\"fullRunMs\":684,\"rerun1Ms\":977},\"browserErrors\":[]}\n"
+                    },
+                    {
+                      "text": "{\"repeat\":2,\"runsPersisted\":3,\"storedCharacters\":45619,\"expandedCharacters\":8041845,\"timings\":{\"initialBuildMs\":9707,\"Keyword MapperOpenMs\":688,\"Category RollupOpenMs\":557,\"FAPI Lines EngineOpenMs\":479,\"FAPI Summary EngineOpenMs\":409,\"fullRunMs\":684,\"rerun1Ms\":977,\"rerun2Ms\":876},\"browserErrors\":[]}\n"
+                    },
+                    {
+                      "text": "{\"repeat\":3,\"runsPersisted\":4,\"storedCharacters\":47067,\"expandedCharacters\":10653380,\"timings\":{\"initialBuildMs\":9707,\"Keyword MapperOpenMs\":688,\"Category RollupOpenMs\":557,\"FAPI Lines EngineOpenMs\":479,\"FAPI Summary EngineOpenMs\":409,\"fullRunMs\":684,\"rerun1Ms\":977,\"rerun2Ms\":876,\"rerun3Ms\":910},\"browserErrors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:04:18.389Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "verified-results",
+                      "contentType": "application/json",
+                      "body": "ewogICJkb2N1bWVudCI6ICJzYWxlcy1jaGVjay5jc3YiLAogICJyb3dzIjogMywKICAibWF0Y2hlZCI6IDIsCiAgInVubWF0Y2hlZCI6IDEsCiAgImdyb3VwVG90YWwiOiAyMDAsCiAgImZvcm11bGEiOiAid2lkZ2V0X3RvdGFsICogNTAwIC8gMiIsCiAgImZpbmFsUmVzdWx0IjogNTAwMDAsCiAgIndvcmtmbG93IjogIkZBUEkgQ2FsY3VsYXRpb24gVGVtcGxhdGUg4oCUIE15IHdvcmtmbG93IiwKICAidmVyc2lvbiI6IDEsCiAgIndhcm5pbmdzIjogWwogICAgIjEgcm93KHMpIHdlcmUgbm90IG1hdGNoZWQgYnkga2V5d29yZCBydWxlcy4iLAogICAgIk1pc3NpbmcgY2F0ZWdvcnkgcmVmZXJlbmNlOiBpbnRlcmVzdEluY29tZS4iLAogICAgIk1pc3NpbmcgY2F0ZWdvcnkgcmVmZXJlbmNlOiByZW50cy4iLAogICAgIk1pc3NpbmcgY2F0ZWdvcnkgcmVmZXJlbmNlOiByb3lhbHRpZXMuIiwKICAgICJNaXNzaW5nIGNhdGVnb3J5IHJlZmVyZW5jZTogZGl2aWRlbmRzLiIsCiAgICAiTWlzc2luZyBjYXRlZ29yeSByZWZlcmVuY2U6IG90aGVyRmFwaUluY29tZS4iLAogICAgIk1pc3NpbmcgY2F0ZWdvcnkgcmVmZXJlbmNlOiBnZW5lcmFsRXhwZW5zZXMuIiwKICAgICJNaXNzaW5nIGNhdGVnb3J5IHJlZmVyZW5jZTogbGVnYWxFeHBlbnNlcy4iLAogICAgIk1pc3NpbmcgY2F0ZWdvcnkgcmVmZXJlbmNlOiBhY2NvdW50aW5nRXhwZW5zZXMuIiwKICAgICJNaXNzaW5nIGNhdGVnb3J5IHJlZmVyZW5jZTogY2ZhSW5jb21lLiIsCiAgICAiTWlzc2luZyBjYXRlZ29yeSByZWZlcmVuY2U6IGRlYnRGb3JnaXZlbmVzcy4iLAogICAgIk1pc3NpbmcgY2F0ZWdvcnkgcmVmZXJlbmNlOiBidXNpbmVzc0xvc3Nlcy4iLAogICAgIk1pc3NpbmcgY2F0ZWdvcnkgcmVmZXJlbmNlOiBmYWNsQ2Fycnlmb3J3YXJkLiIsCiAgICAiQ2FsY3VsYXRpb24gQiByYW4gd2l0aCB1bnJlc29sdmVkIGRlcGVuZGVuY3kgdmFsdWVzLiIsCiAgICAiTWlzc2luZyBvcGVyYW5kIGNhcEdhaW5zLiIsCiAgICAiT3V0cHV0IHByZXZpZXcgaW5jbHVkZXMgcmVzdWx0cyB0aGF0IHN0aWxsIG5lZWQgcmV2aWV3LiIKICBdCn0="
+                    },
+                    {
+                      "name": "timings",
+                      "contentType": "application/json",
+                      "body": "ewogICJpbml0aWFsQnVpbGRNcyI6IDk3MDcsCiAgIktleXdvcmQgTWFwcGVyT3Blbk1zIjogNjg4LAogICJDYXRlZ29yeSBSb2xsdXBPcGVuTXMiOiA1NTcsCiAgIkZBUEkgTGluZXMgRW5naW5lT3Blbk1zIjogNDc5LAogICJGQVBJIFN1bW1hcnkgRW5naW5lT3Blbk1zIjogNDA5LAogICJmdWxsUnVuTXMiOiA2ODQsCiAgInJlcnVuMU1zIjogOTc3LAogICJyZXJ1bjJNcyI6IDg3NiwKICAicmVydW4zTXMiOiA5MTAKfQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "07ea2ccb02f195fd9323-b5ce47f1e0aa6ac5f2d1",
+          "file": "document-to-result.spec.ts",
+          "line": 3,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "panel-resize.spec.ts",
+      "file": "panel-resize.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "resizing the workspace and block panels does not open an error overlay",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 19706,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:05:23.817Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6e9d4ce2783832bb71f4-aa1a33f5e1856cc154ae",
+          "file": "panel-resize.spec.ts",
+          "line": 3,
+          "column": 5
+        },
+        {
+          "title": "browser resize notifications are excluded without suppressing real exceptions",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10588,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:05:43.573Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6e9d4ce2783832bb71f4-94abbe3641d00e25b40d",
+          "file": "panel-resize.spec.ts",
+          "line": 61,
+          "column": 5
+        },
+        {
+          "title": "window errors without an Error object retain their original message",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 9554,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:05:54.229Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6e9d4ce2783832bb71f4-fde195498d822bd7f064",
+          "file": "panel-resize.spec.ts",
+          "line": 111,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "route-smoke.spec.ts",
+      "file": "route-smoke.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "no crash on /",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6093,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:06:03.826Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f6a6508e96383c4dcbab-8b1d7a62b7b2a41ecf97",
+          "file": "route-smoke.spec.ts",
+          "line": 48,
+          "column": 7
+        },
+        {
+          "title": "no crash on /workflows",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6959,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:06:09.954Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f6a6508e96383c4dcbab-081b900d6afb0c1a9b67",
+          "file": "route-smoke.spec.ts",
+          "line": 48,
+          "column": 7
+        },
+        {
+          "title": "no crash on /workflows-hub",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6952,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:06:16.953Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f6a6508e96383c4dcbab-3c5ec3cd3dfc1eaab930",
+          "file": "route-smoke.spec.ts",
+          "line": 48,
+          "column": 7
+        },
+        {
+          "title": "no crash on /agent",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6751,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:06:23.943Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f6a6508e96383c4dcbab-1c33dbea85960df88191",
+          "file": "route-smoke.spec.ts",
+          "line": 48,
+          "column": 7
+        },
+        {
+          "title": "no crash on /agent-lab",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5826,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:06:30.730Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f6a6508e96383c4dcbab-00e5ad997cb442fbe1b2",
+          "file": "route-smoke.spec.ts",
+          "line": 48,
+          "column": 7
+        },
+        {
+          "title": "no crash on /dashboard",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8106,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:06:36.591Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f6a6508e96383c4dcbab-d88cd1b1f1197a017782",
+          "file": "route-smoke.spec.ts",
+          "line": 48,
+          "column": 7
+        },
+        {
+          "title": "no crash on /bu-overview",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 9218,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:06:44.733Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f6a6508e96383c4dcbab-9d8880bd774051fee74b",
+          "file": "route-smoke.spec.ts",
+          "line": 48,
+          "column": 7
+        },
+        {
+          "title": "no crash on /t1134",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7340,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:06:53.992Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f6a6508e96383c4dcbab-213f3e7ed336dc77d822",
+          "file": "route-smoke.spec.ts",
+          "line": 48,
+          "column": 7
+        },
+        {
+          "title": "no crash on /surplus",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6385,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:07:01.366Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f6a6508e96383c4dcbab-0823756932f17e9bc0c4",
+          "file": "route-smoke.spec.ts",
+          "line": 48,
+          "column": 7
+        },
+        {
+          "title": "no crash on /fapi",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6774,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:07:07.786Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f6a6508e96383c4dcbab-f36e0f50384b13d50780",
+          "file": "route-smoke.spec.ts",
+          "line": 48,
+          "column": 7
+        },
+        {
+          "title": "no crash on /documents",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6828,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:07:14.599Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f6a6508e96383c4dcbab-4227b4a1d8191f7b4cba",
+          "file": "route-smoke.spec.ts",
+          "line": 48,
+          "column": 7
+        },
+        {
+          "title": "no crash on /viewer",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7026,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:07:21.467Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f6a6508e96383c4dcbab-a3f57947741c60de37e9",
+          "file": "route-smoke.spec.ts",
+          "line": 48,
+          "column": 7
+        },
+        {
+          "title": "no crash on /worksheets",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6713,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:07:28.533Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f6a6508e96383c4dcbab-82d6c4e1c443978dd8cc",
+          "file": "route-smoke.spec.ts",
+          "line": 48,
+          "column": 7
+        },
+        {
+          "title": "no crash on /genui-lab",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6586,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:07:35.283Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f6a6508e96383c4dcbab-901b1667ecb506b339f8",
+          "file": "route-smoke.spec.ts",
+          "line": 48,
+          "column": 7
+        }
+      ]
+    },
+    {
+      "title": "workflow-builder-roundtrip.spec.ts",
+      "file": "workflow-builder-roundtrip.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "defined aggregation terms are available without a run and saved versions retain edited rules",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 8688,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:07:41.915Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fd3b783e9f20db5692ac-3d6bad822868ff9c3a7d",
+          "file": "workflow-builder-roundtrip.spec.ts",
+          "line": 3,
+          "column": 5
+        },
+        {
+          "title": "Build uploads create a personal workflow that survives Run and reload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 21438,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:07:50.649Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fd3b783e9f20db5692ac-50759ab5d31b96e0c61b",
+          "file": "workflow-builder-roundtrip.spec.ts",
+          "line": 81,
+          "column": 5
+        },
+        {
+          "title": "uploading CSV into a blank workflow adds a source and preserves its Start block",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 15250,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:08:12.127Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fd3b783e9f20db5692ac-f7aa4600c70a6e62c951",
+          "file": "workflow-builder-roundtrip.spec.ts",
+          "line": 146,
+          "column": 5
+        },
+        {
+          "title": "text-only records and custom fields survive parsing; empty input never becomes sample data",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7948,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:08:27.422Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fd3b783e9f20db5692ac-44d20c8d2ed53b86d378",
+          "file": "workflow-builder-roundtrip.spec.ts",
+          "line": 159,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "workflow-run-persistence.spec.ts",
+      "file": "workflow-run-persistence.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Workflow run-state persistence (#9)",
+          "file": "workflow-run-persistence.spec.ts",
+          "line": 18,
+          "column": 6,
+          "specs": [
+            {
+              "title": "a started run is NOT reset to \"Document needed\" after navigating away and back",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 20933,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-10T00:08:35.437Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a2c89392a86d81fadbcb-6017a4ef6a17a25933d0",
+              "file": "workflow-run-persistence.spec.ts",
+              "line": 19,
+              "column": 7
+            },
+            {
+              "title": "a workflow that was never started still asks for its source (invariant preserved)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 12922,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-10T00:08:56.426Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "a2c89392a86d81fadbcb-231643e36e7b9c19f367",
+              "file": "workflow-run-persistence.spec.ts",
+              "line": 42,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "workspace-dataflow.spec.ts",
+      "file": "workspace-dataflow.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "block I/O replaces the strip and selected connections show recorded transfers",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 19485,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:09:09.415Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ec844f2348e8d16e5468-2032d9ee6df6859f4bd3",
+          "file": "workspace-dataflow.spec.ts",
+          "line": 37,
+          "column": 5
+        },
+        {
+          "title": "Run keeps saved versions separate from changed drafts and readiness stays advisory",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 15691,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:09:28.941Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ec844f2348e8d16e5468-d9b23d86a42d623e69d1",
+          "file": "workspace-dataflow.spec.ts",
+          "line": 55,
+          "column": 5
+        },
+        {
+          "title": "Trigger displays uploaded documents and saves editable conditions",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 25307,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:09:44.672Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ec844f2348e8d16e5468-73dc7eb315f2769ff8d3",
+          "file": "workspace-dataflow.spec.ts",
+          "line": 75,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-10T00:00:09.571Z",
+    "duration": 600822.842,
+    "expected": 47,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

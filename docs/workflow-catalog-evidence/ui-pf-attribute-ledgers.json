@@ -1,0 +1,733 @@
+{
+  "id": "pf-attribute-ledgers",
+  "inputKind": "generic upload probe; not domain-complete input",
+  "inputRows": 2,
+  "openMs": 10600,
+  "runMs": 469,
+  "totalMs": 21381,
+  "browserErrors": [],
+  "first": {
+    "id": "custom:3cd2a823-1a80-480e-a09a-0dd645f313af",
+    "name": "Tax Attribute & Continuity Ledgers — My workflow",
+    "version": 1,
+    "runCount": 1,
+    "runId": "local-tool-workflow-1789009135027-ubjf2n",
+    "status": "error",
+    "errors": [
+      "Keyword Mapper needs Data rows input.",
+      "Keyword Mapper needs Keyword rules input.",
+      "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "warnings": [
+      "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value.",
+      "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value.",
+      "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one.",
+      "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "sources": [
+      {
+        "id": "pf-attribute-ledgers--src-financials",
+        "connected": true,
+        "consumedBy": [
+          "pf-attribute-ledgers--lg-reconcile"
+        ]
+      }
+    ],
+    "results": [
+      {
+        "blockId": "pf-attribute-ledgers--start",
+        "label": "Start · Ledgers",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "triggerPayload",
+          "blockId",
+          "firedAt",
+          "mode",
+          "runId",
+          "workflowId",
+          "startedBy",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--src-prior",
+        "label": "Prior returns & assessments",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--src-workflows",
+        "label": "Approved workflow movements",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--src-financials",
+        "label": "Financial reporting",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "rawRows",
+          "rawRowsCount",
+          "selectedRows",
+          "selectedRowsCount",
+          "workbookFile",
+          "selectedSheet",
+          "selectedRange",
+          "sourceMetadata",
+          "sourceLocator",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--ai-extract",
+        "label": "Extract opening balances",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "authoritative",
+          "accepted",
+          "proposal",
+          "proposalOnly",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--lg-normalize",
+        "label": "Normalize attributes",
+        "status": "error",
+        "errors": [
+          "Keyword Mapper needs Data rows input.",
+          "Keyword Mapper needs Keyword rules input."
+        ],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "mappedRows",
+          "mappedRowsCount",
+          "unmatchedRows",
+          "unmatchedRowsCount",
+          "lowConfidenceRows",
+          "lowConfidenceRowsCount",
+          "conflictCount",
+          "conflicts",
+          "mappingSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--lg-post",
+        "label": "Post movements",
+        "status": "error",
+        "errors": [
+          "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+        ],
+        "warnings": [
+          "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--lg-rules",
+        "label": "Apply utilization & expiry",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--chk-lock",
+        "label": "Judgment · lock year-end",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "label",
+          "readOnlyEvidence",
+          "unit",
+          "value",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--lg-reconcile",
+        "label": "Reconcile balances",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--fld-continuity",
+        "label": "Continuity views",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--lg-flag",
+        "label": "Flag discontinuities",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--out-loss",
+        "label": "Loss continuity",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--out-cca",
+        "label": "CCA / UCC continuity",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--out-acbpuc",
+        "label": "ACB & PUC schedules",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--out-foreign",
+        "label": "Foreign tax & surplus balances",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--out-restricted",
+        "label": "Restricted interest continuity",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--out-ledger",
+        "label": "Locked ledger balances",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      }
+    ]
+  },
+  "second": {
+    "id": "custom:3cd2a823-1a80-480e-a09a-0dd645f313af",
+    "name": "Tax Attribute & Continuity Ledgers — My workflow",
+    "version": 1,
+    "runCount": 2,
+    "runId": "local-tool-workflow-1789009143176-wtd0sx",
+    "status": "error",
+    "errors": [
+      "Keyword Mapper needs Data rows input.",
+      "Keyword Mapper needs Keyword rules input.",
+      "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "warnings": [
+      "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value.",
+      "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value.",
+      "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one.",
+      "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "sources": [
+      {
+        "id": "pf-attribute-ledgers--src-financials",
+        "connected": true,
+        "consumedBy": [
+          "pf-attribute-ledgers--lg-reconcile"
+        ]
+      }
+    ],
+    "results": [
+      {
+        "blockId": "pf-attribute-ledgers--start",
+        "label": "Start · Ledgers",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "triggerPayload",
+          "blockId",
+          "firedAt",
+          "mode",
+          "runId",
+          "workflowId",
+          "startedBy",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--src-prior",
+        "label": "Prior returns & assessments",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--src-workflows",
+        "label": "Approved workflow movements",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--src-financials",
+        "label": "Financial reporting",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "rawRows",
+          "rawRowsCount",
+          "selectedRows",
+          "selectedRowsCount",
+          "workbookFile",
+          "selectedSheet",
+          "selectedRange",
+          "sourceMetadata",
+          "sourceLocator",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--ai-extract",
+        "label": "Extract opening balances",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "authoritative",
+          "accepted",
+          "proposal",
+          "proposalOnly",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--lg-normalize",
+        "label": "Normalize attributes",
+        "status": "error",
+        "errors": [
+          "Keyword Mapper needs Data rows input.",
+          "Keyword Mapper needs Keyword rules input."
+        ],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "mappedRows",
+          "mappedRowsCount",
+          "unmatchedRows",
+          "unmatchedRowsCount",
+          "lowConfidenceRows",
+          "lowConfidenceRowsCount",
+          "conflictCount",
+          "conflicts",
+          "mappingSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--lg-post",
+        "label": "Post movements",
+        "status": "error",
+        "errors": [
+          "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+        ],
+        "warnings": [
+          "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--lg-rules",
+        "label": "Apply utilization & expiry",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--chk-lock",
+        "label": "Judgment · lock year-end",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "label",
+          "readOnlyEvidence",
+          "unit",
+          "value",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--lg-reconcile",
+        "label": "Reconcile balances",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--fld-continuity",
+        "label": "Continuity views",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--lg-flag",
+        "label": "Flag discontinuities",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--out-loss",
+        "label": "Loss continuity",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--out-cca",
+        "label": "CCA / UCC continuity",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--out-acbpuc",
+        "label": "ACB & PUC schedules",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--out-foreign",
+        "label": "Foreign tax & surplus balances",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--out-restricted",
+        "label": "Restricted interest continuity",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-attribute-ledgers--out-ledger",
+        "label": "Locked ledger balances",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      }
+    ]
+  }
+}

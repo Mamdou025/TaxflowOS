@@ -9,10 +9,17 @@
 // when the search is unconfigured / empty / failed.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { useMemo } from 'react';
 import { useAtomValue } from 'jotai';
 import { Globe, ExternalLink, Search, Landmark } from 'lucide-react';
 import { LC } from '@/lib/librechat-theme';
-import { webSearchResultsAtom, webSearchKey, type WebSearchScope } from '@/shared/stores/web-search-store';
+import {
+  webSearchResultsAtom,
+  webSearchKey,
+  type WebSearchScope,
+  type WebSearchResult,
+  type WebSearchStatus,
+} from '@/shared/stores/web-search-store';
 
 function domainOf(url: string): string {
   try {
@@ -22,16 +29,51 @@ function domainOf(url: string): string {
   }
 }
 
+// Derive card state from the tool's RECORDED result (persisted with the message),
+// so a reloaded thread still shows its sources. Live searches drive the card via
+// the in-memory atom; this is the durable fallback when the atom is empty.
+function normalizeRecordedResult(
+  result: unknown,
+): { status: WebSearchStatus; results: WebSearchResult[]; note?: string } | null {
+  if (result == null) return null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let obj: any = result;
+  if (typeof result === 'string') {
+    const t = result.trim();
+    if (!t) return null;
+    try {
+      obj = JSON.parse(t);
+    } catch {
+      return null;
+    }
+  }
+  if (!obj || typeof obj !== 'object') return null;
+  const results: WebSearchResult[] = Array.isArray(obj.results)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ? obj.results
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .filter((r: any) => r && typeof r.url === 'string')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((r: any) => ({ title: String(r.title ?? r.url), url: String(r.url), snippet: String(r.snippet ?? '') }))
+    : [];
+  const note = typeof obj.error === 'string' ? obj.error : typeof obj.note === 'string' ? obj.note : undefined;
+  const status: WebSearchStatus = results.length ? 'done' : note ? 'error' : 'empty';
+  return { status, results, note };
+}
+
 const SCOPE_LABEL: Record<WebSearchScope, string> = {
   web: 'Web results',
   'ca-tax': 'Official Canadian tax sources',
 };
 
-export function WebSearchCard({ query, scope = 'web' }: { query: string; scope?: WebSearchScope }) {
+export function WebSearchCard({ query, scope = 'web', result }: { query: string; scope?: WebSearchScope; result?: unknown }) {
   const map = useAtomValue(webSearchResultsAtom);
-  const state = map[webSearchKey(scope, query)];
-  const status = state?.status ?? 'searching';
-  const results = state?.results ?? [];
+  const live = map[webSearchKey(scope, query)];
+  // Live atom wins while fresh; the recorded result is the fallback on reload.
+  const recorded = useMemo(() => normalizeRecordedResult(result), [result]);
+  const status = live?.status ?? recorded?.status ?? 'searching';
+  const results = (live?.results?.length ? live.results : recorded?.results) ?? [];
+  const note = live?.note ?? recorded?.note;
   const HeaderIcon = scope === 'ca-tax' ? Landmark : Search;
 
   return (
@@ -70,7 +112,7 @@ export function WebSearchCard({ query, scope = 'web' }: { query: string; scope?:
         </div>
       ) : results.length === 0 ? (
         <div style={{ padding: '14px 13px', fontSize: 12.5, color: LC.muted }}>
-          {state?.note ?? 'No web results found.'}
+          {note ?? 'No web results found.'}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column' }}>

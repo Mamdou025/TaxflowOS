@@ -79,114 +79,6 @@ function ReadOnlyBanner({
   );
 }
 
-function InteractiveIOStrip({
-  block,
-  edges,
-  lastRun,
-  nodes,
-  onExecuteStep,
-}: {
-  block: WorkflowBlock;
-  edges: WorkflowEdge[];
-  lastRun?: LocalRunRecord;
-  nodes: WorkflowNode[];
-  onExecuteStep?: () => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [panelHeight, setPanelHeight] = useState(220);
-
-  const onResizePointerDown = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      const startY = e.clientY;
-      const startHeight = panelHeight;
-      const onMove = (ev: PointerEvent) => {
-        const delta = startY - ev.clientY;
-        setPanelHeight(Math.max(140, Math.min(560, startHeight + delta)));
-      };
-      const onUp = () => {
-        window.removeEventListener("pointermove", onMove);
-        window.removeEventListener("pointerup", onUp);
-      };
-      window.addEventListener("pointermove", onMove);
-      window.addEventListener("pointerup", onUp);
-    },
-    [panelHeight]
-  );
-
-  const incomingCount = edges.filter((e) => e.target === block.id).length;
-
-  return (
-    <div className="shrink-0 border-t bg-background">
-      <div className="flex items-center">
-        <button
-          className="flex flex-1 items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-muted/30"
-          onClick={() => setOpen((v) => !v)}
-          type="button"
-        >
-          {open ? (
-            <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
-          ) : (
-            <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
-          )}
-          <span className="font-medium">Connected I/O</span>
-          {incomingCount > 0 && (
-            <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-              {incomingCount} input{incomingCount !== 1 ? "s" : ""}
-            </span>
-          )}
-          <span className="ml-auto text-[10px] opacity-60">
-            {open ? "collapse" : "expand"}
-          </span>
-        </button>
-        {onExecuteStep && (
-          <button
-            className="mr-3 flex shrink-0 items-center gap-1.5 rounded-md border border-primary/40 px-2.5 py-1 text-[11px] font-medium text-primary transition-colors hover:bg-primary/10"
-            onClick={onExecuteStep}
-            title="Run this step"
-            type="button"
-          >
-            <Play className="size-3" />
-            Run step
-          </button>
-        )}
-      </div>
-
-      {open && (
-        <>
-          <div
-            className="h-1.5 w-full cursor-ns-resize bg-border/40 transition-colors hover:bg-primary/30 active:bg-primary/40"
-            onPointerDown={onResizePointerDown}
-            title="Drag to resize"
-          />
-          <div className="flex border-t" style={{ height: panelHeight }}>
-            <div className="w-1/2 shrink-0 overflow-y-auto border-r">
-              <BlockDataFlowColumn
-                block={block}
-                edges={edges}
-                lastRun={lastRun}
-                nodes={nodes}
-                onExecuteStep={onExecuteStep}
-                side="inputs"
-              />
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              <BlockDataFlowColumn
-                block={block}
-                edges={edges}
-                lastRun={lastRun}
-                nodes={nodes}
-                onExecuteStep={onExecuteStep}
-                side="outputs"
-              />
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
 export function CalculationEngineWorkspace({
   block,
   createTermRequest,
@@ -197,6 +89,7 @@ export function CalculationEngineWorkspace({
   lastRunOutput,
   nodes,
   onConfigPatch,
+  onRuleConfigPatch,
   onExecuteStep,
   onSelectedTermIdChange,
   selectedTermId,
@@ -210,6 +103,7 @@ export function CalculationEngineWorkspace({
   lastRunOutput: Record<string, unknown>;
   nodes: WorkflowNode[];
   onConfigPatch: (patch: Record<string, unknown>) => void;
+  onRuleConfigPatch?: (id: string, patch: Record<string, unknown>) => void;
   onExecuteStep?: () => void;
   onSelectedTermIdChange?: (termId: string | null) => void;
   selectedTermId?: string | null;
@@ -223,18 +117,21 @@ export function CalculationEngineWorkspace({
     const primary = connectedSources[0];
     workspaceContent = (
       <>
-        <ReadOnlyBanner
-          label={`${primary.label}${connectedSources.length > 1 ? ` +${connectedSources.length - 1} more` : ""}`}
-        />
+        <div className="border-b px-3 py-2 text-xs text-muted-foreground">Rules from {primary.label}. Edits update this workflow?s connected rulebook.</div>
         <div className="min-h-0 flex-1 overflow-hidden">
           <CalculationEngineEditor
             block={primary.block}
-            disabled
+            inputContextBlock={block}
+            createTermRequest={createTermRequest}
+            insertRequest={insertRequest}
+            onSelectedTermIdChange={onSelectedTermIdChange}
+            selectedTermId={selectedTermId}
+            disabled={disabled || !onRuleConfigPatch}
             edges={edges}
             fill
-            lastRunOutput={{}}
+            lastRunOutput={lastRunOutput}
             nodes={nodes}
-            onUpdateConfig={() => {}}
+            onUpdateConfig={(key, value) => onRuleConfigPatch?.(primary.block.id, { [key]: value })}
           />
         </div>
       </>
@@ -264,13 +161,7 @@ export function CalculationEngineWorkspace({
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {workspaceContent}
       </div>
-      <InteractiveIOStrip
-        block={block}
-        edges={edges}
-        lastRun={lastRun}
-        nodes={nodes}
-        onExecuteStep={onExecuteStep}
-      />
+
     </div>
   );
 }

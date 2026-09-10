@@ -1,0 +1,725 @@
+{
+  "id": "pf-ownership-graph",
+  "inputKind": "generic upload probe; not domain-complete input",
+  "inputRows": 2,
+  "openMs": 9385,
+  "runMs": 332,
+  "totalMs": 21159,
+  "browserErrors": [],
+  "first": {
+    "id": "custom:0e27a8a7-0dc3-47f6-8c6b-9b1c36a27017",
+    "name": "Foreign Affiliate Ownership & Entity Graph — My workflow",
+    "version": 1,
+    "runCount": 1,
+    "runId": "local-tool-workflow-1789009112144-6nmgx1",
+    "status": "error",
+    "errors": [
+      "Keyword Mapper needs Keyword rules input.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "warnings": [
+      "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value.",
+      "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value.",
+      "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "sources": [
+      {
+        "id": "pf-ownership-graph--src-structure",
+        "connected": true,
+        "consumedBy": [
+          "pf-ownership-graph--lg-normalize"
+        ]
+      }
+    ],
+    "results": [
+      {
+        "blockId": "pf-ownership-graph--start",
+        "label": "Start · Ownership graph",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "triggerPayload",
+          "blockId",
+          "firedAt",
+          "mode",
+          "runId",
+          "workflowId",
+          "startedBy",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--src-structure",
+        "label": "Legal entity structure",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "rawRows",
+          "rawRowsCount",
+          "selectedRows",
+          "selectedRowsCount",
+          "workbookFile",
+          "selectedSheet",
+          "selectedRange",
+          "sourceMetadata",
+          "sourceLocator",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--src-prior",
+        "label": "Prior-year entity graph",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--src-docs",
+        "label": "Ownership & incorporation docs",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--chk-control",
+        "label": "Judgment · control determination",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "label",
+          "readOnlyEvidence",
+          "unit",
+          "value",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--ai-extract",
+        "label": "Extract ownership facts",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "authoritative",
+          "accepted",
+          "proposal",
+          "proposalOnly",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--lg-normalize",
+        "label": "Normalize names & identifiers",
+        "status": "error",
+        "errors": [
+          "Keyword Mapper needs Keyword rules input."
+        ],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "mappedRows",
+          "mappedRowsCount",
+          "unmatchedRows",
+          "unmatchedRowsCount",
+          "lowConfidenceRows",
+          "lowConfidenceRowsCount",
+          "conflictCount",
+          "conflicts",
+          "mappingSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--lg-ownership",
+        "label": "Direct & indirect ownership %",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--lg-status",
+        "label": "FA / CFA status",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--lg-participating",
+        "label": "Equity & participating %",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--lg-changes",
+        "label": "Detect ownership changes",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--fld-register",
+        "label": "Ownership register",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--fld-changes",
+        "label": "Ownership changes",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--out-register",
+        "label": "Approved entity & ownership register",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--out-determination",
+        "label": "FA / CFA determination schedule",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--out-participating",
+        "label": "Participating percentage schedule",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--out-exception",
+        "label": "Manager exception summary",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--out-publish",
+        "label": "Publish approved entity graph",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      }
+    ]
+  },
+  "second": {
+    "id": "custom:0e27a8a7-0dc3-47f6-8c6b-9b1c36a27017",
+    "name": "Foreign Affiliate Ownership & Entity Graph — My workflow",
+    "version": 1,
+    "runCount": 2,
+    "runId": "local-tool-workflow-1789009121266-vg1yuh",
+    "status": "error",
+    "errors": [
+      "Keyword Mapper needs Keyword rules input.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "warnings": [
+      "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value.",
+      "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value.",
+      "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "sources": [
+      {
+        "id": "pf-ownership-graph--src-structure",
+        "connected": true,
+        "consumedBy": [
+          "pf-ownership-graph--lg-normalize"
+        ]
+      }
+    ],
+    "results": [
+      {
+        "blockId": "pf-ownership-graph--start",
+        "label": "Start · Ownership graph",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "triggerPayload",
+          "blockId",
+          "firedAt",
+          "mode",
+          "runId",
+          "workflowId",
+          "startedBy",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--src-structure",
+        "label": "Legal entity structure",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "rawRows",
+          "rawRowsCount",
+          "selectedRows",
+          "selectedRowsCount",
+          "workbookFile",
+          "selectedSheet",
+          "selectedRange",
+          "sourceMetadata",
+          "sourceLocator",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--src-prior",
+        "label": "Prior-year entity graph",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--src-docs",
+        "label": "Ownership & incorporation docs",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--chk-control",
+        "label": "Judgment · control determination",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "label",
+          "readOnlyEvidence",
+          "unit",
+          "value",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--ai-extract",
+        "label": "Extract ownership facts",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "authoritative",
+          "accepted",
+          "proposal",
+          "proposalOnly",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--lg-normalize",
+        "label": "Normalize names & identifiers",
+        "status": "error",
+        "errors": [
+          "Keyword Mapper needs Keyword rules input."
+        ],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "mappedRows",
+          "mappedRowsCount",
+          "unmatchedRows",
+          "unmatchedRowsCount",
+          "lowConfidenceRows",
+          "lowConfidenceRowsCount",
+          "conflictCount",
+          "conflicts",
+          "mappingSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--lg-ownership",
+        "label": "Direct & indirect ownership %",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--lg-status",
+        "label": "FA / CFA status",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--lg-participating",
+        "label": "Equity & participating %",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--lg-changes",
+        "label": "Detect ownership changes",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--fld-register",
+        "label": "Ownership register",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--fld-changes",
+        "label": "Ownership changes",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--out-register",
+        "label": "Approved entity & ownership register",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--out-determination",
+        "label": "FA / CFA determination schedule",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--out-participating",
+        "label": "Participating percentage schedule",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--out-exception",
+        "label": "Manager exception summary",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-ownership-graph--out-publish",
+        "label": "Publish approved entity graph",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      }
+    ]
+  }
+}

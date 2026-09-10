@@ -1,0 +1,52 @@
+CONFIDENTIAL — CORPORATE TAX FILE (FICTIONAL SAMPLE FOR TESTING)
+Internal reference: PROJECT-BOREALIS-2024
+
+================================================================
+COMPANY PROFILE
+================================================================
+Legal name:            Northwind Fiscal Holdings Inc.
+Type:                   Canadian-Controlled Private Corporation (CCPC)
+Jurisdiction:           Federal (Canada), head office in Montreal, Quebec
+Business Number:        87263 4915 RC0001
+Fiscal year-end:        December 31
+Functional currency:    Canadian dollars (CAD)
+
+================================================================
+FOREIGN AFFILIATE
+================================================================
+Affiliate name:         Northwind Ireland Ltd.
+Ownership:              100% (wholly owned foreign affiliate)
+Country of residence:   Ireland
+Nature:                 Controlled foreign affiliate (CFA)
+
+Surplus balances (as at December 31, 2024):
+  Exempt surplus:            CAD 1,250,000
+  Taxable surplus:           CAD   340,000
+  Pre-acquisition surplus:   CAD         0
+  Hybrid surplus:            CAD    75,000
+
+Foreign Accrual Property Income (FAPI) for the 2024 tax year:
+  FAPI:                      CAD    87,500
+  Foreign accrual tax (FAT): CAD    12,000
+  Relevant tax factor:       4.0
+
+================================================================
+FILING OBLIGATIONS
+================================================================
+T1134 (Information Return Relating to Controlled and Not-Controlled
+Foreign Affiliates): REQUIRED for the 2024 tax year in respect of
+Northwind Ireland Ltd.
+  Due date: within 10 months of year-end  ->  October 31, 2025.
+
+T106 (Information Return of Non-Arm's-Length Transactions with
+Non-Residents): REQUIRED — total reportable transactions CAD 640,000.
+
+================================================================
+NOTES FOR THE PREPARER
+================================================================
+- The exempt surplus dividend of CAD 1,250,000 is deductible under
+  subsection 113(1)(a) when paid to Northwind Fiscal Holdings Inc.
+- Confirm the small business deduction: the federal SBD limit for a
+  CCPC is $500,000, shared among associated corporations.
+- Keyword tags for retrieval testing: BOREALIS, IRELAND-AFFILIATE,
+  EXEMPT-SURPLUS-1250000, FAPI-87500.

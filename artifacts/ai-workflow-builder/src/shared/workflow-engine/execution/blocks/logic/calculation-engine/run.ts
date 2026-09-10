@@ -1,4 +1,5 @@
 import { error, info, warning } from "../../../runtime/events";
+import { calculationValueKey, numericOutputFields } from "../../../../calculation-values";
 import {
   dedupeEvidenceRefs,
   dedupeSourceTrace,
@@ -97,6 +98,12 @@ function getRules(context: ToolExecutionContext): {
 
 function getNamedValues(context: ToolExecutionContext) {
   const values: Record<string, number> = {};
+  for (const input of getRoleInputs(context, "calculation_sources")) {
+    const source = input as { blockId: string; output: unknown };
+    for (const field of numericOutputFields(source.output)) {
+      values[calculationValueKey(source.blockId, field.path)] = field.value;
+    }
+  }
   for (const role of ["named_values", "protected_inputs", "fapi_inputs"]) {
     for (const input of getRoleInputs(context, role)) {
       for (const [key, value] of collectNamedValuesFromBackendInput(input)) {
@@ -151,8 +158,28 @@ function getMissingInputErrors({
   rules: CalculationRule[];
 }) {
   const errors: string[] = [];
-  if (Object.keys(namedValues).length === 0) {
-    errors.push("Calculation Engine needs named_values input.");
+  const ruleKeys = new Set(rules.map(rule => rule.resultKey));
+  if (ruleKeys.size !== rules.length) errors.push('Calculation result keys must be unique.');
+  const visited = new Set<string>();
+  const visiting = new Set<string>();
+  const visit = (key: string) => {
+    if (visited.has(key)) return;
+    if (visiting.has(key)) { errors.push(`Circular calculation dependency: ${key}.`); return; }
+    visiting.add(key);
+    const rule = rules.find(rule => rule.resultKey === key)!;
+    const refs = rule.formulaExpression ? collectFormulaReferences(rule.formulaExpression) : rule.operands.filter((operand): operand is string => typeof operand === 'string');
+    refs.filter(ref => ruleKeys.has(ref) && !Object.hasOwn(namedValues, ref)).forEach(visit);
+    visiting.delete(key);
+    visited.add(key);
+  };
+  ruleKeys.forEach(visit);
+  // Numbers alone are valid formulas. Explicit source references, however,
+  // must never silently turn an absent API field into a zero.
+  for (const rule of rules) {
+    const refs = rule.formulaExpression ? collectFormulaReferences(rule.formulaExpression) : rule.operands.filter((operand): operand is string => typeof operand === 'string');
+    for (const ref of refs.filter(ref => ref.startsWith('source:'))) {
+      if (!Object.hasOwn(namedValues, ref)) errors.push(`The connected field ${ref} has no numeric value. Run its source and check the selected field.`);
+    }
   }
   if (rules.length === 0) {
     if (configMode === "external_rules") {
@@ -173,22 +200,19 @@ function getMissingInputErrors({
 }
 
 function roundMoney(value: number) {
-  return Math.round((value + Number.EPSILON) * 100) / 100;
+  return roundTo(value, 2);
 }
 
-// A RATE result (an FX / conversion factor) must NOT be rounded to money cents:
-// 2dp rounding destroys its precision (1.3978 → 1.40) and then corrupts every
-// amount multiplied by it — e.g. the *_CAD conversions FX_RATE feeds. Rates flow
-// through at FULL precision here; only money amounts round to 2dp, and the final
-// DISPLAY rounding happens at the surface (worksheet / snapshot formatting). The
-// key heuristic matches the worksheet-intel `isRateKey` convention (_RATE suffix
-// or FX prefix), so no money line is ever mistaken for a rate.
-const RATE_RESULT_KEY = /_RATE$|^FX/i;
-function roundResult(value: number, resultKey: string) {
-  if (!Number.isFinite(value)) {
-    return 0;
-  }
-  return RATE_RESULT_KEY.test(resultKey) ? value : roundMoney(value);
+// Preserve intermediate precision. Rounding is an explicit rule choice.
+function roundResult(value: number, _resultKey: string) { return value; }
+function roundTo(value: number, digits: number) {
+  // Shift the decimal representation before rounding so 1.005 rounds to
+  // 1.01 instead of inheriting its binary floating-point approximation.
+  const [coefficient, exponent = '0'] = Math.abs(value).toString().split('e');
+  const shifted = Number(`${coefficient}e${Number(exponent) + digits}`);
+  if (!Number.isFinite(shifted)) return value;
+  const [rounded, roundedExponent = '0'] = Math.round(shifted).toString().split('e');
+  return Math.sign(value) * Number(`${rounded}e${Number(roundedExponent) - digits}`);
 }
 
 function isDigit(character: string) {
@@ -240,14 +264,8 @@ function tokenizeFormulaExpression(expression: string) {
     }
 
     if (isDigit(character) || character === ".") {
-      let end = index + 1;
-      while (
-        end < expression.length &&
-        (isDigit(expression[end]) || expression[end] === ".")
-      ) {
-        end += 1;
-      }
-      const text = expression.slice(index, end);
+      const text = expression.slice(index).match(/^(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/)?.[0] ?? character;
+      const end = index + text.length;
       const value = Number(text);
       if (Number.isFinite(value)) {
         tokens.push({ text, type: "number", value });
@@ -280,7 +298,7 @@ function isSupportedFormulaFunction(name: string) {
   return SUPPORTED_FORMULA_FUNCTIONS.has(name.toLowerCase());
 }
 
-function collectFormulaReferences(expression: string) {
+export function collectFormulaReferences(expression: string) {
   const { tokens } = tokenizeFormulaExpression(expression);
   const refs = tokens.flatMap((token, index) => {
     if (token.type !== "identifier") {
@@ -392,8 +410,15 @@ function applyFormulaFunction({
     min: () => (values.length > 0 ? Math.min(...values) : 0),
     min_multiply_cap: () =>
       Math.min(Math.max(values[0] ?? 0, 0) * (values[1] ?? 0), values[2] ?? 0),
-    round: () => roundMoney(values[0] ?? 0),
+    round: () => roundTo(values[0] ?? 0, values[1] ?? 2),
   };
+  const arity: Record<string, [number, number]> = { abs: [1, 1], max: [1, Infinity], min: [1, Infinity], max_subtract_zero: [2, 2], min_multiply_cap: [3, 3], round: [1, 2] };
+  const bounds = arity[normalizedName];
+  if (bounds && (args.length < bounds[0] || args.length > bounds[1])) warnings.push(`Invalid number of arguments for ${name} in ${ruleId}.`);
+  if (normalizedName === 'round' && values[1] !== undefined && (!Number.isInteger(values[1]) || values[1] < 0 || values[1] > 15)) {
+    warnings.push(`Rounding digits must be a whole number from 0 to 15 in ${ruleId}.`);
+    values[1] = 2;
+  }
   const evaluator = evaluators[normalizedName];
   if (!evaluator) {
     warnings.push(`Unsupported formula function ${name} in ${ruleId}.`);
@@ -508,10 +533,12 @@ function createFormulaParser({
   const parseFunctionCall = (name: string): FormulaValue => {
     consume();
     const args: FormulaValue[] = [];
+    let closed = false;
     while (index < tokens.length) {
       const token = peek();
       if (token?.type === "paren" && token.value === ")") {
         consume();
+        closed = true;
         break;
       }
       args.push(parseExpression());
@@ -527,6 +554,7 @@ function createFormulaParser({
         break;
       }
     }
+    if (!closed) warnings.push(`Formula expression in ${ruleId} has an unmatched parenthesis.`);
     return applyFormulaFunction({ args, name, ruleId });
   };
 
@@ -615,6 +643,7 @@ function evaluateFormulaExpression({
     tokens: tokenized.tokens,
   }).parse();
   const warnings = [...new Set([...tokenized.warnings, ...parsed.warnings])];
+  if (!Number.isFinite(parsed.value)) warnings.push(`Non-finite result in ${ruleId}.`);
   const result = roundResult(parsed.value, resultKey);
 
   return {
@@ -683,6 +712,7 @@ function evaluateRule({
   rule: CalculationRule;
 }) {
   const formulaExpression = rule.formulaExpression?.trim();
+  if (!formulaExpression && !rule.operands.length) return { resolvedOperands: [], result: 0, warnings: [`Add a value or formula to ${rule.label || rule.resultKey}.`] };
   if (formulaExpression) {
     return evaluateFormulaExpression({
       expression: formulaExpression,
@@ -711,6 +741,7 @@ function evaluateRule({
         resolvedOperands.map((operand) => operand.value)
       );
   const result = roundResult(rawResult, rule.resultKey);
+  if (!Number.isFinite(rawResult)) warnings.push(`Non-finite result in ${rule.calculationId}.`);
 
   return {
     resolvedOperands,
@@ -735,6 +766,16 @@ export function runCalculationEngine(
   const { rules, mode: resolvedMode } = getRules(context);
   const configMode = getCalculationMode(context);
   const namedValues = getNamedValues(context);
+  const defaultWarnings: string[] = [];
+  const defaults = context.block.config.inputDefaults;
+  if (defaults && typeof defaults === 'object') {
+    for (const [key, value] of Object.entries(defaults)) {
+      if (!Object.hasOwn(namedValues, key) && typeof value === 'number' && Number.isFinite(value)) {
+        namedValues[key] = value;
+        defaultWarnings.push(`Used your explicit default for ${key}: ${value}.`);
+      }
+    }
+  }
   const missingErrors = getMissingInputErrors({
     configMode,
     namedValues,
@@ -745,11 +786,15 @@ export function runCalculationEngine(
     return createErrorResult({ context, errors: missingErrors });
   }
 
+  for (const rule of rules) {
+    if (rule.roundingDigits !== undefined && (!Number.isInteger(rule.roundingDigits) || rule.roundingDigits < 0 || rule.roundingDigits > 15))
+      return createErrorResult({ context, errors: [`Invalid rounding precision for ${rule.resultKey}.`] });
+  }
   const pendingRules = [...rules];
   const calculatedResults: Record<string, number> = {};
   const resultDetails: Record<string, Record<string, unknown>> = {};
   const formulaTrace: Record<string, Record<string, unknown>> = {};
-  const warnings: string[] = [];
+  const warnings: string[] = [...defaultWarnings];
   let progressed = true;
 
   while (pendingRules.length > 0 && progressed) {
@@ -762,12 +807,17 @@ export function runCalculationEngine(
       }
 
       const evaluation = evaluateRule({ namedValues, rule });
+      const invalid = evaluation.warnings;
+      if (invalid.length > 0) return createErrorResult({ context, errors: invalid });
+      if (rule.roundingDigits !== undefined) evaluation.result = roundTo(evaluation.result, rule.roundingDigits);
       namedValues[rule.resultKey] = evaluation.result;
       calculatedResults[rule.resultKey] = evaluation.result;
       resultDetails[rule.resultKey] = {
         calculationId: rule.calculationId,
         description: rule.description,
         label: rule.label,
+        unit: rule.unit,
+        roundingDigits: rule.roundingDigits,
         operation: rule.operation,
         result: evaluation.result,
         resultKey: rule.resultKey,
@@ -790,34 +840,11 @@ export function runCalculationEngine(
     }
   }
 
-  for (const rule of pendingRules) {
-    const evaluation = evaluateRule({ namedValues, rule });
-    namedValues[rule.resultKey] = evaluation.result;
-    calculatedResults[rule.resultKey] = evaluation.result;
-    resultDetails[rule.resultKey] = {
-      calculationId: rule.calculationId,
-      description: rule.description,
-      label: rule.label,
-      operation: rule.operation,
-      result: evaluation.result,
-      resultKey: rule.resultKey,
-      warnings: evaluation.warnings,
-    };
-    formulaTrace[rule.resultKey] = {
-      calculationId: rule.calculationId,
-      expression: getRuleExpression(rule),
-      inputValues: evaluation.resolvedOperands.map((operand) => ({
-        operand: operand.operand,
-        value: operand.value,
-      })),
-      operation: rule.operation,
-      result: evaluation.result,
-      warnings: evaluation.warnings,
-    };
-    warnings.push(
-      `Calculation ${rule.calculationId} ran with unresolved dependency values.`,
-      ...evaluation.warnings
-    );
+  if (pendingRules.length) {
+    return createErrorResult({ context, errors: pendingRules.map(rule => {
+      const refs = rule.formulaExpression ? collectFormulaReferences(rule.formulaExpression) : rule.operands.filter((item): item is string => typeof item === 'string');
+      return `Cannot calculate ${rule.label || rule.resultKey}: missing input ${refs.filter(key => !Object.hasOwn(namedValues, key)).join(', ')}. Provide the value or set an explicit default in Calculation settings.`;
+    }) });
   }
 
   const sourceTrace = dedupeSourceTrace(context.sourceTrace || []);

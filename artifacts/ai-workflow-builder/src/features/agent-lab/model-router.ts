@@ -34,8 +34,15 @@ export type RouterPlan = {
   supportsEffort: boolean;
   /** The effort actually applied this turn (undefined = model default, or unsupported). */
   effort?: EffortLevel;
-  /** Cache the large system/doc block via Anthropic prompt caching. */
-  cacheSystem: boolean;
+  /**
+   * Cache the large static prefix (tools + system + attached documents) via Anthropic prompt
+   * caching, so repeat turns over the same documents read that block at ~10% input price.
+   * True for Anthropic (which needs an explicit cache breakpoint); false elsewhere. AI SDK v6+
+   * forbids a system-role MESSAGE — the old breakpoint site — so the runtime attaches the
+   * breakpoint to a MESSAGE PART instead (the documents on the first user message). Other
+   * providers don't need this: OpenAI auto-caches long prefixes. See agent.ts `cacheDocs`.
+   */
+  cachePrefix: boolean;
   /** Provider-namespaced options to pass to generateText, or undefined. */
   providerOptions?: Record<string, Record<string, JsonValue>>;
 };
@@ -70,7 +77,7 @@ export function planForModel(modelId: string, opts?: { effort?: EffortLevel }): 
       provider: modelId.includes('/') ? 'gateway-other' : 'openai',
       sendTemperature: true,
       supportsEffort: false,
-      cacheSystem: false,
+      cachePrefix: false, // OpenAI/other: no explicit breakpoint needed (OpenAI auto-caches)
     };
   }
 
@@ -89,7 +96,7 @@ export function planForModel(modelId: string, opts?: { effort?: EffortLevel }): 
     sendTemperature: !REJECTS_SAMPLING.test(anth),
     supportsEffort,
     effort,
-    cacheSystem: true,
+    cachePrefix: true, // cache tools+system+docs via a message-part breakpoint (see agent.ts)
     providerOptions,
   };
 }

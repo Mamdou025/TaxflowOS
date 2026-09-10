@@ -164,6 +164,30 @@ export const setRunEditsAtom = atom(
   }
 );
 
+/** Shared, PERSISTED run *gate* state — keyed by workflow id ('fapi', 'roulement').
+ *  The run's flow gates (source provided? amount elected? figures approved?) used to be
+ *  component-local useState in WorkflowRunFlow, so leaving the Run tab and returning reset
+ *  a finished run to "Document needed", forcing a re-run. Persisting them here (like
+ *  runEditsAtom) restores an in-progress/finished run when you come back — across tab
+ *  navigation AND a reload — matching how the run's DATA already persists (uploadedRowsAtom
+ *  + runEditsAtom). A workflow that was never advanced has NO entry, so a brand-new run
+ *  still asks for its source first (cached rows alone don't auto-satisfy the gate). */
+export type RunFlow = { uploaded: boolean; elected: number | null; approved: boolean; rows?: SourceRow[] };
+export const INITIAL_RUN_FLOW: RunFlow = { uploaded: false, elected: null, approved: false };
+export const runFlowAtom = atomWithStorage<Record<string, RunFlow>>('taxflow:run-flow', {});
+
+/** Set (or functionally update) one workflow's run-flow gate state. */
+export const setRunFlowAtom = atom(
+  null,
+  (get, set, { id, flow }: { id: string; flow: RunFlow | ((prev: RunFlow) => RunFlow) }) => {
+    set(runFlowAtom, (prev) => {
+      const cur = prev[id] ?? INITIAL_RUN_FLOW;
+      const next = typeof flow === 'function' ? flow(cur) : flow;
+      return { ...prev, [id]: next };
+    });
+  }
+);
+
 // Derived: the currently focused window (or the last opened as a fallback).
 export const activeWorkspaceWindowAtom = atom((get) => {
   const windows = get(workspaceWindowsAtom);

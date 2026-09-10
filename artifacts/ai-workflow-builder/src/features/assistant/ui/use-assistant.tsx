@@ -18,7 +18,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useRouter, usePathname } from '@/lib/router';
 import { Globe, FileText, Workflow, Bot, GitBranch, SquarePen, Play, Sparkles } from 'lucide-react';
-import { useCopilotAction, useCopilotReadable, useCopilotChat } from '@copilotkit/react-core';
+import { useCopilotAction, useCopilotReadable, useCopilotChat, useCopilotChatInternal } from '@copilotkit/react-core';
 import { TextMessage, Role } from '@copilotkit/runtime-client-gql';
 import {
   workspaceWindowsAtom,
@@ -43,6 +43,7 @@ import { WorkflowRunFlow, WorkflowElementCard, RunProposalCard } from '@/feature
 import type { ComposerSuggestion } from '@/features/assistant/workspace/aside-thread';
 import { getWorkflowConfig, WORKFLOW_CONFIGS, type TemplateConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
 import { PORTFOLIO_WORKFLOWS } from '@/shared/workflow-engine/templates/portfolio/portfolio-workflows';
+import { aimBuilderAtWorkflowAtom } from '@/features/workflows-hub/workflows-store';
 import { WORKFLOWS } from '@/lib/agents';
 import { worksheetIntelRegistryAtom, pickIntel, listIntel, createTemplateIntel } from '@/features/worksheets/intel';
 import { GenUIRender } from '@/features/genui/genui-render';
@@ -52,10 +53,11 @@ import { CoworkerAvatar } from './coworker-avatar';
 import { useChatPersistence } from '@/features/assistant/runtime/chat/use-chat-persistence';
 import { webSearchResultsAtom, webSearchKey, type WebSearchScope, type WebSearchResult } from '@/shared/stores/web-search-store';
 import { WebSearchCard } from '@/features/assistant/workspace/web-search-card';
+import type { ToolResult } from './tool-result-card';
 
 
 // ── Work-item classification ────────────────────────────────────────────────────
-const WORKSHEET_KEYS = new Set(['fapi', 't1134', 'surplus', 'bu-overview', 'expense']);
+const WORKSHEET_KEYS = new Set(['fapi', 't1134', 'surplus', 'expense']);
 function pageWorkType(pageKey: string): WorkItemType {
   return WORKSHEET_KEYS.has(pageKey) ? 'worksheet' : 'page';
 }
@@ -107,15 +109,11 @@ const PORTFOLIO_BLUEPRINTS = PORTFOLIO_WORKFLOWS.map((w) => ({
 function describeRoute(pathname: string): { route: string; label: string } {
   const map: Record<string, string> = {
     '/': 'Assistant — full-screen focus mode',
-    '/builder': 'Workflow Builder — the visual node canvas',
-    '/dashboard': 'Dashboard — client & workflow overview',
     '/fapi': 'FAPI worksheet',
     '/t1134': 'T1134 worksheet',
     '/surplus': 'Surplus worksheet',
-    '/bu-overview': 'Executive Overview',
   };
   if (map[pathname]) return { route: pathname, label: map[pathname] };
-  if (pathname.startsWith('/client')) return { route: pathname, label: 'Client workspace' };
   if (pathname.startsWith('/workflows')) return { route: pathname, label: 'Saved workflow (database)' };
   return { route: pathname, label: pathname };
 }
@@ -185,6 +183,7 @@ export function useAssistant() {
   const pushTrail = useSetAtom(pushTrailAtom);
   const recordWork = useSetAtom(recordWorkItemAtom);
   const setBuilderFocus = useSetAtom(builderFocusTargetAtom);
+  const aimBuilder = useSetAtom(aimBuilderAtWorkflowAtom);
   const setUploadedRows = useSetAtom(uploadedRowsAtom);
   const setAttachedDocs = useSetAtom(attachedDocsAtom);
   const attachedDocs = useAtomValue(attachedDocsAtom);
@@ -203,6 +202,21 @@ export function useAssistant() {
   const fieldValues = useAtomValue(fieldValuesAtom);
   const allRunEdits = useAtomValue(runEditsAtom);
   const uploaded = useAtomValue(uploadedRowsAtom);
+
+  // Open a workflow (or Sinaxe blueprint) in the NEW builder: the Workflows surface's
+  // Build tab (InlineBuilder), docked beside the chat — NOT the legacy standalone
+  // /builder page (the older UI). aimBuilder points the surface at the workflow +
+  // block (see aimBuilderAtWorkflowAtom); this only has to bring the surface up. A
+  // workflow with no portfolio surface yet falls back to the legacy canvas so the
+  // click still works rather than landing on an empty "Select a workflow" state.
+  const openInlineBuilder = (workflowId: string, blockId = '') => {
+    if (aimBuilder({ workflowId, blockId })) {
+      const page = getPage('workflows');
+      openWindow({ pageKey: 'workflows', title: page?.title ?? 'Workflows' });
+    } else {
+      openWindow({ pageKey: 'workflow-builder', title: 'Workflow Builder' });
+    }
+  };
 
   // ── CopilotKit context + tools ───────────────────────────────────────────────
   // Where the user is right now. Registered here so it's live on EVERY route (the
@@ -491,10 +505,10 @@ export function useAssistant() {
     parameters: [{ name: 'workflowId', type: 'string', description: 'optional — a workflow or blueprint id to open on the canvas', required: false }],
     handler: async ({ workflowId }: { workflowId?: string }) => {
       if (workflowId && (getWorkflowConfig(workflowId) || PORTFOLIO_WORKFLOWS.some((w) => w.id === workflowId))) {
-        launchOpenBuilder(workflowId);
+        openInlineBuilder(workflowId);
         return `Opening ${workflowId} in the workflow builder.`;
       }
-      router.push('/builder');
+      launchOpenPage('workflows');
       return 'Opening the workflow builder.';
     },
   });
@@ -523,7 +537,7 @@ export function useAssistant() {
           <RunWorkflowRender
             config={config}
             onOpenPage={(pk) => { const def = getPage(pk); if (def) openWindow({ pageKey: pk, title: def.title }); }}
-            onOpenBuilder={(blockId) => { setBuilderFocus({ workflowId: config.id, blockId }); router.push('/builder'); }}
+            onOpenBuilder={(blockId) => openInlineBuilder(config.id, blockId)}
           />
         </div>
       );
@@ -549,7 +563,7 @@ export function useAssistant() {
       const c = getWorkflowConfig(args?.workflowId ?? '');
       if (!c) return <></>;
       const el = args?.element === 'output' ? 'output' : 'source';
-      return <div data-work-id={workIdFor('source-review', `${c.id}:${el}`)}><WorkflowElementCard config={c} element={el} onOpenPage={(pk) => { const d = getPage(pk); if (d) openWindow({ pageKey: pk, title: d.title }); }} onOpenBuilder={(blockId) => { setBuilderFocus({ workflowId: c.id, blockId }); router.push('/builder'); }} /></div>;
+      return <div data-work-id={workIdFor('source-review', `${c.id}:${el}`)}><WorkflowElementCard config={c} element={el} onOpenPage={(pk) => { const d = getPage(pk); if (d) openWindow({ pageKey: pk, title: d.title }); }} onOpenBuilder={(blockId) => openInlineBuilder(c.id, blockId)} /></div>;
     },
   });
 
@@ -688,14 +702,23 @@ export function useAssistant() {
         });
         if (!res.ok) return { passages: [], note: 'Document search is unavailable.' };
         const data = (await res.json()) as {
-          passages?: { fileName: string; content: string; chunkIndex: number }[];
+          passages?: { fileName: string; content: string; chunkIndex: number; documentId?: string; similarity?: number }[];
         };
         const passages = data.passages ?? [];
         if (passages.length === 0) {
           return { passages: [], note: 'No relevant passages found in the stored documents.' };
         }
+        // Keep the provenance the retrieval already computed (documentId, chunkIndex,
+        // similarity) instead of narrowing to just the file name — the receipt UI
+        // shows it so the fiscalist can see WHICH passage, and how strong the match.
         return {
-          passages: passages.map((p) => ({ source: p.fileName, excerpt: p.content })),
+          passages: passages.map((p) => ({
+            source: p.fileName,
+            documentId: p.documentId,
+            chunkIndex: p.chunkIndex,
+            similarity: typeof p.similarity === 'number' ? Number(p.similarity.toFixed(3)) : undefined,
+            excerpt: p.content,
+          })),
           instruction:
             'Answer using these passages and CITE the source file name for each fact. If they do not answer the question, say so plainly.',
         };
@@ -753,9 +776,9 @@ export function useAssistant() {
       { name: 'limit', type: 'number', description: 'max results (default 6, max 10)', required: false },
     ],
     handler: async ({ query, limit }: { query: string; limit?: number }) => runWebSearch('web', 'searchWeb', query, limit),
-    render: ({ args }: { args: { query?: string } }) =>
+    render: ({ args, result }: { args: { query?: string }; result?: unknown }) =>
       args?.query
-        ? <WebSearchCard query={args.query} scope="web" />
+        ? <WebSearchCard query={args.query} scope="web" result={result} />
         : <div style={{ fontSize: 12.5, color: '#71717a', padding: '8px 0' }}>Preparing web search…</div>,
   });
 
@@ -768,9 +791,9 @@ export function useAssistant() {
       { name: 'limit', type: 'number', description: 'max results (default 5, max 10)', required: false },
     ],
     handler: async ({ query, limit }: { query: string; limit?: number }) => runWebSearch('ca-tax', 'searchCanadianTax', query, limit),
-    render: ({ args }: { args: { query?: string } }) =>
+    render: ({ args, result }: { args: { query?: string }; result?: unknown }) =>
       args?.query
-        ? <WebSearchCard query={args.query} scope="ca-tax" />
+        ? <WebSearchCard query={args.query} scope="ca-tax" result={result} />
         : <div style={{ fontSize: 12.5, color: '#71717a', padding: '8px 0' }}>Searching Canadian tax sources…</div>,
   });
 
@@ -808,6 +831,20 @@ export function useAssistant() {
   });
 
   useCopilotAction({
+    name: 'callApi',
+    description:
+      "Call a public JSON HTTP API and return what it responds with. Use it to try an endpoint the user names, inspect its shape, or pull live data no other tool covers. Only public http(s) URLs work — private/internal addresses are refused. When the response is a list you get the record count, the field names and a few example records; otherwise a truncated JSON preview. NEVER invent a response: if the call fails, report the error. If the user wants this endpoint in a workflow, tell them to add an 'API / HTTP Request' Source block with the same url and resultsPath.",
+    parameters: [
+      { name: 'url', type: 'string', description: 'the full public http(s) URL to call', required: true },
+      { name: 'method', type: 'string', description: '"GET" (default) or "POST"', required: false },
+      { name: 'body', type: 'string', description: 'request body for POST, as a JSON string', required: false },
+      { name: 'resultsPath', type: 'string', description: 'dotted path to the array of records, e.g. "results" or "data.items". Omit to auto-detect.', required: false },
+    ],
+    handler: async ({ url, method, body, resultsPath }: { url: string; method?: string; body?: string; resultsPath?: string }) =>
+      callServerTool('callApi', { url, method, body, resultsPath }),
+  });
+
+  useCopilotAction({
     name: 'calculate',
     description: 'Evaluate a basic arithmetic expression, e.g. "0.18 * 240" or "3 * (4 + 5)". Use only numbers and + - * / ( ) .',
     parameters: [{ name: 'expression', type: 'string', description: 'a math expression using only numbers and + - * / ( ) .', required: true }],
@@ -834,7 +871,10 @@ export function useAssistant() {
   });
 
   // ── Conversation-launch state ────────────────────────────────────────────────
-  const { appendMessage, visibleMessages } = useCopilotChat();
+  const { appendMessage } = useCopilotChat();
+  // Read the live messages from the AG-UI store (CopilotKit 1.63). The legacy
+  // useCopilotChat().visibleMessages is undefined here — see use-chat-persistence.
+  const { messages: visibleMessages } = useCopilotChatInternal() as unknown as { messages: unknown[] };
   // Server-side persistence: autosaves each turn + restores saved threads. Additive
   // — it observes CopilotKit, doesn't change how the chat runs. See use-chat-persistence.
   const persistence = useChatPersistence();
@@ -842,16 +882,24 @@ export function useAssistant() {
   const [pinnedFields, setPinnedFields] = useState<string[]>([]); // fields brought in via search
   const [pinnedElements, setPinnedElements] = useState<PinnedElement[]>([]); // workflow source/output summoned in
   const [pinnedRuns, setPinnedRuns] = useState<string[]>([]); // workflow ids launched deterministically (no LLM routing)
+  const [pinnedToolResults, setPinnedToolResults] = useState<ToolResult[]>([]); // tools run by hand from the Tools menu
 
   const say = (content: string) => { appendMessage(new TextMessage({ content, role: Role.User })); setSent(true); };
   const threadEmpty = (visibleMessages?.length ?? 0) === 0;
   const showHero = threadEmpty && !sent; // centered composer until the first message
-  // New chat: clear the store + start a fresh (unsaved-until-first-message) thread.
-  const newChat = () => { persistence.startNewThread(); setSent(false); };
-  // Restore a saved conversation from history, then show it (not the hero).
+  // Clear the parts of a conversation that live OUTSIDE the CopilotKit message store:
+  // deterministically-pinned run cards + summoned fields/elements. These are per-chat
+  // UI state, so switching chats (new or restored) must wipe them or the previous
+  // chat's cards bleed into the next one (they were never part of "the same chat").
+  const clearPinned = () => { setPinnedRuns([]); setPinnedElements([]); setPinnedFields([]); setPinnedToolResults([]); };
+  // New chat: clear the store + pinned cards, and start a fresh (unsaved-until-first-
+  // message) thread — genuinely blank, distinct from the one you were in.
+  const newChat = () => { persistence.startNewThread(); clearPinned(); setSent(false); };
+  // Restore a saved conversation from history, then show it (not the hero). Wipe the
+  // outgoing chat's pinned cards so only the restored transcript shows.
   const openThread = async (id: string) => {
     const ok = await persistence.loadThread(id);
-    if (ok) setSent(true);
+    if (ok) { clearPinned(); setSent(true); }
     return ok;
   };
 
@@ -861,6 +909,13 @@ export function useAssistant() {
     if (def) openWindow({ pageKey, title: def.title });
   };
   const launchPinField = (fieldId: string) => setPinnedFields((prev) => (prev.includes(fieldId) ? prev : [...prev, fieldId]));
+  // Pin the result of a tool run-by-hand (Tools menu → Run ▸) into the thread. Flips
+  // the hero → conversation so the value card is visible. Deterministic, no LLM.
+  const launchPinToolResult = (r: { toolName: string; args: Record<string, unknown>; result: unknown }) => {
+    setSent(true);
+    const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${r.toolName}-${Date.now()}`;
+    setPinnedToolResults((prev) => [...prev, { id, at: Date.now(), ...r }]);
+  };
   const launchPinElement = (workflowId: string, element: 'source' | 'output') => setPinnedElements((prev) => (prev.some((e) => e.workflowId === workflowId && e.element === element) ? prev : [...prev, { workflowId, element }]));
   // Start a workflow DETERMINISTICALLY — pin its run card into the thread directly,
   // bypassing the LLM. (Previously this dropped a `say("Run the X workflow")` turn
@@ -875,14 +930,11 @@ export function useAssistant() {
     setPinnedRuns((prev) => (prev.includes(config.id) ? prev : [...prev, config.id]));
   };
 
-  // Open a workflow OR a Sinaxe portfolio blueprint on the builder canvas. Sets
-  // the builder focus target (resolved by app/builder/page.tsx — run-config OR
-  // portfolio blueprint) and navigates there. Blueprints aren't runnable, so this
-  // is how the chat surfaces them: view/edit in the builder, not execute.
-  const launchOpenBuilder = (workflowId: string) => {
-    setBuilderFocus({ workflowId, blockId: '' });
-    router.push('/builder');
-  };
+  // Open a workflow OR a Sinaxe portfolio blueprint in the builder. Delegates to
+  // openInlineBuilder → the Workflows surface's Build tab (InlineBuilder), docked
+  // beside the chat. Blueprints aren't runnable, so this is how the chat surfaces
+  // them: view/edit in the builder, not execute.
+  const launchOpenBuilder = (workflowId: string) => openInlineBuilder(workflowId);
 
   // Scroll the thread to the live run when the status chip is clicked.
   const scrollToRun = () => {
@@ -905,8 +957,7 @@ export function useAssistant() {
     { key: 'cmd:open-fapi', title: 'Open FAPI worksheet', sub: 'Foreign Accrual Property Income', kind: 'open', icon: <Globe size={14} />, run: () => launchOpenPage('fapi') },
     { key: 'cmd:open-t1134', title: 'Open T1134 worksheet', sub: 'Foreign affiliate reporting', kind: 'open', icon: <Globe size={14} />, run: () => launchOpenPage('t1134') },
     { key: 'cmd:open-surplus', title: 'Open Surplus worksheet', sub: 'Surplus account balances', kind: 'open', icon: <Globe size={14} />, run: () => launchOpenPage('surplus') },
-    { key: 'cmd:open-overview', title: 'Open Executive overview', sub: 'Business-unit summary', kind: 'open', icon: <Globe size={14} />, run: () => launchOpenPage('bu-overview') },
-    { key: 'cmd:open-builder', title: 'Open workflow builder', sub: 'The visual node canvas', kind: 'open', icon: <Workflow size={14} />, run: () => router.push('/builder') },
+    { key: 'cmd:open-builder', title: 'Open workflow builder', sub: 'The visual node canvas', kind: 'open', icon: <Workflow size={14} />, run: () => launchOpenPage('workflows') },
     // Bring a live element into the chat (synced to the worksheet)
     { key: 'cmd:edit-fx', title: 'Edit the FX rate inline', sub: 'Live field, synced to the worksheet', kind: 'inline', icon: <SquarePen size={14} />, run: () => launchPinField('fx') },
     { key: 'cmd:fapi-source', title: 'Show FAPI source document', sub: 'The trial balance feeding the run', kind: 'inline', icon: <GitBranch size={14} />, run: () => launchPinElement('fapi', 'source') },
@@ -1008,14 +1059,15 @@ export function useAssistant() {
     // pinned inline cards
     pinnedFields, pinnedElements, setPinnedFields, setPinnedElements,
     pinnedRuns, setPinnedRuns,
+    pinnedToolResults, setPinnedToolResults,
     // composer
     composerSearch, composerTools, composerCommands, onAttach,
     // run
     activeRun, scrollToRun,
     // launcher
-    launchOpenPage, launchPinField, launchPinElement, launchStartWorkflow,
+    launchOpenPage, launchPinField, launchPinElement, launchStartWorkflow, launchPinToolResult,
     // navigation helpers (for inline card "open in builder")
-    setBuilderFocus, router,
+    openInlineBuilder, setBuilderFocus, router,
   };
 }
 

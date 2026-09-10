@@ -22,9 +22,13 @@ export type FapiInputsConfig = {
   partnershipDividends?: number; // → H
 };
 
-// Platform snaps RTF to one of these; default 1.9.
+// Platform snaps RTF to one of these. This is a Canadian CORPORATE-tax workspace,
+// so the corporate relevant tax factor (s.248(1)) — 4 — is the default. 1.9 is the
+// individual/trust factor: it stays available and is chosen per-case via the RTF
+// selector on the FAPI worksheet (fapi-worksheet.tsx). Do NOT silently default to
+// 1.9 in a corporate context — that understates the ss.91(4) FAT deduction.
 const ALLOWED_RTF_VALUES = [1.9, 4];
-const DEFAULT_RTF_VALUE = 1.9;
+const DEFAULT_RTF_VALUE = 4;
 function normalizeRtf(value: number | undefined): number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     return DEFAULT_RTF_VALUE;

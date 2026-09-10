@@ -8,6 +8,10 @@
  * To connect to a real Sentry project, set the environment variable:
  *   VITE_SENTRY_DSN=https://<key>@o<org>.ingest.sentry.io/<project>
  *
+ * Production source-map uploads additionally use SENTRY_AUTH_TOKEN,
+ * SENTRY_ORG, SENTRY_PROJECT, and VITE_RELEASE at build time. Keep
+ * SENTRY_AUTH_TOKEN in Replit Secrets; never expose it with a VITE_ prefix.
+ *
  * Without a DSN the SDK is initialised in "dry-run" mode — structured
  * console.error logs are still emitted, but nothing is sent over the network.
  */
@@ -40,7 +44,7 @@ export function initErrorMonitoring(): void {
     environment: import.meta.env.MODE,
     // Capture 100 % of sessions in development; tune for production.
     tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
-    // Source maps are uploaded separately; attach release via CI env var.
+    // vite.config.ts injects this same value into the upload plugin's release.
     release: (import.meta.env.VITE_RELEASE as string | undefined) ?? undefined,
   });
 }
@@ -57,6 +61,24 @@ export function captureRenderError(
     scope.setTag('error.type', event.type);
     scope.setExtra('guardTriggered', event.guardTriggered);
     scope.setExtra('componentStack', event.componentStack ?? '(none)');
+    Sentry.captureException(error);
+  });
+}
+
+/** Forward an unhandled promise rejection to Sentry. */
+export function captureUnhandledRejection(reason: unknown): void {
+  const error =
+    reason instanceof Error
+      ? reason
+      : new Error(
+          `Unhandled promise rejection: ${
+            typeof reason === 'string' ? reason : String(reason)
+          }`,
+        );
+
+  Sentry.withScope((scope) => {
+    scope.setTag('error.type', 'UnhandledPromiseRejection');
+    scope.setTag('error.source', 'window.unhandledrejection');
     Sentry.captureException(error);
   });
 }

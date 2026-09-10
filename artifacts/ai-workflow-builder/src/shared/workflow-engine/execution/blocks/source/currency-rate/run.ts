@@ -29,32 +29,33 @@ export function runCurrencyRateSource(
   const hasLiveRate =
     !sameCurrency && typeof liveRate === "number" && Number.isFinite(liveRate);
   const warnings: string[] = [];
-  // Prefer the live Bank of Canada Valet rate when one has been fetched;
-  // otherwise fall back to the workbook-provided override.
-  let rate = sameCurrency ? 1 : hasLiveRate ? liveRate : overrideRate;
+  // Match the editor: an explicit override wins until the user clears it.
+  const hasOverride = typeof overrideRate === 'number' && Number.isFinite(overrideRate);
+  const usesLiveRate = hasLiveRate && !hasOverride;
+  let rate = sameCurrency ? 1 : hasOverride ? overrideRate : liveRate;
   let rateSource = sameCurrency
     ? "same_currency"
-    : hasLiveRate
+    : usesLiveRate
       ? "bank_of_canada_valet"
       : "override";
   let rateType = sameCurrency
     ? "same_currency"
-    : hasLiveRate
+    : usesLiveRate
       ? config.rateType || "annual_average"
       : "user_override";
-  if (!(typeof rate === "number" && Number.isFinite(rate))) {
-    warnings.push(
-      "No FX override was supplied. The Bank of Canada lookup path is available for later integration, but local deterministic runs require an override."
-    );
-    rate = 0;
-    rateSource = "missing_override";
-    rateType = "missing";
+  const fetchedFor = context.config.rateFetchedFor as { documentCurrency?: string; reportingCurrency?: string; year?: number } | undefined;
+  const staleRequest = usesLiveRate && fetchedFor && (fetchedFor.documentCurrency !== documentCurrency || fetchedFor.reportingCurrency !== reportingCurrency || fetchedFor.year !== rateYear);
+  if (!(typeof rate === 'number' && Number.isFinite(rate) && rate > 0) || staleRequest) {
+    const message = staleRequest ? 'The saved rate belongs to a different currency pair or year. Fetch the selected rate again.' : 'No valid exchange rate is available. Fetch a rate or enter an explicit positive override.';
+    return { blockId: context.block.id, toolId: 'source.currency_rate', runId: context.runId, startedAt: context.startedAt, completedAt: new Date().toISOString(), status: 'error', errors: [message], warnings: [], outputs: {}, logs: [], evidenceRefs: [], sourceTrace: [] };
   }
 
   const exchangeRate = {
     conversion_applied: documentCurrency !== reportingCurrency,
     documentCurrency,
     exchange_rate: rate,
+    fetched_at: context.config.rateFetchedAt,
+    replayed_saved_response: usesLiveRate,
     override_reason: config.overrideReason,
     provider: config.rateProvider || "bank_of_canada",
     rate,
@@ -74,7 +75,9 @@ export function runCurrencyRateSource(
   const sourceTrace = [createSourceTraceRef({ evidenceRef })];
   const rateMetadata = {
     fetcher: fetchAnnualAverageExchangeRate.name,
-    live: hasLiveRate,
+    live: false,
+    replayedSavedResponse: usesLiveRate,
+    fetchedAt: context.config.rateFetchedAt,
     provider: config.rateProvider || "bank_of_canada",
     rate_source: rateSource,
     sourceId: context.block.id,

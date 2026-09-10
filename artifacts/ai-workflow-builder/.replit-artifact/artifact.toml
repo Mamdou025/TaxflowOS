@@ -14,7 +14,7 @@ localPort = 22179
 run = "pnpm --filter @workspace/ai-workflow-builder run dev"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/ai-workflow-builder", "run", "build" ]
+build = [ "pnpm", "--filter", "@workspace/ai-workflow-builder", "run", "test:prod" ]
 serve = "static"
 publicDir = "artifacts/ai-workflow-builder/dist/public"
 

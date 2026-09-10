@@ -17,7 +17,7 @@ export function PersistentCanvas() {
     setIsMounted(true);
   }, []);
 
-  const showCanvas = pathname === "/builder" || pathname.startsWith("/workflows/");
+  const showCanvas = pathname.startsWith("/workflows/");
 
   if (!(isMounted && showCanvas)) {
     return null;

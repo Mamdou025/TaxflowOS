@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { startIngestWorker } from "./lib/ingest-worker";
 import { db, users, eq } from "@workspace/db";
 
 // Ensure the anonymous user row exists — it is the FK anchor for all data
@@ -49,4 +50,8 @@ app.listen(port, (err) => {
   }
 
   logger.info({ port }, "Server listening");
+
+  // Drain the durable ingest_jobs queue in the background (RAG document
+  // processing). Disable with INGEST_WORKER=0 to run it as a separate process.
+  startIngestWorker();
 });

@@ -8,7 +8,9 @@
     "build": "NODE_OPTIONS=--max-old-space-size=4096 vite build --config vite.config.ts",
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:prod-freshness": "node --experimental-strip-types --test e2e/prod-build-freshness.test.mjs",
     "test:e2e": "playwright test --config=playwright.config.mjs",
+    "test:prod": "PROD_SMOKE_SKIP_BUILD=${PROD_SMOKE_SKIP_BUILD:-1} playwright test --config=playwright.config.mjs --project=production",
     "test:e2e:ui": "playwright test --config=playwright.config.mjs --ui"
   },
   "devDependencies": {
@@ -44,6 +46,7 @@
     "@replit/vite-plugin-cartographer": "catalog:",
     "@replit/vite-plugin-dev-banner": "catalog:",
     "@replit/vite-plugin-runtime-error-modal": "catalog:",
+    "@sentry/vite-plugin": "^4.6.1",
     "@tailwindcss/typography": "^0.5.15",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-query": "catalog:",
@@ -98,6 +101,7 @@
     "mammoth": "^1.12.0",
     "motion": "^12.42.2",
     "nanoid": "^6.0.0",
+    "pako": "1.0.11",
     "radix-ui": "^1.6.6",
     "topojson-client": "^3.1.0",
     "unpdf": "^1.7.0",

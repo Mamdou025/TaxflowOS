@@ -1,0 +1,144 @@
+{
+  "config": {
+    "argv": [
+      "C:\\nvm4w\\nodejs\\node.exe",
+      "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\node_modules\\.pnpm\\@playwright+test@1.62.0\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config",
+      "playwright.production-audit.config.mjs",
+      "--tsconfig",
+      "e2e/tsconfig.json",
+      "--grep",
+      "production load"
+    ],
+    "configFile": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\playwright.production-audit.config.mjs",
+    "rootDir": "C:/Users/Mamad/Sinaxe/TaxflowOS/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/Mamad/Sinaxe/TaxflowOS/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/Mamad/Sinaxe/TaxflowOS/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "production-demo.spec.ts"
+        ],
+        "timeout": 120000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/production-audit-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.62.0",
+    "workers": 1,
+    "webServer": {
+      "command": "python e2e/serve-production.py",
+      "url": "http://127.0.0.1:4173",
+      "reuseExistingServer": true,
+      "timeout": 15000
+    }
+  },
+  "suites": [
+    {
+      "title": "production-demo.spec.ts",
+      "file": "production-demo.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "production load of 1000 rows persists two runs and displays the correct total",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 25339,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"count\":1000,\"runAndInspectMs\":4200,\"persistedRuns\":2,\"errors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "(node:13992) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-10T00:12:09.162Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "production-load-timing",
+                      "contentType": "application/json",
+                      "body": "ewogICJjb3VudCI6IDEwMDAsCiAgInJ1bkFuZEluc3BlY3RNcyI6IDQyMDAsCiAgInBlcnNpc3RlZFJ1bnMiOiAyLAogICJlcnJvcnMiOiBbXQp9"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4ed67b66ba0b928cd081-a408f56314b5ebd82ea7",
+          "file": "production-demo.spec.ts",
+          "line": 70,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-10T00:12:06.835Z",
+    "duration": 29275.828,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -5,6 +5,8 @@ import {
   FapiInputsSourcePanel,
 } from "@/features/workflow-builder/ui/source-viewers/currency-rate-source-panel";
 import { ExcelUploadPanel } from "@/features/workflow-builder/ui/source-viewers/excel-upload-panel";
+import { HttpJsonSourcePanel } from "@/features/workflow-builder/ui/source-viewers/http-json-source-panel";
+import { ManualValueSourcePanel } from "@/features/workflow-builder/ui/source-viewers/manual-value-source-panel";
 import { AggregationRulebookEditor } from "@/features/workflow-builder/ui/source-viewers/aggregation-rulebook-editor";
 import { RuleSourceEditor } from "@/features/workflow-builder/ui/source-viewers/rule-source-editor";
 import {
@@ -68,6 +70,30 @@ function isAggregationRuleSource(
   );
 }
 
+function isHttpJsonSource(
+  block: WorkflowBlock,
+  config: Record<string, unknown>
+) {
+  const sourceKind = String(config.sourceKind || "").toLowerCase();
+  return (
+    block.subtype === "API / HTTP Request" ||
+    config.toolId === "source.http_json" ||
+    sourceKind.includes("http_json")
+  );
+}
+
+function isManualValueSource(
+  block: WorkflowBlock,
+  config: Record<string, unknown>
+) {
+  const sourceKind = String(config.sourceKind || "").toLowerCase();
+  return (
+    block.subtype === "Manual Entry" ||
+    config.toolId === "source.manual_value" ||
+    sourceKind.includes("manual_value")
+  );
+}
+
 function isExcelSource(block: WorkflowBlock, config: Record<string, unknown>) {
   const sourceKind = String(config.sourceKind || "").toLowerCase();
   return (
@@ -80,12 +106,19 @@ function isExcelSource(block: WorkflowBlock, config: Record<string, unknown>) {
 }
 
 export function SourceSetupPanel(props: SourceSetupPanelProps) {
+  const canCreateDraft = props.sourceLocked && (
+    props.config.sourceKind === 'currency_rate' || props.config.sourceKind === 'fapi_inputs' || isHttpJsonSource(props.block, props.config)
+  );
+  const draftAction = canCreateDraft ? <div className="mb-3 rounded border p-3 text-sm">
+    <p>This source was used in a run. Create a new source version to change its data while keeping the recorded result.</p>
+    <button type="button" className="mt-2 rounded border px-3 py-2" disabled={props.disabled} onClick={props.onCreateSourceVersion}>Create new source version from v{props.sourceVersion}</button>
+  </div> : null;
   if (props.config.sourceKind === "currency_rate") {
-    return <CurrencyRateSourcePanel {...props} />;
+    return <>{draftAction}<CurrencyRateSourcePanel {...props} /></>;
   }
 
   if (props.config.sourceKind === "fapi_inputs") {
-    return <FapiInputsSourcePanel {...props} />;
+    return <>{draftAction}<FapiInputsSourcePanel {...props} disabled={props.disabled || props.sourceLocked} /></>;
   }
 
   if (isRollupRuleSource(props.block, props.config)) {
@@ -116,6 +149,14 @@ export function SourceSetupPanel(props: SourceSetupPanelProps) {
         showRulebookOverview={props.showRulebookOverview}
       />
     );
+  }
+
+  if (isHttpJsonSource(props.block, props.config)) {
+    return <>{draftAction}<HttpJsonSourcePanel {...props} /></>;
+  }
+
+  if (isManualValueSource(props.block, props.config)) {
+    return <ManualValueSourcePanel {...props} />;
   }
 
   if (isExcelSource(props.block, props.config)) {

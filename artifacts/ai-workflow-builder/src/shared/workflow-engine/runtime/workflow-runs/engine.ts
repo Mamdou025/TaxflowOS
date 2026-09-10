@@ -75,12 +75,64 @@ export type TemplateConfig = {
   /** Fixed scalar params (e.g. jvm_total) used by `computeExtra`. */
   params?: Record<string, number>;
   /**
+   * The figures this config produces are a stand-in, not the workflow's real
+   * domain math (the portfolio blueprints share one generic income/expense engine
+   * so their Run → Results flow works end-to-end). Drives the "representative
+   * figures" caveat on the worksheet. A fully built workflow leaves this unset.
+   */
+  representative?: boolean;
+  /**
+   * This workflow's rows come from a live JSON endpoint rather than an uploaded
+   * workbook. The run's first step then offers "Fetch from <provider>" (served by
+   * POST /api/http-source) instead of an upload prompt. Upload and the offline
+   * sample stay available as fallbacks — a demo must still work with no network.
+   */
+  apiSource?: {
+    url: string;
+    method?: 'GET' | 'POST';
+    body?: unknown;
+    resultsPath?: string;
+    fieldMap?: Record<string, string>;
+    currency?: string;
+    maxRows?: number;
+    /** Human name of the upstream, e.g. "USAspending.gov". */
+    provider: string;
+    /** What one row is, e.g. "contract awards". */
+    recordLabel: string;
+    /**
+     * When set, the run asks for this connector's BUSINESS parameters (a year, a
+     * currency) instead of fetching a fixed URL — and rebuilds the request from
+     * them. `url`/`body`/`fieldMap` above stay as the defaults the connector
+     * resolves to, so a template reads the same either way and nothing downstream
+     * has to know a connector was involved.
+     *
+     * This is what lets a run started from chat be completed by answering "2024,
+     * EUR" rather than by pasting an endpoint.
+     */
+    connectorId?: string;
+    /** Starting parameter values; anything omitted falls back to the connector's default. */
+    connectorParams?: Record<string, string | number>;
+  };
+  /**
    * Optional deterministic post-compute. Used when the template's calc engine
    * can't reproduce the domain math (e.g. Roulement's params source is
    * under-wired) — the engine still does the real classification + rollup, and
    * this computes the lines/summary/bounds from the aggregated total + params.
    */
-  computeExtra?: (args: { rollup: Record<string, number>; params: Record<string, number>; elected: number | null }) => {
+  computeExtra?: (args: {
+    rollup: Record<string, number>;
+    params: Record<string, number>;
+    elected: number | null;
+    /**
+     * The rows THIS run is actually working on — live-fetched, uploaded, or the
+     * sample. Templates whose math is row-level (a count above a threshold, a
+     * top-N concentration) must read these; closing over the module's sample rows
+     * silently reports sample figures for a live run.
+     */
+    rows: SourceRow[];
+    /** Just the rows the mapper classified (a subset of `rows`). */
+    mapped: MappedRow[];
+  }) => {
     lines: DerivedRow[];
     summary: DerivedRow[];
     boundsMin: number;
@@ -245,6 +297,20 @@ export function runTemplateCore(
 
   const named = asNumberRecord(outputOf(config.rollupBlockId).namedValues);
   const buckets = config.bucketKeys.filter((k) => k in named).map((k) => ({ key: k, value: named[k] }));
+
+  // Rows the mapper couldn't classify are left OUT of every rollup total, so a
+  // worksheet's own figures can silently fail to foot to the source it was built
+  // from — 6 excluded awards worth $2.5bn sat outside the spend review's totals
+  // with no figure naming them. These three keys are always available to a
+  // template so any worksheet can reconcile to what actually arrived:
+  //   SOURCE_TOTAL = UNMATCHED_TOTAL + everything that reached the rollup.
+  const SOURCE_TOTAL = opts.rows.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
+  const UNMATCHED_TOTAL = unmatched.reduce((sum, row) => sum + row.amount, 0);
+  const reconciliation = {
+    SOURCE_TOTAL,
+    UNMATCHED_TOTAL,
+    UNMATCHED_COUNT: unmatched.length,
+  };
   const derive = (rules: CalcRuleLike[], calc: Record<string, number>): DerivedRow[] =>
     rules.filter((r) => r.resultKey in calc).map((r) => ({ key: r.resultKey, label: r.label, value: calc[r.resultKey], formula: r.description }));
 
@@ -254,7 +320,7 @@ export function runTemplateCore(
 
   if (config.computeExtra) {
     // Real classification + rollup from the engine; deterministic domain math here.
-    const ex = config.computeExtra({ rollup: named, params: { ...(config.params ?? {}), ...paramOverrides }, elected: opts.elected ?? null });
+    const ex = config.computeExtra({ rollup: named, params: { ...(config.params ?? {}), ...paramOverrides }, elected: opts.elected ?? null, rows: opts.rows, mapped });
     lines = ex.lines;
     summary = ex.summary;
     bounds = { min: ex.boundsMin, max: ex.boundsMax };
@@ -263,6 +329,11 @@ export function runTemplateCore(
   } else if (config.elect) {
     bounds = { min: lineValues[config.elect.minKey] ?? 0, max: lineValues[config.elect.maxKey] ?? 0 };
   }
+
+  // Published after computeExtra so a template can reference them in its own
+  // rules, but never overwritten by one — reconciliation is the engine's fact.
+  Object.assign(summaryValues, reconciliation);
+  Object.assign(lineValues, reconciliation);
 
   const detail: RunDetail = { sourceRows: opts.rows, mapped, unmatched, buckets, lines, summary };
   const status = run.result.status === 'error' ? 'error' : run.result.status === 'warning' ? 'warning' : 'success';
@@ -295,7 +366,17 @@ const ELECT_CHOICE = '__elect__';
 
 export function runTemplateLoop(config: TemplateConfig, state: RunState): RunOutcome {
   if (!state.uploaded) {
-    return { detail: null, done: false, activeStage: 0, blocker: { kind: 'upload', message: 'This workflow needs its source document before it can classify anything. Upload the workbook (or use the sample) to continue.' } };
+    return {
+      detail: null,
+      done: false,
+      activeStage: 0,
+      blocker: {
+        kind: 'upload',
+        message: config.apiSource
+          ? `This workflow reads its ${config.apiSource.recordLabel} straight from ${config.apiSource.provider} — no upload needed.`
+          : 'This workflow needs its source document before it can classify anything. Upload the workbook (or use the sample) to continue.',
+      },
+    };
   }
 
   // Real uploaded rows (shared with the builder) when present; else the sample.

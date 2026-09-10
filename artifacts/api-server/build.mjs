@@ -10,6 +10,13 @@ globalThis.require = createRequire(import.meta.url);
 
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
 
+// The web app package's source. A handful of server-safe modules live there and
+// are reused verbatim by this api-server (e.g. the Agent Lab's runAgent + its
+// shared tool registry), so we alias `@` to it exactly like the Vite build does
+// (vite.config.ts resolve.alias['@']). esbuild follows the imports and bundles
+// them; the whole reused tree only needs `ai`, `zod`, and `fetch`.
+const webSrc = path.resolve(artifactDir, "..", "ai-workflow-builder", "src");
+
 async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
   await rm(distDir, { recursive: true, force: true });
@@ -22,6 +29,10 @@ async function buildAll() {
     outdir: distDir,
     outExtension: { ".js": ".mjs" },
     logLevel: "info",
+    alias: { "@": webSrc },
+    // Bundle the GenUI system prompt (a pre-generated .txt) into the output as a
+    // string, so /api/genui has no runtime file dependency in the container.
+    loader: { ".txt": "text" },
     // Some packages may not be bundleable, so we externalize them, we can add more here as needed.
     // Some of the packages below may not be imported or installed, but we're adding them in case they are in the future.
     // Examples of unbundleable packages:

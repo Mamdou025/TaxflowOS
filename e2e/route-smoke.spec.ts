@@ -10,12 +10,12 @@
  * require a real resource ID; they are covered by feature-level tests.
  */
 
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from './workflow-audit-isolation';
+import type { Page } from '@playwright/test';
 
 // All static routes declared in artifacts/ai-workflow-builder/src/App.tsx
 const STATIC_ROUTES = [
   '/',
-  '/builder',
   '/workflows',
   '/workflows-hub',
   '/agent',

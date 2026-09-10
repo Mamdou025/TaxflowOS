@@ -94,6 +94,7 @@ services:
       PORT: "5173"                   # the frontend also throws if PORT is unset
       BASE_PATH: /
       API_BASE: http://api:5000      # where server-side code reaches the backend (container network)
+      VITE_USE_POLLING: "1"          # Windows bind mounts drop inotify events → poll so HMR sees host edits (no more manual restarts)
     env_file:
       - .env.local
     ports:

@@ -1,3 +1,9 @@
+import { BlockIOPanel, ConnectionTransferPanel, resultForBlock } from '../workspace/block-io-panel';
+import { IsolatedBlockTest } from '../workspace/isolated-block-test';
+import { TriggerReadinessPanel } from '../config/trigger-readiness-panel';
+import { activeBuilderWorkflowIdAtom } from '@/lib/builder-bridge';
+import { workflowLibraryAtom } from '@/features/workflows-hub/workflow-library';
+import { BlockTestResult } from '../workspace/block-test-result';
 
 
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -112,6 +118,11 @@ import { generateNodeCode } from "@/features/workflow-builder/ui/utils/code-gene
 import { WorkflowRuns } from "@/features/workflow-builder/ui/workflow-runs";
 import { BlockDataFlowColumn } from "@/features/workflow-builder/ui/workspace/block-data-flow-pane";
 import { getLatestLocalRunForBlock } from "@/features/workflow-builder/ui/workspace/latest-local-run";
+import { BlockRunPanel } from "@/features/workflow-builder/ui/workspace/block-run-panel";
+import {
+  getToolIdForBlock,
+  type ToolRunResult,
+} from "@/shared/workflow-engine/local-tool-registry";
 import {
   getWorkspaceGridColumns,
   useWorkspacePaneSizing,
@@ -453,93 +464,6 @@ function WorkspaceRunsTab({
       <div className="flex-1 overflow-y-auto p-4">
         <WorkflowRuns isActive={activeTab === "runs"} onRefreshRef={refreshRunsRef} />
       </div>
-    </div>
-  );
-}
-
-function CollapsibleDataFlow({
-  block,
-  edges,
-  lastRun,
-  nodes,
-  onExecuteStep,
-}: {
-  block: WorkflowBlock;
-  edges: WorkflowEdge[];
-  lastRun?: LocalRunRecord;
-  nodes: WorkflowNode[];
-  onExecuteStep?: () => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [panelHeight, setPanelHeight] = useState(260);
-
-  const onResizePointerDown = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      const startY = e.clientY;
-      const startHeight = panelHeight;
-      const onMove = (ev: PointerEvent) => {
-        const delta = startY - ev.clientY;
-        setPanelHeight(Math.max(160, Math.min(600, startHeight + delta)));
-      };
-      const onUp = () => {
-        window.removeEventListener("pointermove", onMove);
-        window.removeEventListener("pointerup", onUp);
-      };
-      window.addEventListener("pointermove", onMove);
-      window.addEventListener("pointerup", onUp);
-    },
-    [panelHeight]
-  );
-
-  return (
-    <div className="shrink-0 border-t bg-background">
-      <button
-        className="flex w-full items-center gap-2 px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground"
-        onClick={() => setOpen((v) => !v)}
-        type="button"
-      >
-        {open ? (
-          <ChevronDown className="size-3 shrink-0" />
-        ) : (
-          <ChevronRight className="size-3 shrink-0" />
-        )}
-        <span className="font-medium">Connected I/O</span>
-        <span className="ml-auto text-[10px] opacity-60">
-          {open ? "collapse" : "expand"}
-        </span>
-      </button>
-      {open && (
-        <>
-          {/* Drag handle — drag up to make panel taller */}
-          <div
-            className="h-1.5 w-full cursor-ns-resize bg-border/40 transition-colors hover:bg-primary/30 active:bg-primary/40"
-            onPointerDown={onResizePointerDown}
-            title="Drag to resize"
-          />
-          <div className="flex border-t" style={{ height: panelHeight }}>
-            <div className="flex-1 overflow-y-auto border-r">
-              <BlockDataFlowColumn
-                block={block}
-                edges={edges}
-                lastRun={lastRun}
-                nodes={nodes}
-                side="inputs"
-              />
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              <BlockDataFlowColumn
-                block={block}
-                edges={edges}
-                lastRun={lastRun}
-                nodes={nodes}
-                onExecuteStep={onExecuteStep}
-                side="outputs"
-              />
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
 }
@@ -981,15 +905,13 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
     });
   };
 
-  // Determine which tabs to show (only for node view)
-  const showCodeTab = Boolean(
-    selectedNode &&
-      (selectedNode.data.block?.family === "Logic" ||
-        ((selectedNode.data.type !== "trigger" ||
-          (selectedNode.data.config?.triggerType as string) !== "Manual" ||
-          selectedNode.data.config?.fiscalStage) &&
-          selectedNode.data.config?.actionType !== "Condition"))
-  );
+  // The Code tab is gone. It rendered GENERATED code — a plausible-looking
+  // rendering of what a block might do, which is not what the engine executes.
+  // In a product whose whole claim is that a figure can be traced to what actually
+  // ran, a second, non-executing description of a block is worse than no
+  // description: it is the thing a reviewer would reasonably trust. The Runs tab
+  // now answers the same question with the block's REAL output.
+  const showCodeTab = false;
 
   // Get current tab title
   const getTabTitle = () => {
@@ -1162,18 +1084,42 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
   };
 
   const selectedBlock = selectedNode?.data.block;
+  // The ToolRunResult for the block the user just ran — what the Runs tab shows.
+  // The run record kept in executionLogs is per-step UI status, not the tool's
+  // actual output, so the result is taken straight off the runner.
+  const activeDefinitionId = useAtomValue(activeBuilderWorkflowIdAtom);
+  const personalLibrary = useAtomValue(workflowLibraryAtom);
+  const scopedRuns = [...new Map([...(activeDefinitionId ? personalLibrary[activeDefinitionId]?.runs.map(run => run.result.record) ?? [] : []), ...loadLocalRunRecords()]
+    .filter(run => run.execution.workflowId === (activeDefinitionId ?? currentWorkflowId))
+    .map(run => [run.execution.id, run])).values()].sort((a, b) => new Date(b.execution.startedAt).getTime() - new Date(a.execution.startedAt).getTime());
+  const runPicker = scopedRuns.length > 0 ? <label className="block px-4 py-2 text-xs">Inspect run <select aria-label="Inspect run" className="ml-2 rounded border bg-background p-1" value={scopedRuns.some(run => run.execution.id === selectedExecutionId) ? selectedExecutionId! : scopedRuns[0].execution.id} onChange={event => {
+    const record = scopedRuns.find(run => run.execution.id === event.target.value)!;
+    setSelectedExecutionId(record.execution.id);
+    setExecutionLogs(createExecutionLogsMap(record.logs));
+  }}>{scopedRuns.map(run => <option key={run.execution.id} value={run.execution.id}>{new Date(run.execution.startedAt).toLocaleString()} · {run.execution.status}</option>)}</select></label> : null;
+  const [blockRunResult, setBlockRunResult] = useState<ToolRunResult | null>(null);
+  const [showStandaloneTest, setShowStandaloneTest] = useState(false);
+  useEffect(() => { setShowStandaloneTest(false); }, [selectedBlock?.id, activeTab]);
+  useEffect(() => { setBlockRunResult(null); }, [selectedBlock?.id, selectedBlock?.config]);
   const handleExecuteSelectedStep = useCallback(() => {
     if (!(selectedNode && selectedBlock)) {
       return;
     }
 
+    const isRulebook = selectedBlock.family === 'Source' && /rules/.test(String(selectedBlock.config.sourceKind));
+    const consumerId = isRulebook ? edges.find(edge => edge.source === selectedBlock.id && nodes.find(node => node.id === edge.target)?.data.block?.family === 'Logic')?.target : undefined;
+    const testBlockId = consumerId ?? selectedBlock.id;
     const localRun = runLocalWorkflowTools({
       edges,
       mode: "selected",
       nodes,
-      selectedBlockId: selectedBlock.id,
+      selectedBlockId: testBlockId,
+      workflowId: activeDefinitionId ?? undefined,
       workflowName: currentWorkflowName,
     });
+    setBlockRunResult(
+      localRun.result.results.find((r) => r.blockId === testBlockId) ?? null
+    );
     saveLocalRunRecord(localRun.record);
     setSelectedExecutionId(localRun.record.execution.id);
     setExecutionLogs(createExecutionLogsMap(localRun.record.logs));
@@ -1187,7 +1133,9 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
         runId: localRun.record.execution.id,
       })
     );
-    if (localRun.result.status === "success") {
+    if (localRun.result.status === "error") {
+      toast.error(localRun.result.errors[0] ?? 'Block execution failed. Review its inputs and settings.');
+    } else if (localRun.result.status === "success") {
       toast.success("Local step run completed");
     } else {
       toast.warning(
@@ -1196,6 +1144,7 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
     }
   }, [
     currentWorkflowName,
+    activeDefinitionId,
     edges,
     nodes,
     selectedBlock,
@@ -1210,9 +1159,12 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
   if (selectedEdge && !selectedNode) {
     return (
       <div className="flex h-[85vh] flex-col">
-        <SmartOverlayHeader overlayId={overlayId} title="Relationship" />
+        <SmartOverlayHeader overlayId={overlayId} title="Connection details" />
+        {runPicker}
 
         <div className="flex-1 space-y-4 overflow-y-auto px-6 pt-4 pb-6">
+          <ConnectionTransferPanel edge={selectedEdge} source={selectedEdgeSourceNode?.data.block} target={selectedEdgeTargetNode?.data.block} run={getLatestLocalRunForBlock({ blockId: selectedEdge.target, executionLogs, selectedExecutionId, storedRecords: [...(activeDefinitionId ? personalLibrary[activeDefinitionId]?.runs.map(run => run.result.record) ?? [] : []), ...loadLocalRunRecords()], workflowId: activeDefinitionId ?? currentWorkflowId })} />
+          <details><summary className="cursor-pointer text-sm font-medium">Connection settings</summary><div className="mt-3">
           <EdgeInspector
             disabled={isGenerating || !isOwner}
             edge={selectedEdge}
@@ -1224,6 +1176,7 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
             sourceBlock={selectedEdgeSourceNode?.data.block}
             targetBlock={selectedEdgeTargetNode?.data.block}
           />
+          </div></details>
         </div>
       </div>
     );
@@ -1231,11 +1184,10 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
 
   // If no node is selected, show workflow-level configuration
   if (!selectedNode) {
-    // For workflow view, only properties, code, and runs (if owner) are valid tabs
+    // Workflow view: properties, and runs (if owner). The Code tab was removed —
+    // see showCodeTab.
     const validWorkflowTab =
-      activeTab === "properties" ||
-      activeTab === "code" ||
-      (activeTab === "runs" && isOwner)
+      activeTab === "properties" || (activeTab === "runs" && isOwner)
         ? activeTab
         : "properties";
 
@@ -1286,42 +1238,6 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
             </div>
           )}
 
-          {validWorkflowTab === "code" && (
-            <div className="flex flex-col">
-              <div className="flex shrink-0 items-center justify-between border-b bg-muted/30 px-3 py-2">
-                <div className="flex items-center gap-2">
-                  <FileCode className="size-3.5 text-muted-foreground" />
-                  <code className="text-muted-foreground text-xs">
-                    workflow.ts
-                  </code>
-                </div>
-                <Button
-                  className="h-7 text-xs"
-                  onClick={handleCopyWorkflowCode}
-                  size="sm"
-                  variant="ghost"
-                >
-                  <Copy className="mr-1 size-3" />
-                  Copy
-                </Button>
-              </div>
-              <div className="h-[400px]">
-                <CodeEditor
-                  defaultLanguage="typescript"
-                  height="100%"
-                  options={{
-                    readOnly: true,
-                    minimap: { enabled: false },
-                    lineNumbers: "on",
-                    scrollBeyondLastLine: false,
-                    fontSize: 12,
-                    wordWrap: "on",
-                  }}
-                  value={workflowCode}
-                />
-              </div>
-            </div>
-          )}
 
           {validWorkflowTab === "runs" && isOwner && (
             <div className="flex h-full flex-col">
@@ -1370,18 +1286,6 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
             <Settings2 className="size-5" />
             Workflow
           </button>
-          <button
-            className={`flex flex-1 flex-col items-center gap-1 py-3 font-medium text-xs transition-colors ${
-              validWorkflowTab === "code"
-                ? "text-foreground"
-                : "text-muted-foreground"
-            }`}
-            onClick={() => setActiveTab("code")}
-            type="button"
-          >
-            <Code className="size-5" />
-            Code
-          </button>
           {isOwner && (
             <button
               className={`flex flex-1 flex-col items-center gap-1 py-3 font-medium text-xs transition-colors ${
@@ -1428,8 +1332,6 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
     selectedNode.data.block?.governance?.requiresUnlockToEdit &&
       !selectedNode.data.config?.protectedEditIntent
   );
-  const identityFieldsDisabled =
-    isGenerating || !isOwner || sourceEvidenceLocked || protectedNeedsUnlock;
   const showDataFlowWorkspace = Boolean(
     selectedBlock && !selectedNode.data.config?.blockCandidate
   );
@@ -1438,8 +1340,8 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
         blockId: selectedBlock.id,
         executionLogs,
         selectedExecutionId,
-        storedRecords: loadLocalRunRecords(),
-        workflowId: currentWorkflowId,
+        storedRecords: [...(activeDefinitionId ? personalLibrary[activeDefinitionId]?.runs.slice().reverse().map(run => run.result.record) ?? [] : []), ...loadLocalRunRecords()],
+        workflowId: activeDefinitionId ?? currentWorkflowId,
       })
     : undefined;
   const latestRunOutputsByBlockId = getRunOutputsByBlockId(
@@ -1469,6 +1371,15 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
           sourceHasLockableEvidence &&
           (sourceUsedInRun || selectedBlock.config.sourceUsedInRun === true)))
   );
+  // Evidence immutability only bites once the source is COMMITTED. Every source is
+  // stamped immutable at creation, so requiring `sourceEvidenceLocked` alone froze
+  // brand-new draft blocks — a Manual Entry arrived with its label, description and
+  // whole config greyed out, before it held any evidence to protect.
+  const identityFieldsDisabled =
+    isGenerating ||
+    !isOwner ||
+    (sourceEvidenceLocked && sourceLocked) ||
+    protectedNeedsUnlock;
   const handleCreateRulebookItem = () => {
     if (selectedBlockIsCalculationRuleSource) {
       setSelectedRulebookItemId(NEW_CALCULATION_RULE_ID);
@@ -1524,7 +1435,9 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
         <RuleSourceViewer
           config={selectedBlock.config || {}}
           disabled={isGenerating || !isOwner || sourceLocked}
-          onCreateItem={isOwner && !sourceLocked ? handleCreateRulebookItem : undefined}
+          onCreateItem={
+            isOwner && !sourceLocked ? handleCreateRulebookItem : undefined
+          }
           onSelectItem={setSelectedRulebookItemId}
           selectedItemId={selectedRulebookItemId}
         />
@@ -1559,8 +1472,37 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
         title={showDataFlowWorkspace ? "Block workspace" : getTabTitle()}
       />
 
+      {selectedBlock && (
+        <div className="shrink-0 border-b px-4 py-2">
+          <button
+            type="button"
+            className="rounded bg-primary px-3 py-1.5 text-sm text-primary-foreground disabled:opacity-50"
+            disabled={isGenerating || !isOwner}
+            onClick={() => setShowStandaloneTest(true)}
+          >
+            Test block
+          </button>
+          <button type="button" className="ml-2 rounded border px-3 py-1.5 text-sm disabled:opacity-50" disabled={isGenerating || !isOwner} onClick={() => { setShowStandaloneTest(false); handleExecuteSelectedStep(); setActiveTab("data"); }}>Test with upstream blocks</button>
+          <span className="ml-3 text-xs text-muted-foreground">
+            Test this block alone, or run the blocks supplying its inputs.
+          </span>
+
+        </div>
+      )}
       {/* Content based on active tab */}
-      {selectedBlockIsRuleSource &&
+      {!showStandaloneTest && activeTab === "data" && runPicker}
+      {showStandaloneTest && selectedBlock ? (
+        <IsolatedBlockTest key={selectedBlock.id} block={selectedBlock} nodes={nodes} edges={edges} records={scopedRuns} workflowId={activeDefinitionId ?? currentWorkflowId ?? undefined} workflowName={currentWorkflowName} disabled={isGenerating || !isOwner} onResult={localRun => {
+          setBlockRunResult(localRun.result.results[0] ?? null);
+          saveLocalRunRecord(localRun.record);
+          setSelectedExecutionId(localRun.record.execution.id);
+          setExecutionLogs(createExecutionLogsMap(localRun.record.logs));
+        }} />
+      ) : activeTab === "data" && selectedBlock ? (
+        <BlockIOPanel block={selectedBlock} edges={edges} nodes={nodes} run={latestSelectedBlockRun} testResult={blockRunResult} />
+      ) : activeTab === "runs" && isOwner ? (
+        <WorkspaceRunsTab activeTab={activeTab} isRefreshing={isRefreshing} onDeleteAll={handleDeleteAllRuns} onRefresh={handleRefreshRuns} refreshRunsRef={refreshRunsRef} />
+      ) : selectedBlockIsRuleSource &&
       !selectedBlockIsAggregationRuleSource &&
       !selectedBlockIsCalculationRuleSource &&
       selectedBlock ? (
@@ -1638,6 +1580,21 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
               lastRunOutput={latestRunOutputsByBlockId}
               nodes={nodes}
               onConfigPatch={handlePatchSelectedBlockConfig}
+              onRuleConfigPatch={(id, patch) => {
+                const node = nodes.find((node) => node.id === id);
+                if (!node?.data.block) return;
+                const config = {
+                  ...node.data.block.config,
+                  ...patch,
+                  sourceStatus: "draft",
+                  sourceUsedInRun: false,
+                };
+                updateNodeData({
+                  id,
+                  data: { config, block: { ...node.data.block, config } },
+                });
+                setHasUnsavedChanges(true);
+              }}
               onExecuteStep={handleExecuteSelectedStep}
               onSelectedTermIdChange={setSelectedCalculationTermId}
               selectedTermId={selectedCalculationTermId}
@@ -1652,7 +1609,9 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
           nodes={nodes}
           onExecuteStep={handleExecuteSelectedStep}
         />
-      ) : selectedBlock && (isAggregatorLogicBlock(selectedBlock) || isKeywordMapperBlock(selectedBlock)) ? (
+      ) : selectedBlock &&
+        (isAggregatorLogicBlock(selectedBlock) ||
+          isKeywordMapperBlock(selectedBlock)) ? (
         // Rollup / Aggregation group — inline rules save to block config; connected rulebook overrides
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {activeTab === "runs" && isOwner ? (
@@ -1691,298 +1650,314 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
       ) : (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="min-h-0 flex-1 overflow-y-auto">
-          {activeTab === "properties" && (
-            <div className="space-y-4 px-6 pt-4 pb-6">
-              {/* Action selection */}
-              {selectedNode.data.type === "action" &&
-                !selectedNode.data.config?.actionType &&
-                !selectedNode.data.visualLevel &&
-                isOwner && (
-                  <ActionGrid
-                    disabled={isGenerating}
-                    isNewlyCreated={selectedNode?.id === newlyCreatedNodeId}
-                    onSelectAction={(actionType) => {
-                      if (actionType.startsWith("preset:")) {
-                        handleApplyVisualPreset(actionType);
+            {activeTab === "properties" && (
+              <div className="space-y-4 px-6 pt-4 pb-6">
+                {/* Action selection */}
+                {selectedNode.data.type === "action" &&
+                  !selectedNode.data.config?.actionType &&
+                  !selectedNode.data.visualLevel &&
+                  isOwner && (
+                    <ActionGrid
+                      disabled={isGenerating}
+                      isNewlyCreated={selectedNode?.id === newlyCreatedNodeId}
+                      onSelectAction={(actionType) => {
+                        if (actionType.startsWith("preset:")) {
+                          handleApplyVisualPreset(actionType);
+                          if (selectedNode?.id === newlyCreatedNodeId) {
+                            setNewlyCreatedNodeId(null);
+                          }
+                          return;
+                        }
+
+                        if (getBlockCatalogItem(actionType)) {
+                          handleApplyBlockCatalogItem(actionType);
+                          if (selectedNode?.id === newlyCreatedNodeId) {
+                            setNewlyCreatedNodeId(null);
+                          }
+                          return;
+                        }
+
+                        handleUpdateConfig("actionType", actionType);
                         if (selectedNode?.id === newlyCreatedNodeId) {
                           setNewlyCreatedNodeId(null);
                         }
-                        return;
-                      }
+                      }}
+                    />
+                  )}
 
-                      if (getBlockCatalogItem(actionType)) {
-                        handleApplyBlockCatalogItem(actionType);
-                        if (selectedNode?.id === newlyCreatedNodeId) {
-                          setNewlyCreatedNodeId(null);
-                        }
-                        return;
-                      }
+                {selectedNode.data.type === "trigger" && (
+                  <>
+                  <TriggerConfig
+                    config={selectedNode.data.config || {}}
+                    disabled={isGenerating || !isOwner}
+                    onUpdateConfig={handleUpdateConfig}
+                    workflowId={currentWorkflowId ?? undefined}
+                  />
+                  <TriggerReadinessPanel config={selectedBlock?.config ?? selectedNode.data.config ?? {}} blocks={nodes.flatMap(node => node.data.block ? [node.data.block] : [])} outputs={Object.fromEntries(nodes.flatMap(node => {
+                    const result = resultForBlock(latestSelectedBlockRun, node.id);
+                    return result?.configSignature === JSON.stringify(node.data.block?.config) ? [[node.id, result.output]] : [];
+                  }))} disabled={isGenerating || !isOwner} onChange={conditions => handlePatchSelectedBlockConfig({ readinessConditions: conditions })} />
+                  </>
+                )}
 
-                      handleUpdateConfig("actionType", actionType);
-                      if (selectedNode?.id === newlyCreatedNodeId) {
-                        setNewlyCreatedNodeId(null);
-                      }
+                {selectedBlock?.family === "Source" && (
+                  <SourceSetupPanel
+                    block={selectedBlock}
+                    config={
+                      selectedBlock.config || selectedNode.data.config || {}
+                    }
+                    disabled={isGenerating || !isOwner}
+                    onConfigPatch={handlePatchSelectedBlockConfig}
+                    onCreateSourceVersion={handleCreateSourceVersion}
+                    onSelectedRulebookItemChange={setSelectedRulebookItemId}
+                    selectedRulebookItemId={selectedRulebookItemId}
+                    showRulebookOverview={!selectedBlockIsRuleSource}
+                    sourceLocked={sourceLocked}
+                    sourceUsedInRun={sourceUsedInRun}
+                    sourceVersion={sourceVersion}
+                  />
+                )}
+
+                {selectedBlock && isKeywordMapperBlock(selectedBlock) && (
+                  <KeywordMapperRulesPanel
+                    block={selectedBlock}
+                    edges={edges}
+                    nodes={nodes}
+                    onOpenRuleSource={(nodeId) => {
+                      setSelectedNodeId(nodeId);
+                      setActiveTab("properties");
                     }}
                   />
                 )}
 
-              {selectedNode.data.type === "trigger" && (
-                <TriggerConfig
-                  config={selectedNode.data.config || {}}
-                  disabled={isGenerating || !isOwner}
-                  onUpdateConfig={handleUpdateConfig}
-                  workflowId={currentWorkflowId ?? undefined}
-                />
-              )}
-
-              {selectedBlock?.family === "Source" && (
-                <SourceSetupPanel
-                  block={selectedBlock}
-                  config={
-                    selectedBlock.config || selectedNode.data.config || {}
-                  }
-                  disabled={isGenerating || !isOwner}
-                  onConfigPatch={handlePatchSelectedBlockConfig}
-                  onCreateSourceVersion={handleCreateSourceVersion}
-                  onSelectedRulebookItemChange={setSelectedRulebookItemId}
-                  selectedRulebookItemId={selectedRulebookItemId}
-                  showRulebookOverview={!selectedBlockIsRuleSource}
-                  sourceLocked={sourceLocked}
-                  sourceUsedInRun={sourceUsedInRun}
-                  sourceVersion={sourceVersion}
-                />
-              )}
-
-              {selectedBlock && isKeywordMapperBlock(selectedBlock) && (
-                <KeywordMapperRulesPanel
-                  block={selectedBlock}
-                  edges={edges}
-                  nodes={nodes}
-                  onOpenRuleSource={(nodeId) => {
-                    setSelectedNodeId(nodeId);
-                    setActiveTab("properties");
-                  }}
-                />
-              )}
-
-              {selectedBlock && isHierarchyAggregatorBlock(selectedBlock) && (
-                <HierarchyAggregatorPanel
-                  block={selectedBlock}
-                  edges={edges}
-                  lastRun={latestSelectedBlockRun}
-                  nodes={nodes}
-                  onOpenRuleSource={(nodeId) => {
-                    setSelectedNodeId(nodeId);
-                    setActiveTab("properties");
-                  }}
-                />
-              )}
-
-              {selectedBlock && isCalculationEngineBlock(selectedBlock) && (
-                <CalculationEngineModeSection
-                  block={selectedBlock}
-                  createTermRequest={calculationTermCreateRequest}
-                  disabled={isGenerating || !isOwner}
-                  edges={edges}
-                  insertRequest={calculationInsertRequest}
-                  lastRunOutput={latestRunOutputsByBlockId}
-                  nodes={nodes}
-                  onSelectedTermIdChange={setSelectedCalculationTermId}
-                  onUpdateConfig={(key, value) =>
-                    handlePatchSelectedBlockConfig({ [key]: value })
-                  }
-                  selectedTermId={selectedCalculationTermId}
-                />
-              )}
-
-              {selectedNode.data.type === "action" &&
-                selectedNode.data.config?.actionType !== undefined && (
-                  <ActionConfig
-                    config={selectedNode.data.config || {}}
-                    disabled={isGenerating || !isOwner}
-                    isOwner={isOwner}
-                    onUpdateConfig={handleUpdateConfig}
+                {selectedBlock && isHierarchyAggregatorBlock(selectedBlock) && (
+                  <HierarchyAggregatorPanel
+                    block={selectedBlock}
+                    edges={edges}
+                    lastRun={latestSelectedBlockRun}
+                    nodes={nodes}
+                    onOpenRuleSource={(nodeId) => {
+                      setSelectedNodeId(nodeId);
+                      setActiveTab("properties");
+                    }}
                   />
                 )}
 
-              {(selectedNode.data.config?.fiscalStage ||
-                (!selectedNode.data.config?.actionType &&
-                  selectedNode.data.visualRole)) &&
-                !usesFocusedLogicWorkspace(selectedBlock) && (
-                  <FiscalBlockConfig
-                    config={selectedNode.data.config || {}}
+                {selectedBlock && isCalculationEngineBlock(selectedBlock) && (
+                  <CalculationEngineModeSection
+                    block={selectedBlock}
+                    createTermRequest={calculationTermCreateRequest}
                     disabled={isGenerating || !isOwner}
-                    onUpdateConfig={handleUpdateConfig}
-                    onUpdateStage={handleUpdateFiscalStage}
-                    visualRole={selectedNode.data.visualRole}
+                    edges={edges}
+                    insertRequest={calculationInsertRequest}
+                    lastRunOutput={latestRunOutputsByBlockId}
+                    nodes={nodes}
+                    onSelectedTermIdChange={setSelectedCalculationTermId}
+                    onUpdateConfig={(key, value) =>
+                      handlePatchSelectedBlockConfig({ [key]: value })
+                    }
+                    selectedTermId={selectedCalculationTermId}
                   />
                 )}
 
-              {/* Label & Description */}
-              {(selectedNode.data.type !== "action" ||
-                selectedNode.data.config?.actionType !== undefined ||
-                selectedNode.data.visualLevel) && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="label">Label</Label>
-                    <Input
-                      disabled={identityFieldsDisabled}
-                      id="label"
-                      onChange={(e) => handleUpdateLabel(e.target.value)}
-                      value={selectedNode.data.label as string}
+                {selectedNode.data.type === "action" &&
+                  selectedNode.data.config?.actionType !== undefined && (
+                    <ActionConfig
+                      config={selectedNode.data.config || {}}
+                      disabled={isGenerating || !isOwner}
+                      isOwner={isOwner}
+                      onUpdateConfig={handleUpdateConfig}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Input
-                      disabled={identityFieldsDisabled}
-                      id="description"
-                      onChange={(e) => handleUpdateDescription(e.target.value)}
-                      placeholder="Optional description"
-                      value={(selectedNode.data.description as string) || ""}
-                    />
-                  </div>
-                </>
-              )}
+                  )}
 
-              {/* Actions */}
-              {isOwner && (
-                <div className="flex items-center gap-2 pt-2">
-                  {selectedNode.data.type === "action" && (
+                {(selectedNode.data.config?.fiscalStage ||
+                  (!selectedNode.data.config?.actionType &&
+                    selectedNode.data.visualRole)) &&
+                  !usesFocusedLogicWorkspace(selectedBlock) && (
+                    <FiscalBlockConfig
+                      config={selectedNode.data.config || {}}
+                      disabled={isGenerating || !isOwner}
+                      locked={sourceLocked || protectedNeedsUnlock}
+                      onUpdateConfig={handleUpdateConfig}
+                      onUpdateStage={handleUpdateFiscalStage}
+                      visualRole={selectedNode.data.visualRole}
+                    />
+                  )}
+
+                {/* Label & Description */}
+                {(selectedNode.data.type !== "action" ||
+                  selectedNode.data.config?.actionType !== undefined ||
+                  selectedNode.data.visualLevel) && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="label">Label</Label>
+                      <Input
+                        disabled={identityFieldsDisabled}
+                        id="label"
+                        onChange={(e) => handleUpdateLabel(e.target.value)}
+                        value={selectedNode.data.label as string}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description</Label>
+                      <Input
+                        disabled={identityFieldsDisabled}
+                        id="description"
+                        onChange={(e) =>
+                          handleUpdateDescription(e.target.value)
+                        }
+                        placeholder="Optional description"
+                        value={(selectedNode.data.description as string) || ""}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Actions */}
+                {isOwner && (
+                  <div className="flex items-center gap-2 pt-2">
+                    {selectedNode.data.type === "action" && (
+                      <Button
+                        className="text-muted-foreground"
+                        onClick={handleToggleEnabled}
+                        size="sm"
+                        variant="ghost"
+                      >
+                        {selectedNode.data.enabled === false ? (
+                          <>
+                            <EyeOff className="mr-2 size-4" />
+                            Disabled
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="mr-2 size-4" />
+                            Enabled
+                          </>
+                        )}
+                      </Button>
+                    )}
                     <Button
                       className="text-muted-foreground"
-                      onClick={handleToggleEnabled}
+                      onClick={handleDeleteNode}
                       size="sm"
                       variant="ghost"
                     >
-                      {selectedNode.data.enabled === false ? (
-                        <>
-                          <EyeOff className="mr-2 size-4" />
-                          Disabled
-                        </>
-                      ) : (
-                        <>
-                          <Eye className="mr-2 size-4" />
-                          Enabled
-                        </>
-                      )}
+                      <Trash2 className="mr-2 size-4" />
+                      Delete
                     </Button>
-                  )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Preload Code tab - always render but hide when not active */}
+        {showCodeTab && (
+              <div
+                className={`flex flex-col ${activeTab === "code" ? "" : "-z-10 invisible absolute"}`}
+              >
+                {showDataFlowWorkspace && selectedBlock ? (
+                  <BlockGeneratedCodeTab
+                    block={selectedBlock}
+                    edges={edges}
+                    nodes={nodes}
+                  />
+                ) : (
+                  <>
+                    <div className="flex shrink-0 items-center justify-between border-b bg-muted/30 px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <FileCode className="size-3.5 text-muted-foreground" />
+                        <code className="text-muted-foreground text-xs">
+                          {getCodeFilename(selectedNode)}
+                        </code>
+                      </div>
+                      <Button
+                        className="text-muted-foreground"
+                        onClick={handleCopyCode}
+                        size="sm"
+                        variant="ghost"
+                      >
+                        <Copy className="mr-2 size-4" />
+                        Copy
+                      </Button>
+                    </div>
+                    <div className="h-[400px]">
+                      <CodeEditor
+                        height="100%"
+                        language={
+                          selectedNode.data.type === "trigger" &&
+                          (selectedNode.data.config?.triggerType as string) ===
+                            "Schedule"
+                            ? "json"
+                            : "typescript"
+                        }
+                        options={{
+                          readOnly: true,
+                          minimap: { enabled: false },
+                          scrollBeyondLastLine: false,
+                          fontSize: 13,
+                          lineNumbers: "on",
+                          folding: false,
+                          wordWrap: "off",
+                          padding: { top: 16, bottom: 16 },
+                        }}
+                        value={generateNodeCode(selectedNode)}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {activeTab === "runs" && isOwner && (
+              <div className="flex h-full flex-col">
+                {/* THIS block's own run comes first — "what does this block do?" is
+                  the question the tab is opened with. The workflow's run history
+                  stays available underneath. */}
+                {selectedBlock && (
+                  <BlockRunPanel
+                    block={selectedBlock}
+                    disabled={isGenerating || !isOwner}
+                    lastRun={blockRunResult}
+                    onRun={handleExecuteSelectedStep}
+                    toolId={getToolIdForBlock(selectedBlock)}
+                  />
+                )}
+                <div className="flex shrink-0 items-center gap-2 border-t border-b px-4 py-2">
+                  <span className="mr-auto font-medium text-muted-foreground text-xs">
+                    Workflow run history
+                  </span>
                   <Button
                     className="text-muted-foreground"
-                    onClick={handleDeleteNode}
+                    disabled={isRefreshing}
+                    onClick={handleRefreshRuns}
                     size="sm"
                     variant="ghost"
                   >
-                    <Trash2 className="mr-2 size-4" />
-                    Delete
+                    <RefreshCw
+                      className={`mr-2 size-4 ${isRefreshing ? "animate-spin" : ""}`}
+                    />
+                    Refresh
+                  </Button>
+                  <Button
+                    className="text-muted-foreground"
+                    onClick={handleDeleteAllRuns}
+                    size="sm"
+                    variant="ghost"
+                  >
+                    <Eraser className="mr-2 size-4" />
+                    Clear All
                   </Button>
                 </div>
-              )}
-            </div>
-          )}
-
-          {/* Preload Code tab - always render but hide when not active */}
-          {showCodeTab && (
-            <div
-              className={`flex flex-col ${activeTab === "code" ? "" : "-z-10 invisible absolute"}`}
-            >
-              {showDataFlowWorkspace && selectedBlock ? (
-                <BlockGeneratedCodeTab
-                  block={selectedBlock}
-                  edges={edges}
-                  nodes={nodes}
-                />
-              ) : (
-                <>
-                  <div className="flex shrink-0 items-center justify-between border-b bg-muted/30 px-3 py-2">
-                    <div className="flex items-center gap-2">
-                      <FileCode className="size-3.5 text-muted-foreground" />
-                      <code className="text-muted-foreground text-xs">
-                        {getCodeFilename(selectedNode)}
-                      </code>
-                    </div>
-                    <Button
-                      className="text-muted-foreground"
-                      onClick={handleCopyCode}
-                      size="sm"
-                      variant="ghost"
-                    >
-                      <Copy className="mr-2 size-4" />
-                      Copy
-                    </Button>
-                  </div>
-                  <div className="h-[400px]">
-                    <CodeEditor
-                      height="100%"
-                      language={
-                        selectedNode.data.type === "trigger" &&
-                        (selectedNode.data.config?.triggerType as string) ===
-                          "Schedule"
-                          ? "json"
-                          : "typescript"
-                      }
-                      options={{
-                        readOnly: true,
-                        minimap: { enabled: false },
-                        scrollBeyondLastLine: false,
-                        fontSize: 13,
-                        lineNumbers: "on",
-                        folding: false,
-                        wordWrap: "off",
-                        padding: { top: 16, bottom: 16 },
-                      }}
-                      value={generateNodeCode(selectedNode)}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {activeTab === "runs" && isOwner && (
-            <div className="flex h-full flex-col">
-              <div className="flex shrink-0 items-center gap-2 border-b px-4 py-2">
-                <Button
-                  className="text-muted-foreground"
-                  disabled={isRefreshing}
-                  onClick={handleRefreshRuns}
-                  size="sm"
-                  variant="ghost"
-                >
-                  <RefreshCw
-                    className={`mr-2 size-4 ${isRefreshing ? "animate-spin" : ""}`}
+                <div className="max-h-64 shrink-0 overflow-y-auto p-4">
+                  <WorkflowRuns
+                    isActive={activeTab === "runs"}
+                    onRefreshRef={refreshRunsRef}
                   />
-                  Refresh
-                </Button>
-                <Button
-                  className="text-muted-foreground"
-                  onClick={handleDeleteAllRuns}
-                  size="sm"
-                  variant="ghost"
-                >
-                  <Eraser className="mr-2 size-4" />
-                  Clear All
-                </Button>
+                </div>
               </div>
-              <div className="flex-1 overflow-y-auto p-4">
-                <WorkflowRuns
-                  isActive={activeTab === "runs"}
-                  onRefreshRef={refreshRunsRef}
-                />
-              </div>
-            </div>
-          )}
+            )}
           </div>
-          {selectedBlock && (
-            <CollapsibleDataFlow
-              block={selectedBlock}
-              edges={edges}
-              lastRun={latestSelectedBlockRun}
-              nodes={nodes}
-              onExecuteStep={handleExecuteSelectedStep}
-            />
-          )}
+
         </div>
       )}
 
@@ -2000,6 +1975,7 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
           <Settings2 className="size-5" />
           Properties
         </button>
+        {selectedBlock && <button type="button" className={`flex flex-1 flex-col items-center gap-1 py-3 font-medium text-xs ${activeTab === "data" ? "text-foreground" : "text-muted-foreground"}`} onClick={() => setActiveTab("data")}><span className="text-lg" aria-hidden="true">I/O</span>Input &amp; Output</button>}
         {showCodeTab && (
           <button
             className={`flex flex-1 flex-col items-center gap-1 py-3 font-medium text-xs transition-colors ${

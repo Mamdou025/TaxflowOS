@@ -212,9 +212,10 @@ function manualRowFromRecord(
   index: number
 ): ManualTableRow {
   return {
+    ...rowRecord,
     account:
       typeof rowRecord.account === "string" ? rowRecord.account : undefined,
-    amount: parseNumber(rowRecord.amount) ?? parseNumber(rowRecord.value) ?? 0,
+    amount: parseNumber(rowRecord.amount) ?? parseNumber(rowRecord.value) ?? Number.NaN,
     currency:
       typeof rowRecord.currency === "string" ? rowRecord.currency : undefined,
     description:

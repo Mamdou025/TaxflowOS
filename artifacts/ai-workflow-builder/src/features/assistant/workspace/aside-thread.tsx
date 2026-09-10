@@ -19,6 +19,7 @@ import { CoworkerAvatar } from '@/features/assistant/ui/coworker-avatar';
 import { coworkerForMessage, WORKSPACE_ASSISTANT, SINA, type Coworker } from '@/lib/coworkers';
 import { MessageSpecialistContext } from '@/features/assistant/ui/message-specialists';
 import { detectComposerIntent } from '@/lib/composer-intent';
+import { formatArmedMessage } from '@/features/assistant/ui/runnable-tools';
 
 // Accent + the reference's soft focus ring (rgba of --is-accent-ring). The composer
 // bar mirrors the tax-workspace-UI reference: a plain raised pill that lifts a soft
@@ -28,11 +29,15 @@ const FOCUS_RING = 'rgba(124,110,174,0.28)';
 
 // ── Composer command palette ──────────────────────────────────────────────────
 export type ComposerSuggestion = { key: string; title: string; sub: string; kind: string; dim?: boolean; icon?: ReactNode; run: () => void };
+/** A search tool "armed" from the Tools menu — the next message routes to it. */
+export type ArmedComposerTool = { name: string; label: string };
 export const AsideComposerContext = createContext<{
   search?: (q: string) => ComposerSuggestion[];
   tools?: ComposerSuggestion[];
   commands?: ComposerSuggestion[]; // pickable "build functions" — shown when the text starts with "@"
   onAttach?: (files: File[]) => Promise<string>;
+  armedTool?: ArmedComposerTool | null; // tool armed via the Tools menu "Use in chat"
+  setArmedTool?: (t: ArmedComposerTool | null) => void;
 } | null>(null);
 
 type ComposerMode = 'ask' | 'search';
@@ -120,15 +125,18 @@ export function AsideInput(props: {
   const busy = !!props.inProgress;
   const ready = (!!text.trim() || files.length > 0) && !busy && !attaching;
 
-  // Live PREVIEW of what Scope will do (advisory — see lib/composer-intent). Only
-  // in Ask mode and never for the "@" command palette or Search mode.
-  const intent = mode === 'ask' && !text.startsWith('@') ? detectComposerIntent(text) : null;
+  const ctx = useContext(AsideComposerContext);
+  // A search tool armed from the Tools menu ("Use in chat") — the next message routes
+  // to it (its query is templated in send()). A chip above the composer shows which.
+  const armedTool = ctx?.armedTool ?? null;
+
+  // Live PREVIEW of what Scope will do (advisory — see lib/composer-intent). Only in
+  // Ask mode, never for the "@" command palette, Search mode, or when a tool is armed.
+  const intent = mode === 'ask' && !armedTool && !text.startsWith('@') ? detectComposerIntent(text) : null;
   const isAction = !!intent && intent.action !== 'answer';
   const runCoworker = intent?.action === 'run' && intent.workflowId ? SINA : null;
   const VerbIcon = intent?.action === 'run' ? Play : intent?.action === 'open' ? ExternalLink : Sparkles;
   const showAction = ready && isAction;
-
-  const ctx = useContext(AsideComposerContext);
   // "@" opens the command menu (pick a build function by name); otherwise the
   // typed text searches the workspace. Both feed one `palette` for keyboard nav.
   const commandMode = text.startsWith('@');
@@ -150,7 +158,11 @@ export function AsideInput(props: {
       setAttaching(true);
       try { note = await ctx.onAttach(pending); } finally { setAttaching(false); }
     }
-    props.onSend?.([t, note].filter(Boolean).join('\n\n'));
+    // An armed tool templates the typed query into a message that routes to it (e.g.
+    // "Search the web for: …"), then disarms so the next message is a normal one.
+    const body = armedTool ? formatArmedMessage(armedTool.name, t) : t;
+    if (armedTool) ctx?.setArmedTool?.(null);
+    props.onSend?.([body, note].filter(Boolean).join('\n\n'));
     ref.current?.focus();
   };
   const pick = (s: ComposerSuggestion) => { setText(''); setActive(-1); setShowTools(false); s.run(); ref.current?.focus(); };
@@ -167,10 +179,16 @@ export function AsideInput(props: {
       else if (showPalette && (commandMode || mode === 'search')) pick(palette[0]);
       else send();
     }
-    if (e.key === 'Escape') { setActive(-1); setShowTools(false); }
+    if (e.key === 'Escape') { setActive(-1); setShowTools(false); if (armedTool) ctx?.setArmedTool?.(null); }
   };
 
-  const addFiles = (list: FileList | null) => { if (list?.length) setFiles((prev) => [...prev, ...Array.from(list)]); };
+  // Snapshot into a plain File[] at call time. The caller resets the <input>'s
+  // value right after picking (so re-selecting the same file fires onChange again),
+  // which EMPTIES the live FileList. If we deferred `Array.from(list)` into the
+  // setState updater it would read that now-empty list and silently drop the file
+  // (symptom: attach a file, no chip appears). Materialising to an array up-front,
+  // synchronously, makes the reset order irrelevant.
+  const addFiles = (list: File[]) => { if (list.length) setFiles((prev) => [...prev, ...list]); };
 
   useEffect(() => {
     const el = ref.current;
@@ -278,7 +296,25 @@ export function AsideInput(props: {
           .lc-ribbon { animation: lc-rise 240ms cubic-bezier(0.23,1,0.32,1) both; }
           @keyframes lc-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
           @media (prefers-reduced-motion: reduce) { .lc-ribbon { animation: none; } }
+          .lc-spin { animation: lc-spin 0.7s linear infinite; }
+          @keyframes lc-spin { to { transform: rotate(360deg); } }
         `}</style>
+
+        {/* Armed-tool chip — the "tooltip at the top" telling you which tool your next
+            message will run. Rises above the pill; ✕ (or Esc) disarms. */}
+        {armedTool && (
+          <div className="lc-ribbon" style={{ display: 'flex', alignItems: 'center', gap: 9, margin: '0 8px 12px', padding: '8px 12px', background: LC.surface, boxShadow: LC.shadowSm, borderRadius: 14 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: ACCENT, flexShrink: 0 }}>
+              <Sparkles size={14} /> {armedTool.label}
+            </span>
+            <span style={{ fontSize: 12, color: LC.muted, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              Your next message runs this tool
+            </span>
+            <button onClick={() => ctx?.setArmedTool?.(null)} aria-label="Cancel armed tool" title="Cancel (Esc)" style={{ display: 'flex', border: 'none', background: 'none', color: LC.muted, cursor: 'pointer', padding: 2, flexShrink: 0 }}>
+              <X size={14} />
+            </button>
+          </div>
+        )}
 
         {/* Intent ribbon — rises ABOVE the pill when an action is detected */}
         {isAction && intent && (
@@ -318,7 +354,7 @@ export function AsideInput(props: {
             padding: '15px 16px 12px', transition: 'box-shadow 200ms cubic-bezier(0.23,1,0.32,1)',
           }}
         >
-          <input ref={fileRef} type="file" multiple style={{ display: 'none' }} onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
+          <input ref={fileRef} type="file" multiple style={{ display: 'none' }} onChange={(e) => { const picked = Array.from(e.target.files ?? []); e.target.value = ''; addFiles(picked); }} />
 
           <textarea
             ref={ref}
@@ -326,14 +362,19 @@ export function AsideInput(props: {
             onChange={(e) => setText(e.target.value)}
             onKeyDown={onKeyDown}
             rows={1}
-            placeholder={mode === 'search' ? 'Search worksheets, workflows, agents…' : 'Ask Scope, or describe a task…'}
+            placeholder={armedTool ? `${armedTool.label} — type your query…` : mode === 'search' ? 'Search worksheets, workflows, agents…' : 'Ask Scope, or describe a task…'}
             className="lc-textarea"
             style={{ width: '100%', minWidth: 0, display: 'block', resize: 'none', fontSize: 16, color: LC.text, background: 'transparent', outline: 'none', border: 'none', lineHeight: 1.5, minHeight: 30, maxHeight: 200, overflowY: 'auto', fontFamily: 'inherit', fontWeight: 400, padding: '2px 2px' }}
           />
 
-          {/* attached file chips */}
+          {/* attached file chips — staged before send. A paperclip + count make it
+              unmistakable that files ARE attached (the plain filename pill was easy
+              to miss, so uploads read as "nothing happened"). */}
           {files.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: LC.muted }}>
+                <Paperclip size={12} /> {files.length} attached
+              </span>
               {files.map((f, i) => (
                 <span key={`${f.name}-${i}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: LC.surfaceHover, border: `1px solid ${LC.border}`, borderRadius: 999, padding: '4px 7px 4px 11px', fontSize: 11.5, color: LC.text, maxWidth: 220 }}>
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
@@ -341,6 +382,16 @@ export function AsideInput(props: {
                 </span>
               ))}
             </div>
+          )}
+
+          {/* Reading indicator — the extract call runs AFTER send (chips already
+              cleared), so without this the upload moment is invisible and it looks
+              like nothing uploaded. Shows for the duration of onAttach. */}
+          {attaching && (
+            <span style={{ display: 'inline-flex', alignSelf: 'flex-start', alignItems: 'center', gap: 8, background: LC.surfaceHover, border: `1px solid ${LC.border}`, borderRadius: 999, padding: '5px 12px', fontSize: 12, color: LC.body }}>
+              <span className="lc-spin" style={{ width: 13, height: 13, borderRadius: '50%', border: `2px solid ${LC.faint}`, borderTopColor: ACCENT, display: 'inline-block' }} />
+              Reading your document…
+            </span>
           )}
 
           {/* Control row — squared icon buttons on the left, dark send on the right. */}
