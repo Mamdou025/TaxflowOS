@@ -1,4 +1,5 @@
 import path from 'path';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
@@ -27,8 +28,26 @@ if (!basePath) {
   );
 }
 
+const sentryRelease = process.env.VITE_RELEASE;
+const hasSentryUploadConfig = Boolean(
+  process.env.SENTRY_AUTH_TOKEN &&
+    process.env.SENTRY_ORG &&
+    process.env.SENTRY_PROJECT,
+);
+
+if (hasSentryUploadConfig && !sentryRelease) {
+  throw new Error(
+    'VITE_RELEASE is required when Sentry source-map uploads are configured.',
+  );
+}
+
 export default defineConfig({
   base: basePath,
+  define: {
+    // Keep the browser SDK release identical to the release used by the upload
+    // plugin. JSON.stringify also makes an absent value a valid `undefined`.
+    'import.meta.env.VITE_RELEASE': JSON.stringify(sentryRelease),
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -44,6 +63,23 @@ export default defineConfig({
           await import('@replit/vite-plugin-dev-banner').then((m) =>
             m.devBanner(),
           ),
+        ]
+      : []),
+    ...(process.env.NODE_ENV === 'production' && hasSentryUploadConfig
+      ? [
+          sentryVitePlugin({
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+            org: process.env.SENTRY_ORG,
+            project: process.env.SENTRY_PROJECT,
+            release: {
+              name: sentryRelease,
+            },
+            sourcemaps: {
+              assets: './dist/public/assets/**',
+              filesToDeleteAfterUpload: './dist/public/assets/**/*.map',
+            },
+            telemetry: false,
+          }),
         ]
       : []),
   ],
@@ -63,6 +99,9 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, 'dist/public'),
     emptyOutDir: true,
+    // "hidden" emits full maps for Sentry without adding sourceMappingURL
+    // comments that would advertise their public location to browsers.
+    sourcemap: 'hidden',
     rollupOptions: {
       output: {
         manualChunks(id) {
