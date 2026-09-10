@@ -132,7 +132,7 @@ test("Build uploads create a personal workflow that survives Run and reload", as
   await page
     .locator(`.react-flow__node[data-id="${rulebook.id}"]`)
     .click();
-  await page.getByRole("button", { name: "Test block", exact: true }).click();
+  await page.getByRole("button", { name: "Test with upstream blocks", exact: true }).click();
   await expect(page.getByTestId("block-io-panel")).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Received", exact: true }),

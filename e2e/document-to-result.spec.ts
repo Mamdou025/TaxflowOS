@@ -34,7 +34,7 @@ test('uploaded CSV to new keyword rule, rollup, calculation and saved final outp
   await page.locator('div.space-y-1\\.5').filter({ has: page.locator('label', { hasText: /^Category label$/ }) }).locator('input').fill('Widget sales');
   await page.getByPlaceholder('Add contains keyword').fill('Widget');
   await page.getByPlaceholder('Add contains keyword').press('Enter');
-  await page.getByRole('button', { name: 'Test block', exact: true }).click();
+  await page.getByRole('button', { name: 'Test with upstream blocks', exact: true }).click();
   await expect(page.getByTestId('block-io-panel')).toContainText('Widget sales');
 
   await openBlock('Category Rollup');
@@ -42,7 +42,7 @@ test('uploaded CSV to new keyword rule, rollup, calculation and saved final outp
   await page.getByPlaceholder('e.g. income_base').fill('widget_total');
   await page.getByPlaceholder('e.g. Income Base').fill('Widget total');
   await page.getByRole('button', { name: 'Widget sales', exact: true }).click();
-  await page.getByRole('button', { name: 'Test block', exact: true }).click();
+  await page.getByRole('button', { name: 'Test with upstream blocks', exact: true }).click();
   await expect(page.getByTestId('block-io-panel')).toContainText('widget total');
 
   await openBlock('FAPI Lines Engine');
@@ -56,7 +56,7 @@ test('uploaded CSV to new keyword rule, rollup, calculation and saved final outp
   await page.getByRole('button', { name: '÷', exact: true }).click();
   await page.getByRole('spinbutton', { name: 'Number to add' }).fill('2');
   await page.getByRole('button', { name: 'Add number', exact: true }).click();
-  await page.getByRole('button', { name: 'Test block', exact: true }).click();
+  await page.getByRole('button', { name: 'Test with upstream blocks', exact: true }).click();
   await expect(page.getByTestId('block-io-panel')).toContainText('50,000');
 
   await openBlock('FAPI Summary Engine');

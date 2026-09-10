@@ -12,6 +12,7 @@ export function presentToolOutput(
   result: ToolRunResult,
   block?: WorkflowBlock,
 ): Record<string, unknown> {
+  if (result.toolId === 'test.example_input') return result.output;
   const tool = block ? getToolForBlock(block) : null;
   if (block?.family === "Source" && Array.isArray(result.output.rows)) {
     return { rows: result.output.rows };

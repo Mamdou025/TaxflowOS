@@ -520,7 +520,8 @@ export function runLocalWorkflowTools({
     allResults[block.id] = {
       ...result,
       ...(mode === "isolated" ? { blockTest: { mode: "isolated" as const, inputs: testInputSource } } : {}),
-      configSignature: JSON.stringify(block.config),
+      // Compare against the editable settings, before canvas conversion adds UI metadata.
+      configSignature: JSON.stringify(nodes.find(node => node.id === block.id)?.data.block?.config ?? block.config),
       inputTransfers: incomingEdges.flatMap(edge => {
         const sourceResult = allResults[edge.sourceBlockId];
         if (!sourceResult) return [];

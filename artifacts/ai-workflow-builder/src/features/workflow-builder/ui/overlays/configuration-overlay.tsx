@@ -1,4 +1,5 @@
 import { BlockIOPanel, ConnectionTransferPanel, resultForBlock } from '../workspace/block-io-panel';
+import { IsolatedBlockTest } from '../workspace/isolated-block-test';
 import { TriggerReadinessPanel } from '../config/trigger-readiness-panel';
 import { activeBuilderWorkflowIdAtom } from '@/lib/builder-bridge';
 import { workflowLibraryAtom } from '@/features/workflows-hub/workflow-library';
@@ -1097,6 +1098,8 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
     setExecutionLogs(createExecutionLogsMap(record.logs));
   }}>{scopedRuns.map(run => <option key={run.execution.id} value={run.execution.id}>{new Date(run.execution.startedAt).toLocaleString()} · {run.execution.status}</option>)}</select></label> : null;
   const [blockRunResult, setBlockRunResult] = useState<ToolRunResult | null>(null);
+  const [showStandaloneTest, setShowStandaloneTest] = useState(false);
+  useEffect(() => { setShowStandaloneTest(false); }, [selectedBlock?.id, activeTab]);
   useEffect(() => { setBlockRunResult(null); }, [selectedBlock?.id, selectedBlock?.config]);
   const handleExecuteSelectedStep = useCallback(() => {
     if (!(selectedNode && selectedBlock)) {
@@ -1130,7 +1133,9 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
         runId: localRun.record.execution.id,
       })
     );
-    if (localRun.result.status === "success") {
+    if (localRun.result.status === "error") {
+      toast.error(localRun.result.errors[0] ?? 'Block execution failed. Review its inputs and settings.');
+    } else if (localRun.result.status === "success") {
       toast.success("Local step run completed");
     } else {
       toast.warning(
@@ -1473,20 +1478,27 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
             type="button"
             className="rounded bg-primary px-3 py-1.5 text-sm text-primary-foreground disabled:opacity-50"
             disabled={isGenerating || !isOwner}
-            onClick={() => { handleExecuteSelectedStep(); setActiveTab("data"); }}
+            onClick={() => setShowStandaloneTest(true)}
           >
             Test block
           </button>
+          <button type="button" className="ml-2 rounded border px-3 py-1.5 text-sm disabled:opacity-50" disabled={isGenerating || !isOwner} onClick={() => { setShowStandaloneTest(false); handleExecuteSelectedStep(); setActiveTab("data"); }}>Test with upstream blocks</button>
           <span className="ml-3 text-xs text-muted-foreground">
-            Uses current rules and connected data. Rulebooks are tested through
-            their connected logic block.
+            Test this block alone, or run the blocks supplying its inputs.
           </span>
 
         </div>
       )}
       {/* Content based on active tab */}
-      {activeTab === "data" && runPicker}
-      {activeTab === "data" && selectedBlock ? (
+      {!showStandaloneTest && activeTab === "data" && runPicker}
+      {showStandaloneTest && selectedBlock ? (
+        <IsolatedBlockTest key={selectedBlock.id} block={selectedBlock} nodes={nodes} edges={edges} records={scopedRuns} workflowId={activeDefinitionId ?? currentWorkflowId ?? undefined} workflowName={currentWorkflowName} disabled={isGenerating || !isOwner} onResult={localRun => {
+          setBlockRunResult(localRun.result.results[0] ?? null);
+          saveLocalRunRecord(localRun.record);
+          setSelectedExecutionId(localRun.record.execution.id);
+          setExecutionLogs(createExecutionLogsMap(localRun.record.logs));
+        }} />
+      ) : activeTab === "data" && selectedBlock ? (
         <BlockIOPanel block={selectedBlock} edges={edges} nodes={nodes} run={latestSelectedBlockRun} testResult={blockRunResult} />
       ) : activeTab === "runs" && isOwner ? (
         <WorkspaceRunsTab activeTab={activeTab} isRefreshing={isRefreshing} onDeleteAll={handleDeleteAllRuns} onRefresh={handleRefreshRuns} refreshRunsRef={refreshRunsRef} />

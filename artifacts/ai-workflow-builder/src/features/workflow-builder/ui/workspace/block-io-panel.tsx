@@ -27,6 +27,7 @@ export function BlockIOPanel({ block, edges, nodes, run, testResult }: {
       <h3 className="font-semibold">{block.label} · Input & Output</h3>
       <p className="text-xs text-muted-foreground">{result && run ? `Recorded run · ${new Date(run.execution.startedAt).toLocaleString()} · ${result.status.replaceAll('_', ' ')}` : 'Expected connections and fields · this block has not run in the selected run.'}</p>
       {result && <p className="text-xs text-muted-foreground">These are recorded values. Changes to rules or documents require a new test.</p>}
+      {result?.blockTest && <p className="text-sm">Individual block test · {result.blockTest.inputs === 'examples' ? 'Example inputs' : result.blockTest.inputs === 'recorded' ? 'Recorded inputs' : 'Block settings only'}. This is not a full workflow run.</p>}
       {result?.configSignature && result.configSignature !== JSON.stringify(block.config) && <p className="text-sm text-amber-700">This block has changed since the displayed run.</p>}
     </div>
     <div className="grid gap-4 lg:grid-cols-2">

@@ -298,7 +298,7 @@ function isSupportedFormulaFunction(name: string) {
   return SUPPORTED_FORMULA_FUNCTIONS.has(name.toLowerCase());
 }
 
-function collectFormulaReferences(expression: string) {
+export function collectFormulaReferences(expression: string) {
   const { tokens } = tokenizeFormulaExpression(expression);
   const refs = tokens.flatMap((token, index) => {
     if (token.type !== "identifier") {

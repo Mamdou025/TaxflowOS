@@ -143,7 +143,7 @@ test('live FX fetch pins a value, reports override precedence, and preserves it 
   const fetchMs = Date.now() - start;
   await page.getByPlaceholder('none', { exact: true }).fill('');
   expect((await stored(page)).draft.blocks.find((b: any) => b.id === 'fapi-source-fx-rate').config.overrideRate).toBeNull();
-  await page.getByRole('button', { name: 'Test block', exact: true }).click();
+  await page.getByRole('button', { name: 'Test with upstream blocks', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Produced outputs' })).toContainText(data.rate.toLocaleString('en-US', { maximumSignificantDigits: 21 }));
   await page.getByRole('button', { name: 'Properties', exact: true }).click();
   await page.getByRole('button', { name: 'Create new source version from v1', exact: true }).click();

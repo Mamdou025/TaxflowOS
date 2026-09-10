@@ -1,4 +1,4 @@
-import { info } from "../../../runtime/events";
+import { error, info } from "../../../runtime/events";
 import {
   createEvidenceRef,
   createSourceTraceRef,
@@ -17,6 +17,8 @@ export function runManualTableSource(
     config: context.config,
     fallbackRows: SAMPLE_MANUAL_TABLE_ROWS,
   });
+  const missingDocument = rows.length === 0 && context.config.requireUpload === true;
+  const missingMessage = 'No document records supplied. Upload a document or enter example data.';
   const sourceKind = String(context.config.sourceKind || "manual_table");
   const evidenceRefs = rows.map((row) =>
     createEvidenceRef({
@@ -86,9 +88,9 @@ export function runManualTableSource(
   return {
     blockId: context.block.id,
     completedAt: new Date().toISOString(),
-    errors: [],
+    errors: missingDocument ? [missingMessage] : [],
     evidenceRefs,
-    logs: [
+    logs: missingDocument ? [error(missingMessage)] : [
       info("Manual table Source emitted immutable rows.", {
         rowCount: rows.length,
       }),
@@ -129,8 +131,8 @@ export function runManualTableSource(
     runId: context.runId,
     sourceTrace,
     startedAt: context.startedAt,
-    status: "success",
+    status: missingDocument ? 'error' : rows.length === 0 ? 'warning' : 'success',
     toolId: "source.manual_table",
-    warnings: rows.length === 0 ? ['No document records supplied. Upload a document or enter example data.'] : rows.some(row => !Number.isFinite(row.amount)) ? ['Some records have no numerical value. They can be classified; choose a number field before calculating amounts.'] : [],
+    warnings: missingDocument ? [] : rows.length === 0 ? [missingMessage] : rows.some(row => !Number.isFinite(row.amount)) ? ['Some records have no numerical value. They can be classified; choose a number field before calculating amounts.'] : [],
   };
 }

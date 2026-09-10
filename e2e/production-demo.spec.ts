@@ -1,5 +1,35 @@
 import { test, expect } from './workflow-audit-isolation';
 
+test('production individual block tests show real inputs and outputs without becoming full workflow runs', async ({ page }, info) => {
+  const errors: string[] = []; page.on('pageerror', error => errors.push(error.message));
+  const start = Date.now();
+  await page.goto('/w/pf-document-calculator');
+  await page.getByRole('button', { name: 'Build', exact: true }).click();
+  await page.getByRole('button', { name: 'Calculate', exact: true }).click();
+  await page.getByRole('button', { name: 'Test block', exact: true }).click();
+  const panel = page.getByRole('region', { name: 'Individual block test' });
+  await panel.getByLabel('Test value 1 number').fill('125.5');
+  const runStart = Date.now();
+  await panel.getByRole('button', { name: 'Run block', exact: true }).click();
+  await expect(panel.getByText('251', { exact: true })).toBeVisible();
+  await expect(panel.getByText('125.5', { exact: true })).toBeVisible();
+  await expect(panel).toContainText('Individual block test');
+  const runMs = Date.now() - runStart;
+  await page.screenshot({ path: info.outputPath('production-individual-block.png'), fullPage: true });
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
+  await page.getByRole('button', { name: 'Run', exact: true }).first().click();
+  await expect(page.getByRole('region', { name: 'Final workflow results' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Build', exact: true }).click();
+  await page.getByRole('button', { name: 'Final result', exact: true }).click();
+  await page.getByRole('button', { name: 'Test block', exact: true }).click();
+  await panel.getByLabel('Block test input source').selectOption('recorded');
+  await panel.getByRole('button', { name: 'Run block', exact: true }).click();
+  await expect(panel).toContainText('251');
+  await expect(panel).not.toContainText('No usable recorded result');
+  expect(errors).toEqual([]);
+  console.log(JSON.stringify({ scenario: 'individual-block', openMs: runStart - start, runMs, errors }));
+});
+
 test('production document-to-output rehearsal uses the UI and survives reload', async ({ page }, info) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -34,7 +64,7 @@ test('production document-to-output rehearsal uses the UI and survives reload', 
   await page.getByRole('button', { name: '÷', exact: true }).click();
   await page.getByRole('spinbutton', { name: 'Number to add' }).fill('2');
   await page.getByRole('button', { name: 'Add number', exact: true }).click();
-  await page.getByRole('button', { name: 'Test block', exact: true }).click();
+  await page.getByRole('button', { name: 'Test with upstream blocks', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Produced outputs' })).toContainText('50,000');
   await page.getByRole('button', { name: 'Close', exact: true }).click();
   await page.getByRole('button', { name: 'FAPI Summary Engine', exact: true }).click();
