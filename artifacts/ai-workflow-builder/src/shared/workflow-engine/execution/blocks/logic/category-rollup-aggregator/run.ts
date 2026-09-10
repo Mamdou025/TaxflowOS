@@ -155,6 +155,13 @@ export function runCategoryRollupAggregator(
   context: ToolExecutionContext
 ): ToolRunResult {
   const rows = getMappedRows(context);
+  // Do not silently drop a matched record whose numeric field is missing.
+  const invalidRows = getRoleInputs(context, 'mapped_rows').flatMap(input => {
+    const record = input as Record<string, unknown>;
+    const raw = Array.isArray(input) ? input : record?.mappedRows ?? record?.mapped_rows ?? record?.rows;
+    return Array.isArray(raw) ? raw.filter(row => collectMappedRowsFromRollupInput([row]).length === 0) : [];
+  });
+  if (invalidRows.length) return createErrorResult({ context, errors: invalidRows.map((row, index) => `Cannot aggregate ${String(row?.label ?? row?.rowId ?? `row ${index + 1}`)}: its category or numeric value is missing. Review the document fields.`) });
   const rules = getRollupRules(context);
   const missingErrors = getMissingInputErrors({ rows, rules });
 
@@ -163,6 +170,18 @@ export function runCategoryRollupAggregator(
   }
 
   const categoryDetails = getCategoryDetails(rows);
+  // The mapper declares its configured categories independently of matches.
+  // An empty, known category has a computed zero total; an unknown input does not.
+  for (const input of getRoleInputs(context, 'mapping_summary')) {
+    const declared = (input as { rulesUsed?: { categoryId?: string; categoryLabel?: string }[] }).rulesUsed;
+    if (!Array.isArray(declared)) continue;
+    for (const category of declared) {
+      if (category.categoryId && !Object.hasOwn(categoryDetails, category.categoryId)) categoryDetails[category.categoryId] = {
+        categoryId: category.categoryId, categoryLabel: category.categoryLabel || category.categoryId,
+        includedRows: [], rowCount: 0, value: 0,
+      };
+    }
+  }
   const categoryTotals = getCategoryTotals(categoryDetails);
   const rollupTotals: Record<string, number> = {};
   const rollupTotalDetails: Record<string, Record<string, unknown>> = {};

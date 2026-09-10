@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './workflow-audit-isolation';
 
 test('constant and explicit numeric-field formulas do not require a generic amount field', async ({ page }) => {
   await page.goto('/');

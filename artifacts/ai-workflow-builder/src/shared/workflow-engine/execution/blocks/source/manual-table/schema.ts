@@ -1,3 +1,4 @@
+import { parseNumericInput as parseNumber } from '../../../../numeric-input';
 import type { EvidenceRef, SourceTraceRef } from "../../../runtime/types";
 
 const NUMBER_PATTERN = /-?\d+(\.\d+)?/;
@@ -22,23 +23,6 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
-function parseNumber(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const match = value.trim().match(NUMBER_PATTERN);
-  if (!match) {
-    return null;
-  }
-
-  const parsed = Number(match[0]);
-  return Number.isFinite(parsed) ? parsed : null;
-}
 
 function optionalString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
@@ -59,8 +43,7 @@ export function normalizeManualTableRow(
     return null;
   }
 
-  const amount =
-    parseNumber(record.amount) ??
+  const amount = Object.hasOwn(record, 'amount') ? parseNumber(record.amount) :
     parseNumber(record.value) ??
     parseNumber(record.balance);
 

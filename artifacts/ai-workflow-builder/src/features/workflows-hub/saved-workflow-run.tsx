@@ -1,3 +1,5 @@
+import { WorkflowResultSummary } from './workflow-result-summary';
+import { ApiDataStatus } from './workflow-api-status';
 import { useState } from 'react';
 import { LazyDetails } from '@/features/workflow-builder/ui/workspace/lazy-details';
 import { TriggerReadinessPanel } from '@/features/workflow-builder/ui/config/trigger-readiness-panel';
@@ -140,6 +142,7 @@ export function SavedWorkflowRun({
       {!resultsOnly && (
         <>
           <WorkflowTestData definition={definition} onChange={update} />
+          <ApiDataStatus blocks={definition.blocks} />
           <TriggerReadinessPanel config={(definition.blocks.find(block => block.config.canvasNodeType === 'trigger') ?? definition.blocks.find(block => block.id === definition.structure.entryBlockId))?.config ?? {}} blocks={definition.blocks} outputs={Object.fromEntries((entry?.runs.at(-1)?.result.result.results ?? []).filter(result => result.configSignature === JSON.stringify(definition.blocks.find(block => block.id === result.blockId)?.config)).map(result => [result.blockId, result.output]))} />
           <div className="space-y-2 rounded border p-3">
             <p className="text-sm font-medium">{unsaved ? 'Unsaved changes in Build' : `Build and Run share saved version ${latestSaved?.number}`}</p>
@@ -174,6 +177,8 @@ export function SavedWorkflowRun({
             Version {latest.version} · {new Date(latest.at).toLocaleString()} ·{" "}
             {latest.result.result.status}
           </h3>
+          <WorkflowResultSummary definition={latestVersion?.definition} results={latest.result.result.results} />
+          <ApiDataStatus blocks={latestVersion?.definition.blocks ?? []} recorded />
           {latest.result.result.results.map((result) => (
             <LazyDetails
               className="rounded-lg border bg-background p-3"

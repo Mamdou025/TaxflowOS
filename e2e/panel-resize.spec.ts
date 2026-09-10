@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./workflow-audit-isolation";
 
 test("resizing the workspace and block panels does not open an error overlay", async ({
   page,

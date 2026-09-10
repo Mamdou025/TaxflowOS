@@ -70,6 +70,7 @@ export type ToolRunLog = {
 };
 
 export type ToolRunResult = {
+  blockTest?: { mode: "isolated"; inputs: "examples" | "recorded" | "none" };
   configSignature?: string;
   input?: Record<string, unknown>;
   inputTransfers?: { edgeId: string; sourceBlockId: string; sourceLabel: string; sourceOutputRole?: string; targetInputRole?: string; delivered: boolean; output: Record<string, unknown> }[];
@@ -1621,10 +1622,14 @@ function getOutputFinalitySummary({
     (result) =>
       result.runtimeLocked !== true || result.finalityStatus !== "final"
   );
+  const expectsProtectedResult = workflow.blocks.some(
+    (block) => block.config.toolId === "protected.protected_result" ||
+      block.catalogId === "protected:protected-result"
+  );
   let finalityStatus: FinalityStatus = "final";
   if (hasExecutionError) {
     finalityStatus = "failed";
-  } else if (protectedResults.length === 0) {
+  } else if (results.length === 0 || (expectsProtectedResult && protectedResults.length === 0)) {
     finalityStatus = "draft";
   } else if (
     validationGate.blockingIssues.length > 0 ||
@@ -1637,7 +1642,9 @@ function getOutputFinalitySummary({
     ...validationGate,
     finalityStatus,
     protectedResultsFinality,
-    reason: getOutputFinalityReason(finalityStatus),
+    reason: finalityStatus === "final" && !expectsProtectedResult
+      ? "Workflow steps completed and all blocking validations passed."
+      : getOutputFinalityReason(finalityStatus),
   };
 }
 

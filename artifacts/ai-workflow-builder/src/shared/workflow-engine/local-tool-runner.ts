@@ -1,6 +1,7 @@
 import { presentToolOutput } from './present-tool-output';
 import {
   createWorkflowDefinitionFromCanvas,
+  createWorkflowEdgeRecord,
   LOCAL_WORKFLOW_ID,
   type LocalExecutionLog,
   type LocalRunRecord,
@@ -21,7 +22,8 @@ import {
 } from "./local-tool-registry";
 import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
 
-type LocalToolRunMode = "downstream" | "selected" | "workflow";
+type LocalToolRunMode = "downstream" | "selected" | "workflow" | "isolated";
+export type IsolatedBlockInput = { block: WorkflowBlock; result: ToolRunResult };
 export type LocalEdgeRunStatus = "error" | "success" | "warning";
 
 export type LocalToolRunnerResult = {
@@ -177,6 +179,9 @@ function getExecutionBlocks({
   mode: LocalToolRunMode;
   selectedBlockId?: string | null;
 }) {
+  if (mode === "isolated") {
+    return definition.blocks.filter((block) => block.id === selectedBlockId);
+  }
   if (mode === "selected" && selectedBlockId) {
     const ancestors = collectAncestorBlockIds({
       blockId: selectedBlockId,
@@ -383,6 +388,8 @@ export function runLocalWorkflowTools({
   selectedBlockId,
   workflowName,
   workflowId,
+  isolatedInputs = [],
+  testInputSource = "none",
 }: {
   edges: WorkflowEdge[];
   nodes: WorkflowNode[];
@@ -390,9 +397,21 @@ export function runLocalWorkflowTools({
   workflowId?: string;
   mode?: LocalToolRunMode;
   selectedBlockId?: string | null;
+  isolatedInputs?: IsolatedBlockInput[];
+  testInputSource?: "examples" | "recorded" | "none";
 }): LocalToolRunnerResult {
   const definition = createWorkflowDefinition({ edges, nodes, workflowName });
   if (workflowId) definition.id = workflowId;
+  if (mode === "isolated") {
+    if (!selectedBlockId || !definition.blocks.some(block => block.id === selectedBlockId)) throw new Error("Select a block to test.");
+    const ids = new Set<string>();
+    for (const input of isolatedInputs) {
+      if (input.block.id === selectedBlockId || input.result.blockId !== input.block.id || ids.has(input.block.id)) throw new Error("Each test input must have a distinct source.");
+      ids.add(input.block.id);
+      if (!definition.blocks.some(block => block.id === input.block.id)) definition.blocks.push(input.block);
+      if (!definition.edges.some(edge => edge.status === 'active' && edge.sourceBlockId === input.block.id && edge.targetBlockId === selectedBlockId)) definition.edges.push(createWorkflowEdgeRecord({ id: `test-input-${input.block.id}`, sourceBlockId: input.block.id, targetBlockId: selectedBlockId, bindingLabel: input.block.label, reason: 'Input supplied for an isolated block test' }));
+    }
+  }
   const schemaEdges = getActiveSchemaEdges(definition);
   const executionId = makeRunId(
     mode === "workflow" ? "local-tool-workflow" : `local-tool-${mode}`
@@ -405,11 +424,13 @@ export function runLocalWorkflowTools({
     selectedBlockId,
   });
   const subsetIds = new Set(runnableBlocks.map((block) => block.id));
+  if (mode === "isolated") for (const input of isolatedInputs) subsetIds.add(input.block.id);
   const orderedBlocks = orderBlocks({
     blocks: runnableBlocks,
     edges: schemaEdges,
   });
   const allResults: Record<string, ToolRunResult> = {};
+  if (mode === "isolated") for (const input of isolatedInputs) allResults[input.block.id] = input.result;
   const logs: LocalExecutionLog[] = [];
 
   orderedBlocks.forEach((block, index) => {
@@ -498,6 +519,7 @@ export function runLocalWorkflowTools({
 
     allResults[block.id] = {
       ...result,
+      ...(mode === "isolated" ? { blockTest: { mode: "isolated" as const, inputs: testInputSource } } : {}),
       configSignature: JSON.stringify(block.config),
       inputTransfers: incomingEdges.flatMap(edge => {
         const sourceResult = allResults[edge.sourceBlockId];
@@ -545,7 +567,7 @@ export function runLocalWorkflowTools({
     .map((block) => allResults[block.id])
     .filter((result): result is ToolRunResult => Boolean(result));
   const edgeStatuses = Object.fromEntries(
-    schemaEdges
+    (mode === 'isolated' ? [] : schemaEdges)
       .map((edge) => {
         const status = getEdgeRunStatus({
           sourceResult: allResults[edge.sourceBlockId],

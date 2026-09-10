@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './workflow-audit-isolation';
 
 test('formulas combine constants with API fields and retain source identity', async ({ page }) => {
   await page.goto('/');

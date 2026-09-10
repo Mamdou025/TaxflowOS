@@ -26,6 +26,7 @@ app.use(
   }),
 );
 app.use(cors());
+app.use('/api/workflow-library', express.json({ limit: '24mb' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

@@ -1,3 +1,4 @@
+import { CalculationSettings } from './calculation-settings';
 import { CalculationSourcePicker, calculationSources } from './calculation-source-picker';
 import { availableCalculationValues } from './available-calculation-values';
 
@@ -43,7 +44,7 @@ const KNOWN_FUNCTIONS = new Set([
 const DIGIT_CHARACTER_REGEX = /\d/;
 const IDENTIFIER_CHARACTER_REGEX = /[A-Za-z0-9_:.@-]/;
 const IDENTIFIER_START_REGEX = /[A-Za-z_]/;
-const NUMBER_CHARACTER_REGEX = /[\d.]/;
+const NUMBER_PREFIX_REGEX = /^(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/;
 const WHITESPACE_CHARACTER_REGEX = /\s/;
 const OPERATOR_TOKENS = new Set(["+", "-", "*", "/"]);
 
@@ -57,10 +58,8 @@ function getSingleCharacterToken(character: string): DisplayToken | null {
 }
 
 function readNumberToken(expression: string, startIndex: number) {
-  let endIndex = startIndex + 1;
-  while (endIndex < expression.length && NUMBER_CHARACTER_REGEX.test(expression[endIndex])) {
-    endIndex += 1;
-  }
+  const text = expression.slice(startIndex).match(NUMBER_PREFIX_REGEX)?.[0] ?? expression[startIndex];
+  const endIndex = startIndex + text.length;
   return {
     nextIndex: endIndex,
     token: { type: "num" as const, value: expression.slice(startIndex, endIndex) },
@@ -318,7 +317,7 @@ export function CalculationEngineEditor({
   const insertConstant = () => {
     if (!constantInput.trim()) return;
     const num = Number(constantInput);
-    if (!/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(constantInput.trim())) return;
+    if (!/^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(constantInput.trim())) return;
     if (!Number.isFinite(num)) return;
     appendToken({ type: "num", value: constantInput.trim() });
     setConstantInput("");
@@ -327,11 +326,11 @@ export function CalculationEngineEditor({
   const backspace = () => { if (!disabled && tokens.length > 0) saveTokens(tokens.slice(0, -1)); };
   const clearFormula = () => { if (!disabled) saveTokens([]); };
 
-  const updateFormulaField = (field: "resultKey" | "label" | "description", value: string) => {
+  const updateFormulaField = (field: "resultKey" | "label" | "description" | "roundingDigits" | "unit", value: string | number | undefined) => {
     if (disabled || selectedIndex === null) return;
     const next = [...formulas];
     const updated = { ...next[selectedIndex], [field]: value };
-    if (field === "resultKey") { selectedTerms.set(block.id, value); updated.calculationId = value; onSelectedTermIdChange?.(value); }
+    if (field === "resultKey" && typeof value === "string") { selectedTerms.set(block.id, value); updated.calculationId = value; onSelectedTermIdChange?.(value); }
     next[selectedIndex] = updated;
     saveFormulas(next);
   };
@@ -506,6 +505,12 @@ export function CalculationEngineEditor({
 
               {/* Formula tape */}
               <div className="shrink-0 border-b px-3 pt-3 pb-2">
+                <div className="flex flex-wrap gap-3 text-xs">
+                  <label>Round this term <select aria-label="Term rounding" disabled={disabled} value={selectedFormula.roundingDigits ?? ''} onChange={event => updateFormulaField('roundingDigits', event.target.value === '' ? undefined : Number(event.target.value))}>
+                    <option value="">Keep full precision</option>{Array.from({ length: 16 }, (_, i) => <option key={i} value={i}>{i} decimal places</option>)}
+                  </select></label>
+                  <label>Unit <input aria-label="Result unit" placeholder="e.g. kg, CAD, units" value={selectedFormula.unit ?? ''} disabled={disabled} onChange={event => updateFormulaField('unit', event.target.value)} /></label>
+                </div>
                 <div className="flex min-h-11 flex-wrap items-center gap-1 rounded-md border bg-background px-2 py-1.5">
                   {tokens.length === 0 ? (
                     <span className="select-none text-[11px] text-muted-foreground italic">Formula is empty</span>
@@ -551,7 +556,7 @@ export function CalculationEngineEditor({
                     />
                     <button
                       className="h-7 rounded border border-amber-400/40 bg-amber-400/10 px-2 font-semibold text-[10px] text-amber-700 transition-colors hover:bg-amber-400/25 disabled:opacity-40 dark:text-amber-400"
-                      disabled={disabled || !/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(constantInput.trim())}
+                      disabled={disabled || !/^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(constantInput.trim())}
                       onClick={insertConstant}
                       type="button"
                     >
@@ -660,7 +665,9 @@ export function CalculationEngineEditor({
   );
 
   return (
-    <div className={cn(fill ? "h-full" : "h-[560px]", "overflow-hidden rounded-md border")}>
+    <div className={cn(fill ? "h-full" : "h-[560px]", "flex flex-col overflow-hidden rounded-md border")}>
+      <CalculationSettings config={config} disabled={disabled} onChange={onUpdateConfig} />
+      <div className="min-h-0 flex-1">
       <TwoPanelToolShell
         badge="Logic"
         badgeVariant="logic"
@@ -670,6 +677,7 @@ export function CalculationEngineEditor({
         rightPanel={rightPanel}
         title="Calculation Engine"
       />
+      </div>
     </div>
   );
 }

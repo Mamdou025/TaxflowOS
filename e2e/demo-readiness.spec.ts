@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from './workflow-audit-isolation';
+import type { Page } from '@playwright/test';
 import path from 'node:path';
 
 const stored = (page: Page) => page.evaluate(async () => { const { readWorkflowLibrary } = await import('/src/features/workflows-hub/workflow-library.ts'); return Object.values(readWorkflowLibrary())[0] as any; });
@@ -26,6 +27,7 @@ for (const format of ['xlsx', 'pdf', 'docx', 'tsv', 'json', 'txt']) {
     }
     await expect(page.getByRole('button', { name: 'Use this test data', exact: true })).toBeVisible({ timeout: 30000 });
     const previewMs = Date.now() - start;
+    if (await page.getByLabel('Confirm extracted values').count()) await page.getByLabel('Confirm extracted values').check();
     await page.getByRole('button', { name: 'Use this test data', exact: true }).click();
     const entry = await stored(page);
     const source = entry.draft.blocks.find((block: any) => block.id === 'fapi-source-trial-balance');
@@ -142,7 +144,7 @@ test('live FX fetch pins a value, reports override precedence, and preserves it 
   await page.getByPlaceholder('none', { exact: true }).fill('');
   expect((await stored(page)).draft.blocks.find((b: any) => b.id === 'fapi-source-fx-rate').config.overrideRate).toBeNull();
   await page.getByRole('button', { name: 'Test block', exact: true }).click();
-  await expect(page.getByRole('region', { name: 'Produced outputs' })).toContainText('1.398');
+  await expect(page.getByRole('region', { name: 'Produced outputs' })).toContainText(data.rate.toLocaleString('en-US', { maximumSignificantDigits: 21 }));
   await page.getByRole('button', { name: 'Properties', exact: true }).click();
   await page.getByRole('button', { name: 'Create new source version from v1', exact: true }).click();
   await page.route('**/api/fx-rate?**', route => route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ ok: false, reason: 'Simulated API outage' }) }));

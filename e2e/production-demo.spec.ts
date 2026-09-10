@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './workflow-audit-isolation';
 
 test('production document-to-output rehearsal uses the UI and survives reload', async ({ page }, info) => {
   const errors: string[] = [];
@@ -40,6 +40,7 @@ test('production document-to-output rehearsal uses the UI and survives reload', 
   await page.getByRole('button', { name: 'FAPI Summary Engine', exact: true }).click();
   await page.getByRole('button', { name: 'New term', exact: true }).click();
   await page.getByPlaceholder('KEY', { exact: true }).fill('FINAL_WIDGET_RESULT');
+  await page.getByPlaceholder('Label', { exact: true }).fill('Final widget sales');
   await page.getByRole('button', { name: /^WIDGET_RESULT(?: = 50000)?$/ }).click();
   await page.getByRole('button', { name: 'Close', exact: true }).click();
   await page.getByRole('button', { name: 'Run', exact: true }).first().click();
@@ -53,6 +54,7 @@ test('production document-to-output rehearsal uses the UI and survives reload', 
   const finalLabel = output.getByText('FINAL WIDGET RESULT', { exact: true }).last();
   await finalLabel.scrollIntoViewIfNeeded();
   await expect(finalLabel).toBeVisible();
+  await page.getByRole('region', { name: 'Final workflow results' }).scrollIntoViewIfNeeded();
   await page.screenshot({ path: info.outputPath('production-final-result.png'), fullPage: true });
   await page.reload();
   await page.getByRole('button', { name: 'Workflows', exact: true }).click();
@@ -99,4 +101,41 @@ test('production load of 1000 rows persists two runs and displays the correct to
   expect(errors).toEqual([]);
   console.log(JSON.stringify({ count: 1000, runAndInspectMs, persistedRuns: 2, errors }));
   await info.attach('production-load-timing', { contentType: 'application/json', body: JSON.stringify({ count: 1000, runAndInspectMs, persistedRuns: 2, errors }, null, 2) });
+});
+
+test('production PDF review calculates final values without downloading document parser bundles', async ({ page }, info) => {
+  const errors: string[] = []; const assets: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('request', request => { if (request.url().includes('/assets/')) assets.push(request.url()); });
+  const start = Date.now();
+  await page.goto('/w/pf-document-calculator'); await page.getByRole('button', { name: 'Build', exact: true }).click();
+  const openMs = Date.now() - start;
+  await page.getByText('Test data — upload document or enter examples', { exact: true }).click();
+  const uploadStart = Date.now();
+  await page.getByLabel('Upload test document').setInputFiles('e2e/fixtures/demo/sales-check.pdf');
+  await expect(page.getByLabel('Row 1 number_1')).toBeVisible({ timeout: 30000 });
+  const previewMs = Date.now() - uploadStart;
+  await page.getByLabel('Row 1 label', { exact: true }).fill('Item one');
+  await page.getByLabel('Row 1 number_1', { exact: true }).fill('120');
+  await page.getByLabel('Row 2 label', { exact: true }).fill('Item two');
+  await page.getByLabel('Row 2 number_1', { exact: true }).fill('80');
+  await page.getByLabel('Remove row 3', { exact: true }).click();
+  await page.getByLabel('Number to calculate').selectOption('number_1'); await page.getByLabel('Confirm extracted values').check();
+  await page.getByRole('button', { name: 'Use this test data', exact: true }).click();
+  await page.getByRole('button', { name: 'Run', exact: true }).first().click();
+  await page.getByLabel('Workflow name').fill('Document Calculator — PDF rehearsal');
+  const runStart = Date.now();
+  await page.getByRole('button', { name: 'Save changes and run', exact: true }).click();
+  const summary = page.getByRole('region', { name: 'Final workflow results' });
+  await expect(summary).toContainText('400'); await expect(summary).toContainText('units');
+  await expect(page.locator('summary').filter({ hasText: /^Final result/ })).toHaveText('Final result \u00b7 success');
+  await expect(summary).not.toContainText('review message');
+  const runMs = Date.now() - runStart;
+  await page.locator('summary').filter({ hasText: /^Final result/ }).click();
+  await expect(page.locator('details').filter({ has: page.locator('summary', { hasText: /^Final result/ }) }).first()).toContainText('400');
+  await summary.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: info.outputPath('neutral-pdf-final-result.png'), fullPage: true });
+  expect(errors).toEqual([]);
+  expect(assets.filter(url => /\/(spreadsheets|pdf-processing|word-processing)-/.test(url))).toEqual([]);
+  console.log(JSON.stringify({ openMs, previewMs, runMs, errors, documentParserDownloads: 0 }));
 });

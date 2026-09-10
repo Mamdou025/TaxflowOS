@@ -1,3 +1,4 @@
+import { WorkflowStoragePanel } from './workflow-storage-panel';
 
 
 // WorkflowPage — the Workflows surface, built for maximum canvas room:
@@ -72,6 +73,7 @@ export function WorkflowSidebarList() {
   const select = (id: string) => { setSelected(id); setTab('overview'); };
   return (
     <div>
+      <WorkflowStoragePanel />
       <button
         onClick={() => { setSelected(NEW_WORKFLOW_ID); setTab('build'); }}
         className="neu-row"

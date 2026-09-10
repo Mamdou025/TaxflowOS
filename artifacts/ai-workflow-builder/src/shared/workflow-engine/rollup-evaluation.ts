@@ -30,8 +30,8 @@ export function evaluateRollupGroups(rules: RollupRule[], categories: Record<str
         return { categoryId, value: child.result };
       }
       leaves.add(categoryId);
-      if (!(categoryId in categories)) warnings.push(`Missing category reference: ${categoryId}.`);
-      return { categoryId, value: categories[categoryId] ?? 0 };
+      if (!Object.hasOwn(categories, categoryId)) throw new Error(`Unknown category reference: ${categoryId}. Connect the category's rules and data before calculating this group.`);
+      return { categoryId, value: categories[categoryId] };
     });
     const values = inputValues.map(input => input.value);
     let result = 0;

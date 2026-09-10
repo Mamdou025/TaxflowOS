@@ -26,7 +26,6 @@ import {
   Upload, X, Download, MessageSquarePlus, Table2, Loader2, Check,
   FileText, FileSpreadsheet, FileType2, File as FileIcon,
 } from 'lucide-react';
-import * as XLSX from 'xlsx';
 import { attachedDocsAtom, uploadedRowsAtom, type AttachedDoc } from '@/shared/stores/workspace-store';
 import { assistantOpenAtom } from '@/shared/stores/chat-store';
 import { parseUploadToRows } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
@@ -144,6 +143,7 @@ export default function DocumentViewer() {
       let payload: Omit<AttachedDoc, 'at'>;
       if (doc.kind === 'excel') {
         // Client-side: flatten every sheet to CSV so the model can read the grid.
+        const XLSX = await import('xlsx');
         const wb = XLSX.read(await doc.file.arrayBuffer(), { type: 'array' });
         const parts = wb.SheetNames.map((n) => `# Sheet: ${n}\n${XLSX.utils.sheet_to_csv(wb.Sheets[n])}`);
         let text = parts.join('\n\n');
@@ -393,6 +393,7 @@ function ExcelRender({ file }: { file: File }) {
     let cancelled = false;
     (async () => {
       try {
+        const XLSX = await import('xlsx');
         const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' });
         const sheets: Record<string, string> = {};
         for (const n of wb.SheetNames) sheets[n] = XLSX.utils.sheet_to_html(wb.Sheets[n], { id: 'x', editable: false });

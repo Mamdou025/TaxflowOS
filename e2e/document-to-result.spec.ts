@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './workflow-audit-isolation';
 
 test('uploaded CSV to new keyword rule, rollup, calculation and saved final output', async ({ page }, testInfo) => {
   test.setTimeout(180000);
@@ -35,7 +35,7 @@ test('uploaded CSV to new keyword rule, rollup, calculation and saved final outp
   await page.getByPlaceholder('Add contains keyword').fill('Widget');
   await page.getByPlaceholder('Add contains keyword').press('Enter');
   await page.getByRole('button', { name: 'Test block', exact: true }).click();
-  await expect(page.getByTestId('block-io-panel')).toContainText('widget_sales');
+  await expect(page.getByTestId('block-io-panel')).toContainText('Widget sales');
 
   await openBlock('Category Rollup');
   await page.getByRole('button', { name: 'New Group', exact: true }).click();
@@ -43,7 +43,7 @@ test('uploaded CSV to new keyword rule, rollup, calculation and saved final outp
   await page.getByPlaceholder('e.g. Income Base').fill('Widget total');
   await page.getByRole('button', { name: 'Widget sales', exact: true }).click();
   await page.getByRole('button', { name: 'Test block', exact: true }).click();
-  await expect(page.getByTestId('block-io-panel')).toContainText('widget_total');
+  await expect(page.getByTestId('block-io-panel')).toContainText('widget total');
 
   await openBlock('FAPI Lines Engine');
   await page.getByRole('button', { name: 'New term', exact: true }).click();

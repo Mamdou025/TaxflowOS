@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./workflow-audit-isolation";
 
 test("defined aggregation terms are available without a run and saved versions retain edited rules", async ({
   page,

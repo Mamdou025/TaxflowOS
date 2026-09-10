@@ -1,3 +1,4 @@
+import { apiRequestSignature } from '@/shared/workflow-engine/api-snapshot';
 
 
 // Setup panel for the API / HTTP Request source — a real request builder.
@@ -348,10 +349,11 @@ export function HttpJsonSourcePanel({
 
       // Pin the response so the run replays it. Only on a clean, mapped result —
       // a failed or unmapped call must not silently replace working evidence.
-      if (data.ok && Array.isArray(data.rows) && data.rows.length > 0) {
+      if (response.ok && data.ok && Array.isArray(data.rows) && data.rows.length > 0) {
         onConfigPatch({
           fetchedRows: data.rows,
           responseMeta: data.responseMeta,
+          fetchedRequestSignature: apiRequestSignature(config),
           samplePayload: data.samplePayload,
         });
       }

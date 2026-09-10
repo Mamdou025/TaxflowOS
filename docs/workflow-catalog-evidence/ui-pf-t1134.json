@@ -1,0 +1,357 @@
+{
+  "id": "pf-t1134",
+  "inputKind": "bundled sample records",
+  "inputRows": 6,
+  "openMs": 9158,
+  "runMs": 469,
+  "totalMs": 20011,
+  "browserErrors": [],
+  "first": {
+    "id": "custom:eab05d33-d248-4cb1-aef4-1e18ad6cb090",
+    "name": "T1134 Foreign Affiliate Reporting — My workflow",
+    "version": 1,
+    "runCount": 1,
+    "runId": "local-tool-workflow-1789009176162-becr9y",
+    "status": "error",
+    "errors": [
+      "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "warnings": [
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "sources": [
+      {
+        "id": "bp-run-t1134--src",
+        "connected": true,
+        "consumedBy": [
+          "bp-run-t1134--classify"
+        ]
+      }
+    ],
+    "results": [
+      {
+        "blockId": "bp-run-t1134--start",
+        "label": "Start",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "triggerPayload",
+          "blockId",
+          "firedAt",
+          "mode",
+          "runId",
+          "workflowId",
+          "startedBy",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-t1134--src",
+        "label": "Source data",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "rawRows",
+          "rawRowsCount",
+          "selectedRows",
+          "selectedRowsCount",
+          "workbookFile",
+          "selectedSheet",
+          "selectedRange",
+          "sourceMetadata",
+          "sourceLocator",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-t1134--classify",
+        "label": "Classify",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "mappedRows",
+          "mappedRowsCount",
+          "unmatchedRows",
+          "unmatchedRowsCount",
+          "lowConfidenceRows",
+          "lowConfidenceRowsCount",
+          "conflictCount",
+          "conflicts",
+          "mappingSummary",
+          "rulesUsed",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-t1134--rollup",
+        "label": "Aggregate",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "categoryTotalDetails",
+          "categoryTotals",
+          "rollupTotalDetails",
+          "rollupTotals",
+          "namedValues",
+          "namedValuesSourceKind",
+          "excludedRows",
+          "excludedRowsCount",
+          "includedRowsByCategory",
+          "includedRowsByRollup",
+          "rollupFormulaTrace",
+          "rollupSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-t1134--lines",
+        "label": "Compute",
+        "status": "error",
+        "errors": [
+          "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source."
+        ],
+        "warnings": [],
+        "calculated": {},
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "namedValues",
+          "formulaTrace",
+          "calculatedResults",
+          "resultDetails",
+          "calculationSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-t1134--summary",
+        "label": "Summary",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-t1134--out",
+        "label": "Result",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      }
+    ]
+  },
+  "second": {
+    "id": "custom:eab05d33-d248-4cb1-aef4-1e18ad6cb090",
+    "name": "T1134 Foreign Affiliate Reporting — My workflow",
+    "version": 1,
+    "runCount": 2,
+    "runId": "local-tool-workflow-1789009184554-a0i5ty",
+    "status": "error",
+    "errors": [
+      "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "warnings": [
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "sources": [
+      {
+        "id": "bp-run-t1134--src",
+        "connected": true,
+        "consumedBy": [
+          "bp-run-t1134--classify"
+        ]
+      }
+    ],
+    "results": [
+      {
+        "blockId": "bp-run-t1134--start",
+        "label": "Start",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "triggerPayload",
+          "blockId",
+          "firedAt",
+          "mode",
+          "runId",
+          "workflowId",
+          "startedBy",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-t1134--src",
+        "label": "Source data",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "rawRows",
+          "rawRowsCount",
+          "selectedRows",
+          "selectedRowsCount",
+          "workbookFile",
+          "selectedSheet",
+          "selectedRange",
+          "sourceMetadata",
+          "sourceLocator",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-t1134--classify",
+        "label": "Classify",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "mappedRows",
+          "mappedRowsCount",
+          "unmatchedRows",
+          "unmatchedRowsCount",
+          "lowConfidenceRows",
+          "lowConfidenceRowsCount",
+          "conflictCount",
+          "conflicts",
+          "mappingSummary",
+          "rulesUsed",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-t1134--rollup",
+        "label": "Aggregate",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "categoryTotalDetails",
+          "categoryTotals",
+          "rollupTotalDetails",
+          "rollupTotals",
+          "namedValues",
+          "namedValuesSourceKind",
+          "excludedRows",
+          "excludedRowsCount",
+          "includedRowsByCategory",
+          "includedRowsByRollup",
+          "rollupFormulaTrace",
+          "rollupSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-t1134--lines",
+        "label": "Compute",
+        "status": "error",
+        "errors": [
+          "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source."
+        ],
+        "warnings": [],
+        "calculated": {},
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "namedValues",
+          "formulaTrace",
+          "calculatedResults",
+          "resultDetails",
+          "calculationSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-t1134--summary",
+        "label": "Summary",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "bp-run-t1134--out",
+        "label": "Result",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      }
+    ]
+  }
+}

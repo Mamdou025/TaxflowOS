@@ -111,15 +111,11 @@ export default defineConfig({
           // preloaded on every navigation).
           // Note: pnpm virtual store paths look like .pnpm/xlsx@x.y.z/node_modules/xlsx
           // so we match on the package name anywhere in the id.
-          if (
-            id.includes('/xlsx/') ||
-            id.includes('/mammoth/') ||
-            id.includes('/unpdf/') ||
-            id.includes('/pdfjs-dist/') ||
-            id.includes('/jszip/')
-          ) {
-            return 'doc-processing';
-          }
+          if (id.includes('/pako/')) return 'workflow-compression';
+          if (id.includes('/xlsx/')) return 'spreadsheets';
+          if (id.includes('/mammoth/')) return 'word-processing';
+          if (id.includes('/unpdf/') || id.includes('/pdfjs-dist/')) return 'pdf-processing';
+          if (id.includes('/jszip/')) return 'document-zip';
           // External service SDKs — very large, only needed when those integrations
           // are active. @linear/sdk alone is ~28 MB source; @slack/web-api is ~8 MB.
           if (id.includes('@linear/sdk') || id.includes('@slack/web-api') || id.includes('@slack/')) {

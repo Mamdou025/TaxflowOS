@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { DocumentReviewTable } from './document-review-table';
+import { parseDocumentNumber } from './document-records';
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   createWorkflowBlockFromCatalog,
@@ -27,6 +29,22 @@ export function WorkflowTestData({
   );
   const [target, setTarget] = useState(sources[0]?.id ?? "new");
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState('');
+  const [numericFields, setNumericFields] = useState<string[]>([]);
+  const [decimal, setDecimal] = useState('.');
+  const [reviewed, setReviewed] = useState(false);
+  const [scanFile, setScanFile] = useState<File | null>(null);
+  const [ocrAvailable, setOcrAvailable] = useState(false);
+  const controller = useRef<AbortController | null>(null);
+  const parseText = (content: string, extension: string, signal: AbortSignal) => new Promise<Record<string, unknown>[]>((resolve, reject) => {
+    const worker = new Worker(new URL('./document-worker.ts', import.meta.url), { type: 'module' });
+    const finish = () => { worker.terminate(); signal.removeEventListener('abort', abort); };
+    const abort = () => { finish(); reject(new Error('Upload cancelled.')); };
+    signal.addEventListener('abort', abort, { once: true });
+    worker.onmessage = event => { finish(); event.data.error ? reject(new Error(event.data.error)) : resolve(event.data.rows); };
+    worker.onerror = () => { finish(); reject(new Error('Could not read this document.')); };
+    worker.postMessage({ text: content, extension });
+  });
   const [preview, setPreview] = useState<Record<string, unknown> | null>(null);
   const [manual, setManual] = useState(false);
   const [text, setText] = useState("");
@@ -36,6 +54,17 @@ export function WorkflowTestData({
   const [numberField, setNumberField] = useState("");
   const apply = () => {
     if (!preview) return;
+    if (!Array.isArray(preview.rows) || !preview.rows.length) { toast.error('Add at least one record.'); return; }
+    const converted = preview.rows.map(row => ({ ...row }));
+    for (const [index, row] of converted.entries()) {
+      for (const key of new Set([...numericFields, ...(numberField ? [numberField] : [])])) {
+        if (!(key in row)) continue;
+        if (row[key] === '' || row[key] == null) { row[key] = null; continue; }
+        const number = parseDocumentNumber(row[key], decimal);
+        if (number === null) { toast.error(`Row ${index + 1}, ${key}: enter a valid number or choose the correct decimal separator.`); return; }
+        row[key] = number;
+      }
+    }
     const existing = sources.find((source) => source.id === target);
     const block =
       existing ??
@@ -45,7 +74,7 @@ export function WorkflowTestData({
         position: { x: 0, y: 0 },
       });
     const rows = Array.isArray(preview.rows)
-      ? preview.rows.map((row, index) => ({
+      ? converted.map((row, index) => ({
           ...row,
           rowId: row.rowId ?? `row-${index + 1}`,
           ...(textField
@@ -100,13 +129,19 @@ export function WorkflowTestData({
         : "Document source added. Connect it to the next block in Build.",
     );
   };
-  const upload = async (file: File) => {
+  const upload = async (file: File, ocr = false) => {
+    controller.current?.abort();
+    const abort = new AbortController(); controller.current = abort;
+    setProgress('Reading document...');
+    setReviewed(false); setNumericFields([]); setScanFile(null);
     setBusy(true);
     setPreview(null);
     setTextField("");
     setNumberField("");
     try {
+      if (file.size > 20 * 1024 * 1024) throw new Error('Use a document smaller than 20 MB.');
       const extension = file.name.split(".").pop()?.toLowerCase();
+      if (extension === 'pdf' && !(await file.slice(0, 1024).text()).includes('%PDF-')) throw new Error('This file does not contain a valid PDF header. Choose a PDF document.');
       if (extension === "xlsx" || extension === "xls") {
         const workbook = await parseExcelWorkbookFile(file);
         const patch = buildExcelSourceConfigPatch({
@@ -118,21 +153,16 @@ export function WorkflowTestData({
             ...(row.raw ?? {}),
             ...row,
           }));
+        if (abort.signal.aborted) return;
         setPreview(patch);
+        if (Array.isArray(patch.rows)) setNumericFields([...new Set(patch.rows.flatMap(Object.keys))].filter(key => patch.rows.some((row: Record<string, unknown>) => typeof row[key] === 'number')));
       } else {
         let rows: Record<string, unknown>[];
         if (extension === "csv" || extension === "tsv") {
-          const XLSX = await import("xlsx");
-          const workbook = XLSX.read(await file.text(), {
-            type: "string",
-            raw: true,
-          });
-          rows = XLSX.utils.sheet_to_json(
-            workbook.Sheets[workbook.SheetNames[0]],
-            { defval: null },
-          );
+          rows = await parseText(await file.text(), extension, abort.signal);
         } else if (extension === "json") {
           const value = JSON.parse(await file.text());
+          if (value == null) throw new Error('Use an object or a list of records.');
           rows = Array.isArray(value)
             ? value
             : Array.isArray(value.rows)
@@ -145,39 +175,31 @@ export function WorkflowTestData({
           )
             throw new Error("Use an object or a list of records.");
         } else {
-          let content = await file.text();
-          if (extension === "pdf") {
-            const { extractText, getDocumentProxy } = await import("unpdf");
-            const pdf = await getDocumentProxy(
-              new Uint8Array(await file.arrayBuffer()),
-            );
-            const extracted = await extractText(pdf, { mergePages: true });
-            content = extracted.text;
-            await pdf.destroy();
-          } else if (extension === "docx") {
-            const mammoth = await import("mammoth");
-            content = (
-              await mammoth.extractRawText({
-                arrayBuffer: await file.arrayBuffer(),
-              })
-            ).value;
-          }
-          rows = content
-            .split(/\r?\n/)
-            .filter((line) => line.trim())
-            .map((line, i) => ({
-              rowId: `row-${i + 1}`,
-              label: line,
-              description: line,
-            }));
+          let content: string;
+          if (extension === 'pdf' || extension === 'docx') {
+            setProgress(ocr ? 'Reading scanned pages with OCR. Review every extracted number.' : 'Extracting document text on the server...');
+            const body = new FormData(); body.append('file', file); if (ocr) body.append('ocr', 'true');
+            const response = await fetch('/api/workflow-extract', { method: 'POST', body, signal: AbortSignal.any([abort.signal, AbortSignal.timeout(120000)]) });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Document extraction failed.');
+            if (result.needsOcr) { setScanFile(file); setOcrAvailable(result.ocrAvailable); return; }
+            content = result.text;
+          } else content = await file.text();
+          setProgress('Finding records and numeric fields...');
+          rows = await parseText(content, 'txt', abort.signal);
         }
         if (!rows.length)
           throw new Error(
             "No readable records found. For scanned documents, enter the extracted values manually.",
           );
+        if (abort.signal.aborted) return;
+        const extracted = ['pdf', 'docx', 'txt'].includes(extension ?? '');
+        setNumericFields([...new Set(rows.flatMap(Object.keys))].filter(key => extracted ? key.startsWith('number_') : rows.some(row => typeof row[key] === 'number') && rows.every(row => row[key] == null || typeof row[key] === 'number')));
         setText(JSON.stringify(rows, null, 2));
         setPreview({
           rows,
+          extractionReviewRequired: extracted,
+          extractionMethod: ocr ? 'ocr' : 'text',
           fileName: file.name,
           sourceKind: "manual_table",
           uploadTimestamp: new Date().toISOString(),
@@ -189,7 +211,7 @@ export function WorkflowTestData({
         error instanceof Error ? error.message : "Could not read document",
       );
     } finally {
-      setBusy(false);
+      if (controller.current === abort) setBusy(false);
     }
   };
   return (
@@ -224,7 +246,12 @@ export function WorkflowTestData({
             event.target.value = "";
           }}
         />
-        {busy && <p>Reading document…</p>}
+        {busy && <div role="status"><p>{progress}</p><button onClick={() => controller.current?.abort()}>Cancel upload</button></div>}
+        {scanFile && <div role="status" className="rounded border p-3">
+          <p>This document has no readable text layer and requires OCR. You can also enter records manually below.</p>
+          <button disabled={!ocrAvailable || busy} onClick={() => void upload(scanFile, true)}>Read scanned document with OCR</button>
+          {!ocrAvailable && <p>OCR is not configured on this server. Manual entry is available.</p>}
+        </div>}
         <button
           className="block text-sm underline"
           onClick={() => setManual(!manual)}
@@ -276,6 +303,7 @@ export function WorkflowTestData({
             />
             <button
               onClick={() => {
+                setPreview(null);
                 try {
                   const rows = JSON.parse(text);
                   if (
@@ -338,9 +366,13 @@ export function WorkflowTestData({
                 </label>
               ))}
             </div>
-            <ReadableData value={preview.rows ?? preview} />
+            <label className="block text-sm">Decimal separator <select aria-label="Document decimal separator" value={decimal} onChange={event => { setDecimal(event.target.value); setReviewed(false); }}><option value=".">Point: 1,234.56</option><option value=",">Comma: 1.234,56</option></select></label>
+            <DocumentReviewTable rows={Array.isArray(preview.rows) ? preview.rows : []} numericFields={numericFields} onNumericFields={fields => { setNumericFields(fields); setReviewed(false); }} onChange={rows => { setPreview({ ...preview, rows }); setReviewed(false); }} />
+            {Boolean(preview.extractionReviewRequired) && <label className="flex gap-2 text-sm"><input type="checkbox" aria-label="Confirm extracted values" checked={reviewed} onChange={event => setReviewed(event.target.checked)} />I checked the extracted values and selected the correct numeric fields. Numbers may represent dates or identifiers; they are not automatically treated as amounts.</label>}
+            <details><summary>Original structured preview / JSON</summary><ReadableData value={preview.rows ?? preview} /></details>
             <button
               className="rounded bg-primary px-3 py-2 text-primary-foreground"
+              disabled={busy || Boolean(preview.extractionReviewRequired) && !reviewed}
               onClick={apply}
             >
               Use this test data

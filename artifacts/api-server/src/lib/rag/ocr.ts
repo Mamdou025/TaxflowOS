@@ -24,9 +24,8 @@ const MAX_OUTPUT_TOKENS = Number(process.env.OCR_MAX_TOKENS) || 16_384;
 const OCR_PROMPT =
   "Transcribe ALL text from this document exactly as it appears, preserving " +
   "reading order, table structure (as plain-text rows), labels, and every number. " +
-  "This is a tax/financial document — do NOT summarize, omit, translate, or " +
-  "interpret anything; output only the raw transcribed text. Transcribe your best " +
-  "reading of any unclear value rather than skipping it.";
+  "This document may concern any subject — do NOT summarize, omit, translate, or " +
+  "interpret anything; output only the raw transcribed text. Mark unclear values as [unclear]; never guess a number.";
 
 function isImage(fileName: string, mime?: string | null): boolean {
   return (
