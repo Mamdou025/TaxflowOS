@@ -1,4 +1,5 @@
 import { error, info, warning } from "../../../runtime/events";
+import { calculationValueKey, numericOutputFields } from "../../../../calculation-values";
 import {
   dedupeEvidenceRefs,
   dedupeSourceTrace,
@@ -97,6 +98,12 @@ function getRules(context: ToolExecutionContext): {
 
 function getNamedValues(context: ToolExecutionContext) {
   const values: Record<string, number> = {};
+  for (const input of getRoleInputs(context, "calculation_sources")) {
+    const source = input as { blockId: string; output: unknown };
+    for (const field of numericOutputFields(source.output)) {
+      values[calculationValueKey(source.blockId, field.path)] = field.value;
+    }
+  }
   for (const role of ["named_values", "protected_inputs", "fapi_inputs"]) {
     for (const input of getRoleInputs(context, role)) {
       for (const [key, value] of collectNamedValuesFromBackendInput(input)) {
@@ -151,8 +158,28 @@ function getMissingInputErrors({
   rules: CalculationRule[];
 }) {
   const errors: string[] = [];
-  if (Object.keys(namedValues).length === 0) {
-    errors.push("Calculation Engine needs named_values input.");
+  const ruleKeys = new Set(rules.map(rule => rule.resultKey));
+  if (ruleKeys.size !== rules.length) errors.push('Calculation result keys must be unique.');
+  const visited = new Set<string>();
+  const visiting = new Set<string>();
+  const visit = (key: string) => {
+    if (visited.has(key)) return;
+    if (visiting.has(key)) { errors.push(`Circular calculation dependency: ${key}.`); return; }
+    visiting.add(key);
+    const rule = rules.find(rule => rule.resultKey === key)!;
+    const refs = rule.formulaExpression ? collectFormulaReferences(rule.formulaExpression) : rule.operands.filter((operand): operand is string => typeof operand === 'string');
+    refs.filter(ref => ruleKeys.has(ref) && !Object.hasOwn(namedValues, ref)).forEach(visit);
+    visiting.delete(key);
+    visited.add(key);
+  };
+  ruleKeys.forEach(visit);
+  // Numbers alone are valid formulas. Explicit source references, however,
+  // must never silently turn an absent API field into a zero.
+  for (const rule of rules) {
+    const refs = rule.formulaExpression ? collectFormulaReferences(rule.formulaExpression) : rule.operands.filter((operand): operand is string => typeof operand === 'string');
+    for (const ref of refs.filter(ref => ref.startsWith('source:'))) {
+      if (!Object.hasOwn(namedValues, ref)) errors.push(`The connected field ${ref} has no numeric value. Run its source and check the selected field.`);
+    }
   }
   if (rules.length === 0) {
     if (configMode === "external_rules") {
@@ -615,6 +642,7 @@ function evaluateFormulaExpression({
     tokens: tokenized.tokens,
   }).parse();
   const warnings = [...new Set([...tokenized.warnings, ...parsed.warnings])];
+  if (!Number.isFinite(parsed.value)) warnings.push(`Non-finite result in ${ruleId}.`);
   const result = roundResult(parsed.value, resultKey);
 
   return {
@@ -711,6 +739,7 @@ function evaluateRule({
         resolvedOperands.map((operand) => operand.value)
       );
   const result = roundResult(rawResult, rule.resultKey);
+  if (!Number.isFinite(rawResult)) warnings.push(`Non-finite result in ${rule.calculationId}.`);
 
   return {
     resolvedOperands,
@@ -762,6 +791,8 @@ export function runCalculationEngine(
       }
 
       const evaluation = evaluateRule({ namedValues, rule });
+      const invalid = evaluation.warnings.filter(message => !message.startsWith('Missing operand '));
+      if (invalid.length > 0) return createErrorResult({ context, errors: invalid });
       namedValues[rule.resultKey] = evaluation.result;
       calculatedResults[rule.resultKey] = evaluation.result;
       resultDetails[rule.resultKey] = {
@@ -792,6 +823,8 @@ export function runCalculationEngine(
 
   for (const rule of pendingRules) {
     const evaluation = evaluateRule({ namedValues, rule });
+    const invalid = evaluation.warnings.filter(message => !message.startsWith('Missing operand '));
+    if (invalid.length > 0) return createErrorResult({ context, errors: invalid });
     namedValues[rule.resultKey] = evaluation.result;
     calculatedResults[rule.resultKey] = evaluation.result;
     resultDetails[rule.resultKey] = {

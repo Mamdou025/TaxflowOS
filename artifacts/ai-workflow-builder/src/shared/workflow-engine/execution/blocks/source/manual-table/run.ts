@@ -131,6 +131,6 @@ export function runManualTableSource(
     startedAt: context.startedAt,
     status: "success",
     toolId: "source.manual_table",
-    warnings: [],
+    warnings: rows.length === 0 ? ['No document records supplied. Upload a document or enter example data.'] : rows.some(row => !Number.isFinite(row.amount)) ? ['Some records have no numerical value. They can be classified; choose a number field before calculating amounts.'] : [],
   };
 }

@@ -11,17 +11,22 @@
 // branch).
 
 import { useEffect, useRef } from 'react';
-import { useAtomValue, useSetAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import { ReactFlowProvider } from '@xyflow/react';
 import { toast } from 'sonner';
 import { WorkflowCanvas } from '@/features/workflow-builder/ui/workflow-canvas';
 import { RightPanelShell } from '@/features/workflow-builder/ui/right-panel-shell';
 import { BuilderCopilot } from '@/features/assistant/ui/builder-copilot';
 import { BuilderPageMenu } from '@/features/workflow-builder/ui/builder-page-menu';
-import { builderEmbeddedAtom } from '@/lib/builder-bridge';
+import { activeBuilderWorkflowIdAtom, builderEmbeddedAtom } from '@/lib/builder-bridge';
 import { getPortfolioWorkflowDef } from '@/shared/workflow-engine/templates/portfolio/portfolio-workflows';
+import { WorkflowTestData } from '@/features/workflows-hub/workflow-test-data';
+import { workflowLibraryAtom, definitionFingerprint } from '@/features/workflows-hub/workflow-library';
+import { useOverlay } from '@/shared/ui/overlays/overlay-provider';
+import { selectedWorkflowIdAtom } from '@/features/workflows-hub/workflows-store';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
+  createWorkflowDefinitionFromCanvas,
   createBlankWorkflow,
   createPortfolioWorkflowById,
   createWorkingSourceRulesDemoWorkflow,
@@ -51,7 +56,18 @@ import {
 
 export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blank?: boolean } = {}) {
   const isMobile = useIsMobile();
+  const [library, setLibrary] = useAtom(workflowLibraryAtom);
+  const setSelectedWorkflow = useSetAtom(selectedWorkflowIdAtom);
+  const liveNodes = useAtomValue(nodesAtom);
+  const liveEdges = useAtomValue(edgesAtom);
+  const liveName = useAtomValue(currentWorkflowNameAtom);
+  const liveSelectedNode = useAtomValue(selectedNodeAtom);
+  const { hasOverlays } = useOverlay();
+  const loaded = useRef<{ snapshot: ReturnType<typeof createBlankWorkflow>; fingerprint: string; ready: boolean } | null>(null);
+  const initialLibrary = useRef(library);
+
   const setEmbedded = useSetAtom(builderEmbeddedAtom);
+  const setDefinitionId = useSetAtom(activeBuilderWorkflowIdAtom);
   const setNodes = useSetAtom(nodesAtom);
   const setEdges = useSetAtom(edgesAtom);
   const setCurrentWorkflowName = useSetAtom(currentWorkflowNameAtom);
@@ -75,8 +91,9 @@ export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blan
   // Tell the toolbar to hide its floating rail; the chrome lives in the header.
   useEffect(() => {
     setEmbedded(true);
-    return () => setEmbedded(false);
-  }, [setEmbedded]);
+    setDefinitionId(workflowId ?? null);
+    return () => { setEmbedded(false); setDefinitionId(null); };
+  }, [setEmbedded, setDefinitionId, workflowId]);
 
   useEffect(() => {
     // A deep-link focus target for THIS workflow (compare ignoring the pf- prefix, as
@@ -84,10 +101,12 @@ export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blan
     // because which graph to load depends on where that block actually lives.
     const focus = focusRef.current;
     const focusBlockId =
-      focus && focus.blockId && workflowId &&
-      focus.workflowId.replace(/^pf-/, '') === workflowId.replace(/^pf-/, '')
+      focus &&
+      focus.blockId &&
+      workflowId &&
+      focus.workflowId.replace(/^pf-/, "") === workflowId.replace(/^pf-/, "")
         ? focus.blockId
-        : '';
+        : "";
 
     // A specific workflow (the Build tab of a workflow page) loads THAT graph —
     // a portfolio blueprint (pf-*) or a runnable config — WITHOUT clobbering the
@@ -95,55 +114,57 @@ export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blan
     let snapshot;
     if (blank) {
       snapshot = createBlankWorkflow();
+    } else if (workflowId && initialLibrary.current[workflowId]) {
+      snapshot = initialLibrary.current[workflowId].draft;
     } else if (workflowId) {
-      const cfg = getWorkflowConfig(workflowId.replace(/^pf-/, ''));
-      const def = getPortfolioWorkflowDef(workflowId);
+      const cfg = getWorkflowConfig(workflowId.replace(/^pf-/, ""));
       const runnableSnapshot = cfg
-        ? (cfg.buildSnapshot() as ReturnType<typeof createWorkingSourceRulesDemoWorkflow>)
+        ? (cfg.buildSnapshot() as ReturnType<
+            typeof createWorkingSourceRulesDemoWorkflow
+          >)
         : null;
       const blueprint = createPortfolioWorkflowById(workflowId);
-      const holds = (s: { blocks?: { id: string }[] } | null | undefined) =>
-        Boolean(focusBlockId && s?.blocks?.some((b) => b.id === focusBlockId));
-      // A def flagged `canvasFromRunnable` is an outline of a workflow that is
-      // actually BUILT — load the runnable config's real configured graph instead,
-      // so the Build tab shows the rulebooks/API config the run uses. Blueprints
-      // (no flag) keep showing their structural outline, which is their point —
-      // EXCEPT when we were deep-linked to a specific block: the chat/worksheets
-      // address blocks by their RUNNABLE id ("fapi-source-inputs"), which exists
-      // only on the configured graph, so loading the outline would land on a canvas
-      // that cannot contain the block the user asked to see.
-      const preferRunnable =
-        Boolean(def?.canvasFromRunnable) || (holds(runnableSnapshot) && !holds(blueprint));
+      // Build the executable graph whenever the template provides one.
       snapshot =
-        (preferRunnable ? runnableSnapshot : null) ||
-        blueprint ||
-        runnableSnapshot ||
-        createWorkingSourceRulesDemoWorkflow();
+        runnableSnapshot || blueprint || createWorkingSourceRulesDemoWorkflow();
     } else {
       const loadResult = loadLocalWorkflowSnapshotResult();
       if (loadResult.warning) {
-        toast.warning('Saved local workflow could not be loaded. Restored the working Excel workflow.');
+        toast.warning(
+          "Saved local workflow could not be loaded. Restored the working Excel workflow.",
+        );
       }
       snapshot = loadResult.snapshot || createWorkingSourceRulesDemoWorkflow();
     }
     const canvas = workflowDefinitionToCanvas(snapshot);
+    loaded.current = {
+      snapshot,
+      fingerprint: definitionFingerprint(
+        createWorkflowDefinitionFromCanvas({
+          ...canvas,
+          name: snapshot.name,
+          existing: snapshot,
+        }),
+      ),
+      ready: false,
+    };
     // The deep-linked block (resolved above) → select + centre it.
-    const focusedNode = focusBlockId ? canvas.nodes.find((n) => n.id === focusBlockId) : undefined;
+    const focusedNode = focusBlockId
+      ? canvas.nodes.find((n) => n.id === focusBlockId)
+      : undefined;
     const selectedNode =
-      focusedNode ||
-      canvas.nodes.find((n) => n.selected) ||
-      canvas.nodes[0];
+      focusedNode || canvas.nodes.find((n) => n.selected) || canvas.nodes[0];
     setNodes(
       canvas.nodes.map((node) => ({
         ...node,
         selected: selectedNode ? node.id === selectedNode.id : false,
-        data: { ...node.data, status: 'idle' as const },
-      }))
+        data: { ...node.data, status: "idle" as const },
+      })),
     );
     setEdges(canvas.edges);
     setCurrentWorkflowId(LOCAL_WORKFLOW_ID);
     setCurrentWorkflowName(snapshot.name);
-    setCurrentWorkflowVisibility('private');
+    setCurrentWorkflowVisibility("private");
     setIsWorkflowOwner(true);
     setHasUnsavedChanges(false);
     setHasSidebarBeenShown(true);
@@ -163,11 +184,77 @@ export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blan
     // (they persist it with the Save button when ready).
     if (!workflowId && !blank) saveWorkflowDefinitionSnapshot(snapshot);
   }, [
-    workflowId, blank,
-    setCurrentWorkflowId, setCurrentWorkflowName, setCurrentWorkflowVisibility,
-    setEdges, setHasSidebarBeenShown, setHasUnsavedChanges, setIsWorkflowOwner,
-    setNodes, setSelectedEdge, setSelectedExecutionId, setSelectedNode, setWorkflowNotFound,
-    setFocusNodeId, setOpenBlockConfig,
+    workflowId,
+    blank,
+    setCurrentWorkflowId,
+    setCurrentWorkflowName,
+    setCurrentWorkflowVisibility,
+    setEdges,
+    setHasSidebarBeenShown,
+    setHasUnsavedChanges,
+    setIsWorkflowOwner,
+    setNodes,
+    setSelectedEdge,
+    setSelectedExecutionId,
+    setSelectedNode,
+    setWorkflowNotFound,
+    setFocusNodeId,
+    setOpenBlockConfig,
+  ]);
+
+  // Persist the actual canvas before navigation can unmount Build.
+  useEffect(() => {
+    if (!workflowId && !blank) return;
+    const base = loaded.current;
+    if (!base) return;
+    if (!base.ready) {
+      base.ready = true;
+      return;
+    }
+    const draft = createWorkflowDefinitionFromCanvas({
+      nodes: liveNodes,
+      edges: liveEdges,
+      name: liveName,
+      existing: base.snapshot,
+    });
+    const fingerprint = definitionFingerprint(draft);
+    if (fingerprint === base.fingerprint) return;
+    base.fingerprint = fingerprint;
+    const existing = workflowId ? library[workflowId] : undefined;
+    const id = existing?.id ?? `custom:${crypto.randomUUID()}`;
+    const namedDraft = {
+      ...draft,
+      id,
+      name: existing ? draft.name : `${draft.name} \u2014 My workflow`,
+    };
+    setLibrary((previous) => ({
+      ...previous,
+      [id]: {
+        ...(existing ?? {
+          id,
+          templateId: workflowId ?? "__new__",
+          versions: [],
+          runs: [],
+        }),
+        draft: namedDraft,
+      },
+    }));
+    if (!existing) {
+      setBuilderFocus({ workflowId: id, blockId: hasOverlays ? liveSelectedNode ?? "" : "" });
+      setSelectedWorkflow(id);
+    }
+  }, [
+    liveNodes,
+    liveEdges,
+    liveName,
+    workflowId,
+    library,
+    setLibrary,
+    setSelectedWorkflow,
+    liveSelectedNode,
+    hasOverlays,
+    setBuilderFocus,
+    blank,
   ]);
 
   // Clear the deep-link target shortly after mount — late enough to survive a
@@ -184,9 +271,12 @@ export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blan
       {/* Teaches the chat about this canvas + publishes the header menu. Render nothing. */}
       <BuilderCopilot />
       <BuilderPageMenu />
-      <ReactFlowProvider>
+      <div className="absolute inset-x-3 top-2 z-20 max-h-[65%] overflow-auto">
+        {loaded.current && <WorkflowTestData definition={createWorkflowDefinitionFromCanvas({ nodes: liveNodes, edges: liveEdges, name: liveName, existing: loaded.current.snapshot })} onChange={definition => { const canvas = workflowDefinitionToCanvas(definition); setNodes(canvas.nodes); setEdges(canvas.edges); setHasUnsavedChanges(true); }} />}
+      </div>
+      <div className="absolute inset-x-0 bottom-0 top-16"><ReactFlowProvider>
         <WorkflowCanvas />
-      </ReactFlowProvider>
+      </ReactFlowProvider></div>
       <RightPanelShell isMobile={isMobile} />
     </div>
   );

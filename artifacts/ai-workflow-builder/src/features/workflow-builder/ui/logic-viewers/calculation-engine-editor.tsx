@@ -1,3 +1,5 @@
+import { CalculationSourcePicker, calculationSources } from './calculation-source-picker';
+import { availableCalculationValues } from './available-calculation-values';
 
 
 import { cn } from "@/lib/utils";
@@ -163,49 +165,20 @@ function isCalculationInputRole(role?: string) {
   return role === "named_values" || role === "fapi_inputs" || role === "protected_inputs";
 }
 
-function collectUpstreamValues(
-  block: WorkflowBlock,
-  edges: WorkflowEdge[],
-  nodes: WorkflowNode[],
-  lastOutput: Record<string, unknown>
-): Array<{ key: string; value: number | null }> {
-  const seen = new Set<string>();
-  const result: Array<{ key: string; value: number | null }> = [];
-  const incomingEdges = edges.filter((e) => e.target === block.id);
-
-  for (const edge of incomingEdges) {
-    const sourceNode = nodes.find((n) => n.id === edge.source);
-    if (!sourceNode) continue;
-    const sourceBlock = sourceNode.data.block;
-    const role = edge.data?.targetInputRole ?? edge.data?.workflowEdge?.targetInputRole;
-    if (!isCalculationInputRole(role)) continue;
-    const sourceOutput = asRecord(lastOutput[edge.source] ?? lastOutput[sourceBlock?.id ?? ""] ?? {});
-    for (const key of UPSTREAM_VALUE_GROUP_KEYS) {
-      const group = asRecord(sourceOutput[key]);
-      for (const [valueKey, value] of Object.entries(group)) {
-        if (!seen.has(valueKey)) {
-          seen.add(valueKey);
-          result.push({ key: valueKey, value: asNumber(value) });
-        }
-      }
-    }
-  }
-
-  for (const key of FALLBACK_VALUE_KEYS) {
-    if (!seen.has(key)) {
-      seen.add(key);
-      result.push({ key, value: null });
-    }
-  }
-
-  return result;
+function collectUpstreamValues(block: WorkflowBlock, edges: WorkflowEdge[], nodes: WorkflowNode[], lastOutput: Record<string, unknown>) {
+  return availableCalculationValues(block, edges, nodes, lastOutput);
 }
 
 // ─── Token chip ───────────────────────────────────────────────────────────────
 
-function TokenChip({ termKeys, token, upstreamKeys }: { termKeys: Set<string>; token: DisplayToken; upstreamKeys: Set<string> }) {
+function TokenChip({ sourceLabels, termKeys, token, upstreamKeys }: { sourceLabels?: Map<string, string>; termKeys: Set<string>; token: DisplayToken; upstreamKeys: Set<string> }) {
   const operatorLabels: Record<string, string> = { "*": "×", "-": "−", "/": "÷" };
-  const displayValue = operatorLabels[token.value] ?? token.value;
+  let displayValue = operatorLabels[token.value] ?? token.value;
+  if (token.value.startsWith('source:')) {
+    const [, source, path] = token.value.split(':');
+    const decode = (part: string) => { try { return decodeURIComponent(part.replace(/@/g, '%')); } catch { return part; } };
+    displayValue = `${sourceLabels?.get(decode(source)) ?? decode(source)} · ${path.split('.').map(decode).join(' › ')}`;
+  }
 
   if (token.type === "op") return <span className="inline-flex select-none items-center rounded px-1.5 py-0.5 font-bold font-mono text-foreground/60 text-xs">{displayValue}</span>;
   if (token.type === "paren") return <span className="inline-flex select-none items-center rounded px-1 py-0.5 font-mono text-muted-foreground text-xs">{token.value}</span>;
@@ -213,7 +186,7 @@ function TokenChip({ termKeys, token, upstreamKeys }: { termKeys: Set<string>; t
   if (token.type === "func") return <span className="inline-flex items-center rounded border border-violet-400/50 bg-violet-400/15 px-1.5 py-0.5 font-mono text-[11px] text-violet-700 dark:text-violet-400">{token.value}</span>;
   if (termKeys.has(token.value)) return <span className="inline-flex items-center rounded border border-emerald-400/50 bg-emerald-400/15 px-1.5 py-0.5 font-mono text-[11px] text-emerald-700 dark:text-emerald-400">{token.value}</span>;
   if (upstreamKeys.has(token.value)) return <span className="inline-flex items-center rounded border border-sky-400/50 bg-sky-400/15 px-1.5 py-0.5 font-mono text-[11px] text-sky-700 dark:text-sky-400">{token.value}</span>;
-  return <span className="inline-flex items-center rounded border border-muted-foreground/30 bg-muted/50 px-1.5 py-0.5 font-mono text-[11px] text-foreground">{token.value}</span>;
+  return <span className="inline-flex items-center rounded border border-muted-foreground/30 bg-muted/50 px-1.5 py-0.5 font-mono text-[11px] text-foreground">{displayValue}</span>;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -244,11 +217,16 @@ const LEGEND = [
   { cls: "border-violet-400/40 bg-violet-400/10 text-violet-700", label: "Function" },
 ] as const;
 
+// A template's first edit creates a personal workflow and remounts the editor.
+// Keep its selection through that transition without writing UI state to rules.
+const selectedTerms = new Map<string, string>();
+
 // ─── CalculationEngineEditor ──────────────────────────────────────────────────
 
 export function CalculationEngineEditor({
   block,
   createTermRequest,
+  inputContextBlock,
   disabled,
   edges,
   fill,
@@ -260,6 +238,7 @@ export function CalculationEngineEditor({
   selectedTermId,
 }: {
   block: WorkflowBlock;
+  inputContextBlock?: WorkflowBlock;
   createTermRequest?: number;
   disabled: boolean;
   edges: WorkflowEdge[];
@@ -275,14 +254,18 @@ export function CalculationEngineEditor({
   const mode = (config.mode as CalculationMode | undefined) ?? "auto";
   const formulas = getFormulasFromConfig(config);
 
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [tokens, setTokens] = useState<DisplayToken[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(() => {
+    const key = selectedTermId ?? selectedTerms.get(block.id);
+    const index = formulas.findIndex(formula => formula.resultKey === key);
+    return index >= 0 ? index : null;
+  });
+  const [tokens, setTokens] = useState<DisplayToken[]>(() => selectedIndex === null ? [] : tokenizeExpression(formulaToExpression(formulas[selectedIndex])));
   const [constantInput, setConstantInput] = useState("");
   const [activeTab, setActiveTab] = useState<"edit" | "summary">("edit");
   const handledCreateRequestRef = useRef<number | undefined>(undefined);
   const handledInsertRequestRef = useRef<string | undefined>(undefined);
 
-  const upstreamValues = collectUpstreamValues(block, edges, nodes, lastRunOutput);
+  const upstreamValues = collectUpstreamValues(inputContextBlock ?? block, edges, nodes, lastRunOutput);
   const upstreamKeys = new Set(upstreamValues.map((v) => v.key));
   const allTermKeys = new Set(formulas.map((f) => f.resultKey));
   const tokenItems = getTokenItems(tokens);
@@ -310,11 +293,12 @@ export function CalculationEngineEditor({
     (index: number) => {
       setSelectedIndex(index);
       const formula = formulas[index];
+      selectedTerms.set(block.id, formula.resultKey);
       setTokens(tokenizeExpression(formulaToExpression(formula)));
       setConstantInput("");
       onSelectedTermIdChange?.(formula.resultKey);
     },
-    [formulas, onSelectedTermIdChange]
+    [block.id, formulas, onSelectedTermIdChange]
   );
 
   const appendToken = useCallback(
@@ -333,7 +317,8 @@ export function CalculationEngineEditor({
 
   const insertConstant = () => {
     if (!constantInput.trim()) return;
-    const num = Number.parseFloat(constantInput);
+    const num = Number(constantInput);
+    if (!/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(constantInput.trim())) return;
     if (!Number.isFinite(num)) return;
     appendToken({ type: "num", value: constantInput.trim() });
     setConstantInput("");
@@ -346,23 +331,26 @@ export function CalculationEngineEditor({
     if (disabled || selectedIndex === null) return;
     const next = [...formulas];
     const updated = { ...next[selectedIndex], [field]: value };
-    if (field === "resultKey") { updated.calculationId = value; onSelectedTermIdChange?.(value); }
+    if (field === "resultKey") { selectedTerms.set(block.id, value); updated.calculationId = value; onSelectedTermIdChange?.(value); }
     next[selectedIndex] = updated;
     saveFormulas(next);
   };
 
   const addTerm = useCallback(() => {
     if (disabled) return;
-    const id = `TERM_${formulas.length + 1}`;
+    let nextNumber = formulas.length + 1;
+    while (formulas.some(formula => formula.resultKey === `TERM_${nextNumber}`)) nextNumber++;
+    const id = `TERM_${nextNumber}`;
     const newFormula: InlineFormula = { calculationId: id, formulaExpression: "", label: id, operands: [], operation: "pass_through", resultKey: id };
     const next = [...formulas, newFormula];
+    selectedTerms.set(block.id, id);
     saveFormulas(next);
     const newIndex = next.length - 1;
     setSelectedIndex(newIndex);
     setTokens([]);
     setConstantInput("");
     onSelectedTermIdChange?.(id);
-  }, [disabled, formulas, onSelectedTermIdChange, saveFormulas]);
+  }, [block.id, disabled, formulas, onSelectedTermIdChange, saveFormulas]);
 
   const deleteTerm = (index: number) => {
     if (disabled) return;
@@ -523,7 +511,7 @@ export function CalculationEngineEditor({
                     <span className="select-none text-[11px] text-muted-foreground italic">Formula is empty</span>
                   ) : (
                     tokenItems.map(({ key, token }) => (
-                      <TokenChip key={key} termKeys={allTermKeys} token={token} upstreamKeys={upstreamKeys} />
+                      <TokenChip sourceLabels={new Map(nodes.map(node => [node.id, node.data.block?.label ?? node.id]))} key={key} termKeys={allTermKeys} token={token} upstreamKeys={upstreamKeys} />
                     ))
                   )}
                 </div>
@@ -546,8 +534,36 @@ export function CalculationEngineEditor({
                 </div>
               </div>
 
+                {/* Constant */}
+                <div className="shrink-0 space-y-1.5 border-b px-3 py-2">
+                  <div className="font-bold text-[9px] text-amber-600/80 uppercase tracking-widest">Add a number</div>
+                  <div className="flex items-center gap-1.5">
+                    <Input
+                      className="h-7 w-28 font-mono text-xs"
+                      disabled={disabled}
+                      onChange={(e) => setConstantInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && insertConstant()}
+                      aria-label="Number to add"
+                      step="any"
+                      placeholder="e.g. 500 or 2"
+                      type="number"
+                      value={constantInput}
+                    />
+                    <button
+                      className="h-7 rounded border border-amber-400/40 bg-amber-400/10 px-2 font-semibold text-[10px] text-amber-700 transition-colors hover:bg-amber-400/25 disabled:opacity-40 dark:text-amber-400"
+                      disabled={disabled || !/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(constantInput.trim())}
+                      onClick={insertConstant}
+                      type="button"
+                    >
+                      Add number
+                    </button>
+                  </div>
+                </div>
+
+
               {/* Builder tools */}
               <div className="flex-1 space-y-4 overflow-y-auto px-3 py-3">
+                <CalculationSourcePicker sources={calculationSources(inputContextBlock ?? block, edges, nodes)} outputs={lastRunOutput} disabled={disabled} onInsert={appendRef} />
                 {/* Upstream keys */}
                 {upstreamValues.length > 0 && (
                   <div className="space-y-1.5">
@@ -559,7 +575,7 @@ export function CalculationEngineEditor({
                           disabled={disabled}
                           key={key}
                           onClick={() => appendRef(key)}
-                          title={value !== null ? String(value) : "no value from last run"}
+                          title={value !== null ? String(value) : "Awaiting data ? you can use this term now"}
                           type="button"
                         >
                           {key}
@@ -606,30 +622,6 @@ export function CalculationEngineEditor({
                         {display}
                       </button>
                     ))}
-                  </div>
-                </div>
-
-                {/* Constant */}
-                <div className="space-y-1.5">
-                  <div className="font-bold text-[9px] text-amber-600/80 uppercase tracking-widest">Constant</div>
-                  <div className="flex items-center gap-1.5">
-                    <Input
-                      className="h-7 w-28 font-mono text-xs"
-                      disabled={disabled}
-                      onChange={(e) => setConstantInput(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && insertConstant()}
-                      placeholder="e.g. 34400"
-                      type="number"
-                      value={constantInput}
-                    />
-                    <button
-                      className="h-7 rounded border border-amber-400/40 bg-amber-400/10 px-2 font-semibold text-[10px] text-amber-700 transition-colors hover:bg-amber-400/25 disabled:opacity-40 dark:text-amber-400"
-                      disabled={disabled || !constantInput.trim()}
-                      onClick={insertConstant}
-                      type="button"
-                    >
-                      Insert
-                    </button>
                   </div>
                 </div>
 

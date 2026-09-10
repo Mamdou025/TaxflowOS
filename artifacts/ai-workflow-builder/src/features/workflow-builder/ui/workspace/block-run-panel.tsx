@@ -1,3 +1,5 @@
+import { presentToolOutput } from '@/shared/workflow-engine/present-tool-output';
+import { ReadableData } from './readable-data';
 
 
 // Run ONE block and see what it actually produced.
@@ -140,29 +142,7 @@ export function BlockRunPanel({
               )}
             </div>
 
-            {outputs.length > 0 && (
-              <div>
-                <h4 className="mb-2 font-medium text-foreground text-xs">
-                  Outputs
-                </h4>
-                <div className="overflow-hidden rounded-md border">
-                  <table className="w-full text-xs">
-                    <tbody>
-                      {outputs.map(([key, value]) => (
-                        <tr className="border-b last:border-b-0" key={key}>
-                          <td className="w-1/3 bg-muted/30 p-2 align-top font-mono text-[11px] text-muted-foreground">
-                            {key}
-                          </td>
-                          <td className="p-2 align-top text-foreground">
-                            {summarize(value)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
+            <div className="space-y-3"><h4>Input</h4><ReadableData value={lastRun.input ?? {}} /><h4>Output</h4><ReadableData value={presentToolOutput(lastRun, block)} /></div>
 
             {lastRun.logs.length > 0 && (
               <div>

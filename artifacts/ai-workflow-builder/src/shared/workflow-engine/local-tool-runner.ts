@@ -1,3 +1,4 @@
+import { presentToolOutput } from './present-tool-output';
 import {
   createWorkflowDefinitionFromCanvas,
   LOCAL_WORKFLOW_ID,
@@ -194,6 +195,7 @@ function getExecutionBlocks({
       blockId: selectedBlockId,
       edges: activeEdges,
     });
+    for (const id of descendants) for (const ancestor of collectAncestorBlockIds({ blockId: id, edges: activeEdges })) ancestors.add(ancestor);
     return definition.blocks.filter(
       (block) => ancestors.has(block.id) || descendants.has(block.id)
     );
@@ -334,8 +336,8 @@ function createExecutionLog({
   result: ToolRunResult;
   startedAt: Date;
 }): LocalExecutionLog {
-  const stepStartedAt = new Date(startedAt.getTime() + index * 80);
-  const completedAt = new Date(stepStartedAt.getTime() + 72);
+  const stepStartedAt = new Date(result.startedAt);
+  const completedAt = new Date(result.completedAt);
 
   return {
     completedAt,
@@ -380,14 +382,17 @@ export function runLocalWorkflowTools({
   nodes,
   selectedBlockId,
   workflowName,
+  workflowId,
 }: {
   edges: WorkflowEdge[];
   nodes: WorkflowNode[];
   workflowName: string;
+  workflowId?: string;
   mode?: LocalToolRunMode;
   selectedBlockId?: string | null;
 }): LocalToolRunnerResult {
   const definition = createWorkflowDefinition({ edges, nodes, workflowName });
+  if (workflowId) definition.id = workflowId;
   const schemaEdges = getActiveSchemaEdges(definition);
   const executionId = makeRunId(
     mode === "workflow" ? "local-tool-workflow" : `local-tool-${mode}`
@@ -418,20 +423,52 @@ export function runLocalWorkflowTools({
     const upstreamResults = incomingEdges
       .map((edge) => allResults[edge.sourceBlockId])
       .filter((upstreamResult): upstreamResult is ToolRunResult =>
-        Boolean(upstreamResult)
+        Boolean(upstreamResult),
       );
     const upstreamBlocks = incomingEdges
       .map((edge) =>
         definition.blocks.find(
-          (candidate) => candidate.id === edge.sourceBlockId
-        )
+          (candidate) => candidate.id === edge.sourceBlockId,
+        ),
       )
       .filter((candidate): candidate is WorkflowBlock => Boolean(candidate));
-    const resultStartedAt = new Date(
-      startedAt.getTime() + index * 80
-    ).toISOString();
-    const result =
-      !tool
+    const resultStartedAt = new Date().toISOString();
+    const missingNumbers =
+      tool?.toolGroup === "calculation" &&
+      toolId !== "logic.calculation_engine" &&
+      upstreamResults.some((item) =>
+        ["rows", "mappedRows", "selectedRows"].some(
+          (key) =>
+            Array.isArray(item.output[key]) &&
+            ((item.output[key] as unknown[]).length === 0 ||
+              (item.output[key] as Record<string, unknown>[]).some(
+                (row) =>
+                  typeof row.amount !== "number" ||
+                  !Number.isFinite(row.amount),
+              )),
+        ),
+      );
+    const upstreamFailed = upstreamResults.some(
+      (item) => item.status === "error" || item.status === "skipped",
+    );
+    const blockedMessage = missingNumbers
+      ? "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+      : upstreamFailed
+        ? "A preceding block could not execute. Resolve its message and test again."
+        : null;
+    const result = blockedMessage
+      ? {
+          ...createSkippedResult({
+            block,
+            message: blockedMessage,
+            runId: executionId,
+            startedAt: resultStartedAt,
+            toolId,
+          }),
+          status: "error" as const,
+          errors: [blockedMessage],
+        }
+      : !tool
         ? createSkippedResult({
             block,
             message: `No local deterministic tool is registered for ${block.family} / ${block.subtype}.`,
@@ -444,16 +481,16 @@ export function runLocalWorkflowTools({
             block,
             config: { ...tool.defaultConfig, ...block.config, toolId },
             evidenceRefs: dedupeEvidence(
-              upstreamResults.flatMap((item) => item.evidenceRefs)
+              upstreamResults.flatMap((item) => item.evidenceRefs),
             ),
             runId: executionId,
             sourceTrace: dedupeTrace(
-              upstreamResults.flatMap((item) => item.sourceTrace)
+              upstreamResults.flatMap((item) => item.sourceTrace),
             ),
             startedAt: resultStartedAt,
             upstreamBlocks,
             upstreamOutputs: Object.fromEntries(
-              upstreamResults.map((item) => [item.blockId, item.output])
+              upstreamResults.map((item) => [item.blockId, item.output]),
             ),
             upstreamResults,
             workflow: definition,
@@ -461,6 +498,25 @@ export function runLocalWorkflowTools({
 
     allResults[block.id] = {
       ...result,
+      configSignature: JSON.stringify(block.config),
+      inputTransfers: incomingEdges.flatMap(edge => {
+        const sourceResult = allResults[edge.sourceBlockId];
+        if (!sourceResult) return [];
+        return [{ edgeId: edge.id, sourceBlockId: edge.sourceBlockId,
+          sourceLabel: upstreamBlocks.find(source => source.id === edge.sourceBlockId)?.label ?? edge.sourceBlockId,
+          sourceOutputRole: edge.sourceOutputRole, targetInputRole: edge.targetInputRole,
+          delivered: result.status !== 'skipped', output: sourceResult.output }];
+      }),
+      input: Object.fromEntries(
+        upstreamResults.map((item) => [
+          upstreamBlocks.find((source) => source.id === item.blockId)?.label ??
+            item.blockId,
+          presentToolOutput(
+            item,
+            upstreamBlocks.find((source) => source.id === item.blockId),
+          ),
+        ]),
+      ),
       output: {
         bindingValidation: incomingEdges.map((edge) => ({
           bindingLabel: edge.bindingLabel,
@@ -484,7 +540,7 @@ export function runLocalWorkflowTools({
     );
   });
 
-  const completedAt = new Date(startedAt.getTime() + logs.length * 90 + 120);
+  const completedAt = new Date();
   const results = orderedBlocks
     .map((block) => allResults[block.id])
     .filter((result): result is ToolRunResult => Boolean(result));

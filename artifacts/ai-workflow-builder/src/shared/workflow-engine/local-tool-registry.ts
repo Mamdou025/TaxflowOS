@@ -70,6 +70,9 @@ export type ToolRunLog = {
 };
 
 export type ToolRunResult = {
+  configSignature?: string;
+  input?: Record<string, unknown>;
+  inputTransfers?: { edgeId: string; sourceBlockId: string; sourceLabel: string; sourceOutputRole?: string; targetInputRole?: string; delivered: boolean; output: Record<string, unknown> }[];
   runId: string;
   blockId: string;
   toolId: string;
@@ -438,7 +441,7 @@ function getConfiguredRows(config: Record<string, unknown>): FiscalRow[] {
         parseNumber(record.amount) ??
         parseNumber(record.value) ??
         parseNumber(record.balance) ??
-        0;
+        Number.NaN;
       let account: string | undefined;
       if (typeof record.account === "string") {
         account = record.account;
@@ -446,6 +449,7 @@ function getConfiguredRows(config: Record<string, unknown>): FiscalRow[] {
         account = record.accountNumber;
       }
       const row: FiscalRow = {
+        ...record,
         amount,
         currency:
           typeof record.currency === "string" ? record.currency : undefined,
@@ -464,7 +468,7 @@ function getConfiguredRows(config: Record<string, unknown>): FiscalRow[] {
     })
     .filter((item): item is FiscalRow => Boolean(item));
 
-  return rows.length > 0 ? rows : DEFAULT_TABLE_ROWS;
+  return rows;
 }
 
 function getConfiguredScalar({
@@ -5602,6 +5606,8 @@ function toBackendInputsByRole(context: ToolExecutionContext) {
   const inputsByRole: Record<string, unknown[]> = {};
 
   for (const result of context.upstreamResults) {
+    // Preserve source identity and the public output shape for formula references.
+    pushInputRole(inputsByRole, "calculation_sources", { blockId: result.blockId, output: result.output });
     const backendOutputs = asRecord(result.output.backendOutputs);
     if (backendOutputs) {
       pushBackendOutputsAsInputs(inputsByRole, backendOutputs);

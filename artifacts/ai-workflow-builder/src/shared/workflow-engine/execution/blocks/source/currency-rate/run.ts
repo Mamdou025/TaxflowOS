@@ -29,17 +29,18 @@ export function runCurrencyRateSource(
   const hasLiveRate =
     !sameCurrency && typeof liveRate === "number" && Number.isFinite(liveRate);
   const warnings: string[] = [];
-  // Prefer the live Bank of Canada Valet rate when one has been fetched;
-  // otherwise fall back to the workbook-provided override.
-  let rate = sameCurrency ? 1 : hasLiveRate ? liveRate : overrideRate;
+  // Match the editor: an explicit override wins until the user clears it.
+  const hasOverride = typeof overrideRate === 'number' && Number.isFinite(overrideRate);
+  const usesLiveRate = hasLiveRate && !hasOverride;
+  let rate = sameCurrency ? 1 : hasOverride ? overrideRate : liveRate;
   let rateSource = sameCurrency
     ? "same_currency"
-    : hasLiveRate
+    : usesLiveRate
       ? "bank_of_canada_valet"
       : "override";
   let rateType = sameCurrency
     ? "same_currency"
-    : hasLiveRate
+    : usesLiveRate
       ? config.rateType || "annual_average"
       : "user_override";
   if (!(typeof rate === "number" && Number.isFinite(rate))) {
@@ -74,7 +75,7 @@ export function runCurrencyRateSource(
   const sourceTrace = [createSourceTraceRef({ evidenceRef })];
   const rateMetadata = {
     fetcher: fetchAnnualAverageExchangeRate.name,
-    live: hasLiveRate,
+    live: usesLiveRate,
     provider: config.rateProvider || "bank_of_canada",
     rate_source: rateSource,
     sourceId: context.block.id,

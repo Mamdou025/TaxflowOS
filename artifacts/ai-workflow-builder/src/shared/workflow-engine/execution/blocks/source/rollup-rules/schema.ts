@@ -2,7 +2,7 @@ import type { EvidenceRef, SourceTraceRef } from "../../../runtime/types";
 
 const LIST_DELIMITER_REGEX = /[,;\n|]/;
 
-export type RollupOperation = "sum" | "sum_abs";
+export type RollupOperation = "sum" | "sum_abs" | "subtract" | "multiply" | "divide" | "pass_through";
 
 export type RollupRule = {
   rollupId: string;
@@ -43,7 +43,7 @@ function optionalString(value: unknown) {
 }
 
 function parseOperation(value: unknown): RollupOperation {
-  return value === "sum_abs" ? "sum_abs" : "sum";
+  return ['sum', 'sum_abs', 'subtract', 'multiply', 'divide', 'pass_through'].includes(String(value)) ? value as RollupOperation : 'sum';
 }
 
 function humanizeId(value: string) {

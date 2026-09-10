@@ -677,116 +677,6 @@ export function FieldRow({
   );
 }
 
-// ── Connected I/O strip (same pattern as AggregatorWorkspace) ─────────────────
-
-function InteractiveIOStrip({
-  block,
-  edges,
-  lastRun,
-  nodes,
-  onExecuteStep,
-}: {
-  block: WorkflowBlock;
-  edges: WorkflowEdge[];
-  lastRun?: LocalRunRecord;
-  nodes: WorkflowNode[];
-  onExecuteStep?: () => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [panelHeight, setPanelHeight] = useState(220);
-
-  const onResizePointerDown = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      const startY = e.clientY;
-      const startHeight = panelHeight;
-      const onMove = (ev: PointerEvent) => {
-        setPanelHeight(Math.max(140, Math.min(560, startHeight + (startY - ev.clientY))));
-      };
-      const onUp = () => {
-        window.removeEventListener("pointermove", onMove);
-        window.removeEventListener("pointerup", onUp);
-      };
-      window.addEventListener("pointermove", onMove);
-      window.addEventListener("pointerup", onUp);
-    },
-    [panelHeight]
-  );
-
-  const incomingCount = edges.filter((e) => e.target === block.id).length;
-
-  return (
-    <div className="shrink-0 border-t bg-background">
-      <div className="flex items-center">
-        <button
-          className="flex flex-1 items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-muted/30"
-          onClick={() => setOpen((v) => !v)}
-          type="button"
-        >
-          {open ? (
-            <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" />
-          ) : (
-            <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
-          )}
-          <span className="font-medium">Connected I/O</span>
-          {incomingCount > 0 && (
-            <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-              {incomingCount} input{incomingCount !== 1 ? "s" : ""}
-            </span>
-          )}
-          <span className="ml-auto text-[10px] opacity-60">
-            {open ? "collapse" : "expand"}
-          </span>
-        </button>
-        {onExecuteStep && (
-          <button
-            className="mr-3 flex shrink-0 items-center gap-1.5 rounded-md border border-primary/40 px-2.5 py-1 text-[11px] font-medium text-primary transition-colors hover:bg-primary/10"
-            onClick={onExecuteStep}
-            title="Run this block"
-            type="button"
-          >
-            <Play className="size-3" />
-            Run step
-          </button>
-        )}
-      </div>
-
-      {open && (
-        <>
-          <div
-            className="h-1.5 w-full cursor-ns-resize bg-border/40 transition-colors hover:bg-primary/30 active:bg-primary/40"
-            onPointerDown={onResizePointerDown}
-            title="Drag to resize"
-          />
-          <div className="flex border-t" style={{ height: panelHeight }}>
-            <div className="w-1/2 shrink-0 overflow-y-auto border-r">
-              <BlockDataFlowColumn
-                block={block}
-                edges={edges}
-                lastRun={lastRun}
-                nodes={nodes}
-                onExecuteStep={onExecuteStep}
-                side="inputs"
-              />
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              <BlockDataFlowColumn
-                block={block}
-                edges={edges}
-                lastRun={lastRun}
-                nodes={nodes}
-                onExecuteStep={onExecuteStep}
-                side="outputs"
-              />
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-// ── SourceGroup header ────────────────────────────────────────────────────────
 
 function SourceHeader({ label, subtype }: { label: string; subtype?: string }) {
   return (
@@ -804,7 +694,6 @@ function SourceHeader({ label, subtype }: { label: string; subtype?: string }) {
   );
 }
 
-// ── main component ────────────────────────────────────────────────────────────
 
 export function FieldBlockWorkspace({
   block,
@@ -916,16 +805,7 @@ export function FieldBlockWorkspace({
           )}
         </div>
 
-        {/* Connected I/O strip */}
-        {!compact && (
-          <InteractiveIOStrip
-            block={block}
-            edges={edges}
-            lastRun={lastRun}
-            nodes={nodes}
-            onExecuteStep={onExecuteStep}
-          />
-        )}
+
       </div>
 
       {/* source detail side panel */}

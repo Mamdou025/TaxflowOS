@@ -1,3 +1,4 @@
+import { availableCalculationValues } from './available-calculation-values';
 
 
 import { Plus, Trash2 } from "lucide-react";
@@ -290,37 +291,8 @@ function addFallbackValues({
   }
 }
 
-function collectUpstreamValues(
-  block: WorkflowBlock,
-  edges: WorkflowEdge[],
-  nodes: WorkflowNode[],
-  lastOutput: Record<string, unknown>
-): Array<{ key: string; value: number | null }> {
-  const seen = new Set<string>();
-  const result: Array<{ key: string; value: number | null }> = [];
-  const incomingEdges = edges.filter((e) => e.target === block.id);
-
-  for (const edge of incomingEdges) {
-    const sourceNode = nodes.find((n) => n.id === edge.source);
-    if (!sourceNode) {
-      continue;
-    }
-    const sourceBlock = sourceNode.data.block;
-    const role =
-      edge.data?.targetInputRole ?? edge.data?.workflowEdge?.targetInputRole;
-    if (!isCalculationInputRole(role)) {
-      continue;
-    }
-
-    const sourceOutput = asRecord(
-      lastOutput[edge.source] ?? lastOutput[sourceBlock?.id ?? ""] ?? {}
-    );
-    addOutputGroups({ result, seen, sourceOutput });
-  }
-
-  addFallbackValues({ result, seen });
-
-  return result;
+function collectUpstreamValues(block: WorkflowBlock, edges: WorkflowEdge[], nodes: WorkflowNode[], lastOutput: Record<string, unknown>) {
+  return availableCalculationValues(block, edges, nodes, lastOutput);
 }
 
 // ─── Token chip display ───────────────────────────────────────────────────────

@@ -8,20 +8,29 @@ export const calculationEngineDefinition: ToolDefinition = {
   family: "Logic",
   inputRoles: [
     {
-      acceptedFamilies: ["Logic", "Source", "Protected"],
+      acceptedFamilies: ["Logic", "Source", "Protected", "Field", "Review / Validation"],
       acceptedOutputTypes: [
         "named_values",
         "calculated_results",
         "fapi_inputs",
         "protected_result",
         "governed_value",
+        "rows",
+        "table_rows",
+        "raw_rows",
+        "parsed_table",
+        "mapped_rows",
+        "transformed_rows",
+        "computed_values",
+        "exchange_rate",
+        "reviewed_exchange_rate",
       ],
       allowMultiple: true,
       description:
         "Named numeric values from rollups, inputs, or protected values.",
       id: "named_values",
-      label: "Named values",
-      required: true,
+      label: "Calculation values",
+      required: false,
     },
     {
       acceptedFamilies: ["Source"],
