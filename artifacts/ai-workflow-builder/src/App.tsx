@@ -4,7 +4,7 @@ import { captureRenderError } from '@/lib/error-monitoring';
 /** Full-page spinner shown while the app shell is hydrating */
 function AppSpinner() {
   return (
-    <div style={{
+    <div role="status" aria-label="Loading workspace" style={{
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -20,6 +20,7 @@ function AppSpinner() {
         borderRadius: '50%',
         animation: 'spin 0.8s linear infinite',
       }} />
+      <span style={{ marginLeft: 12 }}>Loading workspace...</span>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );

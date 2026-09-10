@@ -17,6 +17,7 @@ function parseNumber(value: unknown): number | null {
   if (typeof value !== "string") {
     return null;
   }
+  if (!value.trim()) return null;
   const parsed = Number(value.trim());
   return Number.isFinite(parsed) ? parsed : null;
 }

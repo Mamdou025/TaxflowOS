@@ -1,3 +1,5 @@
+import { presentToolOutput } from '@/shared/workflow-engine/present-tool-output';
+import { ReadableData } from './readable-data';
 
 
 // Run ONE block and see what it actually produced.
@@ -7,11 +9,8 @@
 // and still have no way to see its output without running the whole workflow and
 // inferring backwards.
 //
-// `mode: "selected"` in the local runner already did the right thing: it executes
-// the block PLUS its ancestors, because a block with no upstream inputs produces
-// nothing meaningful. So a single-block run here is a real run of a real slice —
-// the same executor, the same evidence, the same warnings as the full workflow.
-// This panel just surfaces its result.
+// Connected tests run ancestors; isolated tests execute only the selected block
+// with explicit examples or recorded inputs. Both use the same executor.
 //
 // It shows outputs, logs, warnings and errors verbatim. A block that refuses to
 // compute ("needs mapped_rows input") says exactly that, which is the honest and
@@ -29,6 +28,7 @@ type BlockRunPanelProps = {
   onRun: () => void;
   running?: boolean;
   toolId: string;
+  isolated?: boolean;
 };
 
 const STATUS_STYLES: Record<string, { className: string; icon: React.ReactNode }> = {
@@ -75,6 +75,7 @@ export function BlockRunPanel({
   onRun,
   running,
   toolId,
+  isolated,
 }: BlockRunPanelProps) {
   const status = lastRun?.status ?? null;
   const style = status ? STATUS_STYLES[status] : null;
@@ -83,16 +84,14 @@ export function BlockRunPanel({
   );
 
   return (
-    <div className="flex h-full flex-col">
+    <div className={isolated ? 'flex min-h-80 min-w-0 flex-col overflow-hidden lg:min-h-0' : 'flex h-full flex-col'}>
       <div className="flex shrink-0 items-start justify-between gap-3 border-b px-4 py-3">
         <div className="min-w-0">
           <h3 className="font-semibold text-foreground text-sm">
             Run this block
           </h3>
           <p className="mt-0.5 text-[11px] text-muted-foreground leading-relaxed">
-            Executes <span className="font-mono">{toolId}</span> together with the
-            blocks feeding it, so the result is what this block really produces —
-            not a preview.
+            {isolated ? 'Executes this block using the supplied test inputs. Results are labeled as a block test.' : 'Executes this block together with the blocks feeding it.'}
           </p>
         </div>
         <Button
@@ -114,6 +113,7 @@ export function BlockRunPanel({
         {lastRun ? (
           <div className="space-y-4">
             <div className={`rounded-md border p-3 ${style?.className ?? "bg-muted/30"}`}>
+              {lastRun.blockTest && <p className="mb-2 text-xs">Individual block test · {lastRun.blockTest.inputs === 'examples' ? 'Example inputs' : lastRun.blockTest.inputs === 'recorded' ? 'Recorded inputs' : 'Block settings only'}</p>}
               <div className="flex items-center gap-2">
                 {style?.icon}
                 <span className="font-medium text-foreground text-sm capitalize">
@@ -140,29 +140,7 @@ export function BlockRunPanel({
               )}
             </div>
 
-            {outputs.length > 0 && (
-              <div>
-                <h4 className="mb-2 font-medium text-foreground text-xs">
-                  Outputs
-                </h4>
-                <div className="overflow-hidden rounded-md border">
-                  <table className="w-full text-xs">
-                    <tbody>
-                      {outputs.map(([key, value]) => (
-                        <tr className="border-b last:border-b-0" key={key}>
-                          <td className="w-1/3 bg-muted/30 p-2 align-top font-mono text-[11px] text-muted-foreground">
-                            {key}
-                          </td>
-                          <td className="p-2 align-top text-foreground">
-                            {summarize(value)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
+            <div className="space-y-3"><h4>Input</h4><ReadableData value={lastRun.input ?? {}} /><h4>Output</h4><ReadableData value={presentToolOutput(lastRun, block)} /></div>
 
             {lastRun.logs.length > 0 && (
               <div>

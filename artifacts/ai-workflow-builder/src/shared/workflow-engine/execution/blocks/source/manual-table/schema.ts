@@ -1,3 +1,4 @@
+import { parseNumericInput as parseNumber } from '../../../../numeric-input';
 import type { EvidenceRef, SourceTraceRef } from "../../../runtime/types";
 
 const NUMBER_PATTERN = /-?\d+(\.\d+)?/;
@@ -22,23 +23,6 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
-function parseNumber(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  const match = value.trim().match(NUMBER_PATTERN);
-  if (!match) {
-    return null;
-  }
-
-  const parsed = Number(match[0]);
-  return Number.isFinite(parsed) ? parsed : null;
-}
 
 function optionalString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
@@ -59,19 +43,15 @@ export function normalizeManualTableRow(
     return null;
   }
 
-  const amount =
-    parseNumber(record.amount) ??
+  const amount = Object.hasOwn(record, 'amount') ? parseNumber(record.amount) :
     parseNumber(record.value) ??
     parseNumber(record.balance);
 
-  if (amount === null) {
-    return null;
-  }
-
   return {
+    ...record,
     account:
       optionalString(record.account) || optionalString(record.accountNumber),
-    amount,
+    amount: amount ?? Number.NaN,
     currency: optionalString(record.currency),
     description: optionalString(record.description),
     label: String(record.label || record.name || `Source row ${index + 1}`),
@@ -79,7 +59,7 @@ export function normalizeManualTableRow(
     raw:
       asRecord(record.raw) ||
       asRecord(asRecord(record.metadata)?.raw) ||
-      undefined,
+      record,
     rowId: String(record.rowId || record.id || `source-row-${index + 1}`),
     rowNumber: optionalNumber(record.rowNumber),
   };
@@ -105,11 +85,5 @@ export function parseManualTableRows({
     .map(normalizeManualTableRow)
     .filter((row): row is ManualTableRow => Boolean(row));
 
-  if (rows.length > 0) {
-    return rows;
-  }
-
-  return config.requireUpload === true
-    ? []
-    : fallbackRows.map((row) => ({ ...row }));
+  return rows;
 }

@@ -1,0 +1,563 @@
+{
+  "id": "pf-data-readiness",
+  "inputKind": "generic upload probe; not domain-complete input",
+  "inputRows": 2,
+  "openMs": 9255,
+  "runMs": 599,
+  "totalMs": 21071,
+  "browserErrors": [],
+  "first": {
+    "id": "custom:6ff08641-da28-4680-8376-436582bf6b1c",
+    "name": "Platform Services · Data Readiness Service — My workflow",
+    "version": 1,
+    "runCount": 1,
+    "runId": "local-tool-workflow-1789009090916-mrq6as",
+    "status": "error",
+    "errors": [
+      "Keyword Mapper needs Keyword rules input.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "warnings": [
+      "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value.",
+      "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one.",
+      "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "sources": [
+      {
+        "id": "pf-data-readiness--src-tb",
+        "connected": true,
+        "consumedBy": [
+          "pf-data-readiness--lg-check"
+        ]
+      }
+    ],
+    "results": [
+      {
+        "blockId": "pf-data-readiness--start",
+        "label": "Assess readiness",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "triggerPayload",
+          "blockId",
+          "firedAt",
+          "mode",
+          "runId",
+          "workflowId",
+          "startedBy",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--src-tb",
+        "label": "Trial balances",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "rawRows",
+          "rawRowsCount",
+          "selectedRows",
+          "selectedRowsCount",
+          "workbookFile",
+          "selectedSheet",
+          "selectedRange",
+          "sourceMetadata",
+          "sourceLocator",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--src-fs",
+        "label": "Financial statements",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--src-fx",
+        "label": "FX rates",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "exchangeRate",
+          "exchangeRateInfo",
+          "value",
+          "fapiInputs",
+          "rateMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--ai-ocr",
+        "label": "OCR / extraction check",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "authoritative",
+          "accepted",
+          "proposal",
+          "proposalOnly",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--src-tp",
+        "label": "Transfer-pricing reports",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--src-responses",
+        "label": "Client responses",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--lg-check",
+        "label": "Check received vs required",
+        "status": "error",
+        "errors": [
+          "Keyword Mapper needs Keyword rules input."
+        ],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "mappedRows",
+          "mappedRowsCount",
+          "unmatchedRows",
+          "unmatchedRowsCount",
+          "lowConfidenceRows",
+          "lowConfidenceRowsCount",
+          "conflictCount",
+          "conflicts",
+          "mappingSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--chk-review",
+        "label": "Judgment · proceed / hold",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "label",
+          "readOnlyEvidence",
+          "unit",
+          "value",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--lg-score",
+        "label": "Readiness score",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--fld-readiness",
+        "label": "Readiness dashboard",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--out-readiness",
+        "label": "Data readiness assessment",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--out-requests",
+        "label": "Outstanding-information request",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      }
+    ]
+  },
+  "second": {
+    "id": "custom:6ff08641-da28-4680-8376-436582bf6b1c",
+    "name": "Platform Services · Data Readiness Service — My workflow",
+    "version": 1,
+    "runCount": 2,
+    "runId": "local-tool-workflow-1789009099815-qy45xc",
+    "status": "error",
+    "errors": [
+      "Keyword Mapper needs Keyword rules input.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "warnings": [
+      "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value.",
+      "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one.",
+      "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "sources": [
+      {
+        "id": "pf-data-readiness--src-tb",
+        "connected": true,
+        "consumedBy": [
+          "pf-data-readiness--lg-check"
+        ]
+      }
+    ],
+    "results": [
+      {
+        "blockId": "pf-data-readiness--start",
+        "label": "Assess readiness",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "triggerPayload",
+          "blockId",
+          "firedAt",
+          "mode",
+          "runId",
+          "workflowId",
+          "startedBy",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--src-tb",
+        "label": "Trial balances",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "rawRows",
+          "rawRowsCount",
+          "selectedRows",
+          "selectedRowsCount",
+          "workbookFile",
+          "selectedSheet",
+          "selectedRange",
+          "sourceMetadata",
+          "sourceLocator",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--src-fs",
+        "label": "Financial statements",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--src-fx",
+        "label": "FX rates",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "exchangeRate",
+          "exchangeRateInfo",
+          "value",
+          "fapiInputs",
+          "rateMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--ai-ocr",
+        "label": "OCR / extraction check",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "authoritative",
+          "accepted",
+          "proposal",
+          "proposalOnly",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--src-tp",
+        "label": "Transfer-pricing reports",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--src-responses",
+        "label": "Client responses",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--lg-check",
+        "label": "Check received vs required",
+        "status": "error",
+        "errors": [
+          "Keyword Mapper needs Keyword rules input."
+        ],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "mappedRows",
+          "mappedRowsCount",
+          "unmatchedRows",
+          "unmatchedRowsCount",
+          "lowConfidenceRows",
+          "lowConfidenceRowsCount",
+          "conflictCount",
+          "conflicts",
+          "mappingSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--chk-review",
+        "label": "Judgment · proceed / hold",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "label",
+          "readOnlyEvidence",
+          "unit",
+          "value",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--lg-score",
+        "label": "Readiness score",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--fld-readiness",
+        "label": "Readiness dashboard",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--out-readiness",
+        "label": "Data readiness assessment",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-data-readiness--out-requests",
+        "label": "Outstanding-information request",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      }
+    ]
+  }
+}

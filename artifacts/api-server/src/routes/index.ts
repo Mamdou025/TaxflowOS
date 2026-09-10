@@ -1,3 +1,5 @@
+import workflowExtractRouter from './workflow-extract';
+import workflowLibraryRouter from './workflow-library';
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
 import workflowsRouter from "./workflows";
@@ -16,6 +18,8 @@ import paramOptionsRouter from "./param-options";
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(workflowExtractRouter);
+router.use('/workflow-library', workflowLibraryRouter);
 // Live Bank of Canada FX rate for the FAPI run card's "fetch live rate" button.
 router.use(fxRateRouter);
 // Server-side JSON API calls: the builder's API Source block and Sina's callApi tool.

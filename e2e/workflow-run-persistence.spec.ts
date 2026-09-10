@@ -11,7 +11,7 @@
  * This drives the AI-free standalone run route (/run/:workflowId → WorkflowRunFlow)
  * deterministically — no chat, no model, no gateway credit needed.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect } from './workflow-audit-isolation';
 
 const RUN_ROUTE = '/run/fapi'; // a registered runnable workflow (FAPI Calculation)
 

@@ -1,6 +1,6 @@
 import type { BlockFamily } from "./block-types";
 
-export const INSPECTOR_TABS = ["properties", "code", "runs"] as const;
+export const INSPECTOR_TABS = ["properties", "data", "code", "runs"] as const;
 
 export type InspectorTab = (typeof INSPECTOR_TABS)[number];
 
@@ -26,7 +26,8 @@ export function isInspectorTab(value: unknown): value is InspectorTab {
 export function getDefaultInspectorTabForFamily(
   family?: BlockFamily | null
 ): InspectorTab {
-  return family === "Logic" ? "code" : "properties";
+  // Logic editors now live under Properties; Code is an optional legacy view.
+  return "properties";
 }
 
 export function getDefaultInspectorTabForSelection({

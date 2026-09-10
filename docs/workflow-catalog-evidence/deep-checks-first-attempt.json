@@ -1,0 +1,274 @@
+{
+  "config": {
+    "argv": [
+      "C:\\nvm4w\\nodejs\\node.exe",
+      "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\node_modules\\.pnpm\\@playwright+test@1.62.0\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config",
+      "playwright.catalog-audit.config.mjs",
+      "--tsconfig",
+      "e2e/tsconfig.json",
+      "workflow-catalog-deep-checks.spec.ts"
+    ],
+    "configFile": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\playwright.catalog-audit.config.mjs",
+    "rootDir": "C:/Users/Mamad/Sinaxe/TaxflowOS/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/Mamad/Sinaxe/TaxflowOS/test-results/catalog-execution",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/Mamad/Sinaxe/TaxflowOS/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "workflow-catalog-audit.spec.ts",
+          "workflow-catalog-deep-checks.spec.ts"
+        ],
+        "timeout": 120000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "docs/workflow-catalog-evidence/test-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.62.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "workflow-catalog-deep-checks.spec.ts",
+      "file": "workflow-catalog-deep-checks.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "compare runtime completion claims with underlying execution errors",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6453,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[{\"id\":\"holiday-payroll\",\"representative\":false,\"coreStatus\":\"error\",\"done\":true,\"headline\":{\"label\":\"Statutory holiday liability\",\"value\":0,\"currency\":\"CAD\"},\"summaryText\":\"HOLIDAY-PAYROLL complete. Statutory holiday liability = 0 CAD.\"},{\"id\":\"fapi\",\"representative\":false,\"coreStatus\":\"warning\",\"done\":true,\"headline\":{\"label\":\"Gross\",\"value\":25000,\"currency\":\"USD\"},\"summaryText\":\"FAPI complete. Gross = 25,000 USD.\"},{\"id\":\"roulement\",\"representative\":false,\"coreStatus\":\"error\",\"done\":true,\"headline\":{\"label\":\"Gain différé (non reconnu)\",\"value\":270000,\"currency\":\"USD\"},\"summaryText\":\"ROULEMENT complete. Gain différé (non reconnu) = 270,000 USD.\"},{\"id\":\"expense\",\"representative\":false,\"coreStatus\":\"warning\",\"done\":true,\"headline\":{\"label\":\"Net payable to employee\",\"value\":2325,\"currency\":\"USD\"},\"summaryText\":\"EXPENSE complete. Net payable to employee = 2,325 USD.\"},{\"id\":\"campaign\",\"representative\":false,\"coreStatus\":\"error\",\"done\":true,\"headline\":{\"label\":\"Projected revenue\",\"value\":525000,\"currency\":\"USD\"},\"summaryText\":\"CAMPAIGN complete. Projected revenue = 525,000 USD.\"},{\"id\":\"t1134\",\"representative\":true,\"coreStatus\":\"error\",\"done\":true,\"headline\":{\"label\":\"NET\",\"value\":247000,\"currency\":\"USD\"},\"summaryText\":\"T1134 complete. NET = 247,000 USD.\"},{\"id\":\"surplus\",\"representative\":true,\"coreStatus\":\"error\",\"done\":true,\"headline\":{\"label\":\"NET\",\"value\":172900,\"currency\":\"USD\"},\"summaryText\":\"SURPLUS complete. NET = 172,900 USD.\"},{\"id\":\"t106\",\"representative\":true,\"coreStatus\":\"error\",\"done\":true,\"headline\":{\"label\":\"NET\",\"value\":123500,\"currency\":\"USD\"},\"summaryText\":\"T106 complete. NET = 123,500 USD.\"},{\"id\":\"eifel\",\"representative\":true,\"coreStatus\":\"error\",\"done\":true,\"headline\":{\"label\":\"NET\",\"value\":321100,\"currency\":\"USD\"},\"summaryText\":\"EIFEL complete. NET = 321,100 USD.\"},{\"id\":\"t2-suite\",\"representative\":true,\"coreStatus\":\"error\",\"done\":true,\"headline\":{\"label\":\"NET\",\"value\":271700,\"currency\":\"USD\"},\"summaryText\":\"T2-SUITE complete. NET = 271,700 USD.\"},{\"id\":\"tax-provision\",\"representative\":true,\"coreStatus\":\"error\",\"done\":true,\"headline\":{\"label\":\"NET\",\"value\":222300,\"currency\":\"USD\"},\"summaryText\":\"TAX-PROVISION complete. NET = 222,300 USD.\"},{\"id\":\"part-xiii\",\"representative\":true,\"coreStatus\":\"error\",\"done\":true,\"headline\":{\"label\":\"NET\",\"value\":74100,\"currency\":\"USD\"},\"summaryText\":\"PART-XIII complete. NET = 74,100 USD.\"}]\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "(node:44672) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-10T03:02:34.334Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2c79e55c3a1b696cc679-bd6b12bfb2ad5de0785f",
+          "file": "workflow-catalog-deep-checks.spec.ts",
+          "line": 6,
+          "column": 5
+        },
+        {
+          "title": "builder examples execute with an explicitly supplied matching document",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7235,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[{\"name\":\"createWorkingSourceRulesDemoWorkflow\",\"status\":\"needs_review\",\"errors\":[]},{\"name\":\"createFapiSampleWorkflow\",\"status\":\"error\",\"errors\":[\"Rollup & Calculation Engine needs mapped_rows input.\",\"Rollup & Calculation Engine needs aggregation_rules input.\",\"A preceding block could not execute. Resolve its message and test again.\"]}]\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T03:02:41.142Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2c79e55c3a1b696cc679-a9b6eac15b9b86ff1039",
+          "file": "workflow-catalog-deep-checks.spec.ts",
+          "line": 21,
+          "column": 5
+        },
+        {
+          "title": "controlled arithmetic checks and exported expense payload inspection",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6379,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T03:02:48.412Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2c79e55c3a1b696cc679-4801a86684ed7d2f9164",
+          "file": "workflow-catalog-deep-checks.spec.ts",
+          "line": 40,
+          "column": 5
+        },
+        {
+          "title": "holiday workflow with a real API response still reports its calculation outcome",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 20907,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeEnabled\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('button', { name: 'Send', exact: true }).first()\nExpected: enabled\nReceived: disabled\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeEnabled\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('button', { name: 'Send', exact: true }).first()\u001b[22m\n\u001b[2m    13 × locator resolved to <button disabled title=\"Send\" aria-label=\"Send\">…</button>\u001b[22m\n\u001b[2m       - unexpected value \"disabled\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeEnabled\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('button', { name: 'Send', exact: true }).first()\nExpected: enabled\nReceived: disabled\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeEnabled\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('button', { name: 'Send', exact: true }).first()\u001b[22m\n\u001b[2m    13 × locator resolved to <button disabled title=\"Send\" aria-label=\"Send\">…</button>\u001b[22m\n\u001b[2m       - unexpected value \"disabled\"\u001b[22m\n\n    at C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\e2e\\workflow-catalog-deep-checks.spec.ts:82:81",
+                    "location": {
+                      "file": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\e2e\\workflow-catalog-deep-checks.spec.ts",
+                      "column": 81,
+                      "line": 82
+                    },
+                    "snippet": "  80 |   const response = await responsePromise; const payload = await response.json();\n  81 |   save('holiday-live-response', { fetchMs: Date.now() - fetchStart, httpStatus: response.status(), ...payload });\n> 82 |   await expect(page.getByRole('button', { name: 'Send', exact: true }).first()).toBeEnabled();\n     |                                                                                 ^\n  83 |   await page.getByRole('button', { name: 'Close', exact: true }).click();\n  84 |   await page.getByRole('button', { name: 'Run', exact: true }).first().click();\n  85 |   await page.getByRole('button', { name: 'Save changes and run', exact: true }).click();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\e2e\\workflow-catalog-deep-checks.spec.ts",
+                        "column": 81,
+                        "line": 82
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeEnabled\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator:  getByRole('button', { name: 'Send', exact: true }).first()\nExpected: enabled\nReceived: disabled\nTimeout:  5000ms\n\nCall log:\n\u001b[2m  - Expect \"toBeEnabled\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('button', { name: 'Send', exact: true }).first()\u001b[22m\n\u001b[2m    13 × locator resolved to <button disabled title=\"Send\" aria-label=\"Send\">…</button>\u001b[22m\n\u001b[2m       - unexpected value \"disabled\"\u001b[22m\n\n\n  80 |   const response = await responsePromise; const payload = await response.json();\n  81 |   save('holiday-live-response', { fetchMs: Date.now() - fetchStart, httpStatus: response.status(), ...payload });\n> 82 |   await expect(page.getByRole('button', { name: 'Send', exact: true }).first()).toBeEnabled();\n     |                                                                                 ^\n  83 |   await page.getByRole('button', { name: 'Close', exact: true }).click();\n  84 |   await page.getByRole('button', { name: 'Run', exact: true }).first().click();\n  85 |   await page.getByRole('button', { name: 'Save changes and run', exact: true }).click();\n    at C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\e2e\\workflow-catalog-deep-checks.spec.ts:82:81"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T03:02:54.819Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\test-results\\catalog-execution\\workflow-catalog-deep-chec-c06d0-rts-its-calculation-outcome\\test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\test-results\\catalog-execution\\workflow-catalog-deep-chec-c06d0-rts-its-calculation-outcome\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\e2e\\workflow-catalog-deep-checks.spec.ts",
+                    "column": 81,
+                    "line": 82
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "2c79e55c3a1b696cc679-c7bb9a9574ae0eb7ae49",
+          "file": "workflow-catalog-deep-checks.spec.ts",
+          "line": 68,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-10T03:02:32.355Z",
+    "duration": 43560.945999999996,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

@@ -1,3 +1,4 @@
+import { evaluateRollupGroups } from '@/shared/workflow-engine/rollup-evaluation';
 
 
 import { cn } from "@/lib/utils";
@@ -86,36 +87,10 @@ function getAllLeafCategories(groups: RollupGroup[]): string[] {
   const all = new Set<string>();
   for (const g of groups) {
     for (const id of g.includeCategoryIds) {
-      if (!isGroupRef(id, groups)) all.add(id);
+      if (id === g.rollupId || !isGroupRef(id, groups)) all.add(id);
     }
   }
   return [...all].sort();
-}
-
-function computeRecursive(
-  id: string,
-  groups: RollupGroup[],
-  leafValues: Record<string, number>,
-  visited: Set<string>
-): number {
-  if (visited.has(id)) return 0; // cycle guard
-  const group = groups.find((g) => g.rollupId === id);
-  if (!group) return leafValues[id] ?? 0;
-
-  const next = new Set([...visited, id]);
-  const nums = group.includeCategoryIds.map((child) =>
-    computeRecursive(child, groups, leafValues, next)
-  );
-  if (nums.length === 0) return 0;
-  switch (group.operation) {
-    case "sum": return nums.reduce((a, b) => a + b, 0);
-    case "sum_abs": return nums.reduce((a, b) => a + Math.abs(b), 0);
-    case "subtract": return nums[0] - nums.slice(1).reduce((a, b) => a + b, 0);
-    case "multiply": return nums.reduce((a, b) => a * b, 1);
-    case "divide": return nums.slice(1).reduce((a, b) => a / b, nums[0]);
-    case "pass_through": return nums[0] ?? 0;
-    default: return nums.reduce((a, b) => a + b, 0);
-  }
 }
 
 export function getRollupGroups(config: Record<string, unknown>): RollupGroup[] {
@@ -157,12 +132,14 @@ const OPERATIONS: Array<{ label: string; value: RollupOperation }> = [
 // ─── Tree child: raw category leaf OR nested group ref ────────────────────────
 
 function GroupTreeChild({
+  ancestors,
   depth,
   groups,
   id,
   onSelect,
   selectedId,
 }: {
+  ancestors: string[];
   depth: number;
   groups: RollupGroup[];
   id: string;
@@ -170,7 +147,9 @@ function GroupTreeChild({
   selectedId: string | null;
 }) {
   const [expanded, setExpanded] = useState(true);
-  const referencedGroup = groups.find((g) => g.rollupId === id);
+  // A group may wrap a category with the same ID. Never expand a group
+  // already on this branch (including malformed cyclic imported rules).
+  const referencedGroup = ancestors.includes(id) ? undefined : groups.find((g) => g.rollupId === id);
   const indent = 24 + depth * 14;
 
   if (referencedGroup) {
@@ -218,6 +197,7 @@ function GroupTreeChild({
         </div>
         {expanded && hasChildren && referencedGroup.includeCategoryIds.map((childId) => (
           <GroupTreeChild
+            ancestors={[...ancestors, id]}
             depth={depth + 1}
             groups={groups}
             id={childId}
@@ -330,6 +310,7 @@ function GroupTreeItem({
         <div className="border-b bg-muted/10">
           {group.includeCategoryIds.map((id) => (
             <GroupTreeChild
+              ancestors={[group.rollupId]}
               depth={0}
               groups={groups}
               id={id}
@@ -617,6 +598,7 @@ function TestTab({ groups }: { groups: RollupGroup[] }) {
   const leafCategories = useMemo(() => getAllLeafCategories(groups), [groups]);
   const [values, setValues] = useState<Record<string, string>>({});
   const [results, setResults] = useState<TestResult[] | null>(null);
+  const [testError, setTestError] = useState<string | null>(null);
 
   const runTest = () => {
     const parsed: Record<string, number> = {};
@@ -624,21 +606,22 @@ function TestTab({ groups }: { groups: RollupGroup[] }) {
       const n = Number.parseFloat(raw);
       parsed[id] = Number.isFinite(n) ? n : 0;
     }
-    setResults(
-      groups.map((group) => {
-        const result = computeRecursive(group.rollupId, groups, parsed, new Set());
-        const breakdown = group.includeCategoryIds.map((id) => {
-          const refGroup = groups.find((g) => g.rollupId === id);
-          return {
-            id,
-            label: refGroup ? refGroup.label : id,
-            value: computeRecursive(id, groups, parsed, new Set()),
-            isGroup: !!refGroup,
-          };
-        });
-        return { groupId: group.rollupId, label: group.label, result, breakdown };
-      })
-    );
+    try {
+      const evaluated = evaluateRollupGroups(groups, parsed);
+      setTestError(null);
+      setResults(groups.map(group => {
+        const value = evaluated.get(group.rollupId)!;
+        return { groupId: group.rollupId, label: group.label, result: value.result,
+          breakdown: value.inputValues.map(input => ({
+            id: input.categoryId, label: groups.find(g => g.rollupId === input.categoryId)?.label ?? input.categoryId,
+            value: input.value, isGroup: input.categoryId !== group.rollupId && isGroupRef(input.categoryId, groups),
+          })),
+        };
+      }));
+    } catch (error) {
+      setResults(null);
+      setTestError(error instanceof Error ? error.message : 'Could not evaluate groups.');
+    }
   };
 
   if (leafCategories.length === 0 && groups.length === 0) {
@@ -689,6 +672,7 @@ function TestTab({ groups }: { groups: RollupGroup[] }) {
         Run Test
       </Button>
 
+      {testError && <p role="alert" className="text-sm text-destructive">{testError}</p>}
       {results && (
         <div className="space-y-2">
           <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -858,7 +842,9 @@ export function RollupRulebookEditor({
 
   const addGroup = useCallback(() => {
     if (disabled) return;
-    const id = `group_${groups.length + 1}`;
+    let nextNumber = groups.length + 1;
+    while (groups.some(group => group.rollupId === `group_${nextNumber}`)) nextNumber++;
+    const id = `group_${nextNumber}`;
     const newGroup: RollupGroup = {
       rollupId: id,
       label: humanize(id),

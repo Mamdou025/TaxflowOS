@@ -1,0 +1,146 @@
+[
+  {
+    "id": "holiday-payroll",
+    "representative": false,
+    "coreStatus": "error",
+    "done": true,
+    "headline": {
+      "label": "Statutory holiday liability",
+      "value": 0,
+      "currency": "CAD"
+    },
+    "summaryText": "HOLIDAY-PAYROLL complete. Statutory holiday liability = 0 CAD."
+  },
+  {
+    "id": "fapi",
+    "representative": false,
+    "coreStatus": "warning",
+    "done": true,
+    "headline": {
+      "label": "Gross",
+      "value": 25000,
+      "currency": "USD"
+    },
+    "summaryText": "FAPI complete. Gross = 25,000 USD."
+  },
+  {
+    "id": "roulement",
+    "representative": false,
+    "coreStatus": "error",
+    "done": true,
+    "headline": {
+      "label": "Gain différé (non reconnu)",
+      "value": 270000,
+      "currency": "USD"
+    },
+    "summaryText": "ROULEMENT complete. Gain différé (non reconnu) = 270,000 USD."
+  },
+  {
+    "id": "expense",
+    "representative": false,
+    "coreStatus": "warning",
+    "done": true,
+    "headline": {
+      "label": "Net payable to employee",
+      "value": 2325,
+      "currency": "USD"
+    },
+    "summaryText": "EXPENSE complete. Net payable to employee = 2,325 USD."
+  },
+  {
+    "id": "campaign",
+    "representative": false,
+    "coreStatus": "error",
+    "done": true,
+    "headline": {
+      "label": "Projected revenue",
+      "value": 525000,
+      "currency": "USD"
+    },
+    "summaryText": "CAMPAIGN complete. Projected revenue = 525,000 USD."
+  },
+  {
+    "id": "t1134",
+    "representative": true,
+    "coreStatus": "error",
+    "done": true,
+    "headline": {
+      "label": "NET",
+      "value": 247000,
+      "currency": "USD"
+    },
+    "summaryText": "T1134 complete. NET = 247,000 USD."
+  },
+  {
+    "id": "surplus",
+    "representative": true,
+    "coreStatus": "error",
+    "done": true,
+    "headline": {
+      "label": "NET",
+      "value": 172900,
+      "currency": "USD"
+    },
+    "summaryText": "SURPLUS complete. NET = 172,900 USD."
+  },
+  {
+    "id": "t106",
+    "representative": true,
+    "coreStatus": "error",
+    "done": true,
+    "headline": {
+      "label": "NET",
+      "value": 123500,
+      "currency": "USD"
+    },
+    "summaryText": "T106 complete. NET = 123,500 USD."
+  },
+  {
+    "id": "eifel",
+    "representative": true,
+    "coreStatus": "error",
+    "done": true,
+    "headline": {
+      "label": "NET",
+      "value": 321100,
+      "currency": "USD"
+    },
+    "summaryText": "EIFEL complete. NET = 321,100 USD."
+  },
+  {
+    "id": "t2-suite",
+    "representative": true,
+    "coreStatus": "error",
+    "done": true,
+    "headline": {
+      "label": "NET",
+      "value": 271700,
+      "currency": "USD"
+    },
+    "summaryText": "T2-SUITE complete. NET = 271,700 USD."
+  },
+  {
+    "id": "tax-provision",
+    "representative": true,
+    "coreStatus": "error",
+    "done": true,
+    "headline": {
+      "label": "NET",
+      "value": 222300,
+      "currency": "USD"
+    },
+    "summaryText": "TAX-PROVISION complete. NET = 222,300 USD."
+  },
+  {
+    "id": "part-xiii",
+    "representative": true,
+    "coreStatus": "error",
+    "done": true,
+    "headline": {
+      "label": "NET",
+      "value": 74100,
+      "currency": "USD"
+    },
+    "summaryText": "PART-XIII complete. NET = 74,100 USD."
+  }
+]

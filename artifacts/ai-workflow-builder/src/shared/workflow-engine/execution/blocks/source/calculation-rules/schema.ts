@@ -23,6 +23,8 @@ export type CalculationRule = {
   operation: CalculationOperation;
   operands: CalculationOperand[];
   resultKey: string;
+  roundingDigits?: number;
+  unit?: string;
   description?: string;
   evidenceRefs?: EvidenceRef[];
   formulaExpression?: string;
@@ -46,6 +48,7 @@ function parseNumber(value: unknown): number | null {
   if (typeof value !== "string") {
     return null;
   }
+  if (!value.trim()) return null;
   const parsed = Number(value.trim());
   return Number.isFinite(parsed) ? parsed : null;
 }
@@ -136,6 +139,8 @@ export function normalizeCalculationRule(
     operands,
     operation: parseOperation(record.operation),
     resultKey,
+    roundingDigits: typeof record.roundingDigits === 'number' ? record.roundingDigits : undefined,
+    unit: optionalString(record.unit),
   };
 }
 
