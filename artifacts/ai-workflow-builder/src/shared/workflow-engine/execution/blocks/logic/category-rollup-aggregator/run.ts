@@ -1,4 +1,5 @@
 import { error, info, warning } from "../../../runtime/events";
+import { evaluateRollupGroups } from '@/shared/workflow-engine/rollup-evaluation';
 import {
   dedupeEvidenceRefs,
   dedupeSourceTrace,
@@ -150,40 +151,17 @@ function getCategoryTotals(details: Record<string, CategoryDetail>) {
   );
 }
 
-function evaluateRollup({
-  categoryDetails,
-  rule,
-}: {
-  categoryDetails: Record<string, CategoryDetail>;
-  rule: RollupRule;
-}) {
-  const inputValues = rule.includeCategoryIds.map((categoryId) => ({
-    categoryId,
-    value: categoryDetails[categoryId]?.value ?? 0,
-  }));
-  const missingCategoryIds = rule.includeCategoryIds.filter(
-    (categoryId) => !categoryDetails[categoryId]
-  );
-  const result = inputValues.reduce((total, input) => {
-    const value =
-      rule.operation === "sum_abs" ? Math.abs(input.value) : input.value;
-    return total + value;
-  }, 0);
-  const warnings = missingCategoryIds.map(
-    (categoryId) => `Missing category reference: ${categoryId}.`
-  );
-
-  return {
-    inputValues,
-    result,
-    warnings,
-  };
-}
-
 export function runCategoryRollupAggregator(
   context: ToolExecutionContext
 ): ToolRunResult {
   const rows = getMappedRows(context);
+  // Do not silently drop a matched record whose numeric field is missing.
+  const invalidRows = getRoleInputs(context, 'mapped_rows').flatMap(input => {
+    const record = input as Record<string, unknown>;
+    const raw = Array.isArray(input) ? input : record?.mappedRows ?? record?.mapped_rows ?? record?.rows;
+    return Array.isArray(raw) ? raw.filter(row => collectMappedRowsFromRollupInput([row]).length === 0) : [];
+  });
+  if (invalidRows.length) return createErrorResult({ context, errors: invalidRows.map((row, index) => `Cannot aggregate ${String(row?.label ?? row?.rowId ?? `row ${index + 1}`)}: its category or numeric value is missing. Review the document fields.`) });
   const rules = getRollupRules(context);
   const missingErrors = getMissingInputErrors({ rows, rules });
 
@@ -192,6 +170,18 @@ export function runCategoryRollupAggregator(
   }
 
   const categoryDetails = getCategoryDetails(rows);
+  // The mapper declares its configured categories independently of matches.
+  // An empty, known category has a computed zero total; an unknown input does not.
+  for (const input of getRoleInputs(context, 'mapping_summary')) {
+    const declared = (input as { rulesUsed?: { categoryId?: string; categoryLabel?: string }[] }).rulesUsed;
+    if (!Array.isArray(declared)) continue;
+    for (const category of declared) {
+      if (category.categoryId && !Object.hasOwn(categoryDetails, category.categoryId)) categoryDetails[category.categoryId] = {
+        categoryId: category.categoryId, categoryLabel: category.categoryLabel || category.categoryId,
+        includedRows: [], rowCount: 0, value: 0,
+      };
+    }
+  }
   const categoryTotals = getCategoryTotals(categoryDetails);
   const rollupTotals: Record<string, number> = {};
   const rollupTotalDetails: Record<string, Record<string, unknown>> = {};
@@ -199,15 +189,21 @@ export function runCategoryRollupAggregator(
   const rollupFormulaTrace: Record<string, Record<string, unknown>> = {};
   const warnings: string[] = [];
   const includedCategoryIds = new Set<string>();
+  let evaluated: ReturnType<typeof evaluateRollupGroups>;
+  try {
+    evaluated = evaluateRollupGroups(rules, categoryTotals);
+  } catch (error) {
+    return createErrorResult({ context, errors: [error instanceof Error ? error.message : 'Could not evaluate aggregation groups.'] });
+  }
 
   for (const rule of rules) {
-    const rollup = evaluateRollup({ categoryDetails, rule });
+    const rollup = evaluated.get(rule.rollupId)!;
     rollupTotals[rule.rollupId] = rollup.result;
-    for (const categoryId of rule.includeCategoryIds) {
+    for (const categoryId of rollup.leafCategoryIds) {
       includedCategoryIds.add(categoryId);
     }
     const rollupRows = rows.filter((row) =>
-      rule.includeCategoryIds.includes(row.categoryId)
+      rollup.leafCategoryIds.includes(row.categoryId)
     );
     includedRowsByRollup[rule.rollupId] = rollupRows;
     rollupTotalDetails[rule.rollupId] = {
@@ -220,10 +216,7 @@ export function runCategoryRollupAggregator(
     };
     rollupFormulaTrace[rule.rollupId] = {
       description: rule.description,
-      formula:
-        rule.operation === "sum_abs"
-          ? `sum_abs(${rule.includeCategoryIds.join(", ")})`
-          : `sum(${rule.includeCategoryIds.join(", ")})`,
+      formula: `${rule.operation}(${rule.includeCategoryIds.join(', ')})`,
       inputValues: rollup.inputValues,
       operation: rule.operation,
       result: rollup.result,

@@ -1,3 +1,4 @@
+import { DOCUMENT_CALCULATOR } from './document-calculator';
 import {
   HOLIDAY_TEMPLATE_BLOCK_SPECS,
   HOLIDAY_TEMPLATE_EDGE_SPECS,
@@ -918,6 +919,7 @@ const HOLIDAY_PAYROLL: PortfolioWorkflowDef = {
 // foundation, then Tier 1).
 // ─────────────────────────────────────────────────────────────────────────────
 export const PORTFOLIO_WORKFLOWS: PortfolioWorkflowDef[] = [
+  DOCUMENT_CALCULATOR,
   HOLIDAY_PAYROLL,
   PLATFORM_SEQUENCE,
   SCOPE_SERVICE,

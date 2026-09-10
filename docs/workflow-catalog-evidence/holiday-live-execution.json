@@ -1,0 +1,227 @@
+{
+  "status": "error",
+  "errors": [
+    "No API response is saved. Fetch the source or explicitly enable example data.",
+    "A preceding block could not execute. Resolve its message and test again."
+  ],
+  "warnings": [
+    "A preceding block could not execute. Resolve its message and test again."
+  ],
+  "results": [
+    {
+      "label": "Start Accrual",
+      "status": "success",
+      "errors": [],
+      "warnings": [],
+      "output": {}
+    },
+    {
+      "label": "Public Holidays (Nager.Date API)",
+      "status": "error",
+      "errors": [
+        "No API response is saved. Fetch the source or explicitly enable example data."
+      ],
+      "warnings": [],
+      "output": {}
+    },
+    {
+      "label": "Payroll Assumptions",
+      "status": "success",
+      "errors": [],
+      "warnings": [],
+      "output": {}
+    },
+    {
+      "label": "Holiday Scope Rulebook",
+      "status": "success",
+      "errors": [],
+      "warnings": [],
+      "output": {}
+    },
+    {
+      "label": "Calendar Hierarchy",
+      "status": "success",
+      "errors": [],
+      "warnings": [],
+      "output": {}
+    },
+    {
+      "label": "Holiday Scope Classifier",
+      "status": "error",
+      "errors": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "warnings": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "output": {}
+    },
+    {
+      "label": "Day-Count Rollup Rules",
+      "status": "success",
+      "errors": [],
+      "warnings": [],
+      "output": {}
+    },
+    {
+      "label": "Accrual Formula Rules",
+      "status": "success",
+      "errors": [],
+      "warnings": [],
+      "output": {}
+    },
+    {
+      "label": "Day Counts",
+      "status": "error",
+      "errors": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "warnings": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "output": {}
+    },
+    {
+      "label": "Calendar Rollup",
+      "status": "error",
+      "errors": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "warnings": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "output": {}
+    },
+    {
+      "label": "Accrual Calculation",
+      "status": "error",
+      "errors": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "warnings": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "output": {
+        "bindingValidation": [
+          {
+            "bindingLabel": "day counts",
+            "bindingStatus": "valid",
+            "sourceBlockId": "hol-logic-rollup",
+            "sourceOutputRole": "named_values",
+            "targetInputRole": "named_values"
+          },
+          {
+            "bindingLabel": "formulas",
+            "bindingStatus": "valid",
+            "sourceBlockId": "hol-source-formulas",
+            "sourceOutputRole": "calculation_rules",
+            "targetInputRole": "calculation_rules"
+          },
+          {
+            "bindingLabel": "assumptions",
+            "bindingStatus": "valid",
+            "sourceBlockId": "hol-source-params",
+            "sourceOutputRole": "payroll_params",
+            "targetInputRole": "payroll_params"
+          }
+        ],
+        "reason": "A preceding block could not execute. Resolve its message and test again.",
+        "skipped": true,
+        "upstreamBlockIds": [
+          "hol-logic-rollup",
+          "hol-source-formulas",
+          "hol-source-params"
+        ]
+      }
+    },
+    {
+      "label": "Unplaced Holidays",
+      "status": "error",
+      "errors": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "warnings": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "output": {}
+    },
+    {
+      "label": "Weak Match Review",
+      "status": "error",
+      "errors": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "warnings": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "output": {}
+    },
+    {
+      "label": "Payroll Sign-off",
+      "status": "error",
+      "errors": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "warnings": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "output": {}
+    },
+    {
+      "label": "Export Readiness",
+      "status": "error",
+      "errors": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "warnings": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "output": {}
+    },
+    {
+      "label": "Accrual Schedule (CSV)",
+      "status": "error",
+      "errors": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "warnings": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "output": {}
+    },
+    {
+      "label": "Accrual Workbook",
+      "status": "error",
+      "errors": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "warnings": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "output": {}
+    },
+    {
+      "label": "Canonical JSON",
+      "status": "error",
+      "errors": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "warnings": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "output": {}
+    },
+    {
+      "label": "Evidence Pack",
+      "status": "error",
+      "errors": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "warnings": [
+        "A preceding block could not execute. Resolve its message and test again."
+      ],
+      "output": {}
+    }
+  ],
+  "browserErrors": []
+}

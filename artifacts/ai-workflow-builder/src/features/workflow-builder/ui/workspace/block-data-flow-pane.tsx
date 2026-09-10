@@ -1,3 +1,5 @@
+import { ReadableData } from './readable-data';
+import { availableCalculationValues } from '../logic-viewers/available-calculation-values';
 "use client";
 
 import { ChevronDown, ChevronRight, Copy, Maximize2, Plus } from "lucide-react";
@@ -1282,7 +1284,11 @@ function createOutputGroups({
   outgoingEdges: WorkflowEdge[];
   tool: ToolDefinition;
 }): DataFlowGroup[] {
-  return getDisplayOutputRoles({ block, tool }).map((role) =>
+  return getDisplayOutputRoles({ block, tool }).filter((role, index) => {
+    const value = getRoleOutputValue(role, latestOutput);
+    const connected = outgoingEdges.some(edge => (edge.data?.workflowEdge?.sourceOutputRole ?? edge.data?.sourceOutputRole) === role.id);
+    return connected || hasDataValue(value) || (index === 0 && Object.keys(latestOutput).length === 0);
+  }).map((role) =>
     createOutputGroup({
       block,
       lastRun,
@@ -1380,7 +1386,7 @@ function OutputRoleCard({
               Full
             </Button>
           </div>
-          {group.hasData ? (
+          {group.hasData ? (view === 'table' ? <ReadableData value={group.value} /> :
             <DataDisplayViewer
               className="min-h-[220px]"
               contextData={group.contextData}
@@ -1993,7 +1999,7 @@ export function BlockDataFlowColumn({
   }, [groups, search]);
   const groupedCalculationInputs =
     side === "inputs" && isCalculationEngineBlock(block)
-      ? getGroupedCalculationInputTerms({ block, groups })
+      ? (() => { const grouped = getGroupedCalculationInputTerms({ block, groups }); const seen = new Set(grouped.groupedDataTerms.flatMap(group => group.terms.map(term => term.key))); const defined = availableCalculationValues(block, edges, nodes).filter(term => !seen.has(term.key)); if (defined.length) grouped.groupedDataTerms.unshift({ category: 'Defined upstream groups', terms: defined.map(term => ({ ...term, source: 'data' as const })) }); return grouped; })()
       : undefined;
   const calculationInputTerms = groupedCalculationInputs
     ? {

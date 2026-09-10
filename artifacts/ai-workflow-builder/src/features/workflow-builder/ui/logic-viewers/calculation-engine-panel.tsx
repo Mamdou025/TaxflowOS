@@ -1,3 +1,4 @@
+import { availableCalculationValues } from './available-calculation-values';
 
 
 import { Plus, Trash2 } from "lucide-react";
@@ -23,6 +24,8 @@ export type InlineFormula = {
   operands: Array<string | number>;
   operation: string;
   resultKey: string;
+  roundingDigits?: number;
+  unit?: string;
 };
 
 type CalculationMode = "auto" | "inline" | "external_rules";
@@ -57,7 +60,7 @@ const KNOWN_FUNCTIONS = new Set([
 const DIGIT_CHARACTER_REGEX = /\d/;
 const IDENTIFIER_CHARACTER_REGEX = /[A-Za-z0-9_:.@-]/;
 const IDENTIFIER_START_REGEX = /[A-Za-z_]/;
-const NUMBER_CHARACTER_REGEX = /[\d.]/;
+const NUMBER_PREFIX_REGEX = /^(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/;
 const WHITESPACE_CHARACTER_REGEX = /\s/;
 const OPERATOR_TOKENS = new Set(["+", "-", "*", "/"]);
 
@@ -75,13 +78,8 @@ function getSingleCharacterToken(character: string): DisplayToken | null {
 }
 
 function readNumberToken(expression: string, startIndex: number) {
-  let endIndex = startIndex + 1;
-  while (
-    endIndex < expression.length &&
-    NUMBER_CHARACTER_REGEX.test(expression[endIndex])
-  ) {
-    endIndex += 1;
-  }
+  const text = expression.slice(startIndex).match(NUMBER_PREFIX_REGEX)?.[0] ?? expression[startIndex];
+  const endIndex = startIndex + text.length;
   return {
     nextIndex: endIndex,
     token: { type: "num", value: expression.slice(startIndex, endIndex) },
@@ -290,37 +288,8 @@ function addFallbackValues({
   }
 }
 
-function collectUpstreamValues(
-  block: WorkflowBlock,
-  edges: WorkflowEdge[],
-  nodes: WorkflowNode[],
-  lastOutput: Record<string, unknown>
-): Array<{ key: string; value: number | null }> {
-  const seen = new Set<string>();
-  const result: Array<{ key: string; value: number | null }> = [];
-  const incomingEdges = edges.filter((e) => e.target === block.id);
-
-  for (const edge of incomingEdges) {
-    const sourceNode = nodes.find((n) => n.id === edge.source);
-    if (!sourceNode) {
-      continue;
-    }
-    const sourceBlock = sourceNode.data.block;
-    const role =
-      edge.data?.targetInputRole ?? edge.data?.workflowEdge?.targetInputRole;
-    if (!isCalculationInputRole(role)) {
-      continue;
-    }
-
-    const sourceOutput = asRecord(
-      lastOutput[edge.source] ?? lastOutput[sourceBlock?.id ?? ""] ?? {}
-    );
-    addOutputGroups({ result, seen, sourceOutput });
-  }
-
-  addFallbackValues({ result, seen });
-
-  return result;
+function collectUpstreamValues(block: WorkflowBlock, edges: WorkflowEdge[], nodes: WorkflowNode[], lastOutput: Record<string, unknown>) {
+  return availableCalculationValues(block, edges, nodes, lastOutput);
 }
 
 // ─── Token chip display ───────────────────────────────────────────────────────
@@ -546,7 +515,8 @@ export function CalculationEngineModeSection({
     if (!constantInput.trim()) {
       return;
     }
-    const num = Number.parseFloat(constantInput);
+    const num = Number(constantInput);
+    if (!/^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(constantInput.trim())) return;
     if (!Number.isFinite(num)) {
       return;
     }

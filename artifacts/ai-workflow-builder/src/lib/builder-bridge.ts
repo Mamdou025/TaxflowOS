@@ -22,3 +22,6 @@ export const builderBridgeAtom = atom<BuilderBridge | null>(null);
 
 /** True while the builder is rendered inline (Scope panel) → hide the floating rail. */
 export const builderEmbeddedAtom = atom(false);
+
+/** Identity of the definition open in the embedded builder. */
+export const activeBuilderWorkflowIdAtom = atom<string | null>(null);

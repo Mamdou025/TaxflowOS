@@ -1,0 +1,801 @@
+{
+  "id": "pf-holiday-payroll",
+  "inputKind": "bundled sample records",
+  "inputRows": 10,
+  "openMs": 10014,
+  "runMs": 696,
+  "totalMs": 24618,
+  "browserErrors": [],
+  "first": {
+    "id": "custom:7bc3cc7f-e242-4493-99f1-425b8e599828",
+    "name": "Statutory Holiday Payroll Accrual — My workflow",
+    "version": 1,
+    "runCount": 1,
+    "runId": "local-tool-workflow-1789009002756-63a2s7",
+    "status": "error",
+    "errors": [
+      "No API response is saved. Fetch the source or explicitly enable example data.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "warnings": [
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "sources": [
+      {
+        "id": "fa477023-083c-45f8-812f-855167fd7f28",
+        "connected": false,
+        "consumedBy": []
+      }
+    ],
+    "results": [
+      {
+        "blockId": "hol-trigger",
+        "label": "Start Accrual",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "triggerPayload",
+          "blockId",
+          "firedAt",
+          "mode",
+          "runId",
+          "workflowId",
+          "startedBy",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-source-holidays",
+        "label": "Public Holidays (Nager.Date API)",
+        "status": "error",
+        "errors": [
+          "No API response is saved. Fetch the source or explicitly enable example data."
+        ],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-source-params",
+        "label": "Payroll Assumptions",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "expectedResults",
+          "fapiInputs",
+          "inputMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-source-keywords",
+        "label": "Holiday Scope Rulebook",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "keywordRuleEvidence",
+          "keywordRules",
+          "keywordRuleTrace",
+          "readOnlyEvidence",
+          "ruleMetadata",
+          "ruleVersion",
+          "ruleCount",
+          "sourceKind",
+          "ruleVersionMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-source-hierarchy",
+        "label": "Calendar Hierarchy",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "aggregationRuleEvidence",
+          "aggregationTree",
+          "aggregationRules",
+          "aggregationRuleTrace",
+          "immutable",
+          "readOnlyEvidence",
+          "ruleMetadata",
+          "ruleVersion",
+          "ruleCount",
+          "sourceKind",
+          "ruleVersionMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fa477023-083c-45f8-812f-855167fd7f28",
+        "label": "Document",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "rawRows",
+          "rawRowsCount",
+          "selectedRows",
+          "selectedRowsCount",
+          "workbookFile",
+          "selectedSheet",
+          "selectedRange",
+          "sourceMetadata",
+          "sourceLocator",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-logic-classifier",
+        "label": "Holiday Scope Classifier",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-source-rollup",
+        "label": "Day-Count Rollup Rules",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rollupRuleEvidence",
+          "rollupRules",
+          "rollupRuleTrace",
+          "ruleMetadata",
+          "ruleVersion",
+          "ruleCount",
+          "sourceKind",
+          "ruleVersionMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-source-formulas",
+        "label": "Accrual Formula Rules",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "calculationRuleEvidence",
+          "calculationRules",
+          "calculationRuleTrace",
+          "immutable",
+          "readOnlyEvidence",
+          "ruleMetadata",
+          "ruleVersion",
+          "ruleCount",
+          "sourceKind",
+          "ruleVersionMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-logic-rollup",
+        "label": "Day Counts",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-logic-hierarchy",
+        "label": "Calendar Rollup",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-logic-calc",
+        "label": "Accrual Calculation",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-review-unmatched",
+        "label": "Unplaced Holidays",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-review-confidence",
+        "label": "Weak Match Review",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-review-approve",
+        "label": "Payroll Sign-off",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-review-ready",
+        "label": "Export Readiness",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-output-csv",
+        "label": "Accrual Schedule (CSV)",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-output-excel",
+        "label": "Accrual Workbook",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-output-json",
+        "label": "Canonical JSON",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-output-pack",
+        "label": "Evidence Pack",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      }
+    ]
+  },
+  "second": {
+    "id": "custom:7bc3cc7f-e242-4493-99f1-425b8e599828",
+    "name": "Statutory Holiday Payroll Accrual — My workflow",
+    "version": 1,
+    "runCount": 2,
+    "runId": "local-tool-workflow-1789009014230-104110",
+    "status": "error",
+    "errors": [
+      "No API response is saved. Fetch the source or explicitly enable example data.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "warnings": [
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "sources": [
+      {
+        "id": "fa477023-083c-45f8-812f-855167fd7f28",
+        "connected": false,
+        "consumedBy": []
+      }
+    ],
+    "results": [
+      {
+        "blockId": "hol-trigger",
+        "label": "Start Accrual",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "triggerPayload",
+          "blockId",
+          "firedAt",
+          "mode",
+          "runId",
+          "workflowId",
+          "startedBy",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-source-holidays",
+        "label": "Public Holidays (Nager.Date API)",
+        "status": "error",
+        "errors": [
+          "No API response is saved. Fetch the source or explicitly enable example data."
+        ],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-source-params",
+        "label": "Payroll Assumptions",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "expectedResults",
+          "fapiInputs",
+          "inputMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-source-keywords",
+        "label": "Holiday Scope Rulebook",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "keywordRuleEvidence",
+          "keywordRules",
+          "keywordRuleTrace",
+          "readOnlyEvidence",
+          "ruleMetadata",
+          "ruleVersion",
+          "ruleCount",
+          "sourceKind",
+          "ruleVersionMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-source-hierarchy",
+        "label": "Calendar Hierarchy",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "aggregationRuleEvidence",
+          "aggregationTree",
+          "aggregationRules",
+          "aggregationRuleTrace",
+          "immutable",
+          "readOnlyEvidence",
+          "ruleMetadata",
+          "ruleVersion",
+          "ruleCount",
+          "sourceKind",
+          "ruleVersionMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fa477023-083c-45f8-812f-855167fd7f28",
+        "label": "Document",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "rawRows",
+          "rawRowsCount",
+          "selectedRows",
+          "selectedRowsCount",
+          "workbookFile",
+          "selectedSheet",
+          "selectedRange",
+          "sourceMetadata",
+          "sourceLocator",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-logic-classifier",
+        "label": "Holiday Scope Classifier",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-source-rollup",
+        "label": "Day-Count Rollup Rules",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rollupRuleEvidence",
+          "rollupRules",
+          "rollupRuleTrace",
+          "ruleMetadata",
+          "ruleVersion",
+          "ruleCount",
+          "sourceKind",
+          "ruleVersionMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-source-formulas",
+        "label": "Accrual Formula Rules",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "calculationRuleEvidence",
+          "calculationRules",
+          "calculationRuleTrace",
+          "immutable",
+          "readOnlyEvidence",
+          "ruleMetadata",
+          "ruleVersion",
+          "ruleCount",
+          "sourceKind",
+          "ruleVersionMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-logic-rollup",
+        "label": "Day Counts",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-logic-hierarchy",
+        "label": "Calendar Rollup",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-logic-calc",
+        "label": "Accrual Calculation",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-review-unmatched",
+        "label": "Unplaced Holidays",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-review-confidence",
+        "label": "Weak Match Review",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-review-approve",
+        "label": "Payroll Sign-off",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-review-ready",
+        "label": "Export Readiness",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-output-csv",
+        "label": "Accrual Schedule (CSV)",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-output-excel",
+        "label": "Accrual Workbook",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-output-json",
+        "label": "Canonical JSON",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "hol-output-pack",
+        "label": "Evidence Pack",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      }
+    ]
+  }
+}

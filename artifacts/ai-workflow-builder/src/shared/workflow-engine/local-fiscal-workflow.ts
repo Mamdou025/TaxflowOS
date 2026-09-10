@@ -895,6 +895,16 @@ function getDefaultBindingRoles({
       };
     }
 
+    if (sourceBlock.config.toolId === "source.http_json" || sourceBlock.config.sourceKind === "http_json") {
+      return { bindingLabel: "API values", bindingStatus: "valid", sourceOutputRole: "raw_rows", targetInputRole: "named_values" };
+    }
+    if (sourceBlock.config.toolId === "source.manual_table") {
+      return { bindingLabel: "Table values", bindingStatus: "valid", sourceOutputRole: "rows", targetInputRole: "named_values" };
+    }
+    if (sourceBlock.family === "Field") {
+      return { bindingLabel: "Field values", bindingStatus: "valid", sourceOutputRole: "computed_values", targetInputRole: "named_values" };
+    }
+
     return {
       bindingLabel: "Named values",
       bindingStatus: "valid",
@@ -4168,7 +4178,7 @@ export function loadLocalRunRecords(): LocalRunRecord[] {
     if (!stored) {
       return [];
     }
-    const records = JSON.parse(stored) as LocalRunRecord[];
+    const records = parseSharedJSON(stored) as LocalRunRecord[];
     return records.map((record) => ({
       execution: {
         ...record.execution,
@@ -4284,7 +4294,7 @@ function persistLocalRunRecords(records: LocalRunRecord[]) {
   try {
     window.localStorage.setItem(
       LOCAL_RUNS_STORAGE_KEY,
-      JSON.stringify(records, null, 2)
+      stringifySharedJSON(records)
     );
     return true;
   } catch (error) {
@@ -5282,3 +5292,4 @@ function getFapiSampleEdges(): WorkflowEdge[] {
 
   return edges;
 }
+import { parseSharedJSON, stringifySharedJSON } from './shared-json';

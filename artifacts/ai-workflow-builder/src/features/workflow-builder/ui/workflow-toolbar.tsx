@@ -1548,21 +1548,9 @@ function useWorkflowActions(state: ReturnType<typeof useWorkflowState>) {
       let nextWorkflowName = workflowName;
 
       if (!targetNode) {
-        const demo = {
-          ...createFapiTemplateWorkflow(),
-          events: [
-            createWorkflowEvent({
-              message:
-                "Local studio loaded the FAPI Calculation Template for workbook upload.",
-              type: "reset_sample",
-            }),
-          ],
-        };
-        const canvas = workflowDefinitionToCanvas(demo);
-        nextNodes = canvas.nodes;
-        nextEdges = canvas.edges;
-        targetNode = nextNodes.find(isExcelSourceNode);
-        nextWorkflowName = demo.name;
+        const block = createWorkflowBlockFromCatalog("source:excel-workbook", { id: nanoid(), label: "Document", position: { x: 0, y: 0 } });
+        targetNode = createWorkflowNodeFromBlock(block, { selected: true });
+        nextNodes = [...nextNodes, targetNode];
       }
 
       if (!targetNode) {

@@ -231,7 +231,7 @@ const Animated = ({
   const runVisual = getRunStatusVisual(runStatus);
   const statusClasses = getEdgeStatusClasses(workflowEdge?.status);
   const showLabel = Boolean(
-    workflowEdge && (selected || workflowEdge.status !== "active")
+    workflowEdge && selected
   );
   const relationshipLabel = workflowEdge
     ? formatRelationshipType(workflowEdge.relationshipType)

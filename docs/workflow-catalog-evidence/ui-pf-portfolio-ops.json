@@ -1,0 +1,859 @@
+{
+  "id": "pf-portfolio-ops",
+  "inputKind": "generic upload probe; not domain-complete input",
+  "inputRows": 2,
+  "openMs": 9285,
+  "runMs": 455,
+  "totalMs": 20771,
+  "browserErrors": [],
+  "first": {
+    "id": "custom:e7fe42ac-1834-4e95-bbed-fac1c0a04d85",
+    "name": "Portfolio Tax Calendar, Client Requests & Review — My workflow",
+    "version": 1,
+    "runCount": 1,
+    "runId": "local-tool-workflow-1789009155394-k01yor",
+    "status": "error",
+    "errors": [
+      "Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate A1: missing input debtForgiveness. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate A2: missing input priorYearG. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate B: missing input capGains, inclusionRate. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate C: missing input cfaIncome. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate D: missing input businessLosses. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate E: missing input faclCarryforward. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate F: missing input prescribedAmount. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate F1: missing input prescribedAmountF1. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate G: missing input dividendDeductions. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate H: missing input partnershipDividends. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate FAT Paid: missing input fatPaid. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate RTF: missing input rtf. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate FX Rate: missing input fxRate. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate Gross: missing input A, A1, A2, B, C. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate Deductions: missing input D, E, F, F1, G, H. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate FAPI Brut: missing input GROSS, DEDUCTIONS. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate FAT Deduction: missing input FAT_PAID, RTF, FAPI_BRUT. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate Net FAPI: missing input FAPI_BRUT, FAT_DEDUCTION. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate Net FAPI CAD: missing input NET_FAPI, FX_RATE. Provide the value or set an explicit default in Calculation settings.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "warnings": [
+      "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value.",
+      "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value.",
+      "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "sources": [
+      {
+        "id": "0fc8ece5-c9eb-410e-9cdc-ab906f9d5e05",
+        "connected": false,
+        "consumedBy": []
+      }
+    ],
+    "results": [
+      {
+        "blockId": "pf-portfolio-ops--start",
+        "label": "Schedule · Portfolio sweep",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "triggerPayload",
+          "blockId",
+          "firedAt",
+          "mode",
+          "runId",
+          "workflowId",
+          "cron",
+          "timezone",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "0fc8ece5-c9eb-410e-9cdc-ab906f9d5e05",
+        "label": "Document",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "rawRows",
+          "rawRowsCount",
+          "selectedRows",
+          "selectedRowsCount",
+          "workbookFile",
+          "selectedSheet",
+          "selectedRange",
+          "sourceMetadata",
+          "sourceLocator",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--src-portfolio",
+        "label": "Client & entity portfolio",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--src-deadlines",
+        "label": "Deadline rules",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "label",
+          "readOnlyEvidence",
+          "unit",
+          "value",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--src-responses",
+        "label": "Client responses",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--lg-applicability",
+        "label": "Determine applicability & deadlines",
+        "status": "error",
+        "errors": [
+          "Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate A1: missing input debtForgiveness. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate A2: missing input priorYearG. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate B: missing input capGains, inclusionRate. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate C: missing input cfaIncome. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate D: missing input businessLosses. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate E: missing input faclCarryforward. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate F: missing input prescribedAmount. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate F1: missing input prescribedAmountF1. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate G: missing input dividendDeductions. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate H: missing input partnershipDividends. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate FAT Paid: missing input fatPaid. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate RTF: missing input rtf. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate FX Rate: missing input fxRate. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate Gross: missing input A, A1, A2, B, C. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate Deductions: missing input D, E, F, F1, G, H. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate FAPI Brut: missing input GROSS, DEDUCTIONS. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate FAT Deduction: missing input FAT_PAID, RTF, FAPI_BRUT. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate Net FAPI: missing input FAPI_BRUT, FAT_DEDUCTION. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate Net FAPI CAD: missing input NET_FAPI, FX_RATE. Provide the value or set an explicit default in Calculation settings."
+        ],
+        "warnings": [],
+        "calculated": {},
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "namedValues",
+          "formulaTrace",
+          "calculatedResults",
+          "resultDetails",
+          "calculationSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--ai-route",
+        "label": "Route evidence",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "authoritative",
+          "accepted",
+          "proposal",
+          "proposalOnly",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--lg-assign",
+        "label": "Create instances & assign",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--lg-requests",
+        "label": "Generate information requests",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--lg-monitor",
+        "label": "Monitor progress",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--chk-review",
+        "label": "Manager review queue",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "label",
+          "readOnlyEvidence",
+          "unit",
+          "value",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--lg-risk",
+        "label": "Materiality & risk scoring",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--fld-workplan",
+        "label": "Portfolio workplan",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--fld-queue",
+        "label": "Manager review queue",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--out-workplan",
+        "label": "Portfolio workplan",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--out-outstanding",
+        "label": "Outstanding-information dashboard",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--out-queue",
+        "label": "Manager review queue",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--out-alerts",
+        "label": "Deadline & risk alerts",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--out-status",
+        "label": "Engagement status summaries",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--out-audit",
+        "label": "Workflow audit trail",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      }
+    ]
+  },
+  "second": {
+    "id": "custom:e7fe42ac-1834-4e95-bbed-fac1c0a04d85",
+    "name": "Portfolio Tax Calendar, Client Requests & Review — My workflow",
+    "version": 1,
+    "runCount": 2,
+    "runId": "local-tool-workflow-1789009164240-o5gxx0",
+    "status": "error",
+    "errors": [
+      "Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate A1: missing input debtForgiveness. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate A2: missing input priorYearG. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate B: missing input capGains, inclusionRate. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate C: missing input cfaIncome. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate D: missing input businessLosses. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate E: missing input faclCarryforward. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate F: missing input prescribedAmount. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate F1: missing input prescribedAmountF1. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate G: missing input dividendDeductions. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate H: missing input partnershipDividends. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate FAT Paid: missing input fatPaid. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate RTF: missing input rtf. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate FX Rate: missing input fxRate. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate Gross: missing input A, A1, A2, B, C. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate Deductions: missing input D, E, F, F1, G, H. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate FAPI Brut: missing input GROSS, DEDUCTIONS. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate FAT Deduction: missing input FAT_PAID, RTF, FAPI_BRUT. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate Net FAPI: missing input FAPI_BRUT, FAT_DEDUCTION. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate Net FAPI CAD: missing input NET_FAPI, FX_RATE. Provide the value or set an explicit default in Calculation settings.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "warnings": [
+      "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value.",
+      "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value.",
+      "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "sources": [
+      {
+        "id": "0fc8ece5-c9eb-410e-9cdc-ab906f9d5e05",
+        "connected": false,
+        "consumedBy": []
+      }
+    ],
+    "results": [
+      {
+        "blockId": "pf-portfolio-ops--start",
+        "label": "Schedule · Portfolio sweep",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "triggerPayload",
+          "blockId",
+          "firedAt",
+          "mode",
+          "runId",
+          "workflowId",
+          "cron",
+          "timezone",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "0fc8ece5-c9eb-410e-9cdc-ab906f9d5e05",
+        "label": "Document",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "rawRows",
+          "rawRowsCount",
+          "selectedRows",
+          "selectedRowsCount",
+          "workbookFile",
+          "selectedSheet",
+          "selectedRange",
+          "sourceMetadata",
+          "sourceLocator",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--src-portfolio",
+        "label": "Client & entity portfolio",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--src-deadlines",
+        "label": "Deadline rules",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "label",
+          "readOnlyEvidence",
+          "unit",
+          "value",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--src-responses",
+        "label": "Client responses",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--lg-applicability",
+        "label": "Determine applicability & deadlines",
+        "status": "error",
+        "errors": [
+          "Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate A1: missing input debtForgiveness. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate A2: missing input priorYearG. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate B: missing input capGains, inclusionRate. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate C: missing input cfaIncome. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate D: missing input businessLosses. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate E: missing input faclCarryforward. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate F: missing input prescribedAmount. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate F1: missing input prescribedAmountF1. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate G: missing input dividendDeductions. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate H: missing input partnershipDividends. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate FAT Paid: missing input fatPaid. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate RTF: missing input rtf. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate FX Rate: missing input fxRate. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate Gross: missing input A, A1, A2, B, C. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate Deductions: missing input D, E, F, F1, G, H. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate FAPI Brut: missing input GROSS, DEDUCTIONS. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate FAT Deduction: missing input FAT_PAID, RTF, FAPI_BRUT. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate Net FAPI: missing input FAPI_BRUT, FAT_DEDUCTION. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate Net FAPI CAD: missing input NET_FAPI, FX_RATE. Provide the value or set an explicit default in Calculation settings."
+        ],
+        "warnings": [],
+        "calculated": {},
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "namedValues",
+          "formulaTrace",
+          "calculatedResults",
+          "resultDetails",
+          "calculationSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--ai-route",
+        "label": "Route evidence",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "authoritative",
+          "accepted",
+          "proposal",
+          "proposalOnly",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--lg-assign",
+        "label": "Create instances & assign",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--lg-requests",
+        "label": "Generate information requests",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--lg-monitor",
+        "label": "Monitor progress",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--chk-review",
+        "label": "Manager review queue",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "label",
+          "readOnlyEvidence",
+          "unit",
+          "value",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--lg-risk",
+        "label": "Materiality & risk scoring",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--fld-workplan",
+        "label": "Portfolio workplan",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--fld-queue",
+        "label": "Manager review queue",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--out-workplan",
+        "label": "Portfolio workplan",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--out-outstanding",
+        "label": "Outstanding-information dashboard",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--out-queue",
+        "label": "Manager review queue",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--out-alerts",
+        "label": "Deadline & risk alerts",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--out-status",
+        "label": "Engagement status summaries",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-portfolio-ops--out-audit",
+        "label": "Workflow audit trail",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      }
+    ]
+  }
+}

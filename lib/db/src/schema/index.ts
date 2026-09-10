@@ -68,6 +68,16 @@ export const verifications = pgTable("verifications", {
   updatedAt: timestamp("updated_at"),
 });
 
+
+// Durable personal workflow library. The recovery code is hashed, never stored.
+export const personalWorkflowLibraries = pgTable('personal_workflow_libraries', {
+  workspaceHash: text('workspace_hash').primaryKey(),
+  ownerId: text('owner_id').notNull(),
+  payload: text('payload').notNull(),
+  revision: integer('revision').notNull().default(1),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 // Workflow visibility type
 export type WorkflowVisibility = "private" | "public";
 

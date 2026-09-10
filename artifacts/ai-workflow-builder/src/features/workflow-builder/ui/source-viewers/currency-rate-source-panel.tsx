@@ -70,6 +70,7 @@ function numberValue(value: unknown) {
 }
 
 function patchNumber(value: string) {
+  if (!value.trim()) return null;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
 }
@@ -151,13 +152,15 @@ export function CurrencyRateSourcePanel({
       const response = await fetch(
         `/api/fx-rate?from=${encodeURIComponent(documentCurrency)}&to=${encodeURIComponent(
           reportingCurrency
-        )}&year=${year}`
+        )}&year=${year}`, { signal: AbortSignal.timeout(30000) }
       );
       const data = (await response.json()) as FxRateResult;
       setResult(data);
-      if (data.ok && typeof data.rate === "number") {
+      if (response.ok && data.ok && typeof data.rate === "number" && Number.isFinite(data.rate) && data.rate > 0) {
         onConfigPatch({
           liveRate: data.rate,
+          rateFetchedAt: new Date().toISOString(),
+          rateFetchedFor: { documentCurrency, reportingCurrency, year },
           rateProvider: data.rateSource ?? "bank_of_canada",
           rateType: data.rateType ?? "annual_average",
           sourceLocator: data.endpoint ?? config.sourceLocator,
@@ -258,6 +261,11 @@ export function CurrencyRateSourcePanel({
         </p>
       ) : null}
 
+      <div className="rounded border p-2 text-xs" aria-label="Saved API response status">
+        <p>Run reuses the saved response. Fetch explicitly to refresh it.</p>
+        <p>Fetched: {config.rateFetchedAt ? new Date(String(config.rateFetchedAt)).toLocaleString() : 'Not recorded'}</p>
+        <p>{documentCurrency.toUpperCase() === reportingCurrency.toUpperCase() ? 'Same currency: uses a rate of 1; no override or API conversion is applied.' : overrideRate !== undefined ? `Manual override active: ${overrideRate}. The fetched rate will not be used.` : liveRate !== undefined ? 'Using saved API response.' : 'No fetched rate or override.'}</p>
+      </div>
       <div className="flex items-center gap-2">
         <Button
           disabled={readOnly || fetching || !documentCurrency}

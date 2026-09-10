@@ -1,0 +1,741 @@
+{
+  "config": {
+    "argv": [
+      "C:\\nvm4w\\nodejs\\node.exe",
+      "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\node_modules\\.pnpm\\@playwright+test@1.62.0\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config",
+      "playwright.catalog-audit.config.mjs",
+      "--tsconfig",
+      "e2e/tsconfig.json",
+      "--grep",
+      "UI audit"
+    ],
+    "configFile": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\playwright.catalog-audit.config.mjs",
+    "rootDir": "C:/Users/Mamad/Sinaxe/TaxflowOS/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/Mamad/Sinaxe/TaxflowOS/test-results/catalog-execution",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/Mamad/Sinaxe/TaxflowOS/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "workflow-catalog-audit.spec.ts"
+        ],
+        "timeout": 120000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "docs/workflow-catalog-evidence/test-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.62.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "workflow-catalog-audit.spec.ts",
+      "file": "workflow-catalog-audit.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "UI audit: pf-document-calculator opens Build, accepts a document, executes and retains its actual result",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 25119,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"id\":\"pf-document-calculator\",\"status\":\"success\",\"errors\":[],\"uploadSources\":[{\"id\":\"pf-document-calculator--document\",\"connected\":true,\"consumedBy\":[\"pf-document-calculator--rules\"]}],\"openMs\":11800,\"runMs\":513,\"persistedRuns\":2,\"browserErrors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "(node:57928) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-10T02:56:04.763Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "61d7de3a9f9767840dbb-ef86c8adb0dc63964212",
+          "file": "workflow-catalog-audit.spec.ts",
+          "line": 62,
+          "column": 7
+        },
+        {
+          "title": "UI audit: pf-holiday-payroll opens Build, accepts a document, executes and retains its actual result",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 25054,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"id\":\"pf-holiday-payroll\",\"status\":\"error\",\"errors\":[\"No API response is saved. Fetch the source or explicitly enable example data.\",\"A preceding block could not execute. Resolve its message and test again.\"],\"uploadSources\":[{\"id\":\"fa477023-083c-45f8-812f-855167fd7f28\",\"connected\":false,\"consumedBy\":[]}],\"openMs\":10014,\"runMs\":696,\"persistedRuns\":2,\"browserErrors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T02:56:30.177Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "61d7de3a9f9767840dbb-8b3ab98824936e46689d",
+          "file": "workflow-catalog-audit.spec.ts",
+          "line": 62,
+          "column": 7
+        },
+        {
+          "title": "UI audit: pf-platform-sequence opens Build, accepts a document, executes and retains its actual result",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 21002,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"id\":\"pf-platform-sequence\",\"status\":\"error\",\"errors\":[\"Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate A1: missing input debtForgiveness. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate A2: missing input priorYearG. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate B: missing input capGains, inclusionRate. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate C: missing input cfaIncome. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate D: missing input businessLosses. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate E: missing input faclCarryforward. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate F: missing input prescribedAmount. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate F1: missing input prescribedAmountF1. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate G: missing input dividendDeductions. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate H: missing input partnershipDividends. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate FAT Paid: missing input fatPaid. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate RTF: missing input rtf. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate FX Rate: missing input fxRate. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate Gross: missing input A, A1, A2, B, C. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate Deductions: missing input D, E, F, F1, G, H. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate FAPI Brut: missing input GROSS, DEDUCTIONS. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate FAT Deduction: missing input FAT_PAID, RTF, FAPI_BRUT. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate Net FAPI: missing input FAPI_BRUT, FAT_DEDUCTION. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate Net FAPI CAD: missing input NET_FAPI, FX_RATE. Provide the value or set an explicit default in Calculation settings.\",\"A preceding block could not execute. Resolve its message and test again.\"],\"uploadSources\":[{\"id\":\"pf-platform-sequence--src-collect\",\"connected\":true,\"consumedBy\":[\"pf-platform-sequence--lg-readiness\",\"pf-platform-sequence--ai-taxpos\"]}],\"openMs\":8843,\"runMs\":555,\"persistedRuns\":2,\"browserErrors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T02:56:55.269Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "61d7de3a9f9767840dbb-ea018d97572ba61db0f9",
+          "file": "workflow-catalog-audit.spec.ts",
+          "line": 62,
+          "column": 7
+        },
+        {
+          "title": "UI audit: pf-scope-service opens Build, accepts a document, executes and retains its actual result",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 21252,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"id\":\"pf-scope-service\",\"status\":\"error\",\"errors\":[\"Keyword Mapper needs Data rows input.\",\"Keyword Mapper needs Keyword rules input.\",\"A preceding block could not execute. Resolve its message and test again.\"],\"uploadSources\":[{\"id\":\"6a22f05c-b33f-4371-9456-45aa478cc674\",\"connected\":false,\"consumedBy\":[]}],\"openMs\":9321,\"runMs\":555,\"persistedRuns\":2,\"browserErrors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T02:57:16.300Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "61d7de3a9f9767840dbb-bc398a27e4669483d874",
+          "file": "workflow-catalog-audit.spec.ts",
+          "line": 62,
+          "column": 7
+        },
+        {
+          "title": "UI audit: pf-tax-position-summary opens Build, accepts a document, executes and retains its actual result",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 21488,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"id\":\"pf-tax-position-summary\",\"status\":\"error\",\"errors\":[\"Keyword Mapper needs Data rows input.\",\"Keyword Mapper needs Keyword rules input.\",\"A preceding block could not execute. Resolve its message and test again.\"],\"uploadSources\":[{\"id\":\"6d6ac909-bfbf-4642-9b5b-f59bfb23c693\",\"connected\":false,\"consumedBy\":[]}],\"openMs\":9788,\"runMs\":484,\"persistedRuns\":2,\"browserErrors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T02:57:37.589Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "61d7de3a9f9767840dbb-5728a2083c128db496fb",
+          "file": "workflow-catalog-audit.spec.ts",
+          "line": 62,
+          "column": 7
+        },
+        {
+          "title": "UI audit: pf-data-readiness opens Build, accepts a document, executes and retains its actual result",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 21413,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"id\":\"pf-data-readiness\",\"status\":\"error\",\"errors\":[\"Keyword Mapper needs Keyword rules input.\",\"A preceding block could not execute. Resolve its message and test again.\"],\"uploadSources\":[{\"id\":\"pf-data-readiness--src-tb\",\"connected\":true,\"consumedBy\":[\"pf-data-readiness--lg-check\"]}],\"openMs\":9255,\"runMs\":599,\"persistedRuns\":2,\"browserErrors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T02:57:59.123Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "61d7de3a9f9767840dbb-b51a87530ba2feabb5bc",
+          "file": "workflow-catalog-audit.spec.ts",
+          "line": 62,
+          "column": 7
+        },
+        {
+          "title": "UI audit: pf-ownership-graph opens Build, accepts a document, executes and retains its actual result",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 21502,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"id\":\"pf-ownership-graph\",\"status\":\"error\",\"errors\":[\"Keyword Mapper needs Keyword rules input.\",\"A preceding block could not execute. Resolve its message and test again.\"],\"uploadSources\":[{\"id\":\"pf-ownership-graph--src-structure\",\"connected\":true,\"consumedBy\":[\"pf-ownership-graph--lg-normalize\"]}],\"openMs\":9385,\"runMs\":332,\"persistedRuns\":2,\"browserErrors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T02:58:20.572Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "61d7de3a9f9767840dbb-dbc40ea9da409c0766f9",
+          "file": "workflow-catalog-audit.spec.ts",
+          "line": 62,
+          "column": 7
+        },
+        {
+          "title": "UI audit: pf-attribute-ledgers opens Build, accepts a document, executes and retains its actual result",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 21731,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"id\":\"pf-attribute-ledgers\",\"status\":\"error\",\"errors\":[\"Keyword Mapper needs Data rows input.\",\"Keyword Mapper needs Keyword rules input.\",\"A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.\",\"A preceding block could not execute. Resolve its message and test again.\"],\"uploadSources\":[{\"id\":\"pf-attribute-ledgers--src-financials\",\"connected\":true,\"consumedBy\":[\"pf-attribute-ledgers--lg-reconcile\"]}],\"openMs\":10600,\"runMs\":469,\"persistedRuns\":2,\"browserErrors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T02:58:42.112Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "61d7de3a9f9767840dbb-9f6931e5eee01950a3df",
+          "file": "workflow-catalog-audit.spec.ts",
+          "line": 62,
+          "column": 7
+        },
+        {
+          "title": "UI audit: pf-portfolio-ops opens Build, accepts a document, executes and retains its actual result",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 21128,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"id\":\"pf-portfolio-ops\",\"status\":\"error\",\"errors\":[\"Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate A1: missing input debtForgiveness. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate A2: missing input priorYearG. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate B: missing input capGains, inclusionRate. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate C: missing input cfaIncome. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate D: missing input businessLosses. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate E: missing input faclCarryforward. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate F: missing input prescribedAmount. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate F1: missing input prescribedAmountF1. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate G: missing input dividendDeductions. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate H: missing input partnershipDividends. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate FAT Paid: missing input fatPaid. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate RTF: missing input rtf. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate FX Rate: missing input fxRate. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate Gross: missing input A, A1, A2, B, C. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate Deductions: missing input D, E, F, F1, G, H. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate FAPI Brut: missing input GROSS, DEDUCTIONS. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate FAT Deduction: missing input FAT_PAID, RTF, FAPI_BRUT. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate Net FAPI: missing input FAPI_BRUT, FAT_DEDUCTION. Provide the value or set an explicit default in Calculation settings.\",\"Cannot calculate Net FAPI CAD: missing input NET_FAPI, FX_RATE. Provide the value or set an explicit default in Calculation settings.\",\"A preceding block could not execute. Resolve its message and test again.\"],\"uploadSources\":[{\"id\":\"0fc8ece5-c9eb-410e-9cdc-ab906f9d5e05\",\"connected\":false,\"consumedBy\":[]}],\"openMs\":9285,\"runMs\":455,\"persistedRuns\":2,\"browserErrors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T02:59:03.883Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "61d7de3a9f9767840dbb-0461ef80a6ac66b8ca83",
+          "file": "workflow-catalog-audit.spec.ts",
+          "line": 62,
+          "column": 7
+        },
+        {
+          "title": "UI audit: pf-t1134 opens Build, accepts a document, executes and retains its actual result",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 20637,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"id\":\"pf-t1134\",\"status\":\"error\",\"errors\":[\"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\"A preceding block could not execute. Resolve its message and test again.\"],\"uploadSources\":[{\"id\":\"bp-run-t1134--src\",\"connected\":true,\"consumedBy\":[\"bp-run-t1134--classify\"]}],\"openMs\":9158,\"runMs\":469,\"persistedRuns\":2,\"browserErrors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T02:59:25.049Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "61d7de3a9f9767840dbb-ee62967e01f15c007141",
+          "file": "workflow-catalog-audit.spec.ts",
+          "line": 62,
+          "column": 7
+        },
+        {
+          "title": "UI audit: pf-fapi opens Build, accepts a document, executes and retains its actual result",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 21432,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"id\":\"pf-fapi\",\"status\":\"warning\",\"errors\":[],\"uploadSources\":[{\"id\":\"fapi-source-trial-balance\",\"connected\":true,\"consumedBy\":[\"fapi-logic-keyword-mapper\"]}],\"openMs\":9799,\"runMs\":430,\"persistedRuns\":2,\"browserErrors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T02:59:45.720Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "61d7de3a9f9767840dbb-8583b23d2a86e5121274",
+          "file": "workflow-catalog-audit.spec.ts",
+          "line": 62,
+          "column": 7
+        },
+        {
+          "title": "UI audit: pf-surplus opens Build, accepts a document, executes and retains its actual result",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 29606,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"id\":\"pf-surplus\",\"status\":\"error\",\"errors\":[\"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\"A preceding block could not execute. Resolve its message and test again.\"],\"uploadSources\":[{\"id\":\"bp-run-surplus--src\",\"connected\":true,\"consumedBy\":[\"bp-run-surplus--classify\"]}],\"openMs\":13815,\"runMs\":924,\"persistedRuns\":2,\"browserErrors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T03:00:07.191Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "61d7de3a9f9767840dbb-9cbee25fea95f1e289af",
+          "file": "workflow-catalog-audit.spec.ts",
+          "line": 62,
+          "column": 7
+        },
+        {
+          "title": "UI audit: pf-t106 opens Build, accepts a document, executes and retains its actual result",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 18362,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"id\":\"pf-t106\",\"status\":\"error\",\"errors\":[\"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\"A preceding block could not execute. Resolve its message and test again.\"],\"uploadSources\":[{\"id\":\"bp-run-t106--src\",\"connected\":true,\"consumedBy\":[\"bp-run-t106--classify\"]}],\"openMs\":9386,\"runMs\":585,\"persistedRuns\":2,\"browserErrors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T03:00:36.861Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "61d7de3a9f9767840dbb-a6c9944ff3dd2501a833",
+          "file": "workflow-catalog-audit.spec.ts",
+          "line": 62,
+          "column": 7
+        },
+        {
+          "title": "UI audit: pf-eifel opens Build, accepts a document, executes and retains its actual result",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 15483,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"id\":\"pf-eifel\",\"status\":\"error\",\"errors\":[\"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\"A preceding block could not execute. Resolve its message and test again.\"],\"uploadSources\":[{\"id\":\"bp-run-eifel--src\",\"connected\":true,\"consumedBy\":[\"bp-run-eifel--classify\"]}],\"openMs\":6741,\"runMs\":416,\"persistedRuns\":2,\"browserErrors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T03:00:55.276Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "61d7de3a9f9767840dbb-6c03946c737fb30c0031",
+          "file": "workflow-catalog-audit.spec.ts",
+          "line": 62,
+          "column": 7
+        },
+        {
+          "title": "UI audit: pf-t2-suite opens Build, accepts a document, executes and retains its actual result",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 17406,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"id\":\"pf-t2-suite\",\"status\":\"error\",\"errors\":[\"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\"A preceding block could not execute. Resolve its message and test again.\"],\"uploadSources\":[{\"id\":\"bp-run-t2-suite--src\",\"connected\":true,\"consumedBy\":[\"bp-run-t2-suite--classify\"]}],\"openMs\":7412,\"runMs\":292,\"persistedRuns\":2,\"browserErrors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T03:01:10.787Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "61d7de3a9f9767840dbb-7ee24ea88c3124c50715",
+          "file": "workflow-catalog-audit.spec.ts",
+          "line": 62,
+          "column": 7
+        },
+        {
+          "title": "UI audit: pf-tax-provision opens Build, accepts a document, executes and retains its actual result",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 18339,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"id\":\"pf-tax-provision\",\"status\":\"error\",\"errors\":[\"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\"A preceding block could not execute. Resolve its message and test again.\"],\"uploadSources\":[{\"id\":\"bp-run-tax-provision--src\",\"connected\":true,\"consumedBy\":[\"bp-run-tax-provision--classify\"]}],\"openMs\":9136,\"runMs\":241,\"persistedRuns\":2,\"browserErrors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T03:01:28.223Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "61d7de3a9f9767840dbb-6ae30b2970ac29773e5d",
+          "file": "workflow-catalog-audit.spec.ts",
+          "line": 62,
+          "column": 7
+        },
+        {
+          "title": "UI audit: pf-part-xiii opens Build, accepts a document, executes and retains its actual result",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 15800,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"id\":\"pf-part-xiii\",\"status\":\"error\",\"errors\":[\"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\"A preceding block could not execute. Resolve its message and test again.\"],\"uploadSources\":[{\"id\":\"bp-run-part-xiii--src\",\"connected\":true,\"consumedBy\":[\"bp-run-part-xiii--classify\"]}],\"openMs\":7261,\"runMs\":683,\"persistedRuns\":2,\"browserErrors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T03:01:46.594Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "61d7de3a9f9767840dbb-a655a917e5a33f8370fe",
+          "file": "workflow-catalog-audit.spec.ts",
+          "line": 62,
+          "column": 7
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-10T02:56:02.539Z",
+    "duration": 360093.63899999997,
+    "expected": 17,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

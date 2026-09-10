@@ -1,3 +1,4 @@
+import { apiRequestSignature } from '../../../../api-snapshot';
 // ─────────────────────────────────────────────────────────────────────────────
 // HTTP / JSON Source — the PURE half.
 //
@@ -51,6 +52,9 @@ export function runHttpJsonSource(
 
   const origin =
     pinned.length > 0 ? "live" : injected.length > 0 ? "injected" : "sample";
+  if (origin === 'sample' && context.config.useSampleData !== true || origin === 'live' && context.config.fetchedRequestSignature && context.config.fetchedRequestSignature !== apiRequestSignature(context.config)) {
+    return { blockId: context.block.id, toolId: 'source.http_json', runId: context.runId, startedAt: context.startedAt, completedAt: new Date().toISOString(), status: 'error', errors: [origin === 'live' ? 'API request settings changed. Fetch again before using the saved response.' : 'No API response is saved. Fetch the source or explicitly enable example data.'], warnings: [], outputs: {}, logs: [], evidenceRefs: [], sourceTrace: [] };
+  }
   const rows =
     origin === "live"
       ? pinned
