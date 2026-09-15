@@ -25,17 +25,14 @@ import { useCopilotAction, useCopilotReadable } from '@copilotkit/react-core';
 import { nanoid } from 'nanoid';
 import { toast } from 'sonner';
 import { builderBridgeAtom } from '@/lib/builder-bridge';
-import {
-  BLOCK_CATALOG,
-  createFapiTemplateWorkflow,
-  createPortfolioWorkflowById,
-  createWorkflowBlockFromCatalog,
-  createWorkflowNodeFromBlock,
-  getBlockCatalogItem,
-  PORTFOLIO_WORKFLOWS,
-  saveWorkflowDefinitionSnapshot,
-  workflowDefinitionToCanvas,
-} from '@/shared/workflow-engine/local-fiscal-workflow';
+import { BLOCK_CATALOG } from "@/shared/workflow-engine/block-catalog-data";
+import { createFapiTemplateWorkflow } from "@/shared/workflow-engine/workflow/templates/fapi";
+import { createPortfolioWorkflowById } from "@/shared/workflow-engine/workflow/templates/portfolio";
+import { createWorkflowBlockFromCatalog, createWorkflowNodeFromBlock } from "@/shared/workflow-engine/workflow/block-factory";
+import { getBlockCatalogItem } from "@/shared/workflow-engine/workflow/visuals";
+import { PORTFOLIO_WORKFLOWS } from "@/shared/workflow-engine/templates/portfolio/portfolio-workflows";
+import { saveWorkflowDefinitionSnapshot } from "@/shared/workflow-engine/workflow/storage";
+import { workflowDefinitionToCanvas } from "@/shared/workflow-engine/workflow/canvas";
 import { getWorkflowConfig, WORKFLOW_CONFIGS } from '@/shared/workflow-engine/runtime/workflow-runs';
 import { usePageChat } from '@/lib/page-chat-store';
 import {
@@ -250,13 +247,13 @@ export function BuilderCopilot() {
 
   // GROUNDING — the pre-built (runnable) workflows the chat can open with loadWorkflow.
   useCopilotReadable({
-    description: 'The pre-built RUNNABLE workflows that can be opened onto the canvas with the loadWorkflow action, by workflowId (fapi, roulement, expense, campaign). Loading one replaces whatever is currently open.',
+    description: 'The pre-built RUNNABLE workflows that can be opened onto the canvas with the loadWorkflow action, by workflowId (fapi, expense, document-calculator and the portfolio workpapers). Loading one replaces whatever is currently open.',
     value: BUILT_WORKFLOWS,
   });
 
   // GROUNDING — the Sinaxe portfolio blueprints, also loadable via loadWorkflow.
   useCopilotReadable({
-    description: 'The Sinaxe portfolio blueprints (Canadian Corporate Tax Workflow Portfolio + Platform Services) that can ALSO be opened onto the canvas with loadWorkflow, by workflowId (e.g. "pf-t1134", "pf-scope-service"). These are structural, editable templates — not runnable. Loading one replaces whatever is open.',
+    description: 'The Sinaxe portfolio blueprints (Canadian Corporate Tax Workflow Portfolio + Platform Services) that can ALSO be opened onto the canvas with loadWorkflow, by workflowId (e.g. "pf-t1134", "pf-scope-service"). These are executable workpapers with explicit input contracts. Loading one replaces whatever is open.',
     value: PORTFOLIO_BLUEPRINTS,
   });
 
@@ -444,7 +441,7 @@ export function BuilderCopilot() {
   // Load a pre-built workflow onto the canvas (replaces what's open).
   useCopilotAction({
     name: 'loadWorkflow',
-    description: 'Open a pre-built workflow OR a Sinaxe portfolio blueprint onto the builder canvas, replacing whatever is currently open. workflowId is either a runnable id ("fapi", "roulement", "expense", "campaign") or a blueprint id from the portfolio-blueprints context (e.g. "pf-t1134", "pf-scope-service", "pf-eifel").',
+    description: 'Open a pre-built workflow OR a Sinaxe portfolio blueprint onto the builder canvas, replacing whatever is currently open. workflowId is either a runnable id ("fapi", "expense", "document-calculator") or a blueprint id from the portfolio-blueprints context (e.g. "pf-t1134", "pf-scope-service", "pf-eifel").',
     followUp: false,
     parameters: [{ name: 'workflowId', type: 'string', description: 'id of the workflow or blueprint to open', required: true }],
     handler: async ({ workflowId }: { workflowId: string }) => {

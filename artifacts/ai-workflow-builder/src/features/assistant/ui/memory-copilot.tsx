@@ -1,3 +1,4 @@
+import { apiFetch } from '@/platform/auth/api-fetch';
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -36,7 +37,7 @@ export function MemoryCopilot() {
 
   const refresh = useCallback(async (activeClient: string) => {
     try {
-      const res = await fetch(`/api/assistant/memory?clientId=${encodeURIComponent(activeClient)}`);
+      const res = await apiFetch(`/api/assistant/memory?clientId=${encodeURIComponent(activeClient)}`);
       if (!res.ok) {
         setMemories([]);
         return;
@@ -75,7 +76,7 @@ export function MemoryCopilot() {
     ],
     handler: async ({ content, subject, global }: { content: string; subject?: string; global?: boolean }) => {
       try {
-        const res = await fetch('/api/assistant/memory', {
+        const res = await apiFetch('/api/assistant/memory', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ content, subject, clientId: global ? null : client, kind: 'fact', source: 'user' }),
@@ -106,7 +107,7 @@ export function MemoryCopilot() {
     parameters: [{ name: 'id', type: 'string', description: 'The id of the memory to forget (from the remembered-facts context).', required: true }],
     handler: async ({ id }: { id: string }) => {
       try {
-        const res = await fetch(`/api/assistant/memory?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+        const res = await apiFetch(`/api/assistant/memory?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data?.ok) return 'I could not forget that.';
         await refresh(client);

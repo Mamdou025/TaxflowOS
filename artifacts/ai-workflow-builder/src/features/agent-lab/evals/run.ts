@@ -13,14 +13,16 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import path from 'node:path';
-import { config } from 'dotenv';
+import { loadEnvFile } from 'node:process';
+import { existsSync } from 'node:fs';
 import type { ModelMessage } from 'ai';
 import { EVAL_CASES } from './cases';
 import { scoreCase, type CheckResult } from './score';
 import { DEFAULT_FISCAL_CONTEXT, fiscalPreamble, type FiscalContext } from '../fiscal';
 
 // Load .env.local BEFORE the agent module is imported (below, dynamically).
-config({ path: path.resolve(process.cwd(), '.env.local') });
+const envPath = path.resolve(process.cwd(), '.env.local');
+if (existsSync(envPath)) loadEnvFile(envPath);
 
 function arg(name: string): string | undefined {
   const eq = process.argv.find((a) => a.startsWith(`--${name}=`));

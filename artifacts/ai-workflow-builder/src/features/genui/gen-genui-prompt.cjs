@@ -1,13 +1,6 @@
-// Generates the GenUI system prompt to features/genui/system-prompt.txt.
-//
-// Why a build step: OpenUI's packages (@openuidev/react-lang) call
-// React.createContext at import, so they CANNOT be imported inside a Next App
-// Router route handler (RSC react-server build has no createContext). Plain Node
-// has the full React, so we generate the prompt here and the route reads the txt.
-//
-// The component vocabulary here MUST stay in sync with features/genui/library.tsx
-// (same names + prop schemas). Run: `node features/genui/gen-genui-prompt.cjs`
-// (wired as `pnpm genui:prompt`). Re-run whenever the library changes.
+// Generate the server-owned prompt without importing React UI libraries in Express.
+// Run pnpm --filter @workspace/ai-workflow-builder genui:prompt after changing
+// the component vocabulary in this file and library.tsx.
 
 const fs = require('fs');
 const path = require('path');
@@ -62,7 +55,7 @@ This tool renders views inside InScope, a fiscalist's tax workspace. The two rul
 - Allowed: Stack, Card, CardHeader, TextContent, MarkDownRenderer, TaxMetric, Table, Col, BarChart, HorizontalBarChart, LineChart, AreaChart, PieChart (proportions only), Series, Callout, TextCallout, Tag, TagBlock, Separator, Form, FormControl, Input, TextArea, Select, SelectItem, Slider, RadioGroup, CheckBoxGroup, Buttons, Button, Steps, Tabs, TabItem, Accordion.
 - FORBIDDEN (never emit): Image, ImageBlock, ImageGallery, Carousel, RadarChart, ScatterChart, RadialChart, Modal, and any decorative, marketing, or illustrative content. This is a tax/finance tool, not a landing page.`;
 
-const out = path.join(__dirname, 'system-prompt.txt');
+const out = path.resolve(__dirname, '../../../../../lib/agent-runtime/src/system-prompt.txt');
 const full = library.prompt().trimEnd() + '\n' + GUARDRAILS + '\n';
 fs.writeFileSync(out, full, 'utf8');
 console.log('Wrote', out, '(' + full.length + ' chars)');

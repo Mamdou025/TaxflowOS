@@ -1,8 +1,2 @@
-import type { RegisteredToolModule } from "../../../runtime/types";
-import { keywordRulesDefinition } from "./definition";
-import { runKeywordRulesSource } from "./run";
-
-export const keywordRulesToolModule: RegisteredToolModule = {
-  definition: keywordRulesDefinition,
-  run: runKeywordRulesSource,
-};
+// Compatibility export for existing editor and browser-test imports.
+export * from '@workspace/workflow-executors/execution/blocks/source/keyword-rules/index';

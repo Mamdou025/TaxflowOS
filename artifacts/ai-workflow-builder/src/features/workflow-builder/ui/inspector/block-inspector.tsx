@@ -30,25 +30,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
-import type {
-  LocalRunRecord,
-  WorkflowBlock,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
-import {
-  getToolForBlock,
-  type ToolDefinition,
-  type ToolOutputRole,
-} from "@/shared/workflow-engine/local-tool-registry";
+import { type LocalRunRecord, type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
+import { getToolForBlock } from '@/shared/workflow-engine/tools/lookup';
+
+import { type ToolDefinition, type ToolOutputRole } from "@/shared/workflow-engine/tools/types";
 import type {
   WorkflowEdge,
   WorkflowNode,
   WorkflowNodeData,
 } from "@/shared/workflow-engine/state/workflow-store";
 import { hasExcelSourceEvidence } from "@/shared/workflow-engine/domain/workflow/source-rules";
-import {
-  CalculationEngineModeSection,
-  CalculationEngineRunSections,
-} from "../logic-viewers/calculation-engine-panel";
+import { CalculationEngineModeSection } from "../logic-viewers/calculation-engine-panel";
+import { CalculationEngineRunSections } from "../logic-viewers/calculation-engine-run-sections";
 import { HierarchyAggregatorRunSections } from "../logic-viewers/hierarchy-aggregator-run-sections";
 import { SUPPORTED_AGGREGATION_OPERATIONS } from "../source-viewers/aggregation-rule-modes";
 import {

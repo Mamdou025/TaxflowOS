@@ -7,7 +7,7 @@ import { nanoid } from "nanoid";
 import { useCallback, useEffect, useRef } from "react";
 import { ConfirmOverlay } from "@/shared/ui/overlays/confirm-overlay";
 import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
-import { createDefaultWorkflowBlockCandidate } from "@/shared/workflow-engine/local-fiscal-workflow";
+import { createDefaultWorkflowBlockCandidate } from "@/shared/workflow-engine/workflow/block-factory";
 import { cn } from "@/lib/utils";
 import {
   addNodeAtom,

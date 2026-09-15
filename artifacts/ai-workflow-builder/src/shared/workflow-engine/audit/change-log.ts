@@ -1,3 +1,4 @@
+import { workspaceStorage } from '@/platform/auth/workspace-context';
 import type { WorkflowAuditEvent } from "./workflow-events";
 
 const CHANGE_LOG_STORAGE_KEY = "workflow-studio.change-log.v1";
@@ -15,7 +16,7 @@ function readStoredEvents(): WorkflowAuditEvent[] {
   }
 
   try {
-    const stored = window.localStorage.getItem(CHANGE_LOG_STORAGE_KEY);
+    const stored = workspaceStorage.getItem(CHANGE_LOG_STORAGE_KEY);
     if (!stored) {
       return [];
     }
@@ -39,7 +40,7 @@ function writeStoredEvents(events: WorkflowAuditEvent[]) {
   }
 
   try {
-    window.localStorage.setItem(
+    workspaceStorage.setItem(
       CHANGE_LOG_STORAGE_KEY,
       JSON.stringify(cappedEvents)
     );

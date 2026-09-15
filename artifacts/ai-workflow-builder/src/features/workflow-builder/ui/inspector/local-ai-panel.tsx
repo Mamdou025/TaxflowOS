@@ -31,23 +31,14 @@ import {
   MOCK_AI_ACTIONS,
   type MockAiActionId,
 } from "@/shared/workflow-engine/local-ai-workflow-assistant";
-import type { EdgeStatus } from "@/shared/workflow-engine/local-fiscal-workflow";
-import {
-  type AiProposal,
-  createCanvasEdgeFromWorkflowEdge,
-  createWorkflowDefinitionFromCanvas,
-  createWorkflowEvent,
-  createWorkflowNodeFromBlock,
-  loadLocalRunRecords,
-  loadLocalWorkflowSnapshot,
-  type WorkflowEdge as SchemaWorkflowEdge,
-  saveWorkflowDefinitionSnapshot,
-  WORKFLOW_RELATIONSHIP_LABELS,
-  type WorkflowBlock,
-  type WorkflowCodeField,
-  type WorkflowDefinition,
-  type WorkflowFormulaField,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { type EdgeStatus } from "@/shared/workflow-engine/workflow/contracts";
+import { type AiProposal, type WorkflowEdge as SchemaWorkflowEdge, WORKFLOW_RELATIONSHIP_LABELS, type WorkflowBlock, type WorkflowCodeField, type WorkflowDefinition, type WorkflowFormulaField } from "@/shared/workflow-engine/workflow/contracts";
+import { createCanvasEdgeFromWorkflowEdge } from "@/shared/workflow-engine/workflow/edges";
+import { createWorkflowDefinitionFromCanvas } from "@/shared/workflow-engine/workflow/canvas";
+import { createWorkflowEvent } from "@/shared/workflow-engine/workflow/events";
+import { createWorkflowNodeFromBlock } from "@/shared/workflow-engine/workflow/block-factory";
+import { loadLocalRunRecords } from "@/shared/workflow-engine/workflow/run-storage";
+import { loadLocalWorkflowSnapshot, saveWorkflowDefinitionSnapshot } from "@/shared/workflow-engine/workflow/storage";
 import { cn } from "@/lib/utils";
 import {
   edgesAtom,

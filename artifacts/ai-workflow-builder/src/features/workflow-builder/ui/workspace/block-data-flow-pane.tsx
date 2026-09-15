@@ -1,3 +1,5 @@
+import { ReadableData } from './readable-data';
+import { availableCalculationValues } from '../logic-viewers/available-calculation-values';
 "use client";
 
 import { ChevronDown, ChevronRight, Copy, Maximize2, Plus } from "lucide-react";
@@ -12,15 +14,10 @@ import {
   DialogTitle,
 } from "@/shared/ui/dialog";
 import { Input } from "@/shared/ui/input";
-import type {
-  LocalRunRecord,
-  WorkflowBlock,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
-import {
-  getToolForBlock,
-  type ToolDefinition,
-  type ToolOutputRole,
-} from "@/shared/workflow-engine/local-tool-registry";
+import { type LocalRunRecord, type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
+import { getToolForBlock } from '@/shared/workflow-engine/tools/lookup';
+
+import { type ToolDefinition, type ToolOutputRole } from "@/shared/workflow-engine/tools/types";
 import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
 import { getDataPreviewSummary } from "../data-viewer/data-preview-summary";
 import { DATA_VIEW_LABELS } from "../data-viewer/data-view-tabs";
@@ -1282,7 +1279,11 @@ function createOutputGroups({
   outgoingEdges: WorkflowEdge[];
   tool: ToolDefinition;
 }): DataFlowGroup[] {
-  return getDisplayOutputRoles({ block, tool }).map((role) =>
+  return getDisplayOutputRoles({ block, tool }).filter((role, index) => {
+    const value = getRoleOutputValue(role, latestOutput);
+    const connected = outgoingEdges.some(edge => (edge.data?.workflowEdge?.sourceOutputRole ?? edge.data?.sourceOutputRole) === role.id);
+    return connected || hasDataValue(value) || (index === 0 && Object.keys(latestOutput).length === 0);
+  }).map((role) =>
     createOutputGroup({
       block,
       lastRun,
@@ -1380,7 +1381,7 @@ function OutputRoleCard({
               Full
             </Button>
           </div>
-          {group.hasData ? (
+          {group.hasData ? (view === 'table' ? <ReadableData value={group.value} /> :
             <DataDisplayViewer
               className="min-h-[220px]"
               contextData={group.contextData}
@@ -1993,7 +1994,7 @@ export function BlockDataFlowColumn({
   }, [groups, search]);
   const groupedCalculationInputs =
     side === "inputs" && isCalculationEngineBlock(block)
-      ? getGroupedCalculationInputTerms({ block, groups })
+      ? (() => { const grouped = getGroupedCalculationInputTerms({ block, groups }); const seen = new Set(grouped.groupedDataTerms.flatMap(group => group.terms.map(term => term.key))); const defined = availableCalculationValues(block, edges, nodes).filter(term => !seen.has(term.key)); if (defined.length) grouped.groupedDataTerms.unshift({ category: 'Defined upstream groups', terms: defined.map(term => ({ ...term, source: 'data' as const })) }); return grouped; })()
       : undefined;
   const calculationInputTerms = groupedCalculationInputs
     ? {
@@ -2002,6 +2003,7 @@ export function BlockDataFlowColumn({
       }
     : undefined;
   const isCalculationInputPane = Boolean(calculationInputTerms);
+  const showSearch = isCalculationInputPane || groups.length >= 8;
   const largeGroup = groups.find((group) => group.id === largeGroupId);
   const filterGroupKind = side === "inputs" ? "input" : "output";
   const emptyFilteredMessage = tool
@@ -2024,12 +2026,18 @@ export function BlockDataFlowColumn({
             : "Source evidence is view-only after use or publish. Corrections should be modeled downstream in Logic."}
         </div>
       )}
-      <Input
-        className="h-8 bg-background/70 text-xs"
-        onChange={(event) => setSearch(event.target.value)}
-        placeholder={`Search ${displaySide === "source" ? "source" : side}`}
-        value={search}
-      />
+      {/* Most blocks expose two to six roles. A permanent search field over four
+          rows is chrome that earns nothing and pushes the actual values down the
+          pane, so it only appears once there is enough to be worth filtering.
+          Calculation inputs are the exception — those panes really can run long. */}
+      {showSearch && (
+        <Input
+          className="h-8 bg-background/70 text-xs"
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder={`Search ${displaySide === "source" ? "source" : side}`}
+          value={search}
+        />
+      )}
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-1">
         {isCalculationInputPane && groupedCalculationInputs ? (
           <>

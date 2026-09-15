@@ -23,11 +23,11 @@ export default function WorkflowsPage() {
           router.replace(`/workflows/${mostRecent.id}`);
         } else {
           // No saved workflows — fall back to the local builder
-          router.replace("/builder");
+          router.replace("/workflows-hub");
         }
       } catch (error) {
         console.error("Failed to load workflows:", error);
-        router.replace("/builder");
+        router.replace("/workflows-hub");
       }
     };
 

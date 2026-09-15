@@ -1,0 +1,64 @@
+{
+  "fetchMs": 5733,
+  "httpStatus": 200,
+  "ok": true,
+  "mode": "rows",
+  "responseMeta": {
+    "durationMs": 56,
+    "fetchedAt": "2026-09-10T03:05:24.083Z",
+    "method": "GET",
+    "status": 200,
+    "totalBytes": 5821,
+    "url": "https://date.nager.at/api/v3/PublicHolidays/2025/CA",
+    "recordCount": 31,
+    "truncated": false
+  },
+  "rows": [],
+  "rowCount": 0,
+  "skipped": 31,
+  "samplePayload": [
+    {
+      "date": "2025-01-01",
+      "localName": "New Year's Day",
+      "name": "New Year's Day",
+      "countryCode": "CA",
+      "fixed": false,
+      "global": true,
+      "counties": null,
+      "launchYear": null,
+      "types": [
+        "Public"
+      ]
+    },
+    {
+      "date": "2025-02-17",
+      "localName": "Louis Riel Day",
+      "name": "Louis Riel Day",
+      "countryCode": "CA",
+      "fixed": false,
+      "global": false,
+      "counties": [
+        "CA-MB"
+      ],
+      "launchYear": null,
+      "types": [
+        "Public"
+      ]
+    },
+    {
+      "date": "2025-02-17",
+      "localName": "Islander Day",
+      "name": "Islander Day",
+      "countryCode": "CA",
+      "fixed": false,
+      "global": false,
+      "counties": [
+        "CA-PE"
+      ],
+      "launchYear": null,
+      "types": [
+        "Public"
+      ]
+    }
+  ]
+}

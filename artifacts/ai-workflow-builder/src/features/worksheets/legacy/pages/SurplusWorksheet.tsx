@@ -150,10 +150,13 @@ const CALC_SECTIONS: CalcRow[] = [
         id: 'cdn-rules',
         tag: 'CDN',
         label: 'Adjustments under Canadian rules — businesses other than active',
-        values: { ES: '0', HS: '0', TS: '(312,000)', PAS: '0' },
+        // Subtotal is 0: the ss.95(2) recharacterization below is a MEMO — the same
+        // FAPI is included once via the 5907(2)(a) ss.91(1) line, so it must not
+        // reduce taxable surplus twice.
+        values: { ES: '0', HS: '0', TS: '0', PAS: '0' },
         showIcons: true,
         children: [
-          { id: 'fapi-adj',    label: 'FAPI recharacterization (ss.95(2))',   values: { ES: '0', HS: '0', TS: '(312,000)', PAS: '0' }, indent: 1, badge: 'LINKED — FAPI', linked: true, showIcons: true },
+          { id: 'fapi-adj',    label: 'FAPI recharacterization (ss.95(2)) — memo, included once via 5907(2)(a) below', values: { ES: '0', HS: '0', TS: '0', PAS: '0' }, indent: 1, badge: 'MEMO', showIcons: true },
           { id: 'prop-inc',    label: 'Property income adjustments',          values: { ES: '0', HS: '0', TS: '0',         PAS: '0' }, indent: 1, showIcons: true },
         ],
       },
@@ -274,13 +277,44 @@ const CALC_SECTIONS: CalcRow[] = [
   },
 ];
 
-// Closing balance computed from mock data
-const CLOSING: Record<SurplusType, string> = {
-  ES:  '2,114,000',
-  HS:  '(28,000)',
-  TS:  '(505,600)',
-  PAS: '0',
-};
+// ─── Closing balance — a COMPUTED rollforward (was a hardcoded string map) ────
+// Sums every CONTRIBUTING row per surplus type. A row that HAS children (a section
+// header, or a subtotal like ABR = depreciation + accruals, or CDN = FAPI-adj +
+// property) is skipped and its child components are summed instead — so a parent
+// and its own breakdown are never both counted. Counting ABR (145,000) AND its two
+// children (98,000 + 47,000) is exactly the double-count that made the automated
+// review believe the ABR line had been dropped from Exempt Surplus. Recomputing
+// from CALC_SECTIONS keeps the footing tied to the rows actually shown.
+const SURPLUS_KEYS: SurplusType[] = ['ES', 'HS', 'TS', 'PAS'];
+
+function parseSurplusValue(raw: string | undefined): number {
+  if (!raw) return 0;
+  const negative = raw.trim().startsWith('(');
+  const n = parseFloat(raw.replace(/[(),\s]/g, '')) || 0;
+  return negative ? -n : n;
+}
+
+function formatSurplusValue(n: number): string {
+  const abs = Math.round(Math.abs(n)).toLocaleString('en-US');
+  return n < 0 ? `(${abs})` : abs;
+}
+
+function computeClosingBalances(sections: CalcRow[]): Record<SurplusType, string> {
+  const totals: Record<SurplusType, number> = { ES: 0, HS: 0, TS: 0, PAS: 0 };
+  const visit = (row: CalcRow) => {
+    if (row.children?.length) { row.children.forEach(visit); return; }
+    for (const key of SURPLUS_KEYS) totals[key] += parseSurplusValue(row.values[key]);
+  };
+  sections.forEach(visit);
+  return {
+    ES: formatSurplusValue(totals.ES),
+    HS: formatSurplusValue(totals.HS),
+    TS: formatSurplusValue(totals.TS),
+    PAS: formatSurplusValue(totals.PAS),
+  };
+}
+
+const CLOSING: Record<SurplusType, string> = computeClosingBalances(CALC_SECTIONS);
 
 // ─── Orbital milestone menu ───────────────────────────────────────────────────
 function OrbitalMilestoneMenu({

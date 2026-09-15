@@ -37,27 +37,12 @@ import {
 import { EdgeInspector } from "@/features/workflow-builder/ui/edge-inspector";
 import { api } from "@/platform/api-client";
 import { integrationsAtom } from "@/lib/integrations-store";
-import {
-  clearLocalRunRecords,
-  createCanvasEdgeFromWorkflowEdge,
-  createWorkflowBlockFromCatalog,
-  createWorkflowEdgeRecord,
-  createWorkflowNodeFromBlock,
-  type FiscalStage,
-  getBlockCatalogItem,
-  getFiscalPreset,
-  getFiscalVisualForFamily,
-  getFiscalVisualForStage,
-  getPendingWorkflowConnection,
-  getUnsupportedWorkflowRelationshipMessage,
-  getWorkflowEdgeDefaults,
-  isLocalWorkflowId,
-  loadLocalRunRecords,
-  type WorkflowEdge as SchemaWorkflowEdge,
-  saveLocalRunRecord,
-  saveLocalWorkflowSnapshot,
-  type WorkflowBlock,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { clearLocalRunRecords, loadLocalRunRecords, saveLocalRunRecord } from "@/shared/workflow-engine/workflow/run-storage";
+import { createCanvasEdgeFromWorkflowEdge, createWorkflowEdgeRecord, getPendingWorkflowConnection, getUnsupportedWorkflowRelationshipMessage, getWorkflowEdgeDefaults } from "@/shared/workflow-engine/workflow/edges";
+import { createWorkflowBlockFromCatalog, createWorkflowNodeFromBlock } from "@/shared/workflow-engine/workflow/block-factory";
+import { type FiscalStage, type WorkflowEdge as SchemaWorkflowEdge, type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
+import { getBlockCatalogItem, getFiscalPreset, getFiscalVisualForFamily, getFiscalVisualForStage, isLocalWorkflowId } from "@/shared/workflow-engine/workflow/visuals";
+import { saveLocalWorkflowSnapshot } from "@/shared/workflow-engine/workflow/storage";
 import {
   type LocalEdgeRunStatus,
   runLocalWorkflowTools,
@@ -98,7 +83,10 @@ import {
   getDefaultInspectorTabForFamily,
   getDefaultInspectorTabForSelection,
 } from "@/shared/workflow-engine/domain/workflow/inspector-rules";
-import { hasExcelSourceEvidence } from "@/shared/workflow-engine/domain/workflow/source-rules";
+import {
+  hasExcelSourceEvidence,
+  isSourceCommitted,
+} from "@/shared/workflow-engine/domain/workflow/source-rules";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { ActionConfig } from "./config/action-config";
 import { ActionGrid } from "./config/action-grid";
@@ -1285,12 +1273,6 @@ export const PanelInner = () => {
               </TabsTrigger>
               <TabsTrigger
                 className="bg-transparent text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none"
-                value="code"
-              >
-                Code
-              </TabsTrigger>
-              <TabsTrigger
-                className="bg-transparent text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none"
                 value="runs"
               >
                 Runs
@@ -1417,12 +1399,6 @@ export const PanelInner = () => {
               value="properties"
             >
               Properties
-            </TabsTrigger>
-            <TabsTrigger
-              className="bg-transparent text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none"
-              value="code"
-            >
-              Code
             </TabsTrigger>
             {isOwner && (
               <TabsTrigger
@@ -1705,8 +1681,16 @@ export const PanelInner = () => {
     selectedNode.data.block?.governance?.requiresUnlockToEdit &&
       !selectedNode.data.config?.protectedEditIntent
   );
+  // See isSourceCommitted: sources are stamped immutable at creation, so evidence
+  // immutability must only bite once the source is published or has been used in a
+  // run — otherwise a draft block is read-only before it holds any evidence.
+  const sourceCommitted = isSourceCommitted(selectedNode.data.block);
+  const blockLocked = sourceCommitted || protectedNeedsUnlock;
   const identityFieldsDisabled =
-    isGenerating || !isOwner || sourceEvidenceLocked || protectedNeedsUnlock;
+    isGenerating ||
+    !isOwner ||
+    (sourceEvidenceLocked && sourceCommitted) ||
+    protectedNeedsUnlock;
 
   return (
     <>
@@ -1724,17 +1708,6 @@ export const PanelInner = () => {
           >
             Properties
           </TabsTrigger>
-          {(selectedNode.data.type !== "trigger" ||
-            (selectedNode.data.config?.triggerType as string) !== "Manual" ||
-            selectedNode.data.config?.fiscalStage) &&
-          selectedNode.data.config?.actionType !== "Condition" ? (
-            <TabsTrigger
-              className="bg-transparent text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none"
-              value="code"
-            >
-              Code
-            </TabsTrigger>
-          ) : null}
           {isOwner && (
             <TabsTrigger
               className="bg-transparent text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none"
@@ -1833,6 +1806,7 @@ export const PanelInner = () => {
                 <FiscalBlockConfig
                   config={selectedNode.data.config || {}}
                   disabled={isGenerating || !isOwner}
+                  locked={blockLocked}
                   onUpdateConfig={handleUpdateConfig}
                   onUpdateStage={handleUpdateFiscalStage}
                   visualRole={selectedNode.data.visualRole}

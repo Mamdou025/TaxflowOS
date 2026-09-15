@@ -8,7 +8,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { CSSProperties, ReactNode } from 'react';
-import { atomWithStorage } from 'jotai/utils';
+import { atomWithStorage } from '@/platform/auth/workspace-atoms';
 import { useAtom, useAtomValue } from 'jotai';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme-toggle';

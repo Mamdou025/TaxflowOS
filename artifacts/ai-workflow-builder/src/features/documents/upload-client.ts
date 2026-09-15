@@ -1,3 +1,4 @@
+import { apiFetch } from '@/platform/auth/api-fetch';
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -21,8 +22,9 @@ export async function uploadDocument(
 ): Promise<UploadResult> {
   try {
     opts.onProgress?.("signing");
-    const signRes = await fetch("/api/documents/upload-url", {
+    const signRes = await apiFetch("/api/documents/upload-url", {
       method: "POST",
+      signal: AbortSignal.timeout(30000),
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         fileName: file.name,
@@ -36,6 +38,8 @@ export async function uploadDocument(
       if (signRes.status === 401) return { error: "Sign in to store documents." };
       if (body.error === "STORAGE_NOT_CONFIGURED")
         return { error: "Document storage isn't configured yet." };
+      if (body.error === 'STORAGE_ERROR')
+        return { error: 'Source file storage is unavailable. The file has not been saved.' };
       return { error: body.error ?? "Couldn't start the upload." };
     }
     const { documentId, uploadUrl } = (await signRes.json()) as {
@@ -44,8 +48,9 @@ export async function uploadDocument(
     };
 
     opts.onProgress?.("uploading");
-    const putRes = await fetch(uploadUrl, {
+    const putRes = await apiFetch(uploadUrl, {
       method: "PUT",
+      signal: AbortSignal.timeout(60000),
       body: file,
       headers: {
         "content-type": file.type || "application/octet-stream",
@@ -55,7 +60,8 @@ export async function uploadDocument(
     if (!putRes.ok) return { error: "Upload to storage failed." };
 
     opts.onProgress?.("finalizing");
-    await fetch(`/api/documents/${documentId}/complete`, { method: "POST" });
+    const completeRes = await apiFetch(`/api/documents/${documentId}/complete`, { method: "POST", signal: AbortSignal.timeout(30000) });
+    if (!completeRes.ok) return { error: 'The file uploaded, but source processing could not be started. Check Sources before retrying.' };
 
     return { documentId };
   } catch (err) {

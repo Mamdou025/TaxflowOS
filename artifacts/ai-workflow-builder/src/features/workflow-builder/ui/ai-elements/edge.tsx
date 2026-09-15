@@ -10,7 +10,7 @@ import {
   useInternalNode,
 } from "@xyflow/react";
 import { CheckCircle2, Loader2, TriangleAlert, XCircle } from "lucide-react";
-import type { WorkflowEdge as SchemaWorkflowEdge } from "@/shared/workflow-engine/local-fiscal-workflow";
+import { type WorkflowEdge as SchemaWorkflowEdge } from "@/shared/workflow-engine/workflow/contracts";
 import {
   formatRelationshipType,
   getEdgeLabelClassName,
@@ -231,7 +231,7 @@ const Animated = ({
   const runVisual = getRunStatusVisual(runStatus);
   const statusClasses = getEdgeStatusClasses(workflowEdge?.status);
   const showLabel = Boolean(
-    workflowEdge && (selected || workflowEdge.status !== "active")
+    workflowEdge && selected
   );
   const relationshipLabel = workflowEdge
     ? formatRelationshipType(workflowEdge.relationshipType)

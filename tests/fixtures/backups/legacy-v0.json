@@ -1,0 +1,129 @@
+{
+  "custom:synthetic-recovery": {
+    "id": "custom:synthetic-recovery",
+    "templateId": "blank",
+    "draft": {
+      "schemaVersion": "workflow-studio.local.v1",
+      "id": "custom:synthetic-recovery",
+      "name": "Synthetic archived draft",
+      "description": "Hand-authored, incomplete graph for backup compatibility tests.",
+      "status": "draft",
+      "metadata": {
+        "kind": "generic-fiscal-workflow",
+        "tags": ["synthetic"],
+        "createdBy": "fixture",
+        "createdAt": "2024-01-02T03:04:05.000Z",
+        "updatedBy": "fixture",
+        "updatedAt": "2024-01-02T03:04:05.000Z"
+      },
+      "blocks": [],
+      "edges": [
+        {
+          "id": "historical-trigger-edge",
+          "sourceBlockId": "missing-source",
+          "targetBlockId": "missing-target",
+          "relationshipType": "triggers",
+          "reason": "Drafts may be incomplete",
+          "bindingStatus": "missing",
+          "status": "active",
+          "createdBy": "fixture",
+          "createdAt": "2024-01-02T03:04:05.000Z",
+          "confidence": 1,
+          "notes": "Synthetic legacy relationship",
+          "history": []
+        }
+      ],
+      "structure": {
+        "layout": "canvas-columns",
+        "blockOrder": [],
+        "columns": []
+      },
+      "runtimeUiConfig": {
+        "runtimeConfigId": "synthetic-runtime",
+        "sourceWorkflowId": "custom:synthetic-recovery",
+        "generatedAt": "2024-01-02T03:04:05.000Z",
+        "sections": [],
+        "visibleRows": [],
+        "hiddenRows": [],
+        "reviewerOnlyRows": [],
+        "advancedRows": [],
+        "allowedActions": []
+      },
+      "outputMappingPreview": {
+        "id": "synthetic-output",
+        "sourceWorkflowId": "custom:synthetic-recovery",
+        "generatedAt": "2024-01-02T03:04:05.000Z",
+        "outputs": []
+      },
+      "mockRuns": [],
+      "versionSnapshots": [],
+      "aiProposals": [],
+      "events": []
+    },
+    "versions": [
+      {
+        "number": 1,
+        "savedAt": "2024-01-02T03:04:05.000Z",
+        "definition": {
+          "schemaVersion": "workflow-studio.local.v1",
+          "id": "custom:synthetic-recovery",
+          "name": "Synthetic archived version",
+          "description": "Hand-authored, incomplete graph for backup compatibility tests.",
+          "status": "draft",
+          "metadata": {
+            "kind": "generic-fiscal-workflow",
+            "tags": ["synthetic"],
+            "createdBy": "fixture",
+            "createdAt": "2024-01-02T03:04:05.000Z",
+            "updatedBy": "fixture",
+            "updatedAt": "2024-01-02T03:04:05.000Z"
+          },
+          "blocks": [],
+          "edges": [
+            {
+              "id": "historical-trigger-edge",
+              "sourceBlockId": "missing-source",
+              "targetBlockId": "missing-target",
+              "relationshipType": "triggers",
+              "reason": "Drafts may be incomplete",
+              "bindingStatus": "missing",
+              "status": "active",
+              "createdBy": "fixture",
+              "createdAt": "2024-01-02T03:04:05.000Z",
+              "confidence": 1,
+              "notes": "Synthetic legacy relationship",
+              "history": []
+            }
+          ],
+          "structure": {
+            "layout": "canvas-columns",
+            "blockOrder": [],
+            "columns": []
+          },
+          "runtimeUiConfig": {
+            "runtimeConfigId": "synthetic-runtime",
+            "sourceWorkflowId": "custom:synthetic-recovery",
+            "generatedAt": "2024-01-02T03:04:05.000Z",
+            "sections": [],
+            "visibleRows": [],
+            "hiddenRows": [],
+            "reviewerOnlyRows": [],
+            "advancedRows": [],
+            "allowedActions": []
+          },
+          "outputMappingPreview": {
+            "id": "synthetic-output",
+            "sourceWorkflowId": "custom:synthetic-recovery",
+            "generatedAt": "2024-01-02T03:04:05.000Z",
+            "outputs": []
+          },
+          "mockRuns": [],
+          "versionSnapshots": [],
+          "aiProposals": [],
+          "events": []
+        }
+      }
+    ],
+    "runs": []
+  }
+}

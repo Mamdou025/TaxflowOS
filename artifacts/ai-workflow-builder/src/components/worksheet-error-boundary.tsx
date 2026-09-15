@@ -65,7 +65,9 @@ export class WorksheetErrorBoundary extends Component<Props, State> {
             <p style={{ margin: 0, fontSize: '0.875rem', maxWidth: 420 }}>
               This worksheet couldn't load its data. Check that the underlying data source is connected, then try again.
             </p>
-            {process.env.NODE_ENV === 'development' && (
+            {/* Vite client bundle — `process` is not defined here, and throwing
+                inside the error UI would replace one failure with a worse one. */}
+            {import.meta.env.DEV && (
               <pre
                 style={{
                   marginTop: 8,

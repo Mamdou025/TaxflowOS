@@ -1,0 +1,659 @@
+{
+  "id": "pf-platform-sequence",
+  "inputKind": "generic upload probe; not domain-complete input",
+  "inputRows": 2,
+  "openMs": 8843,
+  "runMs": 555,
+  "totalMs": 20688,
+  "browserErrors": [],
+  "first": {
+    "id": "custom:36e940ea-b62e-439e-86bb-c1030730a0fe",
+    "name": "Platform Services · Universal Execution Sequence — My workflow",
+    "version": 1,
+    "runCount": 1,
+    "runId": "local-tool-workflow-1789009026536-ioi2nw",
+    "status": "error",
+    "errors": [
+      "Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate A1: missing input debtForgiveness. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate A2: missing input priorYearG. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate B: missing input capGains, inclusionRate. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate C: missing input cfaIncome. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate D: missing input businessLosses. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate E: missing input faclCarryforward. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate F: missing input prescribedAmount. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate F1: missing input prescribedAmountF1. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate G: missing input dividendDeductions. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate H: missing input partnershipDividends. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate FAT Paid: missing input fatPaid. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate RTF: missing input rtf. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate FX Rate: missing input fxRate. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate Gross: missing input A, A1, A2, B, C. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate Deductions: missing input D, E, F, F1, G, H. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate FAPI Brut: missing input GROSS, DEDUCTIONS. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate FAT Deduction: missing input FAT_PAID, RTF, FAPI_BRUT. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate Net FAPI: missing input FAPI_BRUT, FAT_DEDUCTION. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate Net FAPI CAD: missing input NET_FAPI, FX_RATE. Provide the value or set an explicit default in Calculation settings.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "warnings": [
+      "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value.",
+      "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "sources": [
+      {
+        "id": "pf-platform-sequence--src-collect",
+        "connected": true,
+        "consumedBy": [
+          "pf-platform-sequence--lg-readiness",
+          "pf-platform-sequence--ai-taxpos"
+        ]
+      }
+    ],
+    "results": [
+      {
+        "blockId": "pf-platform-sequence--start",
+        "label": "Scope · start",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "triggerPayload",
+          "blockId",
+          "firedAt",
+          "mode",
+          "runId",
+          "workflowId",
+          "startedBy",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--src-scope",
+        "label": "Scope Service",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--src-collect",
+        "label": "Data collection",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "rawRows",
+          "rawRowsCount",
+          "selectedRows",
+          "selectedRowsCount",
+          "workbookFile",
+          "selectedSheet",
+          "selectedRange",
+          "sourceMetadata",
+          "sourceLocator",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--src-rollforward",
+        "label": "Prior-year rollforward",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--lg-readiness",
+        "label": "Data Readiness Service",
+        "status": "error",
+        "errors": [
+          "Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate A1: missing input debtForgiveness. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate A2: missing input priorYearG. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate B: missing input capGains, inclusionRate. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate C: missing input cfaIncome. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate D: missing input businessLosses. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate E: missing input faclCarryforward. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate F: missing input prescribedAmount. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate F1: missing input prescribedAmountF1. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate G: missing input dividendDeductions. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate H: missing input partnershipDividends. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate FAT Paid: missing input fatPaid. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate RTF: missing input rtf. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate FX Rate: missing input fxRate. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate Gross: missing input A, A1, A2, B, C. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate Deductions: missing input D, E, F, F1, G, H. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate FAPI Brut: missing input GROSS, DEDUCTIONS. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate FAT Deduction: missing input FAT_PAID, RTF, FAPI_BRUT. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate Net FAPI: missing input FAPI_BRUT, FAT_DEDUCTION. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate Net FAPI CAD: missing input NET_FAPI, FX_RATE. Provide the value or set an explicit default in Calculation settings."
+        ],
+        "warnings": [],
+        "calculated": {},
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "namedValues",
+          "formulaTrace",
+          "calculatedResults",
+          "resultDetails",
+          "calculationSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--ai-taxpos",
+        "label": "Tax Position Summary Service",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "authoritative",
+          "accepted",
+          "proposal",
+          "proposalOnly",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--lg-plan",
+        "label": "AI + Human Planning",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--chk-judgment",
+        "label": "Professional judgment checkpoint",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "label",
+          "readOnlyEvidence",
+          "unit",
+          "value",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--lg-execute",
+        "label": "Deterministic Workflow Execution",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--lg-review",
+        "label": "Review",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--fld-summary",
+        "label": "Manager workpaper",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--out-deliverables",
+        "label": "Deliverables",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--out-signoff",
+        "label": "Sign-offs & lineage",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--out-persist",
+        "label": "Persist Knowledge",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      }
+    ]
+  },
+  "second": {
+    "id": "custom:36e940ea-b62e-439e-86bb-c1030730a0fe",
+    "name": "Platform Services · Universal Execution Sequence — My workflow",
+    "version": 1,
+    "runCount": 2,
+    "runId": "local-tool-workflow-1789009035381-3ohxtm",
+    "status": "error",
+    "errors": [
+      "Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate A1: missing input debtForgiveness. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate A2: missing input priorYearG. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate B: missing input capGains, inclusionRate. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate C: missing input cfaIncome. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate D: missing input businessLosses. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate E: missing input faclCarryforward. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate F: missing input prescribedAmount. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate F1: missing input prescribedAmountF1. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate G: missing input dividendDeductions. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate H: missing input partnershipDividends. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate FAT Paid: missing input fatPaid. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate RTF: missing input rtf. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate FX Rate: missing input fxRate. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate Gross: missing input A, A1, A2, B, C. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate Deductions: missing input D, E, F, F1, G, H. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate FAPI Brut: missing input GROSS, DEDUCTIONS. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate FAT Deduction: missing input FAT_PAID, RTF, FAPI_BRUT. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate Net FAPI: missing input FAPI_BRUT, FAT_DEDUCTION. Provide the value or set an explicit default in Calculation settings.",
+      "Cannot calculate Net FAPI CAD: missing input NET_FAPI, FX_RATE. Provide the value or set an explicit default in Calculation settings.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "warnings": [
+      "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value.",
+      "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "sources": [
+      {
+        "id": "pf-platform-sequence--src-collect",
+        "connected": true,
+        "consumedBy": [
+          "pf-platform-sequence--lg-readiness",
+          "pf-platform-sequence--ai-taxpos"
+        ]
+      }
+    ],
+    "results": [
+      {
+        "blockId": "pf-platform-sequence--start",
+        "label": "Scope · start",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "triggerPayload",
+          "blockId",
+          "firedAt",
+          "mode",
+          "runId",
+          "workflowId",
+          "startedBy",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--src-scope",
+        "label": "Scope Service",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--src-collect",
+        "label": "Data collection",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "rawRows",
+          "rawRowsCount",
+          "selectedRows",
+          "selectedRowsCount",
+          "workbookFile",
+          "selectedSheet",
+          "selectedRange",
+          "sourceMetadata",
+          "sourceLocator",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--src-rollforward",
+        "label": "Prior-year rollforward",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "live",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "sourceLocator",
+          "sourceMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--lg-readiness",
+        "label": "Data Readiness Service",
+        "status": "error",
+        "errors": [
+          "Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate A1: missing input debtForgiveness. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate A2: missing input priorYearG. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate B: missing input capGains, inclusionRate. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate C: missing input cfaIncome. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate D: missing input businessLosses. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate E: missing input faclCarryforward. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate F: missing input prescribedAmount. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate F1: missing input prescribedAmountF1. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate G: missing input dividendDeductions. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate H: missing input partnershipDividends. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate FAT Paid: missing input fatPaid. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate RTF: missing input rtf. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate FX Rate: missing input fxRate. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate Gross: missing input A, A1, A2, B, C. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate Deductions: missing input D, E, F, F1, G, H. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate FAPI Brut: missing input GROSS, DEDUCTIONS. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate FAT Deduction: missing input FAT_PAID, RTF, FAPI_BRUT. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate Net FAPI: missing input FAPI_BRUT, FAT_DEDUCTION. Provide the value or set an explicit default in Calculation settings.",
+          "Cannot calculate Net FAPI CAD: missing input NET_FAPI, FX_RATE. Provide the value or set an explicit default in Calculation settings."
+        ],
+        "warnings": [],
+        "calculated": {},
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "namedValues",
+          "formulaTrace",
+          "calculatedResults",
+          "resultDetails",
+          "calculationSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--ai-taxpos",
+        "label": "Tax Position Summary Service",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "authoritative",
+          "accepted",
+          "proposal",
+          "proposalOnly",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--lg-plan",
+        "label": "AI + Human Planning",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--chk-judgment",
+        "label": "Professional judgment checkpoint",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "label",
+          "readOnlyEvidence",
+          "unit",
+          "value",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--lg-execute",
+        "label": "Deterministic Workflow Execution",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--lg-review",
+        "label": "Review",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--fld-summary",
+        "label": "Manager workpaper",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--out-deliverables",
+        "label": "Deliverables",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--out-signoff",
+        "label": "Sign-offs & lineage",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-platform-sequence--out-persist",
+        "label": "Persist Knowledge",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "reason",
+          "skipped",
+          "upstreamBlockIds"
+        ]
+      }
+    ]
+  }
+}

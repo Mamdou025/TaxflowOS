@@ -1,0 +1,135 @@
+{
+  "config": {
+    "argv": [
+      "C:\\nvm4w\\nodejs\\node.exe",
+      "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\node_modules\\.pnpm\\@playwright+test@1.62.0\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config",
+      "playwright.catalog-audit.config.mjs",
+      "--tsconfig",
+      "e2e/tsconfig.json",
+      "workflow-catalog-deep-checks.spec.ts",
+      "--grep",
+      "holiday workflow"
+    ],
+    "configFile": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\playwright.catalog-audit.config.mjs",
+    "rootDir": "C:/Users/Mamad/Sinaxe/TaxflowOS/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/Mamad/Sinaxe/TaxflowOS/test-results/catalog-execution",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/Mamad/Sinaxe/TaxflowOS/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "workflow-catalog-audit.spec.ts",
+          "workflow-catalog-deep-checks.spec.ts"
+        ],
+        "timeout": 120000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "docs/workflow-catalog-evidence/test-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.62.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "workflow-catalog-deep-checks.spec.ts",
+      "file": "workflow-catalog-deep-checks.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "holiday workflow with a real API response still reports its calculation outcome",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 19382,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "{\"apiOk\":true,\"rows\":0,\"status\":\"error\",\"errors\":[\"No API response is saved. Fetch the source or explicitly enable example data.\",\"A preceding block could not execute. Resolve its message and test again.\"],\"browserErrors\":[]}\n"
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "text": "(node:48332) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.\n(Use `node --trace-warnings ...` to show where the warning was created)\n"
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-09-10T03:05:05.308Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2c79e55c3a1b696cc679-c7bb9a9574ae0eb7ae49",
+          "file": "workflow-catalog-deep-checks.spec.ts",
+          "line": 68,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-10T03:05:03.413Z",
+    "duration": 21775.013,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

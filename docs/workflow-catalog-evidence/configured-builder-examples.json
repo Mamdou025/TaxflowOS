@@ -1,0 +1,4559 @@
+[
+  {
+    "name": "createWorkingSourceRulesDemoWorkflow",
+    "sourceId": "working-source-uploaded-rows",
+    "rows": 8,
+    "status": "needs_review",
+    "errors": [],
+    "warnings": [
+      "1 row(s) were not matched by keyword rules.",
+      "1 row(s) remain unmatched.",
+      "A expected 4950 but got 22000.",
+      "A1 expected 100 but got 0.",
+      "A2 expected 75 but got 0.",
+      "B expected 400 but got 3000.",
+      "C expected 125 but got 0.",
+      "D expected 200 but got 0.",
+      "Deductions expected 400 but got 0.",
+      "E expected 90 but got 0.",
+      "F expected 40 but got 0.",
+      "F1 expected 10 but got 0.",
+      "FAPI Brut expected 5250 but got 25000.",
+      "G expected 35 but got 0.",
+      "Gross expected 5650 but got 25000.",
+      "H expected 25 but got 0.",
+      "Net FAPI expected 5060 but got 24810.",
+      "Net FAPI CAD expected 6831 but got 33493.5.",
+      "Output preview includes results that still need review."
+    ],
+    "results": [
+      {
+        "label": "Uploaded Workbook",
+        "toolId": "source.manual_table",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "backendOutputs",
+            "primaryOutputRole",
+            "immutable",
+            "readOnlyEvidence",
+            "rowCount",
+            "rows",
+            "sourceKind",
+            "sourceSubtype",
+            "rawRows",
+            "rawRowsCount",
+            "selectedRows",
+            "selectedRowsCount",
+            "workbookFile",
+            "selectedSheet",
+            "selectedRange",
+            "sourceMetadata",
+            "sourceLocator",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Keyword Rulebook",
+        "toolId": "source.keyword_rules",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "backendOutputs",
+            "primaryOutputRole",
+            "immutable",
+            "keywordRuleEvidence",
+            "keywordRules",
+            "keywordRuleTrace",
+            "readOnlyEvidence",
+            "ruleMetadata",
+            "ruleVersion",
+            "ruleCount",
+            "sourceKind",
+            "ruleVersionMetadata",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Rollup Rulebook",
+        "toolId": "source.rollup_rules",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "backendOutputs",
+            "primaryOutputRole",
+            "immutable",
+            "readOnlyEvidence",
+            "rollupRuleEvidence",
+            "rollupRules",
+            "rollupRuleTrace",
+            "ruleMetadata",
+            "ruleVersion",
+            "ruleCount",
+            "sourceKind",
+            "ruleVersionMetadata",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "FAPI Inputs",
+        "toolId": "source.fapi_inputs",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "backendOutputs",
+            "primaryOutputRole",
+            "expectedResults",
+            "fapiInputs",
+            "inputMetadata",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Bank of Canada FX Rate",
+        "toolId": "source.currency_rate",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "backendOutputs",
+            "primaryOutputRole",
+            "exchangeRate",
+            "exchangeRateInfo",
+            "value",
+            "expectedResults",
+            "fapiInputs",
+            "rateMetadata",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Keyword Mapper",
+        "toolId": "logic.keyword_mapper",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "1 row(s) were not matched by keyword rules."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "backendOutputs",
+            "primaryOutputRole",
+            "mappedRows",
+            "mappedRowsCount",
+            "unmatchedRows",
+            "unmatchedRowsCount",
+            "lowConfidenceRows",
+            "lowConfidenceRowsCount",
+            "conflictCount",
+            "conflicts",
+            "mappingSummary",
+            "rulesUsed",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "FX Rate Review",
+        "toolId": "review.fx_rate_review",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approved",
+            "approvalStatus",
+            "approval_status",
+            "exchangeRateInfo",
+            "fapiInputs",
+            "reviewedExchangeRate",
+            "validationResult",
+            "validation_result",
+            "value",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Category Rollup Aggregator",
+        "toolId": "logic.category_rollup_aggregator",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "backendOutputs",
+            "primaryOutputRole",
+            "categoryTotalDetails",
+            "categoryTotals",
+            "rollupTotalDetails",
+            "rollupTotals",
+            "namedValues",
+            "namedValuesSourceKind",
+            "excludedRows",
+            "excludedRowsCount",
+            "includedRowsByCategory",
+            "includedRowsByRollup",
+            "rollupFormulaTrace",
+            "rollupSummary",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Mapping Quality Check",
+        "toolId": "review.confidence_check",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "blocking",
+            "failedRows",
+            "lowConfidenceRows",
+            "pass",
+            "threshold",
+            "validationResult",
+            "validation_result",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Unmatched Rows Check",
+        "toolId": "review.unmatched_rows_check",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "1 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "blocking",
+            "pass",
+            "reviewOverride",
+            "validationResult",
+            "validation_result",
+            "unmatchedRows",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Protected FX Rate",
+        "toolId": "protected.protected_input",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "fapiInputs",
+            "governedValue",
+            "protectedKind",
+            "runtimeLocked",
+            "sourceTrace",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Required Input Check",
+        "toolId": "review.required_input_check",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "blocking",
+            "missingItems",
+            "missingRequiredKeys",
+            "pass",
+            "checkedBlockIds",
+            "requiredInputResult",
+            "required_input_result",
+            "validationResult",
+            "validation_result",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Calculation Engine",
+        "toolId": "logic.calculation_engine",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "backendOutputs",
+            "primaryOutputRole",
+            "namedValues",
+            "namedValuesSourceKind",
+            "formulaTrace",
+            "formulaTraceText",
+            "calculatedResults",
+            "resultDetails",
+            "calculationSummary",
+            "upstreamBlockIds"
+          ],
+          "calculatedResults": {
+            "FX_RATE": 1.35,
+            "RTF": 1.9,
+            "FAT_PAID": 100,
+            "H": 0,
+            "G": 0,
+            "F1": 0,
+            "F": 0,
+            "E": 0,
+            "D": 0,
+            "C": 0,
+            "B": 3000,
+            "A2": 0,
+            "A1": 0,
+            "A": 22000,
+            "DEDUCTIONS": 0,
+            "GROSS": 25000,
+            "FAPI_BRUT": 25000,
+            "FAT_DEDUCTION": 190,
+            "NET_FAPI": 24810,
+            "NET_FAPI_CAD": 33493.5
+          }
+        }
+      },
+      {
+        "label": "Formula Consistency Check",
+        "toolId": "review.formula_consistency_check",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "A expected 4950 but got 22000.",
+          "A1 expected 100 but got 0.",
+          "A2 expected 75 but got 0.",
+          "B expected 400 but got 3000.",
+          "C expected 125 but got 0.",
+          "D expected 200 but got 0.",
+          "Deductions expected 400 but got 0.",
+          "E expected 90 but got 0.",
+          "F expected 40 but got 0.",
+          "F1 expected 10 but got 0.",
+          "FAPI Brut expected 5250 but got 25000.",
+          "G expected 35 but got 0.",
+          "Gross expected 5650 but got 25000.",
+          "H expected 25 but got 0.",
+          "Net FAPI expected 5060 but got 24810.",
+          "Net FAPI CAD expected 6831 but got 33493.5."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "actualResults",
+            "blocking",
+            "expectedResults",
+            "formulaConsistency",
+            "mismatches",
+            "pass",
+            "validationResult",
+            "validation_result",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Approval Gate",
+        "toolId": "review.approval_gate",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approved",
+            "approvedWithWarnings",
+            "approvalStatus",
+            "approval_status",
+            "notes",
+            "reviewOverride",
+            "reviewer",
+            "reviewerOverrides",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Protected A",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "A expected 4950 but got 22000.",
+          "1 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": true,
+            "approvedBy": "demo-reviewer",
+            "blockingIssues": [
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "final": false,
+            "finalityReason": "Candidate value exists, but blocking validation findings remain unresolved.",
+            "finalityStatus": "review_ready",
+            "name": "A",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {
+              "approvedWithWarnings": false,
+              "overrideUnmatchedRows": false
+            },
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Uploaded Workbook.tb-1",
+              "Keyword Rulebook.rule-interest-income",
+              "Uploaded Workbook.tb-2",
+              "Keyword Rulebook.rule-rents",
+              "Uploaded Workbook.tb-3",
+              "Keyword Rulebook.rule-dividends",
+              "Uploaded Workbook.tb-4",
+              "Keyword Rulebook.rule-cap-gains",
+              "Uploaded Workbook.tb-5",
+              "Keyword Rulebook.rule-general-expenses",
+              "Uploaded Workbook.tb-6",
+              "Keyword Rulebook.rule-legal-expenses",
+              "Uploaded Workbook.tb-7",
+              "Keyword Rulebook.rule-accounting-expenses",
+              "Rollup Rulebook.income_bucket",
+              "Rollup Rulebook.expense_bucket",
+              "FAPI Inputs.value",
+              "Bank of Canada FX Rate.value",
+              "Uploaded Workbook.tb-8",
+              "Keyword Rulebook.rule-royalties",
+              "Keyword Rulebook.rule-other-fapi-income",
+              "Keyword Rulebook.rule-debt-forgiveness",
+              "Keyword Rulebook.rule-prior-year-g",
+              "Keyword Rulebook.rule-cfa-income",
+              "Keyword Rulebook.rule-business-losses",
+              "Keyword Rulebook.rule-facl-carryforward",
+              "Keyword Rulebook.rule-prescribed-amount",
+              "Keyword Rulebook.rule-prescribed-amount-f1",
+              "Keyword Rulebook.rule-dividend-deductions",
+              "Keyword Rulebook.rule-partnership-dividends"
+            ],
+            "status": "review_ready",
+            "validationSummary": [
+              {
+                "blockId": "working-review-required-inputs",
+                "blocking": true,
+                "label": "Required Input Check",
+                "message": "Required FAPI workflow inputs are present.",
+                "overridden": false,
+                "pass": true,
+                "status": "pass"
+              },
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "value": 22000
+          },
+          "finalityStatus": "review_ready"
+        }
+      },
+      {
+        "label": "Protected A1",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "A expected 4950 but got 22000.",
+          "1 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": true,
+            "approvedBy": "demo-reviewer",
+            "blockingIssues": [
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "final": false,
+            "finalityReason": "Candidate value exists, but blocking validation findings remain unresolved.",
+            "finalityStatus": "review_ready",
+            "name": "A1",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {
+              "approvedWithWarnings": false,
+              "overrideUnmatchedRows": false
+            },
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Uploaded Workbook.tb-1",
+              "Keyword Rulebook.rule-interest-income",
+              "Uploaded Workbook.tb-2",
+              "Keyword Rulebook.rule-rents",
+              "Uploaded Workbook.tb-3",
+              "Keyword Rulebook.rule-dividends",
+              "Uploaded Workbook.tb-4",
+              "Keyword Rulebook.rule-cap-gains",
+              "Uploaded Workbook.tb-5",
+              "Keyword Rulebook.rule-general-expenses",
+              "Uploaded Workbook.tb-6",
+              "Keyword Rulebook.rule-legal-expenses",
+              "Uploaded Workbook.tb-7",
+              "Keyword Rulebook.rule-accounting-expenses",
+              "Rollup Rulebook.income_bucket",
+              "Rollup Rulebook.expense_bucket",
+              "FAPI Inputs.value",
+              "Bank of Canada FX Rate.value",
+              "Uploaded Workbook.tb-8",
+              "Keyword Rulebook.rule-royalties",
+              "Keyword Rulebook.rule-other-fapi-income",
+              "Keyword Rulebook.rule-debt-forgiveness",
+              "Keyword Rulebook.rule-prior-year-g",
+              "Keyword Rulebook.rule-cfa-income",
+              "Keyword Rulebook.rule-business-losses",
+              "Keyword Rulebook.rule-facl-carryforward",
+              "Keyword Rulebook.rule-prescribed-amount",
+              "Keyword Rulebook.rule-prescribed-amount-f1",
+              "Keyword Rulebook.rule-dividend-deductions",
+              "Keyword Rulebook.rule-partnership-dividends"
+            ],
+            "status": "review_ready",
+            "validationSummary": [
+              {
+                "blockId": "working-review-required-inputs",
+                "blocking": true,
+                "label": "Required Input Check",
+                "message": "Required FAPI workflow inputs are present.",
+                "overridden": false,
+                "pass": true,
+                "status": "pass"
+              },
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "value": 0
+          },
+          "finalityStatus": "review_ready"
+        }
+      },
+      {
+        "label": "Protected A2",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "A expected 4950 but got 22000.",
+          "1 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": true,
+            "approvedBy": "demo-reviewer",
+            "blockingIssues": [
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "final": false,
+            "finalityReason": "Candidate value exists, but blocking validation findings remain unresolved.",
+            "finalityStatus": "review_ready",
+            "name": "A2",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {
+              "approvedWithWarnings": false,
+              "overrideUnmatchedRows": false
+            },
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Uploaded Workbook.tb-1",
+              "Keyword Rulebook.rule-interest-income",
+              "Uploaded Workbook.tb-2",
+              "Keyword Rulebook.rule-rents",
+              "Uploaded Workbook.tb-3",
+              "Keyword Rulebook.rule-dividends",
+              "Uploaded Workbook.tb-4",
+              "Keyword Rulebook.rule-cap-gains",
+              "Uploaded Workbook.tb-5",
+              "Keyword Rulebook.rule-general-expenses",
+              "Uploaded Workbook.tb-6",
+              "Keyword Rulebook.rule-legal-expenses",
+              "Uploaded Workbook.tb-7",
+              "Keyword Rulebook.rule-accounting-expenses",
+              "Rollup Rulebook.income_bucket",
+              "Rollup Rulebook.expense_bucket",
+              "FAPI Inputs.value",
+              "Bank of Canada FX Rate.value",
+              "Uploaded Workbook.tb-8",
+              "Keyword Rulebook.rule-royalties",
+              "Keyword Rulebook.rule-other-fapi-income",
+              "Keyword Rulebook.rule-debt-forgiveness",
+              "Keyword Rulebook.rule-prior-year-g",
+              "Keyword Rulebook.rule-cfa-income",
+              "Keyword Rulebook.rule-business-losses",
+              "Keyword Rulebook.rule-facl-carryforward",
+              "Keyword Rulebook.rule-prescribed-amount",
+              "Keyword Rulebook.rule-prescribed-amount-f1",
+              "Keyword Rulebook.rule-dividend-deductions",
+              "Keyword Rulebook.rule-partnership-dividends"
+            ],
+            "status": "review_ready",
+            "validationSummary": [
+              {
+                "blockId": "working-review-required-inputs",
+                "blocking": true,
+                "label": "Required Input Check",
+                "message": "Required FAPI workflow inputs are present.",
+                "overridden": false,
+                "pass": true,
+                "status": "pass"
+              },
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "value": 0
+          },
+          "finalityStatus": "review_ready"
+        }
+      },
+      {
+        "label": "Protected B",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "A expected 4950 but got 22000.",
+          "1 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": true,
+            "approvedBy": "demo-reviewer",
+            "blockingIssues": [
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "final": false,
+            "finalityReason": "Candidate value exists, but blocking validation findings remain unresolved.",
+            "finalityStatus": "review_ready",
+            "name": "B",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {
+              "approvedWithWarnings": false,
+              "overrideUnmatchedRows": false
+            },
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Uploaded Workbook.tb-1",
+              "Keyword Rulebook.rule-interest-income",
+              "Uploaded Workbook.tb-2",
+              "Keyword Rulebook.rule-rents",
+              "Uploaded Workbook.tb-3",
+              "Keyword Rulebook.rule-dividends",
+              "Uploaded Workbook.tb-4",
+              "Keyword Rulebook.rule-cap-gains",
+              "Uploaded Workbook.tb-5",
+              "Keyword Rulebook.rule-general-expenses",
+              "Uploaded Workbook.tb-6",
+              "Keyword Rulebook.rule-legal-expenses",
+              "Uploaded Workbook.tb-7",
+              "Keyword Rulebook.rule-accounting-expenses",
+              "Rollup Rulebook.income_bucket",
+              "Rollup Rulebook.expense_bucket",
+              "FAPI Inputs.value",
+              "Bank of Canada FX Rate.value",
+              "Uploaded Workbook.tb-8",
+              "Keyword Rulebook.rule-royalties",
+              "Keyword Rulebook.rule-other-fapi-income",
+              "Keyword Rulebook.rule-debt-forgiveness",
+              "Keyword Rulebook.rule-prior-year-g",
+              "Keyword Rulebook.rule-cfa-income",
+              "Keyword Rulebook.rule-business-losses",
+              "Keyword Rulebook.rule-facl-carryforward",
+              "Keyword Rulebook.rule-prescribed-amount",
+              "Keyword Rulebook.rule-prescribed-amount-f1",
+              "Keyword Rulebook.rule-dividend-deductions",
+              "Keyword Rulebook.rule-partnership-dividends"
+            ],
+            "status": "review_ready",
+            "validationSummary": [
+              {
+                "blockId": "working-review-required-inputs",
+                "blocking": true,
+                "label": "Required Input Check",
+                "message": "Required FAPI workflow inputs are present.",
+                "overridden": false,
+                "pass": true,
+                "status": "pass"
+              },
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "value": 3000
+          },
+          "finalityStatus": "review_ready"
+        }
+      },
+      {
+        "label": "Protected C",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "A expected 4950 but got 22000.",
+          "1 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": true,
+            "approvedBy": "demo-reviewer",
+            "blockingIssues": [
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "final": false,
+            "finalityReason": "Candidate value exists, but blocking validation findings remain unresolved.",
+            "finalityStatus": "review_ready",
+            "name": "C",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {
+              "approvedWithWarnings": false,
+              "overrideUnmatchedRows": false
+            },
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Uploaded Workbook.tb-1",
+              "Keyword Rulebook.rule-interest-income",
+              "Uploaded Workbook.tb-2",
+              "Keyword Rulebook.rule-rents",
+              "Uploaded Workbook.tb-3",
+              "Keyword Rulebook.rule-dividends",
+              "Uploaded Workbook.tb-4",
+              "Keyword Rulebook.rule-cap-gains",
+              "Uploaded Workbook.tb-5",
+              "Keyword Rulebook.rule-general-expenses",
+              "Uploaded Workbook.tb-6",
+              "Keyword Rulebook.rule-legal-expenses",
+              "Uploaded Workbook.tb-7",
+              "Keyword Rulebook.rule-accounting-expenses",
+              "Rollup Rulebook.income_bucket",
+              "Rollup Rulebook.expense_bucket",
+              "FAPI Inputs.value",
+              "Bank of Canada FX Rate.value",
+              "Uploaded Workbook.tb-8",
+              "Keyword Rulebook.rule-royalties",
+              "Keyword Rulebook.rule-other-fapi-income",
+              "Keyword Rulebook.rule-debt-forgiveness",
+              "Keyword Rulebook.rule-prior-year-g",
+              "Keyword Rulebook.rule-cfa-income",
+              "Keyword Rulebook.rule-business-losses",
+              "Keyword Rulebook.rule-facl-carryforward",
+              "Keyword Rulebook.rule-prescribed-amount",
+              "Keyword Rulebook.rule-prescribed-amount-f1",
+              "Keyword Rulebook.rule-dividend-deductions",
+              "Keyword Rulebook.rule-partnership-dividends"
+            ],
+            "status": "review_ready",
+            "validationSummary": [
+              {
+                "blockId": "working-review-required-inputs",
+                "blocking": true,
+                "label": "Required Input Check",
+                "message": "Required FAPI workflow inputs are present.",
+                "overridden": false,
+                "pass": true,
+                "status": "pass"
+              },
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "value": 0
+          },
+          "finalityStatus": "review_ready"
+        }
+      },
+      {
+        "label": "Protected D",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "A expected 4950 but got 22000.",
+          "1 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": true,
+            "approvedBy": "demo-reviewer",
+            "blockingIssues": [
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "final": false,
+            "finalityReason": "Candidate value exists, but blocking validation findings remain unresolved.",
+            "finalityStatus": "review_ready",
+            "name": "D",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {
+              "approvedWithWarnings": false,
+              "overrideUnmatchedRows": false
+            },
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Uploaded Workbook.tb-1",
+              "Keyword Rulebook.rule-interest-income",
+              "Uploaded Workbook.tb-2",
+              "Keyword Rulebook.rule-rents",
+              "Uploaded Workbook.tb-3",
+              "Keyword Rulebook.rule-dividends",
+              "Uploaded Workbook.tb-4",
+              "Keyword Rulebook.rule-cap-gains",
+              "Uploaded Workbook.tb-5",
+              "Keyword Rulebook.rule-general-expenses",
+              "Uploaded Workbook.tb-6",
+              "Keyword Rulebook.rule-legal-expenses",
+              "Uploaded Workbook.tb-7",
+              "Keyword Rulebook.rule-accounting-expenses",
+              "Rollup Rulebook.income_bucket",
+              "Rollup Rulebook.expense_bucket",
+              "FAPI Inputs.value",
+              "Bank of Canada FX Rate.value",
+              "Uploaded Workbook.tb-8",
+              "Keyword Rulebook.rule-royalties",
+              "Keyword Rulebook.rule-other-fapi-income",
+              "Keyword Rulebook.rule-debt-forgiveness",
+              "Keyword Rulebook.rule-prior-year-g",
+              "Keyword Rulebook.rule-cfa-income",
+              "Keyword Rulebook.rule-business-losses",
+              "Keyword Rulebook.rule-facl-carryforward",
+              "Keyword Rulebook.rule-prescribed-amount",
+              "Keyword Rulebook.rule-prescribed-amount-f1",
+              "Keyword Rulebook.rule-dividend-deductions",
+              "Keyword Rulebook.rule-partnership-dividends"
+            ],
+            "status": "review_ready",
+            "validationSummary": [
+              {
+                "blockId": "working-review-required-inputs",
+                "blocking": true,
+                "label": "Required Input Check",
+                "message": "Required FAPI workflow inputs are present.",
+                "overridden": false,
+                "pass": true,
+                "status": "pass"
+              },
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "value": 0
+          },
+          "finalityStatus": "review_ready"
+        }
+      },
+      {
+        "label": "Protected E",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "A expected 4950 but got 22000.",
+          "1 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": true,
+            "approvedBy": "demo-reviewer",
+            "blockingIssues": [
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "final": false,
+            "finalityReason": "Candidate value exists, but blocking validation findings remain unresolved.",
+            "finalityStatus": "review_ready",
+            "name": "E",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {
+              "approvedWithWarnings": false,
+              "overrideUnmatchedRows": false
+            },
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Uploaded Workbook.tb-1",
+              "Keyword Rulebook.rule-interest-income",
+              "Uploaded Workbook.tb-2",
+              "Keyword Rulebook.rule-rents",
+              "Uploaded Workbook.tb-3",
+              "Keyword Rulebook.rule-dividends",
+              "Uploaded Workbook.tb-4",
+              "Keyword Rulebook.rule-cap-gains",
+              "Uploaded Workbook.tb-5",
+              "Keyword Rulebook.rule-general-expenses",
+              "Uploaded Workbook.tb-6",
+              "Keyword Rulebook.rule-legal-expenses",
+              "Uploaded Workbook.tb-7",
+              "Keyword Rulebook.rule-accounting-expenses",
+              "Rollup Rulebook.income_bucket",
+              "Rollup Rulebook.expense_bucket",
+              "FAPI Inputs.value",
+              "Bank of Canada FX Rate.value",
+              "Uploaded Workbook.tb-8",
+              "Keyword Rulebook.rule-royalties",
+              "Keyword Rulebook.rule-other-fapi-income",
+              "Keyword Rulebook.rule-debt-forgiveness",
+              "Keyword Rulebook.rule-prior-year-g",
+              "Keyword Rulebook.rule-cfa-income",
+              "Keyword Rulebook.rule-business-losses",
+              "Keyword Rulebook.rule-facl-carryforward",
+              "Keyword Rulebook.rule-prescribed-amount",
+              "Keyword Rulebook.rule-prescribed-amount-f1",
+              "Keyword Rulebook.rule-dividend-deductions",
+              "Keyword Rulebook.rule-partnership-dividends"
+            ],
+            "status": "review_ready",
+            "validationSummary": [
+              {
+                "blockId": "working-review-required-inputs",
+                "blocking": true,
+                "label": "Required Input Check",
+                "message": "Required FAPI workflow inputs are present.",
+                "overridden": false,
+                "pass": true,
+                "status": "pass"
+              },
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "value": 0
+          },
+          "finalityStatus": "review_ready"
+        }
+      },
+      {
+        "label": "Protected F",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "A expected 4950 but got 22000.",
+          "1 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": true,
+            "approvedBy": "demo-reviewer",
+            "blockingIssues": [
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "final": false,
+            "finalityReason": "Candidate value exists, but blocking validation findings remain unresolved.",
+            "finalityStatus": "review_ready",
+            "name": "F",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {
+              "approvedWithWarnings": false,
+              "overrideUnmatchedRows": false
+            },
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Uploaded Workbook.tb-1",
+              "Keyword Rulebook.rule-interest-income",
+              "Uploaded Workbook.tb-2",
+              "Keyword Rulebook.rule-rents",
+              "Uploaded Workbook.tb-3",
+              "Keyword Rulebook.rule-dividends",
+              "Uploaded Workbook.tb-4",
+              "Keyword Rulebook.rule-cap-gains",
+              "Uploaded Workbook.tb-5",
+              "Keyword Rulebook.rule-general-expenses",
+              "Uploaded Workbook.tb-6",
+              "Keyword Rulebook.rule-legal-expenses",
+              "Uploaded Workbook.tb-7",
+              "Keyword Rulebook.rule-accounting-expenses",
+              "Rollup Rulebook.income_bucket",
+              "Rollup Rulebook.expense_bucket",
+              "FAPI Inputs.value",
+              "Bank of Canada FX Rate.value",
+              "Uploaded Workbook.tb-8",
+              "Keyword Rulebook.rule-royalties",
+              "Keyword Rulebook.rule-other-fapi-income",
+              "Keyword Rulebook.rule-debt-forgiveness",
+              "Keyword Rulebook.rule-prior-year-g",
+              "Keyword Rulebook.rule-cfa-income",
+              "Keyword Rulebook.rule-business-losses",
+              "Keyword Rulebook.rule-facl-carryforward",
+              "Keyword Rulebook.rule-prescribed-amount",
+              "Keyword Rulebook.rule-prescribed-amount-f1",
+              "Keyword Rulebook.rule-dividend-deductions",
+              "Keyword Rulebook.rule-partnership-dividends"
+            ],
+            "status": "review_ready",
+            "validationSummary": [
+              {
+                "blockId": "working-review-required-inputs",
+                "blocking": true,
+                "label": "Required Input Check",
+                "message": "Required FAPI workflow inputs are present.",
+                "overridden": false,
+                "pass": true,
+                "status": "pass"
+              },
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "value": 0
+          },
+          "finalityStatus": "review_ready"
+        }
+      },
+      {
+        "label": "Protected F1",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "A expected 4950 but got 22000.",
+          "1 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": true,
+            "approvedBy": "demo-reviewer",
+            "blockingIssues": [
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "final": false,
+            "finalityReason": "Candidate value exists, but blocking validation findings remain unresolved.",
+            "finalityStatus": "review_ready",
+            "name": "F1",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {
+              "approvedWithWarnings": false,
+              "overrideUnmatchedRows": false
+            },
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Uploaded Workbook.tb-1",
+              "Keyword Rulebook.rule-interest-income",
+              "Uploaded Workbook.tb-2",
+              "Keyword Rulebook.rule-rents",
+              "Uploaded Workbook.tb-3",
+              "Keyword Rulebook.rule-dividends",
+              "Uploaded Workbook.tb-4",
+              "Keyword Rulebook.rule-cap-gains",
+              "Uploaded Workbook.tb-5",
+              "Keyword Rulebook.rule-general-expenses",
+              "Uploaded Workbook.tb-6",
+              "Keyword Rulebook.rule-legal-expenses",
+              "Uploaded Workbook.tb-7",
+              "Keyword Rulebook.rule-accounting-expenses",
+              "Rollup Rulebook.income_bucket",
+              "Rollup Rulebook.expense_bucket",
+              "FAPI Inputs.value",
+              "Bank of Canada FX Rate.value",
+              "Uploaded Workbook.tb-8",
+              "Keyword Rulebook.rule-royalties",
+              "Keyword Rulebook.rule-other-fapi-income",
+              "Keyword Rulebook.rule-debt-forgiveness",
+              "Keyword Rulebook.rule-prior-year-g",
+              "Keyword Rulebook.rule-cfa-income",
+              "Keyword Rulebook.rule-business-losses",
+              "Keyword Rulebook.rule-facl-carryforward",
+              "Keyword Rulebook.rule-prescribed-amount",
+              "Keyword Rulebook.rule-prescribed-amount-f1",
+              "Keyword Rulebook.rule-dividend-deductions",
+              "Keyword Rulebook.rule-partnership-dividends"
+            ],
+            "status": "review_ready",
+            "validationSummary": [
+              {
+                "blockId": "working-review-required-inputs",
+                "blocking": true,
+                "label": "Required Input Check",
+                "message": "Required FAPI workflow inputs are present.",
+                "overridden": false,
+                "pass": true,
+                "status": "pass"
+              },
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "value": 0
+          },
+          "finalityStatus": "review_ready"
+        }
+      },
+      {
+        "label": "Protected G",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "A expected 4950 but got 22000.",
+          "1 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": true,
+            "approvedBy": "demo-reviewer",
+            "blockingIssues": [
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "final": false,
+            "finalityReason": "Candidate value exists, but blocking validation findings remain unresolved.",
+            "finalityStatus": "review_ready",
+            "name": "G",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {
+              "approvedWithWarnings": false,
+              "overrideUnmatchedRows": false
+            },
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Uploaded Workbook.tb-1",
+              "Keyword Rulebook.rule-interest-income",
+              "Uploaded Workbook.tb-2",
+              "Keyword Rulebook.rule-rents",
+              "Uploaded Workbook.tb-3",
+              "Keyword Rulebook.rule-dividends",
+              "Uploaded Workbook.tb-4",
+              "Keyword Rulebook.rule-cap-gains",
+              "Uploaded Workbook.tb-5",
+              "Keyword Rulebook.rule-general-expenses",
+              "Uploaded Workbook.tb-6",
+              "Keyword Rulebook.rule-legal-expenses",
+              "Uploaded Workbook.tb-7",
+              "Keyword Rulebook.rule-accounting-expenses",
+              "Rollup Rulebook.income_bucket",
+              "Rollup Rulebook.expense_bucket",
+              "FAPI Inputs.value",
+              "Bank of Canada FX Rate.value",
+              "Uploaded Workbook.tb-8",
+              "Keyword Rulebook.rule-royalties",
+              "Keyword Rulebook.rule-other-fapi-income",
+              "Keyword Rulebook.rule-debt-forgiveness",
+              "Keyword Rulebook.rule-prior-year-g",
+              "Keyword Rulebook.rule-cfa-income",
+              "Keyword Rulebook.rule-business-losses",
+              "Keyword Rulebook.rule-facl-carryforward",
+              "Keyword Rulebook.rule-prescribed-amount",
+              "Keyword Rulebook.rule-prescribed-amount-f1",
+              "Keyword Rulebook.rule-dividend-deductions",
+              "Keyword Rulebook.rule-partnership-dividends"
+            ],
+            "status": "review_ready",
+            "validationSummary": [
+              {
+                "blockId": "working-review-required-inputs",
+                "blocking": true,
+                "label": "Required Input Check",
+                "message": "Required FAPI workflow inputs are present.",
+                "overridden": false,
+                "pass": true,
+                "status": "pass"
+              },
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "value": 0
+          },
+          "finalityStatus": "review_ready"
+        }
+      },
+      {
+        "label": "Protected H",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "A expected 4950 but got 22000.",
+          "1 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": true,
+            "approvedBy": "demo-reviewer",
+            "blockingIssues": [
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "final": false,
+            "finalityReason": "Candidate value exists, but blocking validation findings remain unresolved.",
+            "finalityStatus": "review_ready",
+            "name": "H",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {
+              "approvedWithWarnings": false,
+              "overrideUnmatchedRows": false
+            },
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Uploaded Workbook.tb-1",
+              "Keyword Rulebook.rule-interest-income",
+              "Uploaded Workbook.tb-2",
+              "Keyword Rulebook.rule-rents",
+              "Uploaded Workbook.tb-3",
+              "Keyword Rulebook.rule-dividends",
+              "Uploaded Workbook.tb-4",
+              "Keyword Rulebook.rule-cap-gains",
+              "Uploaded Workbook.tb-5",
+              "Keyword Rulebook.rule-general-expenses",
+              "Uploaded Workbook.tb-6",
+              "Keyword Rulebook.rule-legal-expenses",
+              "Uploaded Workbook.tb-7",
+              "Keyword Rulebook.rule-accounting-expenses",
+              "Rollup Rulebook.income_bucket",
+              "Rollup Rulebook.expense_bucket",
+              "FAPI Inputs.value",
+              "Bank of Canada FX Rate.value",
+              "Uploaded Workbook.tb-8",
+              "Keyword Rulebook.rule-royalties",
+              "Keyword Rulebook.rule-other-fapi-income",
+              "Keyword Rulebook.rule-debt-forgiveness",
+              "Keyword Rulebook.rule-prior-year-g",
+              "Keyword Rulebook.rule-cfa-income",
+              "Keyword Rulebook.rule-business-losses",
+              "Keyword Rulebook.rule-facl-carryforward",
+              "Keyword Rulebook.rule-prescribed-amount",
+              "Keyword Rulebook.rule-prescribed-amount-f1",
+              "Keyword Rulebook.rule-dividend-deductions",
+              "Keyword Rulebook.rule-partnership-dividends"
+            ],
+            "status": "review_ready",
+            "validationSummary": [
+              {
+                "blockId": "working-review-required-inputs",
+                "blocking": true,
+                "label": "Required Input Check",
+                "message": "Required FAPI workflow inputs are present.",
+                "overridden": false,
+                "pass": true,
+                "status": "pass"
+              },
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "value": 0
+          },
+          "finalityStatus": "review_ready"
+        }
+      },
+      {
+        "label": "Protected FAT_PAID",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "A expected 4950 but got 22000.",
+          "1 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": true,
+            "approvedBy": "demo-reviewer",
+            "blockingIssues": [
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "final": false,
+            "finalityReason": "Candidate value exists, but blocking validation findings remain unresolved.",
+            "finalityStatus": "review_ready",
+            "name": "FAT_PAID",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {
+              "approvedWithWarnings": false,
+              "overrideUnmatchedRows": false
+            },
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Uploaded Workbook.tb-1",
+              "Keyword Rulebook.rule-interest-income",
+              "Uploaded Workbook.tb-2",
+              "Keyword Rulebook.rule-rents",
+              "Uploaded Workbook.tb-3",
+              "Keyword Rulebook.rule-dividends",
+              "Uploaded Workbook.tb-4",
+              "Keyword Rulebook.rule-cap-gains",
+              "Uploaded Workbook.tb-5",
+              "Keyword Rulebook.rule-general-expenses",
+              "Uploaded Workbook.tb-6",
+              "Keyword Rulebook.rule-legal-expenses",
+              "Uploaded Workbook.tb-7",
+              "Keyword Rulebook.rule-accounting-expenses",
+              "Rollup Rulebook.income_bucket",
+              "Rollup Rulebook.expense_bucket",
+              "FAPI Inputs.value",
+              "Bank of Canada FX Rate.value",
+              "Uploaded Workbook.tb-8",
+              "Keyword Rulebook.rule-royalties",
+              "Keyword Rulebook.rule-other-fapi-income",
+              "Keyword Rulebook.rule-debt-forgiveness",
+              "Keyword Rulebook.rule-prior-year-g",
+              "Keyword Rulebook.rule-cfa-income",
+              "Keyword Rulebook.rule-business-losses",
+              "Keyword Rulebook.rule-facl-carryforward",
+              "Keyword Rulebook.rule-prescribed-amount",
+              "Keyword Rulebook.rule-prescribed-amount-f1",
+              "Keyword Rulebook.rule-dividend-deductions",
+              "Keyword Rulebook.rule-partnership-dividends"
+            ],
+            "status": "review_ready",
+            "validationSummary": [
+              {
+                "blockId": "working-review-required-inputs",
+                "blocking": true,
+                "label": "Required Input Check",
+                "message": "Required FAPI workflow inputs are present.",
+                "overridden": false,
+                "pass": true,
+                "status": "pass"
+              },
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "value": 100
+          },
+          "finalityStatus": "review_ready"
+        }
+      },
+      {
+        "label": "Protected RTF",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "A expected 4950 but got 22000.",
+          "1 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": true,
+            "approvedBy": "demo-reviewer",
+            "blockingIssues": [
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "final": false,
+            "finalityReason": "Candidate value exists, but blocking validation findings remain unresolved.",
+            "finalityStatus": "review_ready",
+            "name": "RTF",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {
+              "approvedWithWarnings": false,
+              "overrideUnmatchedRows": false
+            },
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Uploaded Workbook.tb-1",
+              "Keyword Rulebook.rule-interest-income",
+              "Uploaded Workbook.tb-2",
+              "Keyword Rulebook.rule-rents",
+              "Uploaded Workbook.tb-3",
+              "Keyword Rulebook.rule-dividends",
+              "Uploaded Workbook.tb-4",
+              "Keyword Rulebook.rule-cap-gains",
+              "Uploaded Workbook.tb-5",
+              "Keyword Rulebook.rule-general-expenses",
+              "Uploaded Workbook.tb-6",
+              "Keyword Rulebook.rule-legal-expenses",
+              "Uploaded Workbook.tb-7",
+              "Keyword Rulebook.rule-accounting-expenses",
+              "Rollup Rulebook.income_bucket",
+              "Rollup Rulebook.expense_bucket",
+              "FAPI Inputs.value",
+              "Bank of Canada FX Rate.value",
+              "Uploaded Workbook.tb-8",
+              "Keyword Rulebook.rule-royalties",
+              "Keyword Rulebook.rule-other-fapi-income",
+              "Keyword Rulebook.rule-debt-forgiveness",
+              "Keyword Rulebook.rule-prior-year-g",
+              "Keyword Rulebook.rule-cfa-income",
+              "Keyword Rulebook.rule-business-losses",
+              "Keyword Rulebook.rule-facl-carryforward",
+              "Keyword Rulebook.rule-prescribed-amount",
+              "Keyword Rulebook.rule-prescribed-amount-f1",
+              "Keyword Rulebook.rule-dividend-deductions",
+              "Keyword Rulebook.rule-partnership-dividends"
+            ],
+            "status": "review_ready",
+            "validationSummary": [
+              {
+                "blockId": "working-review-required-inputs",
+                "blocking": true,
+                "label": "Required Input Check",
+                "message": "Required FAPI workflow inputs are present.",
+                "overridden": false,
+                "pass": true,
+                "status": "pass"
+              },
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "value": 1.9
+          },
+          "finalityStatus": "review_ready"
+        }
+      },
+      {
+        "label": "Protected Gross",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "A expected 4950 but got 22000.",
+          "1 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": true,
+            "approvedBy": "demo-reviewer",
+            "blockingIssues": [
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "final": false,
+            "finalityReason": "Candidate value exists, but blocking validation findings remain unresolved.",
+            "finalityStatus": "review_ready",
+            "name": "Gross",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {
+              "approvedWithWarnings": false,
+              "overrideUnmatchedRows": false
+            },
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Uploaded Workbook.tb-1",
+              "Keyword Rulebook.rule-interest-income",
+              "Uploaded Workbook.tb-2",
+              "Keyword Rulebook.rule-rents",
+              "Uploaded Workbook.tb-3",
+              "Keyword Rulebook.rule-dividends",
+              "Uploaded Workbook.tb-4",
+              "Keyword Rulebook.rule-cap-gains",
+              "Uploaded Workbook.tb-5",
+              "Keyword Rulebook.rule-general-expenses",
+              "Uploaded Workbook.tb-6",
+              "Keyword Rulebook.rule-legal-expenses",
+              "Uploaded Workbook.tb-7",
+              "Keyword Rulebook.rule-accounting-expenses",
+              "Rollup Rulebook.income_bucket",
+              "Rollup Rulebook.expense_bucket",
+              "FAPI Inputs.value",
+              "Bank of Canada FX Rate.value",
+              "Uploaded Workbook.tb-8",
+              "Keyword Rulebook.rule-royalties",
+              "Keyword Rulebook.rule-other-fapi-income",
+              "Keyword Rulebook.rule-debt-forgiveness",
+              "Keyword Rulebook.rule-prior-year-g",
+              "Keyword Rulebook.rule-cfa-income",
+              "Keyword Rulebook.rule-business-losses",
+              "Keyword Rulebook.rule-facl-carryforward",
+              "Keyword Rulebook.rule-prescribed-amount",
+              "Keyword Rulebook.rule-prescribed-amount-f1",
+              "Keyword Rulebook.rule-dividend-deductions",
+              "Keyword Rulebook.rule-partnership-dividends"
+            ],
+            "status": "review_ready",
+            "validationSummary": [
+              {
+                "blockId": "working-review-required-inputs",
+                "blocking": true,
+                "label": "Required Input Check",
+                "message": "Required FAPI workflow inputs are present.",
+                "overridden": false,
+                "pass": true,
+                "status": "pass"
+              },
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "value": 25000
+          },
+          "finalityStatus": "review_ready"
+        }
+      },
+      {
+        "label": "Protected Deductions",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "A expected 4950 but got 22000.",
+          "1 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": true,
+            "approvedBy": "demo-reviewer",
+            "blockingIssues": [
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "final": false,
+            "finalityReason": "Candidate value exists, but blocking validation findings remain unresolved.",
+            "finalityStatus": "review_ready",
+            "name": "Deductions",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {
+              "approvedWithWarnings": false,
+              "overrideUnmatchedRows": false
+            },
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Uploaded Workbook.tb-1",
+              "Keyword Rulebook.rule-interest-income",
+              "Uploaded Workbook.tb-2",
+              "Keyword Rulebook.rule-rents",
+              "Uploaded Workbook.tb-3",
+              "Keyword Rulebook.rule-dividends",
+              "Uploaded Workbook.tb-4",
+              "Keyword Rulebook.rule-cap-gains",
+              "Uploaded Workbook.tb-5",
+              "Keyword Rulebook.rule-general-expenses",
+              "Uploaded Workbook.tb-6",
+              "Keyword Rulebook.rule-legal-expenses",
+              "Uploaded Workbook.tb-7",
+              "Keyword Rulebook.rule-accounting-expenses",
+              "Rollup Rulebook.income_bucket",
+              "Rollup Rulebook.expense_bucket",
+              "FAPI Inputs.value",
+              "Bank of Canada FX Rate.value",
+              "Uploaded Workbook.tb-8",
+              "Keyword Rulebook.rule-royalties",
+              "Keyword Rulebook.rule-other-fapi-income",
+              "Keyword Rulebook.rule-debt-forgiveness",
+              "Keyword Rulebook.rule-prior-year-g",
+              "Keyword Rulebook.rule-cfa-income",
+              "Keyword Rulebook.rule-business-losses",
+              "Keyword Rulebook.rule-facl-carryforward",
+              "Keyword Rulebook.rule-prescribed-amount",
+              "Keyword Rulebook.rule-prescribed-amount-f1",
+              "Keyword Rulebook.rule-dividend-deductions",
+              "Keyword Rulebook.rule-partnership-dividends"
+            ],
+            "status": "review_ready",
+            "validationSummary": [
+              {
+                "blockId": "working-review-required-inputs",
+                "blocking": true,
+                "label": "Required Input Check",
+                "message": "Required FAPI workflow inputs are present.",
+                "overridden": false,
+                "pass": true,
+                "status": "pass"
+              },
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "value": 0
+          },
+          "finalityStatus": "review_ready"
+        }
+      },
+      {
+        "label": "Protected FAPI Brut",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "A expected 4950 but got 22000.",
+          "1 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": true,
+            "approvedBy": "demo-reviewer",
+            "blockingIssues": [
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "final": false,
+            "finalityReason": "Candidate value exists, but blocking validation findings remain unresolved.",
+            "finalityStatus": "review_ready",
+            "name": "FAPI Brut",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {
+              "approvedWithWarnings": false,
+              "overrideUnmatchedRows": false
+            },
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Uploaded Workbook.tb-1",
+              "Keyword Rulebook.rule-interest-income",
+              "Uploaded Workbook.tb-2",
+              "Keyword Rulebook.rule-rents",
+              "Uploaded Workbook.tb-3",
+              "Keyword Rulebook.rule-dividends",
+              "Uploaded Workbook.tb-4",
+              "Keyword Rulebook.rule-cap-gains",
+              "Uploaded Workbook.tb-5",
+              "Keyword Rulebook.rule-general-expenses",
+              "Uploaded Workbook.tb-6",
+              "Keyword Rulebook.rule-legal-expenses",
+              "Uploaded Workbook.tb-7",
+              "Keyword Rulebook.rule-accounting-expenses",
+              "Rollup Rulebook.income_bucket",
+              "Rollup Rulebook.expense_bucket",
+              "FAPI Inputs.value",
+              "Bank of Canada FX Rate.value",
+              "Uploaded Workbook.tb-8",
+              "Keyword Rulebook.rule-royalties",
+              "Keyword Rulebook.rule-other-fapi-income",
+              "Keyword Rulebook.rule-debt-forgiveness",
+              "Keyword Rulebook.rule-prior-year-g",
+              "Keyword Rulebook.rule-cfa-income",
+              "Keyword Rulebook.rule-business-losses",
+              "Keyword Rulebook.rule-facl-carryforward",
+              "Keyword Rulebook.rule-prescribed-amount",
+              "Keyword Rulebook.rule-prescribed-amount-f1",
+              "Keyword Rulebook.rule-dividend-deductions",
+              "Keyword Rulebook.rule-partnership-dividends"
+            ],
+            "status": "review_ready",
+            "validationSummary": [
+              {
+                "blockId": "working-review-required-inputs",
+                "blocking": true,
+                "label": "Required Input Check",
+                "message": "Required FAPI workflow inputs are present.",
+                "overridden": false,
+                "pass": true,
+                "status": "pass"
+              },
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "value": 25000
+          },
+          "finalityStatus": "review_ready"
+        }
+      },
+      {
+        "label": "Protected FAT Deduction",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "A expected 4950 but got 22000.",
+          "1 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": true,
+            "approvedBy": "demo-reviewer",
+            "blockingIssues": [
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "final": false,
+            "finalityReason": "Candidate value exists, but blocking validation findings remain unresolved.",
+            "finalityStatus": "review_ready",
+            "name": "FAT Deduction",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {
+              "approvedWithWarnings": false,
+              "overrideUnmatchedRows": false
+            },
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Uploaded Workbook.tb-1",
+              "Keyword Rulebook.rule-interest-income",
+              "Uploaded Workbook.tb-2",
+              "Keyword Rulebook.rule-rents",
+              "Uploaded Workbook.tb-3",
+              "Keyword Rulebook.rule-dividends",
+              "Uploaded Workbook.tb-4",
+              "Keyword Rulebook.rule-cap-gains",
+              "Uploaded Workbook.tb-5",
+              "Keyword Rulebook.rule-general-expenses",
+              "Uploaded Workbook.tb-6",
+              "Keyword Rulebook.rule-legal-expenses",
+              "Uploaded Workbook.tb-7",
+              "Keyword Rulebook.rule-accounting-expenses",
+              "Rollup Rulebook.income_bucket",
+              "Rollup Rulebook.expense_bucket",
+              "FAPI Inputs.value",
+              "Bank of Canada FX Rate.value",
+              "Uploaded Workbook.tb-8",
+              "Keyword Rulebook.rule-royalties",
+              "Keyword Rulebook.rule-other-fapi-income",
+              "Keyword Rulebook.rule-debt-forgiveness",
+              "Keyword Rulebook.rule-prior-year-g",
+              "Keyword Rulebook.rule-cfa-income",
+              "Keyword Rulebook.rule-business-losses",
+              "Keyword Rulebook.rule-facl-carryforward",
+              "Keyword Rulebook.rule-prescribed-amount",
+              "Keyword Rulebook.rule-prescribed-amount-f1",
+              "Keyword Rulebook.rule-dividend-deductions",
+              "Keyword Rulebook.rule-partnership-dividends"
+            ],
+            "status": "review_ready",
+            "validationSummary": [
+              {
+                "blockId": "working-review-required-inputs",
+                "blocking": true,
+                "label": "Required Input Check",
+                "message": "Required FAPI workflow inputs are present.",
+                "overridden": false,
+                "pass": true,
+                "status": "pass"
+              },
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "value": 190
+          },
+          "finalityStatus": "review_ready"
+        }
+      },
+      {
+        "label": "Protected Net FAPI",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "A expected 4950 but got 22000.",
+          "1 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": true,
+            "approvedBy": "demo-reviewer",
+            "blockingIssues": [
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "final": false,
+            "finalityReason": "Candidate value exists, but blocking validation findings remain unresolved.",
+            "finalityStatus": "review_ready",
+            "name": "Net FAPI",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {
+              "approvedWithWarnings": false,
+              "overrideUnmatchedRows": false
+            },
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Uploaded Workbook.tb-1",
+              "Keyword Rulebook.rule-interest-income",
+              "Uploaded Workbook.tb-2",
+              "Keyword Rulebook.rule-rents",
+              "Uploaded Workbook.tb-3",
+              "Keyword Rulebook.rule-dividends",
+              "Uploaded Workbook.tb-4",
+              "Keyword Rulebook.rule-cap-gains",
+              "Uploaded Workbook.tb-5",
+              "Keyword Rulebook.rule-general-expenses",
+              "Uploaded Workbook.tb-6",
+              "Keyword Rulebook.rule-legal-expenses",
+              "Uploaded Workbook.tb-7",
+              "Keyword Rulebook.rule-accounting-expenses",
+              "Rollup Rulebook.income_bucket",
+              "Rollup Rulebook.expense_bucket",
+              "FAPI Inputs.value",
+              "Bank of Canada FX Rate.value",
+              "Uploaded Workbook.tb-8",
+              "Keyword Rulebook.rule-royalties",
+              "Keyword Rulebook.rule-other-fapi-income",
+              "Keyword Rulebook.rule-debt-forgiveness",
+              "Keyword Rulebook.rule-prior-year-g",
+              "Keyword Rulebook.rule-cfa-income",
+              "Keyword Rulebook.rule-business-losses",
+              "Keyword Rulebook.rule-facl-carryforward",
+              "Keyword Rulebook.rule-prescribed-amount",
+              "Keyword Rulebook.rule-prescribed-amount-f1",
+              "Keyword Rulebook.rule-dividend-deductions",
+              "Keyword Rulebook.rule-partnership-dividends"
+            ],
+            "status": "review_ready",
+            "validationSummary": [
+              {
+                "blockId": "working-review-required-inputs",
+                "blocking": true,
+                "label": "Required Input Check",
+                "message": "Required FAPI workflow inputs are present.",
+                "overridden": false,
+                "pass": true,
+                "status": "pass"
+              },
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "value": 24810
+          },
+          "finalityStatus": "review_ready"
+        }
+      },
+      {
+        "label": "Protected Net FAPI CAD",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "A expected 4950 but got 22000.",
+          "1 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": true,
+            "approvedBy": "demo-reviewer",
+            "blockingIssues": [
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "final": false,
+            "finalityReason": "Candidate value exists, but blocking validation findings remain unresolved.",
+            "finalityStatus": "review_ready",
+            "name": "Net FAPI CAD",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {
+              "approvedWithWarnings": false,
+              "overrideUnmatchedRows": false
+            },
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Uploaded Workbook.tb-1",
+              "Keyword Rulebook.rule-interest-income",
+              "Uploaded Workbook.tb-2",
+              "Keyword Rulebook.rule-rents",
+              "Uploaded Workbook.tb-3",
+              "Keyword Rulebook.rule-dividends",
+              "Uploaded Workbook.tb-4",
+              "Keyword Rulebook.rule-cap-gains",
+              "Uploaded Workbook.tb-5",
+              "Keyword Rulebook.rule-general-expenses",
+              "Uploaded Workbook.tb-6",
+              "Keyword Rulebook.rule-legal-expenses",
+              "Uploaded Workbook.tb-7",
+              "Keyword Rulebook.rule-accounting-expenses",
+              "Rollup Rulebook.income_bucket",
+              "Rollup Rulebook.expense_bucket",
+              "FAPI Inputs.value",
+              "Bank of Canada FX Rate.value",
+              "Uploaded Workbook.tb-8",
+              "Keyword Rulebook.rule-royalties",
+              "Keyword Rulebook.rule-other-fapi-income",
+              "Keyword Rulebook.rule-debt-forgiveness",
+              "Keyword Rulebook.rule-prior-year-g",
+              "Keyword Rulebook.rule-cfa-income",
+              "Keyword Rulebook.rule-business-losses",
+              "Keyword Rulebook.rule-facl-carryforward",
+              "Keyword Rulebook.rule-prescribed-amount",
+              "Keyword Rulebook.rule-prescribed-amount-f1",
+              "Keyword Rulebook.rule-dividend-deductions",
+              "Keyword Rulebook.rule-partnership-dividends"
+            ],
+            "status": "review_ready",
+            "validationSummary": [
+              {
+                "blockId": "working-review-required-inputs",
+                "blocking": true,
+                "label": "Required Input Check",
+                "message": "Required FAPI workflow inputs are present.",
+                "overridden": false,
+                "pass": true,
+                "status": "pass"
+              },
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "value": 33493.5
+          },
+          "finalityStatus": "review_ready"
+        }
+      },
+      {
+        "label": "Output Readiness Check",
+        "toolId": "review.output_readiness_check",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "A expected 4950 but got 22000.",
+          "1 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "blocking",
+            "finalityStatus",
+            "missingItems",
+            "missingProtectedResults",
+            "outputReadinessResult",
+            "output_readiness_result",
+            "outputCount",
+            "pass",
+            "protectedCount",
+            "protectedResultsFinality",
+            "ready",
+            "validationResult",
+            "validation_result",
+            "upstreamBlockIds"
+          ],
+          "finalityStatus": "review_ready"
+        }
+      },
+      {
+        "label": "Evidence Pack Preview",
+        "toolId": "output.evidence_pack_preview",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "1 row(s) were not matched by keyword rules.",
+          "1 row(s) remain unmatched.",
+          "A expected 4950 but got 22000.",
+          "A1 expected 100 but got 0.",
+          "A2 expected 75 but got 0.",
+          "B expected 400 but got 3000.",
+          "C expected 125 but got 0.",
+          "D expected 200 but got 0.",
+          "Deductions expected 400 but got 0.",
+          "E expected 90 but got 0.",
+          "F expected 40 but got 0.",
+          "F1 expected 10 but got 0.",
+          "FAPI Brut expected 5250 but got 25000.",
+          "G expected 35 but got 0.",
+          "Gross expected 5650 but got 25000.",
+          "H expected 25 but got 0.",
+          "Net FAPI expected 5060 but got 24810.",
+          "Net FAPI CAD expected 6831 but got 33493.5.",
+          "Output preview includes results that still need review."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "blockingIssues",
+            "finalityStatus",
+            "formulas",
+            "keywordRulesUsed",
+            "mappedRows",
+            "nonBlockingWarnings",
+            "outputFinality",
+            "pipelineTrace",
+            "preview",
+            "protectedValues",
+            "protectedResult",
+            "protectedResults",
+            "protectedResultsFinality",
+            "reviewDecisions",
+            "reviewerOverrides",
+            "sourceRows",
+            "sourceTrace",
+            "validationSummary",
+            "warnings",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": true,
+            "approvedBy": "demo-reviewer",
+            "blockingIssues": [
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "final": false,
+            "finalityReason": "Candidate value exists, but blocking validation findings remain unresolved.",
+            "finalityStatus": "review_ready",
+            "name": "A",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {
+              "approvedWithWarnings": false,
+              "overrideUnmatchedRows": false
+            },
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Uploaded Workbook.tb-1",
+              "Keyword Rulebook.rule-interest-income",
+              "Uploaded Workbook.tb-2",
+              "Keyword Rulebook.rule-rents",
+              "Uploaded Workbook.tb-3",
+              "Keyword Rulebook.rule-dividends",
+              "Uploaded Workbook.tb-4",
+              "Keyword Rulebook.rule-cap-gains",
+              "Uploaded Workbook.tb-5",
+              "Keyword Rulebook.rule-general-expenses",
+              "Uploaded Workbook.tb-6",
+              "Keyword Rulebook.rule-legal-expenses",
+              "Uploaded Workbook.tb-7",
+              "Keyword Rulebook.rule-accounting-expenses",
+              "Rollup Rulebook.income_bucket",
+              "Rollup Rulebook.expense_bucket",
+              "FAPI Inputs.value",
+              "Bank of Canada FX Rate.value",
+              "Uploaded Workbook.tb-8",
+              "Keyword Rulebook.rule-royalties",
+              "Keyword Rulebook.rule-other-fapi-income",
+              "Keyword Rulebook.rule-debt-forgiveness",
+              "Keyword Rulebook.rule-prior-year-g",
+              "Keyword Rulebook.rule-cfa-income",
+              "Keyword Rulebook.rule-business-losses",
+              "Keyword Rulebook.rule-facl-carryforward",
+              "Keyword Rulebook.rule-prescribed-amount",
+              "Keyword Rulebook.rule-prescribed-amount-f1",
+              "Keyword Rulebook.rule-dividend-deductions",
+              "Keyword Rulebook.rule-partnership-dividends"
+            ],
+            "status": "review_ready",
+            "validationSummary": [
+              {
+                "blockId": "working-review-required-inputs",
+                "blocking": true,
+                "label": "Required Input Check",
+                "message": "Required FAPI workflow inputs are present.",
+                "overridden": false,
+                "pass": true,
+                "status": "pass"
+              },
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "value": 22000
+          },
+          "finalityStatus": "review_ready"
+        }
+      },
+      {
+        "label": "Canonical JSON",
+        "toolId": "output.canonical_json",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "1 row(s) were not matched by keyword rules.",
+          "1 row(s) remain unmatched.",
+          "A expected 4950 but got 22000.",
+          "A1 expected 100 but got 0.",
+          "A2 expected 75 but got 0.",
+          "B expected 400 but got 3000.",
+          "C expected 125 but got 0.",
+          "D expected 200 but got 0.",
+          "Deductions expected 400 but got 0.",
+          "E expected 90 but got 0.",
+          "F expected 40 but got 0.",
+          "F1 expected 10 but got 0.",
+          "FAPI Brut expected 5250 but got 25000.",
+          "G expected 35 but got 0.",
+          "Gross expected 5650 but got 25000.",
+          "H expected 25 but got 0.",
+          "Net FAPI expected 5060 but got 24810.",
+          "Net FAPI CAD expected 6831 but got 33493.5.",
+          "Output preview includes results that still need review."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "canonicalJson",
+            "canonical_json",
+            "pipelineTrace",
+            "blockingIssues",
+            "candidateLogicOutputs",
+            "finalityStatus",
+            "generatedAt",
+            "keywordRulesUsed",
+            "mappedRows",
+            "nonBlockingWarnings",
+            "outputFinality",
+            "protectedValues",
+            "protectedResult",
+            "protectedResults",
+            "protectedResultsFinality",
+            "reviewResults",
+            "reviewerOverrides",
+            "runId",
+            "sourceTrace",
+            "validationSummary",
+            "warnings",
+            "workflowId",
+            "workflowName",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": true,
+            "approvedBy": "demo-reviewer",
+            "blockingIssues": [
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "final": false,
+            "finalityReason": "Candidate value exists, but blocking validation findings remain unresolved.",
+            "finalityStatus": "review_ready",
+            "name": "A",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {
+              "approvedWithWarnings": false,
+              "overrideUnmatchedRows": false
+            },
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Uploaded Workbook.tb-1",
+              "Keyword Rulebook.rule-interest-income",
+              "Uploaded Workbook.tb-2",
+              "Keyword Rulebook.rule-rents",
+              "Uploaded Workbook.tb-3",
+              "Keyword Rulebook.rule-dividends",
+              "Uploaded Workbook.tb-4",
+              "Keyword Rulebook.rule-cap-gains",
+              "Uploaded Workbook.tb-5",
+              "Keyword Rulebook.rule-general-expenses",
+              "Uploaded Workbook.tb-6",
+              "Keyword Rulebook.rule-legal-expenses",
+              "Uploaded Workbook.tb-7",
+              "Keyword Rulebook.rule-accounting-expenses",
+              "Rollup Rulebook.income_bucket",
+              "Rollup Rulebook.expense_bucket",
+              "FAPI Inputs.value",
+              "Bank of Canada FX Rate.value",
+              "Uploaded Workbook.tb-8",
+              "Keyword Rulebook.rule-royalties",
+              "Keyword Rulebook.rule-other-fapi-income",
+              "Keyword Rulebook.rule-debt-forgiveness",
+              "Keyword Rulebook.rule-prior-year-g",
+              "Keyword Rulebook.rule-cfa-income",
+              "Keyword Rulebook.rule-business-losses",
+              "Keyword Rulebook.rule-facl-carryforward",
+              "Keyword Rulebook.rule-prescribed-amount",
+              "Keyword Rulebook.rule-prescribed-amount-f1",
+              "Keyword Rulebook.rule-dividend-deductions",
+              "Keyword Rulebook.rule-partnership-dividends"
+            ],
+            "status": "review_ready",
+            "validationSummary": [
+              {
+                "blockId": "working-review-required-inputs",
+                "blocking": true,
+                "label": "Required Input Check",
+                "message": "Required FAPI workflow inputs are present.",
+                "overridden": false,
+                "pass": true,
+                "status": "pass"
+              },
+              {
+                "blockId": "working-review-formula-consistency",
+                "blocking": true,
+                "label": "Formula Consistency Check",
+                "message": "A expected 4950 but got 22000.",
+                "overridden": false,
+                "pass": false,
+                "status": "warning"
+              },
+              {
+                "blockId": "working-review-unmatched-rows",
+                "blocking": true,
+                "label": "Unmatched Rows Check",
+                "message": "1 row(s) remain unmatched.",
+                "overridden": false,
+                "pass": false,
+                "status": "fail"
+              }
+            ],
+            "value": 22000
+          },
+          "finalityStatus": "review_ready"
+        }
+      }
+    ]
+  },
+  {
+    "name": "createFapiSampleWorkflow",
+    "sourceId": "source-trial-balance",
+    "rows": 8,
+    "status": "error",
+    "errors": [
+      "Rollup & Calculation Engine needs mapped_rows input.",
+      "Rollup & Calculation Engine needs aggregation_rules input.",
+      "A preceding block could not execute. Resolve its message and test again."
+    ],
+    "warnings": [
+      "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value.",
+      "5 row(s) were not matched by keyword rules.",
+      "No rows matched the aggregation filters.",
+      "A preceding block could not execute. Resolve its message and test again.",
+      "5 row(s) remain unmatched.",
+      "Upstream approval is missing.",
+      "Output preview includes results that still need review."
+    ],
+    "results": [
+      {
+        "label": "Keyword Rulebook",
+        "toolId": "source.keyword_rules",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "backendOutputs",
+            "primaryOutputRole",
+            "immutable",
+            "keywordRuleEvidence",
+            "keywordRules",
+            "keywordRuleTrace",
+            "readOnlyEvidence",
+            "ruleMetadata",
+            "ruleVersion",
+            "ruleCount",
+            "sourceKind",
+            "ruleVersionMetadata",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Trial Balance Rows",
+        "toolId": "source.manual_table",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "backendOutputs",
+            "primaryOutputRole",
+            "immutable",
+            "readOnlyEvidence",
+            "rowCount",
+            "rows",
+            "sourceKind",
+            "sourceSubtype",
+            "rawRows",
+            "rawRowsCount",
+            "selectedRows",
+            "selectedRowsCount",
+            "workbookFile",
+            "selectedSheet",
+            "selectedRange",
+            "sourceMetadata",
+            "sourceLocator",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Financial statements and notes",
+        "toolId": "source.pdf_document",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "immutable",
+            "live",
+            "rowCount",
+            "rows",
+            "sourceKind",
+            "sourceLocator",
+            "sourceMetadata",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "FX Rate",
+        "toolId": "source.manual_value",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "immutable",
+            "label",
+            "readOnlyEvidence",
+            "unit",
+            "value",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Inclusion rate constant",
+        "toolId": "source.manual_value",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "immutable",
+            "label",
+            "readOnlyEvidence",
+            "unit",
+            "value",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "FX rate API source",
+        "toolId": "source.manual_value",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "immutable",
+            "label",
+            "readOnlyEvidence",
+            "unit",
+            "value",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Keyword Mapper",
+        "toolId": "logic.keyword_mapper",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "5 row(s) were not matched by keyword rules."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "backendOutputs",
+            "primaryOutputRole",
+            "mappedRows",
+            "mappedRowsCount",
+            "unmatchedRows",
+            "unmatchedRowsCount",
+            "lowConfidenceRows",
+            "lowConfidenceRowsCount",
+            "conflictCount",
+            "conflicts",
+            "mappingSummary",
+            "rulesUsed",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Property income aggregation",
+        "toolId": "logic.aggregation",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "aggregationSummary",
+            "aggregation_summary",
+            "aggregationMethod",
+            "excludedRows",
+            "formulaTrace",
+            "includedRows",
+            "subtotal",
+            "subtotalValue",
+            "value",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Capital gains / losses aggregation",
+        "toolId": "logic.aggregation",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No rows matched the aggregation filters."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "aggregationSummary",
+            "aggregation_summary",
+            "aggregationMethod",
+            "excludedRows",
+            "formulaTrace",
+            "includedRows",
+            "subtotal",
+            "subtotalValue",
+            "value",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Expenses and deductions aggregation",
+        "toolId": "logic.aggregation",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "aggregationSummary",
+            "aggregation_summary",
+            "aggregationMethod",
+            "excludedRows",
+            "formulaTrace",
+            "includedRows",
+            "subtotal",
+            "subtotalValue",
+            "value",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Apply FX Rate Formula",
+        "toolId": "logic.formula",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "formulaTrace",
+            "inputValues",
+            "operation",
+            "value",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "FAT deduction calculation",
+        "toolId": "logic.hierarchy_aggregator",
+        "status": "error",
+        "errors": [
+          "Rollup & Calculation Engine needs mapped_rows input.",
+          "Rollup & Calculation Engine needs aggregation_rules input."
+        ],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "backendOutputs",
+            "primaryOutputRole",
+            "categoryTotalDetails",
+            "categoryTotals",
+            "nodeTotalDetails",
+            "nodeTotals",
+            "groupTotals",
+            "finalTotalDetails",
+            "finalTotals",
+            "officialLineDetails",
+            "officialLineValues",
+            "aggregationTree",
+            "includedRowsByNode",
+            "excludedRows",
+            "excludedRowsCount",
+            "formulaTrace",
+            "formulaTraceText",
+            "aggregationSummary",
+            "aggregation_summary",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "FX conversion and normalization",
+        "toolId": "logic.hierarchy_aggregator",
+        "status": "error",
+        "errors": [
+          "Rollup & Calculation Engine needs mapped_rows input.",
+          "Rollup & Calculation Engine needs aggregation_rules input."
+        ],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "backendOutputs",
+            "primaryOutputRole",
+            "categoryTotalDetails",
+            "categoryTotals",
+            "nodeTotalDetails",
+            "nodeTotals",
+            "groupTotals",
+            "finalTotalDetails",
+            "finalTotals",
+            "officialLineDetails",
+            "officialLineValues",
+            "aggregationTree",
+            "includedRowsByNode",
+            "excludedRows",
+            "excludedRowsCount",
+            "formulaTrace",
+            "formulaTraceText",
+            "aggregationSummary",
+            "aggregation_summary",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Missing source review routing",
+        "toolId": "logic.hierarchy_aggregator",
+        "status": "error",
+        "errors": [
+          "Rollup & Calculation Engine needs mapped_rows input.",
+          "Rollup & Calculation Engine needs aggregation_rules input."
+        ],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "backendOutputs",
+            "primaryOutputRole",
+            "categoryTotalDetails",
+            "categoryTotals",
+            "nodeTotalDetails",
+            "nodeTotals",
+            "groupTotals",
+            "finalTotalDetails",
+            "finalTotals",
+            "officialLineDetails",
+            "officialLineValues",
+            "aggregationTree",
+            "includedRowsByNode",
+            "excludedRows",
+            "excludedRowsCount",
+            "formulaTrace",
+            "formulaTraceText",
+            "aggregationSummary",
+            "aggregation_summary",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "FX rate exists",
+        "toolId": "review.required_input_check",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Protected values have support",
+        "toolId": "logic.hierarchy_aggregator",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Low confidence warning",
+        "toolId": "review.low_confidence_warning",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "blocking",
+            "lowConfidenceRows",
+            "pass",
+            "threshold",
+            "validationResult",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Unmatched rows check",
+        "toolId": "review.unmatched_rows_check",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "5 row(s) remain unmatched."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "blocking",
+            "pass",
+            "reviewOverride",
+            "validationResult",
+            "validation_result",
+            "unmatchedRows",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Manual override review",
+        "toolId": "review.fx_rate_review",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Approval gate",
+        "toolId": "review.approval_gate",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Output readiness check",
+        "toolId": "review.output_readiness_check",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "FX Rate",
+        "toolId": "protected.protected_input",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Reporting Currency",
+        "toolId": "protected.protected_input",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Document Currency",
+        "toolId": "protected.protected_input",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "FAPI Year / Fiscal Period",
+        "toolId": "protected.protected_input",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Inclusion Rate",
+        "toolId": "protected.protected_input",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "RTF / relevant tax factor",
+        "toolId": "protected.protected_input",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "FAT Paid / Foreign Accrual Tax input",
+        "toolId": "protected.protected_input",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Sample Official Fiscal Line A",
+        "toolId": "logic.hierarchy_aggregator",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Official Line A.1",
+        "toolId": "logic.hierarchy_aggregator",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Official Line A.2",
+        "toolId": "logic.hierarchy_aggregator",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Official Line B",
+        "toolId": "logic.hierarchy_aggregator",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Official Line C",
+        "toolId": "logic.hierarchy_aggregator",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Official Line D",
+        "toolId": "logic.hierarchy_aggregator",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Official Line E",
+        "toolId": "logic.hierarchy_aggregator",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Official Line F",
+        "toolId": "logic.hierarchy_aggregator",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Official Line F.1",
+        "toolId": "logic.hierarchy_aggregator",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Official Line G",
+        "toolId": "logic.hierarchy_aggregator",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Official Line H",
+        "toolId": "logic.hierarchy_aggregator",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Gross",
+        "toolId": "protected.protected_result",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Deductions",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "Upstream approval is missing."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": false,
+            "blockingIssues": [],
+            "currency": "USD",
+            "final": false,
+            "finalityReason": "Candidate value or approval is missing.",
+            "finalityStatus": "draft",
+            "name": "Deductions",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {},
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Trial Balance Rows.tb-1",
+              "Keyword Rulebook.keyword-rule-interest-income",
+              "Trial Balance Rows.tb-2",
+              "Keyword Rulebook.keyword-rule-rents",
+              "Trial Balance Rows.tb-5",
+              "Keyword Rulebook.keyword-rule-general-expenses",
+              "Trial Balance Rows.tb-3",
+              "Trial Balance Rows.tb-4",
+              "Trial Balance Rows.tb-6",
+              "Trial Balance Rows.tb-7",
+              "Trial Balance Rows.tb-8"
+            ],
+            "status": "draft",
+            "validationSummary": [],
+            "value": -1500
+          },
+          "finalityStatus": "draft"
+        }
+      },
+      {
+        "label": "FAPI Brut",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "Upstream approval is missing."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": false,
+            "blockingIssues": [],
+            "final": false,
+            "finalityReason": "Candidate value or approval is missing.",
+            "finalityStatus": "draft",
+            "name": "FAPI Brut",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {},
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Inclusion rate constant.value",
+              "FX Rate.value",
+              "Trial Balance Rows.tb-1",
+              "Keyword Rulebook.keyword-rule-interest-income",
+              "Trial Balance Rows.tb-2",
+              "Keyword Rulebook.keyword-rule-rents",
+              "Trial Balance Rows.tb-5",
+              "Keyword Rulebook.keyword-rule-general-expenses",
+              "Trial Balance Rows.tb-3",
+              "Trial Balance Rows.tb-4",
+              "Trial Balance Rows.tb-6",
+              "Trial Balance Rows.tb-7",
+              "Trial Balance Rows.tb-8"
+            ],
+            "status": "draft",
+            "validationSummary": [],
+            "value": 27000
+          },
+          "finalityStatus": "draft"
+        }
+      },
+      {
+        "label": "FAT Deduction",
+        "toolId": "protected.protected_result",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Sample Protected Result",
+        "toolId": "protected.protected_result",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "FAPL / loss result",
+        "toolId": "protected.protected_result",
+        "status": "needs_review",
+        "errors": [],
+        "warnings": [
+          "Upstream approval is missing."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "approvalStatus",
+            "blockingIssues",
+            "draftOnly",
+            "finalityReason",
+            "finalityStatus",
+            "formulaTrace",
+            "governedValue",
+            "nonBlockingWarnings",
+            "protectedKind",
+            "protectedResult",
+            "protected_result",
+            "reviewerOverrides",
+            "runtimeLocked",
+            "sourceTrace",
+            "validationSummary",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": false,
+            "blockingIssues": [],
+            "final": false,
+            "finalityReason": "Candidate value or approval is missing.",
+            "finalityStatus": "draft",
+            "name": "FAPL / loss result",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {},
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Trial Balance Rows.tb-1",
+              "Keyword Rulebook.keyword-rule-interest-income",
+              "Trial Balance Rows.tb-2",
+              "Keyword Rulebook.keyword-rule-rents",
+              "Trial Balance Rows.tb-5",
+              "Keyword Rulebook.keyword-rule-general-expenses",
+              "Trial Balance Rows.tb-3",
+              "Trial Balance Rows.tb-4",
+              "Trial Balance Rows.tb-6",
+              "Trial Balance Rows.tb-7",
+              "Trial Balance Rows.tb-8"
+            ],
+            "status": "draft",
+            "validationSummary": [],
+            "value": 0
+          },
+          "finalityStatus": "draft"
+        }
+      },
+      {
+        "label": "CSV Export",
+        "toolId": "output.evidence_pack_preview",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Excel Export",
+        "toolId": "output.evidence_pack_preview",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value.",
+          "5 row(s) were not matched by keyword rules.",
+          "No rows matched the aggregation filters.",
+          "A preceding block could not execute. Resolve its message and test again.",
+          "5 row(s) remain unmatched.",
+          "Upstream approval is missing.",
+          "Output preview includes results that still need review."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "blockingIssues",
+            "finalityStatus",
+            "formulas",
+            "keywordRulesUsed",
+            "mappedRows",
+            "nonBlockingWarnings",
+            "outputFinality",
+            "pipelineTrace",
+            "preview",
+            "protectedValues",
+            "protectedResult",
+            "protectedResults",
+            "protectedResultsFinality",
+            "reviewDecisions",
+            "reviewerOverrides",
+            "sourceRows",
+            "sourceTrace",
+            "validationSummary",
+            "warnings",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": false,
+            "blockingIssues": [],
+            "currency": "USD",
+            "final": false,
+            "finalityReason": "Candidate value or approval is missing.",
+            "finalityStatus": "draft",
+            "name": "Deductions",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {},
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Trial Balance Rows.tb-1",
+              "Keyword Rulebook.keyword-rule-interest-income",
+              "Trial Balance Rows.tb-2",
+              "Keyword Rulebook.keyword-rule-rents",
+              "Trial Balance Rows.tb-5",
+              "Keyword Rulebook.keyword-rule-general-expenses",
+              "Trial Balance Rows.tb-3",
+              "Trial Balance Rows.tb-4",
+              "Trial Balance Rows.tb-6",
+              "Trial Balance Rows.tb-7",
+              "Trial Balance Rows.tb-8"
+            ],
+            "status": "draft",
+            "validationSummary": [],
+            "value": -1500
+          },
+          "finalityStatus": "failed"
+        }
+      },
+      {
+        "label": "PDF Review Pack",
+        "toolId": "output.evidence_pack_preview",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value.",
+          "5 row(s) were not matched by keyword rules.",
+          "No rows matched the aggregation filters.",
+          "A preceding block could not execute. Resolve its message and test again.",
+          "5 row(s) remain unmatched.",
+          "Upstream approval is missing.",
+          "Output preview includes results that still need review."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "blockingIssues",
+            "finalityStatus",
+            "formulas",
+            "keywordRulesUsed",
+            "mappedRows",
+            "nonBlockingWarnings",
+            "outputFinality",
+            "pipelineTrace",
+            "preview",
+            "protectedValues",
+            "protectedResult",
+            "protectedResults",
+            "protectedResultsFinality",
+            "reviewDecisions",
+            "reviewerOverrides",
+            "sourceRows",
+            "sourceTrace",
+            "validationSummary",
+            "warnings",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": false,
+            "blockingIssues": [],
+            "currency": "USD",
+            "final": false,
+            "finalityReason": "Candidate value or approval is missing.",
+            "finalityStatus": "draft",
+            "name": "Deductions",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {},
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Trial Balance Rows.tb-1",
+              "Keyword Rulebook.keyword-rule-interest-income",
+              "Trial Balance Rows.tb-2",
+              "Keyword Rulebook.keyword-rule-rents",
+              "Trial Balance Rows.tb-5",
+              "Keyword Rulebook.keyword-rule-general-expenses",
+              "Trial Balance Rows.tb-3",
+              "Trial Balance Rows.tb-4",
+              "Trial Balance Rows.tb-6",
+              "Trial Balance Rows.tb-7",
+              "Trial Balance Rows.tb-8"
+            ],
+            "status": "draft",
+            "validationSummary": [],
+            "value": -1500
+          },
+          "finalityStatus": "failed"
+        }
+      },
+      {
+        "label": "Evidence Pack",
+        "toolId": "output.evidence_pack_preview",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Canonical JSON",
+        "toolId": "output.canonical_json",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "Taxprep Handoff",
+        "toolId": "output.evidence_pack_preview",
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "warnings": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "reason",
+            "skipped",
+            "upstreamBlockIds"
+          ]
+        }
+      },
+      {
+        "label": "ONESOURCE Handoff",
+        "toolId": "output.evidence_pack_preview",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value.",
+          "5 row(s) were not matched by keyword rules.",
+          "No rows matched the aggregation filters.",
+          "A preceding block could not execute. Resolve its message and test again.",
+          "5 row(s) remain unmatched.",
+          "Upstream approval is missing.",
+          "Output preview includes results that still need review."
+        ],
+        "output": {
+          "keys": [
+            "bindingValidation",
+            "blockingIssues",
+            "finalityStatus",
+            "formulas",
+            "keywordRulesUsed",
+            "mappedRows",
+            "nonBlockingWarnings",
+            "outputFinality",
+            "pipelineTrace",
+            "preview",
+            "protectedValues",
+            "protectedResult",
+            "protectedResults",
+            "protectedResultsFinality",
+            "reviewDecisions",
+            "reviewerOverrides",
+            "sourceRows",
+            "sourceTrace",
+            "validationSummary",
+            "warnings",
+            "upstreamBlockIds"
+          ],
+          "protectedResult": {
+            "approved": false,
+            "blockingIssues": [],
+            "currency": "USD",
+            "final": false,
+            "finalityReason": "Candidate value or approval is missing.",
+            "finalityStatus": "draft",
+            "name": "Deductions",
+            "nonBlockingWarnings": [],
+            "reviewerOverrides": {},
+            "runtimeLocked": false,
+            "sourceTrace": [
+              "Trial Balance Rows.tb-1",
+              "Keyword Rulebook.keyword-rule-interest-income",
+              "Trial Balance Rows.tb-2",
+              "Keyword Rulebook.keyword-rule-rents",
+              "Trial Balance Rows.tb-5",
+              "Keyword Rulebook.keyword-rule-general-expenses",
+              "Trial Balance Rows.tb-3",
+              "Trial Balance Rows.tb-4",
+              "Trial Balance Rows.tb-6",
+              "Trial Balance Rows.tb-7",
+              "Trial Balance Rows.tb-8"
+            ],
+            "status": "draft",
+            "validationSummary": [],
+            "value": -1500
+          },
+          "finalityStatus": "failed"
+        }
+      }
+    ]
+  }
+]

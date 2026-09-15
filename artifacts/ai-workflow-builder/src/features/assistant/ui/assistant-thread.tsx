@@ -1,5 +1,3 @@
-
-
 // ─────────────────────────────────────────────────────────────────────────────
 // AssistantThread — the presentational chat column (light neumorphic). Shared by
 // the Scope focus mode (ChatWorkspace) and the docked AssistantPanel. Renders the
@@ -11,7 +9,7 @@
 import { type CSSProperties, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { X, ChevronDown, Calendar } from 'lucide-react';
+import { ArrowRight, Calendar, ChevronDown, Database, Play, X } from 'lucide-react';
 import { CopilotChat } from '@copilotkit/react-ui';
 import '@copilotkit/react-ui/styles.css';
 import {
@@ -25,24 +23,24 @@ import { InlineFieldCard } from '@/features/assistant/workspace/inline-field-car
 import { WorkflowElementCard } from '@/features/assistant/workspace/workflow-run-flow';
 import { getWorkflowConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
 import { agentConfigAtom, applyLiveConfig } from '@/features/assistant/runtime/agent-config';
-import { WORKFLOWS } from '@/lib/agents';
 import { buildAgentCatalog } from '@/shared/stores/resource-registry';
 import { LC } from '@/lib/librechat-theme';
-import { selectedClientAtom, showClientSwitcherAtom, scopeYearAtom } from '@/shared/stores/nav-store';
+import {
+  selectedClientAtom,
+  showClientSwitcherAtom,
+  scopeYearAtom,
+} from '@/shared/stores/nav-store';
 import { InScopeNeuMark } from '@/components/inscope-neu-mark';
+
 import { WorkMenu, WorkMenuStyles } from './work-menu';
+import { ToolsMenu, ToolsMenuStyles, type ArmedTool } from './tools-menu';
+import { ToolResultCard } from './tool-result-card';
+import { DataFilesPanel, DataFilesPanelStyles } from './data-files-panel';
 import { workIdFor, workItemsChronoAtom, type WorkItem } from '@/lib/work-store';
 import { ThreadMessages, PinnedThreadContext } from './thread-messages';
 import { RunWorkflowRender, type Assistant } from './use-assistant';
 
 import { CHAT_THEME } from './chat-theme';
-
-const HERO_SUGGESTIONS = [
-  'Calculate FAPI for Northstar',
-  'Open the dashboard',
-  'Run the art. 85 rollover',
-  'Review FAPI exceptions',
-];
 
 const INSTRUCTIONS = () => {
   const c = buildAgentCatalog();
@@ -54,13 +52,14 @@ Style: ALWAYS reply with a short, natural sentence FIRST — acknowledge the req
 
 INTENT — ask vs. do (read this first):
 - A workflow NAME is not a command. Someone mentioning FAPI, or asking what it is / how it works / what inputs it needs, wants an ANSWER — explain it, do NOT call runWorkflow.
-- Only START a workflow (runWorkflow) when the user gives a clear instruction to act: "start/run/launch/calculate the FAPI workflow", "démarre la FAPI", or an equivalent imperative. When they explicitly ask to start a specific workflow, actually call runWorkflow — don't just talk about it.
+- Only REQUEST a workflow run (runWorkflow) when the user gives a clear instruction to act: "start/run/launch/calculate the FAPI workflow", "démarre la FAPI", or an equivalent imperative. The tool checks a scoped grant and otherwise presents the exact run for approval.
 - Hypotheticals ("what if…", "roughly", "could we", "we may have FAPI", "I'm considering") and negations/holds ("don't run it", "not yet", "only explain", "sans lancer", "pas encore") are NEVER a reason to start or modify anything — answer or offer, don't act.
 - If a message you receive contains a routing note in [assistant-routing] brackets, treat it as an authoritative instruction about what to do this turn (it is added by the system, not the user).
 - When unsure whether the user wants an answer or an action, ANSWER or OFFER — never start, finalize, or change a protected value on a guess. In this workspace a wrong action is worse than an extra question.
 
 CRITICAL tool routing:
-- To RUN / START / EXECUTE a workflow → call **runWorkflow** with the workflowId. Valid ids: "fapi" for "compute/run FAPI"; "roulement" for "run the rollover / roulement art. 85 / section 85"; "expense" for "run the expense report / (employee) expense reimbursement"; "campaign" for "run the campaign budget / marketing budget allocation". This renders a PROPOSAL card (with a Start button); the live run begins only when the user clicks Start, then it pauses for them (upload a document, categorize a row, elect an amount, approve). So OFFER to run it — briefly say what it does and what it needs — do NOT say it is already running. NEVER open a worksheet to "run" a workflow — the worksheet is only the static end result.
+- To RUN / START / EXECUTE a catalog workflow, call runWorkflow with an id from its current executable catalog. For a selected or attached file, set sourceMode to uploaded and omit recordsJson: the handler reads the original rows directly. Use sourceMode records only for records supplied inline, and sample only when explicitly requested. Execution requires a scoped grant or review-card approval. If no source exists, ask the user to Choose source or attach a workbook. Report returned errors and findings; never claim approval or filing. Removed demos are unavailable.
+- To inspect or modify an existing saved workflow, call listSavedWorkflows, then readSavedWorkflow with an exact ID. Use proposeSavedWorkflowDraft for edits. The proposal does not mutate the draft without an applicable scoped grant; otherwise the user reviews its changed fields and base revision before approval. If the user asked to preserve the accepted draft as an immutable version, call saveSavedWorkflowVersion after the draft change is applied. Saving has separate authorization and never executes the workflow. Never substitute a similarly named workflow or bypass a validation finding.
 - To open/show a worksheet for viewing → openPage.
 - To highlight a specific figure/section on a page → focusAnchor.
 - When the user asks to SEE or EDIT a value (e.g. "show me the FX rate", "let me change the FX rate") → call **editField**. This brings the editable field directly INTO the chat; do NOT open the worksheet for this.
@@ -83,6 +82,10 @@ MEMORY — durable facts you can save:
 YOUR EXPERTISE — one unified specialist:
 - You are Sina, a single tax specialist who carries deep domain expertise across FAPI (foreign accrual property income), the section 85 rollover (roulement, art. 85), employee expense reimbursement, and marketing campaign budgets. There are NO separate agents — you handle all of it yourself.
 - Some turns include a "DOMAIN FOCUS FOR THIS TURN" note in context. When present, apply that domain's expertise for the turn. When the topic shifts, apply the other domain's expertise; on general or navigation turns, act as the coordinating workspace assistant. It is one you, one conversation — the domain focus is a lens, not a separate agent.
+
+TAX FACTS — state these exactly (this is a Canadian CORPORATE-tax workspace):
+- Relevant tax factor (RTF, s.248(1)): for a CORPORATION it is 4.0; for an individual or trust it is 1.9. Default to the CORPORATE 4.0 unless the taxpayer is explicitly an individual/trust. NEVER tell a user the corporate RTF is 1.9 — that is the individual/trust factor and it understates the deduction.
+- ss.91(4) FAT deduction = min(FAT paid × RTF, FAPI). On the FAPI worksheet the RTF is a Corporation (4.0) / Individual·trust (1.9) selector; read the chosen value from context rather than assuming, and if it isn't set, treat it as the corporate 4.0.
 
 Registered pages:
 ${pages}
@@ -108,14 +111,40 @@ export function AssistantThreadStyles() {
 // homepage hero (centred, in the "InScope" lockup) and the header cluster (top-left)
 // when a chat starts/stops. Pass the SAME layoutId in both places; framer tweens the
 // position + size. `label=''` renders the bare orb (docked); 'Scope' engraves the word.
-function ScopeOrbButton({ size, layoutId, onClick, label = 'Scope', style }: { size: number; layoutId?: string; onClick?: () => void; label?: string; style?: CSSProperties }) {
+function ScopeOrbButton({
+  size,
+  layoutId,
+  onClick,
+  label = 'Scope',
+  style,
+}: {
+  size: number;
+  layoutId?: string;
+  onClick?: () => void;
+  label?: string;
+  style?: CSSProperties;
+}) {
   return (
     <motion.button
       layoutId={layoutId}
       onClick={onClick}
       aria-label="Choose client — Scope reads their worksheets & documents"
       title="Choose client — Scope reads their worksheets & documents"
-      style={{ position: 'relative', zIndex: 2, flexShrink: 0, display: 'grid', placeItems: 'center', width: size, height: size, borderRadius: '50%', padding: 0, border: 'none', background: 'transparent', cursor: 'pointer', ...style }}
+      style={{
+        position: 'relative',
+        zIndex: 2,
+        flexShrink: 0,
+        display: 'grid',
+        placeItems: 'center',
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        padding: 0,
+        border: 'none',
+        background: 'transparent',
+        cursor: 'pointer',
+        ...style,
+      }}
     >
       <InScopeNeuMark size={size} animate label={label} />
     </motion.button>
@@ -127,30 +156,64 @@ function ScopeOrbButton({ size, layoutId, onClick, label = 'Scope', style }: { s
 // workflow. The orb + the company tag open the client switcher; the workflow tag opens
 // the work switcher. Reads as: [ ORB ]→[ Northstar Inc · 2025 · FAPI · Needs you ].
 // The tray tucks under the orb (negative margin) so the orb looks plugged into it.
-function ScopeCluster({ compact = false, onOpenWork }: { compact?: boolean; onOpenWork: (item: WorkItem) => void }) {
+function ScopeCluster({
+  compact = false,
+  onOpenWork,
+}: {
+  compact?: boolean;
+  onOpenWork: (item: WorkItem) => void;
+}) {
   const client = useAtomValue(selectedClientAtom);
   const year = useAtomValue(scopeYearAtom);
   const openClientSwitcher = useSetAtom(showClientSwitcherAtom);
-  const orbSize = compact ? 32 : 96;
-  const divider = <span style={{ width: 1, height: compact ? 16 : 22, background: LC.borderSubtle, flexShrink: 0 }} />;
+  const orbSize = compact ? 32 : 54; // compact chat-header orb — smaller than the homepage hero orb (116) so the header stays a thin strip
+  const divider = (
+    <span
+      style={{ width: 1, height: compact ? 16 : 22, background: LC.borderSubtle, flexShrink: 0 }}
+    />
+  );
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', minWidth: 0, maxWidth: '100%' }}>
+    // Cap the cluster width (focus header) so the long work-status line truncates to an
+    // ellipsis inside its zone instead of stretching the whole bar edge-to-edge.
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        minWidth: 0,
+        maxWidth: compact ? '100%' : 600,
+      }}
+    >
       {/* The orb — the control. Opens the client switcher. Shares layoutId with the
           homepage hero orb so it FLIES between the two on chat start/stop (focus only). */}
-      <ScopeOrbButton size={orbSize} layoutId={compact ? undefined : 'scope-orb'} onClick={() => openClientSwitcher(true)} label="" />
+      <ScopeOrbButton
+        size={orbSize}
+        layoutId={compact ? undefined : 'scope-orb'}
+        onClick={() => openClientSwitcher(true)}
+        label=""
+      />
 
       {/* The scope tray — the tags the orb controls (company · year · current workflow).
-          It "pulls out" of the orb on reveal: a clip-path wipe from the orb's edge. */}
+          It eases out from behind the orb on reveal with a fade + small slide. We
+          deliberately AVOID clip-path here: clip-path also clips a container's
+          DESCENDANTS, which was slicing off the WorkMenu dropdown that opens
+          below-right of the tray. A transform/opacity reveal can never clip it. */}
       <motion.div
-        initial={compact ? false : { clipPath: 'inset(0 100% 0 0)', opacity: 0 }}
-        animate={{ clipPath: 'inset(0 0% 0 0)', opacity: 1 }}
+        initial={compact ? false : { opacity: 0, x: -14 }}
+        animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.14, duration: 0.42, ease: [0.23, 1, 0.32, 1] }}
         style={{
-          display: 'flex', alignItems: 'center', gap: compact ? 6 : 3, minWidth: 0,
-          marginLeft: compact ? 6 : -16, paddingLeft: compact ? 0 : 28, paddingRight: compact ? 0 : 10,
-          height: compact ? undefined : 56, borderRadius: compact ? 0 : '0 16px 16px 0',
-          background: compact ? 'transparent' : LC.surface, boxShadow: compact ? 'none' : LC.shadowSm,
+          display: 'flex',
+          alignItems: 'center',
+          gap: compact ? 6 : 3,
+          minWidth: 0,
+          marginLeft: compact ? 6 : -16,
+          paddingLeft: compact ? 0 : 28,
+          paddingRight: compact ? 0 : 10,
+          height: compact ? undefined : 46,
+          borderRadius: compact ? 0 : '0 16px 16px 0',
+          background: compact ? 'transparent' : LC.surface,
+          boxShadow: compact ? 'none' : LC.shadowSm,
         }}
       >
         {/* Company */}
@@ -158,10 +221,49 @@ function ScopeCluster({ compact = false, onOpenWork }: { compact?: boolean; onOp
           onClick={() => openClientSwitcher(true)}
           className="hover:bg-black/5"
           title="Choose client — Scope reads their worksheets & documents"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 7, minWidth: 0, maxWidth: compact ? 150 : 210, height: 32, padding: '0 8px', borderRadius: 9, border: 'none', background: 'transparent', cursor: 'pointer' }}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 7,
+            minWidth: 0,
+            maxWidth: compact ? 150 : 210,
+            height: 32,
+            padding: '0 8px',
+            borderRadius: 9,
+            border: 'none',
+            background: 'transparent',
+            cursor: 'pointer',
+          }}
         >
-          <span style={{ width: 20, height: 20, flexShrink: 0, borderRadius: '50%', display: 'grid', placeItems: 'center', background: 'var(--sx-accent-soft)', color: 'var(--sx-accent-strong)', fontSize: 9.5, fontWeight: 800 }}>{client.charAt(0)}</span>
-          <span style={{ minWidth: 0, fontSize: 13, fontWeight: 650, color: LC.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.replace(/\.$/, '')}</span>
+          <span
+            style={{
+              width: 20,
+              height: 20,
+              flexShrink: 0,
+              borderRadius: '50%',
+              display: 'grid',
+              placeItems: 'center',
+              background: 'var(--sx-accent-soft)',
+              color: 'var(--sx-accent-strong)',
+              fontSize: 9.5,
+              fontWeight: 800,
+            }}
+          >
+            {client.charAt(0)}
+          </span>
+          <span
+            style={{
+              minWidth: 0,
+              fontSize: 13,
+              fontWeight: 650,
+              color: LC.text,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {client.replace(/\.$/, '')}
+          </span>
           <ChevronDown size={12} style={{ color: LC.muted, opacity: 0.6, flexShrink: 0 }} />
         </button>
 
@@ -169,7 +271,18 @@ function ScopeCluster({ compact = false, onOpenWork }: { compact?: boolean; onOp
         {!compact && (
           <>
             {divider}
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, padding: '0 9px', color: LC.body, flexShrink: 0 }} title="Fiscal year in scope">
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                height: 32,
+                padding: '0 9px',
+                color: LC.body,
+                flexShrink: 0,
+              }}
+              title="Fiscal year in scope"
+            >
               <Calendar size={13} style={{ color: LC.muted }} />
               <span style={{ fontSize: 13, fontWeight: 600 }}>{year}</span>
             </span>
@@ -194,21 +307,65 @@ function ScopeCluster({ compact = false, onOpenWork }: { compact?: boolean; onOp
 function timeAgo(ts: number): string {
   const s = Math.max(1, Math.round((Date.now() - ts) / 1000));
   if (s < 60) return 'just now';
-  const m = Math.round(s / 60); if (m < 60) return `${m}m ago`;
-  const h = Math.round(m / 60); if (h < 24) return `${h}h ago`;
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h}h ago`;
   return `${Math.round(h / 24)}d ago`;
 }
 
-const launchWell: CSSProperties = { height: 76, borderRadius: 12, background: LC.bg, boxShadow: LC.shadowIn, display: 'grid', placeItems: 'center', overflow: 'hidden', color: LC.muted };
-const launchCard: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 10, flex: '1 1 168px', minWidth: 158, maxWidth: 224, padding: 14, textAlign: 'left', border: 'none', background: LC.surface, boxShadow: LC.shadowSm, borderRadius: 16, cursor: 'pointer' };
-const launchTitle: CSSProperties = { fontSize: 13.5, fontWeight: 650, color: LC.title, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
-const launchSub: CSSProperties = { fontSize: 11.5, color: LC.muted, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
+const launchWell: CSSProperties = {
+  height: 76,
+  borderRadius: 12,
+  background: LC.bg,
+  boxShadow: LC.shadowIn,
+  display: 'grid',
+  placeItems: 'center',
+  overflow: 'hidden',
+  color: LC.muted,
+};
+const launchCard: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 10,
+  flex: '1 1 168px',
+  minWidth: 158,
+  maxWidth: 224,
+  padding: 14,
+  textAlign: 'left',
+  border: 'none',
+  background: LC.surface,
+  boxShadow: LC.shadowSm,
+  borderRadius: 16,
+  cursor: 'pointer',
+};
+const launchTitle: CSSProperties = {
+  fontSize: 13.5,
+  fontWeight: 650,
+  color: LC.title,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+};
+const launchSub: CSSProperties = {
+  fontSize: 11.5,
+  color: LC.muted,
+  marginTop: 2,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+};
 
 // A small workflow node-graph: two inputs merge into a step, then the accent output.
 function BuildArt() {
   return (
     <svg width="72" height="44" viewBox="0 0 72 44" fill="none" aria-hidden>
-      <path d="M18 11 C24 11 24 22 28 22 M18 33 C24 33 24 22 28 22 M44 22 H54" stroke="currentColor" strokeWidth="1.5" opacity="0.35" />
+      <path
+        d="M18 11 C24 11 24 22 28 22 M18 33 C24 33 24 22 28 22 M44 22 H54"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        opacity="0.35"
+      />
       <rect x="2" y="6" width="16" height="10" rx="3" fill="currentColor" opacity="0.16" />
       <rect x="2" y="28" width="16" height="10" rx="3" fill="currentColor" opacity="0.16" />
       <rect x="28" y="17" width="16" height="10" rx="3" fill="currentColor" opacity="0.16" />
@@ -221,63 +378,172 @@ function SheetArt() {
   return (
     <svg width="52" height="44" viewBox="0 0 52 44" fill="none" aria-hidden>
       <rect x="4" y="4" width="44" height="36" rx="5" fill="currentColor" opacity="0.10" />
-      <path d="M4 9 a5 5 0 0 1 5 -5 h34 a5 5 0 0 1 5 5 v3 h-44 z" fill="var(--sx-accent)" opacity="0.9" />
-      <line x1="11" y1="21" x2="41" y2="21" stroke="currentColor" strokeWidth="1.6" opacity="0.28" />
-      <line x1="11" y1="28" x2="41" y2="28" stroke="currentColor" strokeWidth="1.6" opacity="0.28" />
-      <line x1="11" y1="35" x2="30" y2="35" stroke="currentColor" strokeWidth="1.6" opacity="0.28" />
+      <path
+        d="M4 9 a5 5 0 0 1 5 -5 h34 a5 5 0 0 1 5 5 v3 h-44 z"
+        fill="var(--sx-accent)"
+        opacity="0.9"
+      />
+      <line
+        x1="11"
+        y1="21"
+        x2="41"
+        y2="21"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        opacity="0.28"
+      />
+      <line
+        x1="11"
+        y1="28"
+        x2="41"
+        y2="28"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        opacity="0.28"
+      />
+      <line
+        x1="11"
+        y1="35"
+        x2="30"
+        y2="35"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        opacity="0.28"
+      />
     </svg>
   );
 }
 
-function HeroLaunchpad({ onBuild, onResume, onStartWorkflow }: { onBuild: () => void; onResume: (item: WorkItem) => void; onStartWorkflow: (workflowId: string) => void }) {
+function HeroLaunchpad({
+  onAskSources,
+  onBuild,
+  onRun,
+  onResume,
+}: {
+  onAskSources: () => void;
+  onBuild: () => void;
+  onRun: () => void;
+  onResume: (item: WorkItem) => void;
+}) {
   const recent = useAtomValue(workItemsChronoAtom);
   const resumeItem = recent.find((w) => w.open.kind !== 'none');
-  const tasks = WORKFLOWS.filter((w) => w.ready);
+  const needsAttention = recent.find(
+    (item) => item.status === 'awaiting' || item.status === 'running',
+  );
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 12, marginTop: 16, padding: '0 16px' }}>
-      {/* BUILD — opens the Workflows surface (Build canvas) inline next to the chat. */}
-      <button onClick={onBuild} className="cwp-launch hover:brightness-[0.98]" style={launchCard}>
-        <div style={launchWell}><BuildArt /></div>
-        <div style={{ minWidth: 0 }}>
-          <div style={launchTitle}>Build a workflow</div>
-          <div style={launchSub}>Design an automation on the canvas</div>
-        </div>
-      </button>
-
-      {/* RESUME — the most-recent reopenable work item; omitted entirely when none. */}
-      {resumeItem && (
-        <button onClick={() => onResume(resumeItem)} className="cwp-launch hover:brightness-[0.98]" style={launchCard}>
-          <div style={launchWell}><SheetArt /></div>
-          <div style={{ minWidth: 0 }}>
-            <div style={launchTitle}>{resumeItem.title}</div>
-            <div style={launchSub}>Resume · {timeAgo(resumeItem.updatedAt)}</div>
+    <div style={{ marginTop: 16, padding: '0 16px' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 12 }}>
+        <button
+          aria-label="Ask about sources"
+          onClick={onAskSources}
+          className="cwp-launch hover:brightness-[0.98]"
+          style={launchCard}
+        >
+          <div style={launchWell}>
+            <Database size={25} />
           </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={launchTitle}>Ask about sources</div>
+            <div style={launchSub}>Find facts with visible evidence</div>
+          </div>
+        </button>
+        <button
+          aria-label="Build a workflow"
+          onClick={onBuild}
+          className="cwp-launch hover:brightness-[0.98]"
+          style={launchCard}
+        >
+          <div style={launchWell}>
+            <BuildArt />
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={launchTitle}>Build a workflow</div>
+            <div style={launchSub}>Design and save a reusable process</div>
+          </div>
+        </button>
+        <button
+          aria-label="Run a workflow"
+          onClick={onRun}
+          className="cwp-launch hover:brightness-[0.98]"
+          style={launchCard}
+        >
+          <div style={launchWell}>
+            <Play size={25} />
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={launchTitle}>Run a workflow</div>
+            <div style={launchSub}>Choose exact inputs and review the result</div>
+          </div>
+        </button>
+      </div>
+      {resumeItem && (
+        <button
+          type="button"
+          onClick={() => onResume(resumeItem)}
+          style={{
+            width: 'min(696px, 100%)',
+            margin: '12px auto 0',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '10px 13px',
+            border: 'none',
+            borderRadius: 12,
+            background: LC.surface,
+            boxShadow: LC.shadowSm,
+            color: LC.body,
+            cursor: 'pointer',
+            textAlign: 'left',
+          }}
+        >
+          <SheetArt />
+          <span style={{ minWidth: 0, flex: 1 }}>
+            <span style={{ display: 'block', fontSize: 12, fontWeight: 700, color: LC.text }}>
+              {needsAttention?.id === resumeItem.id ? 'Needs your attention' : 'Continue'}
+            </span>
+            <span style={{ display: 'block', fontSize: 11.5, color: LC.muted }}>
+              {resumeItem.title} · {resumeItem.detail ?? timeAgo(resumeItem.updatedAt)}
+            </span>
+          </span>
+          <ArrowRight size={14} />
         </button>
       )}
-
-      {/* TASK QUICK-STARTS — start a workflow run directly. There is one unified agent
-          (Sina) that handles them all, so these are tasks, not separate specialists. */}
-      {tasks.map((w) => (
-        <button key={w.id} onClick={() => onStartWorkflow(w.id)} className="cwp-launch hover:brightness-[0.98]" style={launchCard}>
-          <div style={launchWell}><SheetArt /></div>
-          <div style={{ minWidth: 0 }}>
-            <div style={launchTitle}>{w.name}</div>
-            <div style={launchSub}>{w.sub}</div>
-          </div>
-        </button>
-      ))}
     </div>
   );
 }
 
-export function AssistantThread({ assistant, variant = 'focus' }: { assistant: Assistant; variant?: 'focus' | 'docked' }) {
+export function AssistantThread({
+  assistant,
+  variant = 'focus',
+}: {
+  assistant: Assistant;
+  variant?: 'focus' | 'docked';
+}) {
   const {
-    say, showHero,
-    pinnedFields, pinnedElements, setPinnedFields, setPinnedElements,
-    pinnedRuns, setPinnedRuns,
-    composerSearch, composerTools, composerCommands, onAttach, launchOpenPage, launchStartWorkflow, setBuilderFocus, router,
+    say,
+    showHero,
+    pinnedFields,
+    pinnedElements,
+    setPinnedFields,
+    setPinnedElements,
+    pinnedRuns,
+    setPinnedRuns,
+    pinnedToolResults,
+    setPinnedToolResults,
+    launchPinToolResult,
+    composerSearch,
+    composerTools,
+    composerCommands,
+    onAttach,
+    launchOpenPage,
+    launchStartWorkflow,
+    openInlineBuilder,
   } = assistant;
   const docked = variant === 'docked';
+  // A search tool "armed" from the Tools menu — the composer shows a chip and routes
+  // the next message to it. Lives here so both the ToolsMenu (arms it) and the
+  // composer (reads it) share one source of truth, via AsideComposerContext.
+  const [armedTool, setArmedTool] = useState<ArmedTool | null>(null);
   const openClientSwitcher = useSetAtom(showClientSwitcherAtom);
   // Live-agent config (Build tab writes it): fiscal guardrails + operator additions
   // are layered over the base system prompt for the live chat.
@@ -301,18 +567,45 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
   // Pinned work (deterministically-launched runs + summoned elements/fields).
   // Rendered INSIDE the message scroll by ThreadMessages, so it's part of ONE
   // scrollable conversation (composer fixed at the bottom).
-  const hasPinned = pinnedRuns.length > 0 || pinnedElements.length > 0 || pinnedFields.length > 0;
+  const hasPinned =
+    pinnedRuns.length > 0 ||
+    pinnedElements.length > 0 ||
+    pinnedFields.length > 0 ||
+    pinnedToolResults.length > 0;
   const pinnedNode = hasPinned ? (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
       {pinnedRuns.map((wid) => {
         const cfg = getWorkflowConfig(wid);
         if (!cfg) return null;
         return (
-          <div key={`run:${wid}`} className="flex items-start gap-2" data-work-id={workIdFor('workflow-run', wid)}>
+          <div
+            key={`run:${wid}`}
+            className="flex items-start gap-2"
+            data-work-id={workIdFor('workflow-run', wid)}
+          >
             <div className="flex-1">
-              <RunWorkflowRender config={cfg} onOpenPage={(pk) => launchOpenPage(pk)} onOpenBuilder={(blockId) => { setBuilderFocus({ workflowId: cfg.id, blockId }); router.push('/builder'); }} />
+              <RunWorkflowRender
+                config={cfg}
+                onOpenPage={(pk) => launchOpenPage(pk)}
+                onOpenBuilder={(blockId) => openInlineBuilder(cfg.id, blockId)}
+              />
             </div>
-            <button onClick={() => setPinnedRuns((p) => p.filter((x) => x !== wid))} className="rounded hover:bg-black/5" style={{ width: 22, height: 22, color: LC.muted, border: 'none', background: 'none', cursor: 'pointer', marginTop: 4 }} title="Remove"><X size={13} /></button>
+            <button
+              onClick={() => setPinnedRuns((p) => p.filter((x) => x !== wid))}
+              className="rounded hover:bg-black/5"
+              style={{
+                width: 22,
+                height: 22,
+                color: LC.muted,
+                border: 'none',
+                background: 'none',
+                cursor: 'pointer',
+                marginTop: 4,
+              }}
+              title="Remove"
+            >
+              <X size={13} />
+            </button>
           </div>
         );
       })}
@@ -321,41 +614,140 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
         if (!cfg) return null;
         return (
           <div key={`${el.workflowId}:${el.element}`} className="flex items-start gap-2">
-            <div className="flex-1"><WorkflowElementCard config={cfg} element={el.element} onOpenPage={(pk) => launchOpenPage(pk)} onOpenBuilder={(blockId) => { setBuilderFocus({ workflowId: cfg.id, blockId }); router.push('/builder'); }} /></div>
-            <button onClick={() => setPinnedElements((p) => p.filter((x) => !(x.workflowId === el.workflowId && x.element === el.element)))} className="rounded hover:bg-black/5" style={{ width: 22, height: 22, color: LC.muted, border: 'none', background: 'none', cursor: 'pointer', marginTop: 4 }} title="Remove"><X size={13} /></button>
+            <div className="flex-1">
+              <WorkflowElementCard
+                config={cfg}
+                element={el.element}
+                onOpenPage={(pk) => launchOpenPage(pk)}
+                onOpenBuilder={(blockId) => openInlineBuilder(cfg.id, blockId)}
+              />
+            </div>
+            <button
+              onClick={() =>
+                setPinnedElements((p) =>
+                  p.filter((x) => !(x.workflowId === el.workflowId && x.element === el.element)),
+                )
+              }
+              className="rounded hover:bg-black/5"
+              style={{
+                width: 22,
+                height: 22,
+                color: LC.muted,
+                border: 'none',
+                background: 'none',
+                cursor: 'pointer',
+                marginTop: 4,
+              }}
+              title="Remove"
+            >
+              <X size={13} />
+            </button>
           </div>
         );
       })}
       {pinnedFields.map((fid) => (
         <div key={fid} className="flex items-start gap-2">
-          <div className="flex-1"><InlineFieldCard fieldId={fid} /></div>
-          <button onClick={() => setPinnedFields((p) => p.filter((x) => x !== fid))} className="rounded hover:bg-black/5" style={{ width: 22, height: 22, color: LC.muted, border: 'none', background: 'none', cursor: 'pointer', marginTop: 4 }} title="Remove"><X size={13} /></button>
+          <div className="flex-1">
+            <InlineFieldCard fieldId={fid} />
+          </div>
+          <button
+            onClick={() => setPinnedFields((p) => p.filter((x) => x !== fid))}
+            className="rounded hover:bg-black/5"
+            style={{
+              width: 22,
+              height: 22,
+              color: LC.muted,
+              border: 'none',
+              background: 'none',
+              cursor: 'pointer',
+              marginTop: 4,
+            }}
+            title="Remove"
+          >
+            <X size={13} />
+          </button>
+        </div>
+      ))}
+      {/* Tools-menu Run ▸ results — the value retrieved directly (no LLM), pinned here. */}
+      {pinnedToolResults.map((r) => (
+        <div key={r.id} className="flex items-start gap-2" data-testid="tool-result">
+          <div className="flex-1">
+            <ToolResultCard toolName={r.toolName} args={r.args} result={r.result} />
+          </div>
+          <button
+            onClick={() => setPinnedToolResults((p) => p.filter((x) => x.id !== r.id))}
+            className="rounded hover:bg-black/5"
+            style={{
+              width: 22,
+              height: 22,
+              color: LC.muted,
+              border: 'none',
+              background: 'none',
+              cursor: 'pointer',
+              marginTop: 4,
+            }}
+            title="Remove"
+          >
+            <X size={13} />
+          </button>
         </div>
       ))}
     </div>
   ) : null;
 
   return (
-    <div className="h-full flex flex-col" style={{ ...CHAT_THEME, background: LC.bg /* match the sidebar surface (#F4F5F8) */ }}>
+    <div
+      className="h-full flex flex-col relative"
+      style={{ ...CHAT_THEME, background: LC.bg /* match the sidebar surface (#F4F5F8) */ }}
+    >
       <AsideThreadStyles />
       <AssistantThreadStyles />
       <WorkMenuStyles />
+      <ToolsMenuStyles />
+      <DataFilesPanelStyles />
 
       {/* Header = the SCOPE CLUSTER (big orb + scope tags). Shown once a chat is under
           way; on the FOCUS homepage it's hidden and the orb lives centred in the hero
           below as the "InScope" lockup — the orb then FLIES up here (shared-element
           layoutId="scope-orb") and the tag tray pulls out of it when the chat starts.
-          Docked always shows the compact cluster. */}
+          Docked always shows the compact cluster. In focus mode there's NO full-width
+          bar — the cluster floats on the chat surface (no bottom divider); the docked
+          panel keeps its divider to separate the header from the drawer thread. */}
       {(docked || !showHero) && (
-        <div className="shrink-0 relative flex items-center gap-3" style={{ height: docked ? 44 : 104, padding: '0 12px', borderBottom: `1px solid ${LC.borderSubtle}` }}>
+        <div
+          className="shrink-0 relative flex items-center gap-3"
+          style={{
+            height: docked ? 44 : 68,
+            padding: '0 12px',
+            borderBottom: docked ? `1px solid ${LC.borderSubtle}` : 'none',
+            zIndex: 20,
+          }}
+        >
           <ScopeCluster compact={docked} onOpenWork={onOpenWork} />
           <span style={{ flex: 1 }} />
+          <DataFilesPanel compact={docked} />
+          <ToolsMenu
+            compact={docked}
+            onRunResult={launchPinToolResult}
+            onAsk={say}
+            onArm={setArmedTool}
+          />
         </div>
       )}
       <div className="flex-1 min-h-0 flex flex-col">
-        <AsideComposerContext.Provider value={{ search: composerSearch, tools: composerTools, commands: composerCommands, onAttach }}>
+        <AsideComposerContext.Provider
+          value={{
+            search: composerSearch,
+            tools: composerTools,
+            commands: composerCommands,
+            onAttach,
+            onCustomizeAgent: () => launchOpenPage('agent'),
+            armedTool,
+            setArmedTool,
+          }}
+        >
           <AnimatePresence mode="wait" initial={false}>
-          {showHero ? (
+            {showHero ? (
               <motion.div
                 key="hero"
                 className="flex-1 min-h-0 flex flex-col"
@@ -372,40 +764,66 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
                     ring). Focus only; theme-aware (wordmark = .isneu-wordmark embossed
                     neumorphic in globals.css, dial themes itself). */}
                 {!docked && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, paddingTop: 12, flexShrink: 0 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                      paddingTop: 12,
+                      flexShrink: 0,
+                    }}
+                  >
                     <motion.span
                       className="isneu-wordmark"
                       style={{ fontSize: 38, fontWeight: 400, letterSpacing: '-0.02em' }}
                       layout="position"
-                    >InScope</motion.span>
-                    <ScopeOrbButton size={116} layoutId="scope-orb" onClick={() => openClientSwitcher(true)} label="" />
+                    >
+                      InScope
+                    </motion.span>
+                    <ScopeOrbButton
+                      size={116}
+                      layoutId="scope-orb"
+                      onClick={() => openClientSwitcher(true)}
+                      label=""
+                    />
                   </div>
                 )}
-                {/* Greeting + composer + suggestions — centred in the space below the orb. */}
-                <div className="flex-1 min-h-0 flex items-center justify-center">
-                  <div style={{ width: '100%', maxWidth: docked ? 'none' : 720 }}>
+                {/* Greeting + composer + suggestions — centred in the space below the orb.
+                    `overflow-y-auto` + `margin:auto` (not items-center) so that when the
+                    content is taller than the viewport (short/small windows) it SCROLLS
+                    from the top instead of overflowing UPWARD into the orb/wordmark lockup. */}
+                <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
+                  <div style={{ width: '100%', maxWidth: docked ? 'none' : 720, margin: 'auto' }}>
                     <div style={{ textAlign: 'center', marginBottom: docked ? 10 : 20 }}>
-                      <div style={{ fontSize: docked ? 22 : 34, fontWeight: 700, color: LC.title, letterSpacing: '-0.02em' }}>{greeting}, Sophia</div>
-                      <div style={{ fontSize: docked ? 13 : 16, fontWeight: 400, color: LC.muted, marginTop: 6 }}>How can I help you drive impact today?</div>
+                      <div
+                        style={{
+                          fontSize: docked ? 22 : 34,
+                          fontWeight: 700,
+                          color: LC.title,
+                          letterSpacing: '-0.02em',
+                        }}
+                      >
+                        {greeting}, Sophia
+                      </div>
+                      <div
+                        style={{
+                          fontSize: docked ? 13 : 16,
+                          fontWeight: 400,
+                          color: LC.muted,
+                          marginTop: 6,
+                        }}
+                      >
+                        What would you like to work on?
+                      </div>
                     </div>
                     <AsideInput onSend={(t) => say(String(t))} />
                     {!docked && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 6, padding: '0 16px' }}>
-                        {HERO_SUGGESTIONS.map((s) => (
-                          <button
-                            key={s}
-                            onClick={() => say(s)}
-                            className="hover:brightness-[0.98]"
-                            style={{ background: LC.surface, border: 'none', boxShadow: LC.shadowSm, borderRadius: 999, padding: '8px 15px', fontSize: 13, color: LC.body, cursor: 'pointer', fontWeight: 500 }}
-                          >{s}</button>
-                        ))}
-                      </div>
-                    )}
-                    {!docked && (
                       <HeroLaunchpad
+                        onAskSources={() => say('What sources are available in this workspace?')}
                         onBuild={() => launchOpenPage('workflows')}
+                        onRun={() => say('Help me choose and run a workflow.')}
                         onResume={onOpenWork}
-                        onStartWorkflow={launchStartWorkflow}
                       />
                     )}
                   </div>
@@ -425,7 +843,15 @@ export function AssistantThread({ assistant, variant = 'focus' }: { assistant: A
                   {/* One scroll: pinned runs/cards render INSIDE the message stream (via
                       the custom ThreadMessages), with the composer fixed at the bottom. */}
                   <PinnedThreadContext.Provider value={pinnedNode}>
-                    <CopilotChat className="h-full" instructions={applyLiveConfig(INSTRUCTIONS(), agentConfig)} labels={{ title: 'Assistant', initial: '', placeholder: 'Message Scope…' }} AssistantMessage={AsideAssistantMessage} UserMessage={AsideUserMessage} Input={AsideInput} Messages={ThreadMessages} />
+                    <CopilotChat
+                      className="h-full"
+                      instructions={applyLiveConfig(INSTRUCTIONS(), agentConfig)}
+                      labels={{ title: 'Assistant', initial: '', placeholder: 'Message Scope…' }}
+                      AssistantMessage={AsideAssistantMessage}
+                      UserMessage={AsideUserMessage}
+                      Input={AsideInput}
+                      Messages={ThreadMessages}
+                    />
                   </PinnedThreadContext.Provider>
                 </div>
               </motion.div>

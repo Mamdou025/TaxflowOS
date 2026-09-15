@@ -1,0 +1,6 @@
+# The development image only installs the pinned package manager.
+# Source is mounted at runtime; credentials and local dependencies stay out of builds.
+**
+!package.json
+!docker/
+!docker/development.Dockerfile

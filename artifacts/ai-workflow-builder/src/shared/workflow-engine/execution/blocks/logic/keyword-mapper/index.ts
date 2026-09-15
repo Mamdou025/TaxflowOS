@@ -1,8 +1,2 @@
-import type { RegisteredToolModule } from "../../../runtime/types";
-import { keywordMapperDefinition } from "./definition";
-import { runKeywordMapper } from "./run";
-
-export const keywordMapperToolModule: RegisteredToolModule = {
-  definition: keywordMapperDefinition,
-  run: runKeywordMapper,
-};
+// Compatibility export for existing editor and browser-test imports.
+export * from '@workspace/workflow-executors/execution/blocks/logic/keyword-mapper/index';

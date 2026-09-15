@@ -161,7 +161,7 @@ export const TriggerNode = memo(({ data, selected }: TriggerNodeProps) => {
           )}
         >
           <NodeTitle className={CANVAS_BLOCK_TITLE_CLASS}>
-            {displayTitle}
+            <button type="button">{displayTitle}</button>
           </NodeTitle>
           {displayDescription && (
             <NodeDescription className="max-w-full truncate text-[11px] leading-tight">

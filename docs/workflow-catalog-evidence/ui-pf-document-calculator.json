@@ -1,0 +1,345 @@
+{
+  "id": "pf-document-calculator",
+  "inputKind": "controlled neutral records",
+  "inputRows": 2,
+  "openMs": 11800,
+  "runMs": 513,
+  "totalMs": 24564,
+  "browserErrors": [],
+  "first": {
+    "id": "custom:c8a6c16b-14e4-4193-92e5-50aea3a5e1cb",
+    "name": "Document Calculator — My workflow",
+    "version": 1,
+    "runCount": 1,
+    "runId": "local-tool-workflow-1789008979262-88mgpa",
+    "status": "success",
+    "errors": [],
+    "warnings": [],
+    "sources": [
+      {
+        "id": "pf-document-calculator--document",
+        "connected": true,
+        "consumedBy": [
+          "pf-document-calculator--rules"
+        ]
+      }
+    ],
+    "results": [
+      {
+        "blockId": "pf-document-calculator--start",
+        "label": "Start",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "triggerPayload",
+          "blockId",
+          "firedAt",
+          "mode",
+          "runId",
+          "workflowId",
+          "startedBy",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-document-calculator--document",
+        "label": "Document",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "rawRows",
+          "rawRowsCount",
+          "selectedRows",
+          "selectedRowsCount",
+          "workbookFile",
+          "selectedSheet",
+          "selectedRange",
+          "sourceMetadata",
+          "sourceLocator",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-document-calculator--rules",
+        "label": "Keyword rules",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "mappedRows",
+          "mappedRowsCount",
+          "unmatchedRows",
+          "unmatchedRowsCount",
+          "lowConfidenceRows",
+          "lowConfidenceRowsCount",
+          "conflictCount",
+          "conflicts",
+          "mappingSummary",
+          "rulesUsed",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-document-calculator--groups",
+        "label": "Aggregation groups",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "categoryTotalDetails",
+          "categoryTotals",
+          "rollupTotalDetails",
+          "rollupTotals",
+          "namedValues",
+          "namedValuesSourceKind",
+          "excludedRows",
+          "excludedRowsCount",
+          "includedRowsByCategory",
+          "includedRowsByRollup",
+          "rollupFormulaTrace",
+          "rollupSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-document-calculator--calculate",
+        "label": "Calculate",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "calculated": {
+          "RESULT": 400
+        },
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "namedValues",
+          "formulaTrace",
+          "calculatedResults",
+          "resultDetails",
+          "calculationSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-document-calculator--result",
+        "label": "Final result",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "canonicalJson",
+          "canonical_json",
+          "pipelineTrace",
+          "blockingIssues",
+          "candidateLogicOutputs",
+          "finalityStatus",
+          "generatedAt",
+          "keywordRulesUsed",
+          "mappedRows",
+          "nonBlockingWarnings",
+          "outputFinality",
+          "protectedValues",
+          "protectedResults",
+          "protectedResultsFinality",
+          "reviewResults",
+          "reviewerOverrides",
+          "runId",
+          "sourceTrace",
+          "validationSummary",
+          "warnings",
+          "workflowId",
+          "workflowName",
+          "upstreamBlockIds"
+        ]
+      }
+    ]
+  },
+  "second": {
+    "id": "custom:c8a6c16b-14e4-4193-92e5-50aea3a5e1cb",
+    "name": "Document Calculator — My workflow",
+    "version": 1,
+    "runCount": 2,
+    "runId": "local-tool-workflow-1789008988691-fiv18g",
+    "status": "success",
+    "errors": [],
+    "warnings": [],
+    "sources": [
+      {
+        "id": "pf-document-calculator--document",
+        "connected": true,
+        "consumedBy": [
+          "pf-document-calculator--rules"
+        ]
+      }
+    ],
+    "results": [
+      {
+        "blockId": "pf-document-calculator--start",
+        "label": "Start",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "triggerPayload",
+          "blockId",
+          "firedAt",
+          "mode",
+          "runId",
+          "workflowId",
+          "startedBy",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-document-calculator--document",
+        "label": "Document",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "rawRows",
+          "rawRowsCount",
+          "selectedRows",
+          "selectedRowsCount",
+          "workbookFile",
+          "selectedSheet",
+          "selectedRange",
+          "sourceMetadata",
+          "sourceLocator",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-document-calculator--rules",
+        "label": "Keyword rules",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "mappedRows",
+          "mappedRowsCount",
+          "unmatchedRows",
+          "unmatchedRowsCount",
+          "lowConfidenceRows",
+          "lowConfidenceRowsCount",
+          "conflictCount",
+          "conflicts",
+          "mappingSummary",
+          "rulesUsed",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-document-calculator--groups",
+        "label": "Aggregation groups",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "categoryTotalDetails",
+          "categoryTotals",
+          "rollupTotalDetails",
+          "rollupTotals",
+          "namedValues",
+          "namedValuesSourceKind",
+          "excludedRows",
+          "excludedRowsCount",
+          "includedRowsByCategory",
+          "includedRowsByRollup",
+          "rollupFormulaTrace",
+          "rollupSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-document-calculator--calculate",
+        "label": "Calculate",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "calculated": {
+          "RESULT": 400
+        },
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "namedValues",
+          "formulaTrace",
+          "calculatedResults",
+          "resultDetails",
+          "calculationSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "pf-document-calculator--result",
+        "label": "Final result",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "canonicalJson",
+          "canonical_json",
+          "pipelineTrace",
+          "blockingIssues",
+          "candidateLogicOutputs",
+          "finalityStatus",
+          "generatedAt",
+          "keywordRulesUsed",
+          "mappedRows",
+          "nonBlockingWarnings",
+          "outputFinality",
+          "protectedValues",
+          "protectedResults",
+          "protectedResultsFinality",
+          "reviewResults",
+          "reviewerOverrides",
+          "runId",
+          "sourceTrace",
+          "validationSummary",
+          "warnings",
+          "workflowId",
+          "workflowName",
+          "upstreamBlockIds"
+        ]
+      }
+    ]
+  }
+}

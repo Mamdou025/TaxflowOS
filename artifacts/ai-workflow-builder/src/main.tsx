@@ -1,6 +1,9 @@
 import { createRoot } from 'react-dom/client';
 
-import { initErrorMonitoring } from './lib/error-monitoring';
+import {
+  captureUnhandledRejection,
+  initErrorMonitoring,
+} from './lib/error-monitoring';
 import App from './App';
 
 import './index.css';
@@ -9,5 +12,9 @@ import './index.css';
 // Set VITE_SENTRY_DSN to connect to a real Sentry project; without it the SDK
 // no-ops and structured console.error logs are still emitted from the boundaries.
 initErrorMonitoring();
+
+window.addEventListener('unhandledrejection', (event) => {
+  captureUnhandledRejection(event.reason);
+});
 
 createRoot(document.getElementById('root')!).render(<App />);

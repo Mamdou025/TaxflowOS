@@ -3,10 +3,34 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
+    "preinstall": "node scripts/check-package-manager.mjs",
+    "doctor": "node scripts/check-toolchain.mjs",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck:libs": "tsc --build",
-    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
+    "test:workflow-builder": "node scripts/run-browser-tests.mjs workflow",
+    "test:workflow-reliability": "node scripts/run-browser-tests.mjs reliability",
+    "test:workflow-persistence": "node scripts/run-browser-tests.mjs persistence",
+    "test:integration": "node --test tests/integration/*.test.mjs",
+    "test:phase2": "pnpm run verify && pnpm run test:integration && pnpm run test:workflow-reliability && pnpm run test:workflow-persistence",
+    "test:phase3": "pnpm run verify && pnpm run test:integration && pnpm run test:workflow-reliability && pnpm run test:workflow-persistence",
+    "contracts:generate": "node scripts/generate-workflow-schemas.mjs",
+    "contracts:check": "node scripts/generate-workflow-schemas.mjs --check",
+    "check:architecture": "node scripts/check-architecture.mjs",
+    "format:check": "node scripts/format-maintained.mjs",
+    "format": "node scripts/format-maintained.mjs --write",
+    "test:unit": "node scripts/run-unit-tests.mjs",
+    "test:api-startup": "node --test tests/smoke/api-startup.mjs",
+    "recovery:verify": "node scripts/node_modules/tsx/dist/cli.mjs scripts/src/recovery-verification.ts",
+    "performance:check": "node scripts/check-performance-budgets.mjs",
+    "release:check": "node scripts/run-release-check.mjs",
+    "release:check:persistence": "pnpm run test:integration && pnpm run test:workflow-persistence",
+    "release:check:full": "pnpm run release:check && pnpm run release:check:persistence",
+    "typecheck:tests": "tsc -p tests/tsconfig.json --noEmit",
+    "verify": "pnpm run doctor && pnpm run contracts:check && pnpm run check:architecture && pnpm run format:check && pnpm run typecheck && pnpm run typecheck:tests && pnpm run test:unit && pnpm run typecheck:workflow-core-tests && pnpm run test:workflow-core",
+    "test:workflow-core": "node scripts/run-workflow-core-tests.mjs",
+    "typecheck:workflow-core-tests": "tsc -p tests/core/tsconfig.json --noEmit",
+    "test:production-ui": "node tests/smoke/production-ui.mjs"
   },
   "private": true,
   "dependencies": {
@@ -16,5 +40,10 @@
     "@playwright/test": "^1.62.0",
     "prettier": "^3.9.5",
     "typescript": "~5.9.3"
+  },
+  "packageManager": "pnpm@10.33.2",
+  "engines": {
+    "node": "24.21.0",
+    "pnpm": "10.33.2"
   }
 }

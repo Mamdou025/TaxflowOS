@@ -1,6 +1,6 @@
 
 
-import { createFapiTemplateWorkflow } from '@/shared/workflow-engine/local-fiscal-workflow';
+import { createFapiTemplateWorkflow } from "@/shared/workflow-engine/workflow/templates/fapi";
 import { FAPI_LINES_CALC_RULES, FAPI_SUMMARY_CALC_RULES } from '@/shared/workflow-engine/templates/sample-workflows/fapi-template';
 import { FAPI_MAPPING_RULES } from './fapi-mapping';
 import type { TemplateConfig, SourceRow, CategoryOption } from './engine';
@@ -36,7 +36,7 @@ export const FAPI_CONFIG: TemplateConfig = {
     { label: 'Compute FAPI', sub: 'Rollup + two-stage calculation engine' },
     { label: 'Review & approve', sub: 'Human sign-off on the figures' },
   ],
-  buildSnapshot: createFapiTemplateWorkflow as unknown as TemplateConfig['buildSnapshot'],
+  buildSnapshot: createFapiTemplateWorkflow,
   sampleRows: ROWS,
   sourceBlockId: 'fapi-source-trial-balance',
   mapperBlockId: 'fapi-logic-keyword-mapper',
@@ -74,6 +74,10 @@ export const FAPI_CONFIG: TemplateConfig = {
     { key: 'dividendDeductions', label: 'Line G · Dividend deductions', default: 0, step: 100, hint: 'Deductions for dividends', block: { blockId: 'fapi-source-inputs', configKey: 'dividendDeductions' } },
     { key: 'partnershipDividends', label: 'Line H · Partnership dividends', default: 0, step: 100, hint: 'Partnership dividend deductions', block: { blockId: 'fapi-source-inputs', configKey: 'partnershipDividends' } },
     { key: 'fatPaid', label: 'FAT · Foreign accrual tax paid', default: 100, step: 50, hint: 'Feeds FAT deduction = min(FAT × RTF, FAPI brut)', block: { blockId: 'fapi-source-inputs', configKey: 'fatPaid' } },
+    // Relevant tax factor (s.248(1)): corporation 4.0 (default here — corporate
+    // workspace) vs individual/trust 1.9. Rendered as an explicit labeled selector
+    // on the worksheet (not a free number); the engine snaps it to {1.9, 4}.
+    { key: 'rtf', label: 'Relevant tax factor (RTF)', default: 4, step: 0, hint: 'Corporation 4.0 · individual/trust 1.9 — multiplies FAT in the deduction', block: { blockId: 'fapi-source-inputs', configKey: 'rtf' } },
   ],
   // The three bucket-backed lines carry per-row provenance from the keyword mapper.
   // Mirrors the worksheet's subRows() filter so "what rows feed line A" matches the UI.

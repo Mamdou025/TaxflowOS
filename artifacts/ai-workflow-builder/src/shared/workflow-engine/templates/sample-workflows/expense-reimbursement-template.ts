@@ -1,3 +1,5 @@
+import type { WorkflowRelationshipType } from '@workspace/workflow-contracts/domain/edge-types';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Employee Expense Reimbursement — a NON-fiscal demo workflow.
 //
@@ -118,10 +120,10 @@ export const EXPENSE_ROLLUP_RULES = [
 export const EXPENSE_LINES_CALC_RULES = [
   { calculationId: "TRAVEL_REIMBURSABLE", description: "Travel = travel_total (100% policy)", label: "Travel (reimbursable)", operands: ["travel_total"], operation: "pass_through", resultKey: "TRAVEL_REIMBURSABLE" },
   { calculationId: "LODGING_REIMBURSABLE", description: "Lodging = lodging_total (100% policy)", label: "Lodging (reimbursable)", operands: ["lodging_total"], operation: "pass_through", resultKey: "LODGING_REIMBURSABLE" },
-  { calculationId: "MEALS_REIMBURSABLE", description: "Meals = min(meals_total, per-diem cap)", label: "Meals (capped)", operands: ["meals_total", 250], operation: "min", resultKey: "MEALS_REIMBURSABLE" },
+  { calculationId: "MEALS_REIMBURSABLE", description: "Meals = min(meals_total, per-diem cap)", label: "Meals (capped)", operands: ["meals_total", "mealCap"], operation: "min", resultKey: "MEALS_REIMBURSABLE" },
   { calculationId: "SUPPLIES_REIMBURSABLE", description: "Supplies = supplies_total (100% policy)", label: "Supplies (reimbursable)", operands: ["supplies_total"], operation: "pass_through", resultKey: "SUPPLIES_REIMBURSABLE" },
   { calculationId: "MILEAGE_REIMBURSABLE", description: "Mileage = mileage_total (corporate rate)", label: "Mileage (reimbursable)", operands: ["mileage_total"], operation: "pass_through", resultKey: "MILEAGE_REIMBURSABLE" },
-  { calculationId: "MEALS_OVER_CAP", description: "Meals over cap = max(meals_total − per-diem cap, 0)", label: "Meals over cap (disallowed)", operands: ["meals_total", 250], operation: "max_subtract_zero", resultKey: "MEALS_OVER_CAP" },
+  { calculationId: "MEALS_OVER_CAP", description: "Meals over cap = max(meals_total − per-diem cap, 0)", label: "Meals over cap (disallowed)", operands: ["meals_total", "mealCap"], operation: "max_subtract_zero", resultKey: "MEALS_OVER_CAP" },
 ];
 
 // ── Calculation rules — report totals (stage 2) ───────────────────────────────
@@ -268,6 +270,7 @@ export const EXPENSE_TEMPLATE_BLOCK_SPECS = [
     catalogId: "logic:calculation-engine",
     config: {
       formulas: EXPENSE_LINES_CALC_RULES,
+      inputDefaults: { mealCap: 250 },
       inputs: "named_values, protected_inputs",
       mode: "auto",
       outputs: "calculated_results, formula_trace, calculation_summary, named_values",
@@ -339,16 +342,25 @@ export const EXPENSE_TEMPLATE_BLOCK_SPECS = [
       outputs: "workbook",
       toolId: "output.excel_export",
     },
-    description: "Excel export of the reimbursement schedule for payroll upload.",
+    description: "Receipt evidence and computed reimbursement totals for review.",
     id: "expense-output-excel",
-    label: "Payroll Export",
+    label: "Expense Review Export",
     position: { x: 2180, y: 380 },
   },
 ];
 
 // ── Edge specs ──────────────────────────────────────────────────────────────
 
-export const EXPENSE_TEMPLATE_EDGE_SPECS = [
+export const EXPENSE_TEMPLATE_EDGE_SPECS: Array<{
+  bindingLabel: string;
+  reason: string;
+  relationshipType: WorkflowRelationshipType;
+  sourceBlockId: string;
+  sourceOutputRole: string;
+  targetBlockId: string;
+  targetInputRole: string;
+}> = [
+  { bindingLabel: "Receipt records to export", reason: "Include classified receipt evidence", relationshipType: "included_in_handoff", sourceBlockId: "expense-logic-classifier", sourceOutputRole: "mapped_rows", targetBlockId: "expense-output-excel", targetInputRole: "mapped_rows" },
   // Sources → Logic
   {
     bindingLabel: "Receipts to classify",

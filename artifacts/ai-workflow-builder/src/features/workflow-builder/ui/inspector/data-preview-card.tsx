@@ -1,3 +1,4 @@
+import { ReadableData } from '../workspace/readable-data';
 
 
 import { Copy } from "lucide-react";
@@ -74,7 +75,7 @@ export function DataPreviewCard({
 }: DataPreviewCardProps) {
   const dataValue = value ?? fallbackPreview;
   const [view, setView] = useState<LocalDataDisplayView>(
-    getDefaultView(outputType)
+    "table"
   );
   const count = useMemo(
     () => getItemCount(dataValue, contextData),
@@ -231,12 +232,12 @@ export function DataPreviewCard({
       </div>
 
       <div className="mt-2">
-        <DataDisplayViewerInternal
+        {view === "table" ? <ReadableData value={dataValue} /> : <DataDisplayViewerInternal
           contextData={contextData}
           outputType={outputType}
           value={dataValue}
           view={view}
-        />
+        />}
       </div>
     </div>
   );

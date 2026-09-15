@@ -1,22 +1,7 @@
 import { nanoid } from "nanoid";
-import {
-  type AiProposal,
-  type BlockFamily,
-  type BlockRun,
-  createWorkflowBlockFromCatalog,
-  createWorkflowEdgeRecord,
-  getAllowedWorkflowRelationshipTypes,
-  getWorkflowEdgeDefaults,
-  isCandidateOutputRelationshipType,
-  isGovernedOutputRelationshipType,
-  LOGIC_OUTPUT_GOVERNANCE_WARNING,
-  type LocalRunRecord,
-  WORKFLOW_RELATIONSHIP_LABELS,
-  type WorkflowBlock,
-  type WorkflowDefinition,
-  type WorkflowEdge,
-  type WorkflowRelationshipType,
-} from "./local-fiscal-workflow";
+import { type AiProposal, type BlockFamily, type BlockRun, isCandidateOutputRelationshipType, isGovernedOutputRelationshipType, LOGIC_OUTPUT_GOVERNANCE_WARNING, type LocalRunRecord, WORKFLOW_RELATIONSHIP_LABELS, type WorkflowBlock, type WorkflowDefinition, type WorkflowEdge, type WorkflowRelationshipType } from "@/shared/workflow-engine/workflow/contracts";
+import { createWorkflowBlockFromCatalog } from "@/shared/workflow-engine/workflow/block-factory";
+import { createWorkflowEdgeRecord, getAllowedWorkflowRelationshipTypes, getWorkflowEdgeDefaults } from "@/shared/workflow-engine/workflow/edges";
 import { isGovernedValueBlock } from "@/shared/workflow-engine/domain/workflow/protected-rules";
 
 const MOCK_AI_USER = "mock-ai-panel";

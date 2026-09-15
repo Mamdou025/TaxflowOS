@@ -1,6 +1,6 @@
 
 
-import { createRoullementFiscalWorkflow } from '@/shared/workflow-engine/local-fiscal-workflow';
+import { createRoullementFiscalWorkflow } from "@/shared/workflow-engine/workflow/templates/roulement";
 import { ROULEMENT_ELECTION_CALC_RULES, ROULEMENT_SUMMARY_CALC_RULES } from '@/shared/workflow-engine/templates/sample-workflows/roulement-fiscal-template';
 import type { TemplateConfig, SourceRow, CategoryOption, DerivedRow } from './engine';
 
@@ -38,7 +38,7 @@ export const ROULEMENT_CONFIG: TemplateConfig = {
     { label: 'Élection art. 85', sub: 'Bornes + montant élu' },
     { label: 'Réviser & approuver', sub: 'Signature des chiffres' },
   ],
-  buildSnapshot: createRoullementFiscalWorkflow as unknown as TemplateConfig['buildSnapshot'],
+  buildSnapshot: createRoullementFiscalWorkflow,
   sampleRows: ROWS,
   sourceBlockId: 'roulement-source-biens',
   mapperBlockId: 'roulement-logic-classification',

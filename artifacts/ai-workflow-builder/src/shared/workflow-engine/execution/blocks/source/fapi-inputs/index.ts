@@ -1,8 +1,2 @@
-import type { RegisteredToolModule } from "../../../runtime/types";
-import { fapiInputsDefinition } from "./definition";
-import { runFapiInputsSource } from "./run";
-
-export const fapiInputsToolModule: RegisteredToolModule = {
-  definition: fapiInputsDefinition,
-  run: runFapiInputsSource,
-};
+// Compatibility export for existing editor and browser-test imports.
+export * from '@workspace/workflow-executors/execution/blocks/source/fapi-inputs/index';

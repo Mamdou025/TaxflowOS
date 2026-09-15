@@ -1,3 +1,4 @@
+import { apiFetch } from '@/platform/auth/api-fetch';
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -5,32 +6,44 @@
 //
 // Additive layer over CopilotKit: it observes the live conversation and autosaves
 // a serializable projection to /api/chat/threads/:id/messages after each turn, and
-// can restore a saved thread back into CopilotKit. It does NOT change how the chat
-// runs — the message store stays owned by CopilotKit.
+// can restore a saved thread back into the chat. It does NOT change how the chat
+// runs — the message store stays owned by CopilotKit's AG-UI agent.
 //
 //   • autosave  — debounced, fires when a turn settles (isLoading false)
-//   • restore   — loadThread(id) → setMessages(reconstructed)
-//   • new chat  — startNewThread() → clears the store, next message opens a fresh thread
+//   • restore   — loadThread(id) → setMessages(reconstructed AG-UI messages)
+//   • new chat  — startNewThread() → reset() clears the store; next msg opens a fresh thread
+//
+// CopilotKit 1.63 note: the live messages + writers live on `useCopilotChatInternal`
+// (the same hook react-ui renders from). The legacy `useCopilotChat().visibleMessages`
+// is undefined here (renamed to `.messages`), and `useCopilotMessagesContext()` is an
+// empty vestigial store — using either meant the autosave never saw any messages.
 //
 // FAIL-SOFT: every network call is best-effort. No session / no DB → saves quietly
 // no-op and the chat works exactly as before (unsaved).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  useCopilotChat,
-  useCopilotMessagesContext,
-} from "@copilotkit/react-core";
+import { useCopilotChatInternal } from "@copilotkit/react-core";
 import { useAtom } from "jotai";
 import { activeChatThreadIdAtom } from "@/shared/stores/chat-store";
 import { generateId } from "@/lib/utils/id";
 import {
+  type AguiMessage,
   messagesSignature,
   projectMessages,
   reconstructMessages,
 } from "./message-codec";
 
 const SAVE_DEBOUNCE_MS = 900;
+
+// The subset of useCopilotChatInternal we use. Typed loosely: this is CopilotKit's
+// "internal" hook, so we pin the shape we depend on rather than its full surface.
+type ChatInternal = {
+  messages: AguiMessage[];
+  isLoading: boolean;
+  reset: () => void;
+  setMessages: (messages: AguiMessage[]) => void;
+};
 
 function deriveTitle(messages: ReturnType<typeof projectMessages>): string | null {
   const firstUser = messages.find((m) => m.role === "user" && m.content.text);
@@ -49,24 +62,25 @@ export type ChatPersistence = {
 };
 
 export function useChatPersistence(): ChatPersistence {
-  const { visibleMessages, isLoading, reset } = useCopilotChat();
-  const { setMessages } = useCopilotMessagesContext();
+  const { messages, isLoading, reset, setMessages } =
+    useCopilotChatInternal() as unknown as ChatInternal;
   const [activeThreadId, setActiveThreadId] = useAtom(activeChatThreadIdAtom);
   const [saving, setSaving] = useState(false);
 
   // Refs so the debounced effect always sees current values without re-subscribing.
   const activeIdRef = useRef(activeThreadId);
   activeIdRef.current = activeThreadId;
+  const messagesRef = useRef<AguiMessage[]>(messages ?? []);
+  messagesRef.current = messages ?? [];
   const hydratingRef = useRef(false); // suppress the save that a restore would trigger
   const authFailedRef = useRef(false); // stop hammering the API once it 401s
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const messages = visibleMessages ?? [];
-  const signature = messagesSignature(messages);
+  const signature = messagesSignature(messages ?? []);
 
   const doSave = useCallback(async () => {
     if (authFailedRef.current) return;
-    const projected = projectMessages(visibleMessages ?? []);
+    const projected = projectMessages(messagesRef.current ?? []);
     if (projected.length === 0) return;
 
     // Mint a thread id on the first save of a fresh conversation.
@@ -79,7 +93,7 @@ export function useChatPersistence(): ChatPersistence {
 
     setSaving(true);
     try {
-      const res = await fetch(`/api/chat/threads/${id}/messages`, {
+      const res = await apiFetch(`/api/chat/threads/${id}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: projected, title: deriveTitle(projected) }),
@@ -90,7 +104,7 @@ export function useChatPersistence(): ChatPersistence {
     } finally {
       setSaving(false);
     }
-  }, [visibleMessages, setActiveThreadId]);
+  }, [setActiveThreadId]);
 
   // Debounced autosave: wait until a turn has settled, then persist.
   // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the message signature + loading
@@ -100,7 +114,7 @@ export function useChatPersistence(): ChatPersistence {
       return;
     }
     if (isLoading) return;
-    if ((visibleMessages?.length ?? 0) === 0) return;
+    if ((messagesRef.current?.length ?? 0) === 0) return;
 
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
@@ -115,7 +129,7 @@ export function useChatPersistence(): ChatPersistence {
   const loadThread = useCallback(
     async (id: string): Promise<boolean> => {
       try {
-        const res = await fetch(`/api/chat/threads/${id}`);
+        const res = await apiFetch(`/api/chat/threads/${id}`);
         if (!res.ok) return false;
         const data = (await res.json()) as {
           messages?: { id: string; role: string; seq: number; content: unknown }[];

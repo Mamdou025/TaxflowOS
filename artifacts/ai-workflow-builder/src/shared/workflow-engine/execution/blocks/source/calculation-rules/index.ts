@@ -1,8 +1,2 @@
-import type { RegisteredToolModule } from "../../../runtime/types";
-import { calculationRulesDefinition } from "./definition";
-import { runCalculationRulesSource } from "./run";
-
-export const calculationRulesToolModule: RegisteredToolModule = {
-  definition: calculationRulesDefinition,
-  run: runCalculationRulesSource,
-};
+// Compatibility export for existing editor and browser-test imports.
+export * from '@workspace/workflow-executors/execution/blocks/source/calculation-rules/index';

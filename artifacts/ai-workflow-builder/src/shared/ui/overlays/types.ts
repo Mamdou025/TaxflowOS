@@ -1,15 +1,10 @@
-import type { ComponentType, ReactNode } from "react";
+import type { ComponentType, ReactNode } from 'react';
 
 /**
  * Button variant types matching shadcn/ui Button
  */
 export type OverlayActionVariant =
-  | "default"
-  | "destructive"
-  | "outline"
-  | "secondary"
-  | "ghost"
-  | "link";
+  'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
 
 /**
  * Action button configuration for overlay footer
@@ -39,7 +34,7 @@ export type OverlayOptions = {
   /** Callback when overlay is closed */
   onClose?: () => void;
   /** Width preset for desktop overlays */
-  size?: "default" | "wide";
+  size?: 'default' | 'wide';
 };
 
 /**
@@ -83,13 +78,13 @@ export type OverlayContextValue = {
   open: <P>(
     component: ComponentType<OverlayComponentProps<P>>,
     props?: P,
-    options?: OverlayOptions
+    options?: OverlayOptions,
   ) => string;
   /** Push a new overlay onto the stack (shows back button) */
   push: <P>(
     component: ComponentType<OverlayComponentProps<P>>,
     props?: P,
-    options?: OverlayOptions
+    options?: OverlayOptions,
   ) => string;
   /** Pop the top overlay from the stack */
   pop: () => void;
@@ -97,7 +92,7 @@ export type OverlayContextValue = {
   replace: <P>(
     component: ComponentType<OverlayComponentProps<P>>,
     props?: P,
-    options?: OverlayOptions
+    options?: OverlayOptions,
   ) => string;
   /** Close all overlays */
   closeAll: () => void;

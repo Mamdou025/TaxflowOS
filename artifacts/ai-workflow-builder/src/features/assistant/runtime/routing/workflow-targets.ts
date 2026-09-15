@@ -1,3 +1,4 @@
+import { WORKPAPER_SPECS } from '@/shared/workflow-engine/portfolio-workpapers';
 // ─────────────────────────────────────────────────────────────────────────────
 // Workflow TARGET resolution — "which workflow is this text about?"
 //
@@ -17,57 +18,17 @@ export type WorkflowTarget = {
 };
 
 export const WORKFLOW_TARGETS: WorkflowTarget[] = [
-  {
-    id: 'fapi',
-    name: 'FAPI',
-    aliases: ['fapi', 'foreign accrual property income', 'revenu étranger accumulé', 'reaimp', 'reatb'],
-  },
-  {
-    id: 'roulement',
-    name: 'Roulement fiscal (art. 85)',
-    aliases: [
-      'roulement',
-      'rollover',
-      'roll over',
-      'article 85',
-      'art. 85',
-      'art 85',
-      'section 85',
-      's. 85',
-      't2057',
-      'election 85',
-      'élection 85',
-    ],
-  },
-  {
-    id: 'expense',
-    name: 'Expense reimbursement',
-    aliases: [
-      'expense',
-      'expense report',
-      'expense reimbursement',
-      'employee expense',
-      'reimbursement',
-      'remboursement',
-      'note de frais',
-      'dépenses',
-      'per diem',
-      'per-diem',
-    ],
-  },
-  {
-    id: 'campaign',
-    name: 'Campaign budget allocation',
-    aliases: [
-      'campaign',
-      'campaign budget',
-      'marketing budget',
-      'budget marketing',
-      'budget de campagne',
-      'channel spend',
-      'allocation budget',
-    ],
-  },
+  { id: 'fapi', name: 'FAPI', aliases: ['fapi', 'foreign accrual property income', 'reaimp', 'reatb'] },
+  { id: 'expense', name: 'Expense reimbursement', aliases: ['expense', 'expense reimbursement', 'reimbursement', 'remboursement'] },
+  { id: 'document-calculator', name: 'Document Calculator', aliases: ['document calculator'] },
+  ...WORKPAPER_SPECS.map(spec => ({ id: spec.id, name: spec.name, aliases: [spec.id, spec.id.replaceAll('-', ' '), spec.name.toLowerCase(), ...(spec.id === 'platform-sequence' ? ['universal execution sequence'] : []), ...(spec.id === 't2-suite' ? ['t2'] : []), ...(spec.id === 'part-xiii' ? ['part xiii'] : [])] })),
+];
+
+// Recognize retired names so mixed requests remain ambiguous and cannot launch the wrong workflow.
+const RETIRED_TARGETS: WorkflowTarget[] = [
+  { id: 'roulement', name: 'Removed rollover workflow', aliases: ['roulement', 'rollover', 'art. 85', 'section 85', 't2057'] },
+  { id: 'campaign', name: 'Removed campaign workflow', aliases: ['campaign', 'marketing budget', 'budget allocation'] },
+  { id: 'holiday-payroll', name: 'Removed holiday payroll workflow', aliases: ['holiday payroll', 'statutory holiday', 'holiday accrual'] },
 ];
 
 /** Escape a literal for use inside a RegExp. */
@@ -120,14 +81,18 @@ function extractClientName(original: string): string | null {
  * `original` preserves case for name capture; matching itself is case-insensitive.
  */
 export function resolveWorkflowTarget(original: string): WorkflowTargetResolution {
-  const text = ` ${original.toLowerCase()} `;
+  // Resolve the commanded procedure, not workflow-looking words inside its data
+  // or client name (e.g. "Run FAPI with records: [{label: 'expense'}]").
+  const command = original.match(/\b(?:run|start|execute|calculate|compute|launch|d[ée]marre[rz]?|lance[rz]?|calcule[rz]?)\s+([\s\S]*?)(?=\s+(?:with|using|on|for|pour|avec)\b|[\[{]|$)/i);
+  const targetText = command?.[1] ?? original.split(/[\[{]/, 1)[0];
+  const text = ` ${targetText.toLowerCase()} `;
   const matched: string[] = [];
-  for (const t of WORKFLOW_TARGETS) {
+  for (const t of [...WORKFLOW_TARGETS, ...RETIRED_TARGETS]) {
     if (t.aliases.some((a) => aliasHits(text, a))) matched.push(t.id);
   }
   const ambiguous = matched.length > 1;
   const id = matched.length >= 1 ? matched[0] : null;
-  const name = id ? WORKFLOW_TARGETS.find((t) => t.id === id)?.name ?? null : null;
+  const name = id ? [...WORKFLOW_TARGETS, ...RETIRED_TARGETS].find((t) => t.id === id)?.name ?? null : null;
   return {
     id: ambiguous ? null : id,
     name: ambiguous ? null : name,

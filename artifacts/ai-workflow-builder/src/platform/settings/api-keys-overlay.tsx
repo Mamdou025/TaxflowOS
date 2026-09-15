@@ -1,3 +1,4 @@
+import { apiFetch } from '@/platform/auth/api-fetch';
 
 
 import { Copy, Key, Trash2 } from "lucide-react";
@@ -42,7 +43,7 @@ function CreateApiKeyOverlay({
   const handleCreate = async () => {
     setCreating(true);
     try {
-      const response = await fetch("/api/api-keys", {
+      const response = await apiFetch("/api/api-keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: keyName || null }),
@@ -102,7 +103,7 @@ export function ApiKeysOverlay({ overlayId }: ApiKeysOverlayProps) {
   const loadApiKeys = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/api-keys");
+      const response = await apiFetch("/api/api-keys");
       if (!response.ok) {
         throw new Error("Failed to load API keys");
       }
@@ -128,7 +129,7 @@ export function ApiKeysOverlay({ overlayId }: ApiKeysOverlayProps) {
   const handleDelete = async (keyId: string) => {
     setDeleting(keyId);
     try {
-      const response = await fetch(`/api/api-keys/${keyId}`, {
+      const response = await apiFetch(`/api/api-keys/${keyId}`, {
         method: "DELETE",
       });
 

@@ -1,8 +1,2 @@
-import type { RegisteredToolModule } from "../../../runtime/types";
-import { aggregationRulesDefinition } from "./definition";
-import { runAggregationRulesSource } from "./run";
-
-export const aggregationRulesToolModule: RegisteredToolModule = {
-  definition: aggregationRulesDefinition,
-  run: runAggregationRulesSource,
-};
+// Compatibility export for existing editor and browser-test imports.
+export * from '@workspace/workflow-executors/execution/blocks/source/aggregation-rules/index';

@@ -14,7 +14,7 @@ import {
   integrationsLoadedAtom,
   integrationsVersionAtom,
 } from "@/lib/integrations-store";
-import { isLocalRunExecutionId } from "@/shared/workflow-engine/local-fiscal-workflow";
+import { isLocalRunExecutionId } from "@/shared/workflow-engine/workflow/run-storage";
 import type { IntegrationType } from "@/lib/types/integration";
 import {
   currentWorkflowIdAtom,
@@ -361,7 +361,7 @@ const WorkflowEditor = ({ params: _params }: WorkflowPageProps) => {
       setCurrentWorkflowVisibility(
         (workflow.visibility as WorkflowVisibility) ?? "private"
       );
-      setIsWorkflowOwner(workflow.isOwner !== false); // Default to true if not set
+      setIsWorkflowOwner(workflow.canEdit === true); // Legacy editor flag; authority comes from the API.
       setHasUnsavedChanges(false);
       setWorkflowNotFound(false);
     } catch (error) {

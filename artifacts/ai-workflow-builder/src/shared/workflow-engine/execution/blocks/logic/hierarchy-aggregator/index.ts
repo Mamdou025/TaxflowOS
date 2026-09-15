@@ -1,8 +1,2 @@
-import type { RegisteredToolModule } from "../../../runtime/types";
-import { hierarchyAggregatorDefinition } from "./definition";
-import { runHierarchyAggregator } from "./run";
-
-export const hierarchyAggregatorToolModule: RegisteredToolModule = {
-  definition: hierarchyAggregatorDefinition,
-  run: runHierarchyAggregator,
-};
+// Compatibility export for existing editor and browser-test imports.
+export * from '@workspace/workflow-executors/execution/blocks/logic/hierarchy-aggregator/index';

@@ -80,7 +80,8 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       outputs: "documentEvidence",
       rulebookRef: "Document facts are referenced, not overwritten.",
       sourceLocator: "document://page/section",
-      toolId: "source.manual_value",
+      sourceKind: "pdf_document",
+      toolId: "source.pdf_document",
     },
   },
   {
@@ -88,14 +89,21 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
     family: "Source",
     subtype: "API / HTTP Request",
     label: "API / HTTP Request",
-    description: "Reference value fetched from an external API",
+    description: "Live rows fetched from a public JSON API",
     defaultConfig: {
-      owner: "Tax Operations",
+      owner: "Data Operations",
+      fieldMap: {},
       inputs: "request",
-      outputs: "apiReference",
-      rulebookRef: "API responses are stored as reference evidence.",
+      maxRows: 250,
+      method: "GET",
+      outputs: "rows, raw_rows, response_metadata, source_metadata",
+      resultsPath: "",
+      rulebookRef:
+        "The fetched response is pinned into the run, so re-runs replay the exact payload the figures came from.",
+      sourceKind: "http_json",
       sourceLocator: "https://api.example.test/reference",
-      toolId: "source.manual_value",
+      toolId: "source.http_json",
+      url: "",
     },
   },
   {
@@ -132,7 +140,8 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       outputs: "queryRows",
       rulebookRef: "Database source rows are immutable in the builder.",
       sourceLocator: "database://connection/query",
-      toolId: "source.manual_table",
+      sourceKind: "database_query",
+      toolId: "source.database_query",
     },
   },
   {
@@ -147,7 +156,8 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       outputs: "webReference",
       rulebookRef: "Web references are captured as source evidence.",
       sourceLocator: "https://example.test/source",
-      toolId: "source.manual_value",
+      sourceKind: "web_url",
+      toolId: "source.web_url",
     },
   },
   {
@@ -162,7 +172,8 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       outputs: "aiSearchEvidence",
       rulebookRef: "AI search results require downstream review.",
       sourceLocator: "proposal://ai-search-result",
-      toolId: "source.manual_value",
+      sourceKind: "ai_search",
+      toolId: "source.ai_search",
     },
   },
   {
@@ -690,6 +701,67 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       toolId: "logic.keyword_mapper",
     },
   },
+  // ── Review / Validation ────────────────────────────────────────────────────
+  // These gates already had working executors in the tool registry but no palette
+  // entry, so they could not be placed on a canvas. Catalog ids added here to make
+  // the governance layer buildable (subtypes resolve via REVIEW_TOOL_BY_SUBTYPE).
+  {
+    id: "review:unmatched-rows-check",
+    family: "Review / Validation",
+    subtype: "Unmatched Rows Check",
+    label: "Unmatched Rows Check",
+    description: "Flags rows the classifier could not categorise",
+    defaultConfig: {
+      inputs: "mapped_rows, unmatched_rows",
+      outputs: "review_status, unmatched_rows",
+      owner: "Review",
+      rulebookRef: "Unclassified rows must be resolved or explicitly excluded.",
+      toolId: "review.unmatched_rows_check",
+    },
+  },
+  {
+    id: "review:low-confidence-warning",
+    family: "Review / Validation",
+    subtype: "Low Confidence Warning",
+    label: "Low Confidence Warning",
+    description: "Surfaces weak keyword matches for a human to confirm",
+    defaultConfig: {
+      confidenceThreshold: 0.75,
+      inputs: "mapped_rows",
+      outputs: "review_status, low_confidence_rows",
+      owner: "Review",
+      rulebookRef: "Matches below the confidence threshold require review.",
+      toolId: "review.low_confidence_warning",
+    },
+  },
+  {
+    id: "review:approval-gate",
+    family: "Review / Validation",
+    subtype: "Approval Gate",
+    label: "Approval Gate",
+    description: "Human sign-off before results are released downstream",
+    defaultConfig: {
+      inputs: "value_to_approve, validation_result, review_findings",
+      outputs: "approval_status, review_status",
+      owner: "Review",
+      rulebookRef: "Results require explicit approval before handoff.",
+      toolId: "review.approval_gate",
+    },
+  },
+  {
+    id: "review:output-readiness-check",
+    family: "Review / Validation",
+    subtype: "Output Readiness Check",
+    label: "Output Readiness Check",
+    description: "Confirms every governed value is settled before export",
+    defaultConfig: {
+      inputs: "protected_values, validation_result, review_findings",
+      outputs: "validation_result, review_status",
+      owner: "Review",
+      rulebookRef: "Outputs are gated until all governed values are final.",
+      toolId: "review.output_readiness_check",
+    },
+  },
   {
     id: "field:field-block",
     family: "Field",
@@ -710,9 +782,9 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
     defaultConfig: {
       owner: "Tax Delivery",
       inputs: "approved values",
-      outputs: "csvExport",
+      outputs: "csv, fileName, columns",
       rulebookRef: "CSV output is generated from approved data.",
-      toolId: "output.evidence_pack_preview",
+      toolId: "output.csv_export",
     },
   },
   {
@@ -724,9 +796,9 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
     defaultConfig: {
       owner: "Tax Delivery",
       inputs: "approved values",
-      outputs: "excelExport",
+      outputs: "sheets, workbookSpec, fileName",
       rulebookRef: "Excel output is generated from approved data.",
-      toolId: "output.evidence_pack_preview",
+      toolId: "output.excel_export",
     },
   },
   {
@@ -740,7 +812,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "approved values",
       outputs: "pdfReport",
       rulebookRef: "PDF reports are generated from approved values.",
-      toolId: "output.evidence_pack_preview",
+      toolId: "output.pdf_report",
     },
   },
   {
@@ -782,7 +854,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "approved values",
       outputs: "taxprepHandoff",
       rulebookRef: "V1 exports a placeholder, not a live integration.",
-      toolId: "output.evidence_pack_preview",
+      toolId: "output.taxprep_handoff",
     },
   },
   {
@@ -796,7 +868,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "approved values",
       outputs: "onesourceHandoff",
       rulebookRef: "V1 exports a placeholder, not a live integration.",
-      toolId: "output.evidence_pack_preview",
+      toolId: "output.onesource_handoff",
     },
   },
   {
@@ -849,6 +921,101 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
       inputs: "workflow prompt",
       outputs: "aiWorkflowProposal",
       rulebookRef: "AI workflow proposals stay separate until approved.",
+    },
+  },
+
+  // ── Blocks that had a working executor but no palette entry ────────────────
+  // The 2026-08-12 audit found 16 registered tools unreachable from the palette.
+  // The ones below are the load-bearing ones — most importantly BOTH Protected
+  // tools, which is the family the whole governance story rests on: you could not
+  // place a governed value at all. (The five createMockParserTool stubs are left
+  // unreachable on purpose — a mock parser should not be placeable by accident.)
+  {
+    id: "protected:protected-input",
+    family: "Protected",
+    subtype: "Protected Input",
+    label: "Protected Input",
+    description:
+      "A governed input value that cannot be edited once locked — corrections are modelled downstream",
+    defaultConfig: {
+      inputs: "candidate_value, approval_status",
+      outputs: "protected_value",
+      owner: "Review",
+      rulebookRef: "Protected inputs are locked after approval.",
+      toolId: "protected.protected_input",
+    },
+  },
+  {
+    id: "protected:protected-result",
+    family: "Protected",
+    subtype: "Protected Result",
+    label: "Protected Result",
+    description:
+      "A governed final figure — the value a deliverable is allowed to state",
+    defaultConfig: {
+      inputs: "computed_values, approval_status",
+      outputs: "protected_result",
+      owner: "Review",
+      rulebookRef: "Final amounts are governed and require approval.",
+      toolId: "protected.protected_result",
+    },
+  },
+  {
+    id: "protected:locked-rate",
+    family: "Protected",
+    subtype: "Locked Rate",
+    label: "Locked Rate",
+    description:
+      "A reviewed rate (e.g. FX) pinned for the engagement so every figure uses the same one",
+    defaultConfig: {
+      inputs: "candidate_value, approval_status",
+      outputs: "protected_value",
+      owner: "Review",
+      rulebookRef: "Rates are locked after review and reused unchanged.",
+      toolId: "protected.protected_input",
+    },
+  },
+  {
+    id: "review:required-input-check",
+    family: "Review / Validation",
+    subtype: "Required Input Check",
+    label: "Required Input Check",
+    description: "Blocks the run when a required input is missing",
+    defaultConfig: {
+      inputs: "checked_items",
+      outputs: "validation_result",
+      owner: "Review",
+      rulebookRef: "Required inputs must be present before computation.",
+      toolId: "review.required_input_check",
+    },
+  },
+  {
+    id: "review:formula-consistency-check",
+    family: "Review / Validation",
+    subtype: "Formula Consistency Check",
+    label: "Formula Consistency Check",
+    description: "Verifies computed figures still agree with their formulas",
+    defaultConfig: {
+      inputs: "computed_values",
+      outputs: "validation_result",
+      owner: "Review",
+      rulebookRef: "Figures must reconcile to their stated formula.",
+      toolId: "review.formula_consistency_check",
+    },
+  },
+  {
+    id: "review:manual-override-review",
+    family: "Review / Validation",
+    subtype: "Manual Override Review",
+    label: "Manual Override Review",
+    description:
+      "Surfaces every manual override (including an FX rate) for explicit review",
+    defaultConfig: {
+      inputs: "candidate_value",
+      outputs: "review_findings",
+      owner: "Review",
+      rulebookRef: "Manual overrides are reviewed, never silent.",
+      toolId: "review.fx_rate_review",
     },
   },
 ];

@@ -1,5 +1,5 @@
 import { atom } from 'jotai';
-import { atomWithStorage } from 'jotai/utils';
+import { atomWithStorage } from '@/platform/auth/workspace-atoms';
 import type { SourceRow } from '@/shared/workflow-engine/runtime/workflow-runs/engine';
 import type { ActorKind, Coworker } from '@/lib/coworkers';
 
@@ -57,7 +57,7 @@ export type ActiveRunInfo = {
   totalSteps: number;
   stepIndex: number;
   stepLabel: string;
-  phase: 'upload' | 'categorize' | 'elect' | 'approve' | 'done';
+  phase: 'upload' | 'categorize' | 'elect' | 'approve' | 'done' | 'error';
   awaiting: string; // human description of what the run is waiting for
   headline?: { label: string; value: number; currency: string };
   /** The run's live figures — published once a source is loaded — so the assistant
@@ -98,7 +98,7 @@ export const setActiveCoworkerAtom = atom(
  *  ONE source of truth for the trial balance a run works on: the chat upload writes
  *  it, the chat run reads it, and the builder hydrates its source block from it — so
  *  switching between the chat and the workflow builder shows the exact same data. */
-export type UploadedSource = { fileName: string; rows: SourceRow[]; at: number };
+export type UploadedSource = { fileName: string; rows: SourceRow[]; at: number; sourceId?: string; sourceRevision?: number; contentHash?: string };
 export const uploadedRowsAtom = atomWithStorage<Record<string, UploadedSource>>(
   'taxflow:uploaded-source-rows',
   {}
@@ -137,6 +137,7 @@ export const runEditsAtom = atomWithStorage<Record<string, RunEdits>>('taxflow:r
 export const setRunInputAtom = atom(
   null,
   (get, set, { id, key, value }: { id: string; key: string; value: number }) => {
+    if (get(runEditsAtom)[id]?.inputs[key] !== value) set(invalidateRunApprovalAtom, id);
     set(runEditsAtom, (prev) => {
       const cur = prev[id] ?? EMPTY_RUN_EDITS;
       return { ...prev, [id]: { ...cur, inputs: { ...cur.inputs, [key]: value } } };
@@ -148,6 +149,7 @@ export const setRunInputAtom = atom(
 export const setRunOverrideAtom = atom(
   null,
   (get, set, { id, rowId, categoryId }: { id: string; rowId: string; categoryId: string }) => {
+    if (get(runEditsAtom)[id]?.overrides[rowId] !== categoryId) set(invalidateRunApprovalAtom, id);
     set(runEditsAtom, (prev) => {
       const cur = prev[id] ?? EMPTY_RUN_EDITS;
       return { ...prev, [id]: { ...cur, overrides: { ...cur.overrides, [rowId]: categoryId } } };
@@ -160,7 +162,36 @@ export const setRunOverrideAtom = atom(
 export const setRunEditsAtom = atom(
   null,
   (get, set, { id, edits }: { id: string; edits: RunEdits }) => {
+    if (JSON.stringify(get(runEditsAtom)[id] ?? EMPTY_RUN_EDITS) !== JSON.stringify(edits)) set(invalidateRunApprovalAtom, id);
     set(runEditsAtom, (prev) => ({ ...prev, [id]: edits }));
+  }
+);
+
+/** Shared, PERSISTED run *gate* state — keyed by workflow id ('fapi', 'roulement').
+ *  The run's flow gates (source provided? amount elected? figures approved?) used to be
+ *  component-local useState in WorkflowRunFlow, so leaving the Run tab and returning reset
+ *  a finished run to "Document needed", forcing a re-run. Persisting them here (like
+ *  runEditsAtom) restores an in-progress/finished run when you come back — across tab
+ *  navigation AND a reload — matching how the run's DATA already persists (uploadedRowsAtom
+ *  + runEditsAtom). A workflow that was never advanced has NO entry, so a brand-new run
+ *  still asks for its source first (cached rows alone don't auto-satisfy the gate). */
+export type RunFlow = { uploaded: boolean; elected: number | null; approved: boolean; rows?: SourceRow[] };
+export const INITIAL_RUN_FLOW: RunFlow = { uploaded: false, elected: null, approved: false };
+export const runFlowAtom = atomWithStorage<Record<string, RunFlow>>('taxflow:run-flow', {});
+const invalidateRunApprovalAtom = atom(null, (_get, set, id: string) => {
+  set(runFlowAtom, previous => previous[id] ? { ...previous, [id]: { ...previous[id], approved: false } } : previous);
+});
+
+/** Set (or functionally update) one workflow's run-flow gate state. */
+export const setRunFlowAtom = atom(
+  null,
+  (get, set, { id, flow }: { id: string; flow: RunFlow | ((prev: RunFlow) => RunFlow) }) => {
+    set(runFlowAtom, (prev) => {
+      const cur = prev[id] ?? INITIAL_RUN_FLOW;
+      const next = typeof flow === 'function' ? flow(cur) : flow;
+      const changedEvidence = JSON.stringify(cur.rows) !== JSON.stringify(next.rows) || cur.elected !== next.elected;
+      return { ...prev, [id]: { ...next, approved: changedEvidence ? false : next.approved } };
+    });
   }
 );
 

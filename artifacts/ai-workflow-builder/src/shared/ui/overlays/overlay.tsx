@@ -1,9 +1,7 @@
-
-
-import { cn } from "@/lib/utils";
-import { OverlayFooter } from "./overlay-footer";
-import { SmartOverlayHeader } from "./overlay-header";
-import type { OverlayProps } from "./types";
+import { cn } from '@/lib/utils';
+import { OverlayFooter } from './overlay-footer';
+import { SmartOverlayHeader } from './overlay-header';
+import type { OverlayProps } from './types';
 
 type OverlayComponentProps = OverlayProps & {
   /** The overlay's unique ID (passed automatically by the container) */
@@ -44,14 +42,10 @@ export function Overlay({
   className,
 }: OverlayComponentProps) {
   return (
-    <div className={cn("flex flex-col", className)}>
+    <div className={cn('flex flex-col', className)}>
       {/* Header with smart back button detection */}
       {(title || description) && (
-        <SmartOverlayHeader
-          description={description}
-          overlayId={overlayId}
-          title={title}
-        />
+        <SmartOverlayHeader description={description} overlayId={overlayId} title={title} />
       )}
 
       {/* Content area */}

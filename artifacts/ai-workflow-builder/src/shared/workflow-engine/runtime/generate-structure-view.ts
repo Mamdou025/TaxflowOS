@@ -1,8 +1,4 @@
-import type {
-  WorkflowBlock,
-  WorkflowDefinition,
-  WorkflowEdge,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { type WorkflowBlock, type WorkflowDefinition, type WorkflowEdge } from "@/shared/workflow-engine/workflow/contracts";
 import { isGovernedValueBlock } from "../domain/workflow/protected-rules";
 
 // Canvas owns graph editing, inspector owns formulas/code/configuration, and

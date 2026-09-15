@@ -3,10 +3,7 @@
 import { ExternalLink } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/shared/ui/button";
-import type {
-  LocalRunRecord,
-  WorkflowBlock,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { type LocalRunRecord, type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
 import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
 import { SUPPORTED_AGGREGATION_OPERATIONS } from "../source-viewers/aggregation-rule-modes";
 import { AggregationRulesOverview } from "../source-viewers/aggregation-rules-overview";

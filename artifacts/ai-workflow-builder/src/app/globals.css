@@ -1,10 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@view-transition {
-  navigation: auto;
-}
-
 /* Root crossfade for client-side view transitions (see lib/view-transition.ts).
    Asymmetric — the outgoing page fades a touch faster than the incoming settles,
    so a light→dark move (home → Scope) reads as "entering" rather than a hard cut. */

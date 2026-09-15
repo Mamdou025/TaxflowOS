@@ -1,0 +1,643 @@
+{
+  "id": "pf-fapi",
+  "inputKind": "bundled sample records",
+  "inputRows": 8,
+  "openMs": 9799,
+  "runMs": 430,
+  "totalMs": 21043,
+  "browserErrors": [],
+  "first": {
+    "id": "custom:2436cdf3-eb0f-4ab6-84b0-1105b95b332e",
+    "name": "FAPI Calculation Template — My workflow",
+    "version": 1,
+    "runCount": 1,
+    "runId": "local-tool-workflow-1789009197790-xb9d5v",
+    "status": "warning",
+    "errors": [],
+    "warnings": [
+      "1 row(s) were not matched by keyword rules."
+    ],
+    "sources": [
+      {
+        "id": "fapi-source-trial-balance",
+        "connected": true,
+        "consumedBy": [
+          "fapi-logic-keyword-mapper"
+        ]
+      }
+    ],
+    "results": [
+      {
+        "blockId": "fapi-api-boc-fx",
+        "label": "Bank of Canada Valet API",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "label",
+          "readOnlyEvidence",
+          "unit",
+          "value",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-source-trial-balance",
+        "label": "Trial Balance",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "rawRows",
+          "rawRowsCount",
+          "selectedRows",
+          "selectedRowsCount",
+          "workbookFile",
+          "selectedSheet",
+          "selectedRange",
+          "sourceMetadata",
+          "sourceLocator",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-source-inputs",
+        "label": "FAPI Inputs",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "expectedResults",
+          "fapiInputs",
+          "inputMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-source-fx-rate",
+        "label": "Bank of Canada FX Rate",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "exchangeRate",
+          "exchangeRateInfo",
+          "value",
+          "fapiInputs",
+          "rateMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-logic-keyword-mapper",
+        "label": "Keyword Mapper",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "1 row(s) were not matched by keyword rules."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "mappedRows",
+          "mappedRowsCount",
+          "unmatchedRows",
+          "unmatchedRowsCount",
+          "lowConfidenceRows",
+          "lowConfidenceRowsCount",
+          "conflictCount",
+          "conflicts",
+          "mappingSummary",
+          "rulesUsed",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-logic-category-rollup",
+        "label": "Category Rollup",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "categoryTotalDetails",
+          "categoryTotals",
+          "rollupTotalDetails",
+          "rollupTotals",
+          "namedValues",
+          "namedValuesSourceKind",
+          "excludedRows",
+          "excludedRowsCount",
+          "includedRowsByCategory",
+          "includedRowsByRollup",
+          "rollupFormulaTrace",
+          "rollupSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-field-income",
+        "label": "Income & Expense",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "computedValues",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-logic-lines-engine",
+        "label": "FAPI Lines Engine",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "calculated": {
+          "RTF": 4,
+          "FAT_PAID": 100,
+          "H": 0,
+          "G": 0,
+          "F1": 0,
+          "F": 0,
+          "E": 0,
+          "D": 0,
+          "C": 0,
+          "B": 3000,
+          "A2": 0,
+          "A1": 0,
+          "COMPUTATION_95_4": 0,
+          "EXPENSES": 3000,
+          "A": 22000
+        },
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "namedValues",
+          "formulaTrace",
+          "calculatedResults",
+          "resultDetails",
+          "calculationSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-field-lines",
+        "label": "FAPI Lines A–H",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "computedValues",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-logic-summary-engine",
+        "label": "FAPI Summary Engine",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "calculated": {
+          "FX_RATE": 1.35,
+          "DEDUCTIONS": 0,
+          "GROSS": 25000,
+          "DEDUCTIONS_CAD": 0,
+          "GROSS_CAD": 33750,
+          "FAPI_BRUT": 25000,
+          "FAPI_BRUT_CAD": 33750,
+          "FAT_DEDUCTION": 400,
+          "FAT_DEDUCTION_CAD": 540,
+          "NET_FAPI": 24600,
+          "NET_FAPI_CAD": 33210
+        },
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "namedValues",
+          "formulaTrace",
+          "calculatedResults",
+          "resultDetails",
+          "calculationSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-field-summary",
+        "label": "FAPI Summary",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "computedValues",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-output-evidence",
+        "label": "Evidence Pack",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "1 row(s) were not matched by keyword rules."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "blockingIssues",
+          "finalityStatus",
+          "formulas",
+          "keywordRulesUsed",
+          "mappedRows",
+          "nonBlockingWarnings",
+          "outputFinality",
+          "preview",
+          "protectedValues",
+          "protectedResults",
+          "protectedResultsFinality",
+          "reviewDecisions",
+          "reviewerOverrides",
+          "sourceRows",
+          "sourceTrace",
+          "validationSummary",
+          "warnings",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-output-json",
+        "label": "Canonical JSON",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "1 row(s) were not matched by keyword rules."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "canonicalJson",
+          "canonical_json",
+          "pipelineTrace",
+          "blockingIssues",
+          "candidateLogicOutputs",
+          "finalityStatus",
+          "generatedAt",
+          "keywordRulesUsed",
+          "mappedRows",
+          "nonBlockingWarnings",
+          "outputFinality",
+          "protectedValues",
+          "protectedResults",
+          "protectedResultsFinality",
+          "reviewResults",
+          "reviewerOverrides",
+          "runId",
+          "sourceTrace",
+          "validationSummary",
+          "warnings",
+          "workflowId",
+          "workflowName",
+          "upstreamBlockIds"
+        ]
+      }
+    ]
+  },
+  "second": {
+    "id": "custom:2436cdf3-eb0f-4ab6-84b0-1105b95b332e",
+    "name": "FAPI Calculation Template — My workflow",
+    "version": 1,
+    "runCount": 2,
+    "runId": "local-tool-workflow-1789009205907-5p4gtj",
+    "status": "warning",
+    "errors": [],
+    "warnings": [
+      "1 row(s) were not matched by keyword rules."
+    ],
+    "sources": [
+      {
+        "id": "fapi-source-trial-balance",
+        "connected": true,
+        "consumedBy": [
+          "fapi-logic-keyword-mapper"
+        ]
+      }
+    ],
+    "results": [
+      {
+        "blockId": "fapi-api-boc-fx",
+        "label": "Bank of Canada Valet API",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "immutable",
+          "label",
+          "readOnlyEvidence",
+          "unit",
+          "value",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-source-trial-balance",
+        "label": "Trial Balance",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "immutable",
+          "readOnlyEvidence",
+          "rowCount",
+          "rows",
+          "sourceKind",
+          "rawRows",
+          "rawRowsCount",
+          "selectedRows",
+          "selectedRowsCount",
+          "workbookFile",
+          "selectedSheet",
+          "selectedRange",
+          "sourceMetadata",
+          "sourceLocator",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-source-inputs",
+        "label": "FAPI Inputs",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "expectedResults",
+          "fapiInputs",
+          "inputMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-source-fx-rate",
+        "label": "Bank of Canada FX Rate",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "exchangeRate",
+          "exchangeRateInfo",
+          "value",
+          "fapiInputs",
+          "rateMetadata",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-logic-keyword-mapper",
+        "label": "Keyword Mapper",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "1 row(s) were not matched by keyword rules."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "mappedRows",
+          "mappedRowsCount",
+          "unmatchedRows",
+          "unmatchedRowsCount",
+          "lowConfidenceRows",
+          "lowConfidenceRowsCount",
+          "conflictCount",
+          "conflicts",
+          "mappingSummary",
+          "rulesUsed",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-logic-category-rollup",
+        "label": "Category Rollup",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "categoryTotalDetails",
+          "categoryTotals",
+          "rollupTotalDetails",
+          "rollupTotals",
+          "namedValues",
+          "namedValuesSourceKind",
+          "excludedRows",
+          "excludedRowsCount",
+          "includedRowsByCategory",
+          "includedRowsByRollup",
+          "rollupFormulaTrace",
+          "rollupSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-field-income",
+        "label": "Income & Expense",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "computedValues",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-logic-lines-engine",
+        "label": "FAPI Lines Engine",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "calculated": {
+          "RTF": 4,
+          "FAT_PAID": 100,
+          "H": 0,
+          "G": 0,
+          "F1": 0,
+          "F": 0,
+          "E": 0,
+          "D": 0,
+          "C": 0,
+          "B": 3000,
+          "A2": 0,
+          "A1": 0,
+          "COMPUTATION_95_4": 0,
+          "EXPENSES": 3000,
+          "A": 22000
+        },
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "namedValues",
+          "formulaTrace",
+          "calculatedResults",
+          "resultDetails",
+          "calculationSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-field-lines",
+        "label": "FAPI Lines A–H",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "computedValues",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-logic-summary-engine",
+        "label": "FAPI Summary Engine",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "calculated": {
+          "FX_RATE": 1.35,
+          "DEDUCTIONS": 0,
+          "GROSS": 25000,
+          "DEDUCTIONS_CAD": 0,
+          "GROSS_CAD": 33750,
+          "FAPI_BRUT": 25000,
+          "FAPI_BRUT_CAD": 33750,
+          "FAT_DEDUCTION": 400,
+          "FAT_DEDUCTION_CAD": 540,
+          "NET_FAPI": 24600,
+          "NET_FAPI_CAD": 33210
+        },
+        "outputKeys": [
+          "bindingValidation",
+          "backendOutputs",
+          "primaryOutputRole",
+          "namedValues",
+          "formulaTrace",
+          "calculatedResults",
+          "resultDetails",
+          "calculationSummary",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-field-summary",
+        "label": "FAPI Summary",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
+        "outputKeys": [
+          "bindingValidation",
+          "computedValues",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-output-evidence",
+        "label": "Evidence Pack",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "1 row(s) were not matched by keyword rules."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "blockingIssues",
+          "finalityStatus",
+          "formulas",
+          "keywordRulesUsed",
+          "mappedRows",
+          "nonBlockingWarnings",
+          "outputFinality",
+          "preview",
+          "protectedValues",
+          "protectedResults",
+          "protectedResultsFinality",
+          "reviewDecisions",
+          "reviewerOverrides",
+          "sourceRows",
+          "sourceTrace",
+          "validationSummary",
+          "warnings",
+          "upstreamBlockIds"
+        ]
+      },
+      {
+        "blockId": "fapi-output-json",
+        "label": "Canonical JSON",
+        "status": "warning",
+        "errors": [],
+        "warnings": [
+          "1 row(s) were not matched by keyword rules."
+        ],
+        "outputKeys": [
+          "bindingValidation",
+          "canonicalJson",
+          "canonical_json",
+          "pipelineTrace",
+          "blockingIssues",
+          "candidateLogicOutputs",
+          "finalityStatus",
+          "generatedAt",
+          "keywordRulesUsed",
+          "mappedRows",
+          "nonBlockingWarnings",
+          "outputFinality",
+          "protectedValues",
+          "protectedResults",
+          "protectedResultsFinality",
+          "reviewResults",
+          "reviewerOverrides",
+          "runId",
+          "sourceTrace",
+          "validationSummary",
+          "warnings",
+          "workflowId",
+          "workflowName",
+          "upstreamBlockIds"
+        ]
+      }
+    ]
+  }
+}

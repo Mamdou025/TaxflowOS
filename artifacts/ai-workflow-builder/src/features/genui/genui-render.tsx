@@ -1,3 +1,4 @@
+import { apiFetch } from '@/platform/auth/api-fetch';
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -64,7 +65,7 @@ export function GenUIRender({ prompt }: { prompt: string }) {
       setStreaming(true);
       (async () => {
         try {
-          const res = await fetch('/api/genui', {
+          const res = await apiFetch('/api/genui', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ messages: [{ role: 'user', content: text }] }),

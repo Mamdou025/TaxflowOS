@@ -1,32 +1,11 @@
 import app from "./app";
 import { logger } from "./lib/logger";
-import { db, users, eq } from "@workspace/db";
+import { startIngestWorker } from "./lib/ingest-worker";
+import { startWorkflowRunWorker } from './lib/workflow-run-worker';
+import { pool } from "@workspace/db";
 
-// Ensure the anonymous user row exists — it is the FK anchor for all data
-// written before real auth is wired up. Safe to run on every startup (no-op
-// if the row already exists).
-const ANONYMOUS_USER_ID = "anonymous";
-try {
-  const existing = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.id, ANONYMOUS_USER_ID))
-    .limit(1);
-  if (!existing.length) {
-    await db.insert(users).values({
-      id: ANONYMOUS_USER_ID,
-      name: "Guest",
-      emailVerified: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      isAnonymous: true,
-    });
-    logger.info("Seeded anonymous user row");
-  }
-} catch (err) {
-  // Non-fatal — DB may not have the users table yet (first deploy before migration).
-  logger.warn({ err }, "Could not seed anonymous user; ensure migrations have run");
-}
+// Schema changes are applied by the migration command, never at request time.
+await pool.query("SELECT id FROM workspaces LIMIT 0");
 
 const rawPort = process.env["PORT"];
 
@@ -37,16 +16,30 @@ if (!rawPort) {
 }
 
 const port = Number(rawPort);
+// Only the owned test child uses an OS-assigned local port and IPC readiness.
+const testRun = process.connected && process.env.TAXFLOW_TEST_RUN_ID;
+const isolatedTest = typeof testRun === "string" && /^[a-f0-9]{8}-[a-f0-9-]{36}$/.test(testRun);
 
-if (Number.isNaN(port) || port <= 0) {
+if (!Number.isInteger(port) || port < 0 || (port === 0 && !isolatedTest) || port > 65535) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-app.listen(port, (err) => {
+const server = app.listen(isolatedTest ? { port, host: "127.0.0.1" } : { port }, (err) => {
   if (err) {
     logger.error({ err }, "Error listening on port");
     process.exit(1);
   }
 
   logger.info({ port }, "Server listening");
+  if (isolatedTest) {
+    const address = server.address();
+    if (address && typeof address !== "string") {
+      process.send?.({ type: "taxflow-test-ready", runId: testRun, port: address.port });
+    }
+  }
+
+  // Drain the durable ingest_jobs queue in the background (RAG document
+  // processing). Disable with INGEST_WORKER=0 to run it as a separate process.
+  startIngestWorker();
+  startWorkflowRunWorker();
 });

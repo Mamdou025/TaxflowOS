@@ -1,18 +1,10 @@
 import type { EdgeChange, NodeChange } from "@xyflow/react";
 import { applyEdgeChanges, applyNodeChanges } from "@xyflow/react";
 import { nanoid } from "nanoid";
-import {
-  createCanvasEdgeFromWorkflowEdge,
-  createSplitWorkflowEdgeRecords,
-  createWorkflowBlockFromCatalog,
-  createWorkflowEdgeRecord,
-  createWorkflowNodeFromBlock,
-  getBlockCatalogItem,
-  getWorkflowEdgeDefaults,
-  updateWorkflowEdgeRecord,
-  type WorkflowBlock,
-  type WorkflowEdge as WorkflowSchemaEdge,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { createCanvasEdgeFromWorkflowEdge, createSplitWorkflowEdgeRecords, createWorkflowEdgeRecord, getWorkflowEdgeDefaults, updateWorkflowEdgeRecord } from "@/shared/workflow-engine/workflow/edges";
+import { createWorkflowBlockFromCatalog, createWorkflowNodeFromBlock } from "@/shared/workflow-engine/workflow/block-factory";
+import { getBlockCatalogItem } from "@/shared/workflow-engine/workflow/visuals";
+import { type WorkflowBlock, type WorkflowEdge as WorkflowSchemaEdge } from "@/shared/workflow-engine/workflow/contracts";
 import type {
   WorkflowEdge,
   WorkflowNode,
@@ -944,9 +936,14 @@ export function runWorkflowCommand(
       }
 
       const oldLabel = oldNode.data.label;
+      // Must match getUpdatedNodeData's `sourceLabelLocked` exactly — including the
+      // isSourceLockedByConfig check. Without it a DRAFT source's rename is applied
+      // to the node but treated here as "no label change", so the old label stays
+      // baked into every other block's templates.
       const newLabel =
         oldNode.data.block?.source?.treatedAsEvidence &&
         oldNode.data.block.source.labelLocked &&
+        isSourceLockedByConfig(oldNode.data.block, oldNode.data.config) &&
         command.data.label !== undefined
           ? oldNode.data.label
           : command.data.label;

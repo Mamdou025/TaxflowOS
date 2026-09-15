@@ -1,0 +1,284 @@
+{
+  "config": {
+    "argv": [
+      "C:\\nvm4w\\nodejs\\node.exe",
+      "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\node_modules\\.pnpm\\@playwright+test@1.62.0\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--config",
+      "playwright.catalog-audit.config.mjs",
+      "--tsconfig",
+      "e2e/tsconfig.json",
+      "workflow-catalog-release-gates.spec.ts"
+    ],
+    "configFile": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\playwright.catalog-audit.config.mjs",
+    "rootDir": "C:/Users/Mamad/Sinaxe/TaxflowOS/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/Users/Mamad/Sinaxe/TaxflowOS/test-results/catalog-execution",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "C:/Users/Mamad/Sinaxe/TaxflowOS/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "workflow-catalog-audit.spec.ts",
+          "workflow-catalog-deep-checks.spec.ts",
+          "workflow-catalog-release-gates.spec.ts"
+        ],
+        "timeout": 120000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "docs/workflow-catalog-evidence/test-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.62.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "workflow-catalog-release-gates.spec.ts",
+      "file": "workflow-catalog-release-gates.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "every catalog workflow must execute without an error after its document is supplied",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 49,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 62\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"Keyword Mapper needs Data rows input.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-attribute-ledgers\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"Keyword Mapper needs Keyword rules input.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-data-readiness\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-eifel\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No API response is saved. Fetch the source or explicitly enable example data.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-holiday-payroll\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"Keyword Mapper needs Keyword rules input.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-ownership-graph\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-part-xiii\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-platform-sequence\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-portfolio-ops\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"Keyword Mapper needs Data rows input.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-scope-service\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-surplus\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-t106\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-t1134\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-t2-suite\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"Keyword Mapper needs Data rows input.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-tax-position-summary\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-tax-provision\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 62\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"Keyword Mapper needs Data rows input.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-attribute-ledgers\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"Keyword Mapper needs Keyword rules input.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-data-readiness\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-eifel\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No API response is saved. Fetch the source or explicitly enable example data.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-holiday-payroll\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"Keyword Mapper needs Keyword rules input.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-ownership-graph\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-part-xiii\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-platform-sequence\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-portfolio-ops\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"Keyword Mapper needs Data rows input.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-scope-service\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-surplus\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-t106\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-t1134\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-t2-suite\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"Keyword Mapper needs Data rows input.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-tax-position-summary\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-tax-provision\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\e2e\\workflow-catalog-release-gates.spec.ts:11:140",
+                    "location": {
+                      "file": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\e2e\\workflow-catalog-release-gates.spec.ts",
+                      "column": 140,
+                      "line": 11
+                    },
+                    "snippet": "   9 |   const records = readdirSync(evidence).filter(name => /^ui-pf-.*\\.json$/.test(name)).map(read);\n  10 |   expect(records).toHaveLength(17);\n> 11 |   expect(records.filter(record => record.first.status === 'error').map(record => ({ id: record.id, firstError: record.first.errors[0] }))).toEqual([]);\n     |                                                                                                                                            ^\n  12 | });\n  13 |\n  14 | test('a runtime with execution errors must not claim completion', () => {"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\e2e\\workflow-catalog-release-gates.spec.ts",
+                        "column": 140,
+                        "line": 11
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 62\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"Keyword Mapper needs Data rows input.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-attribute-ledgers\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"Keyword Mapper needs Keyword rules input.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-data-readiness\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-eifel\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No API response is saved. Fetch the source or explicitly enable example data.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-holiday-payroll\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"Keyword Mapper needs Keyword rules input.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-ownership-graph\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-part-xiii\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-platform-sequence\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-portfolio-ops\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"Keyword Mapper needs Data rows input.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-scope-service\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-surplus\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-t106\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-t1134\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-t2-suite\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"Keyword Mapper needs Data rows input.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-tax-position-summary\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"firstError\": \"No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.\",\u001b[39m\n\u001b[31m+     \"id\": \"pf-tax-provision\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m\n\n   9 |   const records = readdirSync(evidence).filter(name => /^ui-pf-.*\\.json$/.test(name)).map(read);\n  10 |   expect(records).toHaveLength(17);\n> 11 |   expect(records.filter(record => record.first.status === 'error').map(record => ({ id: record.id, firstError: record.first.errors[0] }))).toEqual([]);\n     |                                                                                                                                            ^\n  12 | });\n  13 |\n  14 | test('a runtime with execution errors must not claim completion', () => {\n    at C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\e2e\\workflow-catalog-release-gates.spec.ts:11:140"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T03:07:06.259Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\test-results\\catalog-execution\\workflow-catalog-release-g-1bde9-er-its-document-is-supplied\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\e2e\\workflow-catalog-release-gates.spec.ts",
+                    "column": 140,
+                    "line": 11
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "fe9beace601ddc0ccab7-8a96c7a125f99222d7c4",
+          "file": "workflow-catalog-release-gates.spec.ts",
+          "line": 8,
+          "column": 5
+        },
+        {
+          "title": "a runtime with execution errors must not claim completion",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 39,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 42\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"HOLIDAY-PAYROLL complete. Statutory holiday liability = 0 CAD.\",\u001b[39m\n\u001b[31m+     \"id\": \"holiday-payroll\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"ROULEMENT complete. Gain différé (non reconnu) = 270,000 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"roulement\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"CAMPAIGN complete. Projected revenue = 525,000 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"campaign\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"T1134 complete. NET = 247,000 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"t1134\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"SURPLUS complete. NET = 172,900 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"surplus\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"T106 complete. NET = 123,500 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"t106\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"EIFEL complete. NET = 321,100 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"eifel\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"T2-SUITE complete. NET = 271,700 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"t2-suite\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"TAX-PROVISION complete. NET = 222,300 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"tax-provision\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"PART-XIII complete. NET = 74,100 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"part-xiii\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 42\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"HOLIDAY-PAYROLL complete. Statutory holiday liability = 0 CAD.\",\u001b[39m\n\u001b[31m+     \"id\": \"holiday-payroll\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"ROULEMENT complete. Gain différé (non reconnu) = 270,000 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"roulement\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"CAMPAIGN complete. Projected revenue = 525,000 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"campaign\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"T1134 complete. NET = 247,000 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"t1134\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"SURPLUS complete. NET = 172,900 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"surplus\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"T106 complete. NET = 123,500 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"t106\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"EIFEL complete. NET = 321,100 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"eifel\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"T2-SUITE complete. NET = 271,700 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"t2-suite\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"TAX-PROVISION complete. NET = 222,300 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"tax-provision\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"PART-XIII complete. NET = 74,100 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"part-xiii\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\e2e\\workflow-catalog-release-gates.spec.ts:15:169",
+                    "location": {
+                      "file": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\e2e\\workflow-catalog-release-gates.spec.ts",
+                      "column": 169,
+                      "line": 15
+                    },
+                    "snippet": "  13 |\n  14 | test('a runtime with execution errors must not claim completion', () => {\n> 15 |   expect(read('completion-claims.json').filter(record => record.coreStatus === 'error' && record.done).map(record => ({ id: record.id, claimed: record.summaryText }))).toEqual([]);\n     |                                                                                                                                                                         ^\n  16 | });\n  17 |\n  18 | test('the expense payroll export must include data rows', () => {"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\e2e\\workflow-catalog-release-gates.spec.ts",
+                        "column": 169,
+                        "line": 15
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  -  1\u001b[39m\n\u001b[31m+ Received  + 42\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"HOLIDAY-PAYROLL complete. Statutory holiday liability = 0 CAD.\",\u001b[39m\n\u001b[31m+     \"id\": \"holiday-payroll\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"ROULEMENT complete. Gain différé (non reconnu) = 270,000 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"roulement\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"CAMPAIGN complete. Projected revenue = 525,000 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"campaign\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"T1134 complete. NET = 247,000 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"t1134\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"SURPLUS complete. NET = 172,900 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"surplus\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"T106 complete. NET = 123,500 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"t106\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"EIFEL complete. NET = 321,100 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"eifel\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"T2-SUITE complete. NET = 271,700 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"t2-suite\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"TAX-PROVISION complete. NET = 222,300 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"tax-provision\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+   Object {\u001b[39m\n\u001b[31m+     \"claimed\": \"PART-XIII complete. NET = 74,100 USD.\",\u001b[39m\n\u001b[31m+     \"id\": \"part-xiii\",\u001b[39m\n\u001b[31m+   },\u001b[39m\n\u001b[31m+ ]\u001b[39m\n\n  13 |\n  14 | test('a runtime with execution errors must not claim completion', () => {\n> 15 |   expect(read('completion-claims.json').filter(record => record.coreStatus === 'error' && record.done).map(record => ({ id: record.id, claimed: record.summaryText }))).toEqual([]);\n     |                                                                                                                                                                         ^\n  16 | });\n  17 |\n  18 | test('the expense payroll export must include data rows', () => {\n    at C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\e2e\\workflow-catalog-release-gates.spec.ts:15:169"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T03:07:07.971Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\test-results\\catalog-execution\\workflow-catalog-release-g-4d16b-s-must-not-claim-completion\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\e2e\\workflow-catalog-release-gates.spec.ts",
+                    "column": 169,
+                    "line": 15
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "fe9beace601ddc0ccab7-61f96486c56699e8ee67",
+          "file": "workflow-catalog-release-gates.spec.ts",
+          "line": 14,
+          "column": 5
+        },
+        {
+          "title": "the expense payroll export must include data rows",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 33,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n    at C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\e2e\\workflow-catalog-release-gates.spec.ts:20:27",
+                    "location": {
+                      "file": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\e2e\\workflow-catalog-release-gates.spec.ts",
+                      "column": 27,
+                      "line": 20
+                    },
+                    "snippet": "  18 | test('the expense payroll export must include data rows', () => {\n  19 |   const output = read('arithmetic-and-expense-export.json').expenseOutputs.find(result => result.toolId === 'output.excel_export').output;\n> 20 |   expect(output.rowCount).toBeGreaterThan(0);\n     |                           ^\n  21 | });\n  22 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\e2e\\workflow-catalog-release-gates.spec.ts",
+                        "column": 27,
+                        "line": 20
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m0\u001b[39m\nReceived:   \u001b[31m0\u001b[39m\n\n  18 | test('the expense payroll export must include data rows', () => {\n  19 |   const output = read('arithmetic-and-expense-export.json').expenseOutputs.find(result => result.toolId === 'output.excel_export').output;\n> 20 |   expect(output.rowCount).toBeGreaterThan(0);\n     |                           ^\n  21 | });\n  22 |\n    at C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\e2e\\workflow-catalog-release-gates.spec.ts:20:27"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-10T03:07:09.802Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\test-results\\catalog-execution\\workflow-catalog-release-g-32af8-port-must-include-data-rows\\error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\e2e\\workflow-catalog-release-gates.spec.ts",
+                    "column": 27,
+                    "line": 20
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "fe9beace601ddc0ccab7-37856ae578037950c29a",
+          "file": "workflow-catalog-release-gates.spec.ts",
+          "line": 18,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-10T03:07:04.591Z",
+    "duration": 5382.227000000001,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}

@@ -1,202 +1,212 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
+  check,
   index,
   integer,
   jsonb,
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   vector,
-} from "drizzle-orm/pg-core";
-
-
+} from 'drizzle-orm/pg-core';
+import type { LocalToolRunnerResult } from '@workspace/workflow-contracts/execution-result';
+import type { WorkflowDefinition } from '@workspace/workflow-contracts/domain/workflow-types';
 
 import { customAlphabet } from 'nanoid';
 const generateId = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 21);
 export type IntegrationType = string;
-// Better Auth tables
-export const users = pgTable("users", {
-  id: text("id").primaryKey(),
-  name: text("name"),
-  email: text("email").unique(),
-  emailVerified: boolean("email_verified").notNull().default(false),
-  image: text("image"),
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
-  // Anonymous user tracking
-  isAnonymous: boolean("is_anonymous").default(false),
-});
+import { users, sessions } from './auth';
+import { workspaces } from './workspaces';
+export * from './auth';
+export * from './workspaces';
+export * from './agent-actions';
 
-export const sessions = pgTable("sessions", {
-  id: text("id").primaryKey(),
-  expiresAt: timestamp("expires_at").notNull(),
-  token: text("token").notNull().unique(),
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
-  ipAddress: text("ip_address"),
-  userAgent: text("user_agent"),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id),
-});
-
-export const accounts = pgTable("accounts", {
-  id: text("id").primaryKey(),
-  accountId: text("account_id").notNull(),
-  providerId: text("provider_id").notNull(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id),
-  accessToken: text("access_token"),
-  refreshToken: text("refresh_token"),
-  idToken: text("id_token"),
-  accessTokenExpiresAt: timestamp("access_token_expires_at"),
-  refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
-  scope: text("scope"),
-  password: text("password"),
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
-});
-
-export const verifications = pgTable("verifications", {
-  id: text("id").primaryKey(),
-  identifier: text("identifier").notNull(),
-  value: text("value").notNull(),
-  expiresAt: timestamp("expires_at").notNull(),
-  createdAt: timestamp("created_at"),
-  updatedAt: timestamp("updated_at"),
+// Durable personal workflow library. The recovery code is hashed, never stored.
+export const personalWorkflowLibraries = pgTable('personal_workflow_libraries', {
+  workspaceHash: text('workspace_hash').primaryKey(),
+  ownerId: text('owner_id').notNull(),
+  payload: text('payload').notNull(),
+  revision: integer('revision').notNull().default(1),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
 // Workflow visibility type
-export type WorkflowVisibility = "private" | "public";
+export type WorkflowVisibility = 'private' | 'public';
 
 // Workflows table with user association
-export const workflows = pgTable("workflows", {
-  id: text("id")
+export const workflows = pgTable('workflows', {
+  workspaceId: text('workspace_id').references(() => workspaces.id),
+
+  id: text('id')
     .primaryKey()
     .$defaultFn(() => generateId()),
-  name: text("name").notNull(),
-  description: text("description"),
-  userId: text("user_id")
+  name: text('name').notNull(),
+  description: text('description'),
+  userId: text('user_id')
     .notNull()
     .references(() => users.id),
   // biome-ignore lint/suspicious/noExplicitAny: JSONB type - structure validated at application level
-  nodes: jsonb("nodes").notNull().$type<any[]>(),
+  nodes: jsonb('nodes').notNull().$type<any[]>(),
   // biome-ignore lint/suspicious/noExplicitAny: JSONB type - structure validated at application level
-  edges: jsonb("edges").notNull().$type<any[]>(),
-  visibility: text("visibility")
-    .notNull()
-    .default("private")
-    .$type<WorkflowVisibility>(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  edges: jsonb('edges').notNull().$type<any[]>(),
+  visibility: text('visibility').notNull().default('private').$type<WorkflowVisibility>(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
 // Integrations table for storing user credentials
-export const integrations = pgTable("integrations", {
-  id: text("id")
+export const integrations = pgTable('integrations', {
+  workspaceId: text('workspace_id').references(() => workspaces.id),
+
+  id: text('id')
     .primaryKey()
     .$defaultFn(() => generateId()),
-  userId: text("user_id")
+  userId: text('user_id')
     .notNull()
     .references(() => users.id),
-  name: text("name").notNull(),
-  type: text("type").notNull().$type<IntegrationType>(),
+  name: text('name').notNull(),
+  type: text('type').notNull().$type<IntegrationType>(),
   // biome-ignore lint/suspicious/noExplicitAny: JSONB type - encrypted credentials stored as JSON
-  config: jsonb("config").notNull().$type<any>(),
+  config: jsonb('config').notNull().$type<any>(),
   // Whether this integration was created via OAuth (managed by app) vs manual entry
-  isManaged: boolean("is_managed").default(false),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  isManaged: boolean('is_managed').default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
 // Workflow executions table to track workflow runs
-export const workflowExecutions = pgTable("workflow_executions", {
-  id: text("id")
+export const workflowExecutions = pgTable('workflow_executions', {
+  workspaceId: text('workspace_id').references(() => workspaces.id),
+
+  id: text('id')
     .primaryKey()
     .$defaultFn(() => generateId()),
-  workflowId: text("workflow_id")
+  workflowId: text('workflow_id')
     .notNull()
     .references(() => workflows.id),
-  userId: text("user_id")
+  userId: text('user_id')
     .notNull()
     .references(() => users.id),
-  status: text("status")
+  status: text('status')
     .notNull()
-    .$type<"pending" | "running" | "success" | "error" | "cancelled">(),
+    .$type<'pending' | 'running' | 'success' | 'error' | 'cancelled'>(),
   // biome-ignore lint/suspicious/noExplicitAny: JSONB type - structure validated at application level
-  input: jsonb("input").$type<Record<string, any>>(),
+  input: jsonb('input').$type<Record<string, any>>(),
   // biome-ignore lint/suspicious/noExplicitAny: JSONB type - structure validated at application level
-  output: jsonb("output").$type<any>(),
-  error: text("error"),
-  startedAt: timestamp("started_at").notNull().defaultNow(),
-  completedAt: timestamp("completed_at"),
-  duration: text("duration"), // Duration in milliseconds
+  output: jsonb('output').$type<any>(),
+  error: text('error'),
+  startedAt: timestamp('started_at').notNull().defaultNow(),
+  completedAt: timestamp('completed_at'),
+  duration: text('duration'), // Duration in milliseconds
 });
 
+// Server-owned execution queue for immutable saved versions from workspace_libraries.
+// This intentionally does not reference the legacy workflows table: modern workflow
+// IDs use the portable custom:* contract and their exact definition is snapshotted here.
+export type WorkflowRunJobStatus = 'pending' | 'running' | 'success' | 'error' | 'cancelled';
+
+export const workflowRunJobs = pgTable(
+  'workflow_run_jobs',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => generateId()),
+    workspaceId: text('workspace_id')
+      .notNull()
+      .references(() => workspaces.id),
+    workflowId: text('workflow_id').notNull(),
+    workflowVersion: integer('workflow_version').notNull(),
+    definition: jsonb('definition').notNull().$type<WorkflowDefinition>(),
+    requestedBy: text('requested_by')
+      .notNull()
+      .references(() => users.id),
+    requestId: text('request_id').notNull(),
+    status: text('status').notNull().default('pending').$type<WorkflowRunJobStatus>(),
+    attempts: integer('attempts').notNull().default(0),
+    maxAttempts: integer('max_attempts').notNull().default(3),
+    runAfter: timestamp('run_after', { withTimezone: true }).notNull().defaultNow(),
+    claimedAt: timestamp('claimed_at', { withTimezone: true }),
+    cancelRequestedAt: timestamp('cancel_requested_at', { withTimezone: true }),
+    startedAt: timestamp('started_at', { withTimezone: true }),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    result: jsonb('result').$type<LocalToolRunnerResult>(),
+    error: text('error'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('workflow_run_jobs_request_idx').on(t.workspaceId, t.requestId),
+    index('workflow_run_jobs_claim_idx').on(t.status, t.runAfter),
+    index('workflow_run_jobs_workflow_idx').on(t.workspaceId, t.workflowId, t.createdAt),
+  ],
+);
+
 // Workflow execution logs to track individual node executions
-export const workflowExecutionLogs = pgTable("workflow_execution_logs", {
-  id: text("id")
+export const workflowExecutionLogs = pgTable('workflow_execution_logs', {
+  id: text('id')
     .primaryKey()
     .$defaultFn(() => generateId()),
-  executionId: text("execution_id")
+  executionId: text('execution_id')
     .notNull()
     .references(() => workflowExecutions.id),
-  nodeId: text("node_id").notNull(),
-  nodeName: text("node_name").notNull(),
-  nodeType: text("node_type").notNull(),
-  status: text("status")
-    .notNull()
-    .$type<"pending" | "running" | "success" | "error">(),
+  nodeId: text('node_id').notNull(),
+  nodeName: text('node_name').notNull(),
+  nodeType: text('node_type').notNull(),
+  status: text('status').notNull().$type<'pending' | 'running' | 'success' | 'error'>(),
   // biome-ignore lint/suspicious/noExplicitAny: JSONB type - structure validated at application level
-  input: jsonb("input").$type<any>(),
+  input: jsonb('input').$type<any>(),
   // biome-ignore lint/suspicious/noExplicitAny: JSONB type - structure validated at application level
-  output: jsonb("output").$type<any>(),
-  error: text("error"),
-  startedAt: timestamp("started_at").notNull().defaultNow(),
-  completedAt: timestamp("completed_at"),
-  duration: text("duration"), // Duration in milliseconds
-  timestamp: timestamp("timestamp").notNull().defaultNow(),
+  output: jsonb('output').$type<any>(),
+  error: text('error'),
+  startedAt: timestamp('started_at').notNull().defaultNow(),
+  completedAt: timestamp('completed_at'),
+  duration: text('duration'), // Duration in milliseconds
+  timestamp: timestamp('timestamp').notNull().defaultNow(),
 });
 
 // API Keys table for webhook authentication
-export const apiKeys = pgTable("api_keys", {
-  id: text("id")
+export const apiKeys = pgTable('api_keys', {
+  workspaceId: text('workspace_id').references(() => workspaces.id),
+
+  id: text('id')
     .primaryKey()
     .$defaultFn(() => generateId()),
-  userId: text("user_id")
+  userId: text('user_id')
     .notNull()
     .references(() => users.id),
-  name: text("name"), // Optional label for the API key
-  keyHash: text("key_hash").notNull(), // Store hashed version of the key
-  keyPrefix: text("key_prefix").notNull(), // Store first few chars for display (e.g., "wf_abc...")
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  lastUsedAt: timestamp("last_used_at"),
+  name: text('name'), // Optional label for the API key
+  keyHash: text('key_hash').notNull(), // Store hashed version of the key
+  keyPrefix: text('key_prefix').notNull(), // Store first few chars for display (e.g., "wf_abc...")
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  lastUsedAt: timestamp('last_used_at'),
 });
 
 // Assistant memory — durable facts/preferences the AI chat is told to remember.
 // Tenant boundary is user_id (enforced server-side). client_id / fiscal_year /
 // workflow_id are optional SCOPE filters (null = applies globally for the user).
-export type AssistantMemoryKind = "preference" | "fact" | "scope";
-export type AssistantMemorySource = "user" | "assistant";
+export type AssistantMemoryKind = 'preference' | 'fact' | 'scope';
+export type AssistantMemorySource = 'user' | 'assistant';
 
-export const assistantMemories = pgTable("assistant_memories", {
-  id: text("id")
+export const assistantMemories = pgTable('assistant_memories', {
+  workspaceId: text('workspace_id').references(() => workspaces.id),
+
+  id: text('id')
     .primaryKey()
     .$defaultFn(() => generateId()),
-  userId: text("user_id")
+  userId: text('user_id')
     .notNull()
     .references(() => users.id),
-  clientId: text("client_id"), // scope filter (null = global to the user)
-  fiscalYear: integer("fiscal_year"), // scope filter (null = any year)
-  workflowId: text("workflow_id"), // scope filter (null = any workflow)
-  kind: text("kind").notNull().default("fact").$type<AssistantMemoryKind>(),
-  subject: text("subject"), // short label, e.g. "FX rate", "reporting currency"
-  content: text("content").notNull(), // the remembered fact/preference
-  source: text("source").notNull().default("user").$type<AssistantMemorySource>(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  clientId: text('client_id'), // scope filter (null = global to the user)
+  fiscalYear: integer('fiscal_year'), // scope filter (null = any year)
+  workflowId: text('workflow_id'), // scope filter (null = any workflow)
+  kind: text('kind').notNull().default('fact').$type<AssistantMemoryKind>(),
+  subject: text('subject'), // short label, e.g. "FX rate", "reporting currency"
+  content: text('content').notNull(), // the remembered fact/preference
+  source: text('source').notNull().default('user').$type<AssistantMemorySource>(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -207,7 +217,7 @@ export const assistantMemories = pgTable("assistant_memories", {
 // client re-associates each tool call's render from the live useCopilotAction
 // registry, so only the serializable args need to be stored.
 // ─────────────────────────────────────────────────────────────────────────────
-export type ChatMessageRole = "user" | "assistant" | "tool" | "system";
+export type ChatMessageRole = 'user' | 'assistant' | 'tool' | 'system';
 
 /** One tool call within a message (generative-UI action, workflow run, etc.). */
 export type ChatToolCall = {
@@ -228,46 +238,50 @@ export type ChatMessageContent = {
 };
 
 export const chatThreads = pgTable(
-  "chat_threads",
+  'chat_threads',
   {
-    id: text("id")
+    workspaceId: text('workspace_id').references(() => workspaces.id),
+
+    id: text('id')
       .primaryKey()
       .$defaultFn(() => generateId()),
-    userId: text("user_id")
+    userId: text('user_id')
       .notNull()
       .references(() => users.id),
-    clientId: text("client_id"), // optional scope: the active client (null = unscoped)
-    title: text("title"),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
-    archivedAt: timestamp("archived_at"),
+    clientId: text('client_id'), // optional scope: the active client (null = unscoped)
+    title: text('title'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    archivedAt: timestamp('archived_at'),
   },
   (t) => [
     // List a user's threads, most-recently-updated first.
-    index("chat_threads_user_updated_idx").on(t.userId, t.updatedAt),
-  ]
+    index('chat_threads_user_updated_idx').on(t.userId, t.updatedAt),
+  ],
 );
 
 export const chatMessages = pgTable(
-  "chat_messages",
+  'chat_messages',
   {
+    workspaceId: text('workspace_id').references(() => workspaces.id),
+
     // The CopilotKit message id (stable across turns) — upsert key, not app-generated.
-    id: text("id").primaryKey(),
-    threadId: text("thread_id")
+    id: text('id').primaryKey(),
+    threadId: text('thread_id')
       .notNull()
-      .references(() => chatThreads.id, { onDelete: "cascade" }),
-    userId: text("user_id")
+      .references(() => chatThreads.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
       .notNull()
       .references(() => users.id), // denormalized tenancy filter
-    role: text("role").notNull().$type<ChatMessageRole>(),
-    seq: integer("seq").notNull(), // ordering within the thread
-    content: jsonb("content").notNull().$type<ChatMessageContent>(),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
+    role: text('role').notNull().$type<ChatMessageRole>(),
+    seq: integer('seq').notNull(), // ordering within the thread
+    content: jsonb('content').notNull().$type<ChatMessageContent>(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (t) => [
     // Fetch a thread's messages in order.
-    index("chat_messages_thread_seq_idx").on(t.threadId, t.seq),
-  ]
+    index('chat_messages_thread_seq_idx').on(t.threadId, t.seq),
+  ],
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -276,34 +290,57 @@ export const chatMessages = pgTable(
 // `storageBucket`; the raw bytes never live in Postgres. Chunks + embeddings for
 // retrieval live in `document_chunks` (added in the RAG phase).
 // ─────────────────────────────────────────────────────────────────────────────
-export type DocumentStatus = "uploading" | "processing" | "ready" | "failed";
+export type DocumentStatus = 'uploading' | 'processing' | 'ready' | 'failed';
+export type DocumentLifecycleStatus = 'active' | 'archived' | 'deleted' | 'purged';
 
 export const documents = pgTable(
-  "documents",
+  'documents',
   {
-    id: text("id")
+    workspaceId: text('workspace_id').references(() => workspaces.id),
+
+    id: text('id')
       .primaryKey()
       .$defaultFn(() => generateId()),
-    userId: text("user_id")
+    userId: text('user_id')
       .notNull()
       .references(() => users.id),
-    clientId: text("client_id"), // optional scope: the owning client/company
-    fileName: text("file_name").notNull(),
-    mimeType: text("mime_type"),
-    sizeBytes: integer("size_bytes"),
-    storageBucket: text("storage_bucket").notNull(),
-    storageKey: text("storage_key").notNull(),
-    status: text("status").notNull().default("uploading").$type<DocumentStatus>(),
-    extractedChars: integer("extracted_chars"),
-    pageCount: integer("page_count"),
-    error: text("error"),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    clientId: text('client_id'), // optional scope: the owning client/company
+    fileName: text('file_name').notNull(),
+    mimeType: text('mime_type'),
+    sizeBytes: integer('size_bytes'),
+    storageBucket: text('storage_bucket'),
+    storageKey: text('storage_key'),
+    status: text('status').notNull().default('uploading').$type<DocumentStatus>(),
+    sourceRevision: integer('source_revision').notNull().default(1),
+    contentHash: text('content_hash'),
+    lifecycleStatus: text('lifecycle_status')
+      .notNull()
+      .default('active')
+      .$type<DocumentLifecycleStatus>(),
+    archivedAt: timestamp('archived_at'),
+    deletedAt: timestamp('deleted_at'),
+    purgedAt: timestamp('purged_at'),
+    // Whether this document is in Sina's active "Library" (searchable context). The
+    // Documents page is the full repository; a doc is only retrieved by the RAG tool
+    // when in_library is true, so the big dormant reference files can sit in storage
+    // without polluting results until they're switched on. Defaults on for new uploads.
+    inLibrary: boolean('in_library').notNull().default(true),
+    extractedChars: integer('extracted_chars'),
+    pageCount: integer('page_count'),
+    error: text('error'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
   (t) => [
     // List a user's documents, newest first.
-    index("documents_user_created_idx").on(t.userId, t.createdAt),
-  ]
+    index('documents_user_created_idx').on(t.userId, t.createdAt),
+    index('documents_workspace_lifecycle_idx').on(t.workspaceId, t.lifecycleStatus, t.updatedAt),
+    check('documents_source_revision_positive', sql`${t.sourceRevision} > 0`),
+    check(
+      'documents_lifecycle_status',
+      sql`${t.lifecycleStatus} in ('active', 'archived', 'deleted', 'purged')`,
+    ),
+  ],
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -315,44 +352,86 @@ export const documents = pgTable(
 export const EMBEDDING_DIMENSIONS = 1536;
 
 export const documentChunks = pgTable(
-  "document_chunks",
+  'document_chunks',
   {
-    id: text("id")
+    workspaceId: text('workspace_id').references(() => workspaces.id),
+
+    id: text('id')
       .primaryKey()
       .$defaultFn(() => generateId()),
-    documentId: text("document_id")
+    documentId: text('document_id')
       .notNull()
-      .references(() => documents.id, { onDelete: "cascade" }),
-    userId: text("user_id")
+      .references(() => documents.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
       .notNull()
       .references(() => users.id), // denormalized tenancy filter
-    clientId: text("client_id"),
-    chunkIndex: integer("chunk_index").notNull(),
-    content: text("content").notNull(),
-    tokens: integer("tokens"),
-    embedding: vector("embedding", { dimensions: EMBEDDING_DIMENSIONS }).notNull(),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
+    clientId: text('client_id'),
+    chunkIndex: integer('chunk_index').notNull(),
+    content: text('content').notNull(),
+    tokens: integer('tokens'),
+    embedding: vector('embedding', { dimensions: EMBEDDING_DIMENSIONS }).notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (t) => [
-    index("document_chunks_document_idx").on(t.documentId),
+    index('document_chunks_document_idx').on(t.documentId),
     // Approximate-nearest-neighbour index for cosine similarity search.
-    index("document_chunks_embedding_idx").using(
-      "hnsw",
-      t.embedding.op("vector_cosine_ops")
-    ),
-  ]
+    index('document_chunks_embedding_idx').using('hnsw', t.embedding.op('vector_cosine_ops')),
+  ],
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Ingest jobs — the DURABLE work queue for RAG document processing. Replaces the
+// old fire-and-forget ingest, which was lost whenever the api-server restarted or
+// redeployed mid-processing (the document was then stuck in `processing` forever).
+// One row per queued/in-flight ingestion of a `documents` row. A worker claims the
+// next runnable job with `FOR UPDATE SKIP LOCKED`; on a transient failure (a
+// rate-limited embedding call, a network blip) it reschedules the job with
+// exponential backoff via `runAfter` instead of failing the document. A crash
+// mid-processing leaves the row `active` — the worker's reaper requeues rows whose
+// `claimedAt` has gone stale, so no document is silently abandoned. Cascade-deleted
+// with its parent document.
+// ─────────────────────────────────────────────────────────────────────────────
+export type IngestJobStatus = 'queued' | 'active' | 'done' | 'failed';
+
+export const ingestJobs = pgTable(
+  'ingest_jobs',
+  {
+    workspaceId: text('workspace_id').references(() => workspaces.id),
+
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => generateId()),
+    documentId: text('document_id')
+      .notNull()
+      .references(() => documents.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    status: text('status').notNull().default('queued').$type<IngestJobStatus>(),
+    attempts: integer('attempts').notNull().default(0),
+    maxAttempts: integer('max_attempts').notNull().default(5),
+    // When the job becomes eligible to run. Bumped forward for backoff on retry.
+    runAfter: timestamp('run_after').notNull().defaultNow(),
+    // Set when a worker claims the job; used by the reaper to detect stalls.
+    claimedAt: timestamp('claimed_at'),
+    lastError: text('last_error'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (t) => [
+    // The worker's claim query scans by (status, runAfter) for the next job.
+    index('ingest_jobs_claim_idx').on(t.status, t.runAfter),
+    index('ingest_jobs_document_idx').on(t.documentId),
+  ],
 );
 
 // Relations
-export const workflowExecutionsRelations = relations(
-  workflowExecutions,
-  ({ one }) => ({
-    workflow: one(workflows, {
-      fields: [workflowExecutions.workflowId],
-      references: [workflows.id],
-    }),
-  })
-);
+export const workflowExecutionsRelations = relations(workflowExecutions, ({ one }) => ({
+  workflow: one(workflows, {
+    fields: [workflowExecutions.workflowId],
+    references: [workflows.id],
+  }),
+}));
 
 export const documentsRelations = relations(documents, ({ many }) => ({
   chunks: many(documentChunks),
@@ -398,3 +477,7 @@ export type DocumentRow = typeof documents.$inferSelect;
 export type NewDocumentRow = typeof documents.$inferInsert;
 export type DocumentChunk = typeof documentChunks.$inferSelect;
 export type NewDocumentChunk = typeof documentChunks.$inferInsert;
+export type IngestJob = typeof ingestJobs.$inferSelect;
+export type NewIngestJob = typeof ingestJobs.$inferInsert;
+export type WorkflowRunJob = typeof workflowRunJobs.$inferSelect;
+export type NewWorkflowRunJob = typeof workflowRunJobs.$inferInsert;

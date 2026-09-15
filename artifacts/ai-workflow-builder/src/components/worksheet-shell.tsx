@@ -8,7 +8,7 @@
 
 import type { ComponentType, ReactNode } from 'react';
 import { usePathname, useRouter } from '@/lib/router';
-import { Calculator, FileText, Layers, BarChart3, LayoutDashboard, Building2, LayoutGrid } from 'lucide-react';
+import { Calculator, FileText, Layers, LayoutDashboard, Building2, LayoutGrid } from 'lucide-react';
 import { useAtomValue } from 'jotai';
 import { NeumorphicSidebar, NeuSidebarHeader, NeuSectionLabel, NeuRow } from '@/components/neumorphic-sidebar';
 import { selectedClientAtom } from '@/shared/stores/nav-store';
@@ -26,7 +26,6 @@ export const WORKSHEETS: WorksheetMeta[] = [
   { label: 'FAPI Workpaper', href: '/fapi', Icon: Calculator, description: 'Foreign accrual property income — classify trial-balance rows, apply FX, and compute net FAPI.' },
   { label: 'T1134 Workpaper', href: '/t1134', Icon: FileText, description: 'Information return for foreign affiliates — organize disclosures and supporting figures.' },
   { label: 'Surplus Continuity', href: '/surplus', Icon: Layers, description: 'Track exempt / taxable / hybrid surplus balances and their continuity across years.' },
-  { label: 'Executive Overview', href: '/bu-overview', Icon: BarChart3, description: 'Business-unit roll-up — the high-level view across the engagement.' },
 ];
 
 export function WorksheetShell({ children }: { children: ReactNode }) {

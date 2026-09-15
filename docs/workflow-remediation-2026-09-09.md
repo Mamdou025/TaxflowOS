@@ -1,0 +1,68 @@
+**Workflow remediation and verification — September 9, 2026**
+
+This follow-up addresses the eight priorities from the demo-readiness audit. The original audit remains a record of the earlier findings; the behavior described below supersedes its corresponding limitations. The full regression sweep passed 59 of 59 tests. Screenshot review then identified a misleading review status in the neutral workflow; its correction passed three focused checks, including preservation of explicitly required protected-result gates. The final production rehearsal is recorded below.
+
+| Priority | Implemented behavior | Verification |
+|---|---|---|
+| Missing calculation inputs | Missing and blank values stop the calculation. The error identifies the term and missing input. Calculation settings offer explicit named defaults; a real zero takes precedence over a default. Missing FX rates fail instead of becoming zero. HTTP sources require explicit opt-in before using sample rows. | Focused tests passed for absent/blank inputs, real zero, and explicit defaults. Missing and mismatched API response tests also passed. |
+| Calculation precision | Intermediate values are no longer rounded to cents by result-name heuristics. Each term can explicitly select 0–15 rounding digits; `round(value, digits)` is supported. Decimal half ties round away from zero. Display precision is separate from computed/exported values. | Focused tests verify 1 / 3 followed by multiplication by 3, explicit two-decimal rounding, invalid precision, and malformed formulas. Transfer between separate calculation blocks, positive/negative half ties, and scientific-notation constants also passed. |
+| Document extraction | PDF/Word text extraction runs on the API server. Text and CSV parsing use a browser worker. Extracted numeric candidates remain reviewable fields, not automatically assumed amounts. Users can edit records, add fields, select numeric types, choose decimal conventions, and map a field to the calculation amount. Extracted text documents require review confirmation. Invalid numeric entries prevent applying the preview. | A real text PDF was uploaded, reviewed, edited into two records of 120 and 80, aggregated, and doubled to produce 400 units in the neutral workflow. The no-text PDF detection and OCR review interaction also passed, including rejection of invalid numeric text. |
+| Input/output presentation | Final results appear first as a table of labels, values, and units. Users can choose displayed results and display precision. Errors and review messages are accessible beside the results. Block views emphasize records and totals, with technical details and complete JSON available separately. Large record tables have pagination. | The PDF UI rehearsal verifies the business-facing summary and units. Data-flow, selected-link transfer, and full-demo checks passed. An ordinary successful output no longer receives a review warning merely because its workflow has no protected result; explicitly required protected-result gates remain intact. |
+| Durable persistence | Personal drafts, versions, and complete run history are stored in PostgreSQL as a compressed library. A 256-bit recovery code isolates each workspace and lets another browser recover it. Only the code's hash is stored in the database. Revision checks reject conflicting writes. Local editing remains available during server failure, with visible save status, retry, export, and import-as-copy. | The real API and two-browser UI tests passed: recovery includes the saved result, imports create separate workflows, offline edits remain available, retry saves them, and conflicting writes leave the server copy unchanged. A separate one-megabyte payload roundtrip also passed. |
+| API freshness | The Run view states that it uses saved responses and shows fetched time and active overrides. Recorded runs retain their original source metadata. FX and HTTP sources reject saved responses when recorded request parameters no longer match the current request. Fetch/Send remains explicit and preserves the prior response on failure. | The real Bank of Canada fetch, simulated outage, and focused missing/stale-source tests passed. A failed fetch preserved the prior response. |
+| Loading performance | CSV/text parsing runs off the UI thread; extraction has progress and cancellation controls. PDF/Word workflow uploads use server extraction. The spreadsheet viewer no longer imports its parser at application startup. Spreadsheet, Word, archive, and workflow-compression libraries have separate chunks. Closed run panels remain lazy. | All three production rehearsals passed. The PDF path downloaded no spreadsheet, Word, or PDF parser chunks. Timings are recorded below. |
+| Neutral workflow | “Document Calculator” is available in the workflow list. It connects Document → Keyword rules → Aggregation groups → Calculate → Final result, with an advisory Start trigger. Its editable example matches “Item” and doubles the total. It contains no tax inputs, rates, or fiscal categories. | The neutral engine test produced 60 from records of 10 and 20. The reviewed PDF browser rehearsal produced 400 from 120 and 80. |
+
+**How to use the new controls.** In Compute, open “Calculation settings” for explicit defaults, or select a term to choose rounding and its unit. In document upload, review the editable table, choose numeric columns and the number to aggregate, then confirm extracted values. In Run, the final-results table appears above block details; “All details” and “JSON” retain access to the complete data.
+
+The workflow sidebar shows server-save status. Expand it for Retry, Export, Import, and the workspace recovery code. A recovery code grants access to that workspace, so keep it private. The app still has its existing anonymous API identity; this change isolates workflow libraries with recovery codes rather than claiming that account-based authentication has been completed. To recover after browser storage is cleared, open the same server and enter the saved code. Database backups are still needed to survive loss of the server/database itself.
+
+**Document/OCR boundaries.** Numeric extraction supplies candidates for review because an arbitrary number can be an amount, quantity, date, or identifier. The user chooses its meaning. A PDF without a readable text layer is explicitly identified as needing OCR. The OCR button uses the existing configured provider; if no provider is configured, manual entry remains available and the UI says so. OCR output must be reviewed, and unclear values are not supposed to be guessed. Automated coverage of the OCR interaction uses a controlled provider response; it does not certify recognition accuracy on arbitrary scans.
+
+**Precision boundaries.** Computation uses JavaScript numeric precision; removing forced cent-rounding does not introduce arbitrary-precision arithmetic. Explicit rounding is a deliberate calculation step and therefore affects downstream values. Display rounding does not. Existing fiscal workflows may consequently produce more precise intermediate values than before; choose explicit final rounding where the intended workflow requires it.
+
+The stricter missing-input policy exposed a FAPI dependency on an absent `capGains` total. Aggregation now distinguishes categories declared by the connected keyword rules from unknown fields: a declared category with no matching records gets a documented zero total and row count of zero. Unknown calculation inputs still fail. A matched record with a missing numeric value also fails aggregation rather than disappearing from the sum. This preserves the existing template without restoring the old missing-input fallback.
+
+**Persistence details.** The API provides `/api/workflow-library`, scoped by a recovery code sent in a header, and keeps it out of URLs and ordinary workflow listings. Updates include the last known revision; a stale revision receives HTTP 409. The table is declared in both schema catalogs, with initialization SQL at `docker/db-init/002-workflow-libraries.sql`; the API also initializes the table if absent. The library remains finite: the current endpoint accepts a compressed payload up to 20 million characters. Oversized or unavailable saves must show an error rather than imply that a server save succeeded. Backups import under new IDs, preserving existing workflows.
+
+**Verification notes.** During development, one cold-start check exceeded its 90-second timeout while a production build and type check were running on the same machine. The first checks reached no workflow assertion; this is recorded separately from functional failures. Performance measurements should use the production preview without concurrent build work. The build still reports large main/CopilotKit chunks and existing sourcemap warnings; splitting document parsers is a targeted improvement, not a claim that every application bundle is small.
+
+**Regression evidence.** The [full regression report](workflow-remediation-evidence/development-test-report.json) records **59 passed, zero failed, zero skipped, zero flaky**, in **13.4 minutes**. The [output-finality follow-up report](workflow-remediation-evidence/output-finality-test-report.json) records **3 passed** in **43.1 seconds** after the screenshot finding. Two of those checks repeat the neutral engine and PDF UI cases; the third specifically verifies that an ordinary output can finish while a workflow requiring a protected result remains gated. These are supplemental checks, not 62 distinct regression cases.
+
+| Full regression coverage | Passed |
+|---|---:|
+| Calculation and compression audit | 6 |
+| Constants and connected numeric fields | 2 |
+| Document formats, rejection, load, and live API | 12 |
+| Complete upload/rules/groups/calculation/output rehearsal | 1 |
+| Resizing and genuine error reporting | 3 |
+| Route smoke checks | 14 |
+| Build/Run roundtrip and upload persistence | 4 |
+| New calculation, extraction, API, aggregation, and server safeguards | 10 |
+| Standalone Run persistence | 2 |
+| Cross-browser recovery, backups, retry, conflicts, large payload | 2 |
+| Input/output, selected links, saved versions, advisory triggers | 3 |
+
+The final frontend and API type checks and both builds passed. The last output-status change was followed by another frontend type check and build. Tests ran in Chromium on the local Windows/Docker environment. Most regression workspaces use an isolated save-service fixture; persistence tests separately use the real API and PostgreSQL and delete only their test workspaces. The production preview is local; nothing was deployed.
+
+**Development observations.** The full FAPI rehearsal produced 50,000 and retained four distinct runs, with reruns taking 0.67 to 0.88 seconds. The 1,000-row run took 4.75 seconds and retained two runs after reload. The first PDF and Word previews in this sweep took 9.24 and 6.26 seconds. Those delays remain relevant for a cold demo; progress and cancellation make the wait visible, while subsequent extraction is faster. The live exchange-rate request took 10.61 seconds, including the external service.
+
+**Final production verification.** The [production report](workflow-remediation-evidence/production-test-report.json) records **3 passed, zero failed, zero skipped, zero flaky**, in **55.5 seconds**, after the final output-status correction and rebuild. All three captured browser-error lists were empty. The UI editing rehearsal created the rule, aggregation group, and formula through browser controls and reproduced 50,000 after reload. The large-data rehearsal retained two runs and verified a total of 1,000. The PDF rehearsal reviewed 120 and 80, doubled their sum, and verified both the summary and downstream output at 400 units with a successful final status.
+
+| Production measurement | Time |
+|---|---:|
+| Open FAPI Build | 3.64 s |
+| Run FAPI and open the final output | 0.90 s |
+| Complete FAPI editing/reload/rerun scenario | 22.5 s |
+| Run 1,000 rows and inspect numeric totals | 4.51 s |
+| Complete 1,000-row scenario with two persisted runs | 22.1 s |
+| Open Document Calculator Build | 2.83 s |
+| PDF preview with an already warm API | 0.32 s |
+| Save and run the reviewed PDF workflow | 0.61 s |
+| Complete PDF review-to-output scenario | 6.5 s |
+
+These are observations from one machine, not latency guarantees. The production PDF measurement uses an API warmed by prior extraction checks; it should not be substituted for the first-extraction delays above. Main JavaScript remains approximately 2.35 MB before compression, and CopilotKit approximately 3.04 MB; the main and assistant bundles remain candidates for further optimization. No spreadsheet, Word, or PDF parsing bundle was fetched during the production PDF workflow.
+
+The [neutral PDF result screenshot](workflow-remediation-evidence/neutral-pdf-final-result.png) was visually checked: all six steps show success, the result is clearly labeled, and the misleading review warning is gone. The [FAPI result screenshot](workflow-remediation-evidence/production-final-result.png) shows Final widget sales at 50,000. Its remaining review message comes from the deliberately unmatched consulting record, which must remain visible rather than silently discarded.
+
+The local Python preview initially printed a connection-aborted traceback when navigation canceled a response. Its response writer now tolerates only browser disconnect exceptions; upstream API statuses and failures remain visible. The final production pass completed without that traceback. No application error overlay or server error was hidden to obtain the passing result.

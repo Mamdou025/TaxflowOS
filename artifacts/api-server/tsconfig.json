@@ -14,6 +14,21 @@
     },
     {
       "path": "../../lib/api-zod"
+    },
+    {
+      "path": "../../lib/source-connectors"
+    },
+    {
+      "path": "../../lib/source-core"
+    },
+    {
+      "path": "../../lib/agent-runtime"
+    },
+    {
+      "path": "../../lib/workflow-contracts"
+    },
+    {
+      "path": "../../lib/workflow-core"
     }
   ]
 }

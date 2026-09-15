@@ -12,19 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
-import {
-  BLOCK_CATALOG,
-  EDGE_BINDING_STATUS_VALUES,
-  EDGE_STATUS_VALUES,
-  type EdgeBindingStatus,
-  type EdgeStatus,
-  getAllowedWorkflowRelationshipTypes,
-  type WorkflowEdge as SchemaWorkflowEdge,
-  WORKFLOW_RELATIONSHIP_TYPES,
-  type WorkflowBlock,
-  type WorkflowRelationshipType,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
-import { getToolForBlock } from "@/shared/workflow-engine/local-tool-registry";
+import { BLOCK_CATALOG } from "@/shared/workflow-engine/block-catalog-data";
+import { EDGE_BINDING_STATUS_VALUES, EDGE_STATUS_VALUES, type EdgeBindingStatus, type EdgeStatus, type WorkflowEdge as SchemaWorkflowEdge, WORKFLOW_RELATIONSHIP_TYPES, type WorkflowBlock, type WorkflowRelationshipType } from "@/shared/workflow-engine/workflow/contracts";
+import { getAllowedWorkflowRelationshipTypes } from "@/shared/workflow-engine/workflow/edges";
+import { getToolForBlock } from '@/shared/workflow-engine/tools/lookup';
+
 import type { WorkflowEdge } from "@/shared/workflow-engine/state/workflow-store";
 import { formatRelationshipType } from "./utils/edge-relationships";
 

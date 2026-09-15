@@ -1,0 +1,4 @@
+# Match the repository formatter and byte-for-byte schema generator on every OS.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf

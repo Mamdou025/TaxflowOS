@@ -1,3 +1,5 @@
+import { apiFetch } from '@/platform/auth/api-fetch';
+import { workspaceStorage } from '@/platform/auth/workspace-context';
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -30,8 +32,8 @@ import {
   type AgentLabUsage,
   type DocMode,
   type ToolCategory,
-} from '@/features/agent-lab/catalog';
-import { AUTO_MODEL_ID, EFFORT_LEVELS, planForModel, type EffortLevel } from '@/features/agent-lab/model-router';
+} from '@workspace/agent-runtime/catalog';
+import { AUTO_MODEL_ID, EFFORT_LEVELS, planForModel, type EffortLevel } from '@workspace/agent-runtime/model-router';
 import { selectContext } from '@/features/agent-lab/context-router';
 import {
   CURRENCIES,
@@ -111,7 +113,7 @@ async function extractFile(file: File): Promise<ExtractResult> {
 
   const fd = new FormData();
   fd.append('file', file);
-  const res = await fetch('/api/assistant/extract', { method: 'POST', body: fd });
+  const res = await apiFetch('/api/assistant/extract', { method: 'POST', body: fd });
   const data = (await res.json()) as { fileName?: string; chars?: number; truncated?: boolean; text?: string; error?: string };
   const text = data.text;
   if (data.error || !text) {
@@ -190,19 +192,19 @@ export default function AgentLabPage({ embedded = false }: { embedded?: boolean 
 
   // Load/save your notes locally so they survive a refresh.
   useEffect(() => {
-    const saved = localStorage.getItem('agent-lab-notes');
+    const saved = workspaceStorage.getItem('agent-lab-notes');
     if (saved) {
       setNotes(saved);
     }
   }, []);
   useEffect(() => {
-    localStorage.setItem('agent-lab-notes', notes);
+    workspaceStorage.setItem('agent-lab-notes', notes);
   }, [notes]);
 
   // Load saved sections once; then persist any change.
   useEffect(() => {
     try {
-      const raw = localStorage.getItem('agent-lab-sections');
+      const raw = workspaceStorage.getItem('agent-lab-sections');
       if (raw) {
         const parsed = JSON.parse(raw) as PromptSection[];
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -218,13 +220,13 @@ export default function AgentLabPage({ embedded = false }: { embedded?: boolean 
     if (!sectionsLoaded) {
       return;
     }
-    localStorage.setItem('agent-lab-sections', JSON.stringify(sections));
+    workspaceStorage.setItem('agent-lab-sections', JSON.stringify(sections));
   }, [sections, sectionsLoaded]);
 
   // Fiscal mode + context — load once, then persist any change.
   useEffect(() => {
     try {
-      const raw = localStorage.getItem('agent-lab-fiscal');
+      const raw = workspaceStorage.getItem('agent-lab-fiscal');
       if (raw) {
         const parsed = JSON.parse(raw) as { mode?: boolean; ctx?: Partial<FiscalContext> };
         if (typeof parsed.mode === 'boolean') {
@@ -243,13 +245,13 @@ export default function AgentLabPage({ embedded = false }: { embedded?: boolean 
     if (!fiscalLoaded) {
       return;
     }
-    localStorage.setItem('agent-lab-fiscal', JSON.stringify({ mode: fiscalMode, ctx: fiscal }));
+    workspaceStorage.setItem('agent-lab-fiscal', JSON.stringify({ mode: fiscalMode, ctx: fiscal }));
   }, [fiscalMode, fiscal, fiscalLoaded]);
 
   // The saved-prompt library — load once, then persist any change.
   useEffect(() => {
     try {
-      const raw = localStorage.getItem('agent-lab-saved-prompts');
+      const raw = workspaceStorage.getItem('agent-lab-saved-prompts');
       if (raw) {
         const parsed = JSON.parse(raw) as SavedPrompt[];
         if (Array.isArray(parsed)) {
@@ -265,7 +267,7 @@ export default function AgentLabPage({ embedded = false }: { embedded?: boolean 
     if (!savedLoaded) {
       return;
     }
-    localStorage.setItem('agent-lab-saved-prompts', JSON.stringify(savedPrompts));
+    workspaceStorage.setItem('agent-lab-saved-prompts', JSON.stringify(savedPrompts));
   }, [savedPrompts, savedLoaded]);
 
   const enabledTools = Object.keys(enabled).filter((k) => enabled[k]);
@@ -427,7 +429,7 @@ export default function AgentLabPage({ embedded = false }: { embedded?: boolean 
       const turnContext: TurnContext = { model: laneModel, system: sentSystem, enabledTools: sentTools, messageCount: nextMessages.length, documents: docNames, effort, scope, selection, fiscal: fiscalStamp };
       void (async () => {
         try {
-          const res = await fetch('/api/agent-lab', {
+          const res = await apiFetch('/api/agent-lab', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -929,7 +931,7 @@ function Provenance({ msg }: { msg: ChatMessage }) {
     msg.applied ??
     (() => {
       const p = planForModel(ctx.model, { effort: ctx.effort === 'auto' ? undefined : ctx.effort });
-      return { model: ctx.model, auto: false, provider: p.provider, effort: p.effort, cache: p.cacheSystem, temperatureSent: p.sendTemperature };
+      return { model: ctx.model, auto: false, provider: p.provider, effort: p.effort, cache: p.cachePrefix, temperatureSent: p.sendTemperature };
     })();
 
   return (

@@ -1,9 +1,10 @@
 import path from 'path';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 
-import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
+import { developmentRuntimeErrorOverlay } from './build/runtime-error-overlay';
 
 const rawPort = process.env.PORT;
 
@@ -27,12 +28,30 @@ if (!basePath) {
   );
 }
 
+const sentryRelease = process.env.VITE_RELEASE;
+const hasSentryUploadConfig = Boolean(
+  process.env.SENTRY_AUTH_TOKEN &&
+    process.env.SENTRY_ORG &&
+    process.env.SENTRY_PROJECT,
+);
+
+if (hasSentryUploadConfig && !sentryRelease) {
+  throw new Error(
+    'VITE_RELEASE is required when Sentry source-map uploads are configured.',
+  );
+}
+
 export default defineConfig({
   base: basePath,
+  define: {
+    // Keep the browser SDK release identical to the release used by the upload
+    // plugin. JSON.stringify also makes an absent value a valid `undefined`.
+    'import.meta.env.VITE_RELEASE': JSON.stringify(sentryRelease),
+  },
   plugins: [
     react(),
     tailwindcss(),
-    runtimeErrorOverlay(),
+    developmentRuntimeErrorOverlay(),
     ...(process.env.NODE_ENV !== 'production' &&
     process.env.REPL_ID !== undefined
       ? [
@@ -46,9 +65,34 @@ export default defineConfig({
           ),
         ]
       : []),
+    ...(process.env.NODE_ENV === 'production' && hasSentryUploadConfig
+      ? [
+          sentryVitePlugin({
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+            org: process.env.SENTRY_ORG,
+            project: process.env.SENTRY_PROJECT,
+            release: {
+              name: sentryRelease,
+            },
+            sourcemaps: {
+              assets: './dist/public/assets/**',
+              filesToDeleteAfterUpload: './dist/public/assets/**/*.map',
+            },
+            telemetry: false,
+          }),
+        ]
+      : []),
   ],
   resolve: {
     alias: {
+      // Eager development modules avoid route-loading waterfalls. Production
+      // uses lazy bundles, verified separately by test:production-ui.
+      '@/app-workspace': path.resolve(
+        import.meta.dirname,
+        process.env.NODE_ENV === 'production'
+          ? 'src/app-workspace.production.tsx'
+          : 'src/app-workspace.ts',
+      ),
       '@': path.resolve(import.meta.dirname, 'src'),
       '@assets': path.resolve(
         import.meta.dirname,
@@ -63,6 +107,9 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, 'dist/public'),
     emptyOutDir: true,
+    // "hidden" emits full maps for Sentry without adding sourceMappingURL
+    // comments that would advertise their public location to browsers.
+    sourcemap: hasSentryUploadConfig ? 'hidden' : false,
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -97,10 +144,7 @@ export default defineConfig({
           if (id.includes('@xyflow')) {
             return 'xyflow';
           }
-          // CopilotKit AI runtime
-          if (id.includes('@copilotkit')) {
-            return 'copilotkit';
-          }
+          // Let CopilotKit follow feature imports rather than one eager chunk.
           // Radix UI primitives — shared across many pages
           if (id.includes('@radix-ui') || id.includes('radix-ui')) {
             return 'radix';
@@ -111,15 +155,11 @@ export default defineConfig({
           // preloaded on every navigation).
           // Note: pnpm virtual store paths look like .pnpm/xlsx@x.y.z/node_modules/xlsx
           // so we match on the package name anywhere in the id.
-          if (
-            id.includes('/xlsx/') ||
-            id.includes('/mammoth/') ||
-            id.includes('/unpdf/') ||
-            id.includes('/pdfjs-dist/') ||
-            id.includes('/jszip/')
-          ) {
-            return 'doc-processing';
-          }
+          if (id.includes('/pako/')) return 'workflow-compression';
+          if (id.includes('/xlsx/')) return 'spreadsheets';
+          if (id.includes('/mammoth/')) return 'word-processing';
+          if (id.includes('/unpdf/') || id.includes('/pdfjs-dist/')) return 'pdf-processing';
+          if (id.includes('/jszip/')) return 'document-zip';
           // External service SDKs — very large, only needed when those integrations
           // are active. @linear/sdk alone is ~28 MB source; @slack/web-api is ~8 MB.
           if (id.includes('@linear/sdk') || id.includes('@slack/web-api') || id.includes('@slack/')) {
@@ -145,8 +185,38 @@ export default defineConfig({
     strictPort: true,
     host: '0.0.0.0',
     allowedHosts: true,
+    // File-watching over a Docker Desktop *Windows* bind mount: native inotify
+    // events don't propagate from the host into the Linux container, so Vite
+    // never sees source edits and keeps serving the module transforms it cached
+    // at boot (symptom: committed UI changes just don't appear until you manually
+    // `docker compose restart web`). Polling restores HMR there. Gated on an env
+    // var (set for the `web` service in docker-compose.yml) so native, event-based
+    // watching is kept everywhere it actually works (Replit, macOS, bare-metal).
+    watch: process.env.VITE_USE_POLLING
+      ? { usePolling: true, interval: 300 }
+      : undefined,
     fs: {
       strict: true,
+    },
+    // Dev-only bridge: forward the frontend's relative `/api/*` calls — including
+    // the CopilotKit runtime at `/api/copilotkit` (app-shell.tsx runtimeUrl) — to
+    // the Express api-server.
+    //
+    // Port resolution order:
+    //   1. API_BASE        — full override (e.g. http://api:8080 in docker-compose)
+    //   2. API_SERVER_PORT — just the port number (set alongside PORT for each artifact)
+    //   3. 8080            — matches the api-server artifact.toml localPort default
+    //
+    // In the Replit preview pane the platform's own path-router forwards /api
+    // directly to the api-server process before requests ever reach Vite, so the
+    // proxy is only exercised by local curl / e2e tests that hit Vite directly
+    // (localhost:PORT/api/...). The proxy must still point at the correct port so
+    // those callers don't hit ECONNREFUSED.
+    proxy: {
+      '/api': {
+        target: process.env.API_BASE ?? `http://localhost:${process.env.API_SERVER_PORT ?? 8080}`,
+        changeOrigin: true,
+      },
     },
   },
   preview: {

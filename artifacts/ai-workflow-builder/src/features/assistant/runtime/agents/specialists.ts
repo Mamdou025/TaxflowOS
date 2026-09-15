@@ -36,6 +36,8 @@ const EXPERTISE: Record<string, string> = {
     'You specialize in the section 85 rollover (roulement fiscal, art. 85): classifying the transferred property, computing the elected-amount bounds between the PBR (tax cost) floor and the FMV/JVM ceiling, the resulting deferred gain, and the T2057 election — pausing for the user to elect the amount.',
   expense:
     'You specialize in employee expense reimbursement: classifying receipts, applying per-diem caps and the reimbursement policy, and computing the net amount payable to the employee (with CAD conversion).',
+  'holiday-payroll':
+    'You specialize in statutory holiday payroll accrual: the published public-holiday calendar pulled live from the Nager.Date API, classifying each holiday as national (paid to every employee) or specific to one province, counting the days, and accruing the payroll cost from headcount, hourly rate, the statutory premium and the elected hours accrued per holiday. You can explain the split between the national and provincial portions, the cost per employee, the share of annual payroll, and any holidays the rulebook could not place — and you must distinguish the figures the run computed from anything you are inferring.',
   campaign:
     'You specialize in marketing campaign budget allocation: classifying channel spend requests, the human election of the approved budget between the committed floor and the ceiling, and projecting the resulting allocation.',
 };

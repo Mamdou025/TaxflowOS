@@ -1,3 +1,4 @@
+import { workspaceStorage } from '@/platform/auth/workspace-context';
 
 
 import { GripVertical } from "lucide-react";
@@ -57,7 +58,7 @@ function getInitialWorkspacePaneWidths(): WorkspacePaneWidths {
   try {
     return normalizeWorkspacePaneWidths(
       JSON.parse(
-        window.localStorage.getItem(WORKSPACE_PANE_WIDTHS_STORAGE_KEY) || "{}"
+        workspaceStorage.getItem(WORKSPACE_PANE_WIDTHS_STORAGE_KEY) || "{}"
       ) as Partial<WorkspacePaneWidths>
     );
   } catch {
@@ -117,7 +118,7 @@ export function useWorkspacePaneSizing() {
   const workspaceGridRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    window.localStorage.setItem(
+    workspaceStorage.setItem(
       WORKSPACE_PANE_WIDTHS_STORAGE_KEY,
       JSON.stringify(workspacePaneWidths)
     );

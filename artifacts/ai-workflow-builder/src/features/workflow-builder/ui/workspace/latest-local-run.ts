@@ -1,7 +1,4 @@
-import {
-  LOCAL_WORKFLOW_ID,
-  type LocalRunRecord,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { LOCAL_WORKFLOW_ID, type LocalRunRecord } from "@/shared/workflow-engine/workflow/contracts";
 import type { ExecutionLogEntry } from "@/shared/workflow-engine/state/workflow-store";
 
 function createRunRecordFromExecutionLogs({
@@ -70,26 +67,23 @@ export function getLatestLocalRunForBlock({
   storedRecords: LocalRunRecord[];
   workflowId?: string | null;
 }) {
+  storedRecords = storedRecords.filter(record => !workflowId || record.execution.workflowId === workflowId).sort((a, b) => new Date(b.execution.startedAt).getTime() - new Date(a.execution.startedAt).getTime());
   const inMemoryRecord = createRunRecordFromExecutionLogs({
     executionId: selectedExecutionId,
     executionLogs,
     workflowId,
   });
 
-  if (inMemoryRecord?.logs.some((log) => log.nodeId === blockId)) {
-    return inMemoryRecord;
-  }
-
   const selectedStoredRecord = selectedExecutionId
     ? storedRecords.find(
         (record) =>
-          record.execution.id === selectedExecutionId &&
-          record.logs.some((log) => log.nodeId === blockId)
+          record.execution.id === selectedExecutionId
       )
     : undefined;
 
   return (
     selectedStoredRecord ||
+    (inMemoryRecord?.logs.some(log => log.nodeId === blockId) ? inMemoryRecord : undefined) ||
     storedRecords.find((record) =>
       record.logs.some((log) => log.nodeId === blockId)
     )

@@ -1,3 +1,4 @@
+import { apiFetch } from '@/platform/auth/api-fetch';
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -20,7 +21,7 @@ const INK = '#18181b', MUTED = '#71717a', FAINT = '#a1a1aa', LINE = 'rgba(24,24,
 export type PickedSource = { fileName: string; rows: SourceRow[]; origin: 'drive' | 'gmail' };
 
 async function bytesToRows(url: string, fallbackName: string, origin: 'drive' | 'gmail'): Promise<PickedSource> {
-  const res = await fetch(url);
+  const res = await apiFetch(url);
   if (!res.ok) {
     const data = await res.json().catch(() => null);
     throw new Error(data?.error ?? `Download failed (${res.status}).`);
@@ -53,7 +54,7 @@ export function GoogleSourcePicker({ onPicked, onClose }: {
   // Connection status.
   useEffect(() => {
     let alive = true;
-    fetch('/api/google/status')
+    apiFetch('/api/google/status')
       .then((r) => r.json())
       .then((s: GoogleStatusResponse) => { if (alive) setStatus(s); })
       .catch(() => { if (alive) setStatus({ connected: false, missingScopes: [], requiredScopes: [], configured: false }); });
@@ -64,12 +65,12 @@ export function GoogleSourcePicker({ onPicked, onClose }: {
     setListing(true); setError(null);
     try {
       if (activeTab === 'drive') {
-        const res = await fetch(`/api/google/drive/files?q=${encodeURIComponent(q)}`);
+        const res = await apiFetch(`/api/google/drive/files?q=${encodeURIComponent(q)}`);
         const data = (await res.json()) as DriveFilesResponse & { error?: string };
         if (!res.ok) throw new Error(data.error ?? 'Could not list Drive files.');
         setDriveFiles(data.files ?? []);
       } else {
-        const res = await fetch(`/api/google/gmail/messages?q=${encodeURIComponent(q)}`);
+        const res = await apiFetch(`/api/google/gmail/messages?q=${encodeURIComponent(q)}`);
         const data = (await res.json()) as GmailMessagesResponse & { error?: string };
         if (!res.ok) throw new Error(data.error ?? 'Could not search Gmail.');
         setGmailMessages(data.messages ?? []);

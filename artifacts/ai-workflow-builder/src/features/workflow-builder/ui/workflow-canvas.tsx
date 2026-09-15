@@ -20,19 +20,15 @@ import { Controls } from "@/features/workflow-builder/ui/ai-elements/controls";
 import { AIPrompt } from "@/features/workflow-builder/ui/ai-elements/prompt";
 import { ConfigurationOverlay } from "@/features/workflow-builder/ui/overlays/configuration-overlay";
 import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
-import { WorkflowToolbar } from "@/features/workflow-builder/ui/workflow-toolbar";
+import { WorkflowToolbar } from "@/features/workflow-builder/toolbar/workflow-toolbar";
 import { sidebarCollapsedAtom } from "@/components/neumorphic-sidebar";
 import "@xyflow/react/dist/style.css";
 
 import { nanoid } from "nanoid";
 import { toast } from "sonner";
-import {
-  createDefaultWorkflowBlockCandidate,
-  createPendingWorkflowConnection,
-  getUnsupportedWorkflowRelationshipMessage,
-  getWorkflowEdgeDefaults,
-  isLocalWorkflowId,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { createDefaultWorkflowBlockCandidate } from "@/shared/workflow-engine/workflow/block-factory";
+import { createPendingWorkflowConnection, getUnsupportedWorkflowRelationshipMessage, getWorkflowEdgeDefaults } from "@/shared/workflow-engine/workflow/edges";
+import { isLocalWorkflowId } from "@/shared/workflow-engine/workflow/visuals";
 import {
   addNodeAtom,
   connectBlocksAtom,
@@ -52,6 +48,7 @@ import {
   showMinimapAtom,
   triggerFitViewAtom,
   focusNodeIdAtom,
+  openBlockConfigIdAtom,
   updateNodeDataAtom,
   type WorkflowNode,
 } from "@/shared/workflow-engine/state/workflow-store";
@@ -125,6 +122,7 @@ export function WorkflowCanvas() {
   const updateNodeData = useSetAtom(updateNodeDataAtom);
   const [triggerFitView, setTriggerFitView] = useAtom(triggerFitViewAtom);
   const [focusNodeId, setFocusNodeId] = useAtom(focusNodeIdAtom);
+  const [openBlockConfigId, setOpenBlockConfigId] = useAtom(openBlockConfigIdAtom);
   const { open: openOverlay } = useOverlay();
   const { screenToFlowPosition, fitView, getViewport, setViewport } =
     useReactFlow();
@@ -167,6 +165,33 @@ export function WorkflowCanvas() {
     }, 260);
     return () => window.clearTimeout(t);
   }, [focusNodeId, nodes, fitView, setFocusNodeId]);
+
+  // Open a specific block's configuration (chat/worksheet "open the full block in
+  // the builder"). Does exactly what clicking the node does — select it, pick its
+  // family's default inspector tab, open the workspace overlay — so the deep-link
+  // ends on the block's real setup rather than a canvas to hunt through.
+  useEffect(() => {
+    if (!openBlockConfigId) return;
+    const node = nodes.find((n) => n.id === openBlockConfigId) as WorkflowNode | undefined;
+    if (!node) return; // wait until the node exists
+    // Behind the fitView above, so the block is already centred when it opens.
+    const t = window.setTimeout(() => {
+      setSelectedNode(node.id);
+      setSelectedEdge(null);
+      setActiveTab(getDefaultInspectorTabForFamily(node.data.block?.family));
+      openOverlay(ConfigurationOverlay, {}, { size: "wide" });
+      setOpenBlockConfigId(null);
+    }, 700);
+    return () => window.clearTimeout(t);
+  }, [
+    openBlockConfigId,
+    nodes,
+    openOverlay,
+    setActiveTab,
+    setOpenBlockConfigId,
+    setSelectedEdge,
+    setSelectedNode,
+  ]);
 
   // Pre-shift viewport when transitioning from homepage (before sidebar animates)
   const hasPreShiftedRef = useRef(false);
@@ -215,7 +240,7 @@ export function WorkflowCanvas() {
 
     // Use fitView after a brief delay to ensure React Flow and nodes are ready
     setTimeout(() => {
-      fitView({ maxZoom: 1, minZoom: 0.5, padding: 0.2, duration: 0 });
+      fitView({ maxZoom: 1, minZoom: 0.1, padding: 0.2, duration: 0 });
       fittedViewForWorkflowRef.current = currentWorkflowId;
       viewportInitialized.current = true;
       // Show canvas immediately so width animation can be seen
@@ -240,7 +265,7 @@ export function WorkflowCanvas() {
       hadRealNodesRef.current = true;
       // Fit view to center the new node
       setTimeout(() => {
-        fitView({ maxZoom: 1, minZoom: 0.5, padding: 0.2, duration: 0 });
+        fitView({ maxZoom: 1, minZoom: 0.1, padding: 0.2, duration: 0 });
         viewportInitialized.current = true;
         setIsCanvasReady(true);
       }, 0);

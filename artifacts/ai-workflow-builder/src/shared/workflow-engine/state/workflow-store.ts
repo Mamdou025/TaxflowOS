@@ -9,16 +9,10 @@ import {
   type WorkflowCommandState,
 } from "@/shared/workflow-engine/state/workflow-commands";
 import { api } from "@/platform/api-client";
-import type {
-  WorkflowBlock,
-  WorkflowEvent,
-  WorkflowEdge as WorkflowSchemaEdge,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
-import {
-  isLocalWorkflowId,
-  LOCAL_WORKFLOW_ID,
-  saveLocalWorkflowSnapshot,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { type WorkflowBlock, type WorkflowEvent, type WorkflowEdge as WorkflowSchemaEdge } from "@/shared/workflow-engine/workflow/contracts";
+import { isLocalWorkflowId } from "@/shared/workflow-engine/workflow/visuals";
+import { LOCAL_WORKFLOW_ID } from "@/shared/workflow-engine/workflow/contracts";
+import { saveLocalWorkflowSnapshot } from "@/shared/workflow-engine/workflow/storage";
 
 export type WorkflowNodeType = "trigger" | "action" | "add";
 
@@ -101,6 +95,11 @@ export const triggerFitViewAtom = atom<boolean>(false);
 export const builderFocusTargetAtom = atom<{ workflowId: string; blockId: string } | null>(null);
 /** When set, the canvas scrolls to + centers on this node id, then clears. */
 export const focusNodeIdAtom = atom<string | null>(null);
+/** When set, the canvas opens this block's configuration overlay (the same view a
+ *  click on the node gives), then clears. Used by the chat/worksheet "open the full
+ *  block in the builder" deep-link, so it lands ON the block's real setup instead of
+ *  leaving the user to find and click the node themselves. */
+export const openBlockConfigIdAtom = atom<string | null>(null);
 
 // Tracks nodes that are pending integration auto-select check
 // Don't show "missing integration" warning for these nodes
