@@ -1,11 +1,11 @@
 {
-  "fetchMs": 5733,
+  "fetchMs": 385,
   "httpStatus": 200,
   "ok": true,
   "mode": "rows",
   "responseMeta": {
-    "durationMs": 56,
-    "fetchedAt": "2026-09-10T03:05:24.083Z",
+    "durationMs": 73,
+    "fetchedAt": "2026-09-15T22:06:51.338Z",
     "method": "GET",
     "status": 200,
     "totalBytes": 5821,

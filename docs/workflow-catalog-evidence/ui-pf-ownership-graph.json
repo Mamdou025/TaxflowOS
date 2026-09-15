@@ -2,16 +2,16 @@
   "id": "pf-ownership-graph",
   "inputKind": "generic upload probe; not domain-complete input",
   "inputRows": 2,
-  "openMs": 9385,
-  "runMs": 332,
-  "totalMs": 21159,
+  "openMs": 3109,
+  "runMs": 129,
+  "totalMs": 7261,
   "browserErrors": [],
   "first": {
-    "id": "custom:0e27a8a7-0dc3-47f6-8c6b-9b1c36a27017",
+    "id": "custom:84dd5645-ebe6-4bf6-b2f4-740080785fa0",
     "name": "Foreign Affiliate Ownership & Entity Graph — My workflow",
     "version": 1,
     "runCount": 1,
-    "runId": "local-tool-workflow-1789009112144-6nmgx1",
+    "runId": "local-tool-workflow-1789509920098-5xqbzk",
     "status": "error",
     "errors": [
       "Keyword Mapper needs Keyword rules input.",
@@ -365,11 +365,11 @@
     ]
   },
   "second": {
-    "id": "custom:0e27a8a7-0dc3-47f6-8c6b-9b1c36a27017",
+    "id": "custom:84dd5645-ebe6-4bf6-b2f4-740080785fa0",
     "name": "Foreign Affiliate Ownership & Entity Graph — My workflow",
     "version": 1,
     "runCount": 2,
-    "runId": "local-tool-workflow-1789009121266-vg1yuh",
+    "runId": "local-tool-workflow-1789509923667-xluchy",
     "status": "error",
     "errors": [
       "Keyword Mapper needs Keyword rules input.",

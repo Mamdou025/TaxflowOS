@@ -2,16 +2,16 @@
   "id": "pf-eifel",
   "inputKind": "bundled sample records",
   "inputRows": 6,
-  "openMs": 6741,
-  "runMs": 416,
-  "totalMs": 15222,
+  "openMs": 3367,
+  "runMs": 136,
+  "totalMs": 7595,
   "browserErrors": [],
   "first": {
-    "id": "custom:362e3082-7d57-4256-85b2-3003614915a4",
+    "id": "custom:9dc248df-2f7a-4e84-8e8f-5dca3d7c376c",
     "name": "EIFEL — My workflow",
     "version": 1,
     "runCount": 1,
-    "runId": "local-tool-workflow-1789009262974-8n2jd6",
+    "runId": "local-tool-workflow-1789509974246-ol3qz7",
     "status": "error",
     "errors": [
       "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
@@ -181,11 +181,11 @@
     ]
   },
   "second": {
-    "id": "custom:362e3082-7d57-4256-85b2-3003614915a4",
+    "id": "custom:9dc248df-2f7a-4e84-8e8f-5dca3d7c376c",
     "name": "EIFEL — My workflow",
     "version": 1,
     "runCount": 2,
-    "runId": "local-tool-workflow-1789009270383-kdsorv",
+    "runId": "local-tool-workflow-1789509977781-wsl2rc",
     "status": "error",
     "errors": [
       "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",

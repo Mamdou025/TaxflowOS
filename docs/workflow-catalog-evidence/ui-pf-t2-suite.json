@@ -2,16 +2,16 @@
   "id": "pf-t2-suite",
   "inputKind": "bundled sample records",
   "inputRows": 6,
-  "openMs": 7412,
-  "runMs": 292,
-  "totalMs": 17090,
+  "openMs": 3269,
+  "runMs": 152,
+  "totalMs": 7255,
   "browserErrors": [],
   "first": {
-    "id": "custom:81d300c6-e0d0-4e2b-b257-25af992254b2",
+    "id": "custom:671841a7-88d6-49e5-a519-c15fe627fce2",
     "name": "T2 Corporate Income Tax Compliance Suite — My workflow",
     "version": 1,
     "runCount": 1,
-    "runId": "local-tool-workflow-1789009279649-gye4ll",
+    "runId": "local-tool-workflow-1789509981881-pjag4w",
     "status": "error",
     "errors": [
       "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
@@ -181,11 +181,11 @@
     ]
   },
   "second": {
-    "id": "custom:81d300c6-e0d0-4e2b-b257-25af992254b2",
+    "id": "custom:671841a7-88d6-49e5-a519-c15fe627fce2",
     "name": "T2 Corporate Income Tax Compliance Suite — My workflow",
     "version": 1,
     "runCount": 2,
-    "runId": "local-tool-workflow-1789009287732-oil24e",
+    "runId": "local-tool-workflow-1789509985279-4fmtju",
     "status": "error",
     "errors": [
       "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",

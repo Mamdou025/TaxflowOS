@@ -2,16 +2,16 @@
   "id": "pf-t1134",
   "inputKind": "bundled sample records",
   "inputRows": 6,
-  "openMs": 9158,
-  "runMs": 469,
-  "totalMs": 20011,
+  "openMs": 3306,
+  "runMs": 145,
+  "totalMs": 7400,
   "browserErrors": [],
   "first": {
-    "id": "custom:eab05d33-d248-4cb1-aef4-1e18ad6cb090",
+    "id": "custom:f70b2491-fb3b-43af-875d-fe2dcd48473b",
     "name": "T1134 Foreign Affiliate Reporting — My workflow",
     "version": 1,
     "runCount": 1,
-    "runId": "local-tool-workflow-1789009176162-becr9y",
+    "runId": "local-tool-workflow-1789509943146-i6sgt5",
     "status": "error",
     "errors": [
       "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
@@ -181,11 +181,11 @@
     ]
   },
   "second": {
-    "id": "custom:eab05d33-d248-4cb1-aef4-1e18ad6cb090",
+    "id": "custom:f70b2491-fb3b-43af-875d-fe2dcd48473b",
     "name": "T1134 Foreign Affiliate Reporting — My workflow",
     "version": 1,
     "runCount": 2,
-    "runId": "local-tool-workflow-1789009184554-a0i5ty",
+    "runId": "local-tool-workflow-1789509946580-lp5h2i",
     "status": "error",
     "errors": [
       "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
