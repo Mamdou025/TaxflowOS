@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
-import type { WorkflowBlock } from "@/shared/workflow-engine/local-fiscal-workflow";
+import { type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
 import { AggregationRulesOverview } from "./aggregation-rules-overview";
 
 type SplitRuleEditorProps = {

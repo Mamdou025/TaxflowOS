@@ -1,37 +1,32 @@
-# ─────────────────────────────────────────────────────────────────────────────
-# Local development stack for TaxflowOS (the WHOLE app).
-#
-# Purpose: give your Windows laptop the SAME Linux environment Replit runs, so
-# the Linux-only binaries this repo pins in pnpm-workspace.yaml (esbuild,
-# rollup, lightningcss, tailwind-oxide) work WITHOUT any code changes.
-#
-# Services:
-#   db   — Postgres 16 + pgvector (matches Replit's postgresql-16 with the vector extension)
-#   deps — installs all workspace dependencies ONCE into a shared volume, then exits
-#   api  — the Express backend  (artifacts/api-server)
-#   web  — the frontend UI       (artifacts/ai-workflow-builder)
-#
-# Everyday commands (run from this folder):
-#   docker compose up                 # start the WHOLE app (db + api + web)
-#   docker compose up -d              # ...in the background
-#   docker compose logs -f web api    # watch the frontend + backend logs
-#   docker compose restart api web    # pick up code changes (dev scripts have no watcher)
-#   docker compose down               # stop everything (your DB data is kept)
-#   docker compose down -v            # stop AND wipe DB + installed deps (fresh start)
-#
-# One-time after the first `up`, create the database tables:
-#   docker compose exec api pnpm --filter @workspace/db run push
-#
-# Open in your browser:
-#   Web UI:   http://localhost:5173
-#   API:      http://localhost:5050/api/healthz   (5050 on host; you have another container on 5000)
-#   Postgres: localhost:5433   (user: postgres / password: postgres / db: taxflowos)
-#             (5433 on the host to avoid clashing with a Postgres already on 5432)
-# ─────────────────────────────────────────────────────────────────────────────
+# Development only. See docs/DEVELOPMENT.md for first-run setup and verification.
+# The dependencies, API and web containers share the exact same Node/pnpm image.
+x-node: &node
+  image: taxflowos-dev:node24.21.0-pnpm10.33.2
+  build:
+    context: .
+    dockerfile: docker/development.Dockerfile
+  working_dir: /app
+  volumes:
+    - .:/app
+    - node_modules:/app/node_modules
+    - ai_workflow_builder_node_modules:/app/artifacts/ai-workflow-builder/node_modules
+    - api_server_node_modules:/app/artifacts/api-server/node_modules
+    - inscope_pitch_node_modules:/app/artifacts/inscope-pitch/node_modules
+    - mockup_sandbox_node_modules:/app/artifacts/mockup-sandbox/node_modules
+    - agent_runtime_node_modules:/app/lib/agent-runtime/node_modules
+    - api_client_react_node_modules:/app/lib/api-client-react/node_modules
+    - api_spec_node_modules:/app/lib/api-spec/node_modules
+    - api_zod_node_modules:/app/lib/api-zod/node_modules
+    - db_node_modules:/app/lib/db/node_modules
+    - source_connectors_node_modules:/app/lib/source-connectors/node_modules
+    - source_core_node_modules:/app/lib/source-core/node_modules
+    - workflow_contracts_node_modules:/app/lib/workflow-contracts/node_modules
+    - workflow_core_node_modules:/app/lib/workflow-core/node_modules
+    - workflow_executors_node_modules:/app/lib/workflow-executors/node_modules
+    - scripts_node_modules:/app/scripts/node_modules
+    - pnpm_store:/pnpm/store
 
 services:
-  # Postgres 16 + pgvector — matches Replit's `postgresql-16` module, and adds
-  # the `vector` extension the app's schema needs (RAG / searchCompanyDocuments).
   db:
     image: pgvector/pgvector:pg16
     environment:
@@ -39,75 +34,95 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: taxflowos
     ports:
-      - "5433:5432"                  # host 5433 -> container 5432 (GUI connects to localhost:5433)
+      - '${TAXFLOW_DB_PORT:-5433}:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./docker/db-init:/docker-entrypoint-initdb.d:ro   # auto-runs 001-extensions.sql on fresh init
-    healthcheck:                     # others wait until Postgres is actually ready
-      test: ["CMD-SHELL", "pg_isready -U postgres -d taxflowos"]
+      - ./docker/db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d taxflowos']
       interval: 5s
       timeout: 5s
       retries: 10
 
-  # One-shot: install the whole workspace's deps into the shared node_modules
-  # volume, then exit. api + web wait for this so they never install twice or
-  # race each other on the same volume.
   deps:
-    image: node:24-bookworm-slim
-    working_dir: /app
-    command: sh -c "npm install -g pnpm@10 && pnpm install"
-    volumes:
-      - .:/app
-      - node_modules:/app/node_modules
+    <<: *node
+    command: pnpm install --frozen-lockfile --store-dir /pnpm/store
 
-  # API server — Node 24 on Debian (glibc) to match Replit's nodejs-24.
-  api:
-    # IMPORTANT: bookworm (Debian/glibc), NOT alpine. This repo excludes musl
-    # binaries in pnpm-workspace.yaml, so it needs a glibc Linux like Replit.
-    image: node:24-bookworm-slim
-    working_dir: /app
-    command: sh -c "npm install -g pnpm@10 && pnpm --filter @workspace/api-server run dev"
+  migrate:
+    <<: *node
+    command: pnpm --filter @workspace/db run migrate
     environment:
-      NODE_ENV: development
-      PORT: "5000"                   # the server throws if PORT is unset
       DATABASE_URL: postgres://postgres:postgres@db:5432/taxflowos
-    env_file:
-      - .env.local                   # brings in OPENAI_API_KEY etc. (values above win)
-    ports:
-      - "5050:5000"                  # host 5050 -> container 5000 (open http://localhost:5050)
-    volumes:
-      - .:/app                       # your source code, live from the host
-      - node_modules:/app/node_modules  # Linux deps live HERE, isolated from your Windows node_modules
     depends_on:
       db:
         condition: service_healthy
       deps:
         condition: service_completed_successfully
 
-  # Frontend UI — Vite dev server.
-  web:
-    image: node:24-bookworm-slim
-    working_dir: /app
-    command: sh -c "npm install -g pnpm@10 && pnpm --filter @workspace/ai-workflow-builder run dev"
+  api:
+    <<: *node
+    command: pnpm --filter @workspace/api-server run dev
     environment:
       NODE_ENV: development
-      PORT: "5173"                   # the frontend also throws if PORT is unset
-      BASE_PATH: /
-      API_BASE: http://api:5000      # where server-side code reaches the backend (container network)
-      VITE_USE_POLLING: "1"          # Windows bind mounts drop inotify events → poll so HMR sees host edits (no more manual restarts)
+      PORT: '5000'
+      DATABASE_URL: postgres://postgres:postgres@db:5432/taxflowos
     env_file:
-      - .env.local
+      - path: .env.local
+        required: false
     ports:
-      - "5173:5173"                  # open http://localhost:5173
-    volumes:
-      - .:/app
-      - node_modules:/app/node_modules
+      - '${TAXFLOW_API_PORT:-5050}:5000'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:5000/api/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 30s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    <<: *node
+    command: pnpm --filter @workspace/ai-workflow-builder run dev
+    environment:
+      NODE_ENV: development
+      PORT: '5173'
+      BASE_PATH: /
+      API_BASE: http://api:5000
+      VITE_USE_POLLING: '1'
+    env_file:
+      - path: .env.local
+        required: false
+    ports:
+      - '${TAXFLOW_WEB_PORT:-5173}:5173'
     depends_on:
       deps:
         condition: service_completed_successfully
       api:
-        condition: service_started
+        condition: service_healthy
 
 volumes:
-  pgdata:            # your database data — survives `docker compose down`
-  node_modules:      # the container's Linux-installed dependencies
+  pgdata:
+  node_modules:
+  ai_workflow_builder_node_modules:
+  api_server_node_modules:
+  inscope_pitch_node_modules:
+  mockup_sandbox_node_modules:
+  agent_runtime_node_modules:
+  api_client_react_node_modules:
+  api_spec_node_modules:
+  api_zod_node_modules:
+  db_node_modules:
+  source_connectors_node_modules:
+  source_core_node_modules:
+  workflow_contracts_node_modules:
+  workflow_core_node_modules:
+  workflow_executors_node_modules:
+  scripts_node_modules:
+  pnpm_store:

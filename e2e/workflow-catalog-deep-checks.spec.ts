@@ -21,14 +21,19 @@ test('compare runtime completion claims with underlying execution errors', async
 test('builder examples execute with an explicitly supplied matching document', async ({ page }) => {
   await page.goto('/');
   const findings = await page.evaluate(async () => {
-    const local = await import('/src/shared/workflow-engine/local-fiscal-workflow.ts');
+    const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/workflow/canvas.ts');
+    const { createWorkingSourceRulesDemoWorkflow } = await import('/src/shared/workflow-engine/workflow/templates/working-source.ts');
+    const { createFapiSampleWorkflow } = await import('/src/shared/workflow-engine/workflow/templates/fapi.ts');
     const { FAPI_CONFIG } = await import('/src/shared/workflow-engine/runtime/workflow-runs/fapi.ts');
     const { runLocalWorkflowTools } = await import('/src/shared/workflow-engine/local-tool-runner.ts');
-    return ['createWorkingSourceRulesDemoWorkflow', 'createFapiSampleWorkflow'].map(name => {
-      const definition = local[name]();
+    return [
+      { name: 'createWorkingSourceRulesDemoWorkflow', create: createWorkingSourceRulesDemoWorkflow },
+      { name: 'createFapiSampleWorkflow', create: createFapiSampleWorkflow },
+    ].map(({ name, create }) => {
+      const definition = create();
       const source = definition.blocks.find(block => block.catalogId === 'source:excel-workbook');
       if (source) source.config = { ...source.config, rows: FAPI_CONFIG.sampleRows, requireUpload: false, selectedRowsCount: FAPI_CONFIG.sampleRows.length, sourceStatus: 'ready' };
-      const run = runLocalWorkflowTools({ ...local.workflowDefinitionToCanvas(definition), workflowName: definition.name }).result;
+      const run = runLocalWorkflowTools({ ...workflowDefinitionToCanvas(definition), workflowName: definition.name }).result;
       return { name, sourceId: source?.id, rows: FAPI_CONFIG.sampleRows.length, status: run.status, errors: run.errors, warnings: run.warnings, results: run.results.map(r => ({ label: definition.blocks.find(b => b.id === r.blockId)?.label, toolId: r.toolId, status: r.status, errors: r.errors, warnings: r.warnings, output: { keys: Object.keys(r.output), calculatedResults: r.output.calculatedResults, protectedResult: r.output.protectedResult, finalityStatus: r.output.finalityStatus } })) };
     });
   });
@@ -42,7 +47,7 @@ test('controlled arithmetic checks and exported expense payload inspection', asy
   const findings = await page.evaluate(async () => {
     const { templateDefinition } = await import('/src/features/workflows-hub/saved-workflow-run.tsx');
     const { WORKFLOW_CONFIGS, runTemplateCore } = await import('/src/shared/workflow-engine/runtime/workflow-runs/index.ts');
-    const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/local-fiscal-workflow.ts');
+    const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/workflow/canvas.ts');
     const { runLocalWorkflowTools } = await import('/src/shared/workflow-engine/local-tool-runner.ts');
     const run = (id: string, rows: any[]) => {
       const definition = templateDefinition(id)!;
@@ -82,7 +87,7 @@ test('holiday workflow with a real API response still reports its calculation ou
   await expect(page.getByRole('button', { name: 'Send', exact: true }).filter({ hasText: 'Send' }).first()).toBeEnabled();
   await page.getByRole('button', { name: 'Close', exact: true }).click();
   await page.getByRole('button', { name: 'Run', exact: true }).first().click();
-  await page.getByRole('button', { name: 'Save changes and run', exact: true }).click();
+  await page.getByRole('button', { name: 'Save changes and preview', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Final workflow results' })).toBeVisible();
   const findings = await page.evaluate(async () => {
     const { readWorkflowLibrary } = await import('/src/features/workflows-hub/workflow-library.ts');

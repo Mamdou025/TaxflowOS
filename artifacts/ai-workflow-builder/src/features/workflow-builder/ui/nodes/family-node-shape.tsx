@@ -29,11 +29,7 @@ import {
   Webhook,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import type {
-  BlockFamily,
-  BlockSubtype,
-  WorkflowBlock,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { type BlockFamily, type BlockSubtype, type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
 import type { WorkflowNodeData } from "@/shared/workflow-engine/state/workflow-store";
 
 type CanvasFamily = BlockFamily | "Generic";

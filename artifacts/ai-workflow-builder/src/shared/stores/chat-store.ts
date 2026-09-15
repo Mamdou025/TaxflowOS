@@ -1,5 +1,5 @@
 import { atom } from 'jotai';
-import { atomWithStorage } from 'jotai/utils';
+import { atomWithStorage } from '@/platform/auth/workspace-atoms';
 
 // The conversation itself is now owned by CopilotKit (see CopilotWorkspacePanel).
 // These two atoms are all that remains: the panel's open state and a small

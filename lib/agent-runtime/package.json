@@ -1,0 +1,26 @@
+{
+  "name": "@workspace/agent-runtime",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./agent": "./src/agent.ts",
+    "./catalog": "./src/catalog.ts",
+    "./model-router": "./src/model-router.ts",
+    "./tools": "./src/tools.ts",
+    "./registry": "./src/registry.ts",
+    "./capabilities": "./src/capabilities.ts",
+    "./workspace-tools": "./src/workspace-tools.ts",
+    "./system-prompt.txt": "./src/system-prompt.txt"
+  },
+  "dependencies": {
+    "@workspace/source-connectors": "workspace:*",
+    "@workspace/source-core": "workspace:*",
+    "ai": "7.0.37",
+    "@ai-sdk/openai": "4.0.20",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:"
+  }
+}

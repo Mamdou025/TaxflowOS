@@ -1,0 +1,29 @@
+{
+  "format": "taxflow-performance-budgets-v1",
+  "measuredBaseline": {
+    "measuredAt": "2026-09-14",
+    "initialAssetCount": 20,
+    "initialJavascriptRawBytes": 5999147,
+    "initialJavascriptGzipBytes": 1719492,
+    "initialStylesRawBytes": 543355,
+    "initialStylesGzipBytes": 77851,
+    "largestJavascriptRawBytes": 2957896,
+    "largestJavascriptGzipBytes": 863560,
+    "workflowCanvasRawBytes": 174992
+  },
+  "enforcedLimits": {
+    "initialAssetCount": 12,
+    "initialJavascriptRawBytes": 1500000,
+    "initialJavascriptGzipBytes": 450000,
+    "initialStylesRawBytes": 250000,
+    "initialStylesGzipBytes": 40000,
+    "largestJavascriptRawBytes": 1900000,
+    "largestJavascriptGzipBytes": 560000,
+    "workflowCanvasRawBytes": 190000
+  },
+  "improvementTargets": {
+    "initialJavascriptGzipBytes": 900000,
+    "initialStylesGzipBytes": 60000,
+    "largestJavascriptGzipBytes": 500000
+  }
+}

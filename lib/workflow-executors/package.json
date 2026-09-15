@@ -1,0 +1,17 @@
+{
+  "name": "@workspace/workflow-executors",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "dependencies": {
+    "@workspace/workflow-contracts": "workspace:*",
+    "@workspace/workflow-core": "workspace:*",
+    "@workspace/source-connectors": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:"
+  }
+}

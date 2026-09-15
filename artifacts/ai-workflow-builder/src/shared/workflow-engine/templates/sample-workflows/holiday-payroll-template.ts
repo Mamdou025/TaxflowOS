@@ -27,7 +27,7 @@
 import {
   apiRequestToBlockConfig,
   buildApiRequest,
-} from "@/shared/workflow-engine/execution/blocks/source/http-json/connectors";
+} from "@workspace/source-connectors/connectors";
 
 export const HOLIDAY_PARAMS = {
   country: "CA",
@@ -475,7 +475,7 @@ export const HOLIDAY_TEMPLATE_BLOCK_SPECS: HolidayBlockSpec[] = [
 export type HolidayEdgeSpec = {
   bindingLabel: string;
   reason: string;
-  relationshipType: string;
+  relationshipType: import('@workspace/workflow-contracts/domain/edge-types').WorkflowRelationshipType;
   sourceBlockId: string;
   sourceOutputRole: string;
   targetBlockId: string;
@@ -489,7 +489,7 @@ const edge = (
   targetInputRole: string,
   bindingLabel: string,
   reason: string,
-  relationshipType = "data_flow"
+  relationshipType: HolidayEdgeSpec['relationshipType'] = "provides_data_to"
 ): HolidayEdgeSpec => ({
   bindingLabel,
   reason,

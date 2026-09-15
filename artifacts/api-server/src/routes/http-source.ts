@@ -15,14 +15,17 @@
 // Failures return `ok: false` with a reason at HTTP 200 — callers (a run card, a
 // chat tool result) render the reason rather than blowing up the whole run.
 // ─────────────────────────────────────────────────────────────────────────────
-import { Router } from "express";
+import { Router } from 'express';
+import { randomUUID } from 'node:crypto';
 import {
   extractAtPath,
   fetchJsonPayload,
   findRecordArray,
+  HttpJsonSourceError,
   mapRecordsToRows,
   parseHttpJsonConfig,
-} from "@/shared/workflow-engine/execution/blocks/source/http-json/schema";
+} from '@workspace/source-connectors/http-json';
+import type { SourceOperationReceipt } from '@workspace/source-core';
 
 const router = Router();
 
@@ -30,7 +33,7 @@ const router = Router();
 const PREVIEW_CHARS = 4000;
 
 function previewOf(payload: unknown) {
-  const text = JSON.stringify(payload, null, 2) ?? "";
+  const text = JSON.stringify(payload, null, 2) ?? '';
   return text.length > PREVIEW_CHARS
     ? { preview: `${text.slice(0, PREVIEW_CHARS)}\n… truncated`, truncated: true }
     : { preview: text, truncated: false };
@@ -52,13 +55,13 @@ const SECRET_REF = /\{\{\s*env:([A-Za-z_][A-Za-z0-9_]*)\s*\}\}/g;
 function resolveSecretRefs(
   value: string,
   missing: Set<string>,
-  onUse: (name: string) => void
+  onUse: (name: string) => void,
 ): string {
   return value.replace(SECRET_REF, (_match, name: string) => {
     const resolved = process.env[name];
-    if (resolved === undefined || resolved === "") {
+    if (resolved === undefined || resolved === '') {
       missing.add(name);
-      return "";
+      return '';
     }
     onUse(name);
     return resolved;
@@ -72,16 +75,14 @@ function resolveConfigSecrets(config: {
 }) {
   const missing = new Set<string>();
   const used = new Set<string>();
-  const resolve = (value: string) =>
-    resolveSecretRefs(value, missing, (name) => used.add(name));
+  const resolve = (value: string) => resolveSecretRefs(value, missing, (name) => used.add(name));
 
   const headers = Object.fromEntries(
-    Object.entries(config.headers).map(([key, value]) => [key, resolve(value)])
+    Object.entries(config.headers).map(([key, value]) => [key, resolve(value)]),
   );
   const url = resolve(config.url);
   // A POST body can carry a key too; only strings are walked.
-  const body =
-    typeof config.body === "string" ? resolve(config.body) : config.body;
+  const body = typeof config.body === 'string' ? resolve(config.body) : config.body;
 
   return { body, headers, missing: [...missing], url, used: [...used] };
 }
@@ -109,20 +110,33 @@ function redactSecrets<T>(value: T, names: string[]): T {
     return value;
   }
   for (const secret of secrets) {
-    text = text.split(JSON.stringify(secret).slice(1, -1)).join("«redacted»");
+    text = text.split(JSON.stringify(secret).slice(1, -1)).join('«redacted»');
   }
   return JSON.parse(text) as T;
 }
 
-router.post("/http-source", async (req, res) => {
+router.post('/http-source', async (req, res) => {
+  const operationId = randomUUID();
+  const operation = (
+    status: SourceOperationReceipt['status'],
+    attempts: number,
+    retryable = false,
+  ): SourceOperationReceipt => ({
+    operationId,
+    connector: 'http-json',
+    status,
+    attempts,
+    observedAt: new Date().toISOString(),
+    retryable,
+  });
   const body = (req.body ?? {}) as Record<string, unknown>;
   const config = parseHttpJsonConfig(body);
   // `mode: "raw"` skips row mapping — used by the callApi tool for arbitrary
   // endpoints that aren't a list of records.
-  const mode = body.mode === "raw" ? "raw" : "rows";
+  const mode = body.mode === 'raw' ? 'raw' : 'rows';
 
   if (!config.url) {
-    res.json({ ok: false, reason: "No URL was provided." });
+    res.json({ ok: false, operation: operation('failed', 0), reason: 'No URL was provided.' });
     return;
   }
 
@@ -131,16 +145,17 @@ router.post("/http-source", async (req, res) => {
     res.json({
       ok: false,
       mode,
+      operation: operation('failed', 0),
       missingSecrets: secrets.missing,
-      reason: `Not set in the server environment: ${secrets.missing.join(", ")}. Add ${secrets.missing.length === 1 ? "it" : "them"} to .env.local and restart the api service.`,
+      reason: `Not set in the server environment: ${secrets.missing.join(', ')}. Add ${secrets.missing.length === 1 ? 'it' : 'them'} to .env.local and restart the api service.`,
     });
     return;
   }
 
   // Every response below goes out through here, so no path can forget to scrub a
   // resolved key out of an echoed payload or an error message quoting the body.
-  const send = (payload: Record<string, unknown>) =>
-    res.json(redactSecrets(payload, secrets.used));
+  const send = (payload: Record<string, unknown>, receipt: SourceOperationReceipt) =>
+    res.json(redactSecrets({ ...payload, operation: receipt }, secrets.used));
 
   try {
     const { payload, responseMeta: rawMeta } = await fetchJsonPayload({
@@ -156,15 +171,18 @@ router.post("/http-source", async (req, res) => {
     // form anyway: it still identifies the endpoint, and still replays.
     const responseMeta = { ...rawMeta, url: config.url };
 
-    if (mode === "raw") {
+    if (mode === 'raw') {
       const { preview, truncated } = previewOf(payload);
-      send({
-        ok: true,
-        mode,
-        responseMeta: { ...responseMeta, truncated },
-        preview,
-        payload: truncated ? undefined : payload,
-      });
+      send(
+        {
+          ok: true,
+          mode,
+          responseMeta: { ...responseMeta, truncated },
+          preview,
+          payload: truncated ? undefined : payload,
+        },
+        operation('succeeded', rawMeta.attempts ?? 1),
+      );
       return;
     }
 
@@ -176,39 +194,47 @@ router.post("/http-source", async (req, res) => {
     if (!records) {
       // Not an error — hand back the payload so the caller can pick a path.
       const { preview } = previewOf(payload);
-      send({
-        ok: false,
-        mode,
-        responseMeta,
-        preview,
-        reason: config.resultsPath
-          ? `No array of records found at "${config.resultsPath}".`
-          : "Could not find an array of records — set resultsPath to point at one.",
-      });
+      send(
+        {
+          ok: false,
+          mode,
+          responseMeta,
+          preview,
+          reason: config.resultsPath
+            ? `No array of records found at "${config.resultsPath}".`
+            : 'Could not find an array of records — set resultsPath to point at one.',
+        },
+        operation('failed', rawMeta.attempts ?? 1),
+      );
       return;
     }
 
     const { rows, skipped, truncated } = mapRecordsToRows({
+      defaultAmount: config.defaultAmount,
       currency: config.currency,
       fieldMap: config.fieldMap,
       maxRows: config.maxRows,
       records,
     });
 
-    send({
-      ok: true,
-      mode,
-      responseMeta: { ...responseMeta, recordCount: records.length, truncated },
-      rows,
-      rowCount: rows.length,
-      skipped,
-      samplePayload: records.slice(0, 3),
-    });
+    send(
+      {
+        ok: true,
+        mode,
+        responseMeta: { ...responseMeta, recordCount: records.length, truncated },
+        rows,
+        rowCount: rows.length,
+        skipped,
+        samplePayload: records.slice(0, 3),
+      },
+      operation('succeeded', rawMeta.attempts ?? 1),
+    );
   } catch (error) {
-    const reason =
-      error instanceof Error ? error.message : "The request failed.";
-    req.log.warn({ err: error, url: config.url }, "http-source fetch failed");
-    send({ ok: false, mode, reason, url: config.url });
+    const reason = error instanceof Error ? error.message : 'The request failed.';
+    req.log.warn({ err: error, url: config.url }, 'http-source fetch failed');
+    const attempts = error instanceof HttpJsonSourceError ? error.attempts : 0;
+    const retryable = error instanceof HttpJsonSourceError && error.retryable;
+    send({ ok: false, mode, reason, url: config.url }, operation('failed', attempts, retryable));
   }
 });
 

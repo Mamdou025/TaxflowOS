@@ -1,6 +1,8 @@
-import type { LocalRunRecord, WorkflowBlock } from '@/shared/workflow-engine/local-fiscal-workflow';
+import { type LocalRunRecord, type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
 import type { WorkflowEdge, WorkflowNode } from '@/shared/workflow-engine/state/workflow-store';
-import { getToolForBlock, type ToolRunResult } from '@/shared/workflow-engine/local-tool-registry';
+import { getToolForBlock } from '@/shared/workflow-engine/tools/lookup';
+
+import { type ToolRunResult } from "@/shared/workflow-engine/tools/types";
 import { ReadableData, hasValue } from './readable-data';
 
 export function resultForBlock(run: LocalRunRecord | undefined, id: string): ToolRunResult | undefined {

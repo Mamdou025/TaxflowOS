@@ -1,3 +1,4 @@
+import { apiFetch } from '@/platform/auth/api-fetch';
 
 
 // Setup panels for the two rate/assumption sources.
@@ -32,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
-import type { WorkflowBlock } from "@/shared/workflow-engine/local-fiscal-workflow";
+import { type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
 import { formatFileSize } from "@/shared/workflow-engine/parsing/excel-utils";
 import { useParamOptions } from "@/features/workflow-builder/ui/source-viewers/use-param-options";
 
@@ -149,7 +150,7 @@ export function CurrencyRateSourcePanel({
     setFetching(true);
     setResult(null);
     try {
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/fx-rate?from=${encodeURIComponent(documentCurrency)}&to=${encodeURIComponent(
           reportingCurrency
         )}&year=${year}`, { signal: AbortSignal.timeout(30000) }

@@ -1,6 +1,7 @@
-import { createWorkflowBlockFromCatalog, type LocalRunRecord, type WorkflowBlock } from './local-fiscal-workflow';
+import { createWorkflowBlockFromCatalog } from "@/shared/workflow-engine/workflow/block-factory";
+import { type LocalRunRecord, type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
 import type { IsolatedBlockInput } from './local-tool-runner';
-import type { ToolRunResult } from './local-tool-registry';
+import { type ToolRunResult } from "@/shared/workflow-engine/tools/types";
 import { collectFormulaReferences } from './execution/blocks/logic/calculation-engine/run';
 
 export function exampleInput(output: Record<string, unknown>): IsolatedBlockInput {

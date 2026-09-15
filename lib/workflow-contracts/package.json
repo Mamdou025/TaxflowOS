@@ -1,0 +1,21 @@
+{
+  "name": "@workspace/workflow-contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./domain/*": "./src/domain/*.ts",
+    "./tool-types": "./src/tool-types.ts",
+    "./execution-result": "./src/execution-result.ts",
+    "./library-types": "./src/library-types.ts",
+    "./library": "./src/library.ts",
+    "./generated-schemas": "./src/generated-schemas.ts",
+    "./storage-protocol": "./src/storage-protocol.ts"
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:"
+  }
+}

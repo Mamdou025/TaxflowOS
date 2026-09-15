@@ -4,6 +4,7 @@ import { TriggerReadinessPanel } from '../config/trigger-readiness-panel';
 import { activeBuilderWorkflowIdAtom } from '@/lib/builder-bridge';
 import { workflowLibraryAtom } from '@/features/workflows-hub/workflow-library';
 import { BlockTestResult } from '../workspace/block-test-result';
+import { WORKPAPER_SPECS } from '@/shared/workflow-engine/portfolio-workpapers';
 
 
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -41,27 +42,14 @@ import { KeywordMapperWorkspace } from "@/features/workflow-builder/ui/logic-vie
 import { HierarchyAggregatorPanel } from "@/features/workflow-builder/ui/logic-viewers/hierarchy-aggregator-panel";
 import { api } from "@/platform/api-client";
 import { integrationsAtom } from "@/lib/integrations-store";
-import {
-  clearLocalRunRecords,
-  createCanvasEdgeFromWorkflowEdge,
-  createWorkflowBlockFromCatalog,
-  createWorkflowEdgeRecord,
-  type FiscalStage,
-  getBlockCatalogItem,
-  getFiscalPreset,
-  getFiscalVisualForFamily,
-  getFiscalVisualForStage,
-  getPendingWorkflowConnection,
-  getUnsupportedWorkflowRelationshipMessage,
-  getWorkflowEdgeDefaults,
-  isLocalWorkflowId,
-  type LocalRunRecord,
-  loadLocalRunRecords,
-  saveLocalRunRecord,
-  saveLocalWorkflowSnapshot,
-  type WorkflowBlock,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
-import { getToolForBlock } from "@/shared/workflow-engine/local-tool-registry";
+import { clearLocalRunRecords, loadLocalRunRecords, saveLocalRunRecord } from "@/shared/workflow-engine/workflow/run-storage";
+import { createCanvasEdgeFromWorkflowEdge, createWorkflowEdgeRecord, getPendingWorkflowConnection, getUnsupportedWorkflowRelationshipMessage, getWorkflowEdgeDefaults } from "@/shared/workflow-engine/workflow/edges";
+import { createWorkflowBlockFromCatalog } from "@/shared/workflow-engine/workflow/block-factory";
+import { type FiscalStage, type LocalRunRecord, type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
+import { getBlockCatalogItem, getFiscalPreset, getFiscalVisualForFamily, getFiscalVisualForStage, isLocalWorkflowId } from "@/shared/workflow-engine/workflow/visuals";
+import { saveLocalWorkflowSnapshot } from "@/shared/workflow-engine/workflow/storage";
+import { getToolForBlock } from '@/shared/workflow-engine/tools/lookup';
+
 import {
   type LocalEdgeRunStatus,
   runLocalWorkflowTools,
@@ -119,10 +107,8 @@ import { WorkflowRuns } from "@/features/workflow-builder/ui/workflow-runs";
 import { BlockDataFlowColumn } from "@/features/workflow-builder/ui/workspace/block-data-flow-pane";
 import { getLatestLocalRunForBlock } from "@/features/workflow-builder/ui/workspace/latest-local-run";
 import { BlockRunPanel } from "@/features/workflow-builder/ui/workspace/block-run-panel";
-import {
-  getToolIdForBlock,
-  type ToolRunResult,
-} from "@/shared/workflow-engine/local-tool-registry";
+import { getToolIdForBlock } from '@workspace/workflow-core/tool-resolution';
+import { type ToolRunResult } from "@/shared/workflow-engine/tools/types";
 import {
   getWorkspaceGridColumns,
   useWorkspacePaneSizing,
@@ -1557,6 +1543,13 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
             }
             selectedTermId={selectedCalculationTermId}
           />
+        </div>
+      ) : selectedBlock?.config.toolId === 'logic.portfolio_workpaper' ? (
+        <div className="space-y-4 overflow-auto p-4">
+          <h3 className="font-semibold">{selectedBlock.label}</h3>
+          <p>{WORKPAPER_SPECS.find(spec => spec.id === selectedBlock.config.workpaperId)?.purpose}</p>
+          <p>Required source columns: {WORKPAPER_SPECS.find(spec => spec.id === selectedBlock.config.workpaperId)?.fields.join(', ')}</p>
+          <p>These workpaper rules are fixed and validated. Update the connected source records, then run the workflow to produce results and review findings.</p>
         </div>
       ) : selectedBlock && isCalculationEngineBlock(selectedBlock) ? (
         // Calculation / Formula group

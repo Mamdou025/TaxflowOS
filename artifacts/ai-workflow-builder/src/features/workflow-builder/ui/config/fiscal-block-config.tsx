@@ -17,11 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
-import {
-  FISCAL_STAGE_OPTIONS,
-  type FiscalStage,
-  getFiscalStageLabel,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { FISCAL_STAGE_OPTIONS, type FiscalStage } from "@/shared/workflow-engine/workflow/contracts";
+import { getFiscalStageLabel } from "@/shared/workflow-engine/workflow/visuals";
 
 type FiscalBlockConfigProps = {
   config: Record<string, unknown>;

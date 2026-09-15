@@ -1,5 +1,3 @@
-
-
 import {
   type ComponentType,
   createContext,
@@ -9,13 +7,13 @@ import {
   useMemo,
   useRef,
   useState,
-} from "react";
+} from 'react';
 import type {
   OverlayComponentProps,
   OverlayContextValue,
   OverlayOptions,
   OverlayStackItem,
-} from "./types";
+} from './types';
 
 const OverlayContext = createContext<OverlayContextValue | null>(null);
 
@@ -51,7 +49,7 @@ export function OverlayProvider({ children }: OverlayProviderProps) {
     <P,>(
       component: ComponentType<OverlayComponentProps<P>>,
       props?: P,
-      options?: OverlayOptions
+      options?: OverlayOptions,
     ): string => {
       const id = generateOverlayId();
       const item: OverlayStackItem = {
@@ -63,14 +61,14 @@ export function OverlayProvider({ children }: OverlayProviderProps) {
       setStack([item]);
       return id;
     },
-    []
+    [],
   );
 
   const push = useCallback(
     <P,>(
       component: ComponentType<OverlayComponentProps<P>>,
       props?: P,
-      options?: OverlayOptions
+      options?: OverlayOptions,
     ): string => {
       const id = generateOverlayId();
       const item: OverlayStackItem = {
@@ -82,7 +80,7 @@ export function OverlayProvider({ children }: OverlayProviderProps) {
       setStack((prev) => [...prev, item]);
       return id;
     },
-    []
+    [],
   );
 
   const pop = useCallback(() => {
@@ -104,7 +102,7 @@ export function OverlayProvider({ children }: OverlayProviderProps) {
     <P,>(
       component: ComponentType<OverlayComponentProps<P>>,
       props?: P,
-      options?: OverlayOptions
+      options?: OverlayOptions,
     ): string => {
       const id = generateOverlayId();
       const item: OverlayStackItem = {
@@ -124,7 +122,7 @@ export function OverlayProvider({ children }: OverlayProviderProps) {
       });
       return id;
     },
-    []
+    [],
   );
 
   const closeAll = useCallback(() => {
@@ -164,7 +162,7 @@ export function OverlayProvider({ children }: OverlayProviderProps) {
       hasOverlays: stack.length > 0,
       depth: stack.length,
     }),
-    [stack, open, push, pop, replace, closeAll, close]
+    [stack, open, push, pop, replace, closeAll, close],
   );
 
   return (
@@ -183,7 +181,7 @@ export function OverlayProvider({ children }: OverlayProviderProps) {
 export function useOverlay(): OverlayContextValue {
   const context = useContext(OverlayContext);
   if (!context) {
-    throw new Error("useOverlay must be used within an OverlayProvider");
+    throw new Error('useOverlay must be used within an OverlayProvider');
   }
   return context;
 }

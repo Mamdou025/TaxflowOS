@@ -1,0 +1,9 @@
+{
+  "records": [
+    { "label": "Item credit adjustment", "amount": -5 },
+    { "label": "Item explicit zero", "amount": 0 },
+    { "label": "Item invoice", "amount": 20 }
+  ],
+  "expectedResult": 30,
+  "explanation": "All labels match the workflow's Item classification rule. Its formula doubles that group's sum: (-5 + 0 + 20) * 2 = 30."
+}

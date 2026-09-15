@@ -76,7 +76,7 @@ test('production document-to-output rehearsal uses the UI and survives reload', 
   await page.getByRole('button', { name: 'Run', exact: true }).first().click();
   await page.getByLabel('Workflow name').fill('Demo rehearsal — widget sales');
   const runStart = Date.now();
-  await page.getByRole('button', { name: 'Save changes and run', exact: true }).click();
+  await page.getByRole('button', { name: 'Save changes and preview', exact: true }).click();
   await page.locator('summary').filter({ hasText: /^Canonical JSON/ }).click();
   const output = page.locator('details').filter({ has: page.locator('summary', { hasText: /^Canonical JSON/ }) }).first();
   await expect(output).toContainText('50,000');
@@ -90,7 +90,7 @@ test('production document-to-output rehearsal uses the UI and survives reload', 
   await page.getByRole('button', { name: 'Workflows', exact: true }).click();
   await page.getByRole('button', { name: 'Demo rehearsal — widget sales', exact: true }).click();
   await page.getByRole('button', { name: 'Run', exact: true }).first().click();
-  await page.getByRole('button', { name: 'Run saved version 1', exact: true }).click();
+  await page.getByRole('button', { name: 'Preview saved version 1 in this browser', exact: true }).click();
   await page.locator('summary').filter({ hasText: /^Canonical JSON/ }).click();
   await expect(output).toContainText('50,000');
   await expect(page.locator('summary').filter({ hasText: /^Previous runs \(1\)/ })).toBeVisible();
@@ -110,7 +110,7 @@ test('production load of 1000 rows persists two runs and displays the correct to
   await page.getByRole('button', { name: 'Run', exact: true }).first().click();
   await page.getByLabel('Workflow name').fill('Production 1000-row rehearsal');
   const start = Date.now();
-  await page.getByRole('button', { name: 'Save changes and run', exact: true }).click();
+  await page.getByRole('button', { name: 'Save changes and preview', exact: true }).click();
   await page.locator('summary').filter({ hasText: /^Category Rollup/ }).click();
   const rollupOutput = page.locator('details').filter({ has: page.locator('summary', { hasText: /^Category Rollup/ }) }).first();
   const total = rollupOutput.getByText('category Totals', { exact: true }).locator('..').getByText('interest Income', { exact: true }).locator('..');
@@ -123,7 +123,7 @@ test('production load of 1000 rows persists two runs and displays the correct to
     await page.getByRole('button', { name: 'Run', exact: true }).first().click();
   };
   await reopen();
-  await page.getByRole('button', { name: 'Run saved version 1', exact: true }).click();
+  await page.getByRole('button', { name: 'Preview saved version 1 in this browser', exact: true }).click();
   await reopen();
   await expect(page.locator('summary').filter({ hasText: /^Previous runs \(1\)/ })).toBeVisible();
   await page.locator('summary').filter({ hasText: /^Category Rollup/ }).click();
@@ -155,7 +155,7 @@ test('production PDF review calculates final values without downloading document
   await page.getByRole('button', { name: 'Run', exact: true }).first().click();
   await page.getByLabel('Workflow name').fill('Document Calculator — PDF rehearsal');
   const runStart = Date.now();
-  await page.getByRole('button', { name: 'Save changes and run', exact: true }).click();
+  await page.getByRole('button', { name: 'Save changes and preview', exact: true }).click();
   const summary = page.getByRole('region', { name: 'Final workflow results' });
   await expect(summary).toContainText('400'); await expect(summary).toContainText('units');
   await expect(page.locator('summary').filter({ hasText: /^Final result/ })).toHaveText('Final result \u00b7 success');

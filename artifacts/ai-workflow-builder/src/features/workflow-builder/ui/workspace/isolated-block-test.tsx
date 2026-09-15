@@ -1,7 +1,10 @@
 import { useMemo, useState } from 'react';
-import { createBlankWorkflow, createWorkflowBlockFromCatalog, type LocalRunRecord, type WorkflowBlock } from '@/shared/workflow-engine/local-fiscal-workflow';
+import { createBlankWorkflow } from "@/shared/workflow-engine/workflow/templates/portfolio";
+import { createWorkflowBlockFromCatalog } from "@/shared/workflow-engine/workflow/block-factory";
+import { type LocalRunRecord, type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
 import { runLocalWorkflowTools, type LocalToolRunnerResult } from '@/shared/workflow-engine/local-tool-runner';
-import { getToolForBlock } from '@/shared/workflow-engine/local-tool-registry';
+import { getToolForBlock } from '@/shared/workflow-engine/tools/lookup';
+
 import { exampleInput, formulaInputNames, recordedBlockInput } from '@/shared/workflow-engine/block-test-inputs';
 import { parseNumericInput } from '@/shared/workflow-engine/numeric-input';
 import type { WorkflowEdge, WorkflowNode } from '@/shared/workflow-engine/state/workflow-store';

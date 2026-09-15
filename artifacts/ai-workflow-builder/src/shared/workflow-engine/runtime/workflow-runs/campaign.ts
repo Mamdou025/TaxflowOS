@@ -1,6 +1,6 @@
 
 
-import { createCampaignBudgetWorkflow } from '@/shared/workflow-engine/local-fiscal-workflow';
+import { createCampaignBudgetWorkflow } from "@/shared/workflow-engine/workflow/templates/campaign";
 import {
   CAMPAIGN_ELECTION_CALC_RULES,
   CAMPAIGN_SUMMARY_CALC_RULES,
@@ -44,7 +44,7 @@ export const CAMPAIGN_CONFIG: TemplateConfig = {
     { label: 'Elect the approved budget', sub: 'Floor ↔ ceiling' },
     { label: 'Review & approve', sub: 'Sign off the allocation' },
   ],
-  buildSnapshot: createCampaignBudgetWorkflow as unknown as TemplateConfig['buildSnapshot'],
+  buildSnapshot: createCampaignBudgetWorkflow,
   sampleRows: ROWS,
   sourceBlockId: 'campaign-source-requests',
   mapperBlockId: 'campaign-logic-classifier',

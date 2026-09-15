@@ -9,7 +9,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { atom } from 'jotai';
-import { atomWithStorage } from 'jotai/utils';
+import { atomWithStorage } from '@/platform/auth/workspace-atoms';
 
 export type TreeNode = {
   id: string;

@@ -1,6 +1,6 @@
 
 
-import { createFapiTemplateWorkflow } from '@/shared/workflow-engine/local-fiscal-workflow';
+import { createFapiTemplateWorkflow } from "@/shared/workflow-engine/workflow/templates/fapi";
 import { FAPI_LINES_CALC_RULES, FAPI_SUMMARY_CALC_RULES } from '@/shared/workflow-engine/templates/sample-workflows/fapi-template';
 import { FAPI_MAPPING_RULES } from './fapi-mapping';
 import type { TemplateConfig, SourceRow, CategoryOption } from './engine';
@@ -36,7 +36,7 @@ export const FAPI_CONFIG: TemplateConfig = {
     { label: 'Compute FAPI', sub: 'Rollup + two-stage calculation engine' },
     { label: 'Review & approve', sub: 'Human sign-off on the figures' },
   ],
-  buildSnapshot: createFapiTemplateWorkflow as unknown as TemplateConfig['buildSnapshot'],
+  buildSnapshot: createFapiTemplateWorkflow,
   sampleRows: ROWS,
   sourceBlockId: 'fapi-source-trial-balance',
   mapperBlockId: 'fapi-logic-keyword-mapper',

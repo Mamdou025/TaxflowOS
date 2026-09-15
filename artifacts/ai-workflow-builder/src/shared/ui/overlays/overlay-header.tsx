@@ -1,10 +1,8 @@
-
-
-import { ChevronLeftIcon, XIcon } from "lucide-react";
-import { Button } from "@/shared/ui/button";
-import { cn } from "@/lib/utils";
-import { useOverlay, useOverlayPosition } from "./overlay-provider";
-import type { OverlayHeaderProps } from "./types";
+import { ChevronLeftIcon, XIcon } from 'lucide-react';
+import { Button } from '@/shared/ui/button';
+import { cn } from '@/lib/utils';
+import { useOverlay, useOverlayPosition } from './overlay-provider';
+import type { OverlayHeaderProps } from './types';
 
 /**
  * Standardized header component for overlays.
@@ -42,7 +40,7 @@ export function OverlayHeader({
   };
 
   return (
-    <div className={cn("relative flex flex-col gap-1.5 p-6 pb-0", className)}>
+    <div className={cn('relative flex flex-col gap-1.5 p-6 pb-0', className)}>
       {/* Fixed min-height to prevent layout shift when back button appears */}
       <div className="flex min-h-8 items-center gap-2">
         {showBackButton && (
@@ -57,9 +55,7 @@ export function OverlayHeader({
           </Button>
         )}
         {title && (
-          <h2 className="flex-1 font-semibold text-lg leading-none tracking-tight">
-            {title}
-          </h2>
+          <h2 className="flex-1 font-semibold text-lg leading-none tracking-tight">{title}</h2>
         )}
         {showCloseButton && (
           <Button
@@ -73,9 +69,7 @@ export function OverlayHeader({
           </Button>
         )}
       </div>
-      {description && (
-        <p className="text-muted-foreground text-sm">{description}</p>
-      )}
+      {description && <p className="text-muted-foreground text-sm">{description}</p>}
     </div>
   );
 }
@@ -91,10 +85,5 @@ export function SmartOverlayHeader({
 }: OverlayHeaderProps & { overlayId: string }) {
   const { showBackButton: stackShowBackButton } = useOverlayPosition(overlayId);
 
-  return (
-    <OverlayHeader
-      {...props}
-      showBackButton={showBackButtonProp ?? stackShowBackButton}
-    />
-  );
+  return <OverlayHeader {...props} showBackButton={showBackButtonProp ?? stackShowBackButton} />;
 }

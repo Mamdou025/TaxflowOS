@@ -1,0 +1,15 @@
+
+> workspace@0.0.0 test:workflow-reliability C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-browser-tests.mjs reliability "e2e/source-library.spec.ts"
+
+Test run 04a727d1-24d02841-1530-4541-a679-6730d5b7b126; reports and logs: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-24d02841-1530-4541-a679-6730d5b7b126
+Preparing the isolated browser dependency cache…
+
+Running 4 tests using 1 worker
+
+  ok 1 e2e\source-library.spec.ts:32:5 › Owners can recover soft-deleted sources and see permanent purge as a distinct action (16.4s)
+  ok 2 e2e\source-library.spec.ts:76:5 › source repository failures are visible instead of looking like an empty library (18.0s)
+  ok 3 e2e\source-library.spec.ts:89:5 › chat chooses a saved source without uploading and freezes its records for workflow approval (26.7s)
+  ok 4 e2e\source-library.spec.ts:164:5 › a failed saved-source download is visible and preserves the current selection (16.4s)
+
+  4 passed (1.3m)

@@ -1,22 +1,15 @@
-
-
-import type { Variants } from "motion/react";
-import {
-  AnimatePresence,
-  LayoutGroup,
-  motion,
-  useReducedMotion,
-} from "motion/react";
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import { Drawer as DrawerPrimitive } from "vaul";
-import { Dialog, DialogPortal } from "@/shared/ui/dialog";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { cn } from "@/lib/utils";
-import { useOverlay } from "./overlay-provider";
+import type { Variants } from 'motion/react';
+import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'motion/react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { Drawer as DrawerPrimitive } from 'vaul';
+import { Dialog, DialogPortal } from '@/shared/ui/dialog';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
+import { useOverlay } from './overlay-provider';
 
 // iOS-like spring configuration
 const iosSpring = {
-  type: "spring",
+  type: 'spring',
   stiffness: 400,
   damping: 35,
   mass: 0.8,
@@ -24,7 +17,7 @@ const iosSpring = {
 
 // Softer spring for drawer
 const drawerSpring = {
-  type: "spring",
+  type: 'spring',
   stiffness: 350,
   damping: 30,
   mass: 0.8,
@@ -42,7 +35,7 @@ const containerVariants: Variants = {
     opacity: 1,
     scale: 1,
     transition: {
-      type: "spring",
+      type: 'spring',
       stiffness: 400,
       damping: 30,
     },
@@ -62,7 +55,7 @@ const containerVariants: Variants = {
  */
 const _drawerContainerVariants: Variants = {
   hidden: {
-    y: "100%",
+    y: '100%',
     opacity: 0.5,
   },
   visible: {
@@ -71,10 +64,10 @@ const _drawerContainerVariants: Variants = {
     transition: drawerSpring,
   },
   exit: {
-    y: "100%",
+    y: '100%',
     opacity: 0.5,
     transition: {
-      type: "spring",
+      type: 'spring',
       stiffness: 500,
       damping: 40,
     },
@@ -84,17 +77,14 @@ const _drawerContainerVariants: Variants = {
 /**
  * Get x position for overlay item based on its position relative to current
  */
-function getOverlayXPosition(
-  isCurrent: boolean,
-  isPrevious: boolean
-): "0%" | "-35%" | "100%" {
+function getOverlayXPosition(isCurrent: boolean, isPrevious: boolean): '0%' | '-35%' | '100%' {
   if (isCurrent) {
-    return "0%";
+    return '0%';
   }
   if (isPrevious) {
-    return "-35%";
+    return '-35%';
   }
-  return "100%";
+  return '100%';
 }
 
 /**
@@ -147,7 +137,7 @@ function DesktopOverlayContainer() {
   const currentIndex = renderStack.length - 1;
 
   // DEBUG
-  console.log("[DesktopOverlay]", {
+  console.log('[DesktopOverlay]', {
     isOpen,
     stackLength: stack.length,
     frozenStackLength: frozenStackRef.current.length,
@@ -185,27 +175,27 @@ function DesktopOverlayContainer() {
 
   const handleEscapeKey = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === "Escape" && currentItem?.options.closeOnEscape !== false) {
+      if (e.key === 'Escape' && currentItem?.options.closeOnEscape !== false) {
         pop();
       }
     },
-    [currentItem?.options.closeOnEscape, pop]
+    [currentItem?.options.closeOnEscape, pop],
   );
 
   useLayoutEffect(() => {
     if (isOpen) {
-      document.addEventListener("keydown", handleEscapeKey);
-      return () => document.removeEventListener("keydown", handleEscapeKey);
+      document.addEventListener('keydown', handleEscapeKey);
+      return () => document.removeEventListener('keydown', handleEscapeKey);
     }
     return undefined;
   }, [isOpen, handleEscapeKey]);
 
   const handleExitComplete = useCallback(() => {
-    console.log("[DesktopOverlay] handleExitComplete called");
+    console.log('[DesktopOverlay] handleExitComplete called');
     frozenStackRef.current = [];
   }, []);
 
-  console.log("[DesktopOverlay] Rendering, isOpen:", isOpen);
+  console.log('[DesktopOverlay] Rendering, isOpen:', isOpen);
 
   // Don't render Dialog at all when closed - this ensures clean unmount
   if (!isOpen && frozenStackRef.current.length === 0) {
@@ -231,10 +221,10 @@ function DesktopOverlayContainer() {
             <motion.div
               animate="visible"
               className={cn(
-                "-translate-x-1/2 -translate-y-1/2 fixed top-1/2 left-1/2 z-50 w-full px-4",
-                currentItem?.options.size === "wide"
-                  ? "w-[min(96vw,1800px)] max-w-[min(96vw,1800px)]"
-                  : "max-w-lg"
+                '-translate-x-1/2 -translate-y-1/2 fixed top-1/2 left-1/2 z-50 w-full px-4',
+                currentItem?.options.size === 'wide'
+                  ? 'w-[min(96vw,1800px)] max-w-[min(96vw,1800px)]'
+                  : 'max-w-lg',
               )}
               exit="exit"
               initial="hidden"
@@ -244,7 +234,7 @@ function DesktopOverlayContainer() {
                 <motion.div
                   className="workflow-studio-overlay relative overflow-hidden rounded-xl border bg-background shadow-2xl ring-1 ring-black/5 dark:ring-white/8"
                   layout={isOpen}
-                  style={{ minHeight: minHeight > 0 ? minHeight : "auto" }}
+                  style={{ minHeight: minHeight > 0 ? minHeight : 'auto' }}
                   transition={iosSpring}
                 >
                   {/* Accent stripe */}
@@ -258,10 +248,9 @@ function DesktopOverlayContainer() {
                       // For push onto existing stack: new current item slides in from right
                       // For first overlay (fresh open): no slide, dialog container handles entrance
                       // For pop: returning item is already at -35%, animates to 0%
-                      const shouldSlideIn =
-                        isCurrent && isPushing && renderStack.length > 1;
+                      const shouldSlideIn = isCurrent && isPushing && renderStack.length > 1;
                       const initialValue = shouldSlideIn
-                        ? { x: "100%", scale: 1, opacity: 1 }
+                        ? { x: '100%', scale: 1, opacity: 1 }
                         : false;
 
                       return (
@@ -273,10 +262,8 @@ function DesktopOverlayContainer() {
                           }}
                           aria-hidden={!isCurrent}
                           className={cn(
-                            "w-full",
-                            isCurrent
-                              ? "relative"
-                              : "pointer-events-none absolute inset-0"
+                            'w-full',
+                            isCurrent ? 'relative' : 'pointer-events-none absolute inset-0',
                           )}
                           initial={initialValue}
                           key={item.id}
@@ -348,17 +335,17 @@ function MobileOverlayContainer() {
 
   const handleEscapeKey = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === "Escape" && currentItem?.options.closeOnEscape !== false) {
+      if (e.key === 'Escape' && currentItem?.options.closeOnEscape !== false) {
         pop();
       }
     },
-    [currentItem?.options.closeOnEscape, pop]
+    [currentItem?.options.closeOnEscape, pop],
   );
 
   useLayoutEffect(() => {
     if (isOpen) {
-      document.addEventListener("keydown", handleEscapeKey);
-      return () => document.removeEventListener("keydown", handleEscapeKey);
+      document.addEventListener('keydown', handleEscapeKey);
+      return () => document.removeEventListener('keydown', handleEscapeKey);
     }
     return undefined;
   }, [isOpen, handleEscapeKey]);
@@ -387,13 +374,13 @@ function MobileOverlayContainer() {
         {/* Drawer container - let Vaul handle open/close animations */}
         <DrawerPrimitive.Content
           className={cn(
-            "fixed inset-x-0 bottom-0 z-50 flex max-h-[90vh] flex-col",
-            "workflow-studio-overlay rounded-t-2xl border-t bg-background shadow-2xl"
+            'fixed inset-x-0 bottom-0 z-50 flex max-h-[90vh] flex-col',
+            'workflow-studio-overlay rounded-t-2xl border-t bg-background shadow-2xl',
           )}
         >
           {/* Accessible title for screen readers */}
           <DrawerPrimitive.Title className="sr-only">
-            {renderCurrentItem?.options.title || "Dialog"}
+            {renderCurrentItem?.options.title || 'Dialog'}
           </DrawerPrimitive.Title>
 
           {/* Drag handle */}
@@ -404,7 +391,7 @@ function MobileOverlayContainer() {
             <motion.div
               className="relative flex-1 overflow-hidden"
               layout={isOpen}
-              style={{ minHeight: minHeight > 0 ? minHeight : "auto" }}
+              style={{ minHeight: minHeight > 0 ? minHeight : 'auto' }}
               transition={drawerSpring}
             >
               {/* Content wrapper - all items rendered persistently to preserve state */}
@@ -416,11 +403,8 @@ function MobileOverlayContainer() {
                   // For push onto existing stack: new current item slides in from right
                   // For first overlay (fresh open): no slide, drawer container handles entrance
                   // For pop: returning item is already at -35%, animates to 0%
-                  const shouldSlideIn =
-                    isCurrent && isPushing && renderStack.length > 1;
-                  const initialValue = shouldSlideIn
-                    ? { x: "100%", scale: 1, opacity: 1 }
-                    : false;
+                  const shouldSlideIn = isCurrent && isPushing && renderStack.length > 1;
+                  const initialValue = shouldSlideIn ? { x: '100%', scale: 1, opacity: 1 } : false;
 
                   return (
                     <motion.div
@@ -431,10 +415,8 @@ function MobileOverlayContainer() {
                       }}
                       aria-hidden={!isCurrent}
                       className={cn(
-                        "w-full",
-                        isCurrent
-                          ? "relative"
-                          : "pointer-events-none absolute inset-0"
+                        'w-full',
+                        isCurrent ? 'relative' : 'pointer-events-none absolute inset-0',
                       )}
                       initial={initialValue}
                       key={item.id}

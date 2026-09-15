@@ -1,4 +1,4 @@
-import type { WorkflowBlock } from '@/shared/workflow-engine/local-fiscal-workflow';
+import { type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
 import { evaluateReadiness, readinessConditions, type ReadinessCondition } from '@/shared/workflow-engine/trigger-readiness';
 
 export function TriggerReadinessPanel({ config, blocks, outputs = {}, onChange, disabled = false }: { config: Record<string, unknown>; blocks: WorkflowBlock[]; outputs?: Record<string, unknown>; onChange?: (conditions: ReadinessCondition[]) => void; disabled?: boolean }) {

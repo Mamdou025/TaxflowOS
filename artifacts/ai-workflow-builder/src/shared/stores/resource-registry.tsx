@@ -1,17 +1,17 @@
-
-
 import dynamic from '@/lib/next-dynamic-shim';
 import type { ComponentType, CSSProperties } from 'react';
-import { atomWithStorage } from 'jotai/utils';
+import { atomWithStorage } from '@/platform/auth/workspace-atoms';
 import {
+  Bot,
+  CircleHelp,
+  FileText,
+  Files,
   Globe,
   Layers,
-  FileText,
-  Receipt,
-  Files,
   LayoutGrid,
+  PlugZap,
+  Receipt,
   Workflow,
-  Bot,
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -35,13 +35,7 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type ResourceKind =
-  | 'tool'
-  | 'integration'
-  | 'workflow'
-  | 'agent'
-  | 'persona'
-  | 'value'
-  | 'worksheet';
+  'tool' | 'integration' | 'workflow' | 'agent' | 'persona' | 'value' | 'worksheet';
 
 export type ResourceIconProps = { size?: number; style?: CSSProperties };
 
@@ -78,9 +72,7 @@ export type ResourcePage = {
   Component: ComponentType;
 };
 
-export type ResourceOpen =
-  | { as: 'page'; pageKey: string }
-  | { as: 'route'; href: string };
+export type ResourceOpen = { as: 'page'; pageKey: string } | { as: 'route'; href: string };
 
 export type Resource = {
   id: string;
@@ -144,11 +136,76 @@ export const RESOURCES: Resource[] = [
     open: { as: 'route', href: '/workflows-hub' },
   },
   {
+    id: 'sources',
+    kind: 'tool',
+    token: 'SOURCES',
+    mentions: ['sources', 'source library', 'company documents'],
+    keywords: [
+      'sources',
+      'source library',
+      'company documents',
+      'uploaded documents',
+      'document repository',
+    ],
+    note: 'Workspace source library and document lifecycle',
+    open: { as: 'page', pageKey: 'sources' },
+    page: {
+      title: 'Sources',
+      subtitle: 'Documents, processing state and retrieval availability',
+      icon: Files,
+      Component: lazyPage(() =>
+        import('@/features/documents/documents-library').then((module) => ({
+          default: module.DocumentsLibrary,
+        })),
+      ),
+    },
+  },
+  {
+    id: 'connections',
+    kind: 'integration',
+    token: 'CONNECTIONS',
+    mentions: ['connections', 'integrations', 'provider connections'],
+    keywords: ['connections', 'integrations', 'connected accounts', 'provider credentials'],
+    note: 'Configured provider accounts available to workflow blocks',
+    open: { as: 'page', pageKey: 'connections' },
+    page: {
+      title: 'Connections',
+      subtitle: 'Configured integrations, access and health',
+      icon: PlugZap,
+      Component: lazyPage(() => import('@/features/connections/connections-page')),
+    },
+  },
+  {
+    id: 'help',
+    kind: 'tool',
+    token: 'HELP',
+    mentions: ['help', 'help center'],
+    keywords: ['help', 'how do i use', 'getting started'],
+    note: 'Product navigation and operating guidance',
+    open: { as: 'page', pageKey: 'help' },
+    page: {
+      title: 'Help',
+      subtitle: 'How to use Chat, Workflows, Sources and Connections',
+      icon: CircleHelp,
+      Component: lazyPage(() => import('@/features/help/help-page')),
+    },
+  },
+  {
     id: 'viewer',
     kind: 'tool',
     token: 'DOCUMENTS',
     mentions: ['documents', 'document viewer', 'the viewer'],
-    keywords: ['open pdf', 'open excel', 'open word', 'view document', 'view file', 'read pdf', 'read document', 'documents', 'viewer'],
+    keywords: [
+      'open pdf',
+      'open excel',
+      'open word',
+      'view document',
+      'view file',
+      'read pdf',
+      'read document',
+      'documents',
+      'viewer',
+    ],
     note: 'Open & view PDF / Excel / Word files',
     open: { as: 'page', pageKey: 'viewer' },
     page: {
@@ -178,7 +235,14 @@ export const RESOURCES: Resource[] = [
     kind: 'tool',
     token: 'WORKFLOWS',
     mentions: ['workflows', 'the workflows', 'all workflows', 'workflow portfolio'],
-    keywords: ['workflows', 'all workflows', 'workflow portfolio', 'tax workflows', 'open workflow', 'workflow list'],
+    keywords: [
+      'workflows',
+      'all workflows',
+      'workflow portfolio',
+      'tax workflows',
+      'open workflow',
+      'workflow list',
+    ],
     note: 'The workflow portfolio — procedures to view, run and review',
     open: { as: 'page', pageKey: 'workflows' },
     page: {
@@ -193,7 +257,15 @@ export const RESOURCES: Resource[] = [
     kind: 'tool',
     token: 'AGENT',
     mentions: ['agent', 'sina', 'the agent', 'agent settings'],
-    keywords: ['agent', 'sina', 'agent settings', 'assistant settings', 'configure the agent', 'agent overview', 'what the agent knows'],
+    keywords: [
+      'agent',
+      'sina',
+      'agent settings',
+      'assistant settings',
+      'configure the agent',
+      'agent overview',
+      'what the agent knows',
+    ],
     note: 'Sina — the one live agent: see everything it knows / sees / can do, and configure it',
     open: { as: 'page', pageKey: 'agent' },
     page: {
@@ -242,28 +314,54 @@ export const RESOURCES: Resource[] = [
         label: 'Annual Average FX Rate',
         keywords: ['fx rate', 'exchange rate', 'annual average', 'currency conversion', 'fx'],
         field: {
-          id: 'fx', tag: 'FX', ccy: 'RATE', default: '1.35',
+          id: 'fx',
+          tag: 'FX',
+          ccy: 'RATE',
+          default: '1.35',
           hint: 'USD → CAD annual average',
           editKeywords: ['fx rate', 'exchange rate', 'fx', 'annual average'],
           // Bridge to the FAPI engine's fxRate input — one value across chat, sheet, run.
           binding: { workflowId: 'fapi', inputKey: 'fxRate' },
         },
       },
-      { anchor: 'fapi:a', label: 'Property Income (A)', keywords: ['property income', 'dividend', 'component a', 'line a'] },
+      {
+        anchor: 'fapi:a',
+        label: 'Property Income (A)',
+        keywords: ['property income', 'dividend', 'component a', 'line a'],
+      },
       {
         anchor: 'fapi:a-div',
         label: 'Property Income — Dividendes',
         keywords: [], // navigation is via 'fapi:a'; this row is reached by *edit* intent
         field: {
-          id: 'a-div', tag: 'A', ccy: 'CAD', default: '0.00',
+          id: 'a-div',
+          tag: 'A',
+          ccy: 'CAD',
+          default: '0.00',
           hint: 'Manual entry',
           editKeywords: ['dividend', 'dividendes', 'property income'],
         },
       },
-      { anchor: 'fapi:allowable-expenses', label: 'Allowable Expenses', keywords: ['allowable expenses', 'expenses', 'deductions'] },
-      { anchor: 'fapi:b', label: 'Gains From Disposition (B)', keywords: ['component b', 'gains from disposition', 'disposition', 'gains'] },
-      { anchor: 'fapi:95-2', label: 'Canadian Rules 95(2)', keywords: ['95(2)', '95-2', 'canadian rules', 'recharacterization', 'recharacterize'] },
-      { anchor: 'fapi:a1', label: 'Debt Forgiveness (A.1)', keywords: ['debt forgiveness', 'a.1', 'a1'] },
+      {
+        anchor: 'fapi:allowable-expenses',
+        label: 'Allowable Expenses',
+        keywords: ['allowable expenses', 'expenses', 'deductions'],
+      },
+      {
+        anchor: 'fapi:b',
+        label: 'Gains From Disposition (B)',
+        keywords: ['component b', 'gains from disposition', 'disposition', 'gains'],
+      },
+      {
+        anchor: 'fapi:95-2',
+        label: 'Canadian Rules 95(2)',
+        keywords: ['95(2)', '95-2', 'canadian rules', 'recharacterization', 'recharacterize'],
+      },
+      {
+        anchor: 'fapi:a1',
+        label: 'Debt Forgiveness (A.1)',
+        keywords: ['debt forgiveness', 'a.1', 'a1'],
+      },
       { anchor: 'fapi:a2', label: 'Prior Year G (A.2)', keywords: ['prior year', 'a.2', 'a2'] },
     ],
   },
@@ -299,12 +397,36 @@ export const RESOURCES: Resource[] = [
       Component: lazyPage(() => import('@/features/worksheets/legacy/pages/SurplusWorksheet')),
     },
     anchors: [
-      { anchor: 'surplus:opening', label: 'Opening Balance', keywords: ['opening balance', 'opening surplus'] },
-      { anchor: 'surplus:fs-income', label: 'Income per Financial Statements', keywords: ['income per financial', 'financial statements income', 'net income'] },
-      { anchor: 'surplus:book-tax', label: 'Book-to-Tax Adjustments', keywords: ['book-to-tax', 'book to tax'] },
-      { anchor: 'surplus:reg-5907', label: 'Reg. 5907(2) Adjustments', keywords: ['reg. 5907', 'reg 5907', '5907'] },
-      { anchor: 'surplus:taxes', label: 'Income Taxes Paid / Refunded', keywords: ['income taxes', 'taxes paid', 'withholding'] },
-      { anchor: 'surplus:dividends', label: 'Dividends Paid / Received', keywords: ['dividends paid', 'dividends received', 'dividends'] },
+      {
+        anchor: 'surplus:opening',
+        label: 'Opening Balance',
+        keywords: ['opening balance', 'opening surplus'],
+      },
+      {
+        anchor: 'surplus:fs-income',
+        label: 'Income per Financial Statements',
+        keywords: ['income per financial', 'financial statements income', 'net income'],
+      },
+      {
+        anchor: 'surplus:book-tax',
+        label: 'Book-to-Tax Adjustments',
+        keywords: ['book-to-tax', 'book to tax'],
+      },
+      {
+        anchor: 'surplus:reg-5907',
+        label: 'Reg. 5907(2) Adjustments',
+        keywords: ['reg. 5907', 'reg 5907', '5907'],
+      },
+      {
+        anchor: 'surplus:taxes',
+        label: 'Income Taxes Paid / Refunded',
+        keywords: ['income taxes', 'taxes paid', 'withholding'],
+      },
+      {
+        anchor: 'surplus:dividends',
+        label: 'Dividends Paid / Received',
+        keywords: ['dividends paid', 'dividends received', 'dividends'],
+      },
     ],
   },
   {
@@ -319,19 +441,46 @@ export const RESOURCES: Resource[] = [
       Component: lazyPage(() => import('@/features/worksheets/legacy/pages/T1134Worksheet')),
     },
     anchors: [
-      { anchor: 't1134:part1', label: 'Part I — Summary', keywords: ['part i', 'part 1', 't1134 summary', 'summary form'] },
-      { anchor: 't1134:part2-s1', label: 'Part II · Section 1 — Foreign Affiliate Information', keywords: ['foreign affiliate information', 'section 1', 'fa information'] },
-      { anchor: 't1134:part2-s2', label: 'Part II · Section 2 — Financial Information', keywords: ['financial information', 'section 2'] },
-      { anchor: 't1134:part2-s3a', label: 'Part II · Section 3A — Surplus Accounts & Dividends', keywords: ['surplus accounts', 'section 3a'] },
-      { anchor: 't1134:part3-fapi', label: 'Part III · Section 3 — FAPI / FAPL / FACL', keywords: ['facl', 'fapl', 'fapi section', 'part iii section 3'] },
-      { anchor: 't1134:part4', label: 'Part IV — Disclosure', keywords: ['disclosure', 'part iv', 'part 4'] },
+      {
+        anchor: 't1134:part1',
+        label: 'Part I — Summary',
+        keywords: ['part i', 'part 1', 't1134 summary', 'summary form'],
+      },
+      {
+        anchor: 't1134:part2-s1',
+        label: 'Part II · Section 1 — Foreign Affiliate Information',
+        keywords: ['foreign affiliate information', 'section 1', 'fa information'],
+      },
+      {
+        anchor: 't1134:part2-s2',
+        label: 'Part II · Section 2 — Financial Information',
+        keywords: ['financial information', 'section 2'],
+      },
+      {
+        anchor: 't1134:part2-s3a',
+        label: 'Part II · Section 3A — Surplus Accounts & Dividends',
+        keywords: ['surplus accounts', 'section 3a'],
+      },
+      {
+        anchor: 't1134:part3-fapi',
+        label: 'Part III · Section 3 — FAPI / FAPL / FACL',
+        keywords: ['facl', 'fapl', 'fapi section', 'part iii section 3'],
+      },
+      {
+        anchor: 't1134:part4',
+        label: 'Part IV — Disclosure',
+        keywords: ['disclosure', 'part iv', 'part 4'],
+      },
     ],
   },
 ];
 
 // ─── Indexes ─────────────────────────────────────────────────────────────────
 const BY_ID = new Map<string, Resource>();
-const BY_FIELD_ID = new Map<string, { pageKey: string; anchor: ResourceAnchor; field: ResourceField }>();
+const BY_FIELD_ID = new Map<
+  string,
+  { pageKey: string; anchor: ResourceAnchor; field: ResourceField }
+>();
 const ANCHOR_TO_PAGE = new Map<string, string>();
 for (const r of RESOURCES) {
   BY_ID.set(r.id, r);
@@ -361,7 +510,13 @@ export type PageView = {
 
 function toPageView(r: Resource): PageView | null {
   if (!r.page) return null;
-  return { key: r.id, title: r.page.title, subtitle: r.page.subtitle, icon: r.page.icon, Component: r.page.Component };
+  return {
+    key: r.id,
+    title: r.page.title,
+    subtitle: r.page.subtitle,
+    icon: r.page.icon,
+    Component: r.page.Component,
+  };
 }
 
 /** The registered renderable page for a page key, or null. */
@@ -387,8 +542,7 @@ const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const MENTION_RE = new RegExp(`(${MENTIONS.map(escapeRe).join('|')})`, 'gi');
 
 export type MentionSegment =
-  | { type: 'text'; value: string }
-  | { type: 'chip'; resource: Resource; matched: string };
+  { type: 'text'; value: string } | { type: 'chip'; resource: Resource; matched: string };
 
 /** Split a string into plain-text and chip segments for inline rendering. */
 export function splitMentions(text: string): MentionSegment[] {
@@ -425,7 +579,11 @@ export function resolveIntent(raw: string): WorkspaceIntent {
 
   const match = listPages().find((p) => {
     const r = BY_ID.get(p.key)!;
-    return (r.keywords ?? []).some((k) => t.includes(k)) || t.includes(p.title.toLowerCase()) || t.includes(p.key);
+    return (
+      (r.keywords ?? []).some((k) => t.includes(k)) ||
+      t.includes(p.title.toLowerCase()) ||
+      t.includes(p.key)
+    );
   });
 
   const wantsClose = CLOSE_VERB.test(t);
@@ -467,7 +625,12 @@ export type FieldContext = { pageKey: string; anchor: string; field: ResourceFie
 export function getFieldContext(fieldId: string): FieldContext | null {
   const hit = BY_FIELD_ID.get(fieldId);
   if (!hit) return null;
-  return { pageKey: hit.pageKey, anchor: hit.anchor.anchor, field: hit.field, label: hit.anchor.label };
+  return {
+    pageKey: hit.pageKey,
+    anchor: hit.anchor.anchor,
+    field: hit.field,
+    label: hit.anchor.label,
+  };
 }
 
 /** Resolve a loose field reference from the model to a real field id. The LLM
@@ -543,10 +706,12 @@ export function buildAgentCatalog(): AgentCatalog {
   const routes: AgentCatalog['routes'] = [];
   for (const r of RESOURCES) {
     if (r.page) pages.push({ key: r.id, title: r.page.title, subtitle: r.page.subtitle });
-    if (r.open?.as === 'route') routes.push({ id: r.id, label: r.token ?? r.id, href: r.open.href });
+    if (r.open?.as === 'route')
+      routes.push({ id: r.id, label: r.token ?? r.id, href: r.open.href });
     for (const a of r.anchors ?? []) {
       anchors.push({ anchor: a.anchor, pageKey: r.id, label: a.label });
-      if (a.field) fields.push({ fieldId: a.field.id, pageKey: r.id, anchor: a.anchor, label: a.label });
+      if (a.field)
+        fields.push({ fieldId: a.field.id, pageKey: r.id, anchor: a.anchor, label: a.label });
     }
   }
   return { pages, anchors, fields, routes };

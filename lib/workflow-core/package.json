@@ -1,0 +1,26 @@
+{
+  "name": "@workspace/workflow-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./graph": "./src/core/graph.ts",
+    "./ports": "./src/core/ports.ts",
+    "./edges": "./src/core/edges.ts",
+    "./outputs": "./src/core/outputs.ts",
+    "./tool-resolution": "./src/core/tool-resolution.ts",
+    "./durable-tools": "./src/core/durable-tools.ts",
+    "./commands": "./src/application/commands.ts",
+    "./queries": "./src/application/queries.ts",
+    "./agent-commands": "./src/application/agent-commands.ts",
+    "./templates": "./src/application/templates.ts",
+    "./template-command": "./src/application/template-command.ts"
+  },
+  "dependencies": {
+    "@workspace/workflow-contracts": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:"
+  }
+}

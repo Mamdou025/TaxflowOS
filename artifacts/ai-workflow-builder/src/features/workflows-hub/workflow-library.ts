@@ -1,25 +1,28 @@
+import { workspaceStorage } from '@/platform/auth/workspace-context';
 import { atom } from 'jotai';
-import { initializeWorkflowSync, queueWorkflowSave } from './workflow-sync';
-import { sharedJSONStorage } from '@/shared/workflow-engine/shared-json';
-import type { WorkflowDefinition } from "@/shared/workflow-engine/local-fiscal-workflow";
-import type { LocalToolRunnerResult } from "@/shared/workflow-engine/local-tool-runner";
+import { initializeWorkflowSync, queueWorkflowSave, pauseWorkflowSync } from './workflow-sync';
+import { parseSharedJSON, stringifySharedJSON } from '@/shared/workflow-engine/shared-json';
+import { createWorkflowLibraryRepository } from './services/workflow-library-repository';
 
-export type PersonalWorkflow = {
-  id: string;
-  templateId: string;
-  draft: WorkflowDefinition;
-  versions: {
-    number: number;
-    savedAt: string;
-    definition: WorkflowDefinition;
-  }[];
-  runs: { version: number; at: string; result: LocalToolRunnerResult }[];
-};
+import type { PersonalWorkflow } from '@workspace/workflow-contracts/library-types';
+export type { PersonalWorkflow } from '@workspace/workflow-contracts/library-types';
 type Library = Record<string, PersonalWorkflow>;
-const storage = sharedJSONStorage<Library>();
-const STORAGE_KEY = 'taxflow:workflow-library:v1';
-export function readWorkflowLibrary(): Library { return storage.getItem(STORAGE_KEY, {}); }
-let currentLibrary = typeof window === 'undefined' ? {} : readWorkflowLibrary();
+const repository = createWorkflowLibraryRepository({
+  storage: {
+    getItem: key => typeof window === 'undefined' ? null : workspaceStorage.getItem(key),
+    setItem: (key, value) => workspaceStorage.setItem(key, value),
+  },
+  encode: stringifySharedJSON,
+  decode: parseSharedJSON,
+});
+export const readWorkflowLibrary = repository.read;
+export const rawWorkflowBackup = repository.rawBackup;
+let restoreError: string | undefined;
+let currentLibrary: Library = {};
+try { currentLibrary = readWorkflowLibrary(); }
+catch (error) {
+  restoreError = error instanceof Error ? error.message : 'The local workflow backup could not be read.';
+}
 const localLibraryAtom = atom<Library>(currentLibrary);
 type LibraryUpdate = Library | ((previous: Library) => Library) | { remoteLibrary: Library; fromServer: true };
 export const workflowLibraryAtom = atom(
@@ -29,63 +32,17 @@ export const workflowLibraryAtom = atom(
     const next = remote ? (update as { remoteLibrary: Library }).remoteLibrary : typeof update === 'function' ? update(get(localLibraryAtom)) : update as Library;
     currentLibrary = next;
     set(localLibraryAtom, next);
-    try { storage.setItem(STORAGE_KEY, next); } catch { /* Keep the in-memory result and send it to durable server storage. */ }
-    if (!remote) queueWorkflowSave();
+    if (remote) restoreError = undefined;
+    // Keep unreadable original bytes available for raw export until an explicit
+    // restore succeeds. An empty fallback must never overwrite the only backup.
+    if (!restoreError) {
+      try { repository.save(next); } catch { /* Keep the in-memory result and sync it to the server. */ }
+      if (!remote) queueWorkflowSave();
+    }
   },
 );
 workflowLibraryAtom.onMount = set => {
-  initializeWorkflowSync(() => currentLibrary, remoteLibrary => set({ remoteLibrary, fromServer: true }));
+  if (restoreError) pauseWorkflowSync(`${restoreError} Download the raw backup or open a saved workspace to recover.`);
+  return initializeWorkflowSync(() => currentLibrary, remoteLibrary => set({ remoteLibrary, fromServer: true }));
 };
-export function definitionFingerprint(definition: WorkflowDefinition) {
-  return JSON.stringify({
-    name: definition.name,
-    blocks: definition.blocks.map(({ config, id, label, subtype, family }) => ({
-      config,
-      id,
-      label,
-      subtype,
-      family,
-    })),
-    edges: definition.edges.map(
-      ({
-        id,
-        sourceBlockId,
-        targetBlockId,
-        relationshipType,
-        sourceOutputRole,
-        targetInputRole,
-        bindingStatus,
-        status,
-      }) => ({
-        id,
-        sourceBlockId,
-        targetBlockId,
-        relationshipType,
-        sourceOutputRole,
-        targetInputRole,
-        bindingStatus,
-        status,
-      }),
-    ),
-  });
-}
-export function saveVersion(entry: PersonalWorkflow): PersonalWorkflow {
-  const previous = entry.versions.at(-1);
-  if (
-    previous &&
-    definitionFingerprint(previous.definition) ===
-      definitionFingerprint(entry.draft)
-  )
-    return entry;
-  return {
-    ...entry,
-    versions: [
-      ...entry.versions,
-      {
-        number: (previous?.number ?? 0) + 1,
-        savedAt: new Date().toISOString(),
-        definition: structuredClone(entry.draft),
-      },
-    ],
-  };
-}
+export { definitionFingerprint, saveVersion } from './services/workflow-commands';

@@ -4,7 +4,7 @@ test('isolated execution runs only the selected block, supports constants and le
   await page.goto('/');
   const result = await page.evaluate(async () => {
     const { templateDefinition } = await import('/src/features/workflows-hub/saved-workflow-run.tsx');
-    const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/local-fiscal-workflow.ts');
+    const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/workflow/canvas.ts');
     const { runLocalWorkflowTools } = await import('/src/shared/workflow-engine/local-tool-runner.ts');
     const { exampleInput } = await import('/src/shared/workflow-engine/block-test-inputs.ts');
     const definition = templateDefinition('pf-document-calculator')!;
@@ -35,7 +35,7 @@ test('individual keyword, aggregate, compute and output blocks pass real data be
   await page.goto('/');
   const result = await page.evaluate(async () => {
     const { templateDefinition } = await import('/src/features/workflows-hub/saved-workflow-run.tsx');
-    const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/local-fiscal-workflow.ts');
+    const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/workflow/canvas.ts');
     const { runLocalWorkflowTools } = await import('/src/shared/workflow-engine/local-tool-runner.ts');
     const { exampleInput, recordedBlockInput } = await import('/src/shared/workflow-engine/block-test-inputs.ts');
     const definition = templateDefinition('pf-document-calculator')!;
@@ -74,10 +74,10 @@ test('source and rulebook tests execute themselves and report missing documents'
   await page.goto('/');
   const result = await page.evaluate(async () => {
     const { templateDefinition } = await import('/src/features/workflows-hub/saved-workflow-run.tsx');
-    const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/local-fiscal-workflow.ts');
+    const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/workflow/canvas.ts');
     const { runLocalWorkflowTools } = await import('/src/shared/workflow-engine/local-tool-runner.ts');
     const definition = templateDefinition('pf-fapi')!;
-    const { createWorkflowBlockFromCatalog } = await import('/src/shared/workflow-engine/local-fiscal-workflow.ts');
+    const { createWorkflowBlockFromCatalog } = await import('/src/shared/workflow-engine/workflow/block-factory.ts');
     const rulebook = createWorkflowBlockFromCatalog('source:keyword-rules', { id: 'test-rulebook', label: 'Keyword Rulebook', position: { x: 0, y: 0 }, config: { keywordRules: [{ ruleId: 'items', categoryId: 'items', keyword: 'Item', matchType: 'contains', enabled: true }] } });
     definition.blocks.push(rulebook);
     const run = runLocalWorkflowTools({ ...workflowDefinitionToCanvas(definition), workflowName: definition.name, mode: 'isolated', selectedBlockId: rulebook.id });
@@ -127,7 +127,7 @@ test('standalone Compute accepts example numbers, flags stale results and valida
   await expect(panel).toContainText('success');
   const stored = await page.evaluate(async () => {
     const { readWorkflowLibrary } = await import('/src/features/workflows-hub/workflow-library.ts');
-    const { loadLocalRunRecords } = await import('/src/shared/workflow-engine/local-fiscal-workflow.ts');
+    const { loadLocalRunRecords } = await import('/src/shared/workflow-engine/workflow/run-storage.ts');
     return { entries: Object.values(readWorkflowLibrary()), records: loadLocalRunRecords() };
   });
   expect(stored.entries.flatMap((e: any) => e.runs)).toHaveLength(0);
@@ -146,7 +146,7 @@ test('example CSV uploads into one block without changing workflow data', async 
   await expect(panel).toContainText('Items');
   const stored = await page.evaluate(async () => {
     const { readWorkflowLibrary } = await import('/src/features/workflows-hub/workflow-library.ts');
-    const { loadLocalRunRecords } = await import('/src/shared/workflow-engine/local-fiscal-workflow.ts');
+    const { loadLocalRunRecords } = await import('/src/shared/workflow-engine/workflow/run-storage.ts');
     return { entries: Object.values(readWorkflowLibrary()), result: loadLocalRunRecords()[0].logs[0].output };
   });
   expect(stored.result.output.mappedRows).toHaveLength(2);
@@ -159,7 +159,7 @@ test('recorded inputs are explicit and missing snapshots do not execute upstream
   await expect(panel).toContainText('Aggregation groups');
   await panel.getByRole('button', { name: 'Run block', exact: true }).click();
   await expect(panel.getByRole('alert')).toContainText('No usable recorded result');
-  const records = await page.evaluate(async () => (await import('/src/shared/workflow-engine/local-fiscal-workflow.ts')).loadLocalRunRecords());
+  const records = await page.evaluate(async () => (await import('/src/shared/workflow-engine/workflow/run-storage.ts')).loadLocalRunRecords());
   expect(records).toHaveLength(0);
 });
 
@@ -187,7 +187,7 @@ test('the UI reuses individual aggregation and calculation results after reload 
   await expect(panel).toContainText('400');
   await page.screenshot({ path: testInfo.outputPath('individual-final-output.png'), fullPage: true });
   const stored = await page.evaluate(async () => {
-    const { loadLocalRunRecords } = await import('/src/shared/workflow-engine/local-fiscal-workflow.ts');
+    const { loadLocalRunRecords } = await import('/src/shared/workflow-engine/workflow/run-storage.ts');
     return loadLocalRunRecords();
   });
   expect(stored).toHaveLength(3);
@@ -206,7 +206,7 @@ test('large example imports paginate editable records and process every row', as
   await panel.getByLabel('Test row 26 number').fill('0');
   const start = Date.now();
   await panel.getByRole('button', { name: 'Run block', exact: true }).click();
-  const result = await page.evaluate(async () => (await import('/src/shared/workflow-engine/local-fiscal-workflow.ts')).loadLocalRunRecords()[0].logs[0].output);
+  const result = await page.evaluate(async () => (await import('/src/shared/workflow-engine/workflow/run-storage.ts')).loadLocalRunRecords()[0].logs[0].output);
   expect(result.output.mappedRows).toHaveLength(500);
   expect(result.output.mappedRows[25].amount).toBe(0);
   expect(Date.now() - start).toBeLessThan(5000);
@@ -216,7 +216,8 @@ test('isolated calculation combines an aggregate snapshot with a source-qualifie
   await page.goto('/');
   const result = await page.evaluate(async () => {
     const { templateDefinition } = await import('/src/features/workflows-hub/saved-workflow-run.tsx');
-    const { createWorkflowBlockFromCatalog, workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/local-fiscal-workflow.ts');
+    const { createWorkflowBlockFromCatalog } = await import('/src/shared/workflow-engine/workflow/block-factory.ts');
+    const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/workflow/canvas.ts');
     const { runLocalWorkflowTools } = await import('/src/shared/workflow-engine/local-tool-runner.ts');
     const { exampleInput } = await import('/src/shared/workflow-engine/block-test-inputs.ts');
     const { calculationValueKey } = await import('/src/shared/workflow-engine/calculation-values.ts');

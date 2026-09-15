@@ -2,7 +2,7 @@
 
 import { ChevronDown, ChevronRight, Clock, Database, LayoutList, Play, X } from "lucide-react";
 import { useCallback, useState } from "react";
-import type { LocalRunRecord, WorkflowBlock } from "@/shared/workflow-engine/local-fiscal-workflow";
+import { type LocalRunRecord, type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
 import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
 import { BlockDataFlowColumn } from "../workspace/block-data-flow-pane";
 

@@ -16,12 +16,9 @@ import Image from '@/lib/next-image-shim';
 import type { JSX } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/platform/api-client";
-import {
-  isLocalRunExecutionId,
-  isLocalWorkflowId,
-  type LocalRunRecord,
-  loadLocalRunRecords,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { isLocalRunExecutionId, loadLocalRunRecords } from "@/shared/workflow-engine/workflow/run-storage";
+import { isLocalWorkflowId } from "@/shared/workflow-engine/workflow/visuals";
+import { type LocalRunRecord } from "@/shared/workflow-engine/workflow/contracts";
 import {
   OUTPUT_DISPLAY_CONFIGS,
   type OutputDisplayConfig,

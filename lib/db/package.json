@@ -9,9 +9,14 @@
   },
   "scripts": {
     "push": "drizzle-kit push --config ./drizzle.config.ts",
-    "push-force": "drizzle-kit push --force --config ./drizzle.config.ts"
+    "push-force": "drizzle-kit push --force --config ./drizzle.config.ts",
+    "generate": "drizzle-kit generate --config ./drizzle.config.ts",
+    "migrate": "node scripts/migrations.mjs migrate",
+    "baseline": "node scripts/migrations.mjs baseline",
+    "migration-status": "node scripts/migrations.mjs status"
   },
   "dependencies": {
+    "@workspace/workflow-contracts": "workspace:*",
     "drizzle-orm": "catalog:",
     "drizzle-zod": "^0.8.3",
     "nanoid": "^6.0.0",

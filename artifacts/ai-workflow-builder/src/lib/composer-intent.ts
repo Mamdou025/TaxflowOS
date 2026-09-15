@@ -38,9 +38,7 @@ const GEN_VERB = /\b(generate|create|make|build|mock|draw|plot|chart|graph|visua
 // (fapi · roulement · expense · campaign).
 const WF_KEYWORD: { re: RegExp; id: string; target: string }[] = [
   { re: /\bfapi\b/i, id: 'fapi', target: 'FAPI' },
-  { re: /roulement|rollover|art\.?\s*85|section\s*85|\bs\.?\s*85\b/i, id: 'roulement', target: 'the art. 85 rollover' },
   { re: /\bexpenses?\b|d[ée]penses?|reimburs|per[- ]?diem/i, id: 'expense', target: 'expenses' },
-  { re: /\bcampaign\b|marketing budget|budget allocation|channel spend/i, id: 'campaign', target: 'campaign budgets' },
 ];
 
 const PAGE_NOUN = /\b(dashboard|worksheet|worksheets|t1134|surplus|viewer|documents?)\b/i;

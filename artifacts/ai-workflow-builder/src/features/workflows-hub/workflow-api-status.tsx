@@ -1,4 +1,4 @@
-import type { WorkflowBlock } from '@/shared/workflow-engine/local-fiscal-workflow';
+import { type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
 export function ApiDataStatus({ blocks, recorded = false }: { blocks: WorkflowBlock[]; recorded?: boolean }) {
   const sources = blocks.filter(block => ['currency_rate', 'http_json'].includes(String(block.config.sourceKind)) || ['source.currency_rate', 'source.http_json'].includes(String(block.config.toolId)));
   if (!sources.length) return null;

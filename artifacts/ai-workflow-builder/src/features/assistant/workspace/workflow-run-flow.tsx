@@ -1,10 +1,11 @@
+import { apiFetch } from '@/platform/auth/api-fetch';
 
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSetAtom, useAtom, useAtomValue } from 'jotai';
 import { Check, Upload, FileUp, ShieldCheck, Loader2, ChevronDown, ExternalLink, X, GitBranch, SlidersHorizontal, AlertTriangle, Cloud, Play, RotateCcw } from 'lucide-react';
-import { runTemplateLoop, runTemplateCore, buildOverrideRules, resolveBlocker, type TemplateConfig, type RunState, type RunDetail, type SourceRow } from '@/shared/workflow-engine/runtime/workflow-runs';
-import { buildApiRequest, getApiConnector, withParamDefaults } from '@/shared/workflow-engine/execution/blocks/source/http-json/connectors';
+import { runTemplateLoop, runTemplateCore, buildOverrideRules, resolveBlocker, type TemplateConfig, type RunState, type RunDetail, type RunOutcome, type SourceRow } from '@/shared/workflow-engine/runtime/workflow-runs';
+import { buildApiRequest, getApiConnector, withParamDefaults } from '@workspace/source-connectors/connectors';
 import { parseUploadToRows } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
 import { GoogleSourcePicker, type PickedSource } from '@/features/assistant/workspace/google-source-picker';
 import { pushTrailAtom, activeRunAtom, setActiveCoworkerAtom, uploadedRowsAtom, runEditsAtom, setRunInputAtom, setRunOverrideAtom, setRunEditsAtom, EMPTY_RUN_EDITS, runFlowAtom, setRunFlowAtom, INITIAL_RUN_FLOW, type RunFlow } from '@/shared/stores/workspace-store';
@@ -321,7 +322,7 @@ function InputRow({ label, hint, value, onCommit, blockId, onOpenBuilder, live, 
     if (!live) return;
     setFetching(true); setNote(null);
     try {
-      const res = await fetch(`/api/fx-rate?from=${live.from}&to=${live.to}&year=${live.year}`);
+      const res = await apiFetch(`/api/fx-rate?from=${live.from}&to=${live.to}&year=${live.year}`);
       const data = await res.json();
       if (data?.ok && Number.isFinite(data.rate)) {
         const rate = Math.round(data.rate * 10000) / 10000;
@@ -528,7 +529,10 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
     () => (state.uploaded && !state.rows && storeRows && storeRows.length ? { ...state, rows: storeRows } : state),
     [state, storeRows]
   );
-  const outcome = useMemo(() => { try { return runTemplateLoop(config, effectiveState); } catch { return null; } }, [config, effectiveState]);
+  const outcome = useMemo<RunOutcome>(() => {
+    try { return runTemplateLoop(config, effectiveState); }
+    catch (error) { return { detail: null, done: false, activeStage: 2, blocker: { kind: 'error' as const, message: error instanceof Error ? error.message : 'Workflow execution failed.' } }; }
+  }, [config, effectiveState]);
   // Full workflow snapshot (blocks + edges) — powers the inline "where it comes from" peek without a page load.
   const snapshot = useMemo(() => { try { return config.buildSnapshot() as unknown as PeekSnapshot; } catch { return undefined; } }, [config]);
   // Current run values mapped to their target block/config key, so the peek shows the LIVE value (edited / fetched), not just the template default.
@@ -563,6 +567,7 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
     }
     if (blocker.kind === 'approval') return 'Ready for your approval';
     if (blocker.kind === 'choice') return blocker.choiceId === '__elect__' ? 'Waiting for you to elect an amount' : 'Waiting for your decision';
+    if (blocker.kind === 'error') return 'Execution failed — correction required';
     return 'Working…';
   };
 
@@ -619,13 +624,14 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
   // Publish where we are + the live figures so the LLM (via useCopilotReadable)
   // and UI can see it.
   useEffect(() => {
-    const phase: 'upload' | 'categorize' | 'elect' | 'approve' | 'done' =
+    const phase: 'upload' | 'categorize' | 'elect' | 'approve' | 'done' | 'error' =
       done ? 'done'
+      : blocker?.kind === 'error' ? 'error'
       : blocker?.kind === 'upload' ? 'upload'
       : blocker?.kind === 'approval' ? 'approve'
       : blocker?.kind === 'choice' && blocker.choiceId === '__elect__' ? 'elect'
       : 'categorize';
-    const awaiting = { upload: config.apiSource ? `fetching ${config.apiSource.recordLabel} from ${config.apiSource.provider}` : `waiting for you to upload the ${config.documentLabel}`, categorize: 'waiting for you to categorize an unmatched row', elect: 'waiting for you to elect an amount', approve: 'waiting for your approval of the computed figures', done: 'complete' }[phase];
+    const awaiting = { error: blocker?.message ?? 'Execution failed', upload: config.apiSource ? `fetching ${config.apiSource.recordLabel} from ${config.apiSource.provider}` : `waiting for you to upload the ${config.documentLabel}`, categorize: 'waiting for you to categorize an unmatched row', elect: 'waiting for you to elect an amount', approve: 'waiting for your approval of the computed figures', done: 'complete' }[phase];
     setActiveRun({
       workflowId: config.id, workflowName: config.name, agentName: SINA.name, documentLabel: config.documentLabel,
       totalSteps: config.steps.length, stepIndex: activeIdx, stepLabel: config.steps[Math.min(activeIdx, config.steps.length - 1)].label,
@@ -658,7 +664,7 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
         : blocker.kind === 'approval' ? 'Ready for your approval'
         : blocker.kind === 'choice'
           ? (blocker.choiceId === '__elect__' ? 'Waiting for you to elect an amount' : 'Waiting for your decision')
-          : 'Reviewing…';
+          : blocker.kind === 'error' ? 'Execution failed — correction required' : 'Reviewing…';
       setActiveCoworker({ coworker: runActor, status });
     } else {
       setActiveCoworker({ coworker: WORKFLOW_ENGINE, status: `Calculating ${config.documentLabel}…` });
@@ -682,7 +688,7 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
     setParseError(null);
     setShowGoogle(false);
     setUploadedRows((prev) => ({ ...prev, [config.id]: { fileName: name, rows, at: Date.now() } }));
-    setFlow((f) => ({ ...f, rows, uploaded: true }));
+    setFlow((f) => ({ ...f, rows, uploaded: true, approved: false, elected: null }));
   };
 
   // Parse the real workbook (shared parser) → store it (shared with the builder) → run on it.
@@ -730,7 +736,7 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
     setFetching(true);
     setParseError(null);
     try {
-      const res = await fetch('/api/http-source', {
+      const res = await apiFetch('/api/http-source', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -905,6 +911,7 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
         <div style={{ marginTop: 6, paddingTop: 12, borderTop: `1px solid ${HAIRLINE}` }}>
           {/* API-sourced: no document, no upload prompt. It fetches itself; this
               panel only ever appears while that is in flight or after it failed. */}
+          {blocker.kind === 'error' && <div role="alert" style={{ color: DANGER, whiteSpace: 'pre-wrap' }}><strong>Execution failed</strong><div>{blocker.message}</div></div>}
           {blocker.kind === 'upload' && config.apiSource && (
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 600, color: INK, marginBottom: 5 }}>
@@ -963,7 +970,7 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
                     >
                       <Cloud size={13} /> {apiConnector ? `Pull from ${config.apiSource.provider}` : `Try ${config.apiSource.provider} again`}
                     </button>
-                    {ghostBtn({ children: 'Continue with the offline sample', onClick: () => { setParseError(null); fileName.current = null; setFlow((f) => ({ ...f, rows: undefined, uploaded: true })); } })}
+                    {ghostBtn({ children: 'Continue with the offline sample', onClick: () => { setParseError(null); fileName.current = null; setFlow((f) => ({ ...f, rows: config.sampleRows, uploaded: true, approved: false })); } })}
                   </div>
                   {/* The request those parameters resolve to — shown, not hidden.
                       The point of the parameter form is convenience, not opacity. */}
@@ -985,16 +992,16 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
                 {/* A workbook is already loaded (this session / the worksheet / the builder):
                     offer it as the primary one-click path, but still let them swap it. */}
                 {hasCached && (
-                  <button onClick={() => setFlow((f) => ({ ...f, uploaded: true }))} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 550, padding: '7px 13px', borderRadius: 8, background: PRIMARY_BG, color: PRIMARY_FG, border: 'none', cursor: 'pointer' }}>
+                  <button onClick={() => setFlow((f) => ({ ...f, rows: storeRows, uploaded: true, approved: false }))} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 550, padding: '7px 13px', borderRadius: 8, background: PRIMARY_BG, color: PRIMARY_FG, border: 'none', cursor: 'pointer' }}>
                     <Check size={13} /> Use loaded workbook{fileName.current ? ` · ${fileName.current}` : ''} ({storeRows!.length} rows)
                   </button>
                 )}
                 <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 550, padding: '7px 13px', borderRadius: 8, background: parsing ? MUTED : (hasCached || config.apiSource ? CARD : PRIMARY_BG), color: hasCached || config.apiSource ? INK : PRIMARY_FG, border: hasCached || config.apiSource ? `1px solid ${LINE}` : 'none', cursor: parsing ? 'default' : 'pointer' }}>
                   {parsing ? <Loader2 size={13} className="cwp-spin" /> : <Upload size={13} />} {parsing ? 'Parsing…' : hasCached ? 'Upload a different workbook' : 'Upload workbook'}
-                  <input type="file" accept=".xlsx,.xls" disabled={parsing} style={{ display: 'none' }} onChange={onUploadFile} />
+                  <input type="file" accept=".xlsx,.xls,.json" disabled={parsing} style={{ display: 'none' }} onChange={onUploadFile} />
                 </label>
                 {ghostBtn({ children: <><Cloud size={13} /> Import from Google</>, onClick: () => setShowGoogle((v) => !v) })}
-                {ghostBtn({ children: 'Use sample workbook', onClick: () => { fileName.current = null; setUploadedRows((prev) => { const next = { ...prev }; delete next[config.id]; return next; }); setFlow((f) => ({ ...f, rows: undefined, uploaded: true })); } })}
+                {ghostBtn({ children: 'Use sample workbook', onClick: () => { fileName.current = null; setUploadedRows((prev) => { const next = { ...prev }; delete next[config.id]; return next; }); setFlow((f) => ({ ...f, rows: config.sampleRows, uploaded: true, approved: false })); } })}
               </div>
               {showGoogle && <GoogleSourcePicker onPicked={onGooglePicked} onClose={() => setShowGoogle(false)} />}
               {parseError && <div style={{ fontSize: 11, color: DANGER, marginTop: 8 }}>{parseError}</div>}

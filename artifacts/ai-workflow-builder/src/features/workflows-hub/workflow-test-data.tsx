@@ -1,11 +1,10 @@
+import { apiFetch } from '@/platform/auth/api-fetch';
 import { DocumentReviewTable } from './document-review-table';
 import { parseDocumentNumber } from './document-records';
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import {
-  createWorkflowBlockFromCatalog,
-  type WorkflowDefinition,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { createWorkflowBlockFromCatalog } from "@/shared/workflow-engine/workflow/block-factory";
+import { type WorkflowDefinition } from "@/shared/workflow-engine/workflow/contracts";
 import {
   parseExcelWorkbookFile,
   buildExcelSourceConfigPatch,
@@ -66,6 +65,10 @@ export function WorkflowTestData({
       }
     }
     const existing = sources.find((source) => source.id === target);
+    if (!existing || !definition.edges.some(edge => edge.sourceBlockId === existing.id && edge.status === 'active')) {
+      toast.error('Choose a connected document source. Connect it to the calculation in Build before applying records.');
+      return;
+    }
     const block =
       existing ??
       createWorkflowBlockFromCatalog("source:excel-workbook", {
@@ -179,7 +182,7 @@ export function WorkflowTestData({
           if (extension === 'pdf' || extension === 'docx') {
             setProgress(ocr ? 'Reading scanned pages with OCR. Review every extracted number.' : 'Extracting document text on the server...');
             const body = new FormData(); body.append('file', file); if (ocr) body.append('ocr', 'true');
-            const response = await fetch('/api/workflow-extract', { method: 'POST', body, signal: AbortSignal.any([abort.signal, AbortSignal.timeout(120000)]) });
+            const response = await apiFetch('/api/workflow-extract', { method: 'POST', body, signal: AbortSignal.any([abort.signal, AbortSignal.timeout(120000)]) });
             const result = await response.json();
             if (!response.ok) throw new Error(result.error || 'Document extraction failed.');
             if (result.needsOcr) { setScanFile(file); setOcrAvailable(result.ocrAvailable); return; }
@@ -232,7 +235,7 @@ export function WorkflowTestData({
                 {source.label}
               </option>
             ))}
-            <option value="new">Add a document source</option>
+            {!sources.length && <option value="new">Connect a document source in Build first</option>}
           </select>
         </label>
         <input

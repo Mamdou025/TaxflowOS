@@ -1,18 +1,10 @@
 import type { EdgeChange, NodeChange } from "@xyflow/react";
 import { applyEdgeChanges, applyNodeChanges } from "@xyflow/react";
 import { nanoid } from "nanoid";
-import {
-  createCanvasEdgeFromWorkflowEdge,
-  createSplitWorkflowEdgeRecords,
-  createWorkflowBlockFromCatalog,
-  createWorkflowEdgeRecord,
-  createWorkflowNodeFromBlock,
-  getBlockCatalogItem,
-  getWorkflowEdgeDefaults,
-  updateWorkflowEdgeRecord,
-  type WorkflowBlock,
-  type WorkflowEdge as WorkflowSchemaEdge,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { createCanvasEdgeFromWorkflowEdge, createSplitWorkflowEdgeRecords, createWorkflowEdgeRecord, getWorkflowEdgeDefaults, updateWorkflowEdgeRecord } from "@/shared/workflow-engine/workflow/edges";
+import { createWorkflowBlockFromCatalog, createWorkflowNodeFromBlock } from "@/shared/workflow-engine/workflow/block-factory";
+import { getBlockCatalogItem } from "@/shared/workflow-engine/workflow/visuals";
+import { type WorkflowBlock, type WorkflowEdge as WorkflowSchemaEdge } from "@/shared/workflow-engine/workflow/contracts";
 import type {
   WorkflowEdge,
   WorkflowNode,

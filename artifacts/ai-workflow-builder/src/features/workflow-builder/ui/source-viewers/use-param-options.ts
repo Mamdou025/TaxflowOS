@@ -1,3 +1,4 @@
+import { apiFetch } from '@/platform/auth/api-fetch';
 
 
 // Live choices for a connector parameter, from GET /api/param-options.
@@ -13,7 +14,7 @@
 // behind — a stale or invented list is worse than an honest text box.
 
 import { useEffect, useState } from "react";
-import type { ApiParamOption } from "@/shared/workflow-engine/execution/blocks/source/http-json/connectors";
+import type { ApiParamOption } from "@workspace/source-connectors/connectors";
 
 // Module-level so every panel mount doesn't re-request the same list.
 const cache = new Map<string, ApiParamOption[]>();
@@ -41,7 +42,7 @@ export function useParamOptions(connectorId?: string, paramKey?: string) {
     setFailed(false);
     void (async () => {
       try {
-        const response = await fetch(
+        const response = await apiFetch(
           `/api/param-options?connector=${encodeURIComponent(connectorId!)}&param=${encodeURIComponent(paramKey!)}`
         );
         const data = (await response.json()) as {

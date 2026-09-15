@@ -1,6 +1,6 @@
 
 
-import { createExpenseReimbursementWorkflow } from '@/shared/workflow-engine/local-fiscal-workflow';
+import { createExpenseReimbursementWorkflow } from "@/shared/workflow-engine/workflow/templates/expense";
 import {
   EXPENSE_LINES_CALC_RULES,
   EXPENSE_SUMMARY_CALC_RULES,
@@ -46,7 +46,7 @@ export const EXPENSE_CONFIG: TemplateConfig = {
     { label: 'Apply policy & total', sub: 'Per-diem caps + net payable' },
     { label: 'Review & approve', sub: 'Sign off before payroll' },
   ],
-  buildSnapshot: createExpenseReimbursementWorkflow as unknown as TemplateConfig['buildSnapshot'],
+  buildSnapshot: createExpenseReimbursementWorkflow,
   sampleRows: ROWS,
   sourceBlockId: 'expense-source-receipts',
   mapperBlockId: 'expense-logic-classifier',
@@ -67,47 +67,9 @@ export const EXPENSE_CONFIG: TemplateConfig = {
   // can't emit arbitrary policy keys, so the domain math is done in computeExtra).
   params: { mealCap: 250, fxRate: 1.35 },
   editableInputs: [
-    { key: 'mealCap', label: 'Meal per-diem cap', default: 250, step: 25, hint: 'Maximum reimbursable meals total' },
-    { key: 'fxRate', label: 'FX rate (USD → CAD)', default: 1.35, step: 0.01, hint: 'Annual average USD→CAD (Bank of Canada)' },
+    { key: 'mealCap', label: 'Meal per-diem cap', default: 250, step: 25, hint: 'Maximum reimbursable meals total', block: { blockId: 'expense-logic-lines', configKey: 'mealCap' } },
+    { key: 'fxRate', label: 'FX rate (USD → CAD)', default: 1.35, step: 0.01, hint: 'Annual average USD→CAD (Bank of Canada)', block: { blockId: 'expense-source-fx', configKey: 'overrideRate' } },
   ],
-  // The real reimbursement math: driven by the live classification/rollup buckets
-  // + the editable policy params. Overrides the calc-engine blocks' output.
-  computeExtra: ({ rollup, params }): { lines: DerivedRow[]; summary: DerivedRow[]; boundsMin: number; boundsMax: number } => {
-    const travel = rollup.travel_total ?? 0;
-    const lodging = rollup.lodging_total ?? 0;
-    const meals = rollup.meals_total ?? 0;
-    const supplies = rollup.supplies_total ?? 0;
-    const mileage = rollup.mileage_total ?? 0;
-    const nonReimb = rollup.nonreimbursable_total ?? 0;
-    const submitted = rollup.submitted_total ?? travel + lodging + meals + supplies + mileage + nonReimb;
-    const mealCap = params.mealCap ?? 250;
-    const fx = params.fxRate ?? 1.35;
-
-    const mealsReimb = Math.min(meals, mealCap);
-    const mealsOver = Math.max(meals - mealCap, 0);
-    const totalReimb = travel + lodging + mealsReimb + supplies + mileage;
-    const disallowed = nonReimb + mealsOver;
-    const netPayable = totalReimb;
-    const netPayableCad = netPayable * fx;
-
-    const lines: DerivedRow[] = [
-      { key: 'TRAVEL_REIMBURSABLE', label: 'Travel (reimbursable)', value: money(travel), formula: 'travel_total (100% policy)' },
-      { key: 'LODGING_REIMBURSABLE', label: 'Lodging (reimbursable)', value: money(lodging), formula: 'lodging_total (100% policy)' },
-      { key: 'MEALS_REIMBURSABLE', label: 'Meals (capped)', value: money(mealsReimb), formula: `min(meals_total ${money(meals)}, cap ${money(mealCap)})` },
-      { key: 'SUPPLIES_REIMBURSABLE', label: 'Supplies (reimbursable)', value: money(supplies), formula: 'supplies_total (100% policy)' },
-      { key: 'MILEAGE_REIMBURSABLE', label: 'Mileage (reimbursable)', value: money(mileage), formula: 'mileage_total (corporate rate)' },
-      { key: 'MEALS_OVER_CAP', label: 'Meals over cap (disallowed)', value: money(mealsOver), formula: `max(meals_total − cap, 0)` },
-    ];
-    const summary: DerivedRow[] = [
-      { key: 'SUBMITTED_TOTAL', label: 'Submitted total', value: money(submitted), formula: 'sum of all receipts' },
-      { key: 'TOTAL_REIMBURSABLE', label: 'Total reimbursable', value: money(totalReimb), formula: 'travel + lodging + meals(capped) + supplies + mileage' },
-      { key: 'POLICY_DISALLOWED', label: 'Policy-disallowed', value: money(disallowed), formula: 'non-reimbursable + meals over cap' },
-      { key: 'NET_PAYABLE', label: 'Net payable to employee', value: money(netPayable), formula: 'total reimbursable' },
-      { key: 'FX_RATE', label: 'FX rate (USD → CAD)', value: fx, formula: 'annual average (Bank of Canada)' },
-      { key: 'NET_PAYABLE_CAD', label: 'Net payable (CAD)', value: money(netPayableCad), formula: `net payable × ${fx}` },
-    ];
-    return { lines, summary, boundsMin: 0, boundsMax: 0 };
-  },
   // Per-line provenance: which receipts feed each reimbursable category line.
   worksheetProvenance: ({ lineKey, core }) => {
     const map: Record<string, string> = {

@@ -1,3 +1,4 @@
+import { apiFetch } from '@/platform/auth/api-fetch';
 /**
  * API Client for making type-safe API calls to the backend
  * Replaces server actions with API endpoints
@@ -25,6 +26,7 @@ export type SavedWorkflow = WorkflowData & {
   createdAt: string;
   updatedAt: string;
   isOwner?: boolean;
+  canEdit?: boolean;
 };
 
 // API error class
@@ -40,7 +42,7 @@ export class ApiError extends Error {
 
 // Helper function to make API calls
 async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(endpoint, {
+  const response = await apiFetch(endpoint, {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -269,7 +271,7 @@ export const aiApi = {
       name?: string;
     }
   ): Promise<WorkflowData> => {
-    const response = await fetch("/api/ai/generate", {
+    const response = await apiFetch("/api/ai/generate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

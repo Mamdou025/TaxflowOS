@@ -3,23 +3,17 @@
 //
 //   POST /api/assistant/tools  { tool, args }  → tool-specific JSON result
 //
-// Ported from the Next.js route (app/api/assistant/tools/route.ts) into the Express
-// api-server. The tool IMPLEMENTATIONS live in the shared registry
-// (platform/agent-tools/registry.ts), reused verbatim via the `@` esbuild alias — the
-// SAME code the Agent Lab runs, no re-implementation. Covers: searchWeb,
+// Tool implementations live in @workspace/agent-runtime/registry, shared with
+// the Agent Lab. Covers: searchWeb,
 // searchCanadianTax, fetchWebPage, getFxRate (live Bank of Canada rate),
 // estimateForeignIncomeTax. Without this route the client's callServerTool() gets a 404
 // and every one of those tools reports "Tool unavailable (HTTP 404)".
 //
-// Auth: the Next.js original was session-gated. The api-server currently treats all
-// traffic as anonymous (app.ts), so — like the agent-lab/genui ports — this route does
-// not session-gate; it would otherwise reject every caller. Outbound-proxy safety still
-// comes from the registry itself (fetchWebPage keeps its SSRF host guard); the other
-// tools hit fixed upstreams (Bank of Canada, Firecrawl). Re-add a session gate here when
-// real auth lands in the api-server.
+// app.ts requires a real session, current workspace membership and execute permission.
+// Outbound-proxy restrictions also remain enforced by the registry itself.
 // ─────────────────────────────────────────────────────────────────────────────
 import { Router } from "express";
-import { isAgentToolId, runAgentTool } from "@/platform/agent-tools/registry";
+import { isAgentToolId, runAgentTool } from "@workspace/agent-runtime/registry";
 
 const router = Router();
 

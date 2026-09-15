@@ -10,15 +10,14 @@ globalThis.require = createRequire(import.meta.url);
 
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
 
-// The web app package's source. A handful of server-safe modules live there and
-// are reused verbatim by this api-server (e.g. the Agent Lab's runAgent + its
-// shared tool registry), so we alias `@` to it exactly like the Vite build does
-// (vite.config.ts resolve.alias['@']). esbuild follows the imports and bundles
-// them; the whole reused tree only needs `ai`, `zod`, and `fetch`.
-const webSrc = path.resolve(artifactDir, "..", "ai-workflow-builder", "src");
-
 async function buildAll() {
-  const distDir = path.resolve(artifactDir, "dist");
+  const testRun = process.env.TAXFLOW_TEST_RUN_ID;
+  if (testRun && !/^[a-f0-9]{8}-[a-f0-9-]{36}$/.test(testRun)) {
+    throw new Error("Invalid isolated test build identifier");
+  }
+  const distDir = testRun
+    ? path.join(artifactDir, ".test-builds", testRun)
+    : path.resolve(artifactDir, "dist");
   await rm(distDir, { recursive: true, force: true });
 
   await esbuild({
@@ -29,7 +28,6 @@ async function buildAll() {
     outdir: distDir,
     outExtension: { ".js": ".mjs" },
     logLevel: "info",
-    alias: { "@": webSrc },
     // Bundle the GenUI system prompt (a pre-generated .txt) into the output as a
     // string, so /api/genui has no runtime file dependency in the container.
     loader: { ".txt": "text" },
@@ -73,7 +71,7 @@ async function buildAll() {
       "@swc/*",
       "@aws-sdk/*",
       "@azure/*",
-      "@opentelemetry/*",
+      "@opentelemetry/api",
       "@google-cloud/*",
       "@google/*",
       "googleapis",

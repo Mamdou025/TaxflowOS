@@ -1,3 +1,4 @@
+import { workspaceStorage } from '@/platform/auth/workspace-context';
 
 
 import { useAtomValue } from "jotai";
@@ -36,7 +37,8 @@ import {
   TooltipTrigger,
 } from "@/shared/ui/tooltip";
 import { useIsTouch } from "@/hooks/use-touch";
-import { BLOCK_CATALOG, isLocalWorkflowId } from "@/shared/workflow-engine/local-fiscal-workflow";
+import { BLOCK_CATALOG } from "@/shared/workflow-engine/block-catalog-data";
+import { isLocalWorkflowId } from "@/shared/workflow-engine/workflow/visuals";
 import { cn } from "@/lib/utils";
 import { currentWorkflowIdAtom } from "@/shared/workflow-engine/state/workflow-store";
 import { getAllActions } from "@/plugins";
@@ -278,7 +280,7 @@ function getInitialHiddenGroups(): Set<string> {
     return new Set();
   }
   try {
-    const stored = localStorage.getItem(HIDDEN_GROUPS_KEY);
+    const stored = workspaceStorage.getItem(HIDDEN_GROUPS_KEY);
     return stored ? new Set(JSON.parse(stored)) : new Set();
   } catch {
     return new Set();
@@ -290,7 +292,7 @@ function getInitialViewMode(): ViewMode {
     return "list";
   }
   try {
-    const stored = localStorage.getItem(VIEW_MODE_KEY);
+    const stored = workspaceStorage.getItem(VIEW_MODE_KEY);
     return stored === "grid" ? "grid" : "list";
   } catch {
     return "list";
@@ -319,7 +321,7 @@ export function ActionGrid({
   const toggleViewMode = () => {
     const newMode = viewMode === "list" ? "grid" : "list";
     setViewMode(newMode);
-    localStorage.setItem(VIEW_MODE_KEY, newMode);
+    workspaceStorage.setItem(VIEW_MODE_KEY, newMode);
   };
 
   const toggleGroup = (category: string) => {
@@ -343,7 +345,7 @@ export function ActionGrid({
         next.add(category);
       }
       // Persist to localStorage
-      localStorage.setItem(HIDDEN_GROUPS_KEY, JSON.stringify([...next]));
+      workspaceStorage.setItem(HIDDEN_GROUPS_KEY, JSON.stringify([...next]));
       return next;
     });
   };

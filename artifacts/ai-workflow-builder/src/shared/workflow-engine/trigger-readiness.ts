@@ -1,4 +1,4 @@
-import type { WorkflowBlock } from './local-fiscal-workflow';
+import { type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
 
 export type ReadinessCondition = { id: string; kind: 'document' | 'api' | 'field'; sourceId: string; path?: string; operator?: 'exists' | 'equals' | 'greater'; value?: string };
 export function readinessConditions(config: Record<string, unknown>, blocks: WorkflowBlock[]): ReadinessCondition[] {

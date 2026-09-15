@@ -1,320 +1,183 @@
-import { Router } from "express";
-import { db, chatThreads, chatMessages, desc, eq, asc, and, sql } from "@workspace/db";
-import { customAlphabet } from "nanoid";
+import { Router } from 'express';
+import { randomUUID } from 'node:crypto';
+import { z } from 'zod';
+import { pool } from '@workspace/db';
 
-const generateId = customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 21);
 const router = Router();
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Saved chats API. The client (features/assistant/runtime/chat) speaks a BATCH
-// contract — it autosaves the WHOLE projected transcript in one call and never
-// pre-creates the thread — so these handlers upsert the thread on demand and
-// replace its messages. Everything is scoped to req.userId (the anonymous user
-// until a real auth layer lands). See message-codec.ts for the ProjectedMessage
-// shape ({ id, role, seq, content:{text?,toolCall?} }).
-// ─────────────────────────────────────────────────────────────────────────────
-
-type ProjectedMessage = {
-  id?: string;
-  role: "user" | "assistant" | "tool" | "system";
-  seq?: number;
-  content?: unknown;
-};
-
-const isoThread = (t: typeof chatThreads.$inferSelect) => ({
-  ...t,
-  createdAt: t.createdAt.toISOString(),
-  updatedAt: t.updatedAt.toISOString(),
+const Id = z.string().min(1).max(200);
+const Title = z.string().max(500).nullable().optional();
+const Message = z
+  .object({
+    id: Id.optional(),
+    role: z.enum(['user', 'assistant', 'tool', 'system']),
+    seq: z.number().int().nonnegative().max(100000).optional(),
+    content: z.record(z.string(), z.unknown()).optional(),
+  })
+  .strict();
+const Batch = z
+  .object({
+    messages: z.array(Message).max(2000),
+    title: Title,
+    clientId: Id.nullable().optional(),
+  })
+  .strict();
+const Thread = z
+  .object({ id: Id.optional(), title: Title, clientId: Id.nullable().optional() })
+  .strict();
+router.get('/threads', async (req, res) => {
+  const { rows } = await pool.query(
+    'SELECT * FROM chat_threads WHERE workspace_id=$1 ORDER BY updated_at DESC LIMIT 100',
+    [req.workspaceId],
+  );
+  res.json({ threads: rows.map(thread) });
 });
-
-// Ensure a thread exists and is owned by `userId`; create it if missing, and
-// refresh updatedAt (+ title, when provided). Returns null if it exists but is
-// owned by someone else.
-async function ensureOwnedThread(
-  threadId: string,
-  userId: string,
-  title?: string | null,
-  clientId?: string | null,
-) {
-  const existing = await db.query.chatThreads.findFirst({
-    where: eq(chatThreads.id, threadId),
-  });
-  if (existing) {
-    if (existing.userId !== userId) return null;
-    const [updated] = await db
-      .update(chatThreads)
-      .set({ updatedAt: new Date(), ...(title ? { title } : {}) })
-      .where(eq(chatThreads.id, threadId))
-      .returning();
-    return updated;
-  }
-  const [created] = await db
-    .insert(chatThreads)
-    .values({
-      id: threadId,
-      userId,
-      title: title ?? null,
-      clientId: clientId ?? null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .returning();
-  return created;
+function thread(row: Record<string, unknown>) {
+  return {
+    id: row.id,
+    title: row.title,
+    clientId: row.client_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    archivedAt: row.archived_at,
+  };
 }
-
-// GET /api/chat/threads — list the current user's threads, most-recent first.
-router.get("/threads", async (req, res) => {
-  try {
-    const threads = await db
-      .select()
-      .from(chatThreads)
-      .where(eq(chatThreads.userId, req.userId))
-      .orderBy(desc(chatThreads.updatedAt))
-      .limit(100);
-    res.json({ threads: threads.map(isoThread) });
-  } catch {
-    res.json({ threads: [] });
+router.post('/threads', async (req, res) => {
+  const parsed = Thread.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid chat thread.' });
+    return;
   }
-});
-
-// POST /api/chat/threads — explicit upsert of a thread (kept for completeness;
-// the batch message save below also upserts, so the client rarely needs this).
-router.post("/threads", async (req, res) => {
-  try {
-    const { id, title, clientId } = req.body as {
-      id?: string;
-      title?: string;
-      clientId?: string;
-    };
-    const thread = await ensureOwnedThread(id ?? generateId(), req.userId, title, clientId);
-    if (!thread) {
-      res.status(403).json({ error: "Forbidden" });
-      return;
-    }
-    res.status(201).json({ thread: isoThread(thread) });
-  } catch (err) {
-    req.log.error({ err }, "Failed to upsert thread");
-    res.status(500).json({ error: "Failed to upsert thread" });
+  const { rows } = await pool.query(
+    `INSERT INTO chat_threads (id,user_id,workspace_id,title,client_id) VALUES ($1,$2,$3,$4,$5)
+    ON CONFLICT(id) DO UPDATE SET updated_at=now(),title=COALESCE(EXCLUDED.title,chat_threads.title)
+    WHERE chat_threads.workspace_id=EXCLUDED.workspace_id RETURNING *`,
+    [
+      parsed.data.id ?? randomUUID(),
+      req.userId,
+      req.workspaceId,
+      parsed.data.title ?? null,
+      parsed.data.clientId ?? null,
+    ],
+  );
+  if (!rows.length) {
+    res.status(403).json({ error: 'Thread access denied.' });
+    return;
   }
+  res.status(201).json({ thread: thread(rows[0]) });
 });
-
-// GET /api/chat/threads/:threadId — the thread + its full transcript, ordered by
-// seq. This is what the client's loadThread() restores from.
-router.get("/threads/:threadId", async (req, res) => {
-  try {
-    const { threadId } = req.params;
-    const thread = await db.query.chatThreads.findFirst({
-      where: eq(chatThreads.id, threadId),
-    });
-    if (!thread || thread.userId !== req.userId) {
-      res.status(404).json({ error: "Thread not found" });
-      return;
-    }
-    const messages = await db
-      .select()
-      .from(chatMessages)
-      .where(eq(chatMessages.threadId, threadId))
-      .orderBy(asc(chatMessages.seq));
-    res.json({
-      thread: isoThread(thread),
-      messages: messages.map((m) => ({
-        id: m.id,
-        role: m.role,
-        seq: m.seq,
-        content: m.content,
-      })),
-    });
-  } catch {
-    res.json({ messages: [] });
+router.get(['/threads/:threadId', '/threads/:threadId/messages'], async (req, res) => {
+  const owned = await pool.query('SELECT * FROM chat_threads WHERE id=$1 AND workspace_id=$2', [
+    req.params.threadId,
+    req.workspaceId,
+  ]);
+  if (!owned.rowCount) {
+    res.status(404).json({ error: 'Thread not found.' });
+    return;
   }
+  const { rows } = await pool.query(
+    'SELECT id,role,seq,content FROM chat_messages WHERE thread_id=$1 AND workspace_id=$2 ORDER BY seq',
+    [req.params.threadId, req.workspaceId],
+  );
+  res.json({ thread: thread(owned.rows[0]), messages: rows });
 });
-
-// GET /api/chat/threads/:threadId/messages — same transcript, messages only.
-router.get("/threads/:threadId/messages", async (req, res) => {
-  try {
-    const { threadId } = req.params;
-    const thread = await db.query.chatThreads.findFirst({
-      where: eq(chatThreads.id, threadId),
-    });
-    if (!thread || thread.userId !== req.userId) {
-      res.json({ messages: [] });
-      return;
-    }
-    const messages = await db
-      .select()
-      .from(chatMessages)
-      .where(eq(chatMessages.threadId, threadId))
-      .orderBy(asc(chatMessages.seq));
-    res.json({
-      messages: messages.map((m) => ({
-        id: m.id,
-        role: m.role,
-        seq: m.seq,
-        content: m.content,
-      })),
-    });
-  } catch {
-    res.json({ messages: [] });
+router.post('/threads/:threadId/messages', async (req, res) => {
+  const batch = Batch.safeParse(req.body);
+  const single = Message.safeParse(req.body);
+  if (!Id.safeParse(req.params.threadId).success || (!batch.success && !single.success)) {
+    res.status(400).json({ error: 'Invalid chat messages.' });
+    return;
   }
-});
-
-// POST /api/chat/threads/:threadId/messages — the autosave endpoint.
-//   • BATCH  (client): body = { messages: ProjectedMessage[], title? } → upsert
-//     the thread (creating it if new) and REPLACE its transcript with the batch.
-//   • SINGLE (legacy): body = { id, role, seq, content } → upsert one message.
-router.post("/threads/:threadId/messages", async (req, res) => {
+  const input = batch.success ? batch.data.messages : single.success ? [single.data] : [];
+  const rows = Array.from(
+    new Map(
+      input.map((message, i) => {
+        const value = {
+          id: message.id ?? randomUUID(),
+          role: message.role,
+          seq: message.seq ?? i,
+          content: message.content ?? {},
+        };
+        return [value.id, value];
+      }),
+    ).values(),
+  );
+  const client = await pool.connect();
   try {
-    const { threadId } = req.params;
-    const body = req.body as {
-      messages?: ProjectedMessage[];
-      title?: string | null;
-      clientId?: string | null;
-    } & ProjectedMessage;
-
-    // ── BATCH: whole-transcript replace ──────────────────────────────────────
-    if (Array.isArray(body.messages)) {
-      const thread = await ensureOwnedThread(
-        threadId,
+    await client.query('BEGIN');
+    const owned = await client.query(
+      `INSERT INTO chat_threads(id,user_id,workspace_id,title,client_id) VALUES($1,$2,$3,$4,$5)
+      ON CONFLICT(id) DO UPDATE SET updated_at=now(),title=COALESCE(EXCLUDED.title,chat_threads.title)
+      WHERE chat_threads.workspace_id=EXCLUDED.workspace_id RETURNING id`,
+      [
+        req.params.threadId,
         req.userId,
-        body.title,
-        body.clientId,
-      );
-      if (!thread) {
-        res.status(403).json({ error: "Forbidden" });
-        return;
-      }
-
-      const rows = body.messages
-        .filter((m) => m && m.role)
-        .map((m, i) => ({
-          id: m.id ?? generateId(),
-          threadId,
-          userId: req.userId,
-          role: m.role,
-          seq: typeof m.seq === "number" ? m.seq : i,
-          content: (m.content ?? {}) as (typeof chatMessages.$inferInsert)["content"],
-          createdAt: new Date(),
-        }));
-
-      // CopilotKit can re-emit a message `id` within one projected transcript
-      // (e.g. a synthetic tool-result injected by orphan-repair), and `id` is a
-      // GLOBAL primary key while the delete below is only thread-scoped — either
-      // path can make the batch insert violate chat_messages_pkey and 500 the
-      // whole save. Dedup by id (last wins) and upsert so a reused id can never
-      // fail the transcript replace.
-      const deduped = Array.from(new Map(rows.map((r) => [r.id, r])).values());
-
-      // Replace atomically so a save can never leave a half-written transcript.
-      await db.transaction(async (tx) => {
-        await tx.delete(chatMessages).where(eq(chatMessages.threadId, threadId));
-        if (deduped.length > 0) {
-          await tx
-            .insert(chatMessages)
-            .values(deduped)
-            .onConflictDoUpdate({
-              target: chatMessages.id,
-              set: {
-                threadId,
-                userId: req.userId,
-                role: sql`excluded.role`,
-                seq: sql`excluded.seq`,
-                content: sql`excluded.content`,
-                createdAt: sql`excluded.created_at`,
-              },
-            });
-        }
-      });
-
-      res.json({ ok: true, count: deduped.length });
+        req.workspaceId,
+        batch.success ? (batch.data.title ?? null) : null,
+        batch.success ? (batch.data.clientId ?? null) : null,
+      ],
+    );
+    if (!owned.rowCount) {
+      res.status(403).json({ error: 'Thread access denied.' });
       return;
     }
-
-    // ── SINGLE (legacy) ──────────────────────────────────────────────────────
-    const ownerThread = await ensureOwnedThread(threadId, req.userId);
-    if (!ownerThread) {
-      res.status(403).json({ error: "Forbidden" });
+    // Lock/serialize on the parent above. A reused global message ID may never move threads.
+    const collisions = await client.query(
+      'SELECT id FROM chat_messages WHERE id=ANY($1::text[]) AND (thread_id<>$2 OR workspace_id IS DISTINCT FROM $3)',
+      [rows.map((r) => r.id), req.params.threadId, req.workspaceId],
+    );
+    if (collisions.rowCount) {
+      res.status(409).json({ error: 'A message ID already belongs to another thread.' });
       return;
     }
-    const { id, role, seq, content } = body;
-    const messageId = id ?? generateId();
-    const existing = await db.query.chatMessages.findFirst({
-      where: eq(chatMessages.id, messageId),
-    });
-    if (existing) {
-      if (existing.threadId !== threadId || existing.userId !== req.userId) {
-        res.status(403).json({ error: "Forbidden" });
-        return;
-      }
-      const [updated] = await db
-        .update(chatMessages)
-        .set({ content: content as (typeof chatMessages.$inferInsert)["content"], seq: seq ?? existing.seq })
-        .where(and(eq(chatMessages.id, messageId), eq(chatMessages.userId, req.userId)))
-        .returning();
-      res.json({ message: { ...updated, createdAt: updated.createdAt.toISOString() } });
+    if (batch.success)
+      await client.query('DELETE FROM chat_messages WHERE thread_id=$1 AND workspace_id=$2', [
+        req.params.threadId,
+        req.workspaceId,
+      ]);
+    const saved = await client.query(
+      `INSERT INTO chat_messages(id,thread_id,user_id,workspace_id,role,seq,content)
+      SELECT m.id,$2,$3,$4,m.role,m.seq,m.content FROM jsonb_to_recordset($1::jsonb) AS m(id text,role text,seq integer,content jsonb)
+      ON CONFLICT(id) DO UPDATE SET role=EXCLUDED.role,seq=EXCLUDED.seq,content=EXCLUDED.content
+      WHERE chat_messages.thread_id=EXCLUDED.thread_id AND chat_messages.workspace_id=EXCLUDED.workspace_id RETURNING *`,
+      [JSON.stringify(rows), req.params.threadId, req.userId, req.workspaceId],
+    );
+    if (saved.rowCount !== rows.length) {
+      res.status(409).json({ error: 'A message ID changed ownership during the save.' });
       return;
     }
-    const [message] = await db
-      .insert(chatMessages)
-      .values({
-        id: messageId,
-        threadId,
-        userId: req.userId,
-        role: role,
-        seq: seq ?? 0,
-        content: (content ?? {}) as (typeof chatMessages.$inferInsert)["content"],
-        createdAt: new Date(),
-      })
-      .returning();
-    res.status(201).json({ message: { ...message, createdAt: message.createdAt.toISOString() } });
-  } catch (err) {
-    req.log.error({ err }, "Failed to save messages");
-    res.status(500).json({ error: "Failed to save messages" });
+    await client.query('COMMIT');
+    if (batch.success) res.json({ ok: true, count: rows.length });
+    else res.json({ message: saved.rows[0] });
+  } finally {
+    await client.query('ROLLBACK');
+    client.release();
   }
 });
-
-// PATCH /api/chat/threads/:threadId — rename (title) an owned thread.
-router.patch("/threads/:threadId", async (req, res) => {
-  try {
-    const { threadId } = req.params;
-    const { title } = req.body as { title?: string };
-    const owned = await db.query.chatThreads.findFirst({
-      where: and(eq(chatThreads.id, threadId), eq(chatThreads.userId, req.userId)),
-    });
-    if (!owned) {
-      res.status(404).json({ error: "Thread not found" });
-      return;
-    }
-    const [updated] = await db
-      .update(chatThreads)
-      .set({ title: title ?? null, updatedAt: new Date() })
-      .where(eq(chatThreads.id, threadId))
-      .returning();
-    res.json({ thread: isoThread(updated) });
-  } catch (err) {
-    req.log.error({ err }, "Failed to rename thread");
-    res.status(500).json({ error: "Failed to rename thread" });
+router.patch('/threads/:threadId', async (req, res) => {
+  const parsed = z.object({ title: Title }).strict().safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: 'Invalid title.' });
+    return;
   }
-});
-
-// DELETE /api/chat/threads/:threadId — delete an owned thread and its messages.
-router.delete("/threads/:threadId", async (req, res) => {
-  try {
-    const { threadId } = req.params;
-    const owned = await db.query.chatThreads.findFirst({
-      where: and(eq(chatThreads.id, threadId), eq(chatThreads.userId, req.userId)),
-    });
-    if (!owned) {
-      res.status(404).json({ error: "Thread not found" });
-      return;
-    }
-    // Delete messages first (works whether or not the FK cascades at the DB level).
-    await db.delete(chatMessages).where(eq(chatMessages.threadId, threadId));
-    await db.delete(chatThreads).where(eq(chatThreads.id, threadId));
-    res.json({ ok: true });
-  } catch (err) {
-    req.log.error({ err }, "Failed to delete thread");
-    res.status(500).json({ error: "Failed to delete thread" });
+  const { rows } = await pool.query(
+    'UPDATE chat_threads SET title=$3,updated_at=now() WHERE id=$1 AND workspace_id=$2 RETURNING *',
+    [req.params.threadId, req.workspaceId, parsed.data.title ?? null],
+  );
+  if (!rows.length) {
+    res.status(404).json({ error: 'Thread not found.' });
+    return;
   }
+  res.json({ thread: thread(rows[0]) });
 });
-
+router.delete('/threads/:threadId', async (req, res) => {
+  const result = await pool.query('DELETE FROM chat_threads WHERE id=$1 AND workspace_id=$2', [
+    req.params.threadId,
+    req.workspaceId,
+  ]);
+  if (!result.rowCount) {
+    res.status(404).json({ error: 'Thread not found.' });
+    return;
+  }
+  res.json({ ok: true });
+});
 export default router;

@@ -85,6 +85,14 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
+      // Eager development modules avoid route-loading waterfalls. Production
+      // uses lazy bundles, verified separately by test:production-ui.
+      '@/app-workspace': path.resolve(
+        import.meta.dirname,
+        process.env.NODE_ENV === 'production'
+          ? 'src/app-workspace.production.tsx'
+          : 'src/app-workspace.ts',
+      ),
       '@': path.resolve(import.meta.dirname, 'src'),
       '@assets': path.resolve(
         import.meta.dirname,
@@ -101,7 +109,7 @@ export default defineConfig({
     emptyOutDir: true,
     // "hidden" emits full maps for Sentry without adding sourceMappingURL
     // comments that would advertise their public location to browsers.
-    sourcemap: 'hidden',
+    sourcemap: hasSentryUploadConfig ? 'hidden' : false,
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -136,10 +144,7 @@ export default defineConfig({
           if (id.includes('@xyflow')) {
             return 'xyflow';
           }
-          // CopilotKit AI runtime
-          if (id.includes('@copilotkit')) {
-            return 'copilotkit';
-          }
+          // Let CopilotKit follow feature imports rather than one eager chunk.
           // Radix UI primitives — shared across many pages
           if (id.includes('@radix-ui') || id.includes('radix-ui')) {
             return 'radix';

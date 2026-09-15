@@ -20,6 +20,10 @@ import { coworkerForMessage, WORKSPACE_ASSISTANT, SINA, type Coworker } from '@/
 import { MessageSpecialistContext } from '@/features/assistant/ui/message-specialists';
 import { detectComposerIntent } from '@/lib/composer-intent';
 import { formatArmedMessage } from '@/features/assistant/ui/runnable-tools';
+import { ChatSourcePicker } from '../ui/chat-source-picker';
+import { ComposerAgentMenu, ComposerAttachmentMenu } from '../ui/composer-menus';
+import { useAtom } from 'jotai';
+import { selectedChatDocumentAtom, selectedChatWorkflowAtom } from '../runtime/chat/source-selection';
 
 // Accent + the reference's soft focus ring (rgba of --is-accent-ring). The composer
 // bar mirrors the tax-workspace-UI reference: a plain raised pill that lifts a soft
@@ -36,6 +40,7 @@ export const AsideComposerContext = createContext<{
   tools?: ComposerSuggestion[];
   commands?: ComposerSuggestion[]; // pickable "build functions" — shown when the text starts with "@"
   onAttach?: (files: File[]) => Promise<string>;
+  onCustomizeAgent?: () => void;
   armedTool?: ArmedComposerTool | null; // tool armed via the Tools menu "Use in chat"
   setArmedTool?: (t: ArmedComposerTool | null) => void;
 } | null>(null);
@@ -116,6 +121,9 @@ export function AsideInput(props: {
   const [active, setActive] = useState(-1);
   const [mode, setMode] = useState<ComposerMode>('ask');
   const [showTools, setShowTools] = useState(false);
+  const [showSources, setShowSources] = useState(false);
+  const [workflowScope, setWorkflowScope] = useAtom(selectedChatWorkflowAtom);
+  const [documentScope, setDocumentScope] = useAtom(selectedChatDocumentAtom);
   const [openSection, setOpenSection] = useState<'workflows' | 'worksheets' | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [attaching, setAttaching] = useState(false);
@@ -218,6 +226,7 @@ export function AsideInput(props: {
 
   return (
     <div style={{ padding: '8px 16px 16px', position: 'relative' }}>
+      <ChatSourcePicker disabled={busy || attaching} open={showSources} onOpenChange={setShowSources} onDocumentSelect={setDocumentScope} />
       <div style={{ position: 'relative' }}>
         {showPalette && (
           <div style={{ position: 'absolute', left: 0, right: 0, bottom: 'calc(100% + 8px)', zIndex: 20, background: LC.surface, border: `1px solid ${LC.border}`, borderRadius: 14, boxShadow: LC.shadowOut, overflow: 'hidden', maxHeight: 320, overflowY: 'auto' }}>
@@ -227,7 +236,7 @@ export function AsideInput(props: {
             {suggList(palette, true)}
           </div>
         )}
-        {/* "+" menu — Search · Attach files · Workflows · Worksheets. Workflows and
+        {/* "+" menu — Search · Workflows · Worksheets. Workflows and
             Worksheets expand inline to pick a specific one to start/open. */}
         {showTools && !showPalette && (() => {
           const workflows = (ctx?.tools ?? []).filter((t) => t.kind === 'workflow');
@@ -268,14 +277,6 @@ export function AsideInput(props: {
                     <span style={{ display: 'block', fontSize: 11.5, color: LC.muted }}>{mode === 'search' ? 'Back to asking Scope' : 'Search worksheets, workflows & agents'}</span>
                   </span>
                 </button>
-                {/* Attach files */}
-                <button onMouseDown={(e) => { e.preventDefault(); fileRef.current?.click(); closeMenu(); }} className="w-full flex items-center gap-2.5 text-left hover:bg-black/5" style={{ padding: '11px 14px', border: 'none', cursor: 'pointer', background: 'transparent' }}>
-                  <span style={{ color: LC.muted, flexShrink: 0, display: 'flex' }}><Paperclip size={16} /></span>
-                  <span className="flex-1 min-w-0">
-                    <span style={{ display: 'block', fontSize: 13, fontWeight: 550, color: LC.title }}>Attach files</span>
-                    <span style={{ display: 'block', fontSize: 11.5, color: LC.muted }}>Add a document or workbook Scope can read</span>
-                  </span>
-                </button>
                 <div style={{ height: 1, background: LC.borderSubtle, margin: '2px 0' }} />
                 {renderSection('workflows', <Workflow size={16} />, 'Workflows', 'Start a workflow run', workflows)}
                 {renderSection('worksheets', <Table2 size={16} />, 'Worksheets', 'Open a worksheet', worksheets)}
@@ -284,8 +285,6 @@ export function AsideInput(props: {
           );
         })()}
 
-        {/* (Agents popover removed 2026-07-24 — one unified agent, Sina. Tasks are
-            started from the composer's + menu / hero quick-starts instead.) */}
 
         {/* ── The Scope Console — the tax-workspace-UI composer bar ─────────────
             A raised neumorphic pill: [+ add-menu] · a hairline divider · the prompt
@@ -383,6 +382,20 @@ export function AsideInput(props: {
               ))}
             </div>
           )}
+          {workflowScope && (
+            <div className="flex items-center gap-2 rounded-lg border px-3 py-2 text-xs" style={{ color: LC.body, borderColor: LC.borderSubtle }}>
+              <Workflow size={14} />
+              <span className="min-w-0 flex-1 truncate">Workflow: {workflowScope.name} · Draft</span>
+              <button type="button" aria-label="Remove workflow scope" disabled={busy || attaching} onClick={() => setWorkflowScope(null)}><X size={14} /></button>
+            </div>
+          )}
+          {documentScope && (
+            <div className="flex items-center gap-2 rounded-lg border px-3 py-2 text-xs" style={{ color: LC.body, borderColor: LC.borderSubtle }}>
+              <Paperclip size={14} />
+              <span className="min-w-0 flex-1 truncate">Source: {documentScope.fileName} · Saved in Sources</span>
+              <button type="button" aria-label="Remove document source" disabled={busy || attaching} onClick={() => setDocumentScope(null)}><X size={14} /></button>
+            </div>
+          )}
 
           {/* Reading indicator — the extract call runs AFTER send (chips already
               cleared), so without this the upload moment is invisible and it looks
@@ -395,11 +408,12 @@ export function AsideInput(props: {
           )}
 
           {/* Control row — squared icon buttons on the left, dark send on the right. */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            {/* + add-menu — Search · Attach · Workflows · Worksheets */}
-            <button onClick={() => { setShowTools((o) => !o); setOpenSection(null); }} style={{ ...sqBtn, background: showTools ? LC.surfaceHover : 'transparent', color: mode === 'search' ? ACCENT : showTools ? LC.title : LC.muted }} className="hover:bg-black/5" title={mode === 'search' ? 'Search mode on — Enter searches the workspace. Click for options.' : 'Add — search, attach files, run a workflow, open a worksheet'} aria-label="Add — search, attach, workflows, worksheets"><Plus size={18} /></button>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 7 }}>
+            {/* + add-menu — Search · Workflows · Worksheets */}
+            <button onClick={() => { setShowTools((o) => !o); setOpenSection(null); }} style={{ ...sqBtn, background: showTools ? LC.surfaceHover : 'transparent', color: mode === 'search' ? ACCENT : showTools ? LC.title : LC.muted }} className="hover:bg-black/5" title={mode === 'search' ? 'Search mode on — Enter searches the workspace. Click for options.' : 'Add — search, run a workflow, open a worksheet'} aria-label="Add — search, workflows, worksheets"><Plus size={18} /></button>
             {/* attach */}
-            <button onClick={() => fileRef.current?.click()} style={sqBtn} className="hover:bg-black/5" title="Attach a document or workbook Scope can read" aria-label="Attach files"><Paperclip size={16} /></button>
+            <ComposerAttachmentMenu disabled={busy || attaching} onUpload={() => fileRef.current?.click()} onSources={() => setShowSources(true)} onWorkflow={setWorkflowScope} />
+            <ComposerAgentMenu onCustomize={ctx?.onCustomizeAgent} />
             <span style={{ flex: 1 }} />
 
             {/* Send — dark rounded-square (its icon hints the detected action) */}

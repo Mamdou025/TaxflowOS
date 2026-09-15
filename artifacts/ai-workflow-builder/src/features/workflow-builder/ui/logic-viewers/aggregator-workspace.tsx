@@ -2,7 +2,7 @@
 
 import { ChevronDown, ChevronRight, Lock, Play } from "lucide-react";
 import { useCallback, useState } from "react";
-import type { LocalRunRecord, WorkflowBlock } from "@/shared/workflow-engine/local-fiscal-workflow";
+import { type LocalRunRecord, type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
 import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
 import { RollupRulebookEditor } from "../source-viewers/rollup-rulebook-editor";
 import { getKeywordRules } from "../source-viewers/rule-source-editor";

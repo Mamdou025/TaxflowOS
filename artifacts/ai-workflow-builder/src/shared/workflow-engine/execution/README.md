@@ -1,6 +1,7 @@
-# Backend-Style Tool Modules
+# Modular Browser Tool Executors
 
-This folder holds local, backend-style block modules for Workflow Studio. It is not a server integration yet.
+This folder owns the modular browser executors used by Workflow Studio previews. It
+does not provide durable server execution.
 
 The contract is intentionally small:
 
@@ -8,6 +9,10 @@ The contract is intentionally small:
 - A tool is the executable behavior behind a block.
 - A run is the auditable result produced by executing a tool.
 
-The first modules are local deterministic mocks for manual table Sources, keyword rule Sources, and Keyword Mapper Logic. Source modules emit immutable evidence/reference outputs. Logic modules transform or classify those outputs while preserving lineage back to the Source evidence.
+Source modules emit immutable evidence/reference outputs. Logic modules transform
+or classify those outputs while preserving lineage back to the Source evidence.
 
-The frontend runner still owns graph execution for now. The local registry adapts these backend-style modules into the existing UI-facing tool registry so canvas, inspector, runs, import/export, and runtime preview behavior remain unchanged.
+The frontend runner owns browser-preview graph execution. The UI adapter maps each
+module into the existing viewer result shape so canvas, inspector, import/export and
+saved-preview behavior remain compatible. A tool ID has one implementation owner;
+registry composition rejects duplicate modular and legacy definitions.

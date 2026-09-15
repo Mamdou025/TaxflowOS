@@ -18,8 +18,8 @@ import { ReadableData } from './readable-data';
 
 import { AlertTriangle, CheckCircle2, Loader2, Play, XCircle } from "lucide-react";
 import { Button } from "@/shared/ui/button";
-import type { ToolRunResult } from "@/shared/workflow-engine/local-tool-registry";
-import type { WorkflowBlock } from "@/shared/workflow-engine/local-fiscal-workflow";
+import { type ToolRunResult } from "@/shared/workflow-engine/tools/types";
+import { type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
 
 type BlockRunPanelProps = {
   block: WorkflowBlock;

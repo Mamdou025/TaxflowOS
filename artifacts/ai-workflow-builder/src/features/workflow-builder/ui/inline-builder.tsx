@@ -1,3 +1,4 @@
+import { executionCanvas, executionLogs } from '@/features/workflows-hub/workflow-execution';
 
 
 // InlineBuilder — the workflow builder rendered INSIDE the Scope page's right
@@ -22,21 +23,18 @@ import { activeBuilderWorkflowIdAtom, builderEmbeddedAtom } from '@/lib/builder-
 import { getPortfolioWorkflowDef } from '@/shared/workflow-engine/templates/portfolio/portfolio-workflows';
 import { WorkflowTestData } from '@/features/workflows-hub/workflow-test-data';
 import { workflowLibraryAtom, definitionFingerprint } from '@/features/workflows-hub/workflow-library';
+import { createWorkflow, replaceDraft } from '@workspace/workflow-core/commands';
 import { useOverlay } from '@/shared/ui/overlays/overlay-provider';
 import { selectedWorkflowIdAtom } from '@/features/workflows-hub/workflows-store';
 import { useIsMobile } from '@/hooks/use-mobile';
-import {
-  createWorkflowDefinitionFromCanvas,
-  createBlankWorkflow,
-  createPortfolioWorkflowById,
-  createWorkingSourceRulesDemoWorkflow,
-  LOCAL_WORKFLOW_ID,
-  loadLocalWorkflowSnapshotResult,
-  saveWorkflowDefinitionSnapshot,
-  workflowDefinitionToCanvas,
-} from '@/shared/workflow-engine/local-fiscal-workflow';
+import { createWorkflowDefinitionFromCanvas, workflowDefinitionToCanvas } from "@/shared/workflow-engine/workflow/canvas";
+import { createBlankWorkflow, createPortfolioWorkflowById } from "@/shared/workflow-engine/workflow/templates/portfolio";
+import { createWorkingSourceRulesDemoWorkflow } from "@/shared/workflow-engine/workflow/templates/working-source";
+import { LOCAL_WORKFLOW_ID } from "@/shared/workflow-engine/workflow/contracts";
+import { loadLocalWorkflowSnapshotResult, saveWorkflowDefinitionSnapshot } from "@/shared/workflow-engine/workflow/storage";
 import { getWorkflowConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
 import {
+  executionLogsAtom,
   currentWorkflowIdAtom,
   currentWorkflowNameAtom,
   currentWorkflowVisibilityAtom,
@@ -79,6 +77,7 @@ export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blan
   const setWorkflowNotFound = useSetAtom(workflowNotFoundAtom);
   const setSelectedNode = useSetAtom(selectedNodeAtom);
   const setSelectedEdge = useSetAtom(selectedEdgeAtom);
+  const setExecutionLogs = useSetAtom(executionLogsAtom);
   const setSelectedExecutionId = useSetAtom(selectedExecutionIdAtom);
   const setFocusNodeId = useSetAtom(focusNodeIdAtom);
   const setOpenBlockConfig = useSetAtom(openBlockConfigIdAtom);
@@ -126,7 +125,8 @@ export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blan
       const blueprint = createPortfolioWorkflowById(workflowId);
       // Build the executable graph whenever the template provides one.
       snapshot =
-        runnableSnapshot || blueprint || createWorkingSourceRulesDemoWorkflow();
+        runnableSnapshot || blueprint || createBlankWorkflow();
+      if (!runnableSnapshot && !blueprint) toast.error('This workflow is unavailable. Choose one from the executable catalog.');
     } else {
       const loadResult = loadLocalWorkflowSnapshotResult();
       if (loadResult.warning) {
@@ -136,7 +136,9 @@ export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blan
       }
       snapshot = loadResult.snapshot || createWorkingSourceRulesDemoWorkflow();
     }
-    const canvas = workflowDefinitionToCanvas(snapshot);
+    const latestRun = workflowId ? initialLibrary.current[workflowId]?.runs.at(-1)?.result : undefined;
+    const graph = workflowDefinitionToCanvas(snapshot);
+    const canvas = executionCanvas(graph.nodes, graph.edges, latestRun);
     loaded.current = {
       snapshot,
       fingerprint: definitionFingerprint(
@@ -158,7 +160,7 @@ export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blan
       canvas.nodes.map((node) => ({
         ...node,
         selected: selectedNode ? node.id === selectedNode.id : false,
-        data: { ...node.data, status: "idle" as const },
+        data: node.data,
       })),
     );
     setEdges(canvas.edges);
@@ -171,7 +173,8 @@ export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blan
     setWorkflowNotFound(false);
     setSelectedNode(selectedNode?.id ?? null);
     setSelectedEdge(null);
-    setSelectedExecutionId(null);
+    setSelectedExecutionId(latestRun?.record.execution.id ?? null);
+    setExecutionLogs(executionLogs(latestRun));
     // Centre the canvas on the deep-linked block (WorkflowCanvas scrolls to it once
     // the node exists) and open its configuration, so "open the full block in the
     // builder" lands ON the block's real setup instead of a canvas the user still
@@ -196,6 +199,7 @@ export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blan
     setNodes,
     setSelectedEdge,
     setSelectedExecutionId,
+    setExecutionLogs,
     setSelectedNode,
     setWorkflowNotFound,
     setFocusNodeId,
@@ -229,15 +233,8 @@ export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blan
     };
     setLibrary((previous) => ({
       ...previous,
-      [id]: {
-        ...(existing ?? {
-          id,
-          templateId: workflowId ?? "__new__",
-          versions: [],
-          runs: [],
-        }),
-        draft: namedDraft,
-      },
+      [id]: previous[id] ? replaceDraft(previous[id], namedDraft)
+        : createWorkflow(id, workflowId ?? '__new__', namedDraft),
     }));
     if (!existing) {
       setBuilderFocus({ workflowId: id, blockId: hasOverlays ? liveSelectedNode ?? "" : "" });

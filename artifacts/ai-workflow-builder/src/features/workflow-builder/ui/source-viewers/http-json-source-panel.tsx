@@ -1,3 +1,4 @@
+import { apiFetch } from '@/platform/auth/api-fetch';
 import { apiRequestSignature } from '@/shared/workflow-engine/api-snapshot';
 
 
@@ -30,8 +31,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import type { WorkflowBlock } from "@/shared/workflow-engine/local-fiscal-workflow";
+import { Textarea } from "@/shared/ui/textarea";
+import { type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
 import {
   API_CONNECTORS,
   apiRequestToBlockConfig,
@@ -41,7 +42,7 @@ import {
   withParamDefaults,
   type ApiParam,
   type ApiParamValues,
-} from "@/shared/workflow-engine/execution/blocks/source/http-json/connectors";
+} from "@workspace/source-connectors/connectors";
 import { useParamOptions } from "@/features/workflow-builder/ui/source-viewers/use-param-options";
 
 type HttpJsonSourcePanelProps = {
@@ -330,7 +331,7 @@ export function HttpJsonSourcePanel({
     setSending(true);
     setResult(null);
     try {
-      const response = await fetch("/api/http-source", {
+      const response = await apiFetch("/api/http-source", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -340,6 +341,7 @@ export function HttpJsonSourcePanel({
           body: method === "POST" ? stringValue(config.body) : undefined,
           resultsPath: stringValue(config.resultsPath),
           fieldMap,
+          defaultAmount: config.defaultAmount,
           currency: stringValue(config.currency),
           maxRows: Number(config.maxRows) || 250,
         }),

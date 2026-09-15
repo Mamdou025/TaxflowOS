@@ -3,7 +3,8 @@
 import { ArrowLeft, FileText } from "lucide-react";
 import { useState } from "react";
 import { useAtomValue } from "jotai";
-import { loadLocalRunRecords, type WorkflowBlock } from "@/shared/workflow-engine/local-fiscal-workflow";
+import { loadLocalRunRecords } from "@/shared/workflow-engine/workflow/run-storage";
+import { type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
 import {
   currentWorkflowNameAtom,
   edgesAtom,

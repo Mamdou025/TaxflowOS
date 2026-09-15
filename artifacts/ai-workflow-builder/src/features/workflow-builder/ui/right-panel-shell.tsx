@@ -6,14 +6,12 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { WorksheetPageView } from "@/features/workflow-builder/ui/worksheet-page-view";
 import { WORKFLOWS } from "@/lib/agents";
-import {
-  createFapiTemplateWorkflow,
-  createPortfolioWorkflow,
-  PORTFOLIO_WORKFLOWS,
-  saveWorkflowDefinitionSnapshot,
-  type WorkflowBlock,
-  workflowDefinitionToCanvas,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { createFapiTemplateWorkflow } from "@/shared/workflow-engine/workflow/templates/fapi";
+import { createPortfolioWorkflow } from "@/shared/workflow-engine/workflow/templates/portfolio";
+import { PORTFOLIO_WORKFLOWS } from "@/shared/workflow-engine/templates/portfolio/portfolio-workflows";
+import { saveWorkflowDefinitionSnapshot } from "@/shared/workflow-engine/workflow/storage";
+import { type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
+import { workflowDefinitionToCanvas } from "@/shared/workflow-engine/workflow/canvas";
 import { getWorkflowConfig } from "@/shared/workflow-engine/runtime/workflow-runs";
 import {
   activeRightPanelAtom,

@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test';
-import { randomBytes } from 'node:crypto';
+import { test, expect } from './authenticated-fixture';
+import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
 test('missing and blank values stop calculations; explicit defaults preserve real zero; intermediate precision survives', async ({ page }) => {
@@ -42,7 +42,7 @@ test('neutral template executes without fiscal inputs', async ({ page }) => {
   await page.goto('/');
   const results = await page.evaluate(async () => {
     const { templateDefinition } = await import('/src/features/workflows-hub/saved-workflow-run.tsx');
-    const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/local-fiscal-workflow.ts');
+    const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/workflow/canvas.ts');
     const { runLocalWorkflowTools } = await import('/src/shared/workflow-engine/local-tool-runner.ts');
     const definition = templateDefinition('pf-document-calculator')!;
     const source = definition.blocks.find(b => b.config.toolId === 'source.manual_table')!;
@@ -54,18 +54,18 @@ test('neutral template executes without fiscal inputs', async ({ page }) => {
   expect(results.find(result => result.block.endsWith('--calculate'))?.output.calculatedResults).toEqual({ RESULT: 60 });
 });
 
-test('server saves use recovery codes, reject stale writes, isolate workspaces and survive a fresh reader', async ({ request }) => {
-  const key = randomBytes(32).toString('hex');
-  const headers = { 'x-workflow-workspace': key };
-  const url = 'http://localhost:5050/api/workflow-library';
+test('server saves require membership, reject stale writes and survive a fresh reader', async ({ request, workspaceSession }) => {
+  const headers = { 'x-taxflow-workspace': workspaceSession.workspace.id };
+  const url = '/api/workflow-library';
+  const payload = readFileSync('tests/fixtures/backups/legacy-v0.json', 'utf8');
   try {
-    await expect((await request.get(url)).status()).toBe(401);
-    const first = await request.put(url, { headers, data: { revision: 0, payload: '{"saved":"one"}' } }); expect(first.ok()).toBeTruthy();
-    await expect((await request.get(url, { headers })).json()).resolves.toMatchObject({ revision: 1, payload: '{"saved":"one"}' });
-    const stale = await request.put(url, { headers, data: { revision: 0, payload: '{"saved":"stale"}' } }); expect(stale.status()).toBe(409);
-    await expect((await request.get(url, { headers: { 'x-workflow-workspace': randomBytes(32).toString('hex') } })).json()).resolves.toMatchObject({ revision: 0, payload: null });
-    const second = await request.put(url, { headers, data: { revision: 1, payload: '{"saved":"two"}' } }); expect(second.ok()).toBeTruthy();
-    await expect((await request.get(url, { headers })).json()).resolves.toMatchObject({ revision: 2, payload: '{"saved":"two"}' });
+    expect((await request.get(url, { headers: { 'x-taxflow-workspace': '' } })).status()).toBe(400);
+    const first = await request.put(url, { headers, data: { revision: 0, payload } }); expect(first.ok()).toBeTruthy();
+    await expect((await request.get(url, { headers })).json()).resolves.toMatchObject({ revision: 1, payload });
+    const stale = await request.put(url, { headers, data: { revision: 0, payload } }); expect(stale.status()).toBe(409);
+    expect((await request.get(url, { headers: { 'x-taxflow-workspace': randomUUID() } })).status()).toBe(403);
+    const second = await request.put(url, { headers, data: { revision: 1, payload } }); expect(second.ok()).toBeTruthy();
+    await expect((await request.get(url, { headers })).json()).resolves.toMatchObject({ revision: 2, payload });
   } finally { await request.delete(url, { headers }); }
 });
 
@@ -86,7 +86,7 @@ test('PDF extraction review creates numeric columns and produces a neutral final
   await page.getByLabel('Confirm extracted values').check();
   await page.getByRole('button', { name: 'Use this test data', exact: true }).click();
   await page.getByRole('button', { name: 'Run', exact: true }).first().click();
-  await page.getByRole('button', { name: 'Save changes and run', exact: true }).click();
+  await page.getByRole('button', { name: 'Save changes and preview', exact: true }).click();
   const final = page.getByRole('region', { name: 'Final workflow results' });
   await expect(final).toContainText('Adjusted total'); await expect(final).toContainText('400'); await expect(final).toContainText('units');
   await expect(final).not.toContainText('formulaTrace');
@@ -96,7 +96,7 @@ test('precision survives a connection between separate calculation blocks', asyn
   await page.goto('/');
   const values = await page.evaluate(async () => {
     const { templateDefinition } = await import('/src/features/workflows-hub/saved-workflow-run.tsx');
-    const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/local-fiscal-workflow.ts');
+    const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/workflow/canvas.ts');
     const { runLocalWorkflowTools } = await import('/src/shared/workflow-engine/local-tool-runner.ts');
     const definition = templateDefinition('pf-document-calculator')!;
     const first = definition.blocks.find(block => block.config.toolId === 'logic.calculation_engine')!;
@@ -129,7 +129,7 @@ test('missing API data cannot become zero or an implicit sample; changed request
 });
 
 test('documents without a text layer explicitly require OCR; reviewed OCR records reject invalid numbers', async ({ page, request }) => {
-  const detected = await request.post('http://localhost:5050/api/workflow-extract', { multipart: { file: { name: 'no-text.pdf', mimeType: 'application/pdf', buffer: readFileSync('e2e/fixtures/demo/no-text.pdf') } } });
+  const detected = await request.post('/api/workflow-extract', { multipart: { file: { name: 'no-text.pdf', mimeType: 'application/pdf', buffer: readFileSync('e2e/fixtures/demo/no-text.pdf') } } });
   expect(detected.ok()).toBeTruthy(); expect(await detected.json()).toMatchObject({ needsOcr: true, text: '' });
   await page.route('**/api/workflow-library', route => route.fulfill({ json: { revision: 0, payload: null } }));
   let requestedOcr = false;
@@ -149,7 +149,7 @@ test('documents without a text layer explicitly require OCR; reviewed OCR record
   await expect(page.getByText(/Row 1, number_1: enter a valid number/)).toBeVisible();
   await page.getByLabel('Row 1 number_1').fill('45'); await page.getByLabel('Confirm extracted values').check();
   await page.getByRole('button', { name: 'Use this test data', exact: true }).click();
-  await page.getByRole('button', { name: 'Run', exact: true }).first().click(); await page.getByRole('button', { name: 'Save changes and run', exact: true }).click();
+  await page.getByRole('button', { name: 'Run', exact: true }).first().click(); await page.getByRole('button', { name: 'Save changes and preview', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Final workflow results' })).toContainText('100');
 });
 
@@ -189,7 +189,7 @@ test('ordinary output can finish while workflows requiring a protected result re
   await page.goto('/');
   const results = await page.evaluate(async () => {
     const { templateDefinition } = await import('/src/features/workflows-hub/saved-workflow-run.tsx');
-    const { getToolForBlock } = await import('/src/shared/workflow-engine/local-tool-registry.ts');
+    const { getToolForBlock } = await import('/src/shared/workflow-engine/tools/lookup.ts');
     const workflow = templateDefinition('pf-document-calculator')!;
     const output = workflow.blocks.find(block => block.id.endsWith('--result'))!;
     const calculate = workflow.blocks.find(block => block.id.endsWith('--calculate'))!;

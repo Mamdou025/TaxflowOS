@@ -14,9 +14,9 @@
 // it wrong risks the production model resolution, so it's a deliberate follow-up.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { atomWithStorage } from 'jotai/utils';
+import { atomWithStorage } from '@/platform/auth/workspace-atoms';
 import { DEFAULT_FISCAL_CONTEXT, fiscalPreamble, type FiscalContext } from '@/features/agent-lab/fiscal';
-import type { EffortLevel } from '@/features/agent-lab/model-router';
+import type { EffortLevel } from '@workspace/agent-runtime/model-router';
 
 export type LiveAgentConfig = {
   /** Enforce the fiscalist non-negotiables (cite · no self-computed figures · pin · defer). */

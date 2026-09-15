@@ -1,3 +1,4 @@
+import { workspaceStorage } from '@/platform/auth/workspace-context';
 export type RulebookKeywordRule = {
   id: string;
   name: string;
@@ -19,7 +20,7 @@ const STORAGE_KEY = "workflow-keyword-rulebook-v1";
 function parseStorage(): RulebookKeywordRule[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = workspaceStorage.getItem(STORAGE_KEY);
     return raw ? (JSON.parse(raw) as RulebookKeywordRule[]) : [];
   } catch {
     return [];
@@ -27,7 +28,7 @@ function parseStorage(): RulebookKeywordRule[] {
 }
 
 function writeStorage(entries: RulebookKeywordRule[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  workspaceStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
 }
 
 function toStringArray(value: unknown): string[] {

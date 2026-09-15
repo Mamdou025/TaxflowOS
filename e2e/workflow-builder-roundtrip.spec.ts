@@ -5,8 +5,8 @@ test("defined aggregation terms are available without a run and saved versions r
 }) => {
   await page.goto("/");
   const result = await page.evaluate(async () => {
-    const engine =
-      await import("/src/shared/workflow-engine/local-fiscal-workflow.ts");
+    const { workflowDefinitionToCanvas } =
+      await import("/src/shared/workflow-engine/workflow/canvas.ts");
     const { templateDefinition } =
       await import("/src/features/workflows-hub/saved-workflow-run.tsx");
     const { saveVersion } =
@@ -51,7 +51,7 @@ test("defined aggregation terms are available without a run and saved versions r
     const first = entry.versions[0].definition;
     rules.config.keywordRules[0].keywords = ["changed again"];
     entry = saveVersion(entry);
-    const canvas = engine.workflowDefinitionToCanvas(first);
+    const canvas = workflowDefinitionToCanvas(first);
     const run = runLocalWorkflowTools({ ...canvas, workflowName: first.name });
     const computation = first.blocks.find((block) =>
       /calculation.engine/.test(String(block.config.toolId)),
@@ -103,7 +103,7 @@ test("Build uploads create a personal workflow that survives Run and reload", as
   await expect(page.getByText("MY WORKFLOWS", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Run", exact: true }).first().click();
   await page
-    .getByRole("button", { name: "Save changes and run", exact: true })
+    .getByRole("button", { name: "Save changes and preview", exact: true })
     .click();
   const stored = await page.evaluate(async () => { const { readWorkflowLibrary } = await import('/src/features/workflows-hub/workflow-library.ts'); return readWorkflowLibrary(); });
   const entry = Object.values(stored)[0] as any;

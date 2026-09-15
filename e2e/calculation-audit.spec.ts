@@ -4,7 +4,7 @@ test('constant and explicit numeric-field formulas do not require a generic amou
   await page.goto('/');
   const result = await page.evaluate(async () => {
     const { templateDefinition } = await import('/src/features/workflows-hub/saved-workflow-run.tsx');
-    const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/local-fiscal-workflow.ts');
+    const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/workflow/canvas.ts');
     const { runLocalWorkflowTools } = await import('/src/shared/workflow-engine/local-tool-runner.ts');
     const { calculationValueKey } = await import('/src/shared/workflow-engine/calculation-values.ts');
     const definition = templateDefinition('pf-fapi')!;

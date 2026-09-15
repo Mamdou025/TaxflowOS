@@ -5,13 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite --config vite.config.ts --host 0.0.0.0",
-    "build": "NODE_OPTIONS=--max-old-space-size=4096 vite build --config vite.config.ts",
+    "build": "node --max-old-space-size=4096 node_modules/vite/bin/vite.js build --config vite.config.ts",
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:prod-freshness": "node --experimental-strip-types --test e2e/prod-build-freshness.test.mjs",
     "test:e2e": "playwright test --config=playwright.config.mjs",
     "test:prod": "PROD_SMOKE_SKIP_BUILD=${PROD_SMOKE_SKIP_BUILD:-1} playwright test --config=playwright.config.mjs --project=production",
-    "test:e2e:ui": "playwright test --config=playwright.config.mjs --ui"
+    "test:e2e:ui": "playwright test --config=playwright.config.mjs --ui",
+    "genui:prompt": "node src/features/genui/gen-genui-prompt.cjs"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -108,6 +109,13 @@
     "v0-sdk": "^0.16.5",
     "world-atlas": "^2.0.2",
     "xlsx": "^0.18.5",
-    "zustand": "^5.0.14"
+    "zustand": "^5.0.14",
+    "@workspace/source-connectors": "workspace:*",
+    "@workspace/source-core": "workspace:*",
+    "@workspace/agent-runtime": "workspace:*",
+    "@workspace/workflow-contracts": "workspace:*",
+    "@workspace/api-zod": "workspace:*",
+    "@workspace/workflow-core": "workspace:*",
+    "@workspace/workflow-executors": "workspace:*"
   }
 }

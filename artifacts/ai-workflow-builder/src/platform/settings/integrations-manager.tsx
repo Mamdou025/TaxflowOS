@@ -1,46 +1,48 @@
-
-
-import { Pencil, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { Pencil, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import {
   DeleteConnectionOverlay,
   EditConnectionOverlay,
-} from "@/platform/settings/edit-connection-overlay";
-import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
-import { Button } from "@/shared/ui/button";
-import { IntegrationIcon } from "@/platform/integrations/ui/integration-icon";
-import { Spinner } from "@/shared/ui/spinner";
-import { api, type Integration } from "@/platform/api-client";
-import { getIntegrationLabels } from "@/plugins";
+} from '@/platform/settings/edit-connection-overlay';
+import { useOverlay } from '@/shared/ui/overlays/overlay-provider';
+import { Button } from '@/shared/ui/button';
+import { IntegrationIcon } from '@/platform/integrations/ui/integration-icon';
+import { Spinner } from '@/shared/ui/spinner';
+import { api, type Integration } from '@/platform/api-client';
+import { getIntegrationLabels } from '@/plugins';
 
 // System integrations that don't have plugins
 const SYSTEM_INTEGRATION_LABELS: Record<string, string> = {
-  database: "Database",
+  database: 'Database',
 };
 
 type IntegrationsManagerProps = {
   onIntegrationChange?: () => void;
   filter?: string;
+  editable?: boolean;
 };
 
 export function IntegrationsManager({
   onIntegrationChange,
-  filter = "",
+  filter = '',
+  editable = true,
 }: IntegrationsManagerProps) {
   const { push } = useOverlay();
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [loading, setLoading] = useState(true);
   const [testingId, setTestingId] = useState<string | null>(null);
+  const [error, setError] = useState('');
 
   const loadIntegrations = useCallback(async () => {
     try {
       setLoading(true);
+      setError('');
       const data = await api.integration.getAll();
       setIntegrations(data);
     } catch (error) {
-      console.error("Failed to load integrations:", error);
-      toast.error("Failed to load integrations");
+      console.error('Failed to load integrations:', error);
+      setError(error instanceof Error ? error.message : 'Connections could not be loaded.');
     } finally {
       setLoading(false);
     }
@@ -111,16 +113,14 @@ export function IntegrationsManager({
       setTestingId(id);
       const result = await api.integration.testConnection(id);
 
-      if (result.status === "success") {
-        toast.success(result.message || "Connection successful");
+      if (result.status === 'success') {
+        toast.success(result.message || 'Connection successful');
       } else {
-        toast.error(result.message || "Connection test failed");
+        toast.error(result.message || 'Connection test failed');
       }
     } catch (error) {
-      console.error("Connection test failed:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Connection test failed"
-      );
+      console.error('Connection test failed:', error);
+      toast.error(error instanceof Error ? error.message : 'Connection test failed');
     } finally {
       setTestingId(null);
     }
@@ -134,13 +134,27 @@ export function IntegrationsManager({
     );
   }
 
+  if (error) {
+    return (
+      <div role="alert" className="rounded-lg border border-amber-500 p-4 text-sm">
+        <p>Connections could not be loaded. {error}</p>
+        <Button
+          className="mt-3"
+          onClick={() => void loadIntegrations()}
+          size="sm"
+          variant="outline"
+        >
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
   const renderIntegrationsList = () => {
     if (integrations.length === 0) {
       return (
         <div className="py-8 text-center">
-          <p className="text-muted-foreground text-sm">
-            No connections configured yet
-          </p>
+          <p className="text-muted-foreground text-sm">No connections configured yet</p>
         </div>
       );
     }
@@ -148,9 +162,7 @@ export function IntegrationsManager({
     if (integrationsWithLabels.length === 0) {
       return (
         <div className="py-8 text-center">
-          <p className="text-muted-foreground text-sm">
-            No connections match your filter
-          </p>
+          <p className="text-muted-foreground text-sm">No connections match your filter</p>
         </div>
       );
     }
@@ -165,48 +177,44 @@ export function IntegrationsManager({
             <div className="flex items-center gap-2">
               <IntegrationIcon
                 className="size-4"
-                integration={
-                  integration.type === "ai-gateway"
-                    ? "vercel"
-                    : integration.type
-                }
+                integration={integration.type === 'ai-gateway' ? 'vercel' : integration.type}
               />
               <span className="font-medium text-sm">{integration.label}</span>
-              <span className="text-muted-foreground text-sm">
-                {integration.name}
-              </span>
+              <span className="text-muted-foreground text-sm">{integration.name}</span>
             </div>
-            <div className="flex items-center gap-1">
-              <Button
-                className="h-7 px-2"
-                disabled={testingId === integration.id}
-                onClick={() => handleTest(integration.id)}
-                size="sm"
-                variant="outline"
-              >
-                {testingId === integration.id ? (
-                  <Spinner className="size-3" />
-                ) : (
-                  <span className="text-xs">Test</span>
-                )}
-              </Button>
-              <Button
-                className="size-7"
-                onClick={() => handleEdit(integration)}
-                size="icon"
-                variant="outline"
-              >
-                <Pencil className="size-3" />
-              </Button>
-              <Button
-                className="size-7"
-                onClick={() => handleDelete(integration)}
-                size="icon"
-                variant="outline"
-              >
-                <Trash2 className="size-3" />
-              </Button>
-            </div>
+            {editable && (
+              <div className="flex items-center gap-1">
+                <Button
+                  className="h-7 px-2"
+                  disabled={testingId === integration.id}
+                  onClick={() => handleTest(integration.id)}
+                  size="sm"
+                  variant="outline"
+                >
+                  {testingId === integration.id ? (
+                    <Spinner className="size-3" />
+                  ) : (
+                    <span className="text-xs">Test</span>
+                  )}
+                </Button>
+                <Button
+                  className="size-7"
+                  onClick={() => handleEdit(integration)}
+                  size="icon"
+                  variant="outline"
+                >
+                  <Pencil className="size-3" />
+                </Button>
+                <Button
+                  className="size-7"
+                  onClick={() => handleDelete(integration)}
+                  size="icon"
+                  variant="outline"
+                >
+                  <Trash2 className="size-3" />
+                </Button>
+              </div>
+            )}
           </div>
         ))}
       </div>

@@ -13,7 +13,7 @@ import {
   CalculationRulesSourceEditor,
   RollupRulesSourceEditor,
 } from "@/features/workflow-builder/ui/source-viewers/split-rule-source-editors";
-import type { WorkflowBlock } from "@/shared/workflow-engine/local-fiscal-workflow";
+import { type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
 
 type SourceSetupPanelProps = {
   block: WorkflowBlock;

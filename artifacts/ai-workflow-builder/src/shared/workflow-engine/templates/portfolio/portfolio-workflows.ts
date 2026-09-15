@@ -1,4 +1,7 @@
+import type { WorkflowRelationshipType } from '@workspace/workflow-contracts/domain/edge-types';
 import { DOCUMENT_CALCULATOR } from './document-calculator';
+import { EXECUTABLE_WORKPAPERS } from './executable-workpapers';
+import { EXPENSE_TEMPLATE_BLOCK_SPECS, EXPENSE_TEMPLATE_EDGE_SPECS } from '../sample-workflows/expense-reimbursement-template';
 import {
   HOLIDAY_TEMPLATE_BLOCK_SPECS,
   HOLIDAY_TEMPLATE_EDGE_SPECS,
@@ -21,8 +24,8 @@ import {
 //           → Field (manager-level display views)
 //           → Output (manager deliverables + write-back to shared ledgers).
 //
-// These are DECLARATIVE data only — `createPortfolioWorkflow` (in
-// local-fiscal-workflow.ts) turns any def below into a LocalWorkflowSnapshot the
+// These are DECLARATIVE data only — `createPortfolioWorkflow` in
+// `workflow/templates/portfolio.ts` turns any def below into a LocalWorkflowSnapshot the
 // builder can load, edit and save. Block ids are short + local; the builder
 // prefixes them with the workflow id so every block/edge id is globally unique.
 // Positions are derived from `stage` (column) and `row`.
@@ -48,7 +51,7 @@ export type PortfolioEdgeSpec = {
   label: string;
   reason: string;
   /** WorkflowRelationshipType; defaults to "provides_data_to". */
-  rel?: string;
+  rel?: WorkflowRelationshipType;
   fromRole?: string;
   toRole?: string;
 };
@@ -94,7 +97,7 @@ const e = (
   to: string,
   label: string,
   reason: string,
-  rel = "provides_data_to",
+  rel: WorkflowRelationshipType = "provides_data_to",
   fromRole?: string,
   toRole?: string
 ): PortfolioEdgeSpec => ({ from, to, label, reason, rel, fromRole, toRole });
@@ -918,7 +921,7 @@ const HOLIDAY_PAYROLL: PortfolioWorkflowDef = {
 // Registry — ordered for the builder's template menu (platform first, then
 // foundation, then Tier 1).
 // ─────────────────────────────────────────────────────────────────────────────
-export const PORTFOLIO_WORKFLOWS: PortfolioWorkflowDef[] = [
+const LEGACY_PORTFOLIO_WORKFLOWS: PortfolioWorkflowDef[] = [
   DOCUMENT_CALCULATOR,
   HOLIDAY_PAYROLL,
   PLATFORM_SEQUENCE,
@@ -937,6 +940,15 @@ export const PORTFOLIO_WORKFLOWS: PortfolioWorkflowDef[] = [
   TAX_PROVISION,
   PART_XIII,
 ];
+
+const EXPENSE_REIMBURSEMENT: PortfolioWorkflowDef = {
+  id: 'pf-expense', name: 'Employee Expense Reimbursement', group: 'demo',
+  sub: 'Receipts → policy caps → reimbursement workpaper',
+  description: 'Classify supplied receipts, apply the configured meal cap, calculate reimbursement totals and export receipt evidence for review.',
+  blocks: EXPENSE_TEMPLATE_BLOCK_SPECS.map(block => ({ id: block.id, catalogId: block.catalogId, label: block.label, description: block.description, config: block.config, stage: Math.round((block.position.x + 520) / 460), row: Math.round(block.position.y / 400) })),
+  edges: EXPENSE_TEMPLATE_EDGE_SPECS.map(edge => ({ from: edge.sourceBlockId, to: edge.targetBlockId, label: edge.bindingLabel, reason: edge.reason, rel: edge.relationshipType, fromRole: edge.sourceOutputRole, toRole: edge.targetInputRole })),
+};
+export const PORTFOLIO_WORKFLOWS: PortfolioWorkflowDef[] = [DOCUMENT_CALCULATOR, EXPENSE_REIMBURSEMENT, FAPI, ...EXECUTABLE_WORKPAPERS];
 
 export function getPortfolioWorkflowDef(id: string): PortfolioWorkflowDef | null {
   return PORTFOLIO_WORKFLOWS.find((w) => w.id === id) ?? null;

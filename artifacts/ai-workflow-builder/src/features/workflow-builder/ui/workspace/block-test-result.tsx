@@ -1,5 +1,5 @@
-import type { WorkflowBlock } from '@/shared/workflow-engine/local-fiscal-workflow';
-import type { ToolRunResult } from '@/shared/workflow-engine/local-tool-registry';
+import { type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
+import { type ToolRunResult } from "@/shared/workflow-engine/tools/types";
 import { presentToolOutput } from '@/shared/workflow-engine/present-tool-output';
 import { ReadableData } from './readable-data';
 

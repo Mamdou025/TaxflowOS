@@ -57,14 +57,43 @@ const CARD: React.CSSProperties = {
   overflow: 'hidden',
 };
 
-function Shell({ icon, title, subtitle, children }: { icon: React.ReactNode; title: string; subtitle?: string; children: React.ReactNode }) {
+function Shell({
+  icon,
+  title,
+  subtitle,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div style={CARD}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 13px', borderBottom: `1px solid ${LC.borderSubtle}` }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '10px 13px',
+          borderBottom: `1px solid ${LC.borderSubtle}`,
+        }}
+      >
         <span style={{ display: 'inline-flex', color: LC.accent }}>{icon}</span>
         <span style={{ fontSize: 12.5, fontWeight: 650, color: LC.text }}>{title}</span>
         {subtitle && (
-          <span style={{ fontSize: 12, color: LC.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, flex: 1, textAlign: 'right' }}>
+          <span
+            style={{
+              fontSize: 12,
+              color: LC.muted,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              minWidth: 0,
+              flex: 1,
+              textAlign: 'right',
+            }}
+          >
             {subtitle}
           </span>
         )}
@@ -77,7 +106,16 @@ function Shell({ icon, title, subtitle, children }: { icon: React.ReactNode; tit
 function ErrorCard({ title, message }: { title: string; message: string }) {
   return (
     <Shell icon={<AlertTriangle size={14} />} title={title}>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 12.5, color: LC.muted, lineHeight: 1.5 }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: 8,
+          alignItems: 'flex-start',
+          fontSize: 12.5,
+          color: LC.muted,
+          lineHeight: 1.5,
+        }}
+      >
         <AlertTriangle size={14} style={{ color: '#b45309', flexShrink: 0, marginTop: 1 }} />
         <span>{message}</span>
       </div>
@@ -93,12 +131,18 @@ function FxCard({ obj }: { obj: Record<string, unknown> }) {
   const rate = typeof obj.rate === 'number' ? obj.rate : Number(obj.rate);
   const source = typeof obj.rateSource === 'string' ? obj.rateSource : 'Bank of Canada';
   return (
-    <Shell icon={<ArrowRightLeft size={14} />} title="Exchange rate" subtitle={year ? `${from} → ${to} · ${year}` : `${from} → ${to}`}>
+    <Shell
+      icon={<ArrowRightLeft size={14} />}
+      title="Exchange rate"
+      subtitle={year ? `${from} → ${to} · ${year}` : `${from} → ${to}`}
+    >
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
         <span style={{ fontSize: 26, fontWeight: 700, color: LC.text, letterSpacing: '-0.01em' }}>
           {Number.isFinite(rate) ? rate.toFixed(4) : String(obj.rate ?? '—')}
         </span>
-        <span style={{ fontSize: 12.5, color: LC.muted }}>{to} per 1 {from}</span>
+        <span style={{ fontSize: 12.5, color: LC.muted }}>
+          {to} per 1 {from}
+        </span>
       </div>
       <div style={{ fontSize: 11.5, color: LC.faint, marginTop: 6 }}>Source · {source}</div>
     </Shell>
@@ -137,7 +181,9 @@ function DocPassagesCard({ obj, query }: { obj: Record<string, unknown>; query: 
   return (
     <Shell icon={<FileText size={14} />} title="Document search" subtitle={query}>
       {passages.length === 0 ? (
-        <div style={{ fontSize: 12.5, color: LC.muted }}>{note ?? 'No relevant passages found.'}</div>
+        <div style={{ fontSize: 12.5, color: LC.muted }}>
+          {note ?? 'No relevant passages found.'}
+        </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {passages.map((p, i) => {
@@ -145,10 +191,49 @@ function DocPassagesCard({ obj, query }: { obj: Record<string, unknown>; query: 
             return (
               <div key={i} style={{ borderLeft: `2px solid ${LC.borderSubtle}`, paddingLeft: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: LC.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{String(p.source ?? 'document')}</span>
-                  {sim != null && <span style={{ fontSize: 10.5, color: LC.faint, flexShrink: 0 }}>{Math.round(sim * 100)}% match</span>}
+                  <span
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: LC.text,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      minWidth: 0,
+                    }}
+                  >
+                    {String(p.source ?? 'document')}
+                  </span>
+                  {typeof p.revision === 'number' && (
+                    <span style={{ fontSize: 10.5, color: LC.faint, flexShrink: 0 }}>
+                      rev {p.revision}
+                    </span>
+                  )}
+                  {p.selection === 'selected' && (
+                    <span style={{ fontSize: 10.5, color: LC.faint, flexShrink: 0 }}>selected</span>
+                  )}
+                  {sim != null && (
+                    <span style={{ fontSize: 10.5, color: LC.faint, flexShrink: 0 }}>
+                      {Math.round(sim * 100)}% match
+                    </span>
+                  )}
                 </div>
-                <div style={{ fontSize: 12, color: LC.muted, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                {typeof p.citationId === 'string' && (
+                  <div style={{ fontSize: 10.5, color: LC.faint, marginBottom: 3 }}>
+                    {p.citationId}
+                  </div>
+                )}
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: LC.muted,
+                    lineHeight: 1.5,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                  }}
+                >
                   {String(p.excerpt ?? '')}
                 </div>
               </div>
@@ -164,7 +249,9 @@ function DocPassagesCard({ obj, query }: { obj: Record<string, unknown>; query: 
 const HIDE_KEYS = new Set(['instruction', 'note', 'unavailable', 'text']);
 
 function GenericResultCard({ toolName, obj }: { toolName: string; obj: Record<string, unknown> }) {
-  const entries = Object.entries(obj).filter(([k, v]) => !HIDE_KEYS.has(k) && v != null && typeof v !== 'function');
+  const entries = Object.entries(obj).filter(
+    ([k, v]) => !HIDE_KEYS.has(k) && v != null && typeof v !== 'function',
+  );
   const note = typeof obj.note === 'string' ? obj.note : undefined;
   return (
     <Shell icon={<Wrench size={14} />} title={prettify(toolName)}>
@@ -173,7 +260,10 @@ function GenericResultCard({ toolName, obj }: { toolName: string; obj: Record<st
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {entries.map(([k, v]) => (
-            <div key={k} style={{ display: 'flex', gap: 10, fontSize: 12.5, alignItems: 'baseline' }}>
+            <div
+              key={k}
+              style={{ display: 'flex', gap: 10, fontSize: 12.5, alignItems: 'baseline' }}
+            >
               <span style={{ color: LC.faint, minWidth: 108, flexShrink: 0 }}>{prettify(k)}</span>
               <span style={{ color: LC.text, wordBreak: 'break-word', minWidth: 0 }}>
                 {typeof v === 'object' ? JSON.stringify(v) : String(v)}
@@ -187,15 +277,25 @@ function GenericResultCard({ toolName, obj }: { toolName: string; obj: Record<st
   );
 }
 
-export function ToolResultCard({ toolName, args, result }: { toolName: string; args: Record<string, unknown>; result: unknown }) {
+export function ToolResultCard({
+  toolName,
+  args,
+  result,
+}: {
+  toolName: string;
+  args: Record<string, unknown>;
+  result: unknown;
+}) {
   const scope = RUNNABLE_TOOLS[toolName]?.searchScope;
   // Search tools → the existing results card (reads the atom + recorded result).
-  if (scope) return <WebSearchCard query={String(args.query ?? '')} scope={scope} result={result} />;
+  if (scope)
+    return <WebSearchCard query={String(args.query ?? '')} scope={scope} result={result} />;
 
   const obj = asObject(result);
   const err = errorOf(obj);
   if (err) return <ErrorCard title={prettify(toolName)} message={err} />;
-  if (!obj) return <ErrorCard title={prettify(toolName)} message="The tool returned no readable result." />;
+  if (!obj)
+    return <ErrorCard title={prettify(toolName)} message="The tool returned no readable result." />;
 
   switch (toolName) {
     case 'getFxRate':

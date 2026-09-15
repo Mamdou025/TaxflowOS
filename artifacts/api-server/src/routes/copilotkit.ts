@@ -76,83 +76,91 @@ const replitGatewayBaseUrl = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
 const replitGatewayApiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
 const vercelGatewayApiKey = process.env.AI_GATEWAY_API_KEY;
 const gatewayBaseUrl =
-  replitGatewayBaseUrl ??
-  (vercelGatewayApiKey ? "https://ai-gateway.vercel.sh/v1" : undefined);
+  replitGatewayBaseUrl ?? (vercelGatewayApiKey ? "https://ai-gateway.vercel.sh/v1" : undefined);
 const gatewayApiKey = replitGatewayApiKey ?? vercelGatewayApiKey;
 const configuredModel = process.env.OPENAI_CHAT_MODEL ?? "gpt-4o";
 
-if (!gatewayBaseUrl || !gatewayApiKey) {
-  throw new Error(
-    "CopilotKit requires Replit AI Integrations or AI_GATEWAY_API_KEY; OPENAI_API_KEY is not used",
-  );
+function createHandler() {
+  // A missing optional provider must not prevent the rest of the API from booting.
+  if (!gatewayBaseUrl || !gatewayApiKey) return undefined;
+
+  const serviceAdapter = new OpenAIAdapter({
+    openai: new OpenAI({
+      apiKey: gatewayApiKey,
+      baseURL: gatewayBaseUrl,
+    }),
+    model:
+      replitGatewayBaseUrl || configuredModel.includes("/")
+        ? configuredModel
+        : `openai/${configuredModel}`,
+  });
+
+  // Explicit default agent + middleware pipeline. Middleware runs before the
+  // BuiltInAgent converts input.messages for the AI SDK, so the exact thread
+  // the SDK validates is always in good shape.
+  const agent = new BuiltInAgent({ model: serviceAdapter.getLanguageModel() });
+
+  const isStrict = needsStrictSystemHandling(configuredModel);
+
+  agent.use((input, next) => {
+    // ── 1. Orphan repair ────────────────────────────────────────────────────
+    // Ensure every assistant tool-call is answered before handing the thread to
+    // the AI SDK. Reference-stable: a no-op when nothing needs repair.
+    const messages = repairOrphanToolCalls(input.messages);
+    if (messages !== input.messages) {
+      const injected = messages.length - input.messages.length;
+      console.log(
+        `[copilotkit] repaired orphaned tool call(s): injected ${injected} synthetic result(s)`,
+      );
+    }
+
+    // ── 2. Strict-model system-message conversion ────────────────────────────
+    // For Responses-API-only models, tell @ai-sdk/openai to emit system messages
+    // as "developer" role (accepted) instead of "system" role (rejected). We set
+    // this via forwardedProps.providerOptions so it reaches the streamText call
+    // inside BuiltInAgent without touching the adapter or runtime internals.
+    // For permissive chat-completions models, forwardedProps is passed through
+    // unchanged — zero overhead and zero behaviour change for those paths.
+    const fp = input.forwardedProps as Record<string, unknown> | undefined;
+    const forwardedProps: Record<string, unknown> | undefined = isStrict
+      ? {
+          ...fp,
+          providerOptions: {
+            ...(fp?.providerOptions as Record<string, unknown> | undefined),
+            openai: {
+              // Spread any existing openai-specific options so nothing is clobbered.
+              ...((fp?.providerOptions as Record<string, unknown> | undefined)?.openai as
+                Record<string, unknown> | undefined),
+              // "developer" role is the Responses-API equivalent of "system".
+              systemMessageMode: "developer",
+            },
+          },
+        }
+      : fp;
+
+    return next.run({ ...input, messages, forwardedProps });
+  });
+
+  const runtime = new CopilotRuntime({ agents: { default: agent } });
+
+  return copilotRuntimeNodeExpressEndpoint({
+    runtime,
+    serviceAdapter,
+    endpoint: "/api/copilotkit",
+  });
 }
 
-const serviceAdapter = new OpenAIAdapter({
-  openai: new OpenAI({
-    apiKey: gatewayApiKey,
-    baseURL: gatewayBaseUrl,
-  }),
-  model:
-    replitGatewayBaseUrl || configuredModel.includes("/")
-      ? configuredModel
-      : `openai/${configuredModel}`,
-});
-
-// Explicit default agent + middleware pipeline. Middleware runs before the
-// BuiltInAgent converts input.messages for the AI SDK, so the exact thread
-// the SDK validates is always in good shape.
-const agent = new BuiltInAgent({ model: serviceAdapter.getLanguageModel() });
-
-const isStrict = needsStrictSystemHandling(configuredModel);
-
-agent.use((input, next) => {
-  // ── 1. Orphan repair ────────────────────────────────────────────────────
-  // Ensure every assistant tool-call is answered before handing the thread to
-  // the AI SDK. Reference-stable: a no-op when nothing needs repair.
-  const messages = repairOrphanToolCalls(input.messages);
-  if (messages !== input.messages) {
-    const injected = messages.length - input.messages.length;
-    console.log(
-      `[copilotkit] repaired orphaned tool call(s): injected ${injected} synthetic result(s)`,
-    );
-  }
-
-  // ── 2. Strict-model system-message conversion ────────────────────────────
-  // For Responses-API-only models, tell @ai-sdk/openai to emit system messages
-  // as "developer" role (accepted) instead of "system" role (rejected). We set
-  // this via forwardedProps.providerOptions so it reaches the streamText call
-  // inside BuiltInAgent without touching the adapter or runtime internals.
-  // For permissive chat-completions models, forwardedProps is passed through
-  // unchanged — zero overhead and zero behaviour change for those paths.
-  const fp = input.forwardedProps as Record<string, unknown> | undefined;
-  const forwardedProps: Record<string, unknown> | undefined = isStrict
-    ? {
-        ...fp,
-        providerOptions: {
-          ...(fp?.providerOptions as Record<string, unknown> | undefined),
-          openai: {
-            // Spread any existing openai-specific options so nothing is clobbered.
-            ...((fp?.providerOptions as Record<string, unknown> | undefined)
-              ?.openai as Record<string, unknown> | undefined),
-            // "developer" role is the Responses-API equivalent of "system".
-            systemMessageMode: "developer",
-          },
-        },
-      }
-    : fp;
-
-  return next.run({ ...input, messages, forwardedProps });
-});
-
-const runtime = new CopilotRuntime({ agents: { default: agent } });
-
-const handler = copilotRuntimeNodeExpressEndpoint({
-  runtime,
-  serviceAdapter,
-  endpoint: "/api/copilotkit",
-});
+const handler = createHandler();
 
 router.use("/", (req, res, next) => {
+  if (!handler) {
+    res.status(503).json({
+      code: "AI_PROVIDER_NOT_CONFIGURED",
+      error:
+        "Chat is unavailable. Configure Replit AI Integrations or AI_GATEWAY_API_KEY and restart the API.",
+    });
+    return;
+  }
   // Express strips the mount prefix from req.url. GraphQL Yoga needs the full
   // path to route /api/copilotkit and /api/copilotkit/info correctly.
   req.url = (req.baseUrl || "") + (req.url === "/" ? "" : req.url);
@@ -161,10 +169,7 @@ router.use("/", (req, res, next) => {
   // Wrap in Promise.resolve() so .catch() is always valid regardless of which
   // branch the runtime takes.
   Promise.resolve(
-    handler(
-      req as unknown as IncomingMessage,
-      res as unknown as ServerResponse,
-    ),
+    handler(req as unknown as IncomingMessage, res as unknown as ServerResponse),
   ).catch(next);
 });
 

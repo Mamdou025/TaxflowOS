@@ -19,8 +19,8 @@ import {
   getParamOptionsSource,
   optionsFromPayload,
   type ApiParamOption,
-} from "@/shared/workflow-engine/execution/blocks/source/http-json/connectors";
-import { fetchJsonPayload } from "@/shared/workflow-engine/execution/blocks/source/http-json/schema";
+} from "@workspace/source-connectors/connectors";
+import { fetchJsonPayload } from "@workspace/source-connectors/http-json";
 
 const router = Router();
 

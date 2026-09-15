@@ -2,66 +2,8 @@
 
 import { hasExcelSourceEvidence as hasConfiguredExcelSourceEvidence } from "@/shared/workflow-engine/domain/workflow/source-rules";
 
-export type ExcelColumnMapping = {
-  account?: string;
-  label?: string;
-  description?: string;
-  amount?: string;
-  currency?: string;
-  debit?: string;
-  credit?: string;
-  accountType?: string;
-};
-
-export type ExcelNormalizedRow = {
-  rowId: string;
-  rowNumber: number;
-  account: string;
-  label: string;
-  description: string;
-  amount: number;
-  currency: string;
-  raw: Record<string, unknown>;
-  metadata: Record<string, unknown>;
-};
-
-export type ExcelRowData = {
-  rowId: string;
-  rowNumber: number;
-  valuesByColumn: Record<string, unknown>;
-  normalized: ExcelNormalizedRow;
-  raw: Record<string, unknown>;
-};
-
-export type ExcelSheetData = {
-  sheetName: string;
-  rowCount: number;
-  columnCount: number;
-  headers: string[];
-  detectedHeaderRowNumber: number;
-  detectedFirstDataRowNumber: number;
-  rows: ExcelRowData[];
-  cells: string[][];
-  inferredRange: string;
-  persistedRowLimit: number;
-  truncated: boolean;
-};
-
-export type ExcelTableSelection = {
-  columnCount: number;
-  firstDataRowNumber: number;
-  headerRowNumber: number;
-  headers: string[];
-  inferredRange: string;
-};
-
-export type ExcelWorkbookSourceData = {
-  fileName: string;
-  fileSize: number;
-  uploadedAt: string;
-  workbookId: string;
-  sheets: ExcelSheetData[];
-};
+import type { ExcelColumnMapping, ExcelNormalizedRow, ExcelRowData, ExcelSheetData, ExcelTableSelection, ExcelWorkbookSourceData } from './excel-types';
+export type { ExcelColumnMapping, ExcelNormalizedRow, ExcelRowData, ExcelSheetData, ExcelTableSelection, ExcelWorkbookSourceData } from './excel-types';
 
 const ACCOUNT_ALIASES = [
   "account",
@@ -241,6 +183,8 @@ function parseNumber(value: unknown) {
 
   return negativeByParentheses ? -parsed : parsed;
 }
+
+export { parseNumber as parseExcelNumber };
 
 function getRecordValue(
   record: Record<string, unknown>,
@@ -1070,10 +1014,11 @@ export async function parseExcelWorkbookFile(
   const sheets = workbook.SheetNames.map((sheetName) => {
     const worksheet = workbook.Sheets[sheetName];
     const rows = XLSX.utils.sheet_to_json<unknown[]>(worksheet, {
-      blankrows: false,
+      blankrows: true,
       defval: "",
       header: 1,
       raw: false,
+      range: 0,
     });
     const cells = rows.map((row) =>
       Array.isArray(row) ? row.map(formatCellValue) : []
@@ -1202,6 +1147,9 @@ export function getNormalizedRowsForSheet({
     .filter(
       (row) => !(row.metadata as Record<string, unknown>).isBalanceSheetRow
     );
+  if (includeRowsWithoutAmount && !mapping.amount && !mapping.debit && !mapping.credit) {
+    return tableRows;
+  }
   const fallbackRows = getLooseExtractedRows({
     defaultCurrency: currency,
     includeTotalRows,

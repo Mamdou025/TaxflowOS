@@ -67,7 +67,7 @@ test('uploaded CSV to new keyword rule, rollup, calculation and saved final outp
   await page.goto(`/w/${id}`);
   await page.getByRole('button', { name: 'Run', exact: true }).first().click();
   started = Date.now();
-  await page.getByRole('button', { name: 'Save changes and run', exact: true }).click();
+  await page.getByRole('button', { name: 'Save changes and preview', exact: true }).click();
   const entry = await library();
   timings.fullRunMs = Date.now() - started;
   const run = entry.runs.at(-1).result.result;

@@ -1,0 +1,21 @@
+{
+  "description": "Existing large-file ceilings and legacy UI imports as of the maintainability refactor. Remove entries as modules shrink; do not grow this list to bypass a check.",
+  "legacyUiImports": {},
+  "maxImplementationLines": {
+    "artifacts/ai-workflow-builder/src/features/workflow-builder/ui/inspector/block-inspector.tsx": 1637,
+    "artifacts/ai-workflow-builder/src/features/workflow-builder/ui/node-config-panel.tsx": 1962,
+    "artifacts/ai-workflow-builder/src/features/workflow-builder/ui/overlays/configuration-overlay.tsx": 1767,
+    "artifacts/ai-workflow-builder/src/features/workflow-builder/ui/source-viewers/keyword-rulebook-editor.tsx": 1204,
+    "artifacts/ai-workflow-builder/src/features/workflow-builder/ui/source-viewers/rule-source-editor.tsx": 2197,
+    "artifacts/ai-workflow-builder/src/features/workflow-builder/ui/source-viewers/split-rule-source-editors.tsx": 1164,
+    "artifacts/ai-workflow-builder/src/features/workflow-builder/ui/workspace/block-data-flow-pane.tsx": 1960,
+    "artifacts/ai-workflow-builder/src/features/worksheets/legacy/pages/SurplusWorksheet.tsx": 1079,
+    "artifacts/ai-workflow-builder/src/shared/workflow-engine/block-catalog-data.ts": 1018,
+    "artifacts/ai-workflow-builder/src/shared/workflow-engine/codegen/workflow-codegen.ts": 1119,
+    "artifacts/ai-workflow-builder/src/shared/workflow-engine/local-ai-workflow-assistant.ts": 1378,
+    "artifacts/ai-workflow-builder/src/shared/workflow-engine/parsing/excel-utils.ts": 1638,
+    "artifacts/ai-workflow-builder/src/shared/workflow-engine/state/workflow-commands.ts": 1214,
+    "artifacts/ai-workflow-builder/src/shared/workflow-engine/templates/sample-workflows/working-source-rules-demo.ts": 1505,
+    "lib/workflow-executors/src/execution/blocks/logic/hierarchy-aggregator/run.ts": 1223
+  }
+}

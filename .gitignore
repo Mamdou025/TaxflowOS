@@ -53,4 +53,12 @@ Thumbs.db
 
 
 .env*.local
+.env
+.env.*
+!.env.example
 .pnpm-store/
+/test-results/reliability/
+/test-results/reliability-build.log
+/test-results/phase2/
+/test-results/recovery/
+/artifacts/api-server/.test-builds/

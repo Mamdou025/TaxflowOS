@@ -1,11 +1,12 @@
-import type { WorkflowDefinition } from '@/shared/workflow-engine/local-fiscal-workflow';
-import type { ToolRunResult } from '@/shared/workflow-engine/local-tool-registry';
+import { type WorkflowDefinition } from "@/shared/workflow-engine/workflow/contracts";
+import { type ToolRunResult } from "@/shared/workflow-engine/tools/types";
 import { useState } from 'react';
+import { ReadableData } from '@/features/workflow-builder/ui/workspace/readable-data';
 
 export function WorkflowResultSummary({ definition, results }: { definition?: WorkflowDefinition; results: ToolRunResult[] }) {
   const [digits, setDigits] = useState('full');
   const [hidden, setHidden] = useState<string[]>([]);
-  const calculationIds = new Set(results.filter(result => result.toolId === 'logic.calculation_engine').map(result => result.blockId));
+  const calculationIds = new Set(results.filter(result => result.toolId === 'logic.calculation_engine' || result.toolId === 'logic.portfolio_workpaper').map(result => result.blockId));
   const hasDownstreamCalculation = (id: string, visited = new Set<string>()): boolean => {
     if (visited.has(id)) return false; visited.add(id);
     return (definition?.edges ?? []).filter(edge => edge.sourceBlockId === id && edge.status !== 'disabled').some(edge => calculationIds.has(edge.targetBlockId) || hasDownstreamCalculation(edge.targetBlockId, visited));
@@ -20,6 +21,7 @@ export function WorkflowResultSummary({ definition, results }: { definition?: Wo
   return <section aria-label="Final workflow results" className="space-y-3 rounded-xl border bg-background p-4">
     <h3 className="text-lg font-semibold">{hasErrors ? 'Results need attention' : 'Final results'}</h3>
     {hasErrors && <p role="alert">The workflow has errors. Any values shown below are incomplete; resolve the errors and run again.</p>}
+    {final.filter(result => Array.isArray(result.output.workpaperRows)).map(result => <ReadableData key={result.blockId} value={result.output.workpaperRows} />)}
     {!rows.length ? <p>No final numeric results were produced. Review the block details below.</p> : <>
       <label className="text-xs">Display precision <select aria-label="Result display precision" value={digits} onChange={event => setDigits(event.target.value)}><option value="full">Full precision</option>{[0, 2, 4, 6].map(value => <option key={value} value={value}>{value} decimal places</option>)}</select></label>
       <p className="text-xs text-muted-foreground">Display formatting does not change values sent to other blocks or exported in JSON.</p>

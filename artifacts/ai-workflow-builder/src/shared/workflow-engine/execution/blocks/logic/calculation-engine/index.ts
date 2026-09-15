@@ -1,8 +1,2 @@
-import type { RegisteredToolModule } from "../../../runtime/types";
-import { calculationEngineDefinition } from "./definition";
-import { runCalculationEngine } from "./run";
-
-export const calculationEngineToolModule: RegisteredToolModule = {
-  definition: calculationEngineDefinition,
-  run: runCalculationEngine,
-};
+// Compatibility export for existing editor and browser-test imports.
+export * from '@workspace/workflow-executors/execution/blocks/logic/calculation-engine/index';

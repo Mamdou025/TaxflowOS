@@ -1,3 +1,4 @@
+import { apiFetch } from '@/platform/auth/api-fetch';
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -154,7 +155,7 @@ export default function DocumentViewer() {
         // PDF / Word / text → the server extraction route (unpdf / mammoth / utf-8).
         const body = new FormData();
         body.append('file', doc.file);
-        const res = await fetch('/api/assistant/extract', { method: 'POST', body });
+        const res = await apiFetch('/api/assistant/extract', { method: 'POST', body });
         const data = await res.json();
         if (!res.ok) throw new Error(data?.error ?? res.statusText);
         payload = {

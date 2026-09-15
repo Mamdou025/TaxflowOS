@@ -20,19 +20,15 @@ import { Controls } from "@/features/workflow-builder/ui/ai-elements/controls";
 import { AIPrompt } from "@/features/workflow-builder/ui/ai-elements/prompt";
 import { ConfigurationOverlay } from "@/features/workflow-builder/ui/overlays/configuration-overlay";
 import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
-import { WorkflowToolbar } from "@/features/workflow-builder/ui/workflow-toolbar";
+import { WorkflowToolbar } from "@/features/workflow-builder/toolbar/workflow-toolbar";
 import { sidebarCollapsedAtom } from "@/components/neumorphic-sidebar";
 import "@xyflow/react/dist/style.css";
 
 import { nanoid } from "nanoid";
 import { toast } from "sonner";
-import {
-  createDefaultWorkflowBlockCandidate,
-  createPendingWorkflowConnection,
-  getUnsupportedWorkflowRelationshipMessage,
-  getWorkflowEdgeDefaults,
-  isLocalWorkflowId,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { createDefaultWorkflowBlockCandidate } from "@/shared/workflow-engine/workflow/block-factory";
+import { createPendingWorkflowConnection, getUnsupportedWorkflowRelationshipMessage, getWorkflowEdgeDefaults } from "@/shared/workflow-engine/workflow/edges";
+import { isLocalWorkflowId } from "@/shared/workflow-engine/workflow/visuals";
 import {
   addNodeAtom,
   connectBlocksAtom,

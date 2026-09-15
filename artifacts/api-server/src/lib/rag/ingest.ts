@@ -12,14 +12,15 @@
 // embedding + inserting one batch of chunks at a time rather than all at once.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { db, documentChunks, eq } from "@workspace/db";
-import { getDocument, updateDocument } from "./documents-repo";
-import { downloadObject, StorageNotConfiguredError } from "../storage";
-import { chunkText } from "./chunk";
-import { embedTexts, isEmbeddingConfigured } from "./embeddings";
-import { extractText } from "./extract";
-import { canOcr, isOcrConfigured, ocrDocument } from "./ocr";
-import { isRetryableError } from "../retry";
+import { db, documentChunks, eq } from '@workspace/db';
+import { getDocument, updateDocument } from './documents-repo';
+import { downloadObject, StorageNotConfiguredError } from '../storage';
+import { chunkText } from './chunk';
+import { embedTexts, isEmbeddingConfigured } from './embeddings';
+import { extractText } from './extract';
+import { canOcr, isOcrConfigured, ocrDocument } from './ocr';
+import { isRetryableError } from '../retry';
+import { createHash } from 'node:crypto';
 
 // Chunks embedded + inserted per iteration. Caps how many embedding vectors are
 // resident at once (the old path held the whole document's vectors in memory).
@@ -37,24 +38,25 @@ function message(err: unknown, fallback: string): string {
 
 /** Mark the document failed with a user-facing reason and return a terminal outcome. */
 async function terminal(
-  userId: string,
+  workspaceId: string,
   documentId: string,
   error: string,
   extra: { extractedChars?: number; pageCount?: number | null } = {},
 ): Promise<IngestOutcome> {
-  await updateDocument(userId, documentId, { status: "failed", error, ...extra });
+  await updateDocument(workspaceId, documentId, { status: 'failed', error, ...extra });
   return { ok: false, retryable: false, error };
 }
 
 export async function ingestDocument(
-  userId: string,
+  workspaceId: string,
   documentId: string,
 ): Promise<IngestOutcome> {
-  const doc = await getDocument(userId, documentId);
-  if (!doc) return { ok: false, retryable: false, error: "NOT_FOUND" };
+  const doc = await getDocument(workspaceId, documentId);
+  if (!doc) return { ok: false, retryable: false, error: 'NOT_FOUND' };
+  if (!doc.storageKey) return { ok: false, retryable: false, error: 'SOURCE_CONTENT_PURGED' };
 
   // Mark processing (idempotent — the worker also does this when it claims the job).
-  await updateDocument(userId, documentId, { status: "processing", error: null });
+  await updateDocument(workspaceId, documentId, { status: 'processing', error: null });
 
   // 1) Download the bytes. Missing config is terminal; a transient storage error
   //    (network/5xx) is retryable; anything else is treated as a bad object.
@@ -63,12 +65,12 @@ export async function ingestDocument(
     bytes = await downloadObject(doc.storageKey);
   } catch (err) {
     if (err instanceof StorageNotConfiguredError) {
-      return terminal(userId, documentId, "Storage is not configured.");
+      return terminal(workspaceId, documentId, 'Storage is not configured.');
     }
     if (isRetryableError(err)) {
-      return { ok: false, retryable: true, error: message(err, "Storage download failed") };
+      return { ok: false, retryable: true, error: message(err, 'Storage download failed') };
     }
-    return terminal(userId, documentId, "Could not download the file from storage.");
+    return terminal(workspaceId, documentId, 'Could not download the file from storage.');
   }
 
   // 2) Extract text via the fast path (unpdf/mammoth/xlsx). A parser throw is a
@@ -81,9 +83,9 @@ export async function ingestDocument(
     pageCount = extracted.pageCount;
   } catch (err) {
     return terminal(
-      userId,
+      workspaceId,
       documentId,
-      `Could not read this file (${message(err, "extraction failed")}).`,
+      `Could not read this file (${message(err, 'extraction failed')}).`,
     );
   }
 
@@ -99,28 +101,28 @@ export async function ingestDocument(
       if (ocred.trim()) text = ocred;
     } catch (err) {
       if (isRetryableError(err)) {
-        return { ok: false, retryable: true, error: message(err, "OCR failed") };
+        return { ok: false, retryable: true, error: message(err, 'OCR failed') };
       }
-      console.error("[rag] ocr failed (terminal):", err);
+      console.error('[rag] ocr failed (terminal):', err);
     }
   }
 
   if (!text.trim()) {
     return terminal(
-      userId,
+      workspaceId,
       documentId,
       ocrAttempted
-        ? "No extractable text — OCR could not read this scanned file."
-        : "No extractable text (the file may be scanned/image-only).",
+        ? 'No extractable text — OCR could not read this scanned file.'
+        : 'No extractable text (the file may be scanned/image-only).',
       { extractedChars: 0, pageCount },
     );
   }
 
   if (!isEmbeddingConfigured()) {
     return terminal(
-      userId,
+      workspaceId,
       documentId,
-      "No embedding provider configured (OPENAI_API_KEY / AI_GATEWAY_API_KEY).",
+      'No embedding provider configured (OPENAI_API_KEY / AI_GATEWAY_API_KEY).',
       { extractedChars: text.length, pageCount },
     );
   }
@@ -139,7 +141,8 @@ export async function ingestDocument(
       const vectors = await embedTexts(batch.map((c) => c.content));
       const rows = batch.map((c, j) => ({
         documentId,
-        userId,
+        workspaceId,
+        userId: doc.userId,
         clientId: doc.clientId,
         chunkIndex: c.index,
         content: c.content,
@@ -150,20 +153,21 @@ export async function ingestDocument(
       inserted += rows.length;
     }
 
-    await updateDocument(userId, documentId, {
-      status: "ready",
+    await updateDocument(workspaceId, documentId, {
+      status: 'ready',
       error: null,
       extractedChars: text.length,
       pageCount,
+      contentHash: `sha256:${createHash('sha256').update(text).digest('hex')}`,
     });
     return { ok: true, chunks: inserted };
   } catch (err) {
     // Saturated dependency (429/5xx/network) → keep `processing`, let the queue
     // retry with backoff. A terminal error (bad input, auth) → fail the document.
     if (isRetryableError(err)) {
-      console.error("[rag] ingest transient failure (will retry):", err);
-      return { ok: false, retryable: true, error: message(err, "Embedding/index failed") };
+      console.error('[rag] ingest transient failure (will retry):', err);
+      return { ok: false, retryable: true, error: message(err, 'Embedding/index failed') };
     }
-    return terminal(userId, documentId, `Processing failed: ${message(err, "unknown error")}`);
+    return terminal(workspaceId, documentId, `Processing failed: ${message(err, 'unknown error')}`);
   }
 }

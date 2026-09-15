@@ -1,11 +1,10 @@
-
-
-import { ChevronDown, ChevronRight, Lock, Play } from "lucide-react";
-import { useCallback, useState } from "react";
-import type { LocalRunRecord, WorkflowBlock } from "@/shared/workflow-engine/local-fiscal-workflow";
-import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
-import { BlockDataFlowColumn } from "../workspace/block-data-flow-pane";
-import { CalculationEngineEditor } from "./calculation-engine-editor";
+import { Lock } from 'lucide-react';
+import {
+  type LocalRunRecord,
+  type WorkflowBlock,
+} from '@/shared/workflow-engine/workflow/contracts';
+import type { WorkflowEdge, WorkflowNode } from '@/shared/workflow-engine/state/workflow-store';
+import { CalculationEngineEditor } from './calculation-engine-editor';
 
 function getBlockLabel(nodes: WorkflowNode[], blockId: string) {
   const node = nodes.find((n) => n.id === blockId);
@@ -26,14 +25,14 @@ type ConnectedSource = {
 function getConnectedSources(
   block: WorkflowBlock,
   edges: WorkflowEdge[],
-  nodes: WorkflowNode[]
+  nodes: WorkflowNode[],
 ): ConnectedSource[] {
   return edges
     .filter(
       (e) =>
         e.target === block.id &&
-        (e.data?.workflowEdge?.targetInputRole === "calculation_rules" ||
-          e.data?.targetInputRole === "calculation_rules")
+        (e.data?.workflowEdge?.targetInputRole === 'calculation_rules' ||
+          e.data?.targetInputRole === 'calculation_rules'),
     )
     .flatMap((e) => {
       const node = nodes.find((n) => n.id === e.source);
@@ -47,19 +46,13 @@ function getConnectedSources(
           edgeRole:
             (e.data?.workflowEdge?.targetInputRole as string | undefined) ||
             (e.data?.targetInputRole as string | undefined) ||
-            "calculation_rules",
+            'calculation_rules',
         },
       ];
     });
 }
 
-function ReadOnlyBanner({
-  label,
-  onClear,
-}: {
-  label: string;
-  onClear?: () => void;
-}) {
+function ReadOnlyBanner({ label, onClear }: { label: string; onClear?: () => void }) {
   return (
     <div className="flex shrink-0 items-center gap-2 border-b bg-amber-50 px-3 py-1.5 dark:bg-amber-950/30">
       <Lock className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
@@ -117,7 +110,9 @@ export function CalculationEngineWorkspace({
     const primary = connectedSources[0];
     workspaceContent = (
       <>
-        <div className="border-b px-3 py-2 text-xs text-muted-foreground">Rules from {primary.label}. Edits update this workflow?s connected rulebook.</div>
+        <div className="border-b px-3 py-2 text-xs text-muted-foreground">
+          Rules from {primary.label}. Edits update this workflow&apos;s connected rulebook.
+        </div>
         <div className="min-h-0 flex-1 overflow-hidden">
           <CalculationEngineEditor
             block={primary.block}
@@ -158,10 +153,7 @@ export function CalculationEngineWorkspace({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {workspaceContent}
-      </div>
-
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{workspaceContent}</div>
     </div>
   );
 }

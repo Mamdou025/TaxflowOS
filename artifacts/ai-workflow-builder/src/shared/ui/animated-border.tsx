@@ -1,6 +1,4 @@
-
-
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
 interface AnimatedBorderProps {
   className?: string;
@@ -38,14 +36,11 @@ export const AnimatedBorder = ({ className }: AnimatedBorderProps) => {
       `}</style>
       <div
         className={cn(
-          "pointer-events-none absolute inset-0 rounded-[inherit] animate-border-mask",
-          className
+          'pointer-events-none absolute inset-0 rounded-[inherit] animate-border-mask',
+          className,
         )}
       >
-        <svg
-          className="h-full w-full overflow-visible"
-          xmlns="http://www.w3.org/2000/svg"
-        >
+        <svg className="h-full w-full overflow-visible" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="gradient-glow" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#60a5fa" />
@@ -63,7 +58,7 @@ export const AnimatedBorder = ({ className }: AnimatedBorderProps) => {
             stroke="url(#gradient-glow)"
             strokeWidth="2"
             style={{
-              filter: "drop-shadow(0 0 4px #3b82f6)",
+              filter: 'drop-shadow(0 0 4px #3b82f6)',
             }}
           />
         </svg>
@@ -71,8 +66,8 @@ export const AnimatedBorder = ({ className }: AnimatedBorderProps) => {
       {/* Static faint border for structure */}
       <div
         className={cn(
-          "pointer-events-none absolute inset-0 rounded-[inherit] border-2 border-blue-500/10",
-          className
+          'pointer-events-none absolute inset-0 rounded-[inherit] border-2 border-blue-500/10',
+          className,
         )}
       />
     </>

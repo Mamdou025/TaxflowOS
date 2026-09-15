@@ -14,7 +14,7 @@
 // (the shared fetcher throws for non-CAD reporting currencies).
 // ─────────────────────────────────────────────────────────────────────────────
 import { Router } from "express";
-import { fetchAnnualAverageExchangeRate } from "@/shared/workflow-engine/execution/blocks/source/currency-rate/schema";
+import { fetchAnnualAverageExchangeRate } from "@workspace/source-connectors/currency-rate";
 
 const router = Router();
 

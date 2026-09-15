@@ -14,15 +14,10 @@ import {
   DialogTitle,
 } from "@/shared/ui/dialog";
 import { Input } from "@/shared/ui/input";
-import type {
-  LocalRunRecord,
-  WorkflowBlock,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
-import {
-  getToolForBlock,
-  type ToolDefinition,
-  type ToolOutputRole,
-} from "@/shared/workflow-engine/local-tool-registry";
+import { type LocalRunRecord, type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
+import { getToolForBlock } from '@/shared/workflow-engine/tools/lookup';
+
+import { type ToolDefinition, type ToolOutputRole } from "@/shared/workflow-engine/tools/types";
 import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
 import { getDataPreviewSummary } from "../data-viewer/data-preview-summary";
 import { DATA_VIEW_LABELS } from "../data-viewer/data-view-tabs";

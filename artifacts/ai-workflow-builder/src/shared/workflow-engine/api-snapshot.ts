@@ -1,3 +1,2 @@
-export function apiRequestSignature(config: Record<string, unknown>) {
-  return JSON.stringify(Object.fromEntries(['url', 'method', 'headers', 'body', 'resultsPath', 'fieldMap', 'currency', 'maxRows', 'connectorId', 'connectorParams'].map(key => [key, config[key] ?? null])));
-}
+// Compatibility export for existing editor and browser-test imports.
+export * from '@workspace/workflow-executors/api-snapshot';

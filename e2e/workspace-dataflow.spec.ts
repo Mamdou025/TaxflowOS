@@ -5,7 +5,7 @@ async function seed(page: Page, uploaded = true) {
   const info = await page.evaluate(async uploaded => {
     const { templateDefinition } = await import('/src/features/workflows-hub/saved-workflow-run.tsx');
     const { saveVersion } = await import('/src/features/workflows-hub/workflow-library.ts');
-    const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/local-fiscal-workflow.ts');
+    const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/workflow/canvas.ts');
     const { runLocalWorkflowTools } = await import('/src/shared/workflow-engine/local-tool-runner.ts');
     const { calculationValueKey } = await import('/src/shared/workflow-engine/calculation-values.ts');
     const definition = templateDefinition('pf-fapi')!;
@@ -56,17 +56,17 @@ test('Run keeps saved versions separate from changed drafts and readiness stays 
   const { id } = await seed(page, false);
   await page.getByRole('button', { name: 'Run', exact: true }).first().click();
   await expect(page.getByRole('region', { name: 'Trigger readiness' })).toContainText('Waiting');
-  await expect(page.getByRole('button', { name: 'Run saved version 1', exact: true })).toBeEnabled();
-  await page.getByRole('button', { name: 'Run saved version 1', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Preview saved version 1 in this browser', exact: true })).toBeEnabled();
+  await page.getByRole('button', { name: 'Preview saved version 1 in this browser', exact: true }).click();
   let stored = await page.evaluate(async id => { const { readWorkflowLibrary } = await import('/src/features/workflows-hub/workflow-library.ts'); return readWorkflowLibrary()[id]; }, id);
   expect(stored.versions).toHaveLength(1);
   expect(stored.runs.at(-1).result.result.results.at(-1).output.calculatedResults.TOTAL).toBe(20);
-  await page.getByRole('button', { name: 'Save changes and run', exact: true }).click();
+  await page.getByRole('button', { name: 'Save changes and preview', exact: true }).click();
   stored = await page.evaluate(async id => { const { readWorkflowLibrary } = await import('/src/features/workflows-hub/workflow-library.ts'); return readWorkflowLibrary()[id]; }, id);
   expect(stored.versions).toHaveLength(2);
   expect(stored.runs.at(-1).result.result.results.at(-1).output.calculatedResults.TOTAL).toBe(30);
   await page.getByLabel('Saved workflow version').selectOption('1');
-  await page.getByRole('button', { name: 'Run saved version 1', exact: true }).click();
+  await page.getByRole('button', { name: 'Preview saved version 1 in this browser', exact: true }).click();
   stored = await page.evaluate(async id => { const { readWorkflowLibrary } = await import('/src/features/workflows-hub/workflow-library.ts'); return readWorkflowLibrary()[id]; }, id);
   expect(stored.runs.at(-1).version).toBe(1);
   expect(stored.runs.at(-1).result.result.results.at(-1).output.calculatedResults.TOTAL).toBe(20);

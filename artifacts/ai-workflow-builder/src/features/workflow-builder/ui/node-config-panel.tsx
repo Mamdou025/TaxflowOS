@@ -37,27 +37,12 @@ import {
 import { EdgeInspector } from "@/features/workflow-builder/ui/edge-inspector";
 import { api } from "@/platform/api-client";
 import { integrationsAtom } from "@/lib/integrations-store";
-import {
-  clearLocalRunRecords,
-  createCanvasEdgeFromWorkflowEdge,
-  createWorkflowBlockFromCatalog,
-  createWorkflowEdgeRecord,
-  createWorkflowNodeFromBlock,
-  type FiscalStage,
-  getBlockCatalogItem,
-  getFiscalPreset,
-  getFiscalVisualForFamily,
-  getFiscalVisualForStage,
-  getPendingWorkflowConnection,
-  getUnsupportedWorkflowRelationshipMessage,
-  getWorkflowEdgeDefaults,
-  isLocalWorkflowId,
-  loadLocalRunRecords,
-  type WorkflowEdge as SchemaWorkflowEdge,
-  saveLocalRunRecord,
-  saveLocalWorkflowSnapshot,
-  type WorkflowBlock,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { clearLocalRunRecords, loadLocalRunRecords, saveLocalRunRecord } from "@/shared/workflow-engine/workflow/run-storage";
+import { createCanvasEdgeFromWorkflowEdge, createWorkflowEdgeRecord, getPendingWorkflowConnection, getUnsupportedWorkflowRelationshipMessage, getWorkflowEdgeDefaults } from "@/shared/workflow-engine/workflow/edges";
+import { createWorkflowBlockFromCatalog, createWorkflowNodeFromBlock } from "@/shared/workflow-engine/workflow/block-factory";
+import { type FiscalStage, type WorkflowEdge as SchemaWorkflowEdge, type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
+import { getBlockCatalogItem, getFiscalPreset, getFiscalVisualForFamily, getFiscalVisualForStage, isLocalWorkflowId } from "@/shared/workflow-engine/workflow/visuals";
+import { saveLocalWorkflowSnapshot } from "@/shared/workflow-engine/workflow/storage";
 import {
   type LocalEdgeRunStatus,
   runLocalWorkflowTools,

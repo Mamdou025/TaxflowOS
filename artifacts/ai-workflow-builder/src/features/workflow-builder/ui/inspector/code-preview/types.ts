@@ -1,5 +1,5 @@
-import type { WorkflowBlock } from "@/shared/workflow-engine/local-fiscal-workflow";
-import type { ToolDefinition } from "@/shared/workflow-engine/local-tool-registry";
+import { type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
+import { type ToolDefinition } from "@/shared/workflow-engine/tools/types";
 
 export type BlockCodePreviewLanguage =
   | "formula"

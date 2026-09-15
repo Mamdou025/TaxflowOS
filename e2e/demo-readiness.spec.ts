@@ -95,7 +95,7 @@ for (const count of [100, 1000]) {
     const uploadMs = Date.now() - start;
     await page.getByRole('button', { name: 'Run', exact: true }).first().click();
     start = Date.now();
-    await page.getByRole('button', { name: 'Save changes and run', exact: true }).click();
+    await page.getByRole('button', { name: 'Save changes and preview', exact: true }).click();
     const persisted = await page.evaluate(async () => {
       const { readWorkflowLibrary } = await import('/src/features/workflows-hub/workflow-library.ts');
       const entry = Object.values(readWorkflowLibrary())[0];
@@ -111,8 +111,8 @@ for (const count of [100, 1000]) {
     expect(errors).toEqual([]);
     await page.goto(`/w/${persisted.id}`);
     await page.getByRole('button', { name: 'Run', exact: true }).first().click();
-    await expect(page.getByRole('button', { name: 'Run saved version 1' })).toBeVisible();
-    await page.getByRole('button', { name: 'Run saved version 1' }).click();
+    await expect(page.getByRole('button', { name: 'Preview saved version 1 in this browser' })).toBeVisible();
+    await page.getByRole('button', { name: 'Preview saved version 1 in this browser' }).click();
     const repeat = await page.evaluate(async () => {
       const { readWorkflowLibrary } = await import('/src/features/workflows-hub/workflow-library.ts');
       const entry = Object.values(readWorkflowLibrary())[0];

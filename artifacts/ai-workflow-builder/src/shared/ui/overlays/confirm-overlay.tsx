@@ -1,10 +1,8 @@
-
-
-import { AlertTriangleIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Overlay } from "./overlay";
-import { useOverlay } from "./overlay-provider";
-import type { OverlayAction, OverlayActionVariant } from "./types";
+import { AlertTriangleIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Overlay } from './overlay';
+import { useOverlay } from './overlay-provider';
+import type { OverlayAction, OverlayActionVariant } from './types';
 
 type ConfirmOverlayProps = {
   overlayId: string;
@@ -47,11 +45,11 @@ type ConfirmOverlayProps = {
  */
 export function ConfirmOverlay({
   overlayId,
-  title = "Confirm",
+  title = 'Confirm',
   message,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
-  confirmVariant = "default",
+  confirmLabel = 'Confirm',
+  cancelLabel = 'Cancel',
+  confirmVariant = 'default',
   destructive = false,
   onConfirm,
   onCancel,
@@ -71,12 +69,12 @@ export function ConfirmOverlay({
   const actions: OverlayAction[] = [
     {
       label: cancelLabel,
-      variant: "outline",
+      variant: 'outline',
       onClick: handleCancel,
     },
     {
       label: confirmLabel,
-      variant: destructive ? "destructive" : confirmVariant,
+      variant: destructive ? 'destructive' : confirmVariant,
       onClick: handleConfirm,
     },
   ];
@@ -89,11 +87,7 @@ export function ConfirmOverlay({
             <AlertTriangleIcon className="size-5 text-destructive" />
           </div>
         )}
-        <p
-          className={cn("text-muted-foreground text-sm", destructive && "pt-2")}
-        >
-          {message}
-        </p>
+        <p className={cn('text-muted-foreground text-sm', destructive && 'pt-2')}>{message}</p>
       </div>
     </Overlay>
   );

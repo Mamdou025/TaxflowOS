@@ -7,13 +7,13 @@
 // tools — no re-implementation, no drift.
 // ─────────────────────────────────────────────────────────────────────────────
 import { Router } from "express";
-import { runAgent } from "@/features/agent-lab/agent";
+import { runAgent } from "@workspace/agent-runtime/agent";
 import type {
   AgentLabDoc,
   AgentLabMessage,
   DocMode,
-} from "@/features/agent-lab/catalog";
-import { EFFORT_LEVELS, type EffortLevel } from "@/features/agent-lab/model-router";
+} from "@workspace/agent-runtime/catalog";
+import { EFFORT_LEVELS, type EffortLevel } from "@workspace/agent-runtime/model-router";
 
 const router = Router();
 

@@ -4,22 +4,28 @@ import { captureRenderError } from '@/lib/error-monitoring';
 /** Full-page spinner shown while the app shell is hydrating */
 function AppSpinner() {
   return (
-    <div role="status" aria-label="Loading workspace" style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '100dvh',
-      width: '100vw',
-      background: '#f5f5f5',
-    }}>
-      <div style={{
-        width: 36,
-        height: 36,
-        border: '3px solid #d1d5db',
-        borderTopColor: '#6366f1',
-        borderRadius: '50%',
-        animation: 'spin 0.8s linear infinite',
-      }} />
+    <div
+      role="status"
+      aria-label="Loading workspace"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100dvh',
+        width: '100vw',
+        background: '#f5f5f5',
+      }}
+    >
+      <div
+        style={{
+          width: 36,
+          height: 36,
+          border: '3px solid #d1d5db',
+          borderTopColor: '#6366f1',
+          borderRadius: '50%',
+          animation: 'spin 0.8s linear infinite',
+        }}
+      />
       <span style={{ marginLeft: 12 }}>Loading workspace...</span>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
@@ -82,23 +88,27 @@ class AppErrorBoundary extends Component<
       // Show a brief "updating" message while the reload fires.
       if (chunkReloading) {
         return (
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100dvh',
-            gap: 12,
-            fontFamily: 'system-ui, sans-serif',
-          }}>
-            <div style={{
-              width: 32,
-              height: 32,
-              border: '3px solid #d1d5db',
-              borderTopColor: '#6366f1',
-              borderRadius: '50%',
-              animation: 'spin 0.8s linear infinite',
-            }} />
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100dvh',
+              gap: 12,
+              fontFamily: 'system-ui, sans-serif',
+            }}
+          >
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                border: '3px solid #d1d5db',
+                borderTopColor: '#6366f1',
+                borderRadius: '50%',
+                animation: 'spin 0.8s linear infinite',
+              }}
+            />
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             <p style={{ margin: 0, color: '#6b7280', fontSize: 14 }}>
               New version available — reloading…
@@ -111,27 +121,28 @@ class AppErrorBoundary extends Component<
       // Explain what happened and guide the user to do a hard refresh.
       if (isChunkError) {
         return (
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100dvh',
-            gap: 16,
-            fontFamily: 'system-ui, sans-serif',
-            padding: 24,
-            textAlign: 'center',
-          }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100dvh',
+              gap: 16,
+              fontFamily: 'system-ui, sans-serif',
+              padding: 24,
+              textAlign: 'center',
+            }}
+          >
             <div style={{ fontSize: 32 }}>🔄</div>
             <h1 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>The page was updated</h1>
             <p style={{ margin: 0, color: '#6b7280', maxWidth: 440 }}>
-              A new version of the app was deployed while you were using it.
-              Please do a <strong>hard refresh</strong> to load the latest files.
+              A new version of the app was deployed while you were using it. Please do a{' '}
+              <strong>hard refresh</strong> to load the latest files.
             </p>
             <p style={{ margin: 0, color: '#9ca3af', fontSize: 13 }}>
               Windows / Linux: <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd>
-              &nbsp;&nbsp;·&nbsp;&nbsp;
-              Mac: <kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd>
+              &nbsp;&nbsp;·&nbsp;&nbsp; Mac: <kbd>⌘</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd>
             </p>
             <button
               onClick={() => {
@@ -154,7 +165,9 @@ class AppErrorBoundary extends Component<
             <details style={{ marginTop: 8, color: '#9ca3af', fontSize: 12, maxWidth: 600 }}>
               <summary style={{ cursor: 'pointer' }}>Error details</summary>
               <pre style={{ textAlign: 'left', whiteSpace: 'pre-wrap', marginTop: 8 }}>
-                {String(error)}{'\n'}{error.stack}
+                {String(error)}
+                {'\n'}
+                {error.stack}
               </pre>
             </details>
           </div>
@@ -162,17 +175,19 @@ class AppErrorBoundary extends Component<
       }
 
       return (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100dvh',
-          gap: 16,
-          fontFamily: 'system-ui, sans-serif',
-          padding: 24,
-          textAlign: 'center',
-        }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100dvh',
+            gap: 16,
+            fontFamily: 'system-ui, sans-serif',
+            padding: 24,
+            textAlign: 'center',
+          }}
+        >
           <div style={{ fontSize: 32 }}>⚠️</div>
           <h1 style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>Something went wrong</h1>
           <p style={{ margin: 0, color: '#6b7280', maxWidth: 400 }}>
@@ -199,7 +214,9 @@ class AppErrorBoundary extends Component<
           <details style={{ marginTop: 8, color: '#9ca3af', fontSize: 12, maxWidth: 600 }}>
             <summary style={{ cursor: 'pointer' }}>Error details</summary>
             <pre style={{ textAlign: 'left', whiteSpace: 'pre-wrap', marginTop: 8 }}>
-              {String(error)}{'\n'}{error.stack}
+              {String(error)}
+              {'\n'}
+              {error.stack}
             </pre>
           </details>
         </div>
@@ -233,8 +250,20 @@ class RouteErrorBoundary extends Component<{ children: ReactNode }, { error: Err
   render() {
     if (this.state.error) {
       return (
-        <div style={{ padding: 24, color: 'red', fontFamily: 'monospace', whiteSpace: 'pre-wrap', maxWidth: 900 }}>
-          <strong>Route render error:</strong>{'\n'}{String(this.state.error)}{'\n'}{(this.state.error as Error).stack}
+        <div
+          style={{
+            padding: 24,
+            color: 'red',
+            fontFamily: 'monospace',
+            whiteSpace: 'pre-wrap',
+            maxWidth: 900,
+          }}
+        >
+          <strong>Route render error:</strong>
+          {'\n'}
+          {String(this.state.error)}
+          {'\n'}
+          {(this.state.error as Error).stack}
         </div>
       );
     }
@@ -248,14 +277,11 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/platform/auth/ui/provider';
 import { OverlayProvider } from '@/shared/ui/overlays/overlay-provider';
 import { GitHubStarsLoader } from '@/components/github-stars-loader';
-import { AppShell } from '@/components/app-shell';
+import { AppShell, ChatWorkspacePage } from '@/app-workspace';
 import { GlobalModals } from '@/components/global-modals';
 import { Toaster } from '@/shared/ui/sonner';
 
-// Lazy-load all page components (they were Next.js page.tsx files)
-const ChatWorkspacePage = lazy(() =>
-  import('@/features/assistant/workspace/copilot-workspace-panel').then((m) => ({ default: m.ChatWorkspace })),
-);
+// Lazy-load secondary page components.
 const WorkflowsPage = lazy(() =>
   import('@/app/workflows/page').then((m) => ({ default: m.default })),
 );
@@ -268,15 +294,20 @@ const AgentLabPage = lazy(() =>
 const DocumentsPage = lazy(() =>
   import('@/app/documents/page').then((m) => ({ default: m.default })),
 );
+const SourcesPage = lazy(() => import('@/app/sources/page').then((m) => ({ default: m.default })));
+const ConnectionsPage = lazy(() =>
+  import('@/app/connections/page').then((m) => ({ default: m.default })),
+);
+const WorkflowRunsPage = lazy(() =>
+  import('@/app/workflows/runs/page').then((m) => ({ default: m.default })),
+);
 const WorkflowsHubPage = lazy(() =>
   import('@/app/workflows-hub/page').then((m) => ({ default: m.default })),
 );
 const RunPage = lazy(() =>
   import('@/app/run/[workflowId]/page').then((m) => ({ default: m.default })),
 );
-const WPage = lazy(() =>
-  import('@/app/w/[workflowId]/page').then((m) => ({ default: m.default })),
-);
+const WPage = lazy(() => import('@/app/w/[workflowId]/page').then((m) => ({ default: m.default })));
 
 function PageLoader({ children }: { children: ReactNode }) {
   return (
@@ -304,30 +335,116 @@ function Router() {
   return (
     <Switch>
       {/* Main/home — the chat/assistant workspace */}
-      <Route path="/" component={() => <PageLoader><ChatWorkspacePage /></PageLoader>} />
+      <Route
+        path="/"
+        component={() => (
+          <PageLoader>
+            <ChatWorkspacePage />
+          </PageLoader>
+        )}
+      />
       {/* Redirect pages that were folded into "/" */}
-      <Route path="/home"><Redirect to="/" /></Route>
-      <Route path="/chat"><Redirect to="/" /></Route>
+      <Route path="/home">
+        <Redirect to="/" />
+      </Route>
+      <Route path="/chat">
+        <Redirect to="/" />
+      </Route>
 
       {/* Workflow builder + workflows surface */}
-      <Route path="/workflows" component={() => <PageLoader><WorkflowsPage /></PageLoader>} />
-      <Route path="/workflows/:workflowId" component={() => <PageLoader><WorkflowPage /></PageLoader>} />
-      <Route path="/w/:workflowId" component={() => <PageLoader><WPage /></PageLoader>} />
-      <Route path="/run/:workflowId" component={() => <PageLoader><RunPage /></PageLoader>} />
-      <Route path="/workflows-hub" component={() => <PageLoader><WorkflowsHubPage /></PageLoader>} />
+      <Route
+        path="/workflows/runs"
+        component={() => (
+          <PageLoader>
+            <WorkflowRunsPage />
+          </PageLoader>
+        )}
+      />
+      <Route
+        path="/workflows"
+        component={() => (
+          <PageLoader>
+            <WorkflowsPage />
+          </PageLoader>
+        )}
+      />
+      <Route
+        path="/workflows/:workflowId"
+        component={() => (
+          <PageLoader>
+            <WorkflowPage />
+          </PageLoader>
+        )}
+      />
+      <Route
+        path="/w/:workflowId"
+        component={() => (
+          <PageLoader>
+            <WPage />
+          </PageLoader>
+        )}
+      />
+      <Route
+        path="/run/:workflowId"
+        component={() => (
+          <PageLoader>
+            <RunPage />
+          </PageLoader>
+        )}
+      />
+      <Route
+        path="/workflows-hub"
+        component={() => (
+          <PageLoader>
+            <WorkflowsHubPage />
+          </PageLoader>
+        )}
+      />
 
       {/* Agent lab */}
-      <Route path="/agent-lab" component={() => <PageLoader><AgentLabPage /></PageLoader>} />
+      <Route
+        path="/agent-lab"
+        component={() => (
+          <PageLoader>
+            <AgentLabPage />
+          </PageLoader>
+        )}
+      />
 
       {/* Documents */}
-      <Route path="/documents" component={() => <PageLoader><DocumentsPage /></PageLoader>} />
+      <Route
+        path="/documents"
+        component={() => (
+          <PageLoader>
+            <DocumentsPage />
+          </PageLoader>
+        )}
+      />
+      <Route
+        path="/sources"
+        component={() => (
+          <PageLoader>
+            <SourcesPage />
+          </PageLoader>
+        )}
+      />
+      <Route
+        path="/connections"
+        component={() => (
+          <PageLoader>
+            <ConnectionsPage />
+          </PageLoader>
+        )}
+      />
 
       {/* 404 */}
       <Route>
         <div className="flex items-center justify-center h-screen">
           <div className="text-center">
             <h1 className="text-2xl font-bold">404 — Page not found</h1>
-            <a href="/" className="mt-4 text-primary underline block">Go home</a>
+            <a href="/" className="mt-4 text-primary underline block">
+              Go home
+            </a>
           </div>
         </div>
       </Route>

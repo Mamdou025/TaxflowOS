@@ -13,7 +13,7 @@ export const DOCUMENT_CALCULATOR: PortfolioWorkflowDef = {
     { catalogId: 'output:canonical-json', id: 'result', label: 'Final result', description: 'Review final values or export their structured representation.', stage: 5, row: 0, config: {} },
   ],
   edges: [
-    { from: 'start', to: 'document', label: 'Start', reason: 'Manual start', rel: 'triggers' },
+    { from: 'start', to: 'document', label: 'Start', reason: 'Manual start', rel: 'initiates' },
     { from: 'document', to: 'rules', label: 'Document records', reason: 'Classify uploaded text', fromRole: 'rows', toRole: 'rows' },
     { from: 'rules', to: 'groups', label: 'Classified records', reason: 'Aggregate matched records', fromRole: 'mapped_rows', toRole: 'mapped_rows' },
     { from: 'groups', to: 'calculate', label: 'Group totals', reason: 'Use named totals in calculations', fromRole: 'named_values', toRole: 'named_values' },

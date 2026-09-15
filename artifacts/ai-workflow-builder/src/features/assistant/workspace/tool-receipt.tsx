@@ -86,7 +86,16 @@ function formatValue(v: unknown): string {
 function ReceiptSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div style={{ marginBottom: 6 }}>
-      <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase', color: LC.faint, marginBottom: 3 }}>
+      <div
+        style={{
+          fontSize: 10.5,
+          fontWeight: 700,
+          letterSpacing: 0.4,
+          textTransform: 'uppercase',
+          color: LC.faint,
+          marginBottom: 3,
+        }}
+      >
         {title}
       </div>
       {children}
@@ -105,27 +114,56 @@ function KeyVal({ label, value }: { label: string; value: string }) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function PassagesView({ passages, note }: { passages: any[]; note?: string }) {
-  if (!passages.length) return <span style={{ fontSize: 12, color: LC.muted }}>{note ?? 'No passages.'}</span>;
+  if (!passages.length)
+    return <span style={{ fontSize: 12, color: LC.muted }}>{note ?? 'No passages.'}</span>;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {passages.map((p, i) => {
-        const sim = typeof p?.similarity === 'number' ? Math.round(Math.max(0, Math.min(1, p.similarity)) * 100) : null;
+        const sim =
+          typeof p?.similarity === 'number'
+            ? Math.round(Math.max(0, Math.min(1, p.similarity)) * 100)
+            : null;
         return (
           // eslint-disable-next-line react/no-array-index-key
           <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5 }}>
               <FileText size={12} style={{ color: LC.faint, flexShrink: 0 }} />
-              <span style={{ fontWeight: 650, color: LC.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+              <span
+                style={{
+                  fontWeight: 650,
+                  color: LC.text,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  minWidth: 0,
+                }}
+              >
                 {p?.source ?? 'document'}
               </span>
+              {typeof p?.revision === 'number' && (
+                <span style={{ color: LC.faint, flexShrink: 0 }}>rev {p.revision}</span>
+              )}
+              {p?.selection === 'selected' && (
+                <span style={{ color: LC.faint, flexShrink: 0 }}>selected</span>
+              )}
               {sim != null && <span style={{ color: LC.faint, flexShrink: 0 }}>{sim}% match</span>}
-              {typeof p?.chunkIndex === 'number' && <span style={{ color: LC.faint, flexShrink: 0 }}>· passage {p.chunkIndex}</span>}
+              {typeof p?.chunkIndex === 'number' && (
+                <span style={{ color: LC.faint, flexShrink: 0 }}>· passage {p.chunkIndex}</span>
+              )}
             </div>
+            {typeof p?.citationId === 'string' && (
+              <span style={{ fontSize: 10.5, color: LC.faint }}>{p.citationId}</span>
+            )}
             {p?.excerpt && (
               <div
                 style={{
-                  fontSize: 12, color: LC.muted, lineHeight: 1.5,
-                  display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                  fontSize: 12,
+                  color: LC.muted,
+                  lineHeight: 1.5,
+                  display: '-webkit-box',
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
                 }}
               >
                 {p.excerpt}
@@ -144,8 +182,10 @@ export function ToolCallDetail({ args, result }: { args: unknown; result: unknow
   const obj = asObject(result);
   const errorText = obj && typeof obj.error === 'string' ? obj.error : null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const passages = obj && Array.isArray((obj as any).passages) ? ((obj as any).passages as any[]) : null;
-  const hasArgs = args != null && typeof args === 'object' && Object.keys(args as object).length > 0;
+  const passages =
+    obj && Array.isArray((obj as any).passages) ? ((obj as any).passages as any[]) : null;
+  const hasArgs =
+    args != null && typeof args === 'object' && Object.keys(args as object).length > 0;
   return (
     <>
       {hasArgs && (
@@ -160,7 +200,15 @@ export function ToolCallDetail({ args, result }: { args: unknown; result: unknow
 
       <ReceiptSection title="Result">
         {errorText ? (
-          <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start', color: '#c2410c', fontSize: 12 }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: 6,
+              alignItems: 'flex-start',
+              color: '#c2410c',
+              fontSize: 12,
+            }}
+          >
             <AlertTriangle size={13} style={{ flexShrink: 0, marginTop: 1 }} />
             <span>{errorText}</span>
           </div>
@@ -197,7 +245,16 @@ export function ToolsUsed({ calls }: { calls: ToolUsage[] }) {
   return (
     <div data-testid="tools-used" style={{ maxWidth: 760, margin: '2px 0 12px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 11, fontWeight: 600, color: LC.faint, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: LC.faint,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 5,
+          }}
+        >
           <Wrench size={12} /> Tools used
         </span>
         {calls.map((c) => {
@@ -212,11 +269,17 @@ export function ToolsUsed({ calls }: { calls: ToolUsage[] }) {
               aria-expanded={active}
               title="Show inputs & result"
               style={{
-                display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 9px',
-                fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '3px 9px',
+                fontSize: 11.5,
+                fontWeight: 600,
+                cursor: 'pointer',
                 color: isError ? '#c2410c' : active ? LC.text : LC.body,
                 background: active ? LC.surfaceHover : LC.surface,
-                border: `1px solid ${active ? LC.border : LC.borderSubtle}`, borderRadius: 999,
+                border: `1px solid ${active ? LC.border : LC.borderSubtle}`,
+                borderRadius: 999,
               }}
             >
               <Wrench size={11} style={{ color: isError ? '#c2410c' : LC.accent }} />
@@ -227,7 +290,15 @@ export function ToolsUsed({ calls }: { calls: ToolUsage[] }) {
         })}
       </div>
       {openCall && (
-        <div style={{ marginTop: 7, border: `1px solid ${LC.borderSubtle}`, borderRadius: 9, padding: '9px 10px', background: LC.surface }}>
+        <div
+          style={{
+            marginTop: 7,
+            border: `1px solid ${LC.borderSubtle}`,
+            borderRadius: 9,
+            padding: '9px 10px',
+            background: LC.surface,
+          }}
+        >
           <ToolCallDetail args={openCall.args} result={openCall.result} />
         </div>
       )}

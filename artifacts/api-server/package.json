@@ -30,7 +30,14 @@
     "pino": "^9.14.0",
     "pino-http": "^10.5.0",
     "unpdf": "^1.7.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "@workspace/source-connectors": "workspace:*",
+    "@workspace/source-core": "workspace:*",
+    "@workspace/agent-runtime": "workspace:*",
+    "@workspace/workflow-contracts": "workspace:*",
+    "@workspace/workflow-core": "workspace:*",
+    "zod": "catalog:",
+    "@workspace/workflow-executors": "workspace:*"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.10",

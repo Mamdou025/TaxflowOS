@@ -22,7 +22,7 @@ import {
   fiscalPreamble,
   fiscalSummary,
 } from '@/features/agent-lab/fiscal';
-import { EFFORT_LEVELS, type EffortLevel } from '@/features/agent-lab/model-router';
+import { EFFORT_LEVELS, type EffortLevel } from '@workspace/agent-runtime/model-router';
 import AgentLabPage from '@/features/agent-lab/agent-lab-page';
 
 const TAB_LABELS: { id: AgentTab; label: string }[] = [
@@ -35,9 +35,7 @@ const TAB_LABELS: { id: AgentTab; label: string }[] = [
 // The domains Sina absorbed (was Sofi/Théo/Mira/Nova), from agents/specialists.ts.
 const DOMAINS = [
   'FAPI — foreign accrual property income (classify the trial balance, the FAPI line build, FX → CAD, reviewed net FAPI)',
-  'Section 85 rollover (roulement, art. 85) — elected-amount bounds PBR↔FMV, deferred gain, T2057',
   'Employee expense reimbursement — per-diem caps, policy, net payable',
-  'Marketing campaign budgets — channel classification, elect the approved budget',
 ];
 
 // The system-prompt sections Sina always carries (from INSTRUCTIONS() in assistant-thread.tsx).
@@ -48,13 +46,13 @@ const PROMPT_SECTIONS = [
   'Tool routing — runWorkflow / openPage / focusAnchor / editField / generateUI',
   'Grounding — never invent a value; read from the provided contexts',
   'Memory — use remembered facts; save only when asked',
-  'Expertise — the four domains above (per-turn "domain focus")',
+  'Expertise — the executable workflow catalog (per-turn "domain focus")',
   'Registered pages + editable fields (only reference ids that exist)',
 ];
 
 // Actions the live agent can call (client-executed useCopilotAction, from use-assistant.tsx + friends).
 const TOOLS = [
-  ['runWorkflow', 'Propose / start a workflow run in the chat (FAPI · rollover · expense · campaign)'],
+  ['runWorkflow', 'Execute and save a workflow from supplied chat records (FAPI, expenses, document calculator and portfolio workpapers)'],
   ['editField', 'Bring an editable worksheet field into the chat (e.g. the FX rate)'],
   ['openPage', 'Open a registered worksheet / page beside the chat'],
   ['focusAnchor', 'Scroll to + highlight a figure or section on a page'],

@@ -17,7 +17,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { Router } from "express";
 import OpenAI from "openai";
-import SYSTEM_PROMPT from "@/features/genui/system-prompt.txt";
+import SYSTEM_PROMPT from "@workspace/agent-runtime/system-prompt.txt";
 
 const router = Router();
 

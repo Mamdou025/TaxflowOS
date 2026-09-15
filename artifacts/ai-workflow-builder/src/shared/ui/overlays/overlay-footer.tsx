@@ -1,9 +1,7 @@
-
-
-import { Loader2 } from "lucide-react";
-import { Button } from "@/shared/ui/button";
-import { cn } from "@/lib/utils";
-import type { OverlayAction, OverlayFooterProps } from "./types";
+import { Loader2 } from 'lucide-react';
+import { Button } from '@/shared/ui/button';
+import { cn } from '@/lib/utils';
+import type { OverlayAction, OverlayFooterProps } from './types';
 
 /**
  * Render a single action button
@@ -13,7 +11,7 @@ function ActionButton({ action }: { action: OverlayAction }) {
     <Button
       disabled={action.disabled || action.loading}
       onClick={action.onClick}
-      variant={action.variant ?? "default"}
+      variant={action.variant ?? 'default'}
     >
       {action.loading && <Loader2 className="mr-2 size-4 animate-spin" />}
       {action.label}
@@ -25,19 +23,12 @@ function ActionButton({ action }: { action: OverlayAction }) {
  * Standardized footer component for overlays.
  * Renders action buttons in a consistent layout.
  */
-export function OverlayFooter({
-  actions,
-  className,
-  children,
-}: OverlayFooterProps) {
+export function OverlayFooter({ actions, className, children }: OverlayFooterProps) {
   // If children are provided, render them directly
   if (children) {
     return (
       <div
-        className={cn(
-          "flex flex-col-reverse gap-2 p-6 pt-4 sm:flex-row sm:justify-end",
-          className
-        )}
+        className={cn('flex flex-col-reverse gap-2 p-6 pt-4 sm:flex-row sm:justify-end', className)}
       >
         {children}
       </div>
@@ -50,14 +41,14 @@ export function OverlayFooter({
   }
 
   // Ghost buttons go on the left (additional actions like Delete)
-  const leftActions = actions.filter((a) => a.variant === "ghost");
+  const leftActions = actions.filter((a) => a.variant === 'ghost');
 
   // Right side: secondary (outline) then primary (default/destructive)
   const rightSecondary = actions.filter(
-    (a) => a.variant === "outline" || a.variant === "secondary"
+    (a) => a.variant === 'outline' || a.variant === 'secondary',
   );
   const rightPrimary = actions.filter(
-    (a) => !a.variant || a.variant === "default" || a.variant === "destructive"
+    (a) => !a.variant || a.variant === 'default' || a.variant === 'destructive',
   );
 
   const hasLeftActions = leftActions.length > 0;
@@ -66,11 +57,9 @@ export function OverlayFooter({
   return (
     <div
       className={cn(
-        "flex flex-col-reverse gap-2 p-6 pt-4 sm:flex-row",
-        hasLeftActions && hasRightActions
-          ? "sm:justify-between"
-          : "sm:justify-end",
-        className
+        'flex flex-col-reverse gap-2 p-6 pt-4 sm:flex-row',
+        hasLeftActions && hasRightActions ? 'sm:justify-between' : 'sm:justify-end',
+        className,
       )}
     >
       {/* Ghost actions on the left */}

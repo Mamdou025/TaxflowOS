@@ -1,3 +1,4 @@
+import { workspaceStorage, workspaceStorageKey } from '@/platform/auth/workspace-context';
 // Lossless JSON storage with repeated objects stored once. Run records contain
 // many copies of the same upstream rows in outputs, transfer snapshots and logs.
 // The envelope is storage-only; readers still receive the complete JSON value.
@@ -75,16 +76,16 @@ export function sharedJSONStorage<T>() {
   return {
     getItem(key: string, initialValue: T): T {
       if (typeof window === 'undefined') return initialValue;
-      const value = window.localStorage.getItem(key);
+      const value = workspaceStorage.getItem(key);
       return value === null ? initialValue : parseSharedJSON(value) as T;
     },
     setItem(key: string, value: T) {
-      window.localStorage.setItem(key, stringifySharedJSON(value));
+      workspaceStorage.setItem(key, stringifySharedJSON(value));
     },
-    removeItem(key: string) { window.localStorage.removeItem(key); },
+    removeItem(key: string) { workspaceStorage.removeItem(key); },
     subscribe(key: string, callback: (value: T) => void, initialValue: T) {
       const listener = (event: StorageEvent) => {
-        if (event.storageArea === window.localStorage && event.key === key) {
+        if (event.storageArea === window.localStorage && event.key === workspaceStorageKey(key)) {
           callback(event.newValue === null ? initialValue : parseSharedJSON(event.newValue) as T);
         }
       };

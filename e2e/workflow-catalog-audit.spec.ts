@@ -10,23 +10,33 @@ function save(name: string, value: unknown) {
 test('inventory and execute every catalog, additional runtime, and builder example definition', async ({ page }) => {
   await page.goto('/');
   const audit = await page.evaluate(async () => {
-    const local = await import('/src/shared/workflow-engine/local-fiscal-workflow.ts');
+    const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/workflow/canvas.ts');
+    const { createSingleItemPipelineDemoWorkflow } = await import('/src/shared/workflow-engine/workflow/templates/single-item.ts');
+    const { createExpandedMappingPipelineDemoWorkflow } = await import('/src/shared/workflow-engine/workflow/templates/expanded-mapping.ts');
+    const { createWorkingSourceRulesDemoWorkflow } = await import('/src/shared/workflow-engine/workflow/templates/working-source.ts');
+    const { createFapiSampleWorkflow } = await import('/src/shared/workflow-engine/workflow/templates/fapi.ts');
     const { PORTFOLIO_WORKFLOWS } = await import('/src/shared/workflow-engine/templates/portfolio/portfolio-workflows.ts');
     const { WORKFLOW_CONFIGS, runTemplateCore } = await import('/src/shared/workflow-engine/runtime/workflow-runs/index.ts');
     const { templateDefinition } = await import('/src/features/workflows-hub/saved-workflow-run.tsx');
     const { runLocalWorkflowTools } = await import('/src/shared/workflow-engine/local-tool-runner.ts');
-    const { getToolForBlock } = await import('/src/shared/workflow-engine/local-tool-registry.ts');
+    const { getToolForBlock } = await import('/src/shared/workflow-engine/tools/lookup.ts');
     const entries = PORTFOLIO_WORKFLOWS.map(spec => ({ id: spec.id, name: spec.name, surface: 'catalog', definition: templateDefinition(spec.id)!, config: WORKFLOW_CONFIGS[spec.id.replace(/^pf-/, '')] }));
     for (const [id, config] of Object.entries(WORKFLOW_CONFIGS)) {
       if (!entries.some(entry => entry.id === `pf-${id}`)) entries.push({ id, name: config.name, surface: 'additional-runtime', definition: config.buildSnapshot(), config });
     }
-    for (const name of ['createSingleItemPipelineDemoWorkflow', 'createExpandedMappingPipelineDemoWorkflow', 'createWorkingSourceRulesDemoWorkflow', 'createFapiSampleWorkflow']) {
-      const definition = local[name](); entries.push({ id: name, name: definition.name, surface: 'builder-example', definition, config: undefined });
+    const builderExamples = [
+      { name: 'createSingleItemPipelineDemoWorkflow', create: createSingleItemPipelineDemoWorkflow },
+      { name: 'createExpandedMappingPipelineDemoWorkflow', create: createExpandedMappingPipelineDemoWorkflow },
+      { name: 'createWorkingSourceRulesDemoWorkflow', create: createWorkingSourceRulesDemoWorkflow },
+      { name: 'createFapiSampleWorkflow', create: createFapiSampleWorkflow },
+    ];
+    for (const { name, create } of builderExamples) {
+      const definition = create(); entries.push({ id: name, name: definition.name, surface: 'builder-example', definition, config: undefined });
     }
     const execute = (definition: any) => {
       const start = performance.now();
       try {
-        const run = runLocalWorkflowTools({ ...local.workflowDefinitionToCanvas(definition), workflowName: definition.name, workflowId: definition.id }).result;
+        const run = runLocalWorkflowTools({ ...workflowDefinitionToCanvas(definition), workflowName: definition.name, workflowId: definition.id }).result;
         return { status: run.status, elapsedMs: Math.round(performance.now() - start), errors: run.errors, warnings: run.warnings, results: run.results.map(result => ({ blockId: result.blockId, label: definition.blocks.find(b => b.id === result.blockId)?.label, toolId: result.toolId, status: result.status, errors: result.errors, warnings: result.warnings, outputKeys: Object.keys(result.output), calculated: result.output.calculatedResults, namedValues: result.output.namedValues, rowCount: Array.isArray(result.output.rows) ? result.output.rows.length : undefined, mappedCount: Array.isArray(result.output.mappedRows) ? result.output.mappedRows.length : undefined, unmatchedCount: Array.isArray(result.output.unmatchedRows) ? result.output.unmatchedRows.length : undefined, transfers: result.inputTransfers?.map(t => ({ sourceBlockId: t.sourceBlockId, delivered: t.delivered, sourceOutputRole: t.sourceOutputRole, targetInputRole: t.targetInputRole, keys: Object.keys(t.output) })) })) };
       } catch (error) { return { status: 'exception', message: String(error), elapsedMs: Math.round(performance.now() - start), results: [] }; }
     };
@@ -79,7 +89,7 @@ for (const id of catalogIds) {
     await page.getByRole('button', { name: 'Use this test data', exact: true }).click();
     await page.getByRole('button', { name: 'Run', exact: true }).first().click();
     const runStart = Date.now();
-    await page.getByRole('button', { name: 'Save changes and run', exact: true }).click();
+    await page.getByRole('button', { name: 'Save changes and preview', exact: true }).click();
     await expect(page.getByRole('region', { name: 'Final workflow results' })).toBeVisible();
     const readSaved = () => page.evaluate(async () => {
       const { readWorkflowLibrary } = await import('/src/features/workflows-hub/workflow-library.ts');
@@ -97,7 +107,7 @@ for (const id of catalogIds) {
     await page.getByRole('button', { name: 'Workflows', exact: true }).click();
     await page.getByRole('button', { name: first.name, exact: true }).click();
     await page.getByRole('button', { name: 'Run', exact: true }).first().click();
-    await page.getByRole('button', { name: 'Run saved version 1', exact: true }).click();
+    await page.getByRole('button', { name: 'Preview saved version 1 in this browser', exact: true }).click();
     await expect.poll(async () => (await readSaved())?.runCount).toBe(2);
     const second = (await readSaved())!;
     expect(second.runId).not.toBe(first.runId);

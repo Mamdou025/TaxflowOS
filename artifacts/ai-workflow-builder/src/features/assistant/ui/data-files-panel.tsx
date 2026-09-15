@@ -1,5 +1,4 @@
-
-
+import { apiFetch } from '@/platform/auth/api-fetch';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DataFilesPanel — "what is Sina looking into?" A right slide-over with two tabs:
@@ -18,7 +17,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAtomValue } from 'jotai';
 import { useCopilotChatInternal } from '@copilotkit/react-core';
-import { FileText, Globe, Database, X, ExternalLink, Layers, Paperclip, Check, Plus } from 'lucide-react';
+import {
+  FileText,
+  Globe,
+  Database,
+  X,
+  ExternalLink,
+  Layers,
+  Paperclip,
+  Check,
+  Plus,
+} from 'lucide-react';
 import { LC } from '@/lib/librechat-theme';
 import { attachedDocsAtom } from '@/shared/stores/workspace-store';
 import { buildToolCallInfo } from '../workspace/tool-receipt';
@@ -42,7 +51,13 @@ const STATUS_STYLE: Record<DocRow['status'], { label: string; color: string; bg:
   failed: { label: 'Failed', color: '#b91c1c', bg: 'rgba(239,68,68,0.15)' },
 };
 
-type ChatDoc = { key: string; fileName: string; documentId?: string; passages: number; bestSim: number };
+type ChatDoc = {
+  key: string;
+  fileName: string;
+  documentId?: string;
+  passages: number;
+  bestSim: number;
+};
 type ChatWeb = { url: string; title: string; scope: string };
 type ChatTrace = { docs: ChatDoc[]; web: ChatWeb[] };
 
@@ -80,7 +95,10 @@ function formatSize(bytes: number | null): string {
 /** Derive the documents + web sources this conversation actually pulled, from the
  *  recorded tool results (same trace the per-answer receipts read). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function deriveChatTrace(messages: any[], toolCallInfo: Map<string, { name: string; args: unknown }>): ChatTrace {
+function deriveChatTrace(
+  messages: any[],
+  toolCallInfo: Map<string, { name: string; args: unknown }>,
+): ChatTrace {
   const docMap = new Map<string, ChatDoc>();
   const webMap = new Map<string, ChatWeb>();
   for (const m of messages ?? []) {
@@ -104,14 +122,22 @@ function deriveChatTrace(messages: any[], toolCallInfo: Map<string, { name: stri
           docMap.set(key, { key, fileName, documentId, passages: 1, bestSim: sim });
         }
       }
-    } else if ((call.name === 'searchWeb' || call.name === 'searchCanadianTax') && Array.isArray(obj.results)) {
+    } else if (
+      (call.name === 'searchWeb' || call.name === 'searchCanadianTax') &&
+      Array.isArray(obj.results)
+    ) {
       for (const r of obj.results) {
         if (!r || typeof r.url !== 'string' || webMap.has(r.url)) continue;
-        webMap.set(r.url, { url: r.url, title: String(r.title ?? r.url), scope: call.name === 'searchCanadianTax' ? 'CA tax' : 'Web' });
+        webMap.set(r.url, {
+          url: r.url,
+          title: String(r.title ?? r.url),
+          scope: call.name === 'searchCanadianTax' ? 'CA tax' : 'Web',
+        });
       }
     } else if (call.name === 'fetchWebPage') {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const argUrl = call.args && typeof (call.args as any).url === 'string' ? (call.args as any).url : null;
+      const argUrl =
+        call.args && typeof (call.args as any).url === 'string' ? (call.args as any).url : null;
       const url = typeof obj.url === 'string' ? obj.url : argUrl;
       if (url && !webMap.has(url)) webMap.set(url, { url, title: url, scope: 'Read' });
     }
@@ -122,7 +148,7 @@ function deriveChatTrace(messages: any[], toolCallInfo: Map<string, { name: stri
 async function openDocument(id?: string) {
   if (!id) return;
   try {
-    const res = await fetch(`/api/documents/${id}`);
+    const res = await apiFetch(`/api/documents/${id}`);
     if (!res.ok) return;
     const data = (await res.json()) as { downloadUrl?: string | null };
     if (data.downloadUrl) window.open(data.downloadUrl, '_blank', 'noopener');
@@ -147,24 +173,31 @@ export function DataFilesPanel({ compact = false }: { compact?: boolean }) {
 
   const [libDocs, setLibDocs] = useState<DocRow[]>([]);
   const [libLoaded, setLibLoaded] = useState(false);
+  const [libraryError, setLibraryError] = useState('');
 
   useEffect(() => {
-    if (!open || libLoaded) return;
+    if (libLoaded) return;
     (async () => {
       try {
-        const res = await fetch('/api/documents');
+        const res = await apiFetch('/api/documents');
         if (res.ok) {
           const data = (await res.json()) as { documents?: DocRow[] };
           setLibDocs(data.documents ?? []);
+          setLibraryError('');
+        } else {
+          setLibraryError('The source library is unavailable.');
         }
       } catch {
-        // fail-soft
+        setLibraryError('The source library is unavailable.');
       }
       setLibLoaded(true);
     })();
-  }, [open, libLoaded]);
+  }, [libLoaded]);
 
-  const usedIds = useMemo(() => new Set(trace.docs.map((d) => d.documentId).filter(Boolean) as string[]), [trace]);
+  const usedIds = useMemo(
+    () => new Set(trace.docs.map((d) => d.documentId).filter(Boolean) as string[]),
+    [trace],
+  );
   const usedNames = useMemo(() => new Set(trace.docs.map((d) => d.fileName)), [trace]);
 
   // The Library = the documents in Sina's active context. The full repository (upload
@@ -172,10 +205,12 @@ export function DataFilesPanel({ compact = false }: { compact?: boolean }) {
   // drop them out (they stay stored either way, just searchable or not).
   const libraryDocs = useMemo(() => libDocs.filter((d) => d.inLibrary !== false), [libDocs]);
   const availableDocs = useMemo(() => libDocs.filter((d) => d.inLibrary === false), [libDocs]);
+  const selectedCount = attached.length + libraryDocs.length;
+  const usedCount = trace.docs.length + trace.web.length;
   const setInLibrary = async (id: string, next: boolean) => {
     setLibDocs((prev) => prev.map((d) => (d.id === id ? { ...d, inLibrary: next } : d)));
     try {
-      await fetch(`/api/documents/${id}`, {
+      await apiFetch(`/api/documents/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ inLibrary: next }),
@@ -201,24 +236,70 @@ export function DataFilesPanel({ compact = false }: { compact?: boolean }) {
         badge={
           <span style={{ display: 'inline-flex', gap: 5, alignItems: 'center', flexShrink: 0 }}>
             {used && (
-              <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.03em', textTransform: 'uppercase', color: LC.accent, background: 'rgba(167,139,250,0.12)', borderRadius: 5, padding: '1px 5px' }}>Used here</span>
+              <span
+                style={{
+                  fontSize: 9.5,
+                  fontWeight: 700,
+                  letterSpacing: '0.03em',
+                  textTransform: 'uppercase',
+                  color: LC.accent,
+                  background: 'rgba(167,139,250,0.12)',
+                  borderRadius: 5,
+                  padding: '1px 5px',
+                }}
+              >
+                Used here
+              </span>
             )}
             {d.status !== 'ready' && (
-              <span style={{ fontSize: 10.5, fontWeight: 600, padding: '2px 8px', borderRadius: 999, color: s.color, background: s.bg }} title={d.error ?? undefined}>{s.label}</span>
+              <span
+                style={{
+                  fontSize: 10.5,
+                  fontWeight: 600,
+                  padding: '2px 8px',
+                  borderRadius: 999,
+                  color: s.color,
+                  background: s.bg,
+                }}
+                title={d.error ?? undefined}
+              >
+                {s.label}
+              </span>
             )}
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); void setInLibrary(d.id, !inLib); }}
-              title={inLib ? "In Sina's Library — click to remove from its searchable context" : "Add to Sina's Library so it can search this document"}
+              onClick={(e) => {
+                e.stopPropagation();
+                void setInLibrary(d.id, !inLib);
+              }}
+              title={
+                inLib
+                  ? "In Sina's Library — click to remove from its searchable context"
+                  : "Add to Sina's Library so it can search this document"
+              }
               style={{
-                display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 650,
-                padding: '2px 8px', borderRadius: 999, cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                fontSize: 10.5,
+                fontWeight: 650,
+                padding: '2px 8px',
+                borderRadius: 999,
+                cursor: 'pointer',
                 color: inLib ? '#6d28d9' : LC.muted,
                 background: inLib ? 'rgba(139,92,246,0.14)' : 'transparent',
                 border: `1px solid ${inLib ? 'transparent' : LC.borderSubtle}`,
               }}
             >
-              {inLib ? <><Check size={11} /> In Library</> : <><Plus size={11} /> Add</>}
+              {inLib ? (
+                <>
+                  <Check size={11} /> In Library
+                </>
+              ) : (
+                <>
+                  <Plus size={11} /> Add
+                </>
+              )}
             </button>
           </span>
         }
@@ -232,39 +313,82 @@ export function DataFilesPanel({ compact = false }: { compact?: boolean }) {
       <button
         data-testid="data-panel-button"
         onClick={() => setOpen(true)}
+        aria-label={`Context: ${selectedCount} selected, ${usedCount} used`}
         className="hover:bg-black/5"
-        title="Data & files — what Sina is looking into"
+        title="Context — selected sources and evidence used in this chat"
         style={{
-          display: 'inline-flex', alignItems: 'center', gap: 7, height, padding: '0 12px',
-          borderRadius: 999, border: `1px solid ${LC.borderSubtle}`, background: 'transparent',
-          color: LC.body, cursor: 'pointer', fontSize: 12.5, fontWeight: 550,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: compact ? 4 : 7,
+          height,
+          padding: compact ? '0 8px' : '0 12px',
+          borderRadius: 999,
+          border: `1px solid ${LC.borderSubtle}`,
+          background: 'transparent',
+          color: LC.body,
+          cursor: 'pointer',
+          fontSize: 12.5,
+          fontWeight: 550,
         }}
       >
         <Database size={14} style={{ color: LC.muted }} />
-        Data
-        {traceCount > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: LC.faint }}>{traceCount}</span>}
+        {!compact && 'Context'}
+        {!compact && selectedCount > 0 && (
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: LC.faint }}>
+            {selectedCount} selected
+          </span>
+        )}
+        {!compact && usedCount > 0 && (
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: LC.accent }}>
+            {usedCount} used
+          </span>
+        )}
       </button>
 
       {open && (
         <>
-          <div onClick={() => setOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(24,24,27,0.18)', zIndex: 49 }} />
+          <div
+            onClick={() => setOpen(false)}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(24,24,27,0.18)', zIndex: 49 }}
+          />
           <div
             data-testid="data-panel"
             style={{
-              position: 'fixed', top: 0, right: 0, bottom: 0, width: 'min(400px, 94vw)', zIndex: 50,
-              background: LC.surface, borderLeft: `1px solid ${LC.border}`, boxShadow: LC.shadowOut,
-              display: 'flex', flexDirection: 'column',
+              position: 'fixed',
+              top: 0,
+              right: 0,
+              bottom: 0,
+              width: 'min(400px, 94vw)',
+              zIndex: 50,
+              background: LC.surface,
+              borderLeft: `1px solid ${LC.border}`,
+              boxShadow: LC.shadowOut,
+              display: 'flex',
+              flexDirection: 'column',
             }}
           >
             {/* Header */}
-            <div style={{ padding: '14px 16px 10px', borderBottom: `1px solid ${LC.borderSubtle}` }}>
+            <div
+              style={{ padding: '14px 16px 10px', borderBottom: `1px solid ${LC.borderSubtle}` }}
+            >
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Layers size={16} style={{ color: LC.accent }} />
-                <span style={{ fontSize: 14, fontWeight: 700, color: LC.text }}>Data &amp; files</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: LC.text }}>Context</span>
                 <button
                   onClick={() => setOpen(false)}
                   title="Close"
-                  style={{ marginLeft: 'auto', display: 'grid', placeItems: 'center', width: 28, height: 28, borderRadius: 8, border: 'none', background: 'transparent', color: LC.muted, cursor: 'pointer' }}
+                  style={{
+                    marginLeft: 'auto',
+                    display: 'grid',
+                    placeItems: 'center',
+                    width: 28,
+                    height: 28,
+                    borderRadius: 8,
+                    border: 'none',
+                    background: 'transparent',
+                    color: LC.muted,
+                    cursor: 'pointer',
+                  }}
                 >
                   <X size={16} />
                 </button>
@@ -275,8 +399,18 @@ export function DataFilesPanel({ compact = false }: { compact?: boolean }) {
 
               {/* Tabs */}
               <div style={{ display: 'flex', gap: 4, marginTop: 10 }}>
-                <TabButton active={tab === 'chat'} onClick={() => setTab('chat')} label="This chat" count={traceCount} />
-                <TabButton active={tab === 'library'} onClick={() => setTab('library')} label="Library" count={libLoaded ? libraryDocs.length : undefined} />
+                <TabButton
+                  active={tab === 'chat'}
+                  onClick={() => setTab('chat')}
+                  label="This chat"
+                  count={traceCount}
+                />
+                <TabButton
+                  active={tab === 'library'}
+                  onClick={() => setTab('library')}
+                  label="Library"
+                  count={libLoaded ? libraryDocs.length : undefined}
+                />
               </div>
             </div>
 
@@ -292,12 +426,24 @@ export function DataFilesPanel({ compact = false }: { compact?: boolean }) {
                         {attached.map((d) => (
                           <SourceRow
                             key={d.id}
-                            icon={<Paperclip size={14} style={{ color: LC.faint, flexShrink: 0 }} />}
+                            icon={
+                              <Paperclip size={14} style={{ color: LC.faint, flexShrink: 0 }} />
+                            }
                             title={d.fileName}
                             subtitle={`${d.kind.toUpperCase()} · ${d.pages ? `${d.pages} page${d.pages > 1 ? 's' : ''}` : `${d.chars.toLocaleString()} chars`}${d.truncated ? ' · truncated' : ''}`}
                             badge={
                               <span
-                                style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.03em', textTransform: 'uppercase', color: '#047857', background: 'rgba(16,185,129,0.14)', borderRadius: 5, padding: '1px 6px', flexShrink: 0 }}
+                                style={{
+                                  fontSize: 9.5,
+                                  fontWeight: 700,
+                                  letterSpacing: '0.03em',
+                                  textTransform: 'uppercase',
+                                  color: '#047857',
+                                  background: 'rgba(16,185,129,0.14)',
+                                  borderRadius: 5,
+                                  padding: '1px 6px',
+                                  flexShrink: 0,
+                                }}
                                 title="Its extracted text is in the chat's context — Sina can read it"
                               >
                                 In context
@@ -315,7 +461,9 @@ export function DataFilesPanel({ compact = false }: { compact?: boolean }) {
                             icon={<FileText size={14} style={{ color: LC.faint, flexShrink: 0 }} />}
                             title={d.fileName}
                             subtitle={`${d.passages} passage${d.passages > 1 ? 's' : ''}${d.bestSim ? ` · ${Math.round(Math.max(0, Math.min(1, d.bestSim)) * 100)}% match` : ''}`}
-                            onOpen={d.documentId ? () => void openDocument(d.documentId) : undefined}
+                            onOpen={
+                              d.documentId ? () => void openDocument(d.documentId) : undefined
+                            }
                           />
                         ))}
                       </Section>
@@ -338,12 +486,24 @@ export function DataFilesPanel({ compact = false }: { compact?: boolean }) {
                 )
               ) : !libLoaded ? (
                 <EmptyNote text="Loading your documents…" />
+              ) : libraryError ? (
+                <div role="alert" style={{ padding: '8px 6px', fontSize: 12, color: '#b91c1c' }}>
+                  {libraryError}
+                </div>
               ) : libDocs.length === 0 ? (
-                <EmptyNote text="No documents uploaded yet. Upload company files on the Documents page, then add them to the Library so Sina can search them." />
+                <EmptyNote text="No sources uploaded yet. Open Sources to add documents, then choose which ones Sina can search." />
               ) : (
                 <>
-                  <div style={{ fontSize: 11, color: LC.muted, lineHeight: 1.45, padding: '2px 6px 8px' }}>
-                    Choose which documents Sina can search. Everything you upload lives on the Documents page; the Library is the subset it uses as context.
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: LC.muted,
+                      lineHeight: 1.45,
+                      padding: '2px 6px 8px',
+                    }}
+                  >
+                    Choose which documents Sina can search. Everything you upload lives on the
+                    Sources; the Library is the subset it uses as context.
                   </div>
                   <Section title={`In Sina's Library · ${libraryDocs.length}`}>
                     {libraryDocs.length === 0 ? (
@@ -369,19 +529,38 @@ export function DataFilesPanel({ compact = false }: { compact?: boolean }) {
   );
 }
 
-function TabButton({ active, onClick, label, count }: { active: boolean; onClick: () => void; label: string; count?: number }) {
+function TabButton({
+  active,
+  onClick,
+  label,
+  count,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  count?: number;
+}) {
   return (
     <button
       onClick={onClick}
       style={{
-        display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 11px', borderRadius: 8,
-        border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 600,
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 5,
+        padding: '5px 11px',
+        borderRadius: 8,
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: 12.5,
+        fontWeight: 600,
         background: active ? LC.surfaceHover : 'transparent',
         color: active ? LC.text : LC.muted,
       }}
     >
       {label}
-      {typeof count === 'number' && count > 0 && <span style={{ fontSize: 10.5, fontWeight: 700, color: LC.faint }}>{count}</span>}
+      {typeof count === 'number' && count > 0 && (
+        <span style={{ fontSize: 10.5, fontWeight: 700, color: LC.faint }}>{count}</span>
+      )}
     </button>
   );
 }
@@ -389,7 +568,16 @@ function TabButton({ active, onClick, label, count }: { active: boolean; onClick
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 10 }}>
-      <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: LC.faint, padding: '2px 6px 6px' }}>
+      <div
+        style={{
+          fontSize: 10.5,
+          fontWeight: 700,
+          letterSpacing: '0.04em',
+          textTransform: 'uppercase',
+          color: LC.faint,
+          padding: '2px 6px 6px',
+        }}
+      >
         {title}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>{children}</div>
@@ -398,9 +586,19 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function SourceRow({
-  icon, title, subtitle, onOpen, external = false, badge,
+  icon,
+  title,
+  subtitle,
+  onOpen,
+  external = false,
+  badge,
 }: {
-  icon: React.ReactNode; title: string; subtitle: string; onOpen?: () => void; external?: boolean; badge?: React.ReactNode;
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  onOpen?: () => void;
+  external?: boolean;
+  badge?: React.ReactNode;
 }) {
   const clickable = !!onOpen;
   return (
@@ -408,17 +606,44 @@ function SourceRow({
       className={clickable ? 'lc-sourcerow' : undefined}
       onClick={onOpen}
       style={{
-        display: 'flex', alignItems: 'center', gap: 9, padding: '9px 10px', borderRadius: 10,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 9,
+        padding: '9px 10px',
+        borderRadius: 10,
         cursor: clickable ? 'pointer' : 'default',
       }}
     >
       {icon}
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span style={{ fontSize: 13, fontWeight: 550, color: LC.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</span>
-          {external && clickable && <ExternalLink size={11} style={{ color: LC.faint, flexShrink: 0 }} />}
+          <span
+            style={{
+              fontSize: 13,
+              fontWeight: 550,
+              color: LC.text,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {title}
+          </span>
+          {external && clickable && (
+            <ExternalLink size={11} style={{ color: LC.faint, flexShrink: 0 }} />
+          )}
         </div>
-        <div style={{ fontSize: 11, color: LC.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subtitle}</div>
+        <div
+          style={{
+            fontSize: 11,
+            color: LC.muted,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {subtitle}
+        </div>
       </div>
       {badge}
     </div>
@@ -426,7 +651,11 @@ function SourceRow({
 }
 
 function EmptyNote({ text }: { text: string }) {
-  return <div style={{ padding: '18px 10px', fontSize: 12.5, color: LC.muted, lineHeight: 1.55 }}>{text}</div>;
+  return (
+    <div style={{ padding: '18px 10px', fontSize: 12.5, color: LC.muted, lineHeight: 1.55 }}>
+      {text}
+    </div>
+  );
 }
 
 export function DataFilesPanelStyles() {

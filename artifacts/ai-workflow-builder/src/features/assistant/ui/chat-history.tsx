@@ -1,3 +1,4 @@
+import { apiFetch } from '@/platform/auth/api-fetch';
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -44,7 +45,7 @@ export function ChatHistory({
 
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch("/api/chat/threads");
+      const res = await apiFetch("/api/chat/threads");
       if (!res.ok) return;
       const data = (await res.json()) as { threads?: Thread[] };
       setThreads(data.threads ?? []);
@@ -62,7 +63,7 @@ export function ChatHistory({
   const remove = useCallback(
     async (id: string) => {
       try {
-        await fetch(`/api/chat/threads/${id}`, { method: "DELETE" });
+        await apiFetch(`/api/chat/threads/${id}`, { method: "DELETE" });
       } catch {
         // ignore — refresh reflects the real state
       }
@@ -77,7 +78,7 @@ export function ChatHistory({
       const next = title.trim();
       if (!next) return;
       try {
-        await fetch(`/api/chat/threads/${id}`, {
+        await apiFetch(`/api/chat/threads/${id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ title: next }),

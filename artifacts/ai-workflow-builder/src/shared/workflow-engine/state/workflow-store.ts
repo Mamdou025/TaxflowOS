@@ -9,16 +9,10 @@ import {
   type WorkflowCommandState,
 } from "@/shared/workflow-engine/state/workflow-commands";
 import { api } from "@/platform/api-client";
-import type {
-  WorkflowBlock,
-  WorkflowEvent,
-  WorkflowEdge as WorkflowSchemaEdge,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
-import {
-  isLocalWorkflowId,
-  LOCAL_WORKFLOW_ID,
-  saveLocalWorkflowSnapshot,
-} from "@/shared/workflow-engine/local-fiscal-workflow";
+import { type WorkflowBlock, type WorkflowEvent, type WorkflowEdge as WorkflowSchemaEdge } from "@/shared/workflow-engine/workflow/contracts";
+import { isLocalWorkflowId } from "@/shared/workflow-engine/workflow/visuals";
+import { LOCAL_WORKFLOW_ID } from "@/shared/workflow-engine/workflow/contracts";
+import { saveLocalWorkflowSnapshot } from "@/shared/workflow-engine/workflow/storage";
 
 export type WorkflowNodeType = "trigger" | "action" | "add";
 

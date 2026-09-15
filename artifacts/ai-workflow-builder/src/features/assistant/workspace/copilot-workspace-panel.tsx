@@ -1,5 +1,3 @@
-
-
 // ─────────────────────────────────────────────────────────────────────────────
 // ChatWorkspace — the Scope page (route "/"), LibreChat-style (dark):
 //   [ left nav sidebar ] · [ inline page panel ] · [ chat on the RIGHT ]
@@ -11,10 +9,35 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import dynamic from '@/lib/next-dynamic-shim';
-import { useEffect, useRef, useState, type ReactNode, type CSSProperties, type ComponentType, type PointerEvent as ReactPointerEvent } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type CSSProperties,
+  type ComponentType,
+  type PointerEvent as ReactPointerEvent,
+} from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
-import { atomWithStorage } from 'jotai/utils';
-import { X, Plus, Workflow, PanelRightClose, Maximize2, Minimize2, Files, ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { atomWithStorage } from '@/platform/auth/workspace-atoms';
+import { workspaceContext } from '@/platform/auth/workspace-context';
+import { DemoMenu } from '@/platform/auth/ui/demo-menu';
+import {
+  X,
+  Plus,
+  Workflow,
+  MessageSquare,
+  PlugZap,
+  Database,
+  CircleHelp,
+  Settings as SettingsIcon,
+  PanelRightClose,
+  Maximize2,
+  Minimize2,
+  ChevronDown,
+  PanelLeftClose,
+  PanelLeftOpen,
+} from 'lucide-react';
 import { chatPanelModeAtom } from '@/shared/stores/chat-store';
 import {
   workspaceWindowsAtom,
@@ -24,12 +47,9 @@ import {
   focusWorkspaceWindowAtom,
 } from '@/shared/stores/workspace-store';
 import { getPage } from '@/shared/stores/resource-registry';
-import { WORKFLOWS, type WorkflowSuggestion } from '@/lib/agents';
 import { useAssistant } from '@/features/assistant/ui/use-assistant';
 import { AssistantThread } from '@/features/assistant/ui/assistant-thread';
 import { InScopeNeuMark } from '@/components/inscope-neu-mark';
-import { SinaMarkIcon } from '@/features/assistant/ui/sina-mark';
-import { ClientFolders } from '@/features/assistant/workspace/client-folders';
 import { ChatHistory } from '@/features/assistant/ui/chat-history';
 import { LC } from '@/lib/librechat-theme';
 import { NEU } from '@/components/neumorphic-sidebar';
@@ -38,13 +58,21 @@ import { pageMenusAtom } from '@/shared/stores/page-menu-store';
 import { pageSidebarsAtom } from '@/shared/stores/page-sidebar-store';
 import { PageMenuBar } from '@/features/assistant/workspace/page-menu-bar';
 import { InlinePageProvider } from '@/shared/stores/inline-page-context';
+import { workflowSurfaceAtom } from '@/features/workflows-hub/workflows-store';
+import { SettingsOverlay } from '@/platform/settings/settings-overlay';
+import { useOverlay } from '@/shared/ui/overlays/overlay-provider';
 
 // The builder is a heavy ReactFlow canvas — load it on demand so @xyflow/react
 // stays out of the Scope page's first-load JS. It's only rendered when a
 // 'workflow-builder' tab is opened (PageBody below), never at landing.
 const InlineBuilder = dynamic(
   () => import('@/features/workflow-builder/ui/inline-builder').then((m) => m.InlineBuilder),
-  { ssr: false, loading: () => <div style={{ padding: 32, fontSize: 13, color: LC.muted }}>Loading builder…</div> },
+  {
+    ssr: false,
+    loading: () => (
+      <div style={{ padding: 32, fontSize: 13, color: LC.muted }}>Loading builder…</div>
+    ),
+  },
 );
 
 // Foldable Scope sidebar — persisted so it stays folded across navigation.
@@ -60,44 +88,43 @@ const scopeSplitRatioAtom = atomWithStorage('inscope.scope-split.chat-ratio', 0.
 // (rgba(158,158,178)). The light sidebar + chat float on it so the chat stays the
 // prominent surface. Matches the standalone routes' background (app-shell).
 const PORTAL_GROUND = 'var(--sx-ground)';
-const foldBtn: CSSProperties = { width: 26, height: 26, borderRadius: 9, border: 'none', background: NEU.surface, boxShadow: NEU.shadowSm, color: NEU.muted, cursor: 'pointer', display: 'grid', placeItems: 'center', flexShrink: 0 };
-
 // "Portal" chrome — an opened page is a recessed gray slot wedged between the
 // light neumorphic sidebar and chat. These theme its tab strip + tabs against the
 // light PORTAL_GROUND: dark ink for the active tab, muted for the rest, a faint
 // shadow-tone hairline. (Pages render in their normal LIGHT form.)
-const PORTAL_INK = NEU.text;      // active tab / underline
-const PORTAL_MUTED = NEU.muted;   // inactive tabs / close icons
+const PORTAL_INK = NEU.text; // active tab / underline
+const PORTAL_MUTED = NEU.muted; // inactive tabs / close icons
 const PORTAL_BORDER = 'var(--sx-divider)';
+const foldBtn: CSSProperties = {
+  width: 26,
+  height: 26,
+  borderRadius: 9,
+  border: 'none',
+  background: NEU.surface,
+  boxShadow: NEU.shadowSm,
+  color: NEU.muted,
+  cursor: 'pointer',
+  display: 'grid',
+  placeItems: 'center',
+  flexShrink: 0,
+};
 
 // The workflow builder + worksheets are now MODES of the Workflows surface (its
 // Build + Results tabs), not standalone destinations — so they're not sidebar
 // items. Their code lives on (Build reuses InlineBuilder; Results the worksheet).
-const WORKSPACE_ITEMS: { key: string; title: string; Icon: ComponentType<{ size?: number | string }> }[] = [
+const PRIMARY_ITEMS: {
+  key: string;
+  title: string;
+  Icon: ComponentType<{ size?: number | string }>;
+}[] = [
+  { key: 'chat', title: 'Chat', Icon: MessageSquare },
   { key: 'workflows', title: 'Workflows', Icon: Workflow },
-  { key: 'agent', title: 'Agent', Icon: SinaMarkIcon },
-  { key: 'viewer', title: 'Documents', Icon: Files },
+  { key: 'sources', title: 'Sources', Icon: Database },
+  { key: 'connections', title: 'Connections', Icon: PlugZap },
 ];
 
-// The workflow(s) each open page can run — drives the contextual "Run" group,
-// which now follows the active tab instead of a permanent global list. Pages not
-// listed here show no Run group (workflows without a page — roulement, campaign —
-// stay reachable from the chat launcher / agents).
-const PAGE_WORKFLOWS: Record<string, string[]> = {
-  fapi: ['fapi'],
-  expense: ['expense'],
-  surplus: ['surplus'],
-};
-
-function runsForPage(pageKey: string | undefined): WorkflowSuggestion[] {
-  if (!pageKey) return [];
-  return (PAGE_WORKFLOWS[pageKey] ?? [])
-    .map((id) => WORKFLOWS.find((w) => w.id === id))
-    .filter((w): w is WorkflowSuggestion => Boolean(w));
-}
-
 function titleFor(key: string): string {
-  const local = WORKSPACE_ITEMS.find((i) => i.key === key);
+  const local = PRIMARY_ITEMS.find((i) => i.key === key);
   return getPage(key)?.title ?? local?.title ?? key;
 }
 
@@ -109,7 +136,11 @@ function PageBody({ pageKey }: { pageKey: string }) {
   if (pageKey === 'workflow-builder') content = <InlineBuilder />;
   else {
     const Comp = getPage(pageKey)?.Component ?? null;
-    content = Comp ? <Comp /> : <div style={{ padding: 32, fontSize: 13, color: LC.muted }}>Page unavailable.</div>;
+    content = Comp ? (
+      <Comp />
+    ) : (
+      <div style={{ padding: 32, fontSize: 13, color: LC.muted }}>Page unavailable.</div>
+    );
   }
   // Pages read useInlinePage() to hide their own chrome + publish a header menu.
   return <InlinePageProvider>{content}</InlinePageProvider>;
@@ -117,42 +148,192 @@ function PageBody({ pageKey }: { pageKey: string }) {
 
 // ── Neumorphic sidebar bits (light NEU rail on the dark Scope canvas) ───────────
 function SideLabel({ children }: { children: ReactNode }) {
-  return <div style={{ padding: '13px 10px 5px', fontSize: 10, fontWeight: 650, letterSpacing: '0.05em', textTransform: 'uppercase', color: NEU.faint }}>{children}</div>;
+  return (
+    <div
+      style={{
+        padding: '13px 10px 5px',
+        fontSize: 10,
+        fontWeight: 650,
+        letterSpacing: '0.05em',
+        textTransform: 'uppercase',
+        color: NEU.faint,
+      }}
+    >
+      {children}
+    </div>
+  );
 }
-function SideRow({ icon, label, sub, dim, collapsed, onClick }: { icon: ReactNode; label: string; sub?: string; dim?: boolean; collapsed?: boolean; onClick: () => void }) {
+function SideRow({
+  icon,
+  label,
+  sub,
+  dim,
+  active,
+  collapsed,
+  onClick,
+}: {
+  icon: ReactNode;
+  label: string;
+  sub?: string;
+  dim?: boolean;
+  active?: boolean;
+  collapsed?: boolean;
+  onClick: () => void;
+}) {
   if (collapsed) {
     return (
-      <button onClick={onClick} title={label} className="lc-siderow" style={{ display: 'grid', placeItems: 'center', width: 46, height: 46, borderRadius: 12, border: 'none', background: 'transparent', cursor: 'pointer', margin: '2px auto', opacity: dim ? 0.55 : 1 }}>
-        <span style={{ width: 30, height: 30, borderRadius: 9, background: NEU.surface, boxShadow: NEU.shadowSm, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: NEU.muted }}>{icon}</span>
+      <button
+        onClick={onClick}
+        aria-current={active ? 'page' : undefined}
+        title={label}
+        className="lc-siderow"
+        style={{
+          display: 'grid',
+          placeItems: 'center',
+          width: 46,
+          height: 46,
+          borderRadius: 12,
+          border: 'none',
+          background: active ? 'var(--sx-accent-soft)' : 'transparent',
+          cursor: 'pointer',
+          margin: '2px auto',
+          opacity: dim ? 0.55 : 1,
+        }}
+      >
+        <span
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: 9,
+            background: NEU.surface,
+            boxShadow: NEU.shadowSm,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: active ? NEU.accent : NEU.muted,
+          }}
+        >
+          {icon}
+        </span>
       </button>
     );
   }
   return (
     <button
       onClick={onClick}
+      aria-current={active ? 'page' : undefined}
       className="lc-siderow"
-      style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left', padding: '7px 9px', borderRadius: 10, border: 'none', background: 'transparent', color: dim ? NEU.faint : NEU.text, cursor: 'pointer', opacity: dim ? 0.65 : 1, marginBottom: 1 }}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        width: '100%',
+        textAlign: 'left',
+        padding: '7px 9px',
+        borderRadius: 10,
+        border: 'none',
+        background: active ? 'var(--sx-accent-soft)' : 'transparent',
+        color: active ? NEU.accent : dim ? NEU.faint : NEU.text,
+        cursor: 'pointer',
+        opacity: dim ? 0.65 : 1,
+        marginBottom: 1,
+      }}
     >
-      <span style={{ width: 26, height: 26, borderRadius: 8, background: NEU.surface, boxShadow: NEU.shadowSm, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: NEU.muted }}>{icon}</span>
+      <span
+        style={{
+          width: 26,
+          height: 26,
+          borderRadius: 8,
+          background: NEU.surface,
+          boxShadow: NEU.shadowSm,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          color: active ? NEU.accent : NEU.muted,
+        }}
+      >
+        {icon}
+      </span>
       <span style={{ minWidth: 0, flex: 1 }}>
-        <span style={{ display: 'block', fontSize: 13, fontWeight: 600, color: dim ? NEU.faint : NEU.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
-        {sub && <span style={{ display: 'block', fontSize: 10.5, color: NEU.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub}</span>}
+        <span
+          style={{
+            display: 'block',
+            fontSize: 13,
+            fontWeight: 600,
+            color: active ? NEU.accent : dim ? NEU.faint : NEU.text,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {label}
+        </span>
+        {sub && (
+          <span
+            style={{
+              display: 'block',
+              fontSize: 10.5,
+              color: NEU.muted,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {sub}
+          </span>
+        )}
       </span>
     </button>
   );
 }
 // A collapsible menu group — click the header to expand/collapse its rows.
-function SideSection({ label, defaultOpen = true, children }: { label: string; defaultOpen?: boolean; children: ReactNode }) {
+function SideSection({
+  label,
+  defaultOpen = true,
+  children,
+}: {
+  label: string;
+  defaultOpen?: boolean;
+  children: ReactNode;
+}) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%', padding: '13px 10px 5px', background: 'transparent', border: 'none', cursor: 'pointer' }}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          width: '100%',
+          padding: '13px 10px 5px',
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+        }}
       >
-        <span style={{ fontSize: 10, fontWeight: 650, letterSpacing: '0.05em', textTransform: 'uppercase', color: NEU.faint }}>{label}</span>
-        <ChevronDown size={12} style={{ marginLeft: 'auto', color: NEU.faint, transform: open ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform 180ms ease' }} />
+        <span
+          style={{
+            fontSize: 10,
+            fontWeight: 650,
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase',
+            color: NEU.faint,
+          }}
+        >
+          {label}
+        </span>
+        <ChevronDown
+          size={12}
+          style={{
+            marginLeft: 'auto',
+            color: NEU.faint,
+            transform: open ? 'rotate(0deg)' : 'rotate(-90deg)',
+            transition: 'transform 180ms ease',
+          }}
+        />
       </button>
       {open && children}
     </>
@@ -165,7 +346,9 @@ export function ChatWorkspace() {
   const openWindow = useSetAtom(openWorkspaceWindowAtom);
   const closeWindow = useSetAtom(closeWorkspaceWindowAtom);
   const focusWindow = useSetAtom(focusWorkspaceWindowAtom);
-  const [focus, setFocus] = useState<{ pageKey: string; anchor: string; nonce: number } | null>(null);
+  const [focus, setFocus] = useState<{ pageKey: string; anchor: string; nonce: number } | null>(
+    null,
+  );
   const pageBodyRef = useRef<HTMLDivElement>(null);
   const a = useAssistant();
   const pageMenus = useAtomValue(pageMenusAtom);
@@ -173,19 +356,25 @@ export function ChatWorkspace() {
   const [mode, setMode] = useAtom(chatPanelModeAtom);
   const [collapsed, setCollapsed] = useAtom(scopeSidebarCollapsedAtom);
   const [splitRatio, setSplitRatio] = useAtom(scopeSplitRatioAtom);
+  const setWorkflowSurface = useSetAtom(workflowSurfaceAtom);
+  const { open: openOverlay } = useOverlay();
   const splitRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState(false);
   const hasPages = windows.length > 0;
   const active = windows.find((w) => w.id === activeId) ?? windows[windows.length - 1] ?? null;
   const activeMenu = active ? pageMenus[active.pageKey] : undefined;
-  const activeRuns = runsForPage(active?.pageKey); // contextual Run group — follows the open tab
 
   // Closing the *last* page collapses the page panel to zero width and lets the
   // chat glide into the freed space (a slide), then removes the window once the
   // transition finishes — so the panel doesn't just blink out of existence.
   const [closingLast, setClosingLast] = useState(false);
   const closeTimer = useRef<number | null>(null);
-  useEffect(() => () => { if (closeTimer.current) window.clearTimeout(closeTimer.current); }, []);
+  useEffect(
+    () => () => {
+      if (closeTimer.current) window.clearTimeout(closeTimer.current);
+    },
+    [],
+  );
 
   // Reset the split when the last page closes.
   useEffect(() => {
@@ -226,15 +415,34 @@ export function ChatWorkspace() {
   };
 
   useEffect(() => {
-    if (hasPages && !windows.some((w) => w.id === activeId)) setActiveId(windows[windows.length - 1].id);
+    if (hasPages && !windows.some((w) => w.id === activeId))
+      setActiveId(windows[windows.length - 1].id);
   }, [windows, activeId, hasPages, setActiveId]);
 
-  const open = (key: string) => openWindow({ pageKey: key, title: titleFor(key) });
+  const open = (key: string) => {
+    setMode('split');
+    openWindow({ pageKey: key, title: titleFor(key) });
+  };
+  const openPrimary = (key: string) => {
+    if (key === 'chat') {
+      setMode('expanded');
+      return;
+    }
+    if (key === 'workflows' && active?.pageKey !== 'workflows') setWorkflowSurface('library');
+    open(key);
+  };
+  const primaryIsActive = (key: string) =>
+    key === 'chat'
+      ? !hasPages || mode === 'expanded'
+      : mode !== 'expanded' && active?.pageKey === key;
 
   // Close a tab. More than one open → just drop it (we land on a sibling, nothing
   // to reveal). Closing the last one plays the slide: collapse now, remove after.
   const requestClose = (id: string) => {
-    if (windows.length > 1) { closeWindow(id); return; }
+    if (windows.length > 1) {
+      closeWindow(id);
+      return;
+    }
     setClosingLast(true);
     if (closeTimer.current) window.clearTimeout(closeTimer.current);
     closeTimer.current = window.setTimeout(() => {
@@ -257,9 +465,11 @@ export function ChatWorkspace() {
 
   useEffect(() => {
     if (!focus || !active || active.pageKey !== focus.pageKey) return;
-    let raf = 0, tries = 0;
+    let raf = 0,
+      tries = 0;
     const attempt = () => {
-      const el = pageBodyRef.current?.querySelector<HTMLElement>(`[data-anchor="${focus.anchor}"]`) ?? null;
+      const el =
+        pageBodyRef.current?.querySelector<HTMLElement>(`[data-anchor="${focus.anchor}"]`) ?? null;
       if (el) {
         el.scrollIntoView({ block: 'center', behavior: 'smooth' });
         el.classList.add('cwp-anchor-flash');
@@ -299,37 +509,143 @@ export function ChatWorkspace() {
       `}</style>
 
       {/* ── Left nav sidebar (foldable → icon rail) ── */}
-      <div style={{ width: collapsed ? 66 : 258, flexShrink: 0, margin: 10, borderRadius: 12, background: NEU.bg, boxShadow: NEU.shadowOut, display: 'flex', flexDirection: 'column', padding: collapsed ? '12px 8px' : '12px 10px', overflowY: 'auto', overflowX: 'hidden', scrollbarWidth: 'thin', transition: 'width 240ms cubic-bezier(0.23,1,0.32,1)' }}>
+      <div
+        style={{
+          width: collapsed ? 66 : 258,
+          flexShrink: 0,
+          margin: 10,
+          borderRadius: 12,
+          background: NEU.bg,
+          boxShadow: NEU.shadowOut,
+          display: 'flex',
+          flexDirection: 'column',
+          padding: collapsed ? '12px 8px' : '12px 10px',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          scrollbarWidth: 'thin',
+          transition: 'width 240ms cubic-bezier(0.23,1,0.32,1)',
+        }}
+      >
         {collapsed ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '2px 0 10px' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 10,
+              padding: '2px 0 10px',
+            }}
+          >
             {/* Icon only when folded; on hover it becomes the expand affordance, click expands. */}
             <button
               onClick={() => setCollapsed(false)}
-              title="Expand sidebar" aria-label="Expand sidebar"
+              title="Expand sidebar"
+              aria-label="Expand sidebar"
               className="cwp-logo-btn"
-              style={{ position: 'relative', width: 46, height: 46, background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'grid', placeItems: 'center' }}
+              style={{
+                position: 'relative',
+                width: 46,
+                height: 46,
+                background: 'transparent',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                display: 'grid',
+                placeItems: 'center',
+              }}
             >
-              <span className="cwp-logo-mark" style={{ display: 'grid', placeItems: 'center' }}><InScopeNeuMark size={34} /></span>
-              <span className="cwp-logo-expand" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: NEU.muted }}><PanelLeftOpen size={19} /></span>
+              <span className="cwp-logo-mark" style={{ display: 'grid', placeItems: 'center' }}>
+                <InScopeNeuMark size={34} />
+              </span>
+              <span
+                className="cwp-logo-expand"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'grid',
+                  placeItems: 'center',
+                  color: NEU.muted,
+                }}
+              >
+                <PanelLeftOpen size={19} />
+              </span>
             </button>
           </div>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 6px 12px' }}>
             {/* Wordmark only (no icon) when expanded; the fold toggle sits right beside it. */}
-            <button onClick={() => setMode('split')} title="Open chat" aria-label="Open chat" style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center' }} className="hover:brightness-105">
-              <span className="isneu-wordmark" style={{ fontSize: 21, fontWeight: 400, letterSpacing: '-0.02em' }}>InScope</span>
+            <button
+              onClick={() => setMode('split')}
+              title="Open chat"
+              aria-label="Open chat"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+              className="hover:brightness-105"
+            >
+              <span
+                className="isneu-wordmark"
+                style={{ fontSize: 21, fontWeight: 400, letterSpacing: '-0.02em' }}
+              >
+                InScope
+              </span>
             </button>
-            <button onClick={() => setCollapsed(true)} title="Collapse sidebar" aria-label="Collapse sidebar" style={foldBtn}><PanelLeftClose size={15} /></button>
+            <button
+              onClick={() => setCollapsed(true)}
+              title="Collapse sidebar"
+              aria-label="Collapse sidebar"
+              style={foldBtn}
+            >
+              <PanelLeftClose size={15} />
+            </button>
           </div>
         )}
 
         {collapsed ? (
-          <button onClick={() => a.newChat()} title="New chat" aria-label="New chat" style={{ width: 46, height: 46, borderRadius: 12, border: 'none', background: NEU.surface, boxShadow: NEU.shadowSm, color: NEU.text, cursor: 'pointer', display: 'grid', placeItems: 'center', margin: '0 auto 4px' }}><Plus size={18} /></button>
+          <button
+            onClick={() => a.newChat()}
+            title="New chat"
+            aria-label="New chat"
+            style={{
+              width: 46,
+              height: 46,
+              borderRadius: 12,
+              border: 'none',
+              background: NEU.surface,
+              boxShadow: NEU.shadowSm,
+              color: NEU.text,
+              cursor: 'pointer',
+              display: 'grid',
+              placeItems: 'center',
+              margin: '0 auto 4px',
+            }}
+          >
+            <Plus size={18} />
+          </button>
         ) : (
           <button
             onClick={() => a.newChat()}
             className="hover:brightness-105"
-            style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 12px', borderRadius: 12, border: 'none', background: NEU.surface, boxShadow: NEU.shadowSm, color: NEU.text, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              width: '100%',
+              padding: '9px 12px',
+              borderRadius: 12,
+              border: 'none',
+              background: NEU.surface,
+              boxShadow: NEU.shadowSm,
+              color: NEU.text,
+              cursor: 'pointer',
+              fontSize: 13,
+              fontWeight: 600,
+            }}
           >
             <Plus size={15} /> New chat
           </button>
@@ -338,24 +654,33 @@ export function ChatWorkspace() {
         {collapsed ? (
           <>
             <div style={{ height: 1, background: 'var(--sx-divider)', margin: '8px 8px' }} />
-            {WORKSPACE_ITEMS.map((it) => <SideRow key={it.key} collapsed icon={<it.Icon size={16} />} label={it.title} onClick={() => open(it.key)} />)}
-            {activeRuns.length > 0 && <div style={{ height: 1, background: 'rgba(158,158,178,0.28)', margin: '8px 8px' }} />}
-            {activeRuns.map((w) => (
-              <SideRow key={w.id} collapsed icon={<Workflow size={16} />} label={w.name} dim={!w.ready} onClick={() => a.launchStartWorkflow(w.id)} />
+            {PRIMARY_ITEMS.map((it) => (
+              <SideRow
+                key={it.key}
+                collapsed
+                icon={<it.Icon size={16} />}
+                label={it.title}
+                active={primaryIsActive(it.key)}
+                onClick={() => openPrimary(it.key)}
+              />
             ))}
           </>
         ) : (
           <>
             <SideSection label="Workspace">
-              {WORKSPACE_ITEMS.map((it) => <SideRow key={it.key} icon={<it.Icon size={15} />} label={it.title} onClick={() => open(it.key)} />)}
-            </SideSection>
-
-            <SideSection label="Clients & Chats">
-              <ClientFolders />
+              {PRIMARY_ITEMS.map((it) => (
+                <SideRow
+                  key={it.key}
+                  icon={<it.Icon size={15} />}
+                  label={it.title}
+                  active={primaryIsActive(it.key)}
+                  onClick={() => openPrimary(it.key)}
+                />
+              ))}
             </SideSection>
 
             {/* Real saved conversations (Postgres-backed) — reopen / rename / delete. */}
-            <SideSection label="Recent chats">
+            <SideSection label="Recent conversations">
               <ChatHistory
                 activeThreadId={a.activeThreadId}
                 onOpen={(id) => {
@@ -375,42 +700,125 @@ export function ChatWorkspace() {
                 </SideSection>
               ) : null;
             })()}
-
-            {/* Run — follows the open tab: only the workflow(s) the active page can run. */}
-            {activeRuns.length > 0 && (
-              <>
-                <SideLabel>{`Run · ${active?.title ?? ''}`}</SideLabel>
-                {activeRuns.map((w) => (
-                  <SideRow
-                    key={w.id} icon={<Workflow size={15} />} label={w.name}
-                    sub={`${w.sub}${!w.ready ? ' · soon' : ''}`}
-                    dim={!w.ready} onClick={() => a.launchStartWorkflow(w.id)}
-                  />
-                ))}
-              </>
-            )}
           </>
         )}
 
         {/* Theme switch — pinned to the rail bottom (collapsed → icon, else segmented) */}
         <div style={{ marginTop: 'auto', paddingTop: 10 }}>
-          <div style={{ height: 1, background: 'var(--sx-divider)', margin: collapsed ? '0 8px 10px' : '0 4px 10px' }} />
-          <ThemeToggle collapsed={collapsed} />
+          <div
+            style={{
+              height: 1,
+              background: 'var(--sx-divider)',
+              margin: collapsed ? '0 8px 10px' : '0 4px 10px',
+            }}
+          />
+          {collapsed ? (
+            <>
+              <SideRow
+                collapsed
+                icon={<SettingsIcon size={16} />}
+                label="Settings"
+                onClick={() => openOverlay(SettingsOverlay)}
+              />
+              <SideRow
+                collapsed
+                icon={<CircleHelp size={16} />}
+                label="Help"
+                active={primaryIsActive('help')}
+                onClick={() => open('help')}
+              />
+            </>
+          ) : (
+            <>
+              <SideRow
+                icon={<SettingsIcon size={15} />}
+                label="Settings"
+                onClick={() => openOverlay(SettingsOverlay)}
+              />
+              <SideRow
+                icon={<CircleHelp size={15} />}
+                label="Help"
+                active={primaryIsActive('help')}
+                onClick={() => open('help')}
+              />
+            </>
+          )}
+          {workspaceContext?.isDemo && <DemoMenu collapsed={collapsed} />}
+          <div style={{ marginTop: 10 }}>
+            <ThemeToggle collapsed={collapsed} />
+          </div>
         </div>
       </div>
 
       {/* ── Inline page panel (left) + chat (right) ── */}
-      <div ref={splitRef} className="flex-1 min-w-0 flex relative" style={{ userSelect: dragging ? 'none' : undefined, cursor: dragging ? 'col-resize' : undefined }}>
+      <div
+        ref={splitRef}
+        className="flex-1 min-w-0 flex relative"
+        style={{
+          userSelect: dragging ? 'none' : undefined,
+          cursor: dragging ? 'col-resize' : undefined,
+        }}
+      >
         {hasPages && (
-          <div className="min-w-0 flex flex-col cwp-card cwp-page-in flat-surface" style={{ flex: showPage ? '1 1 0px' : '0 0 0px', overflow: 'hidden', margin: showPage ? '10px 0 10px 8px' : 0, borderRadius: showPage ? '3px 0 0 3px' : 0, background: PORTAL_GROUND, boxShadow: 'none', transition: dragging ? 'none' : undefined }}>
-            <div className="shrink-0 flex items-center px-3" style={{ height: 40, background: 'var(--sx-portal-strip)', borderBottom: `1px solid ${PORTAL_BORDER}` }}>
-              <div className="flex items-center gap-1" style={{ overflowX: 'auto', scrollbarWidth: 'none', flex: '0 0 auto', minWidth: 0, maxWidth: 360 }}>
+          <div
+            className="min-w-0 flex flex-col cwp-card cwp-page-in flat-surface"
+            style={{
+              flex: showPage ? '1 1 0px' : '0 0 0px',
+              overflow: 'hidden',
+              margin: showPage ? '10px 0 10px 8px' : 0,
+              borderRadius: showPage ? '3px 0 0 3px' : 0,
+              background: PORTAL_GROUND,
+              boxShadow: 'none',
+              transition: dragging ? 'none' : undefined,
+            }}
+          >
+            <div
+              className="shrink-0 flex items-center px-3"
+              style={{
+                height: 40,
+                background: 'var(--sx-portal-strip)',
+                borderBottom: `1px solid ${PORTAL_BORDER}`,
+              }}
+            >
+              <div
+                className="flex items-center gap-1"
+                style={{
+                  overflowX: 'auto',
+                  scrollbarWidth: 'none',
+                  flex: '0 0 auto',
+                  minWidth: 0,
+                  maxWidth: 360,
+                }}
+              >
                 {windows.map((w) => {
                   const isActive = active?.id === w.id;
                   return (
-                    <button key={w.id} className="lc-tab flex items-center gap-1.5 shrink-0" data-active={isActive} onClick={() => focusWindow(w.id)} style={{ padding: '9px 10px', fontSize: 12.5, fontWeight: 500, color: isActive ? PORTAL_INK : PORTAL_MUTED, background: 'none', border: 'none', cursor: 'pointer' }}>
+                    <button
+                      key={w.id}
+                      className="lc-tab flex items-center gap-1.5 shrink-0"
+                      data-active={isActive}
+                      onClick={() => focusWindow(w.id)}
+                      style={{
+                        padding: '9px 10px',
+                        fontSize: 12.5,
+                        fontWeight: 500,
+                        color: isActive ? PORTAL_INK : PORTAL_MUTED,
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
                       <span className="max-w-40 truncate">{w.title}</span>
-                      <span onClick={(e) => { e.stopPropagation(); requestClose(w.id); }} className="flex items-center justify-center rounded hover:bg-black/5" style={{ width: 16, height: 16 }}><X size={11} style={{ color: PORTAL_MUTED }} /></span>
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          requestClose(w.id);
+                        }}
+                        className="flex items-center justify-center rounded hover:bg-black/5"
+                        style={{ width: 16, height: 16 }}
+                      >
+                        <X size={11} style={{ color: PORTAL_MUTED }} />
+                      </span>
                     </button>
                   );
                 })}
@@ -418,7 +826,11 @@ export function ChatWorkspace() {
               {/* Active page's contextual menu — published via usePageMenu(). */}
               {activeMenu && <PageMenuBar menu={activeMenu} />}
             </div>
-            <div ref={pageBodyRef} className="flex-1 min-h-0 relative" style={{ background: PORTAL_GROUND }}>
+            <div
+              ref={pageBodyRef}
+              className="flex-1 min-h-0 relative"
+              style={{ background: PORTAL_GROUND }}
+            >
               {windows.map((w) => (
                 // Inactive tabs use display:none, NOT visibility:hidden — a hidden
                 // InlineBuilder is a ReactFlow canvas, and @xyflow forces
@@ -426,7 +838,11 @@ export function ChatWorkspace() {
                 // ancestor's `visibility:hidden` and makes the builder's node boxes
                 // bleed through over the active tab. display:none can't be overridden
                 // by descendants, and still keeps the tab mounted (state preserved).
-                <div key={w.id} className="absolute inset-0" style={{ display: active?.id === w.id ? 'block' : 'none', overflow: 'auto' }}>
+                <div
+                  key={w.id}
+                  className="absolute inset-0"
+                  style={{ display: active?.id === w.id ? 'block' : 'none', overflow: 'auto' }}
+                >
                   <PageBody pageKey={w.pageKey} />
                 </div>
               ))}
@@ -444,7 +860,17 @@ export function ChatWorkspace() {
             role="separator"
             aria-orientation="vertical"
             title="Drag to resize"
-            style={{ position: 'absolute', top: 10, bottom: 10, right: `calc(${chatBasis} + 10px)`, width: 14, transform: 'translateX(50%)', cursor: 'col-resize', zIndex: 6, touchAction: 'none' }}
+            style={{
+              position: 'absolute',
+              top: 10,
+              bottom: 10,
+              right: `calc(${chatBasis} + 10px)`,
+              width: 14,
+              transform: 'translateX(50%)',
+              cursor: 'col-resize',
+              zIndex: 6,
+              touchAction: 'none',
+            }}
           >
             <span className="cwp-split-grip" />
           </div>
@@ -459,30 +885,75 @@ export function ChatWorkspace() {
             overflow: 'hidden',
             margin: mode === 'collapsed' ? 0 : 10,
             marginLeft: hasPages && showPage ? 0 : 10,
-            borderRadius: mode === 'collapsed' ? 0 : (hasPages && showPage ? '0 3px 3px 0' : 12),
+            borderRadius: mode === 'collapsed' ? 0 : hasPages && showPage ? '0 3px 3px 0' : 12,
             background: NEU.bg,
             // No dark shadow cast onto the page panel on its left — only the chat's
             // own soft neumorphic elevation (and none while docked flush to a page).
-            boxShadow: mode === 'collapsed' ? 'none' : (hasPages && showPage ? 'none' : NEU.shadowOut),
+            boxShadow:
+              mode === 'collapsed' ? 'none' : hasPages && showPage ? 'none' : NEU.shadowOut,
             transition: dragging ? 'none' : undefined,
             zIndex: 1,
           }}
         >
-          {/* Fold / expand controls — floated over the thread header's empty left
-              slot (absolute, so they DON'T add a row that changes the thread's
-              height when a page opens or closes; the chat stays a constant size). */}
+          {/* Keep panel controls in their own row. The thread header contains several
+              responsive context menus, so overlaying controls there causes collisions
+              when the split pane is narrowed. */}
           {hasPages && showChat && (
-            <div className="absolute flex items-center gap-1" style={{ top: 17, left: 12, zIndex: 5 }}>
-              <button onClick={() => setMode('collapsed')} title="Focus the page — hide the chat" className="hover:bg-black/5" style={{ display: 'grid', placeItems: 'center', width: 28, height: 28, borderRadius: 7, border: 'none', background: 'transparent', color: LC.muted, cursor: 'pointer' }}>
+            <div
+              className="shrink-0 flex items-center gap-1"
+              style={{
+                height: 34,
+                padding: '3px 8px 3px 12px',
+                borderBottom: `1px solid ${LC.borderSubtle}`,
+                zIndex: 5,
+              }}
+            >
+              <span style={{ fontSize: 10.5, fontWeight: 650, color: LC.faint }}>Chat panel</span>
+              <span style={{ flex: 1 }} />
+              <button
+                onClick={() => setMode('collapsed')}
+                title="Focus the page — hide the chat"
+                aria-label="Hide chat panel"
+                className="hover:bg-black/5"
+                style={{
+                  display: 'grid',
+                  placeItems: 'center',
+                  width: 28,
+                  height: 28,
+                  borderRadius: 7,
+                  border: 'none',
+                  background: 'transparent',
+                  color: LC.muted,
+                  cursor: 'pointer',
+                }}
+              >
                 <PanelRightClose size={16} />
               </button>
-              <button onClick={() => setMode(mode === 'expanded' ? 'split' : 'expanded')} title={mode === 'expanded' ? 'Back to split view' : 'Focus the chat — hide the page'} className="hover:bg-black/5" style={{ display: 'grid', placeItems: 'center', width: 28, height: 28, borderRadius: 7, border: 'none', background: 'transparent', color: LC.muted, cursor: 'pointer' }}>
+              <button
+                onClick={() => setMode(mode === 'expanded' ? 'split' : 'expanded')}
+                title={
+                  mode === 'expanded' ? 'Back to split view' : 'Focus the chat — hide the page'
+                }
+                aria-label={mode === 'expanded' ? 'Return to split view' : 'Expand chat panel'}
+                className="hover:bg-black/5"
+                style={{
+                  display: 'grid',
+                  placeItems: 'center',
+                  width: 28,
+                  height: 28,
+                  borderRadius: 7,
+                  border: 'none',
+                  background: 'transparent',
+                  color: LC.muted,
+                  cursor: 'pointer',
+                }}
+              >
                 {mode === 'expanded' ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
               </button>
             </div>
           )}
           <div className="flex-1 min-h-0">
-            <AssistantThread assistant={a} variant="focus" />
+            <AssistantThread assistant={a} variant={chatFull ? 'focus' : 'docked'} />
           </div>
         </div>
 
@@ -491,7 +962,25 @@ export function ChatWorkspace() {
           <button
             onClick={() => setMode('split')}
             title="Open chat"
-            style={{ position: 'absolute', right: 14, bottom: 18, zIndex: 30, display: 'flex', alignItems: 'center', gap: 7, height: 38, padding: '0 14px', borderRadius: 999, background: LC.surface, border: 'none', color: LC.text, cursor: 'pointer', fontSize: 13, fontWeight: 600, boxShadow: LC.shadowOut }}
+            style={{
+              position: 'absolute',
+              right: 14,
+              bottom: 18,
+              zIndex: 30,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 7,
+              height: 38,
+              padding: '0 14px',
+              borderRadius: 999,
+              background: LC.surface,
+              border: 'none',
+              color: LC.text,
+              cursor: 'pointer',
+              fontSize: 13,
+              fontWeight: 600,
+              boxShadow: LC.shadowOut,
+            }}
             className="hover:brightness-[0.98]"
           >
             <InScopeNeuMark size={22} /> Chat

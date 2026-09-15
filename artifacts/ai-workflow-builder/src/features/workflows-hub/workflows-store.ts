@@ -1,5 +1,3 @@
-
-
 // Shared state for the Workflows surface — so the workflow LIST (published into
 // the Scope sidebar) and the DETAIL (in the page body) + the header tabs all read
 // one source of truth.
@@ -9,6 +7,7 @@ import { builderFocusTargetAtom } from '@/shared/workflow-engine/state/workflow-
 import { getPortfolioWorkflowDef } from '@/shared/workflow-engine/templates/portfolio/portfolio-workflows';
 
 export type WorkflowTab = 'overview' | 'build' | 'run' | 'results';
+export type WorkflowSurface = 'library' | 'workflow' | 'history';
 
 /** Sentinel selection for a brand-new, blank workflow being built in the surface. */
 export const NEW_WORKFLOW_ID = '__new__';
@@ -16,6 +15,12 @@ export const NEW_WORKFLOW_ID = '__new__';
 /** The workflow selected on the Workflows surface (a portfolio def id like pf-t1134,
  *  or NEW_WORKFLOW_ID for a blank draft). */
 export const selectedWorkflowIdAtom = atom<string | null>(null);
+
+/** Library, one workflow, and cross-workflow run history are modes of Workflows. */
+export const workflowSurfaceAtom = atom<WorkflowSurface>('library');
+
+/** Exact run selected from Chat or global history. Null means the latest run. */
+export const selectedWorkflowRunIdAtom = atom<string | null>(null);
 
 /** The active mode for the selected workflow. */
 export const workflowTabAtom = atom<WorkflowTab>('overview');
@@ -34,8 +39,10 @@ export const aimBuilderAtWorkflowAtom = atom(
     const baseId = workflowId.replace(/^pf-/, '');
     const def = getPortfolioWorkflowDef(`pf-${baseId}`) ?? getPortfolioWorkflowDef(workflowId);
     set(builderFocusTargetAtom, { workflowId: def?.id ?? workflowId, blockId });
+    set(workflowSurfaceAtom, 'workflow');
+    set(selectedWorkflowRunIdAtom, null);
     set(workflowTabAtom, 'build');
     if (def) set(selectedWorkflowIdAtom, def.id);
     return Boolean(def);
-  }
+  },
 );

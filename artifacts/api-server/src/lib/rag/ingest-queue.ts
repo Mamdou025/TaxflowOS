@@ -13,13 +13,14 @@
 // safely across concurrent workers via row-level locks.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { and, db, documents, eq, inArray, ingestJobs, sql } from "@workspace/db";
-import { backoffMs } from "../retry";
+import { and, db, documents, eq, inArray, ingestJobs, sql } from '@workspace/db';
+import { backoffMs } from '../retry';
 
 export type ClaimedJob = {
   id: string;
   documentId: string;
   userId: string;
+  workspaceId: string;
   attempts: number;
   maxAttempts: number;
 };
@@ -29,21 +30,32 @@ export type ClaimedJob = {
  * document is cleared first so re-uploads don't pile up duplicates; an already
  * `active` job is left alone (re-ingest is idempotent if it does run twice).
  */
-export async function enqueueIngest(userId: string, documentId: string): Promise<void> {
+export async function enqueueIngest(
+  workspaceId: string,
+  documentId: string,
+  userId: string,
+): Promise<string> {
   await db
     .delete(ingestJobs)
     .where(
       and(
         eq(ingestJobs.documentId, documentId),
-        inArray(ingestJobs.status, ["queued", "failed"]),
+        eq(ingestJobs.workspaceId, workspaceId),
+        inArray(ingestJobs.status, ['queued', 'failed']),
       ),
     );
-  await db.insert(ingestJobs).values({
-    userId,
-    documentId,
-    status: "queued",
-    runAfter: new Date(),
-  });
+  const [job] = await db
+    .insert(ingestJobs)
+    .values({
+      userId,
+      workspaceId,
+      documentId,
+      status: 'queued',
+      runAfter: new Date(),
+    })
+    .returning({ id: ingestJobs.id });
+  if (!job) throw new Error('The ingestion job was not created.');
+  return job.id;
 }
 
 /**
@@ -60,7 +72,7 @@ export async function claimNextJob(): Promise<ClaimedJob | null> {
       updated_at = now()
     WHERE id = (
       SELECT id FROM ingest_jobs
-      WHERE status = 'queued' AND run_after <= now()
+      WHERE workspace_id IS NOT NULL AND status = 'queued' AND run_after <= now()
       ORDER BY run_after ASC
       FOR UPDATE SKIP LOCKED
       LIMIT 1
@@ -69,6 +81,7 @@ export async function claimNextJob(): Promise<ClaimedJob | null> {
       id,
       document_id AS "documentId",
       user_id AS "userId",
+      workspace_id AS "workspaceId",
       attempts,
       max_attempts AS "maxAttempts";
   `);
@@ -79,21 +92,17 @@ export async function claimNextJob(): Promise<ClaimedJob | null> {
 export async function markJobDone(id: string): Promise<void> {
   await db
     .update(ingestJobs)
-    .set({ status: "done", claimedAt: null, lastError: null, updatedAt: new Date() })
+    .set({ status: 'done', claimedAt: null, lastError: null, updatedAt: new Date() })
     .where(eq(ingestJobs.id, id));
 }
 
 /** Transient failure: back to `queued`, eligible again after an exponential delay. */
-export async function requeueJob(
-  id: string,
-  attempt: number,
-  error: string,
-): Promise<void> {
+export async function requeueJob(id: string, attempt: number, error: string): Promise<void> {
   const runAfter = new Date(Date.now() + backoffMs(attempt));
   await db
     .update(ingestJobs)
     .set({
-      status: "queued",
+      status: 'queued',
       claimedAt: null,
       runAfter,
       lastError: error.slice(0, 2000),
@@ -107,7 +116,7 @@ export async function failJob(id: string, error: string): Promise<void> {
   await db
     .update(ingestJobs)
     .set({
-      status: "failed",
+      status: 'failed',
       claimedAt: null,
       lastError: error.slice(0, 2000),
       updatedAt: new Date(),
@@ -145,8 +154,8 @@ export async function reapStalledJobs(stallMs: number): Promise<number> {
     await db
       .update(documents)
       .set({
-        status: "failed",
-        error: "Processing stalled and could not be completed.",
+        status: 'failed',
+        error: 'Processing stalled and could not be completed.',
         updatedAt: new Date(),
       })
       .where(eq(documents.id, row.documentId));

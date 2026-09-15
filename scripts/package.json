@@ -13,6 +13,7 @@
     "tsx": "catalog:"
   },
   "dependencies": {
+    "@workspace/workflow-contracts": "workspace:*",
     "ai": "^7.0.37",
     "playwright": "^1.62.0"
   }

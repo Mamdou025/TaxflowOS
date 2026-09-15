@@ -10,7 +10,7 @@
 // liability, so the reviewer's choice visibly moves the answer.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { createHolidayPayrollWorkflow } from '@/shared/workflow-engine/local-fiscal-workflow';
+import { createHolidayPayrollWorkflow } from "@/shared/workflow-engine/workflow/templates/holiday";
 import {
   HOLIDAY_ACCRUAL_CALC_RULES,
   HOLIDAY_COST_CALC_RULES,
@@ -65,7 +65,7 @@ export const HOLIDAY_PAYROLL_CONFIG: TemplateConfig = {
     { label: 'Set hours per holiday', sub: 'Elect the accrual policy' },
     { label: 'Review & approve', sub: 'Sign off the payroll accrual' },
   ],
-  buildSnapshot: createHolidayPayrollWorkflow as unknown as TemplateConfig['buildSnapshot'],
+  buildSnapshot: createHolidayPayrollWorkflow,
   // Derived from the connector, so the run's fetch, the canvas block and Sina's
   // `useApiSource` cannot describe different requests.
   apiSource: {

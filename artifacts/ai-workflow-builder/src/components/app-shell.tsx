@@ -1,4 +1,4 @@
-
+import { workspaceContext } from '@/platform/auth/workspace-context';
 
 import { usePathname } from '@/lib/router';
 import { useEffect, type ReactNode } from 'react';
@@ -36,7 +36,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isCanvasPage = pathname.startsWith('/workflows/');
   // Scope (/) is now the full-height LibreChat shell — flat dark, its own sidebar
   // for nav, so no global grid and no top navbar there.
-  const isScope = pathname === '/';
+  const usesChatWorkspaceShell =
+    pathname === '/' ||
+    pathname === '/documents' ||
+    pathname === '/sources' ||
+    pathname === '/connections' ||
+    pathname === '/workflows/runs' ||
+    pathname === '/workflows-hub';
   // Light neumorphic pages paint a full-viewport light bg so the floating navbar
   // sits on the page colour (no white strip behind the transparent nav row).
   const isLightPage = pathname.startsWith('/run/');
@@ -51,19 +57,25 @@ export function AppShell({ children }: { children: ReactNode }) {
     // product announcements ("Slack early access…") on top of the UI, which is not
     // something to hand a customer mid-demo. So it is opt-in: set
     // VITE_COPILOT_DEV_CONSOLE=1 when you want the banners back.
-    <CopilotKit runtimeUrl="/api/copilotkit" showDevConsole={COPILOT_DEVTOOLS}>
+    <CopilotKit
+      runtimeUrl="/api/copilotkit"
+      headers={{ 'x-taxflow-workspace': workspaceContext?.workspace.id ?? '' }}
+      showDevConsole={COPILOT_DEVTOOLS}
+    >
       {/* Fixed canvas layer — only active on builder/workflow pages */}
       <PersistentCanvas />
 
       {/* Full-viewport light background for neumorphic pages (behind the nav) */}
-      {isLightPage && <div className="fixed inset-0" style={{ zIndex: 0, background: 'var(--sx-ground-run)' }} />}
+      {isLightPage && (
+        <div className="fixed inset-0" style={{ zIndex: 0, background: 'var(--sx-ground-run)' }} />
+      )}
 
       {/* Main layout stack — pointer-events-none on canvas pages so events reach PersistentCanvas */}
       <div
         className={`relative z-10 flex flex-col${isCanvasPage ? ' pointer-events-none' : ''}`}
         style={{ height: '100dvh' }}
       >
-        {!isScope && <GlobalTopNav />}
+        {!usesChatWorkspaceShell && <GlobalTopNav />}
         <div
           className={`flex-1 relative overflow-hidden${isCanvasPage ? ' pointer-events-none' : ''}`}
         >

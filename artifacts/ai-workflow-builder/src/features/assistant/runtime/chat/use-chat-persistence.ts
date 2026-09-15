@@ -1,3 +1,4 @@
+import { apiFetch } from '@/platform/auth/api-fetch';
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -92,7 +93,7 @@ export function useChatPersistence(): ChatPersistence {
 
     setSaving(true);
     try {
-      const res = await fetch(`/api/chat/threads/${id}/messages`, {
+      const res = await apiFetch(`/api/chat/threads/${id}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: projected, title: deriveTitle(projected) }),
@@ -128,7 +129,7 @@ export function useChatPersistence(): ChatPersistence {
   const loadThread = useCallback(
     async (id: string): Promise<boolean> => {
       try {
-        const res = await fetch(`/api/chat/threads/${id}`);
+        const res = await apiFetch(`/api/chat/threads/${id}`);
         if (!res.ok) return false;
         const data = (await res.json()) as {
           messages?: { id: string; role: string; seq: number; content: unknown }[];
