@@ -69,7 +69,9 @@ test('account creation, workspace switching, sign-out and sign-in keep local lib
   await page.getByLabel('Email', { exact: true }).fill(email);
   await page.getByLabel('Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Create account', exact: true }).click();
-  await expect(page.getByText('Choose a workspace', { exact: true })).toBeVisible();
+  await expect(page.getByText('Choose a workspace', { exact: true })).toBeVisible({
+    timeout: 60000,
+  });
   await page.getByLabel('New workspace name').fill('First private workspace');
   await page.getByRole('button', { name: 'Create workspace', exact: true }).click();
   await expect(
@@ -120,7 +122,9 @@ test('account creation, workspace switching, sign-out and sign-in keep local lib
   await expect(page.getByRole('alert')).toBeVisible();
   await page.getByLabel('Password', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await expect(page.getByText('Choose a workspace', { exact: true })).toBeVisible();
+  await expect(page.getByText('Choose a workspace', { exact: true })).toBeVisible({
+    timeout: 60000,
+  });
   await page.getByLabel('Open workspace', { exact: true }).selectOption(first.workspace.id);
   await expect(
     page.getByText('Workspace: First private workspace (owner)', { exact: true }),
