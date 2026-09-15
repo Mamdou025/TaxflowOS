@@ -1,4 +1,5 @@
 import path from 'node:path';
+import fs from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { chromium, expect } from '@playwright/test';
 import { createTestRun, webRoot, reserveLoopbackPort } from '../../scripts/testing/runtime.mjs';
@@ -23,6 +24,29 @@ try {
   browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ serviceWorkers: 'block' });
   const failures = [];
+  const timings = [];
+  const scriptRequests = [];
+  page.on('request', (request) => {
+    if (request.resourceType() === 'script') scriptRequests.push(request.url());
+  });
+  async function measure(name, action, ready) {
+    const start = performance.now();
+    const requestStart = scriptRequests.length;
+    await action();
+    await expect(ready).toBeVisible({ timeout: 60_000 });
+    const milliseconds = Math.round(performance.now() - start);
+    const scripts = scriptRequests.slice(requestStart).map((url) => new URL(url).pathname);
+    timings.push({
+      name,
+      milliseconds,
+      // File bytes are decoded JS size, not compressed network transfer.
+      javascriptBytes: scripts.reduce(
+        (total, script) => total + fs.statSync(path.join(webRoot, 'dist/public', script)).size,
+        0,
+      ),
+      scripts,
+    });
+  }
   page.on('pageerror', (error) => failures.push(error.message));
   const baseURL = `http://127.0.0.1:${port}`;
   await page.route('**/*', (route) => {
@@ -52,10 +76,39 @@ try {
     (value) => sessionStorage.setItem('taxflow:authenticated-workspace', JSON.stringify(value)),
     syntheticContext,
   );
-  await page.goto(baseURL, { waitUntil: 'load' });
-  await expect(page.getByRole('button', { name: 'New chat', exact: true }).first()).toBeVisible({
-    timeout: 60_000,
-  });
+  await measure(
+    'chat-startup',
+    () => page.goto(baseURL, { waitUntil: 'load' }),
+    page.getByRole('button', { name: 'New chat', exact: true }).first(),
+  );
+  const draft = page.locator('.lc-console').getByRole('textbox');
+  await draft.fill('Preserve this draft across deferred pages');
+  await page.getByRole('button', { name: 'Chat agent: Sina' }).click();
+  await measure(
+    'agent-first-open',
+    () => page.getByRole('menuitem', { name: 'Customize agent' }).click(),
+    page.getByText('Operator instructions', { exact: true }),
+  );
+  await page.getByRole('button', { name: 'Overview', exact: true }).click();
+  await expect(page.getByText('Identity — one unified agent', { exact: true })).toBeVisible();
+  await measure(
+    'workflows-first-open',
+    () => page.getByRole('button', { name: 'Workflows', exact: true }).first().click(),
+    page.getByText('Workflow library', { exact: true }).last(),
+  );
+  // A fast library must not preload the editor just because its tab exists.
+  expect(
+    scriptRequests.filter((url) =>
+      /\/(inline-builder|saved-workflow-run|workflow-run-history)-/.test(new URL(url).pathname),
+    ),
+  ).toEqual([]);
+  await page.getByRole('button', { name: 'Chat', exact: true }).click();
+  await measure(
+    'workflows-reopen',
+    () => page.getByRole('button', { name: 'Workflows', exact: true }).first().click(),
+    page.getByText('Workflow library', { exact: true }).last(),
+  );
+  await expect(draft).toHaveValue('Preserve this draft across deferred pages');
   for (const name of ['Sources', 'Connections']) {
     await page.getByRole('button', { name, exact: true }).first().click();
     await expect(page.getByRole('heading', { name, exact: true })).toBeVisible({ timeout: 30_000 });
@@ -65,9 +118,34 @@ try {
   await expect(page.getByRole('heading', { name: 'Workflow run history' })).toBeVisible({
     timeout: 30_000,
   });
+  await measure(
+    'workflow-builder-first-open',
+    () => page.getByRole('button', { name: 'New workflow', exact: true }).click(),
+    page.locator('.react-flow'),
+  );
+  await page.getByRole('button', { name: 'Chat agent: Sina' }).click();
+  await page.getByRole('menuitem', { name: 'Customize agent' }).click();
+  await measure(
+    'agent-lab-first-open',
+    () => page.getByRole('button', { name: 'Lab', exact: true }).click(),
+    page.getByText('Models — pick one per column', { exact: true }),
+  );
+  await page.getByRole('button', { name: 'Workflows', exact: true }).first().click();
+  await page.getByRole('button', { name: 'Document Calculator', exact: true }).click();
+  await page.getByRole('button', { name: 'Results', exact: true }).click();
+  await expect(page.getByText('No results yet.', { exact: false })).toBeVisible();
+  await expect(draft).toHaveValue('Preserve this draft across deferred pages');
   await page.screenshot({ path: path.join(run.output, 'production-workspace.png') });
+  fs.writeFileSync(path.join(run.output, 'page-loading.json'), JSON.stringify(timings, null, 2));
+  console.table(
+    timings.map(({ name, milliseconds, scripts }) => ({
+      name,
+      milliseconds,
+      scripts: scripts.length,
+    })),
+  );
   expect(failures).toEqual([]);
-  console.log(`Production Chat, Sources, Connections and run-history smoke passed: ${run.output}`);
+  console.log(`Production navigation, deferred editors and chat-draft smoke passed: ${run.output}`);
 } finally {
   await browser?.close();
   await new Promise((resolve, reject) =>

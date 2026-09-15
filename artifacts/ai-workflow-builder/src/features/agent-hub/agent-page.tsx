@@ -23,7 +23,16 @@ import {
   fiscalSummary,
 } from '@/features/agent-lab/fiscal';
 import { EFFORT_LEVELS, type EffortLevel } from '@workspace/agent-runtime/model-router';
-import AgentLabPage from '@/features/agent-lab/agent-lab-page';
+import dynamic from '@/lib/next-dynamic-shim';
+
+// Overview and live-agent settings do not need the separate Lab runtime/UI.
+const AgentLabPage = dynamic(() => import('@/features/agent-lab/agent-lab-page'), {
+  loading: () => (
+    <div role="status" aria-label="Loading Agent Lab" className="p-6 text-sm text-muted-foreground">
+      Loading Agent Lab…
+    </div>
+  ),
+});
 
 const TAB_LABELS: { id: AgentTab; label: string }[] = [
   { id: 'overview', label: 'Overview' },

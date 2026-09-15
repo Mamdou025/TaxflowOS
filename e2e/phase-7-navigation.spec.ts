@@ -7,6 +7,56 @@ async function mockWorkspaceReads(page: Page) {
   await page.route('**/api/chat/threads**', (route) => route.fulfill({ json: { threads: [] } }));
 }
 
+test('page summaries defer editors and preserve drafts while switching pages', async ({ page }) => {
+  await mockWorkspaceReads(page);
+  const scripts: string[] = [];
+  page.on('request', (request) => {
+    if (request.resourceType() === 'script') scripts.push(new URL(request.url()).pathname);
+  });
+  await page.goto('/');
+  const draft = page.locator('.lc-console').getByRole('textbox');
+  await draft.fill('Keep my draft while opening editors');
+  await page.getByRole('button', { name: 'Workflows', exact: true }).first().click();
+  await expect(page.getByText('Workflow library', { exact: true }).last()).toBeVisible();
+  expect(scripts.some((url) => url.endsWith('/inline-builder.tsx'))).toBe(false);
+  expect(scripts.some((url) => url.endsWith('/saved-workflow-run.tsx'))).toBe(false);
+  expect(scripts.some((url) => url.endsWith('/workflow-run-history.tsx'))).toBe(false);
+
+  await page.getByRole('button', { name: 'Chat agent: Sina' }).click();
+  await page.getByRole('menuitem', { name: 'Customize agent' }).click();
+  await expect(page.getByText('Operator instructions', { exact: true })).toBeVisible();
+  expect(scripts.some((url) => url.endsWith('/agent-lab-page.tsx'))).toBe(false);
+
+  // Hold the actual module response to check the loading boundary, not a timer.
+  let releaseLab!: () => void;
+  const labReady = new Promise<void>((resolve) => {
+    releaseLab = resolve;
+  });
+  await page.route('**/src/features/agent-lab/agent-lab-page.tsx*', async (route) => {
+    await labReady;
+    await route.continue();
+  });
+  try {
+    await page.getByRole('button', { name: 'Lab', exact: true }).click();
+    await expect(page.getByRole('status', { name: 'Loading Agent Lab' })).toBeVisible();
+    await expect(draft).toHaveValue('Keep my draft while opening editors');
+    await expect(
+      page.getByRole('button', { name: 'Workflows', exact: true }).first(),
+    ).toBeEnabled();
+  } finally {
+    releaseLab();
+  }
+  const notes = page.getByPlaceholder('Jot what you notice about the agent as you test…');
+  await notes.fill('Retain these Lab notes');
+  await page.getByRole('button', { name: 'Workflows', exact: true }).first().click();
+  await expect(page.getByText('Workflow library', { exact: true }).last()).toBeVisible();
+  await page.getByRole('button', { name: 'Chat agent: Sina' }).click();
+  await page.getByRole('menuitem', { name: 'Customize agent' }).click();
+  await page.getByRole('button', { name: 'Lab', exact: true }).click();
+  await expect(notes).toHaveValue('Retain these Lab notes');
+  await expect(draft).toHaveValue('Keep my draft while opening editors');
+});
+
 test('composer groups attachments and exposes the current agent beside the draft', async ({
   page,
 }) => {

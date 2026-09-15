@@ -13,7 +13,7 @@ import { WorkflowStoragePanel } from './workflow-storage-panel';
 // Selection + active tab live in shared atoms so the sidebar list, the header, and
 // the body stay in sync. The engine — not the page — gates Run/Results.
 
-import { SavedWorkflowRun } from './saved-workflow-run';
+import dynamic from '@/lib/next-dynamic-shim';
 import { workflowLibraryAtom, saveVersion, definitionFingerprint } from './workflow-library';
 import { useEffect } from 'react';
 import { useRouter } from '@/lib/router';
@@ -48,11 +48,9 @@ import { getPage } from '@/shared/stores/resource-registry';
 import { usePageMenu, type PageMenuItem } from '@/shared/stores/page-menu-store';
 import { usePageSidebar } from '@/shared/stores/page-sidebar-store';
 import { WorkflowRunFlow } from '@/features/assistant/workspace/workflow-run-flow';
-import { InlineBuilder } from '@/features/workflow-builder/ui/inline-builder';
 import { NEU } from '@/components/neumorphic-sidebar';
 import { WorkflowOverview } from '@/features/workflows-hub/workflow-overview';
 import { GenericWorksheet } from '@/features/workflows-hub/generic-worksheet';
-import { WorkflowRunHistory } from '@/features/workflows-hub/workflow-run-history';
 import {
   NEW_WORKFLOW_ID,
   selectedWorkflowIdAtom,
@@ -61,6 +59,26 @@ import {
   workflowTabAtom,
   type WorkflowTab,
 } from '@/features/workflows-hub/workflows-store';
+
+// Keep the library/overview independent of the canvas and execution screens.
+// Each boundary leaves the page menu and Chat mounted while its view loads.
+const loadingWorkflowView = () => (
+  <div role="status" aria-label="Loading workflow view" className="p-6 text-sm text-muted-foreground">
+    Loading workflow view…
+  </div>
+);
+const InlineBuilder = dynamic(
+  () => import('@/features/workflow-builder/ui/inline-builder').then((module) => module.InlineBuilder),
+  { loading: loadingWorkflowView },
+);
+const SavedWorkflowRun = dynamic(
+  () => import('./saved-workflow-run').then((module) => module.SavedWorkflowRun),
+  { loading: loadingWorkflowView },
+);
+const WorkflowRunHistory = dynamic(
+  () => import('./workflow-run-history').then((module) => module.WorkflowRunHistory),
+  { loading: loadingWorkflowView },
+);
 
 const TAB_LABELS: { id: WorkflowTab; label: string }[] = [
   { id: 'overview', label: 'Overview' },

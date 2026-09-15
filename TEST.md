@@ -9,8 +9,13 @@ No development app, environment file, provider account or existing database is n
 ## Choose the smallest useful check
 
 `pnpm run test:production-ui` serves the existing production build and checks Chat,
-Sources, Connections and run-history navigation with synthetic API responses. It
-catches lazy-chunk initialization failures that a Vite development test cannot.
+Sources, Connections, Workflows, the workflow builder and Agent Lab with synthetic
+API responses, including chat-draft preservation. It records page-ready timings
+and requested scripts in `page-loading.json` in its report directory. These local,
+unthrottled measurements include browser automation overhead and exclude real API
+latency; compare fresh builds under the same conditions, not against a universal
+latency target. It catches lazy-chunk initialization failures that a Vite
+development test cannot.
 The release gate runs it after the build and performance check. All external
 requests are blocked; its success does not verify live providers.
 
