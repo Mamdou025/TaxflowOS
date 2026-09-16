@@ -7,7 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { type CSSProperties, useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { ArrowRight, Calendar, ChevronDown, Database, Play, X } from 'lucide-react';
 import { CopilotChat } from '@copilotkit/react-ui';
@@ -748,117 +748,108 @@ export function AssistantThread({
             setArmedTool,
           }}
         >
-          <AnimatePresence mode="wait" initial={false}>
-            {showHero ? (
-              <motion.div
-                key="hero"
-                className="flex-1 min-h-0 flex flex-col"
-                style={{ padding: docked ? '10px' : '20px' }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
-                {/* "InScope" lockup — the full wordmark beside the animated dial mark,
+          {/* The home and composer must render even when animation frames are suspended. */}
+          {showHero ? (
+            <div
+              key="hero"
+              className="flex-1 min-h-0 flex flex-col"
+              style={{ padding: docked ? '10px' : '20px' }}
+            >
+              {/* "InScope" lockup — the full wordmark beside the animated dial mark,
                     pinned TOP CENTRE. On chat start the dial flies to the header (shared
                     layoutId="scope-orb") and the wordmark is left behind (fades). The dial
                     is pulled in close to the word (negative margin absorbs its transparent
                     ring). Focus only; theme-aware (wordmark = .isneu-wordmark embossed
                     neumorphic in globals.css, dial themes itself). */}
-                {!docked && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 6,
-                      paddingTop: 12,
-                      flexShrink: 0,
-                    }}
+              {!docked && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    paddingTop: 12,
+                    flexShrink: 0,
+                  }}
+                >
+                  <motion.span
+                    className="isneu-wordmark"
+                    style={{ fontSize: 38, fontWeight: 400, letterSpacing: '-0.02em' }}
+                    layout="position"
                   >
-                    <motion.span
-                      className="isneu-wordmark"
-                      style={{ fontSize: 38, fontWeight: 400, letterSpacing: '-0.02em' }}
-                      layout="position"
-                    >
-                      InScope
-                    </motion.span>
-                    <ScopeOrbButton
-                      size={116}
-                      layoutId="scope-orb"
-                      onClick={() => openClientSwitcher(true)}
-                      label=""
-                    />
-                  </div>
-                )}
-                {/* Greeting + composer + suggestions — centred in the space below the orb.
+                    InScope
+                  </motion.span>
+                  <ScopeOrbButton
+                    size={116}
+                    layoutId="scope-orb"
+                    onClick={() => openClientSwitcher(true)}
+                    label=""
+                  />
+                </div>
+              )}
+              {/* Greeting + composer + suggestions — centred in the space below the orb.
                     `overflow-y-auto` + `margin:auto` (not items-center) so that when the
                     content is taller than the viewport (short/small windows) it SCROLLS
                     from the top instead of overflowing UPWARD into the orb/wordmark lockup. */}
-                <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
-                  <div style={{ width: '100%', maxWidth: docked ? 'none' : 720, margin: 'auto' }}>
-                    <div style={{ textAlign: 'center', marginBottom: docked ? 10 : 20 }}>
-                      <div
-                        style={{
-                          fontSize: docked ? 22 : 34,
-                          fontWeight: 700,
-                          color: LC.title,
-                          letterSpacing: '-0.02em',
-                        }}
-                      >
-                        {greeting}, Sophia
-                      </div>
-                      <div
-                        style={{
-                          fontSize: docked ? 13 : 16,
-                          fontWeight: 400,
-                          color: LC.muted,
-                          marginTop: 6,
-                        }}
-                      >
-                        What would you like to work on?
-                      </div>
+              <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
+                <div style={{ width: '100%', maxWidth: docked ? 'none' : 720, margin: 'auto' }}>
+                  <div style={{ textAlign: 'center', marginBottom: docked ? 10 : 20 }}>
+                    <div
+                      style={{
+                        fontSize: docked ? 22 : 34,
+                        fontWeight: 700,
+                        color: LC.title,
+                        letterSpacing: '-0.02em',
+                      }}
+                    >
+                      {greeting}, Sophia
                     </div>
-                    <AsideInput onSend={(t) => say(String(t))} />
-                    {!docked && (
-                      <HeroLaunchpad
-                        onAskSources={() => say('What sources are available in this workspace?')}
-                        onBuild={() => launchOpenPage('workflows')}
-                        onRun={() => say('Help me choose and run a workflow.')}
-                        onResume={onOpenWork}
-                      />
-                    )}
+                    <div
+                      style={{
+                        fontSize: docked ? 13 : 16,
+                        fontWeight: 400,
+                        color: LC.muted,
+                        marginTop: 6,
+                      }}
+                    >
+                      What would you like to work on?
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="thread"
-                className="flex-1 min-h-0 flex flex-col aside-thread"
-                style={{ overflow: 'hidden' }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
-                <div className="flex-1 min-h-0">
-                  {/* One scroll: pinned runs/cards render INSIDE the message stream (via
-                      the custom ThreadMessages), with the composer fixed at the bottom. */}
-                  <PinnedThreadContext.Provider value={pinnedNode}>
-                    <CopilotChat
-                      className="h-full"
-                      instructions={applyLiveConfig(INSTRUCTIONS(), agentConfig)}
-                      labels={{ title: 'Assistant', initial: '', placeholder: 'Message Scope…' }}
-                      AssistantMessage={AsideAssistantMessage}
-                      UserMessage={AsideUserMessage}
-                      Input={AsideInput}
-                      Messages={ThreadMessages}
+                  <AsideInput onSend={(t) => say(String(t))} />
+                  {!docked && (
+                    <HeroLaunchpad
+                      onAskSources={() => say('What sources are available in this workspace?')}
+                      onBuild={() => launchOpenPage('workflows')}
+                      onRun={() => say('Help me choose and run a workflow.')}
+                      onResume={onOpenWork}
                     />
-                  </PinnedThreadContext.Provider>
+                  )}
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </div>
+            </div>
+          ) : (
+            <div
+              key="thread"
+              className="flex-1 min-h-0 flex flex-col aside-thread"
+              style={{ overflow: 'hidden' }}
+            >
+              <div className="flex-1 min-h-0">
+                {/* One scroll: pinned runs/cards render INSIDE the message stream (via
+                      the custom ThreadMessages), with the composer fixed at the bottom. */}
+                <PinnedThreadContext.Provider value={pinnedNode}>
+                  <CopilotChat
+                    className="h-full"
+                    instructions={applyLiveConfig(INSTRUCTIONS(), agentConfig)}
+                    labels={{ title: 'Assistant', initial: '', placeholder: 'Message Scope…' }}
+                    AssistantMessage={AsideAssistantMessage}
+                    UserMessage={AsideUserMessage}
+                    Input={AsideInput}
+                    Messages={ThreadMessages}
+                  />
+                </PinnedThreadContext.Provider>
+              </div>
+            </div>
+          )}
         </AsideComposerContext.Provider>
       </div>
     </div>

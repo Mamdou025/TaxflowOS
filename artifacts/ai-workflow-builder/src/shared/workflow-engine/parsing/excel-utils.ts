@@ -11,6 +11,7 @@ const ACCOUNT_ALIASES = [
   "accountnumber",
   "code",
   "acct",
+  "glaccount",
 ];
 const FINANCIAL_ROW_ALIASES = [
   "financialrow",
@@ -32,9 +33,10 @@ const DESCRIPTION_ALIASES = [
   "memo",
   "notes",
   "details",
+  "jrnlentryitemtext",
   ...FINANCIAL_ROW_ALIASES,
 ];
-const AMOUNT_ALIASES = ["amount", "value", "balance"];
+const AMOUNT_ALIASES = ["amount", "value", "balance", "amountincccrcy"];
 const CURRENCY_ALIASES = ["currency", "curr"];
 const DEBIT_ALIASES = ["debit", "debits"];
 const CREDIT_ALIASES = ["credit", "credits"];

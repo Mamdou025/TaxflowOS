@@ -71,11 +71,15 @@ export function WorkbookImportDialog({
         if (!open) onCancel();
       }}
     >
-      <DialogContent className="max-h-[90vh] overflow-auto sm:max-w-3xl">
+      <DialogContent
+        className="max-h-[90vh] overflow-auto sm:max-w-3xl"
+        onInteractOutside={(event) => event.preventDefault()}
+      >
         <DialogTitle>Choose spreadsheet data</DialogTitle>
         <DialogDescription>
-          Select the worksheet and columns to use. Hidden and empty sheets are excluded. The
-          original file is kept unchanged.
+          Your Excel file has been read. Choose the tab containing the records you want to import,
+          then review its columns and click Use selected data. Hidden and empty tabs are excluded.
+          Your original file stays unchanged.
         </DialogDescription>
         <p className="break-all text-sm">{workbook.fileName}</p>
         <label className="grid gap-1 text-sm">
@@ -93,6 +97,13 @@ export function WorkbookImportDialog({
             ))}
           </select>
         </label>
+        {!sheet && (
+          <p role="status" className="text-sm">
+            This workbook contains {workbook.sheets.length} visible tabs. Choose a data tab above
+            rather than a cover or summary tab. Closing this window pauses the import and keeps your
+            attachment for retry.
+          </p>
+        )}
         {sheet && (
           <>
             <label className="grid gap-1 text-sm">
