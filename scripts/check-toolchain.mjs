@@ -8,17 +8,30 @@ const manifest = JSON.parse(read('package.json'));
 const nodeVersion = read('.node-version').trim();
 const manager = /^pnpm@(\d+\.\d+\.\d+)$/.exec(manifest.packageManager ?? '');
 
-export function runtimeProblems(actualNode, userAgent) {
+export function runtimeProblems(actualNode, userAgent, allowCompatibleMajor = false) {
   const problems = [];
-  if (actualNode !== nodeVersion)
-    problems.push(`Node ${nodeVersion} is required; this process uses ${actualNode}.`);
   const actualPnpm = /^pnpm\/([^ ]+)/.exec(userAgent ?? '')?.[1];
-  if (!manager || actualPnpm !== manager[1])
+  const managerNode = /(?:^| )node\/v?([^ ]+)/.exec(userAgent ?? '')?.[1];
+  const compatibleNode = actualNode.split('.')[0] === nodeVersion.split('.')[0];
+  const compatiblePnpm =
+    Boolean(actualPnpm) && actualPnpm.split('.')[0] === manager?.[1].split('.')[0];
+  const compatibleManagerNode =
+    !managerNode || managerNode.split('.')[0] === nodeVersion.split('.')[0];
+
+  if (actualNode !== nodeVersion && !(allowCompatibleMajor && compatibleNode))
+    problems.push(`Node ${nodeVersion} is required; this process uses ${actualNode}.`);
+  if (
+    !manager ||
+    (actualPnpm !== manager[1] && !(allowCompatibleMajor && compatiblePnpm))
+  )
     problems.push(
       `Use ${manifest.packageManager}; detected ${actualPnpm ? `pnpm ${actualPnpm}` : 'no pnpm invocation'}.`,
     );
-  const managerNode = /(?:^| )node\/v?([^ ]+)/.exec(userAgent ?? '')?.[1];
-  if (managerNode && managerNode !== nodeVersion)
+  if (
+    managerNode &&
+    managerNode !== nodeVersion &&
+    !(allowCompatibleMajor && compatibleManagerNode)
+  )
     problems.push(
       `The pnpm launcher uses Node ${managerNode}; select a launcher using Node ${nodeVersion}.`,
     );

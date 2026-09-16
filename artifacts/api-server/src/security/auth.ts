@@ -3,11 +3,14 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { anonymous } from 'better-auth/plugins/anonymous';
 import { db, users, sessions, accounts, verifications } from '@workspace/db';
 
-const origin = process.env.APP_ORIGIN;
-const secret = process.env.BETTER_AUTH_SECRET;
+const replitDevelopmentOrigin = process.env.REPLIT_DEV_DOMAIN
+  ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+  : undefined;
+const origin = process.env.APP_ORIGIN ?? replitDevelopmentOrigin;
+const secret = process.env.BETTER_AUTH_SECRET ?? process.env.SESSION_SECRET;
 if (!origin || !secret || secret.length < 32) {
   throw new Error(
-    'Set APP_ORIGIN and a random BETTER_AUTH_SECRET of at least 32 characters. See docs/DEVELOPMENT.md.',
+    'Set APP_ORIGIN and a random BETTER_AUTH_SECRET (or SESSION_SECRET) of at least 32 characters. See docs/DEVELOPMENT.md.',
   );
 }
 const url = new URL(origin);
