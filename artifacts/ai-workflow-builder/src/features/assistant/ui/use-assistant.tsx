@@ -30,6 +30,7 @@ import { workspaceWindowsAtom, activeWorkspaceWindowAtom, openWorkspaceWindowAto
 import { pageChatSurfacesAtom } from '@/lib/page-chat-store';
 import { SurfaceEmbed } from './surface-embed';
 import { attachWorkflowSource } from '@/features/documents/attach-workflow-source';
+import { useWorkbookImport } from '@/features/documents/workbook-import-dialog';
 import { builderFocusTargetAtom } from '@/shared/workflow-engine/state/workflow-store';
 import { getPage, listPages, anchorToPage, getFieldContext, buildAgentCatalog, resolveFieldId, fieldValuesAtom } from '@/shared/stores/resource-registry';
 import { InlineFieldCard } from '@/features/assistant/workspace/inline-field-card';
@@ -117,12 +118,10 @@ const HIT_ICON = {
   element: GitBranch,
 } as const;
 
-// Sinaxe portfolio blueprints — structural workflow graphs (Canadian Corporate
-// Tax Workflow Portfolio + Platform Services). Openable in the builder; NOT
-// runnable via runWorkflow (no deterministic engine yet). Published to the
-// assistant so it knows they exist and can offer to open them.
+// Portfolio template IDs open the builder; execution uses the separate runtime ID.
 const PORTFOLIO_BLUEPRINTS = PORTFOLIO_WORKFLOWS.map((w) => ({
   workflowId: w.id,
+  runWorkflowId: getWorkflowConfig(w.id.replace(/^pf-/, ''))?.id ?? null,
   name: w.name,
   group: w.group,
   summary: w.description,
@@ -189,6 +188,7 @@ export function RunWorkflowRender({ config, onOpenPage, onOpenBuilder }: { confi
 export type Assistant = ReturnType<typeof useAssistant>;
 
 export function useAssistant() {
+  const { selectWorkbook, importDialog } = useWorkbookImport();
   const router = useRouter();
   const pathname = usePathname();
   const windows = useAtomValue(workspaceWindowsAtom);
@@ -484,7 +484,7 @@ export function useAssistant() {
   // Sinaxe portfolio blueprints — the assistant knows these exist so it can list
   // them and offer to open them, WITHOUT treating them as runnable.
   useCopilotReadable({
-    description: 'Executable portfolio workpapers. Run these with runWorkflow using supplied records. Read each purpose and required columns; do not claim a workpaper prepares or files a complete statutory return. Removed workflows are unavailable. Never invent missing records, rates or applicability decisions.',
+    description: 'Built-in portfolio templates, independent of saved workspace drafts. workflowId opens the template; runWorkflowId is the exact execution ID, or null when no runtime is available. Discover executable templates with listAvailableWorkflows. Use supplied records and required columns; do not claim a workpaper prepares or files a complete statutory return. Never invent missing records, rates or applicability decisions.',
     value: PORTFOLIO_BLUEPRINTS,
   });
 
@@ -1002,11 +1002,11 @@ export function useAssistant() {
     for (const f of files) {
       if (/\.(xlsx|xls|json)$/i.test(f.name)) {
         try {
-          const { source, notice } = await attachWorkflowSource(f);
+          const { source, notice } = await attachWorkflowSource(f, selectWorkbook);
           setUploadedRows((prev) => ({ ...prev, __unassigned__: source }));
           notes.push(`[Attached ${source.fileName} — ${source.rows.length} source records. ${notice}]`);
         } catch (error) {
-          notes.push(`[Could not attach ${f.name}: ${error instanceof Error ? error.message : 'Unreadable workbook'}]`);
+          throw new Error(`Could not attach ${f.name}: ${error instanceof Error ? error.message : 'Unreadable workbook'}`);
         }
         continue;
       }
@@ -1066,6 +1066,7 @@ export function useAssistant() {
     composerTools,
     composerCommands,
     onAttach,
+    importDialog,
     // run
     activeRun,
     scrollToRun,

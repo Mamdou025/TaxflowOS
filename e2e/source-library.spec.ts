@@ -1,4 +1,85 @@
 import { test, expect } from './workflow-audit-isolation';
+import { createRequire } from 'node:module';
+import path from 'node:path';
+
+test('chat spreadsheet selection preserves drafts on cancel and imports a complete mapped sheet', async ({
+  page,
+}) => {
+  const XLSX = createRequire(path.resolve('artifacts/ai-workflow-builder/package.json'))('xlsx');
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([]), 'Hidden SAP metadata');
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.aoa_to_sheet([['Cover'], ['Instructions']]),
+    'Summary',
+  );
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.aoa_to_sheet([
+      ['G/L Account', 'Jrnl.Entry Item Text', 'Amount in CC Crcy'],
+      ...Array.from({ length: 1100 }, (_, i) => [41000 + i, `Record ${i + 1}`, i + 1]),
+    ]),
+    'SAP EXPORT',
+  );
+  workbook.Workbook = { Sheets: [{ Hidden: 2 }, { Hidden: 0 }, { Hidden: 0 }] };
+  await page.route('**/api/documents**', (route) =>
+    route.fulfill({
+      status: route.request().method() === 'POST' ? 503 : 200,
+      json:
+        route.request().method() === 'POST'
+          ? { error: 'STORAGE_NOT_CONFIGURED' }
+          : { documents: [] },
+    }),
+  );
+  await page.route('**/api/copilotkit**', (route) =>
+    route.fulfill({ status: 503, json: { error: 'No live model in this test.' } }),
+  );
+  await page.route('**/api/chat/threads**', (route) => route.fulfill({ json: { threads: [] } }));
+  await page.goto('/');
+  const composer = page.locator('.lc-console');
+  const draft = composer.getByRole('textbox');
+  await draft.fill('Use this workbook');
+  await composer.getByRole('button', { name: 'Attach files', exact: true }).click();
+  const chooser = page.waitForEvent('filechooser');
+  await page.getByRole('menuitem', { name: 'Upload from laptop' }).click();
+  await (
+    await chooser
+  ).setFiles({
+    name: 'synthetic-sap.xlsx',
+    mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    buffer: XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' }),
+  });
+  await draft.press('Enter');
+  const dialog = page.getByRole('dialog', { name: 'Choose spreadsheet data' });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByLabel('Worksheet').locator('option')).toHaveText([
+    'Choose a worksheet…',
+    'Summary',
+    'SAP EXPORT',
+  ]);
+  await dialog.getByRole('button', { name: 'Cancel import' }).click();
+  await expect(draft).toHaveValue('Use this workbook');
+  await expect(composer.getByText('synthetic-sap.xlsx', { exact: true })).toBeVisible();
+  await draft.press('Enter');
+  await dialog.getByLabel('Worksheet').selectOption('SAP EXPORT');
+  await dialog.getByLabel('Account column', { exact: true }).selectOption('G/L Account');
+  await dialog
+    .getByLabel('Description column', { exact: true })
+    .selectOption('Jrnl.Entry Item Text');
+  await dialog.getByLabel('Amount column', { exact: true }).selectOption('Amount in CC Crcy');
+  await dialog.getByLabel('Source currency').fill('EUR');
+  await dialog.getByRole('button', { name: 'Use selected data' }).click();
+  await expect
+    .poll(async () =>
+      page.evaluate(() => {
+        const source = JSON.parse(
+          localStorage.getItem('taxflow:uploaded-source-rows') ?? '{}',
+        ).__unassigned__;
+        return source ? { count: source.rows.length, last: source.rows.at(-1).amount } : null;
+      }),
+    )
+    .toEqual({ count: 1100, last: 1100 });
+});
 
 const active = {
   id: '00000000-0000-4000-8000-000000000101',

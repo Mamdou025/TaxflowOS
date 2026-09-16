@@ -1,56 +1,33 @@
 {
   "id": "pf-t2-suite",
   "inputKind": "bundled sample records",
-  "inputRows": 6,
-  "openMs": 7412,
-  "runMs": 292,
-  "totalMs": 17090,
+  "inputRows": 1,
+  "openMs": 4110,
+  "runMs": 475,
+  "totalMs": 8127,
   "browserErrors": [],
   "first": {
-    "id": "custom:81d300c6-e0d0-4e2b-b257-25af992254b2",
-    "name": "T2 Corporate Income Tax Compliance Suite — My workflow",
+    "id": "custom:efbe98f6-7486-41b5-8e47-80b5c0f64502",
+    "name": "T2 Taxable Income Bridge Workpaper — My workflow",
     "version": 1,
     "runCount": 1,
-    "runId": "local-tool-workflow-1789009279649-gye4ll",
-    "status": "error",
-    "errors": [
-      "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
-      "A preceding block could not execute. Resolve its message and test again."
-    ],
-    "warnings": [
-      "A preceding block could not execute. Resolve its message and test again."
-    ],
+    "runId": "local-tool-workflow-3534e9e2-c2a1-4beb-b512-35b13c3e5119",
+    "status": "success",
+    "errors": [],
+    "warnings": [],
     "sources": [
       {
-        "id": "bp-run-t2-suite--src",
+        "id": "pf-t2-suite--source",
         "connected": true,
         "consumedBy": [
-          "bp-run-t2-suite--classify"
+          "pf-t2-suite--workpaper"
         ]
       }
     ],
     "results": [
       {
-        "blockId": "bp-run-t2-suite--start",
-        "label": "Start",
-        "status": "success",
-        "errors": [],
-        "warnings": [],
-        "outputKeys": [
-          "bindingValidation",
-          "triggerPayload",
-          "blockId",
-          "firedAt",
-          "mode",
-          "runId",
-          "workflowId",
-          "startedBy",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-t2-suite--src",
-        "label": "Source data",
+        "blockId": "pf-t2-suite--source",
+        "label": "Workpaper records",
         "status": "success",
         "errors": [],
         "warnings": [],
@@ -76,155 +53,72 @@
         ]
       },
       {
-        "blockId": "bp-run-t2-suite--classify",
-        "label": "Classify",
+        "blockId": "pf-t2-suite--workpaper",
+        "label": "T2 Taxable Income Bridge Workpaper",
         "status": "success",
         "errors": [],
         "warnings": [],
+        "calculated": {
+          "RECORDS": 1,
+          "RECONCILED_ENTITIES": 1,
+          "REVIEW_FINDINGS": 0
+        },
         "outputKeys": [
           "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
+          "workpaperRows",
           "mappedRows",
-          "mappedRowsCount",
+          "rows",
+          "calculatedResults",
+          "namedValues",
+          "reviewFindings",
           "unmatchedRows",
-          "unmatchedRowsCount",
-          "lowConfidenceRows",
-          "lowConfidenceRowsCount",
-          "conflictCount",
-          "conflicts",
-          "mappingSummary",
-          "rulesUsed",
           "upstreamBlockIds"
         ]
       },
       {
-        "blockId": "bp-run-t2-suite--rollup",
-        "label": "Aggregate",
+        "blockId": "pf-t2-suite--export",
+        "label": "Workpaper export",
         "status": "success",
         "errors": [],
         "warnings": [],
         "outputKeys": [
           "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
-          "categoryTotalDetails",
-          "categoryTotals",
-          "rollupTotalDetails",
-          "rollupTotals",
-          "namedValues",
-          "namedValuesSourceKind",
-          "excludedRows",
-          "excludedRowsCount",
-          "includedRowsByCategory",
-          "includedRowsByRollup",
-          "rollupFormulaTrace",
-          "rollupSummary",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-t2-suite--lines",
-        "label": "Compute",
-        "status": "error",
-        "errors": [
-          "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source."
-        ],
-        "warnings": [],
-        "calculated": {},
-        "outputKeys": [
-          "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
-          "namedValues",
-          "formulaTrace",
-          "calculatedResults",
-          "resultDetails",
-          "calculationSummary",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-t2-suite--summary",
-        "label": "Summary",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-t2-suite--out",
-        "label": "Result",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
+          "exportFormat",
+          "fileName",
+          "generatedAt",
+          "mimeType",
+          "rowCount",
+          "sheetNames",
+          "sheets",
+          "warnings",
+          "workbookSpec",
           "upstreamBlockIds"
         ]
       }
     ]
   },
   "second": {
-    "id": "custom:81d300c6-e0d0-4e2b-b257-25af992254b2",
-    "name": "T2 Corporate Income Tax Compliance Suite — My workflow",
+    "id": "custom:efbe98f6-7486-41b5-8e47-80b5c0f64502",
+    "name": "T2 Taxable Income Bridge Workpaper — My workflow",
     "version": 1,
     "runCount": 2,
-    "runId": "local-tool-workflow-1789009287732-oil24e",
-    "status": "error",
-    "errors": [
-      "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
-      "A preceding block could not execute. Resolve its message and test again."
-    ],
-    "warnings": [
-      "A preceding block could not execute. Resolve its message and test again."
-    ],
+    "runId": "local-tool-workflow-6f1d907e-2884-4a3d-a23d-21e1b1f24d90",
+    "status": "success",
+    "errors": [],
+    "warnings": [],
     "sources": [
       {
-        "id": "bp-run-t2-suite--src",
+        "id": "pf-t2-suite--source",
         "connected": true,
         "consumedBy": [
-          "bp-run-t2-suite--classify"
+          "pf-t2-suite--workpaper"
         ]
       }
     ],
     "results": [
       {
-        "blockId": "bp-run-t2-suite--start",
-        "label": "Start",
-        "status": "success",
-        "errors": [],
-        "warnings": [],
-        "outputKeys": [
-          "bindingValidation",
-          "triggerPayload",
-          "blockId",
-          "firedAt",
-          "mode",
-          "runId",
-          "workflowId",
-          "startedBy",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-t2-suite--src",
-        "label": "Source data",
+        "blockId": "pf-t2-suite--source",
+        "label": "Workpaper records",
         "status": "success",
         "errors": [],
         "warnings": [],
@@ -250,105 +144,45 @@
         ]
       },
       {
-        "blockId": "bp-run-t2-suite--classify",
-        "label": "Classify",
+        "blockId": "pf-t2-suite--workpaper",
+        "label": "T2 Taxable Income Bridge Workpaper",
         "status": "success",
         "errors": [],
         "warnings": [],
+        "calculated": {
+          "RECORDS": 1,
+          "RECONCILED_ENTITIES": 1,
+          "REVIEW_FINDINGS": 0
+        },
         "outputKeys": [
           "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
+          "workpaperRows",
           "mappedRows",
-          "mappedRowsCount",
+          "rows",
+          "calculatedResults",
+          "namedValues",
+          "reviewFindings",
           "unmatchedRows",
-          "unmatchedRowsCount",
-          "lowConfidenceRows",
-          "lowConfidenceRowsCount",
-          "conflictCount",
-          "conflicts",
-          "mappingSummary",
-          "rulesUsed",
           "upstreamBlockIds"
         ]
       },
       {
-        "blockId": "bp-run-t2-suite--rollup",
-        "label": "Aggregate",
+        "blockId": "pf-t2-suite--export",
+        "label": "Workpaper export",
         "status": "success",
         "errors": [],
         "warnings": [],
         "outputKeys": [
           "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
-          "categoryTotalDetails",
-          "categoryTotals",
-          "rollupTotalDetails",
-          "rollupTotals",
-          "namedValues",
-          "namedValuesSourceKind",
-          "excludedRows",
-          "excludedRowsCount",
-          "includedRowsByCategory",
-          "includedRowsByRollup",
-          "rollupFormulaTrace",
-          "rollupSummary",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-t2-suite--lines",
-        "label": "Compute",
-        "status": "error",
-        "errors": [
-          "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source."
-        ],
-        "warnings": [],
-        "calculated": {},
-        "outputKeys": [
-          "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
-          "namedValues",
-          "formulaTrace",
-          "calculatedResults",
-          "resultDetails",
-          "calculationSummary",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-t2-suite--summary",
-        "label": "Summary",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-t2-suite--out",
-        "label": "Result",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
+          "exportFormat",
+          "fileName",
+          "generatedAt",
+          "mimeType",
+          "rowCount",
+          "sheetNames",
+          "sheets",
+          "warnings",
+          "workbookSpec",
           "upstreamBlockIds"
         ]
       }

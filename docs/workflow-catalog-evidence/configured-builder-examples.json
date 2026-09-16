@@ -3199,6 +3199,7 @@
     "rows": 8,
     "status": "error",
     "errors": [
+      "Formula operand 1 is invalid, missing or ambiguous. Use a finite number or an exact source reference.",
       "Rollup & Calculation Engine needs mapped_rows input.",
       "Rollup & Calculation Engine needs aggregation_rules input.",
       "A preceding block could not execute. Resolve its message and test again."
@@ -3442,16 +3443,14 @@
       {
         "label": "Apply FX Rate Formula",
         "toolId": "logic.formula",
-        "status": "success",
-        "errors": [],
+        "status": "error",
+        "errors": [
+          "Formula operand 1 is invalid, missing or ambiguous. Use a finite number or an exact source reference."
+        ],
         "warnings": [],
         "output": {
           "keys": [
             "bindingValidation",
-            "formulaTrace",
-            "inputValues",
-            "operation",
-            "value",
             "upstreamBlockIds"
           ]
         }
@@ -4118,61 +4117,20 @@
       {
         "label": "FAPI Brut",
         "toolId": "protected.protected_result",
-        "status": "needs_review",
-        "errors": [],
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
         "warnings": [
-          "Upstream approval is missing."
+          "A preceding block could not execute. Resolve its message and test again."
         ],
         "output": {
           "keys": [
             "bindingValidation",
-            "approvalStatus",
-            "blockingIssues",
-            "draftOnly",
-            "finalityReason",
-            "finalityStatus",
-            "formulaTrace",
-            "governedValue",
-            "nonBlockingWarnings",
-            "protectedKind",
-            "protectedResult",
-            "protected_result",
-            "reviewerOverrides",
-            "runtimeLocked",
-            "sourceTrace",
-            "validationSummary",
+            "reason",
+            "skipped",
             "upstreamBlockIds"
-          ],
-          "protectedResult": {
-            "approved": false,
-            "blockingIssues": [],
-            "final": false,
-            "finalityReason": "Candidate value or approval is missing.",
-            "finalityStatus": "draft",
-            "name": "FAPI Brut",
-            "nonBlockingWarnings": [],
-            "reviewerOverrides": {},
-            "runtimeLocked": false,
-            "sourceTrace": [
-              "Inclusion rate constant.value",
-              "FX Rate.value",
-              "Trial Balance Rows.tb-1",
-              "Keyword Rulebook.keyword-rule-interest-income",
-              "Trial Balance Rows.tb-2",
-              "Keyword Rulebook.keyword-rule-rents",
-              "Trial Balance Rows.tb-5",
-              "Keyword Rulebook.keyword-rule-general-expenses",
-              "Trial Balance Rows.tb-3",
-              "Trial Balance Rows.tb-4",
-              "Trial Balance Rows.tb-6",
-              "Trial Balance Rows.tb-7",
-              "Trial Balance Rows.tb-8"
-            ],
-            "status": "draft",
-            "validationSummary": [],
-            "value": 27000
-          },
-          "finalityStatus": "draft"
+          ]
         }
       },
       {
@@ -4362,70 +4320,20 @@
       {
         "label": "PDF Review Pack",
         "toolId": "output.evidence_pack_preview",
-        "status": "warning",
-        "errors": [],
+        "status": "error",
+        "errors": [
+          "A preceding block could not execute. Resolve its message and test again."
+        ],
         "warnings": [
-          "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value.",
-          "5 row(s) were not matched by keyword rules.",
-          "No rows matched the aggregation filters.",
-          "A preceding block could not execute. Resolve its message and test again.",
-          "5 row(s) remain unmatched.",
-          "Upstream approval is missing.",
-          "Output preview includes results that still need review."
+          "A preceding block could not execute. Resolve its message and test again."
         ],
         "output": {
           "keys": [
             "bindingValidation",
-            "blockingIssues",
-            "finalityStatus",
-            "formulas",
-            "keywordRulesUsed",
-            "mappedRows",
-            "nonBlockingWarnings",
-            "outputFinality",
-            "pipelineTrace",
-            "preview",
-            "protectedValues",
-            "protectedResult",
-            "protectedResults",
-            "protectedResultsFinality",
-            "reviewDecisions",
-            "reviewerOverrides",
-            "sourceRows",
-            "sourceTrace",
-            "validationSummary",
-            "warnings",
+            "reason",
+            "skipped",
             "upstreamBlockIds"
-          ],
-          "protectedResult": {
-            "approved": false,
-            "blockingIssues": [],
-            "currency": "USD",
-            "final": false,
-            "finalityReason": "Candidate value or approval is missing.",
-            "finalityStatus": "draft",
-            "name": "Deductions",
-            "nonBlockingWarnings": [],
-            "reviewerOverrides": {},
-            "runtimeLocked": false,
-            "sourceTrace": [
-              "Trial Balance Rows.tb-1",
-              "Keyword Rulebook.keyword-rule-interest-income",
-              "Trial Balance Rows.tb-2",
-              "Keyword Rulebook.keyword-rule-rents",
-              "Trial Balance Rows.tb-5",
-              "Keyword Rulebook.keyword-rule-general-expenses",
-              "Trial Balance Rows.tb-3",
-              "Trial Balance Rows.tb-4",
-              "Trial Balance Rows.tb-6",
-              "Trial Balance Rows.tb-7",
-              "Trial Balance Rows.tb-8"
-            ],
-            "status": "draft",
-            "validationSummary": [],
-            "value": -1500
-          },
-          "finalityStatus": "failed"
+          ]
         }
       },
       {

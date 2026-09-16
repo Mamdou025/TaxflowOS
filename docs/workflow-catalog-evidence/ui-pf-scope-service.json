@@ -1,56 +1,33 @@
 {
   "id": "pf-scope-service",
-  "inputKind": "generic upload probe; not domain-complete input",
-  "inputRows": 2,
-  "openMs": 9321,
-  "runMs": 555,
-  "totalMs": 20856,
+  "inputKind": "bundled sample records",
+  "inputRows": 1,
+  "openMs": 4854,
+  "runMs": 490,
+  "totalMs": 10477,
   "browserErrors": [],
   "first": {
-    "id": "custom:9d32ee78-c572-477b-a3d0-5e5b4045159a",
-    "name": "Platform Services · Scope Service — My workflow",
+    "id": "custom:30d4854f-6368-4eed-9540-d9711a93643d",
+    "name": "Scope Service — My workflow",
     "version": 1,
     "runCount": 1,
-    "runId": "local-tool-workflow-1789009047898-adq2jv",
-    "status": "error",
-    "errors": [
-      "Keyword Mapper needs Data rows input.",
-      "Keyword Mapper needs Keyword rules input.",
-      "A preceding block could not execute. Resolve its message and test again."
-    ],
-    "warnings": [
-      "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value.",
-      "A preceding block could not execute. Resolve its message and test again."
-    ],
+    "runId": "local-tool-workflow-32a0eeb3-cf39-4707-afe1-994e24c5a744",
+    "status": "success",
+    "errors": [],
+    "warnings": [],
     "sources": [
       {
-        "id": "6a22f05c-b33f-4371-9456-45aa478cc674",
-        "connected": false,
-        "consumedBy": []
+        "id": "pf-scope-service--source",
+        "connected": true,
+        "consumedBy": [
+          "pf-scope-service--workpaper"
+        ]
       }
     ],
     "results": [
       {
-        "blockId": "pf-scope-service--start",
-        "label": "Open scope",
-        "status": "success",
-        "errors": [],
-        "warnings": [],
-        "outputKeys": [
-          "bindingValidation",
-          "triggerPayload",
-          "blockId",
-          "firedAt",
-          "mode",
-          "runId",
-          "workflowId",
-          "startedBy",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "6a22f05c-b33f-4371-9456-45aa478cc674",
-        "label": "Document",
+        "blockId": "pf-scope-service--source",
+        "label": "Workpaper records",
         "status": "success",
         "errors": [],
         "warnings": [],
@@ -76,200 +53,72 @@
         ]
       },
       {
-        "blockId": "pf-scope-service--src-clients",
-        "label": "Clients",
-        "status": "warning",
-        "errors": [],
-        "warnings": [
-          "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "immutable",
-          "live",
-          "rowCount",
-          "rows",
-          "sourceKind",
-          "sourceLocator",
-          "sourceMetadata",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-scope-service--src-years",
-        "label": "Taxation years",
+        "blockId": "pf-scope-service--workpaper",
+        "label": "Scope Service",
         "status": "success",
         "errors": [],
         "warnings": [],
+        "calculated": {
+          "RECORDS": 1,
+          "ENTITIES_IN_SCOPE": 1,
+          "REVIEW_FINDINGS": 0
+        },
         "outputKeys": [
           "bindingValidation",
-          "immutable",
-          "label",
-          "readOnlyEvidence",
-          "unit",
-          "value",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-scope-service--src-entities",
-        "label": "Entities & foreign affiliates",
-        "status": "warning",
-        "errors": [],
-        "warnings": [
-          "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "immutable",
-          "live",
-          "rowCount",
-          "rows",
-          "sourceKind",
-          "sourceLocator",
-          "sourceMetadata",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-scope-service--src-params",
-        "label": "Workflow parameters",
-        "status": "success",
-        "errors": [],
-        "warnings": [],
-        "outputKeys": [
-          "bindingValidation",
-          "immutable",
-          "label",
-          "readOnlyEvidence",
-          "unit",
-          "value",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-scope-service--lg-resolve",
-        "label": "Resolve scope",
-        "status": "error",
-        "errors": [
-          "Keyword Mapper needs Data rows input.",
-          "Keyword Mapper needs Keyword rules input."
-        ],
-        "warnings": [],
-        "outputKeys": [
-          "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
+          "workpaperRows",
           "mappedRows",
-          "mappedRowsCount",
+          "rows",
+          "calculatedResults",
+          "namedValues",
+          "reviewFindings",
           "unmatchedRows",
-          "unmatchedRowsCount",
-          "lowConfidenceRows",
-          "lowConfidenceRowsCount",
-          "conflictCount",
-          "conflicts",
-          "mappingSummary",
           "upstreamBlockIds"
         ]
       },
       {
-        "blockId": "pf-scope-service--lg-validate",
-        "label": "Validate scope",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
+        "blockId": "pf-scope-service--export",
+        "label": "Workpaper export",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
         "outputKeys": [
           "bindingValidation",
-          "reason",
-          "skipped",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-scope-service--fld-scope",
-        "label": "Scope preview",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-scope-service--out-scope",
-        "label": "Validated Scope object",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
+          "exportFormat",
+          "fileName",
+          "generatedAt",
+          "mimeType",
+          "rowCount",
+          "sheetNames",
+          "sheets",
+          "warnings",
+          "workbookSpec",
           "upstreamBlockIds"
         ]
       }
     ]
   },
   "second": {
-    "id": "custom:9d32ee78-c572-477b-a3d0-5e5b4045159a",
-    "name": "Platform Services · Scope Service — My workflow",
+    "id": "custom:30d4854f-6368-4eed-9540-d9711a93643d",
+    "name": "Scope Service — My workflow",
     "version": 1,
     "runCount": 2,
-    "runId": "local-tool-workflow-1789009056949-mebsgt",
-    "status": "error",
-    "errors": [
-      "Keyword Mapper needs Data rows input.",
-      "Keyword Mapper needs Keyword rules input.",
-      "A preceding block could not execute. Resolve its message and test again."
-    ],
-    "warnings": [
-      "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value.",
-      "A preceding block could not execute. Resolve its message and test again."
-    ],
+    "runId": "local-tool-workflow-7cfe02b9-7898-4d59-a525-988bdd42c148",
+    "status": "success",
+    "errors": [],
+    "warnings": [],
     "sources": [
       {
-        "id": "6a22f05c-b33f-4371-9456-45aa478cc674",
-        "connected": false,
-        "consumedBy": []
+        "id": "pf-scope-service--source",
+        "connected": true,
+        "consumedBy": [
+          "pf-scope-service--workpaper"
+        ]
       }
     ],
     "results": [
       {
-        "blockId": "pf-scope-service--start",
-        "label": "Open scope",
-        "status": "success",
-        "errors": [],
-        "warnings": [],
-        "outputKeys": [
-          "bindingValidation",
-          "triggerPayload",
-          "blockId",
-          "firedAt",
-          "mode",
-          "runId",
-          "workflowId",
-          "startedBy",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "6a22f05c-b33f-4371-9456-45aa478cc674",
-        "label": "Document",
+        "blockId": "pf-scope-service--source",
+        "label": "Workpaper records",
         "status": "success",
         "errors": [],
         "warnings": [],
@@ -295,150 +144,45 @@
         ]
       },
       {
-        "blockId": "pf-scope-service--src-clients",
-        "label": "Clients",
-        "status": "warning",
-        "errors": [],
-        "warnings": [
-          "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "immutable",
-          "live",
-          "rowCount",
-          "rows",
-          "sourceKind",
-          "sourceLocator",
-          "sourceMetadata",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-scope-service--src-years",
-        "label": "Taxation years",
+        "blockId": "pf-scope-service--workpaper",
+        "label": "Scope Service",
         "status": "success",
         "errors": [],
         "warnings": [],
+        "calculated": {
+          "RECORDS": 1,
+          "ENTITIES_IN_SCOPE": 1,
+          "REVIEW_FINDINGS": 0
+        },
         "outputKeys": [
           "bindingValidation",
-          "immutable",
-          "label",
-          "readOnlyEvidence",
-          "unit",
-          "value",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-scope-service--src-entities",
-        "label": "Entities & foreign affiliates",
-        "status": "warning",
-        "errors": [],
-        "warnings": [
-          "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "immutable",
-          "live",
-          "rowCount",
-          "rows",
-          "sourceKind",
-          "sourceLocator",
-          "sourceMetadata",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-scope-service--src-params",
-        "label": "Workflow parameters",
-        "status": "success",
-        "errors": [],
-        "warnings": [],
-        "outputKeys": [
-          "bindingValidation",
-          "immutable",
-          "label",
-          "readOnlyEvidence",
-          "unit",
-          "value",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-scope-service--lg-resolve",
-        "label": "Resolve scope",
-        "status": "error",
-        "errors": [
-          "Keyword Mapper needs Data rows input.",
-          "Keyword Mapper needs Keyword rules input."
-        ],
-        "warnings": [],
-        "outputKeys": [
-          "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
+          "workpaperRows",
           "mappedRows",
-          "mappedRowsCount",
+          "rows",
+          "calculatedResults",
+          "namedValues",
+          "reviewFindings",
           "unmatchedRows",
-          "unmatchedRowsCount",
-          "lowConfidenceRows",
-          "lowConfidenceRowsCount",
-          "conflictCount",
-          "conflicts",
-          "mappingSummary",
           "upstreamBlockIds"
         ]
       },
       {
-        "blockId": "pf-scope-service--lg-validate",
-        "label": "Validate scope",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
+        "blockId": "pf-scope-service--export",
+        "label": "Workpaper export",
+        "status": "success",
+        "errors": [],
+        "warnings": [],
         "outputKeys": [
           "bindingValidation",
-          "reason",
-          "skipped",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-scope-service--fld-scope",
-        "label": "Scope preview",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-scope-service--out-scope",
-        "label": "Validated Scope object",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
+          "exportFormat",
+          "fileName",
+          "generatedAt",
+          "mimeType",
+          "rowCount",
+          "sheetNames",
+          "sheets",
+          "warnings",
+          "workbookSpec",
           "upstreamBlockIds"
         ]
       }

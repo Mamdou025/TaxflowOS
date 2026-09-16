@@ -1,146 +1,567 @@
 [
   {
-    "id": "holiday-payroll",
+    "id": "document-calculator",
     "representative": false,
-    "coreStatus": "error",
-    "done": true,
+    "coreStatus": "success",
+    "done": false,
     "headline": {
-      "label": "Statutory holiday liability",
-      "value": 0,
-      "currency": "CAD"
+      "label": "Adjusted total",
+      "value": 400,
+      "currency": "units"
     },
-    "summaryText": "HOLIDAY-PAYROLL complete. Statutory holiday liability = 0 CAD."
+    "blocker": {
+      "kind": "approval",
+      "message": "All inputs are resolved and computed. Each figure below shows how it was derived. Approve to finalize.",
+      "figures": [
+        {
+          "key": "RESULT",
+          "label": "Adjusted total",
+          "value": 400,
+          "formula": "item_total × 2"
+        }
+      ]
+    }
   },
   {
     "id": "fapi",
     "representative": false,
     "coreStatus": "warning",
-    "done": true,
+    "done": false,
     "headline": {
       "label": "Gross",
       "value": 25000,
       "currency": "USD"
     },
-    "summaryText": "FAPI complete. Gross = 25,000 USD."
-  },
-  {
-    "id": "roulement",
-    "representative": false,
-    "coreStatus": "error",
-    "done": true,
-    "headline": {
-      "label": "Gain différé (non reconnu)",
-      "value": 270000,
-      "currency": "USD"
-    },
-    "summaryText": "ROULEMENT complete. Gain différé (non reconnu) = 270,000 USD."
+    "blocker": {
+      "kind": "approval",
+      "message": "All inputs are resolved and computed. Each figure below shows how it was derived. Approve to finalize.",
+      "figures": [
+        {
+          "key": "GROSS",
+          "label": "Gross",
+          "value": 25000,
+          "formula": "Gross = A + A1 + A2 + B + C"
+        },
+        {
+          "key": "DEDUCTIONS",
+          "label": "Deductions",
+          "value": 0,
+          "formula": "Deductions = D + E + F + F1 + G + H"
+        },
+        {
+          "key": "FAPI_BRUT",
+          "label": "FAPI Brut",
+          "value": 25000,
+          "formula": "FAPI Brut = max(Gross - Deductions, 0)"
+        },
+        {
+          "key": "FAT_DEDUCTION",
+          "label": "FAT Deduction",
+          "value": 400,
+          "formula": "FAT Deduction = min(FAT_PAID × RTF, FAPI_BRUT)"
+        },
+        {
+          "key": "NET_FAPI",
+          "label": "Net FAPI",
+          "value": 24600,
+          "formula": "Net FAPI = max(FAPI_BRUT - FAT_DEDUCTION, 0)"
+        },
+        {
+          "key": "FX_RATE",
+          "label": "FX Rate",
+          "value": 1.35,
+          "formula": "FX_RATE = fxRate (from Bank of Canada source)"
+        },
+        {
+          "key": "GROSS_CAD",
+          "label": "Gross CAD",
+          "value": 33750,
+          "formula": "Gross CAD = GROSS × FX_RATE"
+        },
+        {
+          "key": "DEDUCTIONS_CAD",
+          "label": "Deductions CAD",
+          "value": 0,
+          "formula": "Deductions CAD = DEDUCTIONS × FX_RATE"
+        },
+        {
+          "key": "FAPI_BRUT_CAD",
+          "label": "FAPI Brut CAD",
+          "value": 33750,
+          "formula": "FAPI Brut CAD = FAPI_BRUT × FX_RATE"
+        },
+        {
+          "key": "FAT_DEDUCTION_CAD",
+          "label": "FAT Deduction CAD",
+          "value": 540,
+          "formula": "FAT Deduction CAD = FAT_DEDUCTION × FX_RATE"
+        },
+        {
+          "key": "NET_FAPI_CAD",
+          "label": "Net FAPI CAD",
+          "value": 33210,
+          "formula": "Net FAPI CAD = NET_FAPI × FX_RATE"
+        }
+      ]
+    }
   },
   {
     "id": "expense",
     "representative": false,
     "coreStatus": "warning",
-    "done": true,
+    "done": false,
     "headline": {
       "label": "Net payable to employee",
       "value": 2325,
       "currency": "USD"
     },
-    "summaryText": "EXPENSE complete. Net payable to employee = 2,325 USD."
+    "blocker": {
+      "kind": "approval",
+      "message": "All inputs are resolved and computed. Each figure below shows how it was derived. Approve to finalize.",
+      "figures": [
+        {
+          "key": "SUBMITTED_TOTAL",
+          "label": "Submitted total",
+          "value": 2462,
+          "formula": "Submitted total = every receipt across all categories"
+        },
+        {
+          "key": "TOTAL_REIMBURSABLE",
+          "label": "Total reimbursable",
+          "value": 2325,
+          "formula": "Total reimbursable = sum of the five reimbursable category lines"
+        },
+        {
+          "key": "POLICY_DISALLOWED",
+          "label": "Policy-disallowed",
+          "value": 137,
+          "formula": "Disallowed = non-reimbursable items + meals over cap"
+        },
+        {
+          "key": "NET_PAYABLE",
+          "label": "Net payable to employee",
+          "value": 2325,
+          "formula": "Net payable to employee = total reimbursable"
+        },
+        {
+          "key": "FX_RATE",
+          "label": "FX rate (USD → CAD)",
+          "value": 1.35,
+          "formula": "Annual-average USD→CAD rate (Bank of Canada)"
+        },
+        {
+          "key": "NET_PAYABLE_CAD",
+          "label": "Net payable (CAD)",
+          "value": 3138.75,
+          "formula": "Net payable (CAD) = net payable × FX rate"
+        }
+      ]
+    }
   },
   {
-    "id": "campaign",
+    "id": "scope-service",
     "representative": false,
-    "coreStatus": "error",
-    "done": true,
+    "coreStatus": "success",
+    "done": false,
     "headline": {
-      "label": "Projected revenue",
-      "value": 525000,
-      "currency": "USD"
+      "label": "Workpaper records",
+      "value": 1,
+      "currency": "records"
     },
-    "summaryText": "CAMPAIGN complete. Projected revenue = 525,000 USD."
+    "blocker": {
+      "kind": "approval",
+      "message": "All inputs are resolved and computed. Each figure below shows how it was derived. Approve to finalize.",
+      "figures": [
+        {
+          "key": "RECORDS",
+          "label": "Workpaper records",
+          "value": 1,
+          "formula": "Number of output records"
+        },
+        {
+          "key": "REVIEW_FINDINGS",
+          "label": "Review findings",
+          "value": 0,
+          "formula": "Outstanding review findings"
+        }
+      ]
+    }
+  },
+  {
+    "id": "tax-position-summary",
+    "representative": false,
+    "coreStatus": "warning",
+    "done": false,
+    "headline": {
+      "label": "Workpaper records",
+      "value": 1,
+      "currency": "records"
+    },
+    "blocker": {
+      "kind": "approval",
+      "message": "All inputs are resolved and computed. Each figure below shows how it was derived. Approve to finalize.",
+      "figures": [
+        {
+          "key": "RECORDS",
+          "label": "Workpaper records",
+          "value": 1,
+          "formula": "Number of output records"
+        },
+        {
+          "key": "REVIEW_FINDINGS",
+          "label": "Review findings",
+          "value": 1,
+          "formula": "Outstanding review findings"
+        }
+      ]
+    }
+  },
+  {
+    "id": "data-readiness",
+    "representative": false,
+    "coreStatus": "success",
+    "done": false,
+    "headline": {
+      "label": "Workpaper records",
+      "value": 1,
+      "currency": "records"
+    },
+    "blocker": {
+      "kind": "approval",
+      "message": "All inputs are resolved and computed. Each figure below shows how it was derived. Approve to finalize.",
+      "figures": [
+        {
+          "key": "RECORDS",
+          "label": "Workpaper records",
+          "value": 1,
+          "formula": "Number of output records"
+        },
+        {
+          "key": "REVIEW_FINDINGS",
+          "label": "Review findings",
+          "value": 0,
+          "formula": "Outstanding review findings"
+        }
+      ]
+    }
+  },
+  {
+    "id": "platform-sequence",
+    "representative": false,
+    "coreStatus": "warning",
+    "done": false,
+    "headline": {
+      "label": "Workpaper records",
+      "value": 1,
+      "currency": "records"
+    },
+    "blocker": {
+      "kind": "approval",
+      "message": "All inputs are resolved and computed. Each figure below shows how it was derived. Approve to finalize.",
+      "figures": [
+        {
+          "key": "RECORDS",
+          "label": "Workpaper records",
+          "value": 1,
+          "formula": "Number of output records"
+        },
+        {
+          "key": "REVIEW_FINDINGS",
+          "label": "Review findings",
+          "value": 1,
+          "formula": "Outstanding review findings"
+        }
+      ]
+    }
+  },
+  {
+    "id": "ownership-graph",
+    "representative": false,
+    "coreStatus": "success",
+    "done": false,
+    "headline": {
+      "label": "Workpaper records",
+      "value": 3,
+      "currency": "records"
+    },
+    "blocker": {
+      "kind": "approval",
+      "message": "All inputs are resolved and computed. Each figure below shows how it was derived. Approve to finalize.",
+      "figures": [
+        {
+          "key": "RECORDS",
+          "label": "Workpaper records",
+          "value": 3,
+          "formula": "Number of output records"
+        },
+        {
+          "key": "REVIEW_FINDINGS",
+          "label": "Review findings",
+          "value": 0,
+          "formula": "Outstanding review findings"
+        }
+      ]
+    }
+  },
+  {
+    "id": "attribute-ledgers",
+    "representative": false,
+    "coreStatus": "success",
+    "done": false,
+    "headline": {
+      "label": "Workpaper records",
+      "value": 1,
+      "currency": "records"
+    },
+    "blocker": {
+      "kind": "approval",
+      "message": "All inputs are resolved and computed. Each figure below shows how it was derived. Approve to finalize.",
+      "figures": [
+        {
+          "key": "RECORDS",
+          "label": "Workpaper records",
+          "value": 1,
+          "formula": "Number of output records"
+        },
+        {
+          "key": "REVIEW_FINDINGS",
+          "label": "Review findings",
+          "value": 0,
+          "formula": "Outstanding review findings"
+        }
+      ]
+    }
+  },
+  {
+    "id": "portfolio-ops",
+    "representative": false,
+    "coreStatus": "warning",
+    "done": false,
+    "headline": {
+      "label": "Workpaper records",
+      "value": 1,
+      "currency": "records"
+    },
+    "blocker": {
+      "kind": "approval",
+      "message": "All inputs are resolved and computed. Each figure below shows how it was derived. Approve to finalize.",
+      "figures": [
+        {
+          "key": "RECORDS",
+          "label": "Workpaper records",
+          "value": 1,
+          "formula": "Number of output records"
+        },
+        {
+          "key": "REVIEW_FINDINGS",
+          "label": "Review findings",
+          "value": 1,
+          "formula": "Outstanding review findings"
+        }
+      ]
+    }
   },
   {
     "id": "t1134",
-    "representative": true,
-    "coreStatus": "error",
-    "done": true,
+    "representative": false,
+    "coreStatus": "warning",
+    "done": false,
     "headline": {
-      "label": "NET",
-      "value": 247000,
-      "currency": "USD"
+      "label": "Workpaper records",
+      "value": 1,
+      "currency": "records"
     },
-    "summaryText": "T1134 complete. NET = 247,000 USD."
+    "blocker": {
+      "kind": "approval",
+      "message": "All inputs are resolved and computed. Each figure below shows how it was derived. Approve to finalize.",
+      "figures": [
+        {
+          "key": "RECORDS",
+          "label": "Workpaper records",
+          "value": 1,
+          "formula": "Number of output records"
+        },
+        {
+          "key": "REVIEW_FINDINGS",
+          "label": "Review findings",
+          "value": 1,
+          "formula": "Outstanding review findings"
+        }
+      ]
+    }
   },
   {
     "id": "surplus",
-    "representative": true,
-    "coreStatus": "error",
-    "done": true,
+    "representative": false,
+    "coreStatus": "success",
+    "done": false,
     "headline": {
-      "label": "NET",
-      "value": 172900,
-      "currency": "USD"
+      "label": "Workpaper records",
+      "value": 1,
+      "currency": "records"
     },
-    "summaryText": "SURPLUS complete. NET = 172,900 USD."
+    "blocker": {
+      "kind": "approval",
+      "message": "All inputs are resolved and computed. Each figure below shows how it was derived. Approve to finalize.",
+      "figures": [
+        {
+          "key": "RECORDS",
+          "label": "Workpaper records",
+          "value": 1,
+          "formula": "Number of output records"
+        },
+        {
+          "key": "REVIEW_FINDINGS",
+          "label": "Review findings",
+          "value": 0,
+          "formula": "Outstanding review findings"
+        }
+      ]
+    }
   },
   {
     "id": "t106",
-    "representative": true,
-    "coreStatus": "error",
-    "done": true,
+    "representative": false,
+    "coreStatus": "success",
+    "done": false,
     "headline": {
-      "label": "NET",
-      "value": 123500,
-      "currency": "USD"
+      "label": "Workpaper records",
+      "value": 1,
+      "currency": "records"
     },
-    "summaryText": "T106 complete. NET = 123,500 USD."
+    "blocker": {
+      "kind": "approval",
+      "message": "All inputs are resolved and computed. Each figure below shows how it was derived. Approve to finalize.",
+      "figures": [
+        {
+          "key": "RECORDS",
+          "label": "Workpaper records",
+          "value": 1,
+          "formula": "Number of output records"
+        },
+        {
+          "key": "REVIEW_FINDINGS",
+          "label": "Review findings",
+          "value": 0,
+          "formula": "Outstanding review findings"
+        }
+      ]
+    }
   },
   {
     "id": "eifel",
-    "representative": true,
-    "coreStatus": "error",
-    "done": true,
+    "representative": false,
+    "coreStatus": "warning",
+    "done": false,
     "headline": {
-      "label": "NET",
-      "value": 321100,
-      "currency": "USD"
+      "label": "Workpaper records",
+      "value": 1,
+      "currency": "records"
     },
-    "summaryText": "EIFEL complete. NET = 321,100 USD."
+    "blocker": {
+      "kind": "approval",
+      "message": "All inputs are resolved and computed. Each figure below shows how it was derived. Approve to finalize.",
+      "figures": [
+        {
+          "key": "RECORDS",
+          "label": "Workpaper records",
+          "value": 1,
+          "formula": "Number of output records"
+        },
+        {
+          "key": "REVIEW_FINDINGS",
+          "label": "Review findings",
+          "value": 1,
+          "formula": "Outstanding review findings"
+        }
+      ]
+    }
   },
   {
     "id": "t2-suite",
-    "representative": true,
-    "coreStatus": "error",
-    "done": true,
+    "representative": false,
+    "coreStatus": "success",
+    "done": false,
     "headline": {
-      "label": "NET",
-      "value": 271700,
-      "currency": "USD"
+      "label": "Workpaper records",
+      "value": 1,
+      "currency": "records"
     },
-    "summaryText": "T2-SUITE complete. NET = 271,700 USD."
+    "blocker": {
+      "kind": "approval",
+      "message": "All inputs are resolved and computed. Each figure below shows how it was derived. Approve to finalize.",
+      "figures": [
+        {
+          "key": "RECORDS",
+          "label": "Workpaper records",
+          "value": 1,
+          "formula": "Number of output records"
+        },
+        {
+          "key": "REVIEW_FINDINGS",
+          "label": "Review findings",
+          "value": 0,
+          "formula": "Outstanding review findings"
+        }
+      ]
+    }
   },
   {
     "id": "tax-provision",
-    "representative": true,
-    "coreStatus": "error",
-    "done": true,
+    "representative": false,
+    "coreStatus": "warning",
+    "done": false,
     "headline": {
-      "label": "NET",
-      "value": 222300,
-      "currency": "USD"
+      "label": "Workpaper records",
+      "value": 1,
+      "currency": "records"
     },
-    "summaryText": "TAX-PROVISION complete. NET = 222,300 USD."
+    "blocker": {
+      "kind": "approval",
+      "message": "All inputs are resolved and computed. Each figure below shows how it was derived. Approve to finalize.",
+      "figures": [
+        {
+          "key": "RECORDS",
+          "label": "Workpaper records",
+          "value": 1,
+          "formula": "Number of output records"
+        },
+        {
+          "key": "REVIEW_FINDINGS",
+          "label": "Review findings",
+          "value": 1,
+          "formula": "Outstanding review findings"
+        }
+      ]
+    }
   },
   {
     "id": "part-xiii",
-    "representative": true,
-    "coreStatus": "error",
-    "done": true,
+    "representative": false,
+    "coreStatus": "warning",
+    "done": false,
     "headline": {
-      "label": "NET",
-      "value": 74100,
-      "currency": "USD"
+      "label": "Workpaper records",
+      "value": 1,
+      "currency": "records"
     },
-    "summaryText": "PART-XIII complete. NET = 74,100 USD."
+    "blocker": {
+      "kind": "approval",
+      "message": "All inputs are resolved and computed. Each figure below shows how it was derived. Approve to finalize.",
+      "figures": [
+        {
+          "key": "RECORDS",
+          "label": "Workpaper records",
+          "value": 1,
+          "formula": "Number of output records"
+        },
+        {
+          "key": "REVIEW_FINDINGS",
+          "label": "Review findings",
+          "value": 1,
+          "formula": "Outstanding review findings"
+        }
+      ]
+    }
   }
 ]

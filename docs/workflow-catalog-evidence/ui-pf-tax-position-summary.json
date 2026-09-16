@@ -1,58 +1,35 @@
 {
   "id": "pf-tax-position-summary",
-  "inputKind": "generic upload probe; not domain-complete input",
-  "inputRows": 2,
-  "openMs": 9788,
-  "runMs": 484,
-  "totalMs": 20995,
+  "inputKind": "bundled sample records",
+  "inputRows": 1,
+  "openMs": 4131,
+  "runMs": 470,
+  "totalMs": 8875,
   "browserErrors": [],
   "first": {
-    "id": "custom:2006f2dc-9270-4ad7-8bb8-d7c67952f075",
-    "name": "Platform Services · Tax Position Summary Service — My workflow",
+    "id": "custom:172aae1b-f699-4606-b826-50a39958e6a3",
+    "name": "Tax Position Summary Workpaper — My workflow",
     "version": 1,
     "runCount": 1,
-    "runId": "local-tool-workflow-1789009069598-io1311",
-    "status": "error",
-    "errors": [
-      "Keyword Mapper needs Data rows input.",
-      "Keyword Mapper needs Keyword rules input.",
-      "A preceding block could not execute. Resolve its message and test again."
-    ],
+    "runId": "local-tool-workflow-c4225f04-25c2-436c-a648-43b144eb7c82",
+    "status": "warning",
+    "errors": [],
     "warnings": [
-      "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value.",
-      "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value.",
-      "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one.",
-      "A preceding block could not execute. Resolve its message and test again."
+      "Example Co: confirm Transfer pricing method against memo-12."
     ],
     "sources": [
       {
-        "id": "6d6ac909-bfbf-4642-9b5b-f59bfb23c693",
-        "connected": false,
-        "consumedBy": []
+        "id": "pf-tax-position-summary--source",
+        "connected": true,
+        "consumedBy": [
+          "pf-tax-position-summary--workpaper"
+        ]
       }
     ],
     "results": [
       {
-        "blockId": "pf-tax-position-summary--start",
-        "label": "Prepare briefing",
-        "status": "success",
-        "errors": [],
-        "warnings": [],
-        "outputKeys": [
-          "bindingValidation",
-          "triggerPayload",
-          "blockId",
-          "firedAt",
-          "mode",
-          "runId",
-          "workflowId",
-          "startedBy",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "6d6ac909-bfbf-4642-9b5b-f59bfb23c693",
-        "label": "Document",
+        "blockId": "pf-tax-position-summary--source",
+        "label": "Workpaper records",
         "status": "success",
         "errors": [],
         "warnings": [],
@@ -78,240 +55,76 @@
         ]
       },
       {
-        "blockId": "pf-tax-position-summary--src-returns",
-        "label": "Prior-year returns",
+        "blockId": "pf-tax-position-summary--workpaper",
+        "label": "Tax Position Summary Workpaper",
         "status": "warning",
         "errors": [],
         "warnings": [
-          "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value."
+          "Example Co: confirm Transfer pricing method against memo-12."
         ],
+        "calculated": {
+          "RECORDS": 1,
+          "CONFIRMED": 0,
+          "REVIEW_FINDINGS": 1
+        },
         "outputKeys": [
           "bindingValidation",
-          "immutable",
-          "live",
-          "rowCount",
-          "rows",
-          "sourceKind",
-          "sourceLocator",
-          "sourceMetadata",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-tax-position-summary--src-memos",
-        "label": "Memos & review notes",
-        "status": "warning",
-        "errors": [],
-        "warnings": [
-          "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "immutable",
-          "live",
-          "rowCount",
-          "rows",
-          "sourceKind",
-          "sourceLocator",
-          "sourceMetadata",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-tax-position-summary--src-scope",
-        "label": "Scope & client facts",
-        "status": "warning",
-        "errors": [],
-        "warnings": [
-          "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "immutable",
-          "live",
-          "rowCount",
-          "rows",
-          "sourceKind",
-          "sourceLocator",
-          "sourceMetadata",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-tax-position-summary--ai-brief",
-        "label": "Draft briefing",
-        "status": "warning",
-        "errors": [],
-        "warnings": [
-          "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "authoritative",
-          "accepted",
-          "proposal",
-          "proposalOnly",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-tax-position-summary--lg-positions",
-        "label": "Historical tax positions",
-        "status": "error",
-        "errors": [
-          "Keyword Mapper needs Data rows input.",
-          "Keyword Mapper needs Keyword rules input."
-        ],
-        "warnings": [],
-        "outputKeys": [
-          "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
+          "workpaperRows",
           "mappedRows",
-          "mappedRowsCount",
+          "rows",
+          "calculatedResults",
+          "namedValues",
+          "reviewFindings",
           "unmatchedRows",
-          "unmatchedRowsCount",
-          "lowConfidenceRows",
-          "lowConfidenceRowsCount",
-          "conflictCount",
-          "conflicts",
-          "mappingSummary",
           "upstreamBlockIds"
         ]
       },
       {
-        "blockId": "pf-tax-position-summary--chk-review",
-        "label": "Judgment · confirm positions",
+        "blockId": "pf-tax-position-summary--export",
+        "label": "Workpaper export",
         "status": "success",
         "errors": [],
         "warnings": [],
         "outputKeys": [
           "bindingValidation",
-          "immutable",
-          "label",
-          "readOnlyEvidence",
-          "unit",
-          "value",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-tax-position-summary--lg-assumptions",
-        "label": "Assumptions & open issues",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-tax-position-summary--fld-brief",
-        "label": "Manager briefing",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-tax-position-summary--out-brief",
-        "label": "Tax position summary",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-tax-position-summary--out-evidence",
-        "label": "Evidence index",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
+          "exportFormat",
+          "fileName",
+          "generatedAt",
+          "mimeType",
+          "rowCount",
+          "sheetNames",
+          "sheets",
+          "warnings",
+          "workbookSpec",
           "upstreamBlockIds"
         ]
       }
     ]
   },
   "second": {
-    "id": "custom:2006f2dc-9270-4ad7-8bb8-d7c67952f075",
-    "name": "Platform Services · Tax Position Summary Service — My workflow",
+    "id": "custom:172aae1b-f699-4606-b826-50a39958e6a3",
+    "name": "Tax Position Summary Workpaper — My workflow",
     "version": 1,
     "runCount": 2,
-    "runId": "local-tool-workflow-1789009078419-dyzi7t",
-    "status": "error",
-    "errors": [
-      "Keyword Mapper needs Data rows input.",
-      "Keyword Mapper needs Keyword rules input.",
-      "A preceding block could not execute. Resolve its message and test again."
-    ],
+    "runId": "local-tool-workflow-00bfdc6a-36f8-49a2-ab1c-5405a5344f52",
+    "status": "warning",
+    "errors": [],
     "warnings": [
-      "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value.",
-      "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value.",
-      "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one.",
-      "A preceding block could not execute. Resolve its message and test again."
+      "Example Co: confirm Transfer pricing method against memo-12."
     ],
     "sources": [
       {
-        "id": "6d6ac909-bfbf-4642-9b5b-f59bfb23c693",
-        "connected": false,
-        "consumedBy": []
+        "id": "pf-tax-position-summary--source",
+        "connected": true,
+        "consumedBy": [
+          "pf-tax-position-summary--workpaper"
+        ]
       }
     ],
     "results": [
       {
-        "blockId": "pf-tax-position-summary--start",
-        "label": "Prepare briefing",
-        "status": "success",
-        "errors": [],
-        "warnings": [],
-        "outputKeys": [
-          "bindingValidation",
-          "triggerPayload",
-          "blockId",
-          "firedAt",
-          "mode",
-          "runId",
-          "workflowId",
-          "startedBy",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "6d6ac909-bfbf-4642-9b5b-f59bfb23c693",
-        "label": "Document",
+        "blockId": "pf-tax-position-summary--source",
+        "label": "Workpaper records",
         "status": "success",
         "errors": [],
         "warnings": [],
@@ -337,188 +150,47 @@
         ]
       },
       {
-        "blockId": "pf-tax-position-summary--src-returns",
-        "label": "Prior-year returns",
+        "blockId": "pf-tax-position-summary--workpaper",
+        "label": "Tax Position Summary Workpaper",
         "status": "warning",
         "errors": [],
         "warnings": [
-          "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value."
+          "Example Co: confirm Transfer pricing method against memo-12."
         ],
+        "calculated": {
+          "RECORDS": 1,
+          "CONFIRMED": 0,
+          "REVIEW_FINDINGS": 1
+        },
         "outputKeys": [
           "bindingValidation",
-          "immutable",
-          "live",
-          "rowCount",
-          "rows",
-          "sourceKind",
-          "sourceLocator",
-          "sourceMetadata",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-tax-position-summary--src-memos",
-        "label": "Memos & review notes",
-        "status": "warning",
-        "errors": [],
-        "warnings": [
-          "No PDF / Document Source evidence is pinned — open the block and upload the PDF to extract it. The run produced no rows rather than a placeholder value."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "immutable",
-          "live",
-          "rowCount",
-          "rows",
-          "sourceKind",
-          "sourceLocator",
-          "sourceMetadata",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-tax-position-summary--src-scope",
-        "label": "Scope & client facts",
-        "status": "warning",
-        "errors": [],
-        "warnings": [
-          "No Database Query Source evidence is pinned — open the block, write the SELECT and press Run query. The run produced no rows rather than a placeholder value."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "immutable",
-          "live",
-          "rowCount",
-          "rows",
-          "sourceKind",
-          "sourceLocator",
-          "sourceMetadata",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-tax-position-summary--ai-brief",
-        "label": "Draft briefing",
-        "status": "warning",
-        "errors": [],
-        "warnings": [
-          "No AI proposal is pinned to this block. Generate one in the block, or remove the block — the run produced no suggestion rather than an invented one."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "authoritative",
-          "accepted",
-          "proposal",
-          "proposalOnly",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-tax-position-summary--lg-positions",
-        "label": "Historical tax positions",
-        "status": "error",
-        "errors": [
-          "Keyword Mapper needs Data rows input.",
-          "Keyword Mapper needs Keyword rules input."
-        ],
-        "warnings": [],
-        "outputKeys": [
-          "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
+          "workpaperRows",
           "mappedRows",
-          "mappedRowsCount",
+          "rows",
+          "calculatedResults",
+          "namedValues",
+          "reviewFindings",
           "unmatchedRows",
-          "unmatchedRowsCount",
-          "lowConfidenceRows",
-          "lowConfidenceRowsCount",
-          "conflictCount",
-          "conflicts",
-          "mappingSummary",
           "upstreamBlockIds"
         ]
       },
       {
-        "blockId": "pf-tax-position-summary--chk-review",
-        "label": "Judgment · confirm positions",
+        "blockId": "pf-tax-position-summary--export",
+        "label": "Workpaper export",
         "status": "success",
         "errors": [],
         "warnings": [],
         "outputKeys": [
           "bindingValidation",
-          "immutable",
-          "label",
-          "readOnlyEvidence",
-          "unit",
-          "value",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-tax-position-summary--lg-assumptions",
-        "label": "Assumptions & open issues",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-tax-position-summary--fld-brief",
-        "label": "Manager briefing",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-tax-position-summary--out-brief",
-        "label": "Tax position summary",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "pf-tax-position-summary--out-evidence",
-        "label": "Evidence index",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
+          "exportFormat",
+          "fileName",
+          "generatedAt",
+          "mimeType",
+          "rowCount",
+          "sheetNames",
+          "sheets",
+          "warnings",
+          "workbookSpec",
           "upstreamBlockIds"
         ]
       }

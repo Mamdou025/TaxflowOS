@@ -1,56 +1,35 @@
 {
   "id": "pf-tax-provision",
   "inputKind": "bundled sample records",
-  "inputRows": 6,
-  "openMs": 9136,
-  "runMs": 241,
-  "totalMs": 17972,
+  "inputRows": 1,
+  "openMs": 4126,
+  "runMs": 475,
+  "totalMs": 8762,
   "browserErrors": [],
   "first": {
-    "id": "custom:0e56a57b-8ea6-476f-a3c3-fee4755616d6",
-    "name": "Corporate Tax Provision — My workflow",
+    "id": "custom:c8433eee-e587-40df-b299-400261994d59",
+    "name": "Corporate Tax Provision Workpaper — My workflow",
     "version": 1,
     "runCount": 1,
-    "runId": "local-tool-workflow-1789009299131-vaab80",
-    "status": "error",
-    "errors": [
-      "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
-      "A preceding block could not execute. Resolve its message and test again."
-    ],
+    "runId": "local-tool-workflow-e20241cd-b944-4a87-9fde-584d503aba05",
+    "status": "warning",
+    "errors": [],
     "warnings": [
-      "A preceding block could not execute. Resolve its message and test again."
+      "Review enacted rates, credit eligibility, recognition of deferred tax assets and allocation between profit, OCI and equity."
     ],
     "sources": [
       {
-        "id": "bp-run-tax-provision--src",
+        "id": "pf-tax-provision--source",
         "connected": true,
         "consumedBy": [
-          "bp-run-tax-provision--classify"
+          "pf-tax-provision--workpaper"
         ]
       }
     ],
     "results": [
       {
-        "blockId": "bp-run-tax-provision--start",
-        "label": "Start",
-        "status": "success",
-        "errors": [],
-        "warnings": [],
-        "outputKeys": [
-          "bindingValidation",
-          "triggerPayload",
-          "blockId",
-          "firedAt",
-          "mode",
-          "runId",
-          "workflowId",
-          "startedBy",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-tax-provision--src",
-        "label": "Source data",
+        "blockId": "pf-tax-provision--source",
+        "label": "Workpaper records",
         "status": "success",
         "errors": [],
         "warnings": [],
@@ -76,155 +55,76 @@
         ]
       },
       {
-        "blockId": "bp-run-tax-provision--classify",
-        "label": "Classify",
-        "status": "success",
+        "blockId": "pf-tax-provision--workpaper",
+        "label": "Corporate Tax Provision Workpaper",
+        "status": "warning",
         "errors": [],
-        "warnings": [],
+        "warnings": [
+          "Review enacted rates, credit eligibility, recognition of deferred tax assets and allocation between profit, OCI and equity."
+        ],
+        "calculated": {
+          "RECORDS": 1,
+          "ENTITIES": 1,
+          "REVIEW_FINDINGS": 1
+        },
         "outputKeys": [
           "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
+          "workpaperRows",
           "mappedRows",
-          "mappedRowsCount",
+          "rows",
+          "calculatedResults",
+          "namedValues",
+          "reviewFindings",
           "unmatchedRows",
-          "unmatchedRowsCount",
-          "lowConfidenceRows",
-          "lowConfidenceRowsCount",
-          "conflictCount",
-          "conflicts",
-          "mappingSummary",
-          "rulesUsed",
           "upstreamBlockIds"
         ]
       },
       {
-        "blockId": "bp-run-tax-provision--rollup",
-        "label": "Aggregate",
+        "blockId": "pf-tax-provision--export",
+        "label": "Workpaper export",
         "status": "success",
         "errors": [],
         "warnings": [],
         "outputKeys": [
           "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
-          "categoryTotalDetails",
-          "categoryTotals",
-          "rollupTotalDetails",
-          "rollupTotals",
-          "namedValues",
-          "namedValuesSourceKind",
-          "excludedRows",
-          "excludedRowsCount",
-          "includedRowsByCategory",
-          "includedRowsByRollup",
-          "rollupFormulaTrace",
-          "rollupSummary",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-tax-provision--lines",
-        "label": "Compute",
-        "status": "error",
-        "errors": [
-          "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source."
-        ],
-        "warnings": [],
-        "calculated": {},
-        "outputKeys": [
-          "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
-          "namedValues",
-          "formulaTrace",
-          "calculatedResults",
-          "resultDetails",
-          "calculationSummary",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-tax-provision--summary",
-        "label": "Summary",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-tax-provision--out",
-        "label": "Result",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
+          "exportFormat",
+          "fileName",
+          "generatedAt",
+          "mimeType",
+          "rowCount",
+          "sheetNames",
+          "sheets",
+          "warnings",
+          "workbookSpec",
           "upstreamBlockIds"
         ]
       }
     ]
   },
   "second": {
-    "id": "custom:0e56a57b-8ea6-476f-a3c3-fee4755616d6",
-    "name": "Corporate Tax Provision — My workflow",
+    "id": "custom:c8433eee-e587-40df-b299-400261994d59",
+    "name": "Corporate Tax Provision Workpaper — My workflow",
     "version": 1,
     "runCount": 2,
-    "runId": "local-tool-workflow-1789009306031-8hur37",
-    "status": "error",
-    "errors": [
-      "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
-      "A preceding block could not execute. Resolve its message and test again."
-    ],
+    "runId": "local-tool-workflow-02af40a9-79a1-4a6b-843b-23db6faa8b60",
+    "status": "warning",
+    "errors": [],
     "warnings": [
-      "A preceding block could not execute. Resolve its message and test again."
+      "Review enacted rates, credit eligibility, recognition of deferred tax assets and allocation between profit, OCI and equity."
     ],
     "sources": [
       {
-        "id": "bp-run-tax-provision--src",
+        "id": "pf-tax-provision--source",
         "connected": true,
         "consumedBy": [
-          "bp-run-tax-provision--classify"
+          "pf-tax-provision--workpaper"
         ]
       }
     ],
     "results": [
       {
-        "blockId": "bp-run-tax-provision--start",
-        "label": "Start",
-        "status": "success",
-        "errors": [],
-        "warnings": [],
-        "outputKeys": [
-          "bindingValidation",
-          "triggerPayload",
-          "blockId",
-          "firedAt",
-          "mode",
-          "runId",
-          "workflowId",
-          "startedBy",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-tax-provision--src",
-        "label": "Source data",
+        "blockId": "pf-tax-provision--source",
+        "label": "Workpaper records",
         "status": "success",
         "errors": [],
         "warnings": [],
@@ -250,105 +150,47 @@
         ]
       },
       {
-        "blockId": "bp-run-tax-provision--classify",
-        "label": "Classify",
-        "status": "success",
+        "blockId": "pf-tax-provision--workpaper",
+        "label": "Corporate Tax Provision Workpaper",
+        "status": "warning",
         "errors": [],
-        "warnings": [],
+        "warnings": [
+          "Review enacted rates, credit eligibility, recognition of deferred tax assets and allocation between profit, OCI and equity."
+        ],
+        "calculated": {
+          "RECORDS": 1,
+          "ENTITIES": 1,
+          "REVIEW_FINDINGS": 1
+        },
         "outputKeys": [
           "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
+          "workpaperRows",
           "mappedRows",
-          "mappedRowsCount",
+          "rows",
+          "calculatedResults",
+          "namedValues",
+          "reviewFindings",
           "unmatchedRows",
-          "unmatchedRowsCount",
-          "lowConfidenceRows",
-          "lowConfidenceRowsCount",
-          "conflictCount",
-          "conflicts",
-          "mappingSummary",
-          "rulesUsed",
           "upstreamBlockIds"
         ]
       },
       {
-        "blockId": "bp-run-tax-provision--rollup",
-        "label": "Aggregate",
+        "blockId": "pf-tax-provision--export",
+        "label": "Workpaper export",
         "status": "success",
         "errors": [],
         "warnings": [],
         "outputKeys": [
           "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
-          "categoryTotalDetails",
-          "categoryTotals",
-          "rollupTotalDetails",
-          "rollupTotals",
-          "namedValues",
-          "namedValuesSourceKind",
-          "excludedRows",
-          "excludedRowsCount",
-          "includedRowsByCategory",
-          "includedRowsByRollup",
-          "rollupFormulaTrace",
-          "rollupSummary",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-tax-provision--lines",
-        "label": "Compute",
-        "status": "error",
-        "errors": [
-          "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source."
-        ],
-        "warnings": [],
-        "calculated": {},
-        "outputKeys": [
-          "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
-          "namedValues",
-          "formulaTrace",
-          "calculatedResults",
-          "resultDetails",
-          "calculationSummary",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-tax-provision--summary",
-        "label": "Summary",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-tax-provision--out",
-        "label": "Result",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
+          "exportFormat",
+          "fileName",
+          "generatedAt",
+          "mimeType",
+          "rowCount",
+          "sheetNames",
+          "sheets",
+          "warnings",
+          "workbookSpec",
           "upstreamBlockIds"
         ]
       }

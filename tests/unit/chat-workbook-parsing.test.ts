@@ -7,6 +7,153 @@ const XLSX = createRequire(
   new URL('../../artifacts/ai-workflow-builder/package.json', import.meta.url),
 )('xlsx');
 
+function multiSheetFile() {
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([]), 'SAP metadata');
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.aoa_to_sheet([['Read me'], ['Cover notes']]),
+    'Summary',
+  );
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.aoa_to_sheet([
+      ['Company export'],
+      [],
+      ['G/L Account', 'Jrnl.Entry Item Text', 'Amount in CC Crcy'],
+      ...Array.from({ length: 2163 }, (_, i) => [41000000 + i, `Entry ${i + 1}`, i + 1]),
+    ]),
+    'SAP EXPORT',
+  );
+  workbook.Workbook = {
+    Sheets: [
+      { name: 'SAP metadata', Hidden: 2 },
+      { name: 'Summary', Hidden: 0 },
+      { name: 'SAP EXPORT', Hidden: 0 },
+    ],
+  };
+  return new File(
+    [XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })],
+    'synthetic-sap.xlsx',
+  );
+}
+
+test('SAP-style workbook requires selection and imports all selected rows with explicit headings', async () => {
+  const file = multiSheetFile();
+  await assert.rejects(() => parseUploadToRows(file), /Choose a worksheet/);
+  const parsed = await parseUploadToRows(file, {
+    selectWorkbook: async (workbook) => {
+      assert.deepEqual(
+        workbook.sheets.map((sheet) => sheet.sheetName),
+        ['Summary', 'SAP EXPORT'],
+      );
+      return {
+        sheetName: 'SAP EXPORT',
+        headerRowNumber: 3,
+        mapping: {
+          account: 'G/L Account',
+          description: 'Jrnl.Entry Item Text',
+          amount: 'Amount in CC Crcy',
+        },
+      };
+    },
+  });
+  assert.equal(parsed.rows.length, 2163);
+  assert.equal(parsed.rows[0].rowNumber, 4);
+  assert.equal(parsed.rows[2162].rowNumber, 2166);
+  assert.equal(parsed.rows[2162].amount, 2163);
+  assert.equal(
+    parsed.rows.reduce((sum, row) => sum + row.amount, 0),
+    2340366,
+  );
+  assert.deepEqual(JSON.parse(JSON.stringify(parsed.rows[0].sourceSelection)), {
+    sheetName: 'SAP EXPORT',
+    headerRowNumber: 3,
+    mapping: {
+      account: 'G/L Account',
+      description: 'Jrnl.Entry Item Text',
+      amount: 'Amount in CC Crcy',
+    },
+  });
+});
+
+test('missing selected sheets and cancellation never fall back to another sheet', async () => {
+  const file = multiSheetFile();
+  await assert.rejects(
+    () => parseUploadToRows(file, { selection: { sheetName: 'Missing' } }),
+    /unavailable/,
+  );
+  await assert.rejects(
+    () =>
+      parseUploadToRows(file, {
+        selectWorkbook: async () => {
+          throw new Error('Cancelled');
+        },
+      }),
+    /Cancelled/,
+  );
+});
+
+test('oversized sheets are rejected rather than truncated', async () => {
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.aoa_to_sheet([
+      ['Label', 'Amount'],
+      ...Array.from({ length: 50001 }, () => ['Entry', 1]),
+    ]),
+    'Data',
+  );
+  const file = new File([XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })], 'large.xlsx');
+  await assert.rejects(
+    () => parseUploadToRows(file, { selection: { sheetName: 'Data', headerRowNumber: 1 } }),
+    /exceeds 50,000/,
+  );
+});
+
+test('selected exports use the confirmed currency and do not assume USD', async () => {
+  const selection = {
+    sheetName: 'SAP EXPORT',
+    headerRowNumber: 3,
+    mapping: {
+      account: 'G/L Account',
+      amount: 'Amount in CC Crcy',
+    },
+  };
+  const file = multiSheetFile();
+  const unknown = await parseUploadToRows(file, { selection });
+  assert.equal(unknown.rows[0].currency, undefined);
+  const euro = await parseUploadToRows(file, { selection: { ...selection, currency: 'EUR' } });
+  assert.equal(euro.rows[0].currency, 'EUR');
+});
+
+test('explicit mapping never extracts other adjacent numbers', async () => {
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.aoa_to_sheet([
+      ['Label', 'Chosen amount', 'Other number'],
+      ['Entry', '', 900],
+    ]),
+    'Data',
+  );
+  const file = new File(
+    [XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })],
+    'mapping.xlsx',
+  );
+  await assert.rejects(
+    () =>
+      parseUploadToRows(file, {
+        selection: {
+          sheetName: 'Data',
+          headerRowNumber: 1,
+          mapping: { label: 'Label', amount: 'Chosen amount' },
+        },
+      }),
+    /No source records/,
+  );
+});
+
 test('chat workbook import skips financial headings and totals while preserving physical Excel rows and currency', async () => {
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(

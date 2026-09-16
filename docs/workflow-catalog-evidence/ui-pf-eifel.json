@@ -1,56 +1,35 @@
 {
   "id": "pf-eifel",
   "inputKind": "bundled sample records",
-  "inputRows": 6,
-  "openMs": 6741,
-  "runMs": 416,
-  "totalMs": 15222,
+  "inputRows": 1,
+  "openMs": 4075,
+  "runMs": 958,
+  "totalMs": 9127,
   "browserErrors": [],
   "first": {
-    "id": "custom:362e3082-7d57-4256-85b2-3003614915a4",
-    "name": "EIFEL — My workflow",
+    "id": "custom:e304d49d-6657-4a99-bbc3-1c9993934b50",
+    "name": "EIFEL Fixed-Ratio Scenario Workpaper — My workflow",
     "version": 1,
     "runCount": 1,
-    "runId": "local-tool-workflow-1789009262974-8n2jd6",
-    "status": "error",
-    "errors": [
-      "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
-      "A preceding block could not execute. Resolve its message and test again."
-    ],
+    "runId": "local-tool-workflow-913efa14-9264-4a14-b83d-7d26c0c57bfc",
+    "status": "warning",
+    "errors": [],
     "warnings": [
-      "A preceding block could not execute. Resolve its message and test again."
+      "Review the supplied ATI, ratio, capacity, applicability and elections before using this scenario in a return."
     ],
     "sources": [
       {
-        "id": "bp-run-eifel--src",
+        "id": "pf-eifel--source",
         "connected": true,
         "consumedBy": [
-          "bp-run-eifel--classify"
+          "pf-eifel--workpaper"
         ]
       }
     ],
     "results": [
       {
-        "blockId": "bp-run-eifel--start",
-        "label": "Start",
-        "status": "success",
-        "errors": [],
-        "warnings": [],
-        "outputKeys": [
-          "bindingValidation",
-          "triggerPayload",
-          "blockId",
-          "firedAt",
-          "mode",
-          "runId",
-          "workflowId",
-          "startedBy",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-eifel--src",
-        "label": "Source data",
+        "blockId": "pf-eifel--source",
+        "label": "Workpaper records",
         "status": "success",
         "errors": [],
         "warnings": [],
@@ -76,155 +55,76 @@
         ]
       },
       {
-        "blockId": "bp-run-eifel--classify",
-        "label": "Classify",
-        "status": "success",
+        "blockId": "pf-eifel--workpaper",
+        "label": "EIFEL Fixed-Ratio Scenario Workpaper",
+        "status": "warning",
         "errors": [],
-        "warnings": [],
+        "warnings": [
+          "Review the supplied ATI, ratio, capacity, applicability and elections before using this scenario in a return."
+        ],
+        "calculated": {
+          "RECORDS": 1,
+          "SCENARIOS": 1,
+          "REVIEW_FINDINGS": 1
+        },
         "outputKeys": [
           "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
+          "workpaperRows",
           "mappedRows",
-          "mappedRowsCount",
+          "rows",
+          "calculatedResults",
+          "namedValues",
+          "reviewFindings",
           "unmatchedRows",
-          "unmatchedRowsCount",
-          "lowConfidenceRows",
-          "lowConfidenceRowsCount",
-          "conflictCount",
-          "conflicts",
-          "mappingSummary",
-          "rulesUsed",
           "upstreamBlockIds"
         ]
       },
       {
-        "blockId": "bp-run-eifel--rollup",
-        "label": "Aggregate",
+        "blockId": "pf-eifel--export",
+        "label": "Workpaper export",
         "status": "success",
         "errors": [],
         "warnings": [],
         "outputKeys": [
           "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
-          "categoryTotalDetails",
-          "categoryTotals",
-          "rollupTotalDetails",
-          "rollupTotals",
-          "namedValues",
-          "namedValuesSourceKind",
-          "excludedRows",
-          "excludedRowsCount",
-          "includedRowsByCategory",
-          "includedRowsByRollup",
-          "rollupFormulaTrace",
-          "rollupSummary",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-eifel--lines",
-        "label": "Compute",
-        "status": "error",
-        "errors": [
-          "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source."
-        ],
-        "warnings": [],
-        "calculated": {},
-        "outputKeys": [
-          "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
-          "namedValues",
-          "formulaTrace",
-          "calculatedResults",
-          "resultDetails",
-          "calculationSummary",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-eifel--summary",
-        "label": "Summary",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-eifel--out",
-        "label": "Result",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
+          "exportFormat",
+          "fileName",
+          "generatedAt",
+          "mimeType",
+          "rowCount",
+          "sheetNames",
+          "sheets",
+          "warnings",
+          "workbookSpec",
           "upstreamBlockIds"
         ]
       }
     ]
   },
   "second": {
-    "id": "custom:362e3082-7d57-4256-85b2-3003614915a4",
-    "name": "EIFEL — My workflow",
+    "id": "custom:e304d49d-6657-4a99-bbc3-1c9993934b50",
+    "name": "EIFEL Fixed-Ratio Scenario Workpaper — My workflow",
     "version": 1,
     "runCount": 2,
-    "runId": "local-tool-workflow-1789009270383-kdsorv",
-    "status": "error",
-    "errors": [
-      "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
-      "A preceding block could not execute. Resolve its message and test again."
-    ],
+    "runId": "local-tool-workflow-4a8cc74d-5907-4a74-8d31-07737063737f",
+    "status": "warning",
+    "errors": [],
     "warnings": [
-      "A preceding block could not execute. Resolve its message and test again."
+      "Review the supplied ATI, ratio, capacity, applicability and elections before using this scenario in a return."
     ],
     "sources": [
       {
-        "id": "bp-run-eifel--src",
+        "id": "pf-eifel--source",
         "connected": true,
         "consumedBy": [
-          "bp-run-eifel--classify"
+          "pf-eifel--workpaper"
         ]
       }
     ],
     "results": [
       {
-        "blockId": "bp-run-eifel--start",
-        "label": "Start",
-        "status": "success",
-        "errors": [],
-        "warnings": [],
-        "outputKeys": [
-          "bindingValidation",
-          "triggerPayload",
-          "blockId",
-          "firedAt",
-          "mode",
-          "runId",
-          "workflowId",
-          "startedBy",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-eifel--src",
-        "label": "Source data",
+        "blockId": "pf-eifel--source",
+        "label": "Workpaper records",
         "status": "success",
         "errors": [],
         "warnings": [],
@@ -250,105 +150,47 @@
         ]
       },
       {
-        "blockId": "bp-run-eifel--classify",
-        "label": "Classify",
-        "status": "success",
+        "blockId": "pf-eifel--workpaper",
+        "label": "EIFEL Fixed-Ratio Scenario Workpaper",
+        "status": "warning",
         "errors": [],
-        "warnings": [],
+        "warnings": [
+          "Review the supplied ATI, ratio, capacity, applicability and elections before using this scenario in a return."
+        ],
+        "calculated": {
+          "RECORDS": 1,
+          "SCENARIOS": 1,
+          "REVIEW_FINDINGS": 1
+        },
         "outputKeys": [
           "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
+          "workpaperRows",
           "mappedRows",
-          "mappedRowsCount",
+          "rows",
+          "calculatedResults",
+          "namedValues",
+          "reviewFindings",
           "unmatchedRows",
-          "unmatchedRowsCount",
-          "lowConfidenceRows",
-          "lowConfidenceRowsCount",
-          "conflictCount",
-          "conflicts",
-          "mappingSummary",
-          "rulesUsed",
           "upstreamBlockIds"
         ]
       },
       {
-        "blockId": "bp-run-eifel--rollup",
-        "label": "Aggregate",
+        "blockId": "pf-eifel--export",
+        "label": "Workpaper export",
         "status": "success",
         "errors": [],
         "warnings": [],
         "outputKeys": [
           "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
-          "categoryTotalDetails",
-          "categoryTotals",
-          "rollupTotalDetails",
-          "rollupTotals",
-          "namedValues",
-          "namedValuesSourceKind",
-          "excludedRows",
-          "excludedRowsCount",
-          "includedRowsByCategory",
-          "includedRowsByRollup",
-          "rollupFormulaTrace",
-          "rollupSummary",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-eifel--lines",
-        "label": "Compute",
-        "status": "error",
-        "errors": [
-          "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source."
-        ],
-        "warnings": [],
-        "calculated": {},
-        "outputKeys": [
-          "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
-          "namedValues",
-          "formulaTrace",
-          "calculatedResults",
-          "resultDetails",
-          "calculationSummary",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-eifel--summary",
-        "label": "Summary",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-eifel--out",
-        "label": "Result",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
+          "exportFormat",
+          "fileName",
+          "generatedAt",
+          "mimeType",
+          "rowCount",
+          "sheetNames",
+          "sheets",
+          "warnings",
+          "workbookSpec",
           "upstreamBlockIds"
         ]
       }

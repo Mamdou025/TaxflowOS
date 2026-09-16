@@ -1,0 +1,67 @@
+--- a/artifacts/ai-workflow-builder/src/features/assistant/ui/use-assistant.tsx
++++ b/artifacts/ai-workflow-builder/src/features/assistant/ui/use-assistant.tsx
+@@ -118,12 +118,10 @@
+   element: GitBranch,
+ } as const;
+ 
+-// Sinaxe portfolio blueprints — structural workflow graphs (Canadian Corporate
+-// Tax Workflow Portfolio + Platform Services). Openable in the builder; NOT
+-// runnable via runWorkflow (no deterministic engine yet). Published to the
+-// assistant so it knows they exist and can offer to open them.
++// Portfolio template IDs open the builder; execution uses the separate runtime ID.
+ const PORTFOLIO_BLUEPRINTS = PORTFOLIO_WORKFLOWS.map((w) => ({
+   workflowId: w.id,
++  runWorkflowId: getWorkflowConfig(w.id.replace(/^pf-/, ''))?.id ?? null,
+   name: w.name,
+   group: w.group,
+   summary: w.description,
+@@ -486,7 +484,7 @@
+   // Sinaxe portfolio blueprints — the assistant knows these exist so it can list
+   // them and offer to open them, WITHOUT treating them as runnable.
+   useCopilotReadable({
+-    description: 'Executable portfolio workpapers. Run these with runWorkflow using supplied records. Read each purpose and required columns; do not claim a workpaper prepares or files a complete statutory return. Removed workflows are unavailable. Never invent missing records, rates or applicability decisions.',
++    description: 'Built-in portfolio templates, independent of saved workspace drafts. workflowId opens the template; runWorkflowId is the exact execution ID, or null when no runtime is available. Discover executable templates with listAvailableWorkflows. Use supplied records and required columns; do not claim a workpaper prepares or files a complete statutory return. Never invent missing records, rates or applicability decisions.',
+     value: PORTFOLIO_BLUEPRINTS,
+   });
+ 
+@@ -494,6 +492,19 @@
+     .map((p) => p.key)
+     .join(', ');
+   const workflowEnum = Object.keys(WORKFLOW_CONFIGS).join(', ');
++
++  useCopilotAction({
++    name: 'listAvailableWorkflows',
++    description: 'List executable built-in workflow templates, including their exact runWorkflow IDs and required source columns. These are available even when the workspace has no saved workflow drafts. Listing does not start a run or supply sample data. Saved drafts and versions are separate; use listSavedWorkflows for those.',
++    parameters: [],
++    handler: async () => Object.values(WORKFLOW_CONFIGS).map((config) => ({
++      workflowId: config.id,
++      name: config.name,
++      kind: 'built-in-template',
++      source: config.documentLabel,
++      requiredColumns: config.requiredColumns,
++    })),
++  });
+ 
+   useCopilotAction({
+     name: 'openPage',
+--- a/artifacts/ai-workflow-builder/src/features/assistant/ui/use-agent-workflow-tools.tsx
++++ b/artifacts/ai-workflow-builder/src/features/assistant/ui/use-agent-workflow-tools.tsx
+@@ -292,7 +292,7 @@
+   useCopilotAction({
+     name: 'listSavedWorkflows',
+     description:
+-      'List exact saved workflow IDs before reading or proposing a change. Never guess an ID from a name.',
++      'List only workspace-saved workflow drafts before reading or proposing a change. An empty list does NOT mean no workflows are available: built-in templates such as FAPI are separate. Use listAvailableWorkflows for the executable template catalog. Never guess a saved ID from a name.',
+     parameters: [],
+     handler: async () =>
+       Object.values(store.get(workflowLibraryAtom)).map((entry) => ({
+--- a/artifacts/ai-workflow-builder/src/features/assistant/ui/assistant-thread.tsx
++++ b/artifacts/ai-workflow-builder/src/features/assistant/ui/assistant-thread.tsx
+@@ -58,6 +58,7 @@
+ - When unsure whether the user wants an answer or an action, ANSWER or OFFER — never start, finalize, or change a protected value on a guess. In this workspace a wrong action is worse than an extra question.
+ 
+ CRITICAL tool routing:
++- To discover executable built-in workflows, use listAvailableWorkflows. Built-in templates (including FAPI) exist independently of workspace-saved drafts. An empty listSavedWorkflows result means there are no saved drafts, not that no workflows are available. Never substitute a built-in template for an explicitly requested saved version.
+ - To RUN / START / EXECUTE a catalog workflow, call runWorkflow with an id from its current executable catalog. For a selected or attached file, set sourceMode to uploaded and omit recordsJson: the handler reads the original rows directly. Use sourceMode records only for records supplied inline, and sample only when explicitly requested. Execution requires a scoped grant or review-card approval. If no source exists, ask the user to Choose source or attach a workbook. Report returned errors and findings; never claim approval or filing. Removed demos are unavailable.
+ - To inspect or modify an existing saved workflow, call listSavedWorkflows, then readSavedWorkflow with an exact ID. Use proposeSavedWorkflowDraft for edits. The proposal does not mutate the draft without an applicable scoped grant; otherwise the user reviews its changed fields and base revision before approval. If the user asked to preserve the accepted draft as an immutable version, call saveSavedWorkflowVersion after the draft change is applied. Saving has separate authorization and never executes the workflow. Never substitute a similarly named workflow or bypass a validation finding.
+ - To open/show a worksheet for viewing → openPage.

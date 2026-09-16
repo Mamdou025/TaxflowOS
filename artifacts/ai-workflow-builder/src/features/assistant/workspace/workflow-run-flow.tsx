@@ -7,6 +7,7 @@ import { Check, Upload, FileUp, ShieldCheck, Loader2, ChevronDown, ExternalLink,
 import { runTemplateLoop, runTemplateCore, buildOverrideRules, resolveBlocker, type TemplateConfig, type RunState, type RunDetail, type RunOutcome, type SourceRow } from '@/shared/workflow-engine/runtime/workflow-runs';
 import { buildApiRequest, getApiConnector, withParamDefaults } from '@workspace/source-connectors/connectors';
 import { parseUploadToRows } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
+import { useWorkbookImport } from '@/features/documents/workbook-import-dialog';
 import { GoogleSourcePicker, type PickedSource } from '@/features/assistant/workspace/google-source-picker';
 import { pushTrailAtom, activeRunAtom, setActiveCoworkerAtom, uploadedRowsAtom, runEditsAtom, setRunInputAtom, setRunOverrideAtom, setRunEditsAtom, EMPTY_RUN_EDITS, runFlowAtom, setRunFlowAtom, INITIAL_RUN_FLOW, type RunFlow } from '@/shared/stores/workspace-store';
 import { scopeYearAtom } from '@/shared/stores/nav-store';
@@ -439,6 +440,7 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
   // reloading) restores an in-progress run instead of resetting it to "Document needed". A
   // workflow never advanced has no entry, so a brand-new run still asks for its source.
   const flowMap = useAtomValue(runFlowAtom);
+  const { selectWorkbook, importDialog } = useWorkbookImport();
   const setFlowMap = useSetAtom(setRunFlowAtom);
   const flow = flowMap[config.id] ?? INITIAL_RUN_FLOW;
   const setFlow = useCallback(
@@ -698,7 +700,7 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
     if (!f) return;
     setParsing(true); setParseError(null);
     try {
-      const { rows, fileName: name } = await parseUploadToRows(f);
+      const { rows, fileName: name } = await parseUploadToRows(f, { selectWorkbook });
       if (!rows.length) { setParseError('No usable rows found in that workbook. Check the trial-balance sheet has label + amount columns.'); return; }
       applyRows(name, rows, 'upload');
     } catch (err) {
@@ -821,6 +823,7 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
     // Chat-native: no card chrome — this renders inline in the aside thread,
     // indented under the run's step, so it reads as part of the conversation.
     <div data-run-flow={config.id} style={{ width: '100%', maxWidth: '100%', ...(surface === 'light' ? (LIGHT_VARS as React.CSSProperties) : null) }}>
+      {importDialog}
       <style>{`
         @keyframes cwpspin{to{transform:rotate(360deg)}}
         .cwp-spin{animation:cwpspin .9s linear infinite}

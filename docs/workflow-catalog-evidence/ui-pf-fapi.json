@@ -2,19 +2,20 @@
   "id": "pf-fapi",
   "inputKind": "bundled sample records",
   "inputRows": 8,
-  "openMs": 9799,
-  "runMs": 430,
-  "totalMs": 21043,
+  "openMs": 4125,
+  "runMs": 621,
+  "totalMs": 9428,
   "browserErrors": [],
   "first": {
-    "id": "custom:2436cdf3-eb0f-4ab6-84b0-1105b95b332e",
+    "id": "custom:8564ad97-6568-43ee-9581-23e5b04a5d2a",
     "name": "FAPI Calculation Template — My workflow",
     "version": 1,
     "runCount": 1,
-    "runId": "local-tool-workflow-1789009197790-xb9d5v",
+    "runId": "local-tool-workflow-0be5e32f-56ed-44cc-a836-39c8a5575062",
     "status": "warning",
     "errors": [],
     "warnings": [
+      "API reference only; this block contains no fetched numeric value.",
       "1 row(s) were not matched by keyword rules."
     ],
     "sources": [
@@ -30,16 +31,15 @@
       {
         "blockId": "fapi-api-boc-fx",
         "label": "Bank of Canada Valet API",
-        "status": "success",
+        "status": "warning",
         "errors": [],
-        "warnings": [],
+        "warnings": [
+          "API reference only; this block contains no fetched numeric value."
+        ],
         "outputKeys": [
           "bindingValidation",
+          "apiReference",
           "immutable",
-          "label",
-          "readOnlyEvidence",
-          "unit",
-          "value",
           "upstreamBlockIds"
         ]
       },
@@ -262,6 +262,7 @@
         "status": "warning",
         "errors": [],
         "warnings": [
+          "API reference only; this block contains no fetched numeric value.",
           "1 row(s) were not matched by keyword rules."
         ],
         "outputKeys": [
@@ -292,6 +293,7 @@
         "status": "warning",
         "errors": [],
         "warnings": [
+          "API reference only; this block contains no fetched numeric value.",
           "1 row(s) were not matched by keyword rules."
         ],
         "outputKeys": [
@@ -324,14 +326,15 @@
     ]
   },
   "second": {
-    "id": "custom:2436cdf3-eb0f-4ab6-84b0-1105b95b332e",
+    "id": "custom:8564ad97-6568-43ee-9581-23e5b04a5d2a",
     "name": "FAPI Calculation Template — My workflow",
     "version": 1,
     "runCount": 2,
-    "runId": "local-tool-workflow-1789009205907-5p4gtj",
+    "runId": "local-tool-workflow-0a07defb-31df-4bb2-9a3a-2e2e1e4a54d9",
     "status": "warning",
     "errors": [],
     "warnings": [
+      "API reference only; this block contains no fetched numeric value.",
       "1 row(s) were not matched by keyword rules."
     ],
     "sources": [
@@ -347,16 +350,15 @@
       {
         "blockId": "fapi-api-boc-fx",
         "label": "Bank of Canada Valet API",
-        "status": "success",
+        "status": "warning",
         "errors": [],
-        "warnings": [],
+        "warnings": [
+          "API reference only; this block contains no fetched numeric value."
+        ],
         "outputKeys": [
           "bindingValidation",
+          "apiReference",
           "immutable",
-          "label",
-          "readOnlyEvidence",
-          "unit",
-          "value",
           "upstreamBlockIds"
         ]
       },
@@ -579,6 +581,7 @@
         "status": "warning",
         "errors": [],
         "warnings": [
+          "API reference only; this block contains no fetched numeric value.",
           "1 row(s) were not matched by keyword rules."
         ],
         "outputKeys": [
@@ -609,6 +612,7 @@
         "status": "warning",
         "errors": [],
         "warnings": [
+          "API reference only; this block contains no fetched numeric value.",
           "1 row(s) were not matched by keyword rules."
         ],
         "outputKeys": [

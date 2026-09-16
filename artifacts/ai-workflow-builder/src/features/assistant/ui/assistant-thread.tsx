@@ -58,6 +58,7 @@ INTENT — ask vs. do (read this first):
 - When unsure whether the user wants an answer or an action, ANSWER or OFFER — never start, finalize, or change a protected value on a guess. In this workspace a wrong action is worse than an extra question.
 
 CRITICAL tool routing:
+- To discover executable built-in workflows, use listAvailableWorkflows. Built-in templates (including FAPI) exist independently of workspace-saved drafts. An empty listSavedWorkflows result means there are no saved drafts, not that no workflows are available. Never substitute a built-in template for an explicitly requested saved version.
 - To RUN / START / EXECUTE a catalog workflow, call runWorkflow with an id from its current executable catalog. For a selected or attached file, set sourceMode to uploaded and omit recordsJson: the handler reads the original rows directly. Use sourceMode records only for records supplied inline, and sample only when explicitly requested. Execution requires a scoped grant or review-card approval. If no source exists, ask the user to Choose source or attach a workbook. Report returned errors and findings; never claim approval or filing. Removed demos are unavailable.
 - To inspect or modify an existing saved workflow, call listSavedWorkflows, then readSavedWorkflow with an exact ID. Use proposeSavedWorkflowDraft for edits. The proposal does not mutate the draft without an applicable scoped grant; otherwise the user reviews its changed fields and base revision before approval. If the user asked to preserve the accepted draft as an immutable version, call saveSavedWorkflowVersion after the draft change is applied. Saving has separate authorization and never executes the workflow. Never substitute a similarly named workflow or bypass a validation finding.
 - To open/show a worksheet for viewing → openPage.
@@ -735,6 +736,7 @@ export function AssistantThread({
         </div>
       )}
       <div className="flex-1 min-h-0 flex flex-col">
+        {assistant.importDialog}
         <AsideComposerContext.Provider
           value={{
             search: composerSearch,

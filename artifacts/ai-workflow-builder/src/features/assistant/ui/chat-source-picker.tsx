@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/shared/ui/dialog';
 import { apiFetch } from '@/platform/auth/api-fetch';
 import { uploadedRowsAtom } from '@/shared/stores/workspace-store';
+import { useWorkbookImport } from '@/features/documents/workbook-import-dialog';
 import {
   isWorkflowSource,
   loadWorkflowSource,
@@ -23,6 +24,7 @@ export function ChatSourcePicker({
   onDocumentSelect: (document: WorkflowSourceDocument) => void;
 }) {
   const [sources, setSources] = useAtom(uploadedRowsAtom);
+  const { selectWorkbook, importDialog } = useWorkbookImport();
   const [documents, setDocuments] = useState<WorkflowSourceDocument[]>([]);
   const [query, setQuery] = useState('');
   const [busy, setBusy] = useState(false);
@@ -61,7 +63,7 @@ export function ChatSourcePicker({
         onOpenChange(false);
         return;
       }
-      const source = await loadWorkflowSource(id);
+      const source = await loadWorkflowSource(id, { selectWorkbook });
       setSources((previous) => ({ ...previous, __unassigned__: source }));
       onOpenChange(false);
     } catch (e) {
@@ -72,6 +74,7 @@ export function ChatSourcePicker({
   };
   return (
     <div className="relative mb-2 space-y-2 text-xs">
+      {importDialog}
       {selected && (
         <div role="status" className="flex items-center gap-2 rounded border p-2">
           <span className="min-w-0 flex-1 break-words">

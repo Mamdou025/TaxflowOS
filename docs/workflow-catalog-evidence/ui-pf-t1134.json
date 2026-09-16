@@ -1,56 +1,35 @@
 {
   "id": "pf-t1134",
   "inputKind": "bundled sample records",
-  "inputRows": 6,
-  "openMs": 9158,
-  "runMs": 469,
-  "totalMs": 20011,
+  "inputRows": 1,
+  "openMs": 4031,
+  "runMs": 486,
+  "totalMs": 8242,
   "browserErrors": [],
   "first": {
-    "id": "custom:eab05d33-d248-4cb1-aef4-1e18ad6cb090",
-    "name": "T1134 Foreign Affiliate Reporting — My workflow",
+    "id": "custom:2fdccdf3-e812-4b8c-8371-03cb63776917",
+    "name": "T1134 Affiliate Reporting Workpaper — My workflow",
     "version": 1,
     "runCount": 1,
-    "runId": "local-tool-workflow-1789009176162-becr9y",
-    "status": "error",
-    "errors": [
-      "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
-      "A preceding block could not execute. Resolve its message and test again."
-    ],
+    "runId": "local-tool-workflow-b4c9f54d-e067-482f-b78f-5da138058ef9",
+    "status": "warning",
+    "errors": [],
     "warnings": [
-      "A preceding block could not execute. Resolve its message and test again."
+      "Example US: prepare and review the supplement."
     ],
     "sources": [
       {
-        "id": "bp-run-t1134--src",
+        "id": "pf-t1134--source",
         "connected": true,
         "consumedBy": [
-          "bp-run-t1134--classify"
+          "pf-t1134--workpaper"
         ]
       }
     ],
     "results": [
       {
-        "blockId": "bp-run-t1134--start",
-        "label": "Start",
-        "status": "success",
-        "errors": [],
-        "warnings": [],
-        "outputKeys": [
-          "bindingValidation",
-          "triggerPayload",
-          "blockId",
-          "firedAt",
-          "mode",
-          "runId",
-          "workflowId",
-          "startedBy",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-t1134--src",
-        "label": "Source data",
+        "blockId": "pf-t1134--source",
+        "label": "Workpaper records",
         "status": "success",
         "errors": [],
         "warnings": [],
@@ -76,155 +55,77 @@
         ]
       },
       {
-        "blockId": "bp-run-t1134--classify",
-        "label": "Classify",
-        "status": "success",
+        "blockId": "pf-t1134--workpaper",
+        "label": "T1134 Affiliate Reporting Workpaper",
+        "status": "warning",
         "errors": [],
-        "warnings": [],
+        "warnings": [
+          "Example US: prepare and review the supplement."
+        ],
+        "calculated": {
+          "RECORDS": 1,
+          "AFFILIATES": 1,
+          "REQUIRED_SUPPLEMENTS": 1,
+          "REVIEW_FINDINGS": 1
+        },
         "outputKeys": [
           "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
+          "workpaperRows",
           "mappedRows",
-          "mappedRowsCount",
+          "rows",
+          "calculatedResults",
+          "namedValues",
+          "reviewFindings",
           "unmatchedRows",
-          "unmatchedRowsCount",
-          "lowConfidenceRows",
-          "lowConfidenceRowsCount",
-          "conflictCount",
-          "conflicts",
-          "mappingSummary",
-          "rulesUsed",
           "upstreamBlockIds"
         ]
       },
       {
-        "blockId": "bp-run-t1134--rollup",
-        "label": "Aggregate",
+        "blockId": "pf-t1134--export",
+        "label": "Workpaper export",
         "status": "success",
         "errors": [],
         "warnings": [],
         "outputKeys": [
           "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
-          "categoryTotalDetails",
-          "categoryTotals",
-          "rollupTotalDetails",
-          "rollupTotals",
-          "namedValues",
-          "namedValuesSourceKind",
-          "excludedRows",
-          "excludedRowsCount",
-          "includedRowsByCategory",
-          "includedRowsByRollup",
-          "rollupFormulaTrace",
-          "rollupSummary",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-t1134--lines",
-        "label": "Compute",
-        "status": "error",
-        "errors": [
-          "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source."
-        ],
-        "warnings": [],
-        "calculated": {},
-        "outputKeys": [
-          "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
-          "namedValues",
-          "formulaTrace",
-          "calculatedResults",
-          "resultDetails",
-          "calculationSummary",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-t1134--summary",
-        "label": "Summary",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-t1134--out",
-        "label": "Result",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
+          "exportFormat",
+          "fileName",
+          "generatedAt",
+          "mimeType",
+          "rowCount",
+          "sheetNames",
+          "sheets",
+          "warnings",
+          "workbookSpec",
           "upstreamBlockIds"
         ]
       }
     ]
   },
   "second": {
-    "id": "custom:eab05d33-d248-4cb1-aef4-1e18ad6cb090",
-    "name": "T1134 Foreign Affiliate Reporting — My workflow",
+    "id": "custom:2fdccdf3-e812-4b8c-8371-03cb63776917",
+    "name": "T1134 Affiliate Reporting Workpaper — My workflow",
     "version": 1,
     "runCount": 2,
-    "runId": "local-tool-workflow-1789009184554-a0i5ty",
-    "status": "error",
-    "errors": [
-      "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
-      "A preceding block could not execute. Resolve its message and test again."
-    ],
+    "runId": "local-tool-workflow-81171056-6f9d-42a7-ad08-7de248bb8884",
+    "status": "warning",
+    "errors": [],
     "warnings": [
-      "A preceding block could not execute. Resolve its message and test again."
+      "Example US: prepare and review the supplement."
     ],
     "sources": [
       {
-        "id": "bp-run-t1134--src",
+        "id": "pf-t1134--source",
         "connected": true,
         "consumedBy": [
-          "bp-run-t1134--classify"
+          "pf-t1134--workpaper"
         ]
       }
     ],
     "results": [
       {
-        "blockId": "bp-run-t1134--start",
-        "label": "Start",
-        "status": "success",
-        "errors": [],
-        "warnings": [],
-        "outputKeys": [
-          "bindingValidation",
-          "triggerPayload",
-          "blockId",
-          "firedAt",
-          "mode",
-          "runId",
-          "workflowId",
-          "startedBy",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-t1134--src",
-        "label": "Source data",
+        "blockId": "pf-t1134--source",
+        "label": "Workpaper records",
         "status": "success",
         "errors": [],
         "warnings": [],
@@ -250,105 +151,48 @@
         ]
       },
       {
-        "blockId": "bp-run-t1134--classify",
-        "label": "Classify",
-        "status": "success",
+        "blockId": "pf-t1134--workpaper",
+        "label": "T1134 Affiliate Reporting Workpaper",
+        "status": "warning",
         "errors": [],
-        "warnings": [],
+        "warnings": [
+          "Example US: prepare and review the supplement."
+        ],
+        "calculated": {
+          "RECORDS": 1,
+          "AFFILIATES": 1,
+          "REQUIRED_SUPPLEMENTS": 1,
+          "REVIEW_FINDINGS": 1
+        },
         "outputKeys": [
           "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
+          "workpaperRows",
           "mappedRows",
-          "mappedRowsCount",
+          "rows",
+          "calculatedResults",
+          "namedValues",
+          "reviewFindings",
           "unmatchedRows",
-          "unmatchedRowsCount",
-          "lowConfidenceRows",
-          "lowConfidenceRowsCount",
-          "conflictCount",
-          "conflicts",
-          "mappingSummary",
-          "rulesUsed",
           "upstreamBlockIds"
         ]
       },
       {
-        "blockId": "bp-run-t1134--rollup",
-        "label": "Aggregate",
+        "blockId": "pf-t1134--export",
+        "label": "Workpaper export",
         "status": "success",
         "errors": [],
         "warnings": [],
         "outputKeys": [
           "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
-          "categoryTotalDetails",
-          "categoryTotals",
-          "rollupTotalDetails",
-          "rollupTotals",
-          "namedValues",
-          "namedValuesSourceKind",
-          "excludedRows",
-          "excludedRowsCount",
-          "includedRowsByCategory",
-          "includedRowsByRollup",
-          "rollupFormulaTrace",
-          "rollupSummary",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-t1134--lines",
-        "label": "Compute",
-        "status": "error",
-        "errors": [
-          "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source."
-        ],
-        "warnings": [],
-        "calculated": {},
-        "outputKeys": [
-          "bindingValidation",
-          "backendOutputs",
-          "primaryOutputRole",
-          "namedValues",
-          "formulaTrace",
-          "calculatedResults",
-          "resultDetails",
-          "calculationSummary",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-t1134--summary",
-        "label": "Summary",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
-          "upstreamBlockIds"
-        ]
-      },
-      {
-        "blockId": "bp-run-t1134--out",
-        "label": "Result",
-        "status": "error",
-        "errors": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "warnings": [
-          "A preceding block could not execute. Resolve its message and test again."
-        ],
-        "outputKeys": [
-          "bindingValidation",
-          "reason",
-          "skipped",
+          "exportFormat",
+          "fileName",
+          "generatedAt",
+          "mimeType",
+          "rowCount",
+          "sheetNames",
+          "sheets",
+          "warnings",
+          "workbookSpec",
           "upstreamBlockIds"
         ]
       }

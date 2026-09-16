@@ -701,7 +701,7 @@ function getLooseExtractedRows({
     rowsByKey.set(key, row);
   }
 
-  return [...rowsByKey.values()].slice(0, MAX_PERSISTED_ROWS_PER_SHEET);
+  return [...rowsByKey.values()].slice(0, sheet.persistedRowLimit);
 }
 
 function shouldUseLooseExtraction({
@@ -926,10 +926,12 @@ function createSheetData({
   cells,
   sheetName,
   workbookId,
+  rowLimit = MAX_PERSISTED_ROWS_PER_SHEET,
 }: {
   cells: string[][];
   sheetName: string;
   workbookId: string;
+  rowLimit?: number;
 }): ExcelSheetData {
   const rowCount = getUsedRowCount(cells);
   const columnCount = Math.max(1, getUsedColumnCount(cells));
@@ -945,7 +947,7 @@ function createSheetData({
   const persistedRows = cells
     .slice(
       dataStartIndex,
-      Math.min(rowCount, dataStartIndex + MAX_PERSISTED_ROWS_PER_SHEET)
+      Math.min(rowCount, dataStartIndex + rowLimit)
     )
     .map((row, rowIndex) => {
       const rowNumber = dataStartIndex + rowIndex + 1;
@@ -978,25 +980,27 @@ function createSheetData({
 
   return {
     cells: cells
-      .slice(0, Math.min(rowCount, MAX_PERSISTED_ROWS_PER_SHEET + 1))
+      .slice(0, Math.min(rowCount, rowLimit + 1))
       .map((row) =>
         Array.from({ length: columnCount }, (_, index) => row[index] || "")
       ),
     columnCount,
     detectedFirstDataRowNumber: detectedTable.firstDataRowNumber,
     detectedHeaderRowNumber: detectedTable.headerRowNumber,
+    totalRowCount: rowCount,
     headers,
     inferredRange,
-    persistedRowLimit: MAX_PERSISTED_ROWS_PER_SHEET,
+    persistedRowLimit: rowLimit,
     rowCount: persistedRows.length,
     rows: persistedRows,
     sheetName,
-    truncated: rowCount > MAX_PERSISTED_ROWS_PER_SHEET + 1,
+    truncated: rowCount > rowLimit + 1,
   };
 }
 
 export async function parseExcelWorkbookFile(
-  file: File
+  file: File,
+  options: { sheetName?: string; rowLimit?: number } = {},
 ): Promise<ExcelWorkbookSourceData> {
   const extension = file.name.split(".").pop()?.toLowerCase();
   if (extension !== "xlsx" && extension !== "xls") {
@@ -1011,7 +1015,12 @@ export async function parseExcelWorkbookFile(
   });
   const uploadedAt = new Date().toISOString();
   const workbookId = `workbook-${Date.now().toString(36)}`;
-  const sheets = workbook.SheetNames.map((sheetName) => {
+  if (options.sheetName && !workbook.SheetNames.includes(options.sheetName))
+    throw new Error(`Sheet "${options.sheetName}" is no longer available.`);
+  const rowLimit = options.rowLimit ?? MAX_PERSISTED_ROWS_PER_SHEET;
+  if (!Number.isInteger(rowLimit) || rowLimit < 1 || rowLimit > 50000)
+    throw new Error('The worksheet row limit must be between 1 and 50,000.');
+  const sheets = workbook.SheetNames.filter(name => !options.sheetName || name === options.sheetName).map((sheetName) => {
     const worksheet = workbook.Sheets[sheetName];
     const rows = XLSX.utils.sheet_to_json<unknown[]>(worksheet, {
       blankrows: true,
@@ -1023,8 +1032,11 @@ export async function parseExcelWorkbookFile(
     const cells = rows.map((row) =>
       Array.isArray(row) ? row.map(formatCellValue) : []
     );
-    return createSheetData({ cells, sheetName, workbookId });
-  }).filter((sheet) => sheet.columnCount > 0);
+    return {
+      ...createSheetData({ cells, sheetName, workbookId, rowLimit }),
+      hidden: Boolean(workbook.Workbook?.Sheets?.find(sheet => sheet.name === sheetName)?.Hidden),
+    };
+  }).filter((sheet) => sheet.cells.some(row => row.some(cell => cell.trim())));
 
   if (sheets.length === 0) {
     throw new Error("No readable sheets were found in this workbook.");
@@ -1084,6 +1096,7 @@ export function getExcelColumnMappingFromConfig(
 }
 
 export function getNormalizedRowsForSheet({
+  allowLooseExtraction = true,
   defaultCurrency,
   firstDataRowNumber,
   headerRowNumber,
@@ -1093,6 +1106,7 @@ export function getNormalizedRowsForSheet({
   sheet,
   workbook,
 }: {
+  allowLooseExtraction?: boolean;
   defaultCurrency?: string;
   firstDataRowNumber?: number;
   headerRowNumber?: number;
@@ -1106,13 +1120,13 @@ export function getNormalizedRowsForSheet({
     firstDataRowNumber,
     headerRowNumber,
   });
-  const currency = defaultCurrency || detectSheetCurrency(sheet.cells);
+  const currency = defaultCurrency ?? detectSheetCurrency(sheet.cells);
   const tableRows = sheet.cells
     .slice(
       table.firstDataRowNumber - 1,
       Math.min(
         sheet.cells.length,
-        table.firstDataRowNumber - 1 + MAX_PERSISTED_ROWS_PER_SHEET
+        table.firstDataRowNumber - 1 + sheet.persistedRowLimit
       )
     )
     .map((row, rowIndex) => {
@@ -1150,6 +1164,7 @@ export function getNormalizedRowsForSheet({
   if (includeRowsWithoutAmount && !mapping.amount && !mapping.debit && !mapping.credit) {
     return tableRows;
   }
+  if (!allowLooseExtraction) return tableRows;
   const fallbackRows = getLooseExtractedRows({
     defaultCurrency: currency,
     includeTotalRows,
@@ -1167,6 +1182,8 @@ export function getNormalizedRowsForSheet({
 }
 
 export function buildExcelSourceConfigPatch({
+  allowLooseExtraction = true,
+  defaultCurrency,
   existingConfig = {},
   firstDataRowNumber,
   headerRowNumber,
@@ -1177,6 +1194,8 @@ export function buildExcelSourceConfigPatch({
   selectedSheetName,
   workbook,
 }: {
+  allowLooseExtraction?: boolean;
+  defaultCurrency?: string;
   workbook: ExcelWorkbookSourceData;
   existingConfig?: Record<string, unknown>;
   firstDataRowNumber?: number;
@@ -1213,6 +1232,8 @@ export function buildExcelSourceConfigPatch({
     includeRowsWithoutAmount ??
     existingConfig.includeRowsWithoutAmount === true;
   const rows = getNormalizedRowsForSheet({
+    allowLooseExtraction,
+    defaultCurrency,
     firstDataRowNumber: table.firstDataRowNumber,
     headerRowNumber: table.headerRowNumber,
     includeRowsWithoutAmount: nextIncludeRowsWithoutAmount,
