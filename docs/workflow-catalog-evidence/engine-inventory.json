@@ -3473,7 +3473,7 @@
     },
     "perturbation": {
       "status": "warning",
-      "elapsedMs": 10,
+      "elapsedMs": 9,
       "errors": [],
       "warnings": [
         "API reference only; this block contains no fetched numeric value.",
@@ -5694,7 +5694,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 2,
+      "elapsedMs": 1,
       "errors": [
         "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -6182,7 +6182,7 @@
     },
     "configured": {
       "status": "warning",
-      "elapsedMs": 9,
+      "elapsedMs": 8,
       "errors": [],
       "warnings": [
         "API reference only; this block contains no fetched numeric value.",
@@ -8000,7 +8000,7 @@
     },
     "perturbation": {
       "status": "warning",
-      "elapsedMs": 9,
+      "elapsedMs": 11,
       "errors": [],
       "warnings": [
         "API reference only; this block contains no fetched numeric value.",
@@ -9894,7 +9894,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 0,
+      "elapsedMs": 1,
       "errors": [
         "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -10333,7 +10333,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 1,
+      "elapsedMs": 0,
       "errors": [
         "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -10602,7 +10602,7 @@
     },
     "perturbation": {
       "status": "warning",
-      "elapsedMs": 0,
+      "elapsedMs": 1,
       "errors": [],
       "warnings": [
         "Example Co: confirm Transfer pricing method against memo-12."
@@ -11049,7 +11049,7 @@
     },
     "perturbation": {
       "status": "success",
-      "elapsedMs": 0,
+      "elapsedMs": 1,
       "errors": [],
       "warnings": [],
       "results": [
@@ -11229,7 +11229,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 0,
+      "elapsedMs": 1,
       "errors": [
         "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -11498,7 +11498,7 @@
     },
     "perturbation": {
       "status": "warning",
-      "elapsedMs": 1,
+      "elapsedMs": 0,
       "errors": [],
       "warnings": [
         "Example Co: reviewApproved is outstanding."
@@ -11943,7 +11943,7 @@
     },
     "perturbation": {
       "status": "success",
-      "elapsedMs": 0,
+      "elapsedMs": 1,
       "errors": [],
       "warnings": [],
       "results": [
@@ -12245,7 +12245,7 @@
     },
     "configured": {
       "status": "success",
-      "elapsedMs": 1,
+      "elapsedMs": 0,
       "errors": [],
       "warnings": [],
       "results": [
@@ -12830,7 +12830,7 @@
     },
     "perturbation": {
       "status": "warning",
-      "elapsedMs": 1,
+      "elapsedMs": 0,
       "errors": [],
       "warnings": [
         "Manager: Example Co/Review workpaper is 1 days overdue."
@@ -14476,7 +14476,7 @@
     },
     "configured": {
       "status": "warning",
-      "elapsedMs": 0,
+      "elapsedMs": 1,
       "errors": [],
       "warnings": [
         "Review the supplied ATI, ratio, capacity, applicability and elections before using this scenario in a return."
@@ -14620,7 +14620,7 @@
     },
     "perturbation": {
       "status": "warning",
-      "elapsedMs": 1,
+      "elapsedMs": 0,
       "errors": [],
       "warnings": [
         "Review the supplied ATI, ratio, capacity, applicability and elections before using this scenario in a return."
@@ -15684,7 +15684,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 0,
+      "elapsedMs": 1,
       "errors": [
         "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -16136,7 +16136,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "success",
-      "elapsedMs": 4,
+      "elapsedMs": 5,
       "errors": [],
       "warnings": [],
       "results": [
@@ -16723,7 +16723,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "needs_review",
-      "elapsedMs": 6,
+      "elapsedMs": 8,
       "errors": [],
       "warnings": [
         "1 row(s) were not matched by keyword rules.",
@@ -17901,7 +17901,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 5,
+      "elapsedMs": 8,
       "errors": [
         "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -21192,7 +21192,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 8,
+      "elapsedMs": 7,
       "errors": [
         "Formula operand 1 is invalid, missing or ambiguous. Use a finite number or an exact source reference.",
         "Rollup & Calculation Engine needs mapped_rows input.",
