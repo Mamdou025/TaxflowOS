@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./graph": "./src/core/graph.ts",
+    "./sessions": "./src/application/sessions.ts",
     "./ports": "./src/core/ports.ts",
     "./edges": "./src/core/edges.ts",
     "./outputs": "./src/core/outputs.ts",

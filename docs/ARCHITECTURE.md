@@ -35,6 +35,10 @@ The cross-workflow execution list is a read projection owned by
 workflow results keep the exact run ID. Opening a record changes selection only and
 never invokes the execution command.
 
+Interactive Chat and Run views share a saved-version session and component. See
+[shared interactive workflow execution](unified-workflow-execution.md) for block
+commands, source revisions, checkpoint behavior and runtime boundaries.
+
 ## Ownership
 
 Phase 4 adds a portable workflow core and application layer. The full boundary,
@@ -43,29 +47,29 @@ The builder and Chat feed definitions to shared commands; the browser supplies c
 tools to the graph runner. Neither React nor the model provider is a dependency of
 `lib/workflow-core`.
 
-| Responsibility                                                        | Owner                                                                                             |
-| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Authentication and role policy                                        | `artifacts/api-server/src/security` and `lib/api-zod/src/access.ts`                               |
-| Workspace membership and library claims                               | `artifacts/api-server/src/routes/workspaces.ts`, `workflow-library.ts`                            |
-| Browser session gate, workspace selection and cache scope             | `src/platform/auth`                                                                               |
-| Schema history and explicit upgrades                                  | `lib/db/migrations`, `lib/db/scripts/migrations.mjs`                                              |
-| Portable workflow types, backup validation, storage wire contract     | `lib/workflow-contracts`                                                                          |
-| HTTP source mapping, connector definitions, exchange-rate fetching    | `lib/source-connectors`                                                                           |
-| Agent loop, model policy/catalog, capability contracts and tool ports | `lib/agent-runtime`                                                                               |
-| Scoped agent grants and durable operation receipts                    | `artifacts/api-server/src/routes/agent-actions.ts`, `lib/db/src/schema/agent-actions.ts`          |
-| Modular deterministic block executors                                 | `lib/workflow-executors/src/execution/blocks`                                                     |
-| Tool composition and result-shape adapters                            | `lib/workflow-executors/src/tools`                                                                |
-| Canvas conversion, workflow factories, publishing, local run storage  | `src/shared/workflow-engine/workflow`                                                             |
-| Graph execution, tool-ID resolution and durable deterministic tools   | `lib/workflow-core/src/core`                                                                      |
+| Responsibility                                                        | Owner                                                                                                 |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Authentication and role policy                                        | `artifacts/api-server/src/security` and `lib/api-zod/src/access.ts`                                   |
+| Workspace membership and library claims                               | `artifacts/api-server/src/routes/workspaces.ts`, `workflow-library.ts`                                |
+| Browser session gate, workspace selection and cache scope             | `src/platform/auth`                                                                                   |
+| Schema history and explicit upgrades                                  | `lib/db/migrations`, `lib/db/scripts/migrations.mjs`                                                  |
+| Portable workflow types, backup validation, storage wire contract     | `lib/workflow-contracts`                                                                              |
+| HTTP source mapping, connector definitions, exchange-rate fetching    | `lib/source-connectors`                                                                               |
+| Agent loop, model policy/catalog, capability contracts and tool ports | `lib/agent-runtime`                                                                                   |
+| Scoped agent grants and durable operation receipts                    | `artifacts/api-server/src/routes/agent-actions.ts`, `lib/db/src/schema/agent-actions.ts`              |
+| Modular deterministic block executors                                 | `lib/workflow-executors/src/execution/blocks`                                                         |
+| Tool composition and result-shape adapters                            | `lib/workflow-executors/src/tools`                                                                    |
+| Canvas conversion, workflow factories, publishing, local run storage  | `src/shared/workflow-engine/workflow`                                                                 |
+| Graph execution, tool-ID resolution and durable deterministic tools   | `lib/workflow-core/src/core`                                                                          |
 | Durable workflow run API, queue and worker                            | `artifacts/api-server/src/routes/workflow-runs.ts`, `src/lib/workflow-runs`, `workflow-run-worker.ts` |
-| Drafts, versioning and execution recording                            | `lib/workflow-core/src/application/commands.ts`                                                   |
-| Browser tool composition and legacy default expansion                 | `src/shared/workflow-engine/workflow/execute.ts`                                                  |
-| Revision/conflict/retry state                                         | `src/features/workflows-hub/services/workflow-sync-service.ts`                                    |
-| Browser storage adapter                                               | `src/features/workflows-hub/services/workflow-library-repository.ts`                              |
-| Jotai bindings and UI notifications                                   | `src/features/workflows-hub/workflow-library.ts`, `workflow-execution.ts`, and `workflow-sync.ts` |
-| Builder toolbar rendering and hooks                                   | `src/features/workflow-builder/toolbar`                                                           |
-| Calculation editor model, interaction and run presentation            | `src/features/workflow-builder/ui/logic-viewers/calculation-*`                                    |
-| HTTP correlation and structured logging                               | `artifacts/api-server/src/observability`, `src/platform/auth/api-fetch.ts`                        |
+| Drafts, versioning and execution recording                            | `lib/workflow-core/src/application/commands.ts`                                                       |
+| Browser tool composition and legacy default expansion                 | `src/shared/workflow-engine/workflow/execute.ts`                                                      |
+| Revision/conflict/retry state                                         | `src/features/workflows-hub/services/workflow-sync-service.ts`                                        |
+| Browser storage adapter                                               | `src/features/workflows-hub/services/workflow-library-repository.ts`                                  |
+| Jotai bindings and UI notifications                                   | `src/features/workflows-hub/workflow-library.ts`, `workflow-execution.ts`, and `workflow-sync.ts`     |
+| Builder toolbar rendering and hooks                                   | `src/features/workflow-builder/toolbar`                                                               |
+| Calculation editor model, interaction and run presentation            | `src/features/workflow-builder/ui/logic-viewers/calculation-*`                                        |
+| HTTP correlation and structured logging                               | `artifacts/api-server/src/observability`, `src/platform/auth/api-fetch.ts`                            |
 
 The `src/` paths in this table are relative to `artifacts/ai-workflow-builder`.
 Shared packages must never import application source. The API consumes package

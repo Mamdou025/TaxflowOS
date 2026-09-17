@@ -22,7 +22,12 @@ export default function WorkflowRoute() {
   const setTab = useSetAtom(workflowTabAtom);
   const search = useSearchParams();
   useEffect(() => {
-    const id = String(params?.workflowId ?? '');
+    let id = String(params?.workflowId ?? '');
+    try {
+      id = decodeURIComponent(id);
+    } catch {
+      /* An invalid ID stays unavailable. */
+    }
     const runId = search.get('run');
     if (id) {
       setSelected(id);

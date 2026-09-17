@@ -1,3 +1,4 @@
+import { WorkflowSessionPanel } from '@/features/workflows-hub/workflow-session-panel';
 // ─────────────────────────────────────────────────────────────────────────────
 // AssistantThread — the presentational chat column (light neumorphic). Shared by
 // the Scope focus mode (ChatWorkspace) and the docked AssistantPanel. Renders the
@@ -38,7 +39,7 @@ import { ToolResultCard } from './tool-result-card';
 import { DataFilesPanel, DataFilesPanelStyles } from './data-files-panel';
 import { workIdFor, workItemsChronoAtom, type WorkItem } from '@/lib/work-store';
 import { ThreadMessages, PinnedThreadContext } from './thread-messages';
-import { RunWorkflowRender, type Assistant } from './use-assistant';
+import { type Assistant } from './use-assistant';
 
 import { CHAT_THEME } from './chat-theme';
 
@@ -59,7 +60,7 @@ INTENT — ask vs. do (read this first):
 
 CRITICAL tool routing:
 - To discover executable built-in workflows, use listAvailableWorkflows. Built-in templates (including FAPI) exist independently of workspace-saved drafts. An empty listSavedWorkflows result means there are no saved drafts, not that no workflows are available. Never substitute a built-in template for an explicitly requested saved version.
-- To RUN / START / EXECUTE a catalog workflow, call runWorkflow with an id from its current executable catalog. For a selected or attached file, set sourceMode to uploaded and omit recordsJson: the handler reads the original rows directly. Use sourceMode records only for records supplied inline, and sample only when explicitly requested. Execution requires a scoped grant or review-card approval. If no source exists, ask the user to Choose source or attach a workbook. Report returned errors and findings; never claim approval or filing. Removed demos are unavailable.
+- To RUN / START / EXECUTE a catalog workflow, call runWorkflow with an id from its current executable catalog. Use its exact workflowId and an explicit version when requested. Attachments are selected in the shared panel, or through controlWorkflowRun with the exact source block ID; do not transcribe the workbook into tool arguments. Execution requires a scoped grant or review-card approval. Even when no source exists, open runWorkflow so the exact steps and source controls appear. The user can then attach a workbook in the shared run panel. Use controlWorkflowRun to pause, resume or rerun a block; inspectWorkflowBlock reads actual results. Report returned errors and findings; never claim approval or filing. Removed demos are unavailable.
 - To inspect or modify an existing saved workflow, call listSavedWorkflows, then readSavedWorkflow with an exact ID. Use proposeSavedWorkflowDraft for edits. The proposal does not mutate the draft without an applicable scoped grant; otherwise the user reviews its changed fields and base revision before approval. If the user asked to preserve the accepted draft as an immutable version, call saveSavedWorkflowVersion after the draft change is applied. Saving has separate authorization and never executes the workflow. Never substitute a similarly named workflow or bypass a validation finding.
 - To open/show a worksheet for viewing → openPage.
 - To highlight a specific figure/section on a page → focusAnchor.
@@ -576,8 +577,6 @@ export function AssistantThread({
   const pinnedNode = hasPinned ? (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
       {pinnedRuns.map((wid) => {
-        const cfg = getWorkflowConfig(wid);
-        if (!cfg) return null;
         return (
           <div
             key={`run:${wid}`}
@@ -585,11 +584,7 @@ export function AssistantThread({
             data-work-id={workIdFor('workflow-run', wid)}
           >
             <div className="flex-1">
-              <RunWorkflowRender
-                config={cfg}
-                onOpenPage={(pk) => launchOpenPage(pk)}
-                onOpenBuilder={(blockId) => openInlineBuilder(cfg.id, blockId)}
-              />
+              <WorkflowSessionPanel workflowId={wid} />
             </div>
             <button
               onClick={() => setPinnedRuns((p) => p.filter((x) => x !== wid))}
@@ -613,6 +608,7 @@ export function AssistantThread({
       {pinnedElements.map((el) => {
         const cfg = getWorkflowConfig(el.workflowId);
         if (!cfg) return null;
+
         return (
           <div key={`${el.workflowId}:${el.element}`} className="flex items-start gap-2">
             <div className="flex-1">

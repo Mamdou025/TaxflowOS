@@ -1,3 +1,4 @@
+import { WorkflowSessionPanel } from './workflow-session-panel';
 import { WorkflowResultSummary } from './workflow-result-summary';
 import { createWorkflow, replaceDraft } from '@workspace/workflow-core/commands';
 import { ApiDataStatus } from './workflow-api-status';
@@ -129,6 +130,15 @@ export function SavedWorkflowRun({
             : 'Template · running or editing creates your own workflow'}
         </p>
       </div>
+      {((!resultsOnly && !selectedRunId) ||
+        entry?.sessions?.some((item) => item.id === selectedRunId)) && (
+        <WorkflowSessionPanel
+          workflowId={id}
+          runId={
+            entry?.sessions?.some((item) => item.id === selectedRunId) ? selectedRunId! : undefined
+          }
+        />
+      )}
       {!resultsOnly && (
         <>
           <WorkflowTestData definition={definition} onChange={update} />
@@ -264,7 +274,9 @@ export function SavedWorkflowRun({
           {displayedRun?.version}; run again to test your changes.
         </p>
       )}
-      {selectedRunId && !displayedRun ? (
+      {selectedRunId &&
+      !displayedRun &&
+      !entry?.sessions?.some((item) => item.id === selectedRunId) ? (
         <p role="alert" className="rounded border border-amber-500 p-3 text-sm">
           Run {selectedRunId} is not available in this workflow. No different run was selected.
         </p>

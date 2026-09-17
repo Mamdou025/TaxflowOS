@@ -2,6 +2,29 @@ import { test, expect } from './workflow-audit-isolation';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 
+test('chat home remains visible when animation frames are suspended', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.requestAnimationFrame = () => 0;
+  });
+  await page.route('**/api/chat/threads**', (route) => route.fulfill({ json: { threads: [] } }));
+  await page.goto('/');
+  const composer = page.getByRole('textbox', { name: 'Ask Scope, or describe a task…' });
+  await expect(composer).toBeVisible();
+  await expect(page.getByText('What would you like to work on?', { exact: true })).toBeVisible();
+  expect(
+    await composer.evaluate((element) => {
+      for (let node: Element | null = element; node; node = node.parentElement) {
+        if (getComputedStyle(node).opacity === '0') return false;
+      }
+      return true;
+    }),
+  ).toBe(true);
+  await page.reload();
+  await expect(composer).toBeVisible();
+  await composer.fill('Ready to chat');
+  await expect(composer).toHaveValue('Ready to chat');
+});
+
 test('chat spreadsheet selection preserves drafts on cancel and imports a complete mapped sheet', async ({
   page,
 }) => {
@@ -52,6 +75,8 @@ test('chat spreadsheet selection preserves drafts on cancel and imports a comple
   await draft.press('Enter');
   const dialog = page.getByRole('dialog', { name: 'Choose spreadsheet data' });
   await expect(dialog).toBeVisible();
+  await page.mouse.click(5, 5);
+  await expect(dialog).toBeVisible();
   await expect(dialog.getByLabel('Worksheet').locator('option')).toHaveText([
     'Choose a worksheet…',
     'Summary',
@@ -62,19 +87,32 @@ test('chat spreadsheet selection preserves drafts on cancel and imports a comple
   await expect(composer.getByText('synthetic-sap.xlsx', { exact: true })).toBeVisible();
   await draft.press('Enter');
   await dialog.getByLabel('Worksheet').selectOption('SAP EXPORT');
-  await dialog.getByLabel('Account column', { exact: true }).selectOption('G/L Account');
+  await expect(dialog.getByRole('combobox', { name: 'Account column', exact: true })).toHaveValue(
+    'G/L Account',
+  );
+  await expect(dialog.getByRole('combobox', { name: 'Amount column', exact: true })).toHaveValue(
+    'Amount in CC Crcy',
+  );
   await dialog
-    .getByLabel('Description column', { exact: true })
+    .getByRole('combobox', { name: 'Account column', exact: true })
+    .selectOption('G/L Account');
+  await dialog
+    .getByRole('combobox', { name: 'Description column', exact: true })
     .selectOption('Jrnl.Entry Item Text');
-  await dialog.getByLabel('Amount column', { exact: true }).selectOption('Amount in CC Crcy');
+  await dialog
+    .getByRole('combobox', { name: 'Amount column', exact: true })
+    .selectOption('Amount in CC Crcy');
   await dialog.getByLabel('Source currency').fill('EUR');
   await dialog.getByRole('button', { name: 'Use selected data' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'synthetic-sap.xlsx' })).toContainText(
+    '1100 records',
+  );
   await expect
     .poll(async () =>
       page.evaluate(() => {
-        const source = JSON.parse(
-          localStorage.getItem('taxflow:uploaded-source-rows') ?? '{}',
-        ).__unassigned__;
+        const context = JSON.parse(sessionStorage.getItem('taxflow:authenticated-workspace')!);
+        const key = `taxflow:scope:${encodeURIComponent(context.userId)}:${context.workspace.id}:taxflow:uploaded-source-rows`;
+        const source = JSON.parse(localStorage.getItem(key) ?? '{}').__unassigned__;
         return source ? { count: source.rows.length, last: source.rows.at(-1).amount } : null;
       }),
     )

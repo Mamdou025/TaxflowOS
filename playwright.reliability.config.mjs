@@ -3,6 +3,7 @@ import { browserConfig } from './scripts/testing/playwright-config.mjs';
 export default defineConfig({
   ...browserConfig(),
   testMatch: [
+    'workflow-session.spec.ts',
     'workflow-reliability.spec.ts',
     'workflow-shared-execution.spec.ts',
     'workflow-run-persistence.spec.ts',

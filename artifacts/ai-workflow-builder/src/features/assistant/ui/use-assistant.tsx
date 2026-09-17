@@ -1,3 +1,12 @@
+import { searchWorkspace, HIT_ICON, type SearchHit } from './workflow-composer-search';
+export type { SearchHit } from './workflow-composer-search';
+import { workflowLibraryAtom } from '@/features/workflows-hub/workflow-library';
+import { WorkflowSessionPanel } from '@/features/workflows-hub/workflow-session-panel';
+import {
+  openWorkflowSession,
+  chatWorkflowIdsAtom,
+} from '@/features/workflows-hub/workflow-session-store';
+import { useSessionTools } from './use-session-tools';
 import { apiFetch } from '@/platform/auth/api-fetch';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -21,28 +30,66 @@ import {
 } from './agent-run-review';
 import type { ReactNode } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { useAtomValue, useSetAtom, useStore } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useRouter, usePathname } from '@/lib/router';
 import { Globe, FileText, Workflow, Bot, GitBranch, SquarePen, Play, Sparkles } from 'lucide-react';
-import { useCopilotAction, useCopilotReadable, useCopilotChat, useCopilotChatInternal } from '@copilotkit/react-core';
+import {
+  useCopilotAction,
+  useCopilotReadable,
+  useCopilotChat,
+  useCopilotChatInternal,
+} from '@copilotkit/react-core';
 import { TextMessage, Role } from '@copilotkit/runtime-client-gql';
-import { workspaceWindowsAtom, activeWorkspaceWindowAtom, openWorkspaceWindowAtom, closeWorkspaceWindowAtom, closeAllWorkspaceWindowsAtom, pushTrailAtom, activeRunAtom, uploadedRowsAtom, attachedDocsAtom, type AttachedDoc, runEditsAtom } from '@/shared/stores/workspace-store';
+import {
+  workspaceWindowsAtom,
+  activeWorkspaceWindowAtom,
+  openWorkspaceWindowAtom,
+  closeWorkspaceWindowAtom,
+  closeAllWorkspaceWindowsAtom,
+  pushTrailAtom,
+  activeRunAtom,
+  uploadedRowsAtom,
+  attachedDocsAtom,
+  type AttachedDoc,
+  runEditsAtom,
+} from '@/shared/stores/workspace-store';
 import { pageChatSurfacesAtom } from '@/lib/page-chat-store';
 import { SurfaceEmbed } from './surface-embed';
 import { attachWorkflowSource } from '@/features/documents/attach-workflow-source';
 import { useWorkbookImport } from '@/features/documents/workbook-import-dialog';
 import { builderFocusTargetAtom } from '@/shared/workflow-engine/state/workflow-store';
-import { getPage, listPages, anchorToPage, getFieldContext, buildAgentCatalog, resolveFieldId, fieldValuesAtom } from '@/shared/stores/resource-registry';
+import {
+  getPage,
+  listPages,
+  anchorToPage,
+  getFieldContext,
+  buildAgentCatalog,
+  resolveFieldId,
+  fieldValuesAtom,
+} from '@/shared/stores/resource-registry';
 import { InlineFieldCard } from '@/features/assistant/workspace/inline-field-card';
-import { WorkflowRunFlow, WorkflowElementCard, RunProposalCard } from '@/features/assistant/workspace/workflow-run-flow';
+import {
+  WorkflowRunFlow,
+  WorkflowElementCard,
+  RunProposalCard,
+} from '@/features/assistant/workspace/workflow-run-flow';
 import type { ComposerSuggestion } from '@/features/assistant/workspace/aside-thread';
-import { getWorkflowConfig, WORKFLOW_CONFIGS, type TemplateConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
+import {
+  getWorkflowConfig,
+  WORKFLOW_CONFIGS,
+  type TemplateConfig,
+} from '@/shared/workflow-engine/runtime/workflow-runs';
 import { PORTFOLIO_WORKFLOWS } from '@/shared/workflow-engine/templates/portfolio/portfolio-workflows';
 import { aimBuilderAtWorkflowAtom } from '@/features/workflows-hub/workflows-store';
 import { WORKFLOWS } from '@/lib/agents';
 import { createTemplateIntel } from '@/features/worksheets/intel';
 import { GenUIRender } from '@/features/genui/genui-render';
-import { recordWorkItemAtom, workIdFor, workKeyFromText, type WorkItemType } from '@/lib/work-store';
+import {
+  recordWorkItemAtom,
+  workIdFor,
+  workKeyFromText,
+  type WorkItemType,
+} from '@/lib/work-store';
 import { UI_CONCIERGE, UI_COMPOSER } from '@/lib/coworkers';
 import { CoworkerAvatar } from './coworker-avatar';
 import { useChatPersistence } from '@/features/assistant/runtime/chat/use-chat-persistence';
@@ -62,62 +109,6 @@ function shortWorkTitle(text: string, max = 46): string {
 }
 
 // ── Composer search ────────────────────────────────────────────────────────────
-export type SearchHit =
-  | { kind: 'page'; id: string; label: string; sub: string }
-  | { kind: 'field'; id: string; label: string; sub: string }
-  | { kind: 'workflow'; id: string; label: string; sub: string; ready: boolean }
-  | { kind: 'blueprint'; id: string; label: string; sub: string }
-  | {
-      kind: 'element';
-      id: string;
-      label: string;
-      sub: string;
-      workflowId: string;
-      element: 'source' | 'output';
-    };
-
-function searchWorkspace(q: string): SearchHit[] {
-  const t = q.toLowerCase().trim();
-  if (!t) return [];
-  const cat = buildAgentCatalog();
-  const hits: SearchHit[] = [];
-  for (const w of WORKFLOWS) if (`${w.name} ${w.sub}`.toLowerCase().includes(t)) hits.push({ kind: 'workflow', id: w.id, label: w.name, sub: w.sub, ready: w.ready });
-  // Sinaxe portfolio blueprints — openable in the builder (not runnable).
-  for (const w of PORTFOLIO_WORKFLOWS) if (`${w.name} ${w.sub} ${w.group}`.toLowerCase().includes(t)) hits.push({ kind: 'blueprint', id: w.id, label: w.name, sub: w.sub });
-  // Workflow elements — summon a source/output into the chat without the builder.
-  for (const c of Object.values(WORKFLOW_CONFIGS)) {
-    if (`${c.name} source document ${c.documentLabel}`.toLowerCase().includes(t))
-      hits.push({
-        kind: 'element',
-        id: `${c.id}:source`,
-        label: `${c.name} — source`,
-        sub: c.documentLabel,
-        workflowId: c.id,
-        element: 'source',
-      });
-    if (`${c.name} output result`.toLowerCase().includes(t))
-      hits.push({
-        kind: 'element',
-        id: `${c.id}:output`,
-        label: `${c.name} — output`,
-        sub: 'Computed result',
-        workflowId: c.id,
-        element: 'output',
-      });
-  }
-  for (const p of cat.pages) if (`${p.title} ${p.subtitle} ${p.key}`.toLowerCase().includes(t)) hits.push({ kind: 'page', id: p.key, label: p.title, sub: p.subtitle });
-  for (const f of cat.fields) if (`${f.label} ${f.fieldId}`.toLowerCase().includes(t)) hits.push({ kind: 'field', id: f.fieldId, label: f.label, sub: 'Editable field' });
-  return hits.slice(0, 9);
-}
-
-const HIT_ICON = {
-  page: Globe,
-  field: FileText,
-  workflow: Workflow,
-  blueprint: Workflow,
-  element: GitBranch,
-} as const;
-
 // Portfolio template IDs open the builder; execution uses the separate runtime ID.
 const PORTFOLIO_BLUEPRINTS = PORTFOLIO_WORKFLOWS.map((w) => ({
   workflowId: w.id,
@@ -137,7 +128,8 @@ function describeRoute(pathname: string): { route: string; label: string } {
     '/surplus': 'Surplus worksheet',
   };
   if (map[pathname]) return { route: pathname, label: map[pathname] };
-  if (pathname.startsWith('/workflows')) return { route: pathname, label: 'Saved workflow (database)' };
+  if (pathname.startsWith('/workflows'))
+    return { route: pathname, label: 'Saved workflow (database)' };
   return { route: pathname, label: pathname };
 }
 
@@ -148,46 +140,10 @@ export type PinnedElement = { workflowId: string; element: 'source' | 'output' }
 // Offer-then-accept: it first shows a PROPOSAL card (what the run will do + what
 // it needs). The live run only begins when the user clicks Start — so a workflow
 // is never kicked off without an explicit accept. Stop/complete handled locally.
-export function RunWorkflowRender({ config, onOpenPage, onOpenBuilder }: { config: TemplateConfig; onOpenPage: (pageKey: string) => void; onOpenBuilder: (blockId: string) => void }) {
-  const [started, setStarted] = useState(false);
-  const [stopped, setStopped] = useState(false);
-  const reduce = useReducedMotion();
-  if (stopped) return <div style={{ fontSize: 12, color: '#71717a', padding: '4px 0' }}>Run stopped.</div>;
-  // Smooth swap: the proposal fades/lifts out, the run fades/rises in (then its own
-  // steps stagger via WorkflowRunFlow's intro) — one continuous motion, not a cut.
-  const ease = [0.23, 1, 0.32, 1] as const;
-  return (
-    <AnimatePresence mode="wait" initial={false}>
-      {!started ? (
-        <motion.div
-          key="proposal"
-          // Rise in a beat AFTER the agent's reply — so the run card reads as the
-          // agent presenting a plan, not an instant menu popping onto the screen.
-          initial={reduce ? { opacity: 0 } : { opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={reduce ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.985 }}
-          transition={{ duration: reduce ? 0 : 0.32, ease, delay: reduce ? 0 : 0.25 }}
-        >
-          <RunProposalCard config={config} onStart={() => setStarted(true)} />
-        </motion.div>
-      ) : (
-        <motion.div key="run" initial={reduce ? { opacity: 0 } : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduce ? 0 : 0.3, ease }}>
-          <WorkflowRunFlow
-            config={config}
-            onOpenPage={onOpenPage}
-            onOpenBuilder={onOpenBuilder}
-            onStop={() => setStopped(true)}
-            onComplete={() => {}} // the run already publishes its result via the activeRun readable + trail
-          />
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
-
 export type Assistant = ReturnType<typeof useAssistant>;
 
 export function useAssistant() {
+  useSessionTools();
   const { selectWorkbook, importDialog } = useWorkbookImport();
   const router = useRouter();
   const pathname = usePathname();
@@ -218,8 +174,15 @@ export function useAssistant() {
   const allRunEdits = useAtomValue(runEditsAtom);
   const uploaded = useAtomValue(uploadedRowsAtom);
   useCopilotReadable({
-    description: 'Selected workflow source. For a request to run a workflow using this source, set runWorkflow sourceMode to uploaded and omit recordsJson. The handler uses these stored rows directly; never replace them with an empty array or transcribed sample.',
-    value: uploaded.__unassigned__ ? { fileName: uploaded.__unassigned__.fileName, rowCount: uploaded.__unassigned__.rows.length, sourceId: uploaded.__unassigned__.sourceId } : null,
+    description:
+      'Selected workflow source. Open runWorkflow to show the shared panel; use its source controls or controlWorkflowRun with the exact source block ID to attach these stored records. Never replace them with an empty array or transcribed sample.',
+    value: uploaded.__unassigned__
+      ? {
+          fileName: uploaded.__unassigned__.fileName,
+          rowCount: uploaded.__unassigned__.rows.length,
+          sourceId: uploaded.__unassigned__.sourceId,
+        }
+      : null,
   });
 
   // Open a workflow (or Sinaxe blueprint) in the NEW builder: the Workflows surface's
@@ -243,7 +206,8 @@ export function useAssistant() {
   // their own selection/detail add further readables locally (e.g. BuilderCopilot).
   const here = describeRoute(pathname);
   useCopilotReadable({
-    description: 'The page the user is currently looking at (their current location in the app). Use this to ground answers in where they are.',
+    description:
+      'The page the user is currently looking at (their current location in the app). Use this to ground answers in where they are.',
     value: here,
   });
 
@@ -257,7 +221,8 @@ export function useAssistant() {
   // here: a live context snapshot, the commands the chat can run on it, and whether
   // it can be brought into the chat. Two generic actions below act on ANY of them.
   useCopilotReadable({
-    description: "Pages/panels open next to the chat that it can act on. For each: pageKey, title, a live context snapshot of what's on that page, and the commands you can run on it (id, label, description, parameters). To DO something to the page the user is looking at, call commandPage with its commandId. To show a page inside the conversation, call bringIntoChat with its pageKey.",
+    description:
+      "Pages/panels open next to the chat that it can act on. For each: pageKey, title, a live context snapshot of what's on that page, and the commands you can run on it (id, label, description, parameters). To DO something to the page the user is looking at, call commandPage with its commandId. To show a page inside the conversation, call bringIntoChat with its pageKey.",
     value: Object.values(surfaces).map((s) => ({
       pageKey: s.pageKey,
       title: s.title,
@@ -277,7 +242,8 @@ export function useAssistant() {
   // just works when one page is open. args are JSON.
   useCopilotAction({
     name: 'commandPage',
-    description: "Run a command on a page/panel open next to the chat (see the commandable-surfaces context for each page's commandId list + parameters). Use this to ACT on the page the user is looking at — e.g. its checks, edits, or actions. pageKey is optional: it defaults to the active page, then to the only open one. argsJson is a JSON object of the command's parameters.",
+    description:
+      "Run a command on a page/panel open next to the chat (see the commandable-surfaces context for each page's commandId list + parameters). Use this to ACT on the page the user is looking at — e.g. its checks, edits, or actions. pageKey is optional: it defaults to the active page, then to the only open one. argsJson is a JSON object of the command's parameters.",
     followUp: false,
     parameters: [
       {
@@ -299,7 +265,15 @@ export function useAssistant() {
         required: false,
       },
     ],
-    handler: async ({ commandId, pageKey, argsJson }: { commandId: string; pageKey?: string; argsJson?: string }) => {
+    handler: async ({
+      commandId,
+      pageKey,
+      argsJson,
+    }: {
+      commandId: string;
+      pageKey?: string;
+      argsJson?: string;
+    }) => {
       const reg = store.get(pageChatSurfacesAtom);
       const keys = Object.keys(reg);
       // Explicit pageKey must exist — never silently fall back to another page.
@@ -307,9 +281,14 @@ export function useAssistant() {
         return { error: `"${pageKey}" is not an open commandable page.`, commandablePages: keys };
       }
       const activeWin = store.get(activeWorkspaceWindowAtom);
-      const surface = (pageKey ? reg[pageKey] : undefined) ?? (activeWin ? reg[activeWin.pageKey] : undefined) ?? (keys.length === 1 ? reg[keys[0]] : undefined);
+      const surface =
+        (pageKey ? reg[pageKey] : undefined) ??
+        (activeWin ? reg[activeWin.pageKey] : undefined) ??
+        (keys.length === 1 ? reg[keys[0]] : undefined);
       if (!surface) {
-        return keys.length ? { error: 'More than one page is open — pass pageKey.', commandablePages: keys } : { error: 'No commandable page is open. Open one first.' };
+        return keys.length
+          ? { error: 'More than one page is open — pass pageKey.', commandablePages: keys }
+          : { error: 'No commandable page is open. Open one first.' };
       }
       const command = surface.commands?.find((c) => c.id === commandId);
       if (!command) {
@@ -335,7 +314,8 @@ export function useAssistant() {
   // Bring a page/panel INTO the chat — render it inline in the conversation.
   useCopilotAction({
     name: 'bringIntoChat',
-    description: 'Bring a page or panel INTO the chat — render it inline in the conversation so the user can see/work with it without leaving the chat. Use for "show me X here", "bring the dashboard into the chat", "pull the workflow in". pageKey is one of the open commandable surfaces (see that context) or any registered page key. Prefer this over openPage when the user wants it "here" / "in the chat".',
+    description:
+      'Bring a page or panel INTO the chat — render it inline in the conversation so the user can see/work with it without leaving the chat. Use for "show me X here", "bring the dashboard into the chat", "pull the workflow in". pageKey is one of the open commandable surfaces (see that context) or any registered page key. Prefer this over openPage when the user wants it "here" / "in the chat".',
     followUp: false,
     parameters: [
       {
@@ -346,7 +326,8 @@ export function useAssistant() {
       },
     ],
     handler: async ({ pageKey }: { pageKey: string }) => {
-      const title = store.get(pageChatSurfacesAtom)[pageKey]?.title ?? getPage(pageKey)?.title ?? pageKey;
+      const title =
+        store.get(pageChatSurfacesAtom)[pageKey]?.title ?? getPage(pageKey)?.title ?? pageKey;
       pushTrail({ text: `Brought ${title} into the chat`, tone: 'info' });
       recordWork({
         id: workIdFor(pageWorkType(pageKey), pageKey),
@@ -369,7 +350,8 @@ export function useAssistant() {
   });
 
   useCopilotReadable({
-    description: 'The workflow run currently in the chat (null if none), INCLUDING its live figures once a source is loaded. Use this to tell the user where we are and what it is waiting for, to answer questions about the run ("what is my biggest income category", "how much is net FAPI"), and to feed generateUI with the run\'s ACTUAL numbers (categories, lines, summary) — even while the run is still active/unapproved. Amounts are in `data.currency`.',
+    description:
+      'The workflow run currently in the chat (null if none), INCLUDING its live figures once a source is loaded. Use this to tell the user where we are and what it is waiting for, to answer questions about the run ("what is my biggest income category", "how much is net FAPI"), and to feed generateUI with the run\'s ACTUAL numbers (categories, lines, summary) — even while the run is still active/unapproved. Amounts are in `data.currency`.',
     value: activeRun
       ? {
           workflow: activeRun.workflowName,
@@ -390,7 +372,8 @@ export function useAssistant() {
   // is the extracted text layer (no OCR); `truncated: true` means the file was longer
   // than the cap and the tail was cut, so say so rather than claiming completeness.
   useCopilotReadable({
-    description: 'Documents in context — attached in the chat OR opened in the Document Viewer next to it (which auto-adds every open file here) — with their extracted text content. When the user asks about "this document", "the attachment", "the PDF", or "the file", ANSWER from the `text` here — it is the real content, not a guess. Each doc: fileName, kind, pages (for PDFs), and text. `truncated: true` means the document was cut at a length cap — answer from what is present and note the tail was not included. Empty list = no document is currently open or attached.',
+    description:
+      'Documents in context — attached in the chat OR opened in the Document Viewer next to it (which auto-adds every open file here) — with their extracted text content. When the user asks about "this document", "the attachment", "the PDF", or "the file", ANSWER from the `text` here — it is the real content, not a guess. Each doc: fileName, kind, pages (for PDFs), and text. `truncated: true` means the document was cut at a length cap — answer from what is present and note the tail was not included. Empty list = no document is currently open or attached.',
     value: attachedDocs.length
       ? attachedDocs.map((d) => ({
           fileName: d.fileName,
@@ -415,7 +398,9 @@ export function useAssistant() {
       let isDefault: boolean;
       if (binding) {
         const stored = allRunEdits[binding.workflowId]?.inputs?.[binding.inputKey];
-        const engineDefault = getWorkflowConfig(binding.workflowId)?.editableInputs?.find((i) => i.key === binding.inputKey)?.default;
+        const engineDefault = getWorkflowConfig(binding.workflowId)?.editableInputs?.find(
+          (i) => i.key === binding.inputKey,
+        )?.default;
         isDefault = stored === undefined;
         value = String(stored ?? engineDefault ?? ctx?.field.default ?? '');
       } else {
@@ -437,7 +422,8 @@ export function useAssistant() {
   }, [fieldValues, allRunEdits]);
 
   useCopilotReadable({
-    description: 'Every editable worksheet field and its CURRENT live value — the real number the user sees and edits (bound fields share the exact engine input the worksheet and the workflow run use). ANSWER value questions from this ("what is the FX rate?", "what inclusion rate are we using?") — do NOT guess or state a value that is not here. `isDefault: true` means the user has not set it yet (still the template default), so say it is unset rather than asserting it as chosen. To change one, call editField with the exact `fieldId` shown here.',
+    description:
+      'Every editable worksheet field and its CURRENT live value — the real number the user sees and edits (bound fields share the exact engine input the worksheet and the workflow run use). ANSWER value questions from this ("what is the FX rate?", "what inclusion rate are we using?") — do NOT guess or state a value that is not here. `isDefault: true` means the user has not set it yet (still the template default), so say it is unset rather than asserting it as chosen. To change one, call editField with the exact `fieldId` shown here.',
     value: fieldValueContext,
   });
 
@@ -452,7 +438,11 @@ export function useAssistant() {
     return Object.values(WORKFLOW_CONFIGS).flatMap((cfg) => {
       const up = uploaded[cfg.id];
       const edits = allRunEdits[cfg.id];
-      const hasData = Boolean(up?.rows?.length) || (edits && (Object.keys(edits.inputs).length > 0 || Object.keys(edits.overrides).length > 0)) || cfg.id === activeId;
+      const hasData =
+        Boolean(up?.rows?.length) ||
+        (edits &&
+          (Object.keys(edits.inputs).length > 0 || Object.keys(edits.overrides).length > 0)) ||
+        cfg.id === activeId;
       if (!hasData) return [];
       let snapshot: unknown = null;
       try {
@@ -469,7 +459,9 @@ export function useAssistant() {
           workflowId: cfg.id,
           name: cfg.name,
           isActiveRun: cfg.id === activeId,
-          source: up ? { fileName: up.fileName, rowCount: up.rows.length } : 'sample data (nothing uploaded yet)',
+          source: up
+            ? { fileName: up.fileName, rowCount: up.rows.length }
+            : 'sample data (nothing uploaded yet)',
           snapshot,
         },
       ];
@@ -477,14 +469,18 @@ export function useAssistant() {
   }, [uploaded, allRunEdits, activeRun?.workflowId]);
 
   useCopilotReadable({
-    description: 'The workflows you are actually working on and their REAL current data — any workflow with an uploaded source, an edited input/override, or an active run. Each `snapshot` is computed by the same engine the worksheet renders (lines, summary with CAD, FX rate, classification buckets), so these ARE the on-screen numbers even when no worksheet page is open. Answer figure questions from here; for a formula or operand breakdown call whyWorksheetValue / explainWorksheetLine with the workflowId. Workflows NOT listed have no live data yet (they would run on sample data).',
-    value: liveWorkflowContext.length ? liveWorkflowContext : 'No workflow has live data yet — nothing has been uploaded, edited, or run.',
+    description:
+      'The workflows you are actually working on and their REAL current data — any workflow with an uploaded source, an edited input/override, or an active run. Each `snapshot` is computed by the same engine the worksheet renders (lines, summary with CAD, FX rate, classification buckets), so these ARE the on-screen numbers even when no worksheet page is open. Answer figure questions from here; for a formula or operand breakdown call whyWorksheetValue / explainWorksheetLine with the workflowId. Workflows NOT listed have no live data yet (they would run on sample data).',
+    value: liveWorkflowContext.length
+      ? liveWorkflowContext
+      : 'No workflow has live data yet — nothing has been uploaded, edited, or run.',
   });
 
   // Sinaxe portfolio blueprints — the assistant knows these exist so it can list
   // them and offer to open them, WITHOUT treating them as runnable.
   useCopilotReadable({
-    description: 'Built-in portfolio templates, independent of saved workspace drafts. workflowId opens the template; runWorkflowId is the exact execution ID, or null when no runtime is available. Discover executable templates with listAvailableWorkflows. Use supplied records and required columns; do not claim a workpaper prepares or files a complete statutory return. Never invent missing records, rates or applicability decisions.',
+    description:
+      'Built-in portfolio templates, independent of saved workspace drafts. workflowId opens the template; runWorkflowId is the exact execution ID, or null when no runtime is available. Discover executable templates with listAvailableWorkflows. Use supplied records and required columns; do not claim a workpaper prepares or files a complete statutory return. Never invent missing records, rates or applicability decisions.',
     value: PORTFOLIO_BLUEPRINTS,
   });
 
@@ -497,7 +493,9 @@ export function useAssistant() {
     name: 'openPage',
     description: `Open a registered worksheet as a tab. Valid pageKey: ${pageEnum}.`,
     followUp: false,
-    parameters: [{ name: 'pageKey', type: 'string', description: 'one of: ' + pageEnum, required: true }],
+    parameters: [
+      { name: 'pageKey', type: 'string', description: 'one of: ' + pageEnum, required: true },
+    ],
     handler: async ({ pageKey }: { pageKey: string }) => {
       const def = getPage(pageKey);
       if (!def) return `No page "${pageKey}".`;
@@ -517,7 +515,8 @@ export function useAssistant() {
 
   useCopilotAction({
     name: 'focusAnchor',
-    description: 'Open a page and scroll to + highlight one specific part of it (an anchor id like "fapi:fx").',
+    description:
+      'Open a page and scroll to + highlight one specific part of it (an anchor id like "fapi:fx").',
     followUp: false,
     parameters: [{ name: 'anchor', type: 'string', description: 'the anchor id', required: true }],
     handler: async ({ anchor }: { anchor: string }) => {
@@ -525,7 +524,9 @@ export function useAssistant() {
       if (!pk) return `No anchor "${anchor}".`;
       const def = getPage(pk);
       openWindow({ pageKey: pk, title: def?.title ?? pk });
-      window.dispatchEvent(new CustomEvent('cwp-focus-anchor', { detail: { pageKey: pk, anchor } }));
+      window.dispatchEvent(
+        new CustomEvent('cwp-focus-anchor', { detail: { pageKey: pk, anchor } }),
+      );
       pushTrail({ text: `Focused ${def?.title ?? pk}`, tone: 'navigation' });
       recordWork({
         id: workIdFor(pageWorkType(pk), pk),
@@ -542,7 +543,8 @@ export function useAssistant() {
 
   useCopilotAction({
     name: 'editField',
-    description: 'Bring an editable worksheet field INTO the chat so the user can view/modify it inline (it syncs to the worksheet AND the workflow run — one shared value). Use for "show me the FX rate", "let me change the dividend", etc. Do NOT open the worksheet. Prefer the exact fieldId from the editable-fields context (e.g. "fx"), but a loose reference ("fx rate", the line key) is resolved too.',
+    description:
+      'Bring an editable worksheet field INTO the chat so the user can view/modify it inline (it syncs to the worksheet AND the workflow run — one shared value). Use for "show me the FX rate", "let me change the dividend", etc. Do NOT open the worksheet. Prefer the exact fieldId from the editable-fields context (e.g. "fx"), but a loose reference ("fx rate", the line key) is resolved too.',
     followUp: false,
     parameters: [
       {
@@ -570,7 +572,13 @@ export function useAssistant() {
     render: ({ args }: { args: { fieldId?: string; value?: string } }) => {
       const id = args?.fieldId ? resolveFieldId(args.fieldId) : null;
       if (id) return <InlineFieldCard fieldId={id} preset={args?.value} />;
-      return args?.fieldId ? <div style={{ fontSize: 12.5, color: '#71717a' }}>No editable field matches “{args.fieldId}”.</div> : <></>;
+      return args?.fieldId ? (
+        <div style={{ fontSize: 12.5, color: '#71717a' }}>
+          No editable field matches “{args.fieldId}”.
+        </div>
+      ) : (
+        <></>
+      );
     },
   });
 
@@ -578,9 +586,13 @@ export function useAssistant() {
     name: 'closePage',
     description: 'Close an open page by pageKey (or the last one if omitted).',
     followUp: false,
-    parameters: [{ name: 'pageKey', type: 'string', description: 'page to close', required: false }],
+    parameters: [
+      { name: 'pageKey', type: 'string', description: 'page to close', required: false },
+    ],
     handler: async ({ pageKey }: { pageKey?: string }) => {
-      const target = pageKey ? windows.find((w) => w.pageKey === pageKey) : windows[windows.length - 1];
+      const target = pageKey
+        ? windows.find((w) => w.pageKey === pageKey)
+        : windows[windows.length - 1];
       if (!target) return 'Nothing open to close.';
       closeWindow(target.id);
       return `Closed ${target.title}.`;
@@ -600,7 +612,8 @@ export function useAssistant() {
 
   useCopilotAction({
     name: 'openWorkflowBuilder',
-    description: 'Navigate to the visual workflow builder canvas. Optionally pass a workflowId to open a specific workflow OR a Sinaxe portfolio blueprint onto the canvas (e.g. "pf-t1134", "pf-scope-service", "pf-eifel", or a runnable id like "fapi"). Use this when the user wants to see/open/edit a blueprint.',
+    description:
+      'Navigate to the visual workflow builder canvas. Optionally pass a workflowId to open a specific workflow OR a Sinaxe portfolio blueprint onto the canvas (e.g. "pf-t1134", "pf-scope-service", "pf-eifel", or a runnable id like "fapi"). Use this when the user wants to see/open/edit a blueprint.',
     followUp: false,
     parameters: [
       {
@@ -611,7 +624,10 @@ export function useAssistant() {
       },
     ],
     handler: async ({ workflowId }: { workflowId?: string }) => {
-      if (workflowId && (getWorkflowConfig(workflowId) || PORTFOLIO_WORKFLOWS.some((w) => w.id === workflowId))) {
+      if (
+        workflowId &&
+        (getWorkflowConfig(workflowId) || PORTFOLIO_WORKFLOWS.some((w) => w.id === workflowId))
+      ) {
         openInlineBuilder(workflowId);
         return `Opening ${workflowId} in the workflow builder.`;
       }
@@ -626,43 +642,6 @@ export function useAssistant() {
   // state/result reach the LLM through the activeRun readable + the trail — not
   // by holding the tool result open until completion (which broke follow-ups mid
   // run with "Tool result is missing for tool call …").
-  useCopilotAction({
-    name: 'runWorkflow',
-    description: `Request execution of a workflow from an explicit chat command. Valid ids: ${workflowEnum}. Set sourceMode to uploaded to use the selected source or previously uploaded records; do not transcribe the file into recordsJson. Set sourceMode to records only for actual records supplied in the user's message. Set sourceMode to sample ONLY when explicitly requested. The action freezes the selected records and asks for scoped approval. Missing data requires a source selection, never fabricated records. Report actual errors and findings; execution never implies result approval or filing.`,
-    followUp: false,
-    parameters: [
-      { name: 'workflowId', type: 'string', description: workflowEnum, required: true },
-      { name: 'sourceMode', type: 'string', enum: ['uploaded', 'records', 'sample'], description: 'uploaded: use selected/attached source directly; records: use inline recordsJson; sample: only when explicitly requested.', required: true },
-      {
-        name: 'recordsJson',
-        type: 'string',
-        description: 'JSON array of supplied source records, preserving business columns',
-        required: false,
-      },
-      {
-        name: 'inputsJson',
-        type: 'string',
-        description: 'JSON object of supplied numeric parameter overrides',
-        required: false,
-      },
-      {
-        name: 'useSample',
-        type: 'boolean',
-        description: 'Only true for an explicit request to run sample data',
-        required: false,
-      },
-    ],
-    handler: async (args: import('../runtime/workflow-run-input').AgentTemplateRunArgs) => {
-      const config = getWorkflowConfig(args.workflowId.replace(/^pf-/, ''));
-      if (!config) return { status: 'error', errors: [`Workflow '${args.workflowId}' is unavailable.`] };
-      return requestAgentWorkflowRun(store, args, config.name);
-    },
-    render: ({ result, status }) => {
-      if (status !== 'complete') return <div role="status">Preparing workflow run…</div>;
-      if (isAgentRunReviewResult(result)) return <AgentRunReview review={result} />;
-      return <WorkflowCommandResult result={result} />;
-    },
-  });
 
   useCopilotAction({
     name: 'showWorkflowElement',
@@ -714,7 +693,8 @@ export function useAssistant() {
   // never fire on a half-streamed prompt.
   useCopilotAction({
     name: 'generateUI',
-    description: 'Generate a CUSTOM, one-off view inline in the chat from a description — a quick dashboard, chart, KPI tiles, table, or a small form for ad-hoc values that are NOT a registered worksheet. Use for "generate/create/mock/show me a dashboard|chart|table|form of …" and for a "Generate this view: …" request. The prompt MUST be a complete, self-contained description INCLUDING the concrete data/numbers to display. Do NOT use for opening a real worksheet (openPage) or running a workflow (runWorkflow).',
+    description:
+      'Generate a CUSTOM, one-off view inline in the chat from a description — a quick dashboard, chart, KPI tiles, table, or a small form for ad-hoc values that are NOT a registered worksheet. Use for "generate/create/mock/show me a dashboard|chart|table|form of …" and for a "Generate this view: …" request. The prompt MUST be a complete, self-contained description INCLUDING the concrete data/numbers to display. Do NOT use for opening a real worksheet (openPage) or running a workflow (runWorkflow).',
     followUp: false,
     parameters: [
       {
@@ -739,7 +719,12 @@ export function useAssistant() {
     // until the prompt settles, so we don't gate on `status` (which can leave the
     // view stuck if it never reports 'complete' in this setup).
     render: ({ args }: { args: { prompt?: string } }) => {
-      if (!args?.prompt) return <div style={{ fontSize: 12.5, color: '#71717a', padding: '10px 0' }}>Reading your request…</div>;
+      if (!args?.prompt)
+        return (
+          <div style={{ fontSize: 12.5, color: '#71717a', padding: '10px 0' }}>
+            Reading your request…
+          </div>
+        );
       return (
         <div data-work-id={workIdFor('generated-view', workKeyFromText(args.prompt))}>
           <GenUIRender prompt={args.prompt} />
@@ -765,7 +750,7 @@ export function useAssistant() {
   const [sent, setSent] = useState(false); // flips the hero → conversation the instant you send
   const [pinnedFields, setPinnedFields] = useState<string[]>([]); // fields brought in via search
   const [pinnedElements, setPinnedElements] = useState<PinnedElement[]>([]); // workflow source/output summoned in
-  const [pinnedRuns, setPinnedRuns] = useState<string[]>([]); // workflow ids launched deterministically (no LLM routing)
+  const [pinnedRuns, setPinnedRuns] = useAtom(chatWorkflowIdsAtom); // workflow ids launched deterministically (no LLM routing)
   const [pinnedToolResults, setPinnedToolResults] = useState<ToolResult[]>([]); // tools run by hand from the Tools menu
 
   const say = (content: string) => {
@@ -773,7 +758,7 @@ export function useAssistant() {
     setSent(true);
   };
   const threadEmpty = (visibleMessages?.length ?? 0) === 0;
-  const showHero = threadEmpty && !sent; // centered composer until the first message
+  const showHero = threadEmpty && !sent && pinnedRuns.length === 0; // centered composer until the first message
   // Clear the parts of a conversation that live OUTSIDE the CopilotKit message store:
   // deterministically-pinned run cards + summoned fields/elements. These are per-chat
   // UI state, so switching chats (new or restored) must wipe them or the previous
@@ -807,15 +792,28 @@ export function useAssistant() {
     const def = getPage(pageKey);
     if (def) openWindow({ pageKey, title: def.title });
   };
-  const launchPinField = (fieldId: string) => setPinnedFields((prev) => (prev.includes(fieldId) ? prev : [...prev, fieldId]));
+  const launchPinField = (fieldId: string) =>
+    setPinnedFields((prev) => (prev.includes(fieldId) ? prev : [...prev, fieldId]));
   // Pin the result of a tool run-by-hand (Tools menu → Run ▸) into the thread. Flips
   // the hero → conversation so the value card is visible. Deterministic, no LLM.
-  const launchPinToolResult = (r: { toolName: string; args: Record<string, unknown>; result: unknown }) => {
+  const launchPinToolResult = (r: {
+    toolName: string;
+    args: Record<string, unknown>;
+    result: unknown;
+  }) => {
     setSent(true);
-    const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${r.toolName}-${Date.now()}`;
+    const id =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `${r.toolName}-${Date.now()}`;
     setPinnedToolResults((prev) => [...prev, { id, at: Date.now(), ...r }]);
   };
-  const launchPinElement = (workflowId: string, element: 'source' | 'output') => setPinnedElements((prev) => (prev.some((e) => e.workflowId === workflowId && e.element === element) ? prev : [...prev, { workflowId, element }]));
+  const launchPinElement = (workflowId: string, element: 'source' | 'output') =>
+    setPinnedElements((prev) =>
+      prev.some((e) => e.workflowId === workflowId && e.element === element)
+        ? prev
+        : [...prev, { workflowId, element }],
+    );
   // Start a workflow DETERMINISTICALLY — pin its run card into the thread directly,
   // bypassing the LLM. (Previously this dropped a `say("Run the X workflow")` turn
   // and relied on the model routing it to the runWorkflow action; that silently
@@ -823,10 +821,9 @@ export function useAssistant() {
   // campaign — leaving the click dead. Pinning the same RunWorkflowRender the action
   // renders makes every launcher click reliable regardless of model behavior.)
   const launchStartWorkflow = (workflowId: string) => {
-    const config = getWorkflowConfig(workflowId);
-    if (!config) return;
-    setSent(true); // flip hero → conversation so the pinned run card is visible
-    setPinnedRuns((prev) => (prev.includes(config.id) ? prev : [...prev, config.id]));
+    const ref = openWorkflowSession(store, workflowId);
+    setSent(true);
+    setPinnedRuns((prev) => (prev.includes(ref.workflowId) ? prev : [...prev, ref.workflowId]));
   };
 
   // Open a workflow OR a Sinaxe portfolio blueprint in the builder. Delegates to
@@ -926,7 +923,10 @@ export function useAssistant() {
       sub: '3 tiles + a dividends bar chart',
       kind: 'genui',
       icon: <Sparkles size={14} />,
-      run: () => genui('A dashboard: 3 KPI tiles (FAPI $1.24M +12%, Surplus $860k, Tax payable $310k) above a bar chart of dividends by year 2021–2025.'),
+      run: () =>
+        genui(
+          'A dashboard: 3 KPI tiles (FAPI $1.24M +12%, Surplus $860k, Tax payable $310k) above a bar chart of dividends by year 2021–2025.',
+        ),
     },
     {
       key: 'cmd:gen-table',
@@ -934,7 +934,10 @@ export function useAssistant() {
       sub: 'Foreign affiliates with columns',
       kind: 'genui',
       icon: <Sparkles size={14} />,
-      run: () => genui('A table of 4 foreign affiliates with columns Name, Jurisdiction, Ownership %, Surplus balance.'),
+      run: () =>
+        genui(
+          'A table of 4 foreign affiliates with columns Name, Jurisdiction, Ownership %, Surplus balance.',
+        ),
     },
     {
       key: 'cmd:gen-form',
@@ -942,7 +945,8 @@ export function useAssistant() {
       sub: 'FX rate + dividend amount',
       kind: 'genui',
       icon: <Sparkles size={14} />,
-      run: () => genui('A short form to enter an FX rate and a dividend amount, with a submit button.'),
+      run: () =>
+        genui('A short form to enter an FX rate and a dividend amount, with a submit button.'),
     },
     {
       key: 'cmd:gen-pie',
@@ -950,7 +954,10 @@ export function useAssistant() {
       sub: 'Income by category',
       kind: 'genui',
       icon: <Sparkles size={14} />,
-      run: () => genui('A pie chart breaking down income by category, and a callout summarizing the largest slice.'),
+      run: () =>
+        genui(
+          'A pie chart breaking down income by category, and a callout summarizing the largest slice.',
+        ),
     },
     // (The former "talk to an agent" @-mentions were removed — there is one unified agent, Sina.)
   ];
@@ -1004,9 +1011,13 @@ export function useAssistant() {
         try {
           const { source, notice } = await attachWorkflowSource(f, selectWorkbook);
           setUploadedRows((prev) => ({ ...prev, __unassigned__: source }));
-          notes.push(`[Attached ${source.fileName} — ${source.rows.length} source records. ${notice}]`);
+          notes.push(
+            `[Attached ${source.fileName} — ${source.rows.length} source records. ${notice}]`,
+          );
         } catch (error) {
-          throw new Error(`Could not attach ${f.name}: ${error instanceof Error ? error.message : 'Unreadable workbook'}`);
+          throw new Error(
+            `Could not attach ${f.name}: ${error instanceof Error ? error.message : 'Unreadable workbook'}`,
+          );
         }
         continue;
       }
@@ -1034,9 +1045,13 @@ export function useAssistant() {
         // Replace any prior attachment of the same file; newest last.
         setAttachedDocs((prev) => [...prev.filter((d) => d.id !== doc.id), doc]);
         const size = doc.pages ? `${doc.pages} pages` : `${doc.chars.toLocaleString()} chars`;
-        notes.push(`[Attached ${doc.fileName} — ${size} of text extracted${doc.truncated ? ' (truncated)' : ''}; full text available to the assistant]`);
+        notes.push(
+          `[Attached ${doc.fileName} — ${size} of text extracted${doc.truncated ? ' (truncated)' : ''}; full text available to the assistant]`,
+        );
       } catch (err) {
-        notes.push(`[Attached ${f.name} — couldn't read it: ${err instanceof Error ? err.message : 'extraction failed'}]`);
+        notes.push(
+          `[Attached ${f.name} — couldn't read it: ${err instanceof Error ? err.message : 'extraction failed'}]`,
+        );
       }
     }
     return notes.join('\n');

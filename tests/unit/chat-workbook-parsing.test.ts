@@ -7,6 +7,16 @@ const XLSX = createRequire(
   new URL('../../artifacts/ai-workflow-builder/package.json', import.meta.url),
 )('xlsx');
 
+test('SAP column headings are recognized without manual column mapping', async () => {
+  const parsed = await parseUploadToRows(multiSheetFile(), {
+    selection: { sheetName: 'SAP EXPORT', headerRowNumber: 3, currency: 'EUR' },
+  });
+  assert.equal(parsed.rows.length, 2163);
+  assert.equal(parsed.rows[0].account, '41000000');
+  assert.equal(parsed.rows[0].description, 'Entry 1');
+  assert.equal(parsed.rows[2162].amount, 2163);
+});
+
 function multiSheetFile() {
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([]), 'SAP metadata');

@@ -65,6 +65,34 @@ export function validateWorkflowLibrary(input: unknown): WorkflowLibrary {
       // An imported copy retains the original execution's workflow ID as
       // provenance. Only the saved-version reference belongs to this library.
     }
+    const sessionIds = new Set<string>();
+    for (const session of item.sessions ?? []) {
+      if (
+        !session.id ||
+        sessionIds.has(session.id) ||
+        !versions.has(session.version) ||
+        !Number.isSafeInteger(session.revision) ||
+        session.revision < 0
+      )
+        throw new Error('A guided run has an invalid identity, revision or saved version.');
+      sessionIds.add(session.id);
+      const definition = item.versions.find(
+        (version) => version.number === session.version,
+      )!.definition;
+      const blocks = new Set(definition.blocks.map((block) => block.id));
+      if (
+        [
+          ...Object.keys(session.results),
+          ...session.stale,
+          ...session.reviewed,
+          ...session.sources.map((source) => source.blockId),
+          ...session.attempts.map((attempt) => attempt.blockId),
+        ].some((id) => !blocks.has(id))
+      )
+        throw new Error('A guided run references a block outside its saved version.');
+      if (Object.entries(session.results).some(([id, result]) => result.blockId !== id))
+        throw new Error('A guided run contains a result for a different block.');
+    }
   }
   return library;
 }
