@@ -105,21 +105,29 @@ export function useSessionTools() {
   const active = useAtomValue(activeSessionAtom);
   const entry = active ? library[active.workflowId] : undefined;
   const session = entry?.sessions?.find((item) => item.id === active?.runId);
+  const renderOpen = ({ result, status }: { result: unknown; status: string }) => {
+    if (status !== 'complete') return <p>Opening workflow…</p>;
+    return result && typeof result === 'object' && 'workflowId' in result ? (
+      <WorkflowSessionPanel
+        workflowId={String(result.workflowId)}
+        version={
+          'version' in result && typeof result.version === 'number' ? result.version : undefined
+        }
+      />
+    ) : (
+      <p role="alert">
+        {result && typeof result === 'object' && 'error' in result
+          ? String(result.error)
+          : 'Workflow unavailable.'}
+      </p>
+    );
+  };
   useCopilotAction({
     name: 'runWorkflow',
     description:
       'Open the shared visual workflow execution in Chat, including steps and source selection even if no file is attached. Use an exact built-in catalog ID or saved workflow ID. OMIT version for built-in templates and whenever the user did not request a specific saved version. Never guess version 1. Opening is not execution or result approval and needs no run approval card. The user starts/resumes in the panel. Use controlWorkflowRun for an existing active run.',
     followUp: false,
-    parameters: [
-      { name: 'workflowId', type: 'string', required: true },
-      {
-        name: 'version',
-        type: 'number',
-        required: false,
-        description:
-          'Only when the user explicitly requested a saved version and workflowId is its exact saved workflow ID. Omit for built-in templates. Never invent a version number.',
-      },
-    ],
+    parameters: [{ name: 'workflowId', type: 'string', required: true }],
     handler: ({ workflowId, version }: { workflowId: string; version?: number }) => {
       return workflowSessionRequest(
         store.get(workflowLibraryAtom),
@@ -128,23 +136,20 @@ export function useSessionTools() {
         version,
       );
     },
-    render: ({ result, status }) => {
-      if (status !== 'complete') return <p>Opening workflow…</p>;
-      return result && typeof result === 'object' && 'workflowId' in result ? (
-        <WorkflowSessionPanel
-          workflowId={String(result.workflowId)}
-          version={
-            'version' in result && typeof result.version === 'number' ? result.version : undefined
-          }
-        />
-      ) : (
-        <p role="alert">
-          {result && typeof result === 'object' && 'error' in result
-            ? String(result.error)
-            : 'Workflow unavailable.'}
-        </p>
-      );
-    },
+    render: renderOpen,
+  });
+  useCopilotAction({
+    name: 'openSavedWorkflowVersion',
+    description:
+      'Open the shared step panel for a specific saved version explicitly requested by the user. Get the exact saved workflow ID and existing version from readSavedWorkflow first. Never use a built-in catalog ID. This only opens a preview and never executes or approves results. For ordinary starts use runWorkflow.',
+    followUp: false,
+    parameters: [
+      { name: 'workflowId', type: 'string', required: true },
+      { name: 'version', type: 'number', required: true },
+    ],
+    handler: ({ workflowId, version }: { workflowId: string; version: number }) =>
+      workflowSessionRequest(store.get(workflowLibraryAtom), () => false, workflowId, version),
+    render: renderOpen,
   });
   useCopilotReadable({
     description:
