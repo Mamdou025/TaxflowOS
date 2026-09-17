@@ -39,7 +39,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 3,
+      "elapsedMs": 4,
       "errors": [
         "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -264,7 +264,7 @@
     },
     "configured": {
       "status": "success",
-      "elapsedMs": 7,
+      "elapsedMs": 8,
       "errors": [],
       "warnings": [],
       "results": [
@@ -1640,7 +1640,7 @@
     },
     "configured": {
       "status": "warning",
-      "elapsedMs": 11,
+      "elapsedMs": 13,
       "errors": [],
       "warnings": [
         "API reference only; this block contains no fetched numeric value.",
@@ -3473,7 +3473,7 @@
     },
     "perturbation": {
       "status": "warning",
-      "elapsedMs": 8,
+      "elapsedMs": 10,
       "errors": [],
       "warnings": [
         "API reference only; this block contains no fetched numeric value.",
@@ -5694,7 +5694,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 1,
+      "elapsedMs": 2,
       "errors": [
         "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -6182,7 +6182,7 @@
     },
     "configured": {
       "status": "warning",
-      "elapsedMs": 7,
+      "elapsedMs": 9,
       "errors": [],
       "warnings": [
         "API reference only; this block contains no fetched numeric value.",
@@ -10333,7 +10333,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 0,
+      "elapsedMs": 1,
       "errors": [
         "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -12830,7 +12830,7 @@
     },
     "perturbation": {
       "status": "warning",
-      "elapsedMs": 0,
+      "elapsedMs": 1,
       "errors": [],
       "warnings": [
         "Manager: Example Co/Review workpaper is 1 days overdue."
@@ -13588,7 +13588,7 @@
     },
     "configured": {
       "status": "success",
-      "elapsedMs": 0,
+      "elapsedMs": 1,
       "errors": [],
       "warnings": [],
       "results": [
@@ -14476,7 +14476,7 @@
     },
     "configured": {
       "status": "warning",
-      "elapsedMs": 1,
+      "elapsedMs": 0,
       "errors": [],
       "warnings": [
         "Review the supplied ATI, ratio, capacity, applicability and elections before using this scenario in a return."
@@ -14620,7 +14620,7 @@
     },
     "perturbation": {
       "status": "warning",
-      "elapsedMs": 0,
+      "elapsedMs": 1,
       "errors": [],
       "warnings": [
         "Review the supplied ATI, ratio, capacity, applicability and elections before using this scenario in a return."
@@ -14798,7 +14798,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 1,
+      "elapsedMs": 0,
       "errors": [
         "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -15506,7 +15506,7 @@
     },
     "perturbation": {
       "status": "warning",
-      "elapsedMs": 0,
+      "elapsedMs": 1,
       "errors": [],
       "warnings": [
         "Review enacted rates, credit eligibility, recognition of deferred tax assets and allocation between profit, OCI and equity."
@@ -15684,7 +15684,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 1,
+      "elapsedMs": 0,
       "errors": [
         "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -21192,7 +21192,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 7,
+      "elapsedMs": 8,
       "errors": [
         "Formula operand 1 is invalid, missing or ambiguous. Use a finite number or an exact source reference.",
         "Rollup & Calculation Engine needs mapped_rows input.",

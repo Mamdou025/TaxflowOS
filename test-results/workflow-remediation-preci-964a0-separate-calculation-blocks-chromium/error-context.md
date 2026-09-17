@@ -12,12 +12,12 @@
 # Error details
 
 ```
-Error: {"message":"Too many requests. Please try again later."}
+Error: {"message":"Invalid origin","code":"INVALID_ORIGIN"}
 
 expect(received).toBe(expected) // Object.is equality
 
 Expected: 200
-Received: 429
+Received: 403
 ```
 
 # Test source
@@ -41,7 +41,7 @@ Received: 429
   16 |       data: { email, password, name: 'Browser test owner' },
   17 |     });
 > 18 |     expect(signup.status(), await signup.text()).toBe(200);
-     |                                                  ^ Error: {"message":"Too many requests. Please try again later."}
+     |                                                  ^ Error: {"message":"Invalid origin","code":"INVALID_ORIGIN"}
   19 |     const { user } = await signup.json();
   20 |     const created = await context.request.post('/api/workspaces', {
   21 |       headers: { Origin: baseURL! },

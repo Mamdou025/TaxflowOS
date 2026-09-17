@@ -19,6 +19,7 @@ import {
   recordAgentActionOutcome,
 } from '../runtime/agent-action-client';
 import { uploadedRowsAtom } from '@/shared/stores/workspace-store';
+import { workflowSessionRequest } from '../runtime/workflow-session-request';
 
 type Proposal = {
   ref: SessionRef;
@@ -107,7 +108,7 @@ export function useSessionTools() {
   useCopilotAction({
     name: 'runWorkflow',
     description:
-      'Open the shared visual workflow execution in Chat, including steps and source selection even if no file is attached. Use an exact built-in catalog ID or saved workflow ID. Opening is not execution or result approval. The user starts/resumes in the panel. Use controlWorkflowRun for an existing active run.',
+      'Open the shared visual workflow execution in Chat, including steps and source selection even if no file is attached. Use an exact built-in catalog ID or saved workflow ID. OMIT version for built-in templates and whenever the user did not request a specific saved version. Never guess version 1. Opening is not execution or result approval and needs no run approval card. The user starts/resumes in the panel. Use controlWorkflowRun for an existing active run.',
     followUp: false,
     parameters: [
       { name: 'workflowId', type: 'string', required: true },
@@ -115,16 +116,17 @@ export function useSessionTools() {
         name: 'version',
         type: 'number',
         required: false,
-        description: 'Exact saved version when requested; never substitute another version.',
+        description:
+          'Only when the user explicitly requested a saved version and workflowId is its exact saved workflow ID. Omit for built-in templates. Never invent a version number.',
       },
     ],
     handler: ({ workflowId, version }: { workflowId: string; version?: number }) => {
-      if (
-        !getWorkflowConfig(workflowId.replace(/^pf-/, '')) &&
-        !store.get(workflowLibraryAtom)[workflowId]
-      )
-        return { error: 'Choose an available workflow.' };
-      return { workflowId, version };
+      return workflowSessionRequest(
+        store.get(workflowLibraryAtom),
+        (id) => !!getWorkflowConfig(id.replace(/^pf-/, '')),
+        workflowId,
+        version,
+      );
     },
     render: ({ result, status }) => {
       if (status !== 'complete') return <p>Opening workflow…</p>;
@@ -136,7 +138,11 @@ export function useSessionTools() {
           }
         />
       ) : (
-        <p role="alert">Workflow unavailable.</p>
+        <p role="alert">
+          {result && typeof result === 'object' && 'error' in result
+            ? String(result.error)
+            : 'Workflow unavailable.'}
+        </p>
       );
     },
   });

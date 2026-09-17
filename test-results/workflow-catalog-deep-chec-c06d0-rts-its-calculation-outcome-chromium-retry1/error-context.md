@@ -113,7 +113,7 @@ Call log:
               - generic [ref=e368]: "9"
           - generic [ref=e372]:
             - generic [ref=e373]:
-              - generic [ref=e374]: Good evening, Sophia
+              - generic [ref=e374]: Good morning, Sophia
               - generic [ref=e375]: What would you like to work on?
             - generic [ref=e378]:
               - textbox "Ask Scope, or describe a task…" [ref=e379]

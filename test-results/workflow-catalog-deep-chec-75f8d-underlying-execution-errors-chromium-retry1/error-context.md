@@ -56,7 +56,7 @@ Received array:  [{"blocker": {"figures": [{"formula": "item_total × 2", "key":
         - button "Choose client — Scope reads their worksheets & documents" [ref=e95] [cursor=pointer]
       - generic [ref=e152]:
         - generic [ref=e153]:
-          - generic [ref=e154]: Good evening, Sophia
+          - generic [ref=e154]: Good morning, Sophia
           - generic [ref=e155]: What would you like to work on?
         - generic [ref=e158]:
           - textbox "Ask Scope, or describe a task…" [ref=e159]

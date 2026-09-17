@@ -125,7 +125,7 @@ Call log:
 - button "Work"
 - 'button "Context: 0 selected, 0 used"'
 - button "Tools": "9"
-- text: Good evening, Sophia What would you like to work on?
+- text: Good morning, Sophia What would you like to work on?
 - textbox "Ask Scope, or describe a task…"
 - button "Add — search, workflows, worksheets"
 - button "Attach files"

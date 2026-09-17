@@ -100,191 +100,261 @@ Error: page.evaluate: TypeError: Cannot read properties of null (reading 'length
               - text: Workflow name
               - textbox "Workflow name" [ref=e272]: FAPI Calculation Template — My workflow
             - paragraph [ref=e273]: Personal workflow · Saved version 1
-          - group [ref=e274]:
-            - generic "Test data — upload document or enter examples" [ref=e275] [cursor=pointer]
+          - region "Workflow execution" [ref=e274]:
+            - generic [ref=e275]:
+              - heading "FAPI Calculation Template — My workflow" [level=3] [ref=e276]
+              - paragraph [ref=e277]: Version 1 · Run local-tool-workflow-34f02469-7c24-4daa-b581-98280aa7d300
+              - status [ref=e278]: Paused — ready when you are
+            - link "Open this workflow in Run" [ref=e279] [cursor=pointer]:
+              - /url: /w/custom%3Af84579e3-0d99-4b83-84a2-8587419bec6e?run=local-tool-workflow-34f02469-7c24-4daa-b581-98280aa7d300
+            - button "Continue in Chat" [ref=e280] [cursor=pointer]
+            - paragraph [ref=e281]: Interactive execution stays in this browser. Progress and evidence are included in the workspace save; resume after reopening. Server background runs remain available in Run.
+            - generic [ref=e282]:
+              - button "Resume workflow" [ref=e283] [cursor=pointer]
+              - button "New run from Build" [ref=e284] [cursor=pointer]
+              - button "Approve completed results" [ref=e285] [cursor=pointer]
+            - group "Sources" [ref=e286]:
+              - generic [ref=e288]:
+                - text: Source block
+                - combobox "Run source block" [ref=e289]:
+                  - option "Choose a source block"
+                  - option "Trial Balance" [selected]
+              - generic [ref=e290]:
+                - text: Source action
+                - combobox "Source action" [ref=e291]:
+                  - option "Replace source records" [selected]
+                  - option "Add another source"
+              - button "Upload run source" [ref=e292]
+              - paragraph [ref=e293]: Source changes preserve previous evidence and mark affected results as outdated. Pause before changing sources.
+            - list "Execution steps" [ref=e294]:
+              - listitem [ref=e295]:
+                - group [ref=e296]:
+                  - generic "1. Trial Balance · success" [ref=e297] [cursor=pointer]
+              - listitem [ref=e298]:
+                - group [ref=e299]:
+                  - generic "2. FAPI Inputs · success" [ref=e300] [cursor=pointer]
+              - listitem [ref=e301]:
+                - group [ref=e302]:
+                  - generic "3. Bank of Canada Valet API · warning" [ref=e303] [cursor=pointer]
+              - listitem [ref=e304]:
+                - group [ref=e305]:
+                  - generic "4. Bank of Canada FX Rate · success" [ref=e306] [cursor=pointer]
+              - listitem [ref=e307]:
+                - group [ref=e308]:
+                  - generic "5. Keyword Mapper · success" [ref=e309] [cursor=pointer]
+              - listitem [ref=e310]:
+                - group [ref=e311]:
+                  - generic "6. Category Rollup · success" [ref=e312] [cursor=pointer]
+              - listitem [ref=e313]:
+                - group [ref=e314]:
+                  - generic "7. FAPI Lines Engine · success" [ref=e315] [cursor=pointer]
+              - listitem [ref=e316]:
+                - group [ref=e317]:
+                  - generic "8. FAPI Summary Engine · success" [ref=e318] [cursor=pointer]
+              - listitem [ref=e319]:
+                - group [ref=e320]:
+                  - generic "9. Income & Expense · success" [ref=e321] [cursor=pointer]
+              - listitem [ref=e322]:
+                - group [ref=e323]:
+                  - generic "10. FAPI Lines A–H · success" [ref=e324] [cursor=pointer]
+              - listitem [ref=e325]:
+                - group [ref=e326]:
+                  - generic "11. FAPI Summary · success" [ref=e327] [cursor=pointer]
+              - listitem [ref=e328]:
+                - group [ref=e329]:
+                  - generic "12. Evidence Pack · warning" [ref=e330] [cursor=pointer]
+              - listitem [ref=e331]:
+                - group [ref=e332]:
+                  - generic "13. Canonical JSON · warning" [ref=e333] [cursor=pointer]
+            - group [ref=e334]:
+              - generic "Execution history (1)" [ref=e335] [cursor=pointer]
+            - complementary "Workflow execution lifetime" [ref=e336]:
+              - generic [ref=e340]: Durable runs use an immutable saved version and continue on the server if this tab closes. All installed workflow tools are supported. Runs use the inputs and source responses saved in that version. Browser previews require this tab to stay open.
+          - group [ref=e341]:
+            - generic "Test data — upload document or enter examples" [ref=e342] [cursor=pointer]
             - option "Trial Balance" [selected]
-          - region "API data for next run" [ref=e276]:
-            - heading "API data for next run" [level=3] [ref=e277]
-            - paragraph [ref=e278]: Run uses the saved response; it does not fetch again. To refresh, open the source in Build, create a new source version if locked, fetch, then save the workflow.
-            - generic [ref=e279]:
-              - strong [ref=e280]: Bank of Canada FX Rate
-              - paragraph [ref=e281]: "Manual override active: 1.35. The fetched rate is not used."
-              - paragraph [ref=e282]: "Fetched: Not recorded"
-          - region "Trigger readiness" [ref=e283]:
-            - heading "Workflow start conditions" [level=3] [ref=e284]
-            - paragraph [ref=e285]: Advisory only — you can always start a manual run. Field checks use recorded source outputs; test again after changing data.
-            - generic [ref=e286]:
-              - generic [ref=e287]:
-                - generic [ref=e288]: Document uploaded
-                - generic [ref=e289]: Met
-              - paragraph [ref=e290]: "Trial Balance · Uploaded: load-1000.csv"
-          - generic [ref=e291]:
-            - paragraph [ref=e292]: Build and Run share saved version 1
-            - generic [ref=e293]:
+          - region "API data for next run" [ref=e343]:
+            - heading "API data for next run" [level=3] [ref=e344]
+            - paragraph [ref=e345]: Run uses the saved response; it does not fetch again. To refresh, open the source in Build, create a new source version if locked, fetch, then save the workflow.
+            - generic [ref=e346]:
+              - strong [ref=e347]: Bank of Canada FX Rate
+              - paragraph [ref=e348]: "Manual override active: 1.35. The fetched rate is not used."
+              - paragraph [ref=e349]: "Fetched: Not recorded"
+          - region "Trigger readiness" [ref=e350]:
+            - heading "Workflow start conditions" [level=3] [ref=e351]
+            - paragraph [ref=e352]: Advisory only — you can always start a manual run. Field checks use recorded source outputs; test again after changing data.
+            - generic [ref=e353]:
+              - generic [ref=e354]:
+                - generic [ref=e355]: Document uploaded
+                - generic [ref=e356]: Met
+              - paragraph [ref=e357]: "Trial Balance · Uploaded: load-1000.csv"
+          - generic [ref=e358]:
+            - paragraph [ref=e359]: Build and Run share saved version 1
+            - generic [ref=e360]:
               - text: Saved workflow version
-              - combobox "Saved workflow version" [ref=e294]:
+              - combobox "Saved workflow version" [ref=e361]:
                 - option "FAPI Calculation Template — My workflow - Version 1" [selected]
-            - button "Preview saved version 1 in this browser" [ref=e295] [cursor=pointer]
-            - button "Run saved version 1 durably" [ref=e296] [cursor=pointer]
-          - button "Save changes and preview" [active] [ref=e297] [cursor=pointer]
-          - paragraph [ref=e298]: Runs the graph and rules shown in Build using its configured source data. Blocks without an executable tool are reported in the results.
-          - complementary "Workflow execution lifetime" [ref=e299]:
-            - generic [ref=e303]: Durable runs use an immutable saved version and continue on the server if this tab closes. All installed workflow tools are supported. Runs use the inputs and source responses saved in that version. Browser previews require this tab to stay open.
-          - generic [ref=e304]:
-            - heading "Version 1 · 9/16/2026, 10:32:08 PM · warning" [level=3] [ref=e305]
-            - paragraph [ref=e306]: Run ID local-tool-workflow-0215eb79-990e-48ee-894d-41d2709a1aab · Started from run
-            - region "Final workflow results" [ref=e307]:
-              - heading "Final results" [level=3] [ref=e308]
-              - generic [ref=e309]:
+            - button "Preview saved version 1 in this browser" [ref=e362] [cursor=pointer]
+            - button "Run saved version 1 durably" [ref=e363] [cursor=pointer]
+          - button "Save changes and preview" [active] [ref=e364] [cursor=pointer]
+          - paragraph [ref=e365]: Runs the graph and rules shown in Build using its configured source data. Blocks without an executable tool are reported in the results.
+          - complementary "Workflow execution lifetime" [ref=e366]:
+            - generic [ref=e370]: Durable runs use an immutable saved version and continue on the server if this tab closes. All installed workflow tools are supported. Runs use the inputs and source responses saved in that version. Browser previews require this tab to stay open.
+          - generic [ref=e371]:
+            - heading "Version 1 · 9/17/2026, 2:51:10 AM · warning" [level=3] [ref=e372]
+            - paragraph [ref=e373]: Run ID local-tool-workflow-34f02469-7c24-4daa-b581-98280aa7d300 · Started from run
+            - region "Final workflow results" [ref=e374]:
+              - heading "Final results" [level=3] [ref=e375]
+              - generic [ref=e376]:
                 - text: Display precision
-                - combobox "Result display precision" [ref=e310]:
+                - combobox "Result display precision" [ref=e377]:
                   - option "Full precision" [selected]
                   - option "0 decimal places"
                   - option "2 decimal places"
                   - option "4 decimal places"
                   - option "6 decimal places"
-              - paragraph [ref=e311]: Display formatting does not change values sent to other blocks or exported in JSON.
-              - group [ref=e312]:
-                - generic "Choose displayed results" [ref=e313]
-              - table [ref=e314]:
-                - rowgroup [ref=e315]:
-                  - row [ref=e316]:
-                    - columnheader "Result" [ref=e317]
-                    - columnheader "Value" [ref=e318]
-                    - columnheader "Unit" [ref=e319]
-                - rowgroup [ref=e320]:
-                  - row [ref=e321]:
-                    - cell "FX Rate FAPI Summary Engine" [ref=e322]:
+              - paragraph [ref=e378]: Display formatting does not change values sent to other blocks or exported in JSON.
+              - group [ref=e379]:
+                - generic "Choose displayed results" [ref=e380]
+              - table [ref=e381]:
+                - rowgroup [ref=e382]:
+                  - row [ref=e383]:
+                    - columnheader "Result" [ref=e384]
+                    - columnheader "Value" [ref=e385]
+                    - columnheader "Unit" [ref=e386]
+                - rowgroup [ref=e387]:
+                  - row [ref=e388]:
+                    - cell "FX Rate FAPI Summary Engine" [ref=e389]:
                       - text: FX Rate
-                      - generic [ref=e323]: FAPI Summary Engine
-                    - cell "1.35" [ref=e324]
-                    - cell "—" [ref=e325]
-                  - row [ref=e326]:
-                    - cell "Deductions FAPI Summary Engine" [ref=e327]:
+                      - generic [ref=e390]: FAPI Summary Engine
+                    - cell "1.35" [ref=e391]
+                    - cell "—" [ref=e392]
+                  - row [ref=e393]:
+                    - cell "Deductions FAPI Summary Engine" [ref=e394]:
                       - text: Deductions
-                      - generic [ref=e328]: FAPI Summary Engine
-                    - cell "0" [ref=e329]
-                    - cell "—" [ref=e330]
-                  - row [ref=e331]:
-                    - cell "Gross FAPI Summary Engine" [ref=e332]:
+                      - generic [ref=e395]: FAPI Summary Engine
+                    - cell "0" [ref=e396]
+                    - cell "—" [ref=e397]
+                  - row [ref=e398]:
+                    - cell "Gross FAPI Summary Engine" [ref=e399]:
                       - text: Gross
-                      - generic [ref=e333]: FAPI Summary Engine
-                    - cell "1,000" [ref=e334]
-                    - cell "—" [ref=e335]
-                  - row [ref=e336]:
-                    - cell "Deductions CAD FAPI Summary Engine" [ref=e337]:
+                      - generic [ref=e400]: FAPI Summary Engine
+                    - cell "1,000" [ref=e401]
+                    - cell "—" [ref=e402]
+                  - row [ref=e403]:
+                    - cell "Deductions CAD FAPI Summary Engine" [ref=e404]:
                       - text: Deductions CAD
-                      - generic [ref=e338]: FAPI Summary Engine
-                    - cell "0" [ref=e339]
-                    - cell "—" [ref=e340]
-                  - row [ref=e341]:
-                    - cell "Gross CAD FAPI Summary Engine" [ref=e342]:
+                      - generic [ref=e405]: FAPI Summary Engine
+                    - cell "0" [ref=e406]
+                    - cell "—" [ref=e407]
+                  - row [ref=e408]:
+                    - cell "Gross CAD FAPI Summary Engine" [ref=e409]:
                       - text: Gross CAD
-                      - generic [ref=e343]: FAPI Summary Engine
-                    - cell "1,350" [ref=e344]
-                    - cell "—" [ref=e345]
-                  - row [ref=e346]:
-                    - cell "FAPI Brut FAPI Summary Engine" [ref=e347]:
+                      - generic [ref=e410]: FAPI Summary Engine
+                    - cell "1,350" [ref=e411]
+                    - cell "—" [ref=e412]
+                  - row [ref=e413]:
+                    - cell "FAPI Brut FAPI Summary Engine" [ref=e414]:
                       - text: FAPI Brut
-                      - generic [ref=e348]: FAPI Summary Engine
-                    - cell "1,000" [ref=e349]
-                    - cell "—" [ref=e350]
-                  - row [ref=e351]:
-                    - cell "FAPI Brut CAD FAPI Summary Engine" [ref=e352]:
+                      - generic [ref=e415]: FAPI Summary Engine
+                    - cell "1,000" [ref=e416]
+                    - cell "—" [ref=e417]
+                  - row [ref=e418]:
+                    - cell "FAPI Brut CAD FAPI Summary Engine" [ref=e419]:
                       - text: FAPI Brut CAD
-                      - generic [ref=e353]: FAPI Summary Engine
-                    - cell "1,350" [ref=e354]
-                    - cell "—" [ref=e355]
-                  - row [ref=e356]:
-                    - cell "FAT Deduction FAPI Summary Engine" [ref=e357]:
+                      - generic [ref=e420]: FAPI Summary Engine
+                    - cell "1,350" [ref=e421]
+                    - cell "—" [ref=e422]
+                  - row [ref=e423]:
+                    - cell "FAT Deduction FAPI Summary Engine" [ref=e424]:
                       - text: FAT Deduction
-                      - generic [ref=e358]: FAPI Summary Engine
-                    - cell "400" [ref=e359]
-                    - cell "—" [ref=e360]
-                  - row [ref=e361]:
-                    - cell "FAT Deduction CAD FAPI Summary Engine" [ref=e362]:
+                      - generic [ref=e425]: FAPI Summary Engine
+                    - cell "400" [ref=e426]
+                    - cell "—" [ref=e427]
+                  - row [ref=e428]:
+                    - cell "FAT Deduction CAD FAPI Summary Engine" [ref=e429]:
                       - text: FAT Deduction CAD
-                      - generic [ref=e363]: FAPI Summary Engine
-                    - cell "540" [ref=e364]
-                    - cell "—" [ref=e365]
-                  - row [ref=e366]:
-                    - cell "Net FAPI FAPI Summary Engine" [ref=e367]:
+                      - generic [ref=e430]: FAPI Summary Engine
+                    - cell "540" [ref=e431]
+                    - cell "—" [ref=e432]
+                  - row [ref=e433]:
+                    - cell "Net FAPI FAPI Summary Engine" [ref=e434]:
                       - text: Net FAPI
-                      - generic [ref=e368]: FAPI Summary Engine
-                    - cell "600" [ref=e369]
-                    - cell "—" [ref=e370]
-                  - row [ref=e371]:
-                    - cell "Net FAPI CAD FAPI Summary Engine" [ref=e372]:
+                      - generic [ref=e435]: FAPI Summary Engine
+                    - cell "600" [ref=e436]
+                    - cell "—" [ref=e437]
+                  - row [ref=e438]:
+                    - cell "Net FAPI CAD FAPI Summary Engine" [ref=e439]:
                       - text: Net FAPI CAD
-                      - generic [ref=e373]: FAPI Summary Engine
-                    - cell "810" [ref=e374]
-                    - cell "—" [ref=e375]
-              - group [ref=e376]:
-                - generic "1 review message" [ref=e377]
-            - region "API data used in this run" [ref=e378]:
-              - heading "API data used in this run" [level=3] [ref=e379]
-              - paragraph [ref=e380]: Run uses the saved response; it does not fetch again. To refresh, open the source in Build, create a new source version if locked, fetch, then save the workflow.
-              - generic [ref=e381]:
-                - strong [ref=e382]: Bank of Canada FX Rate
-                - paragraph [ref=e383]: "Manual override active: 1.35. The fetched rate is not used."
-                - paragraph [ref=e384]: "Fetched: Not recorded"
-            - group [ref=e385]:
-              - generic "Bank of Canada Valet API · warning" [ref=e386] [cursor=pointer]
-            - group [ref=e387]:
-              - generic "Trial Balance · success" [ref=e388] [cursor=pointer]
-            - group [ref=e389]:
-              - generic "FAPI Inputs · success" [ref=e390] [cursor=pointer]
-            - group [ref=e391]:
-              - generic "Bank of Canada FX Rate · success" [ref=e392] [cursor=pointer]
-            - group [ref=e393]:
-              - generic "Keyword Mapper · success" [ref=e394] [cursor=pointer]
-            - group [ref=e395]:
-              - generic "Category Rollup · success" [ref=e396] [cursor=pointer]
-            - group [ref=e397]:
-              - generic "Income & Expense · success" [ref=e398] [cursor=pointer]
-            - group [ref=e399]:
-              - generic "FAPI Lines Engine · success" [ref=e400] [cursor=pointer]
-            - group [ref=e401]:
-              - generic "FAPI Lines A–H · success" [ref=e402] [cursor=pointer]
-            - group [ref=e403]:
-              - generic "FAPI Summary Engine · success" [ref=e404] [cursor=pointer]
-            - group [ref=e405]:
-              - generic "FAPI Summary · success" [ref=e406] [cursor=pointer]
-            - group [ref=e407]:
-              - generic "Evidence Pack · warning" [ref=e408] [cursor=pointer]
-            - group [ref=e409]:
-              - generic "Canonical JSON · warning" [ref=e410] [cursor=pointer]
-      - separator "Drag to resize" [ref=e411]
-      - generic [ref=e413]:
-        - generic [ref=e414]:
-          - generic [ref=e415]: Chat panel
-          - button "Hide chat panel" [ref=e416] [cursor=pointer]
-          - button "Expand chat panel" [ref=e420] [cursor=pointer]
-        - generic [ref=e427]:
-          - generic [ref=e428]:
-            - generic [ref=e429]:
-              - button "Choose client — Scope reads their worksheets & documents" [ref=e430] [cursor=pointer]
-              - generic [ref=e486]:
-                - button "N Northstar Inc" [ref=e487] [cursor=pointer]:
-                  - generic [ref=e488]: "N"
-                  - generic [ref=e489]: Northstar Inc
-                - button "Work" [ref=e494] [cursor=pointer]
-            - 'button "Context: 0 selected, 0 used" [ref=e503] [cursor=pointer]'
-            - button "Tools" [ref=e509] [cursor=pointer]:
-              - generic [ref=e512]: "9"
-          - generic [ref=e516]:
-            - generic [ref=e517]:
-              - generic [ref=e518]: Good evening, Sophia
-              - generic [ref=e519]: What would you like to work on?
-            - generic [ref=e522]:
-              - textbox "Ask Scope, or describe a task…" [ref=e523]
-              - generic [ref=e524]:
-                - button "Add — search, workflows, worksheets" [ref=e525] [cursor=pointer]
-                - button "Attach files" [ref=e527] [cursor=pointer]
-                - 'button "Chat agent: Sina" [ref=e530] [cursor=pointer]': Sina
-                - button "Send" [disabled] [ref=e541]
+                      - generic [ref=e440]: FAPI Summary Engine
+                    - cell "810" [ref=e441]
+                    - cell "—" [ref=e442]
+              - group [ref=e443]:
+                - generic "1 review message" [ref=e444]
+            - region "API data used in this run" [ref=e445]:
+              - heading "API data used in this run" [level=3] [ref=e446]
+              - paragraph [ref=e447]: Run uses the saved response; it does not fetch again. To refresh, open the source in Build, create a new source version if locked, fetch, then save the workflow.
+              - generic [ref=e448]:
+                - strong [ref=e449]: Bank of Canada FX Rate
+                - paragraph [ref=e450]: "Manual override active: 1.35. The fetched rate is not used."
+                - paragraph [ref=e451]: "Fetched: Not recorded"
+            - group [ref=e452]:
+              - generic "Bank of Canada Valet API · warning" [ref=e453] [cursor=pointer]
+            - group [ref=e454]:
+              - generic "Trial Balance · success" [ref=e455] [cursor=pointer]
+            - group [ref=e456]:
+              - generic "FAPI Inputs · success" [ref=e457] [cursor=pointer]
+            - group [ref=e458]:
+              - generic "Bank of Canada FX Rate · success" [ref=e459] [cursor=pointer]
+            - group [ref=e460]:
+              - generic "Keyword Mapper · success" [ref=e461] [cursor=pointer]
+            - group [ref=e462]:
+              - generic "Category Rollup · success" [ref=e463] [cursor=pointer]
+            - group [ref=e464]:
+              - generic "Income & Expense · success" [ref=e465] [cursor=pointer]
+            - group [ref=e466]:
+              - generic "FAPI Lines Engine · success" [ref=e467] [cursor=pointer]
+            - group [ref=e468]:
+              - generic "FAPI Lines A–H · success" [ref=e469] [cursor=pointer]
+            - group [ref=e470]:
+              - generic "FAPI Summary Engine · success" [ref=e471] [cursor=pointer]
+            - group [ref=e472]:
+              - generic "FAPI Summary · success" [ref=e473] [cursor=pointer]
+            - group [ref=e474]:
+              - generic "Evidence Pack · warning" [ref=e475] [cursor=pointer]
+            - group [ref=e476]:
+              - generic "Canonical JSON · warning" [ref=e477] [cursor=pointer]
+      - separator "Drag to resize" [ref=e478]
+      - generic [ref=e480]:
+        - generic [ref=e481]:
+          - generic [ref=e482]: Chat panel
+          - button "Hide chat panel" [ref=e483] [cursor=pointer]
+          - button "Expand chat panel" [ref=e487] [cursor=pointer]
+        - generic [ref=e494]:
+          - generic [ref=e495]:
+            - generic [ref=e496]:
+              - button "Choose client — Scope reads their worksheets & documents" [ref=e497] [cursor=pointer]
+              - generic [ref=e553]:
+                - button "N Northstar Inc" [ref=e554] [cursor=pointer]:
+                  - generic [ref=e555]: "N"
+                  - generic [ref=e556]: Northstar Inc
+                - button "Work" [ref=e561] [cursor=pointer]
+            - 'button "Context: 0 selected, 0 used" [ref=e570] [cursor=pointer]'
+            - button "Tools" [ref=e576] [cursor=pointer]:
+              - generic [ref=e579]: "9"
+          - generic [ref=e583]:
+            - generic [ref=e584]:
+              - generic [ref=e585]: Good morning, Sophia
+              - generic [ref=e586]: What would you like to work on?
+            - generic [ref=e589]:
+              - textbox "Ask Scope, or describe a task…" [ref=e590]
+              - generic [ref=e591]:
+                - button "Add — search, workflows, worksheets" [ref=e592] [cursor=pointer]
+                - button "Attach files" [ref=e594] [cursor=pointer]
+                - 'button "Chat agent: Sina" [ref=e597] [cursor=pointer]': Sina
+                - button "Send" [disabled] [ref=e608]
   - region "Notifications alt+T":
     - list:
-      - listitem [ref=e544]:
-        - generic [ref=e548]: Version 1 calculated with review findings.
+      - listitem [ref=e611]:
+        - generic [ref=e615]: Version 1 calculated with review findings.
 ```

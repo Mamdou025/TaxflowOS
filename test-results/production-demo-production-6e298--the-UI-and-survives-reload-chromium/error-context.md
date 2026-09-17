@@ -79,6 +79,57 @@ Call log:
 - text: Workflow name
 - textbox "Workflow name": Demo rehearsal — widget sales
 - paragraph: Personal workflow · Saved version 1
+- region "Workflow execution":
+  - heading "Demo rehearsal — widget sales" [level=3]
+  - paragraph: Version 1 · Run local-tool-workflow-277291e7-e466-435c-b9d4-e568d4ef1b97
+  - status: Paused — ready when you are
+  - link "Open this workflow in Run":
+    - /url: /w/custom%3A83ab1c04-e35f-4fe6-a7cc-f0dc96c761fb?run=local-tool-workflow-277291e7-e466-435c-b9d4-e568d4ef1b97
+  - button "Continue in Chat"
+  - paragraph: Interactive execution stays in this browser. Progress and evidence are included in the workspace save; resume after reopening. Server background runs remain available in Run.
+  - button "Resume workflow"
+  - button "New run from Build"
+  - button "Approve completed results"
+  - group "Sources":
+    - text: Sources Source block
+    - combobox "Run source block":
+      - option "Choose a source block"
+      - option "Trial Balance" [selected]
+    - text: Source action
+    - combobox "Source action":
+      - option "Replace source records" [selected]
+      - option "Add another source"
+    - button "Upload run source"
+    - paragraph: Source changes preserve previous evidence and mark affected results as outdated. Pause before changing sources.
+  - list "Execution steps":
+    - listitem:
+      - group: 1. Trial Balance · success
+    - listitem:
+      - group: 2. FAPI Inputs · success
+    - listitem:
+      - group: 3. Bank of Canada Valet API · warning
+    - listitem:
+      - group: 4. Bank of Canada FX Rate · success
+    - listitem:
+      - group: 5. Keyword Mapper · warning
+    - listitem:
+      - group: 6. Category Rollup · success
+    - listitem:
+      - group: 7. FAPI Lines Engine · success
+    - listitem:
+      - group: 8. FAPI Summary Engine · success
+    - listitem:
+      - group: 9. Income & Expense · success
+    - listitem:
+      - group: 10. FAPI Lines A–H · success
+    - listitem:
+      - group: 11. FAPI Summary · success
+    - listitem:
+      - group: 12. Evidence Pack · warning
+    - listitem:
+      - group: 13. Canonical JSON · warning
+  - group: Execution history (1)
+  - complementary "Workflow execution lifetime": Durable runs use an immutable saved version and continue on the server if this tab closes. All installed workflow tools are supported. Runs use the inputs and source responses saved in that version. Browser previews require this tab to stay open.
 - group: Test data — upload document or enter examples
 - region "API data for next run":
   - heading "API data for next run" [level=3]
@@ -100,8 +151,8 @@ Call log:
 - button "Save changes and preview"
 - paragraph: Runs the graph and rules shown in Build using its configured source data. Blocks without an executable tool are reported in the results.
 - complementary "Workflow execution lifetime": Durable runs use an immutable saved version and continue on the server if this tab closes. All installed workflow tools are supported. Runs use the inputs and source responses saved in that version. Browser previews require this tab to stay open.
-- heading "Version 1 · 9/16/2026, 10:38:14 PM · warning" [level=3]
-- paragraph: Run ID local-tool-workflow-12d14af5-a773-4bf0-ab4b-eb990fbd88b3 · Started from run
+- heading "Version 1 · 9/17/2026, 2:58:24 AM · warning" [level=3]
+- paragraph: Run ID local-tool-workflow-277291e7-e466-435c-b9d4-e568d4ef1b97 · Started from run
 - region "Final workflow results":
   - heading "Final results" [level=3]
   - text: Display precision
@@ -597,7 +648,7 @@ Call log:
 - button "Work"
 - 'button "Context: 0 selected, 0 used"'
 - button "Tools": "9"
-- text: Good evening, Sophia What would you like to work on?
+- text: Good morning, Sophia What would you like to work on?
 - textbox "Ask Scope, or describe a task…"
 - button "Add — search, workflows, worksheets"
 - button "Attach files"

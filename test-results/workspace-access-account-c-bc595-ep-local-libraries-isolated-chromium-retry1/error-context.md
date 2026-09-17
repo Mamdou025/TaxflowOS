@@ -35,7 +35,7 @@ Call log:
   - text: Name
   - textbox "Name": Workspace browser owner
   - text: Email
-  - textbox "Email": e5328179-eb1c-4bbb-a0cb-39db97ca5d0b@example.invalid
+  - textbox "Email": a77e4825-ede8-4446-9377-95b34fcdc73f@example.invalid
   - text: Password
   - textbox "Password": Synthetic-password-2026!
   - paragraph: Use at least 12 characters. Workspace membership is granted separately by an Owner.
