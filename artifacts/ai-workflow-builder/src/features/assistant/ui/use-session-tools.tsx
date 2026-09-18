@@ -1,3 +1,5 @@
+import { inspectWorkflowRun } from '@workspace/workflow-core/inspection';
+import { ReadableData } from '@/features/workflow-builder/ui/workspace/readable-data';
 import { getWorkflowConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
 import { useState } from 'react';
 import { atom, useAtomValue, useStore } from 'jotai';
@@ -7,6 +9,7 @@ import { getSession, sessionContext, type SessionAction } from '@workspace/workf
 import { workflowLibraryAtom } from '@/features/workflows-hub/workflow-library';
 import {
   activeSessionAtom,
+  workflowInspectionAtom,
   advanceSession,
   applySessionAction,
   type SessionRef,
@@ -162,6 +165,35 @@ export function useSessionTools() {
       'Read a block’s current input, result, findings and stale status in the active run. This does not execute anything.',
     parameters: [{ name: 'blockId', type: 'string', required: true }],
     handler: ({ blockId }: { blockId: string }) => {
+      const inspection = store.get(workflowInspectionAtom);
+      if (inspection) {
+        try {
+          const current = store.get(workflowLibraryAtom)[inspection.workflowId];
+          if (!current) return { error: 'This workflow is unavailable.' };
+          const evidence = inspectWorkflowRun(current, inspection.runId);
+          const step = evidence.steps.find((item) => item.id === blockId);
+          if (!step) return { error: 'That block is not in this run.' };
+          const attempt =
+            inspection.blockId === blockId && inspection.attemptIndex !== null
+              ? evidence.attempts[inspection.attemptIndex]
+              : undefined;
+          const result = attempt
+            ? attempt.result.result.results.find((item) => item.blockId === blockId)
+            : evidence.results[blockId];
+          return {
+            inspection: true,
+            blockId,
+            ...step,
+            workflowId: evidence.workflowId,
+            runId: evidence.runId,
+            version: evidence.version,
+            attemptRevision: attempt?.revision,
+            preview: preview(result ?? null),
+          };
+        } catch (error) {
+          return { error: error instanceof Error ? error.message : 'Evidence unavailable.' };
+        }
+      }
       const ref = store.get(activeSessionAtom);
       if (!ref) return { error: 'Open a workflow first.' };
       const current = store.get(workflowLibraryAtom)[ref.workflowId];
@@ -178,11 +210,20 @@ export function useSessionTools() {
       'workflowId' in result &&
       'runId' in result &&
       'blockId' in result ? (
-        <WorkflowSessionPanel
-          workflowId={String(result.workflowId)}
-          runId={String(result.runId)}
-          focusBlockId={String(result.blockId)}
-        />
+        'inspection' in result ? (
+          <div>
+            <p>
+              Build evidence · Run {String(result.runId)} · Block {String(result.blockId)}
+            </p>
+            <ReadableData value={result} />
+          </div>
+        ) : (
+          <WorkflowSessionPanel
+            workflowId={String(result.workflowId)}
+            runId={String(result.runId)}
+            focusBlockId={String(result.blockId)}
+          />
+        )
       ) : (
         <p>{status === 'complete' ? 'The requested block is unavailable.' : 'Reading block…'}</p>
       ),

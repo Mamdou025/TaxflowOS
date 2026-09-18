@@ -1,3 +1,4 @@
+import { builderFocusTargetAtom } from '@/shared/workflow-engine/state/workflow-store';
 import { useEffect, useState } from 'react';
 import { useAtomValue, useStore } from 'jotai';
 import {
@@ -27,7 +28,7 @@ import { useRouter } from '@/lib/router';
 import { templateDefinition } from './workflow-execution';
 import { chatPanelModeAtom } from '@/shared/stores/chat-store';
 import { openWorkspaceWindowAtom } from '@/shared/stores/workspace-store';
-import { workflowSurfaceAtom } from './workflows-store';
+import { workflowSurfaceAtom, workflowTabAtom } from './workflows-store';
 import { LazyDetails } from '@/features/workflow-builder/ui/workspace/lazy-details';
 
 export function WorkflowSessionPanel({
@@ -139,6 +140,15 @@ export function WorkflowSessionPanel({
       setError(err instanceof Error ? err.message : 'The run action failed.');
     }
   };
+  const verifyInBuild = (blockId = '') => {
+    showSessionInRun(store, ref);
+    store.set(builderFocusTargetAtom, { workflowId: entry.id, blockId });
+    store.set(workflowTabAtom, 'build');
+    store.set(workflowSurfaceAtom, 'workflow');
+    store.set(chatPanelModeAtom, 'split');
+    store.set(openWorkspaceWindowAtom, { pageKey: 'workflows', title: 'Workflows' });
+    router.push('/');
+  };
   const attach = async (name: string, rows: Record<string, unknown>[]) => {
     await act({
       kind: 'source',
@@ -195,6 +205,9 @@ export function WorkflowSessionPanel({
         }}
       >
         Continue in Chat
+      </button>
+      <button className="ml-3 text-sm underline" onClick={() => verifyInBuild()}>
+        Verify this run in Build
       </button>
       <p className="text-xs text-muted-foreground">
         Interactive execution stays in this browser. Progress and evidence are included in the
@@ -327,6 +340,9 @@ export function WorkflowSessionPanel({
                     {message}
                   </p>
                 ))}
+                <button className="text-sm underline" onClick={() => verifyInBuild(step.id)}>
+                  Verify this block in Build
+                </button>
                 {result && (
                   <>
                     <h4 className="mt-2 font-medium">Input</h4>

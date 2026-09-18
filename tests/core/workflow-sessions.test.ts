@@ -1,3 +1,4 @@
+import { inspectWorkflowRun } from '../../lib/workflow-core/src/application/inspection';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -367,4 +368,63 @@ test('missing tools and checkpoints do not fabricate success or advance dependen
     () => changeSession(entry, 'review', 4, { kind: 'approve' }, engine.ports),
     /Complete/,
   );
+});
+
+test('Build inspection selects the exact paused session and immutable version without executing or mutating', () => {
+  const engine = runtime();
+  let entry = startSession(
+    saveVersion(createWorkflow('custom:core', 'core', definition()), instant),
+    1,
+    'old-session',
+    instant,
+  );
+  entry = changeSession(
+    entry,
+    'old-session',
+    0,
+    { kind: 'block', blockId: 'total' },
+    engine.ports,
+    instant,
+  );
+  entry = changeSession(
+    entry,
+    'old-session',
+    1,
+    { kind: 'block', blockId: 'double' },
+    engine.ports,
+    instant,
+  );
+  const changed = structuredClone(entry.draft);
+  changed.blocks[1].config.values = [900];
+  entry = saveVersion(replaceDraft(entry, changed), instant);
+  entry = startSession(entry, 2, 'new-session', instant);
+  const before = JSON.stringify(entry);
+  const calls = engine.calls();
+  const evidence = inspectWorkflowRun(entry, 'old-session');
+  assert.equal(evidence.version, 1);
+  assert.equal(evidence.results.double.output.value, 400);
+  assert.deepEqual(evidence.definition.blocks[1].config.values, [120, 80]);
+  assert.equal(evidence.attempts.length, 2);
+  evidence.results.double.output.value = -1;
+  evidence.definition.blocks[1].config.values = [];
+  assert.equal(JSON.stringify(entry), before);
+  assert.equal(engine.calls(), calls);
+  assert.throws(() => inspectWorkflowRun(entry, 'missing'), /exact run/);
+  assert.equal(Object.keys(inspectWorkflowRun(entry, 'new-session').results).length, 0);
+  entry = changeSession(entry, 'old-session', 2, { kind: 'approve' }, engine.ports, instant);
+  const recordedId = entry.runs[0].result.record.execution.id;
+  entry = changeSession(
+    entry,
+    'old-session',
+    3,
+    { kind: 'block', blockId: 'total' },
+    engine.ports,
+    instant,
+  );
+  assert.equal(
+    inspectWorkflowRun(entry, 'old-session').steps.find((s) => s.id === 'double')?.status,
+    'outdated',
+  );
+  assert.equal(inspectWorkflowRun(entry, recordedId).results.double.output.value, 400);
+  assert.equal(inspectWorkflowRun(entry, recordedId).version, 1);
 });

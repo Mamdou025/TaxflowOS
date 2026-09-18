@@ -63,12 +63,21 @@ import {
 // Keep the library/overview independent of the canvas and execution screens.
 // Each boundary leaves the page menu and Chat mounted while its view loads.
 const loadingWorkflowView = () => (
-  <div role="status" aria-label="Loading workflow view" className="p-6 text-sm text-muted-foreground">
+  <div
+    role="status"
+    aria-label="Loading workflow view"
+    className="p-6 text-sm text-muted-foreground"
+  >
     Loading workflow view…
   </div>
 );
 const InlineBuilder = dynamic(
-  () => import('@/features/workflow-builder/ui/inline-builder').then((module) => module.InlineBuilder),
+  () =>
+    import('@/features/workflow-builder/ui/inline-builder').then((module) => module.InlineBuilder),
+  { loading: loadingWorkflowView },
+);
+const WorkflowRunInspector = dynamic(
+  () => import('./workflow-run-inspector').then((module) => module.WorkflowRunInspector),
   { loading: loadingWorkflowView },
 );
 const SavedWorkflowRun = dynamic(
@@ -346,6 +355,7 @@ function WorkflowDetail({ def }: { def: PortfolioWorkflowDef }) {
   const router = useRouter();
   const { resolvedTheme } = useTheme();
   const tab = useAtomValue(workflowTabAtom);
+  const selectedRun = useAtomValue(selectedWorkflowRunIdAtom);
   const library = useAtomValue(workflowLibraryAtom);
   const setTab = useSetAtom(workflowTabAtom);
   const runnable = getWorkflowConfig(def.id.replace(/^pf-/, ''));
@@ -356,7 +366,15 @@ function WorkflowDetail({ def }: { def: PortfolioWorkflowDef }) {
     // Full-bleed canvas — the whole body. Controls live in the header.
     return (
       <div style={{ position: 'absolute', inset: 0, background: 'var(--sx-canvas-ground)' }}>
-        <InlineBuilder key={def.id} workflowId={def.id} />
+        {selectedRun ? (
+          <WorkflowRunInspector
+            key={`${def.id}:${selectedRun}`}
+            workflowId={def.id}
+            runId={selectedRun}
+          />
+        ) : (
+          <InlineBuilder key={def.id} workflowId={def.id} />
+        )}
       </div>
     );
   }
@@ -425,7 +443,7 @@ export function WorkflowPage({ workflowId }: { workflowId?: string }) {
   const selectedId = useAtomValue(selectedWorkflowIdAtom);
   const [tab, setTab] = useAtom(workflowTabAtom);
   const [surface, setSurface] = useAtom(workflowSurfaceAtom);
-  const setSelectedRun = useSetAtom(selectedWorkflowRunIdAtom);
+  const [selectedRun, setSelectedRun] = useAtom(selectedWorkflowRunIdAtom);
   const bridge = useAtomValue(builderBridgeAtom);
   const setFit = useSetAtom(triggerFitViewAtom);
   const router = useRouter();
@@ -446,6 +464,12 @@ export function WorkflowPage({ workflowId }: { workflowId?: string }) {
   const isNew = selectedId === NEW_WORKFLOW_ID;
   const [library, setLibrary] = useAtom(workflowLibraryAtom);
   const personal = selectedId ? library[selectedId] : undefined;
+  const selectedRunVersion = selectedRun
+    ? (personal?.sessions?.find((item) => item.id === selectedRun)?.version ??
+      personal?.runs.find((item) => item.result.record.execution.id === selectedRun)?.version)
+    : undefined;
+  const inspectedName = personal?.versions.find((item) => item.number === selectedRunVersion)
+    ?.definition.name;
   const def = personal
     ? {
         ...(getPortfolioWorkflowDef(personal.templateId) ?? {
@@ -462,7 +486,7 @@ export function WorkflowPage({ workflowId }: { workflowId?: string }) {
       ? getPortfolioWorkflowDef(selectedId)
       : null;
   const hasSelection = isNew || !!def;
-  const headerName = isNew ? 'New workflow' : def ? short(def.name) : null;
+  const headerName = isNew ? 'New workflow' : def ? short(inspectedName ?? def.name) : null;
   const isBuild = tab === 'build';
 
   // Publish the workflow name + mode tabs (+ Build controls) into the panel header.
@@ -479,13 +503,17 @@ export function WorkflowPage({ workflowId }: { workflowId?: string }) {
               {
                 kind: 'label',
                 id: 'wf-version',
-                text: personal
-                  ? !personal.versions.length ||
-                    definitionFingerprint(personal.draft) !==
-                      definitionFingerprint(personal.versions.at(-1)!.definition)
-                    ? 'Unsaved changes'
-                    : `Version ${personal.versions.at(-1)!.number}`
-                  : 'Template',
+                text: selectedRun
+                  ? selectedRunVersion === undefined
+                    ? 'Run unavailable'
+                    : `Run version ${selectedRunVersion}`
+                  : personal
+                    ? !personal.versions.length ||
+                      definitionFingerprint(personal.draft) !==
+                        definitionFingerprint(personal.versions.at(-1)!.definition)
+                      ? 'Unsaved changes'
+                      : `Version ${personal.versions.at(-1)!.number}`
+                    : 'Template',
               },
               { kind: 'separator', id: 'sep' },
               ...TAB_LABELS.map((t): PageMenuItem => ({
@@ -516,7 +544,7 @@ export function WorkflowPage({ workflowId }: { workflowId?: string }) {
             ]
           : [{ kind: 'label', id: 'wf-empty', text: 'Select a workflow' }];
   const right: PageMenuItem[] =
-    surface === 'workflow' && hasSelection && isBuild
+    surface === 'workflow' && hasSelection && isBuild && !selectedRun
       ? [
           {
             kind: 'button',
@@ -584,6 +612,7 @@ export function WorkflowPage({ workflowId }: { workflowId?: string }) {
     surface,
     selectedId,
     tab,
+    selectedRun,
     !!bridge,
     bridge?.canUndo,
     bridge?.canRedo,

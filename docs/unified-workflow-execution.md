@@ -58,3 +58,28 @@ After building the frontend, `pnpm exec node tests/smoke/workflow-session-ui.mjs
 checks the production bundle with synthetic Excel files: Run → Chat, added-source
 recomputation, explicit approval and reloading the same run. Its API writes are
 isolated mocks; the workspace integration case covers the real storage API.
+
+
+## Verify the selected run in Build
+
+Chat and Run offer **Verify this run in Build**, and each step offers **Verify this
+block in Build**. Build opens the immutable saved graph for that exact session or
+recorded run. It displays recorded block inputs/outputs, source provenance,
+findings, source revision history and previous execution attempts. Paused sessions
+can be inspected before approval. Selecting an upstream block follows the saved
+graph; navigation never executes another calculation.
+
+This evidence view does not mount the editable canvas. **Edit current draft**
+explicitly returns to authoring without changing historical versions or results.
+**Return to this run** and **Continue this run in Chat** retain the same session.
+A missing run/version reports an error rather than showing the latest record.
+
+The portable `workflow-core/inspection` query owns exact run/version resolution.
+The Build adapter publishes the selected evidence context to Chat;
+`inspectWorkflowBlock` reads the selected historical attempt when one is open.
+The existing session execution commands still own reruns and invalidation.
+
+Verification uses isolated synthetic Excel records (200 × 2 = 400, replacement
+50 × 2 = 100), checks that the earlier attempt remains 400, and verifies that
+inspection leaves the draft and execution counts unchanged. Provider-free browser
+checks do not certify live model responses or production persistence.

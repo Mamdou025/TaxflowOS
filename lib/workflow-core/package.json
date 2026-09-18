@@ -15,7 +15,8 @@
     "./queries": "./src/application/queries.ts",
     "./agent-commands": "./src/application/agent-commands.ts",
     "./templates": "./src/application/templates.ts",
-    "./template-command": "./src/application/template-command.ts"
+    "./template-command": "./src/application/template-command.ts",
+    "./inspection": "./src/application/inspection.ts"
   },
   "dependencies": {
     "@workspace/workflow-contracts": "workspace:*",
