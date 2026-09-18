@@ -20,10 +20,7 @@ export function runtimeProblems(actualNode, userAgent, allowCompatibleMajor = fa
 
   if (actualNode !== nodeVersion && !(allowCompatibleMajor && compatibleNode))
     problems.push(`Node ${nodeVersion} is required; this process uses ${actualNode}.`);
-  if (
-    !manager ||
-    (actualPnpm !== manager[1] && !(allowCompatibleMajor && compatiblePnpm))
-  )
+  if (!manager || (actualPnpm !== manager[1] && !(allowCompatibleMajor && compatiblePnpm)))
     problems.push(
       `Use ${manifest.packageManager}; detected ${actualPnpm ? `pnpm ${actualPnpm}` : 'no pnpm invocation'}.`,
     );

@@ -1,7 +1,7 @@
 # Development only. See docs/DEVELOPMENT.md for first-run setup and verification.
 # The dependencies, API and web containers share the exact same Node/pnpm image.
 x-node: &node
-  image: taxflowos-dev:node24.21.0-pnpm10.33.2
+  image: taxflowos-dev:node24.21.0-pnpm10.26.1
   build:
     context: .
     dockerfile: docker/development.Dockerfile

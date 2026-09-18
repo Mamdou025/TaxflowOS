@@ -109,7 +109,7 @@ container rather than changing a global runtime shared by other tasks.
 
 ```sh
 node --version
-npm install --global pnpm@10.33.2
+npm install --global pnpm@10.26.1
 pnpm run doctor
 pnpm install --frozen-lockfile
 pnpm run verify
