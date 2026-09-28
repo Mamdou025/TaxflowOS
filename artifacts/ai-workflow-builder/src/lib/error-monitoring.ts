@@ -14,6 +14,10 @@
  *
  * Without a DSN the SDK is initialised in "dry-run" mode — structured
  * console.error logs are still emitted, but nothing is sent over the network.
+ *
+ * Replay is privacy-first: all text and images are masked/blocked. Production
+ * keeps a small baseline sample, while every session containing an error is
+ * retained so the Sentry issue includes the replay leading up to the crash.
  */
 
 import * as Sentry from '@sentry/react';
@@ -42,8 +46,18 @@ export function initErrorMonitoring(): void {
     // console.error logs in the boundaries still fire regardless.
     dsn: dsn || undefined,
     environment: import.meta.env.MODE,
+    integrations: [
+      Sentry.replayIntegration({
+        maskAllText: true,
+        blockAllMedia: true,
+      }),
+    ],
     // Capture 100 % of sessions in development; tune for production.
     tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
+    // A crash promotes its session into Replay, linking the preceding user
+    // journey to the issue. Baseline production sampling limits volume.
+    replaysSessionSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
+    replaysOnErrorSampleRate: 1.0,
     // vite.config.ts injects this same value into the upload plugin's release.
     release: (import.meta.env.VITE_RELEASE as string | undefined) ?? undefined,
   });

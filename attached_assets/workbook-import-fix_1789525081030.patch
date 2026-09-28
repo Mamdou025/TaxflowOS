@@ -1,0 +1,1088 @@
+diff --git a/artifacts/ai-workflow-builder/src/features/assistant/ui/assistant-thread.tsx b/artifacts/ai-workflow-builder/src/features/assistant/ui/assistant-thread.tsx
+index b5fa7d9..0e13ca2 100644
+--- a/artifacts/ai-workflow-builder/src/features/assistant/ui/assistant-thread.tsx
++++ b/artifacts/ai-workflow-builder/src/features/assistant/ui/assistant-thread.tsx
+@@ -735,6 +735,7 @@ export function AssistantThread({
+         </div>
+       )}
+       <div className="flex-1 min-h-0 flex flex-col">
++        {assistant.importDialog}
+         <AsideComposerContext.Provider
+           value={{
+             search: composerSearch,
+diff --git a/artifacts/ai-workflow-builder/src/features/assistant/ui/chat-source-picker.tsx b/artifacts/ai-workflow-builder/src/features/assistant/ui/chat-source-picker.tsx
+index 6db7512..db21f74 100644
+--- a/artifacts/ai-workflow-builder/src/features/assistant/ui/chat-source-picker.tsx
++++ b/artifacts/ai-workflow-builder/src/features/assistant/ui/chat-source-picker.tsx
+@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
+ import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/shared/ui/dialog';
+ import { apiFetch } from '@/platform/auth/api-fetch';
+ import { uploadedRowsAtom } from '@/shared/stores/workspace-store';
++import { useWorkbookImport } from '@/features/documents/workbook-import-dialog';
+ import {
+   isWorkflowSource,
+   loadWorkflowSource,
+@@ -23,6 +24,7 @@ export function ChatSourcePicker({
+   onDocumentSelect: (document: WorkflowSourceDocument) => void;
+ }) {
+   const [sources, setSources] = useAtom(uploadedRowsAtom);
++  const { selectWorkbook, importDialog } = useWorkbookImport();
+   const [documents, setDocuments] = useState<WorkflowSourceDocument[]>([]);
+   const [query, setQuery] = useState('');
+   const [busy, setBusy] = useState(false);
+@@ -61,7 +63,7 @@ export function ChatSourcePicker({
+         onOpenChange(false);
+         return;
+       }
+-      const source = await loadWorkflowSource(id);
++      const source = await loadWorkflowSource(id, { selectWorkbook });
+       setSources((previous) => ({ ...previous, __unassigned__: source }));
+       onOpenChange(false);
+     } catch (e) {
+@@ -72,6 +74,7 @@ export function ChatSourcePicker({
+   };
+   return (
+     <div className="relative mb-2 space-y-2 text-xs">
++      {importDialog}
+       {selected && (
+         <div role="status" className="flex items-center gap-2 rounded border p-2">
+           <span className="min-w-0 flex-1 break-words">
+diff --git a/artifacts/ai-workflow-builder/src/features/assistant/ui/use-assistant.tsx b/artifacts/ai-workflow-builder/src/features/assistant/ui/use-assistant.tsx
+index 7b925c6..bd44491 100644
+--- a/artifacts/ai-workflow-builder/src/features/assistant/ui/use-assistant.tsx
++++ b/artifacts/ai-workflow-builder/src/features/assistant/ui/use-assistant.tsx
+@@ -30,6 +30,7 @@ import { workspaceWindowsAtom, activeWorkspaceWindowAtom, openWorkspaceWindowAto
+ import { pageChatSurfacesAtom } from '@/lib/page-chat-store';
+ import { SurfaceEmbed } from './surface-embed';
+ import { attachWorkflowSource } from '@/features/documents/attach-workflow-source';
++import { useWorkbookImport } from '@/features/documents/workbook-import-dialog';
+ import { builderFocusTargetAtom } from '@/shared/workflow-engine/state/workflow-store';
+ import { getPage, listPages, anchorToPage, getFieldContext, buildAgentCatalog, resolveFieldId, fieldValuesAtom } from '@/shared/stores/resource-registry';
+ import { InlineFieldCard } from '@/features/assistant/workspace/inline-field-card';
+@@ -189,6 +190,7 @@ export function RunWorkflowRender({ config, onOpenPage, onOpenBuilder }: { confi
+ export type Assistant = ReturnType<typeof useAssistant>;
+ 
+ export function useAssistant() {
++  const { selectWorkbook, importDialog } = useWorkbookImport();
+   const router = useRouter();
+   const pathname = usePathname();
+   const windows = useAtomValue(workspaceWindowsAtom);
+@@ -1002,11 +1004,11 @@ export function useAssistant() {
+     for (const f of files) {
+       if (/\.(xlsx|xls|json)$/i.test(f.name)) {
+         try {
+-          const { source, notice } = await attachWorkflowSource(f);
++          const { source, notice } = await attachWorkflowSource(f, selectWorkbook);
+           setUploadedRows((prev) => ({ ...prev, __unassigned__: source }));
+           notes.push(`[Attached ${source.fileName} — ${source.rows.length} source records. ${notice}]`);
+         } catch (error) {
+-          notes.push(`[Could not attach ${f.name}: ${error instanceof Error ? error.message : 'Unreadable workbook'}]`);
++          throw new Error(`Could not attach ${f.name}: ${error instanceof Error ? error.message : 'Unreadable workbook'}`);
+         }
+         continue;
+       }
+@@ -1066,6 +1068,7 @@ export function useAssistant() {
+     composerTools,
+     composerCommands,
+     onAttach,
++    importDialog,
+     // run
+     activeRun,
+     scrollToRun,
+diff --git a/artifacts/ai-workflow-builder/src/features/assistant/workspace/aside-thread.tsx b/artifacts/ai-workflow-builder/src/features/assistant/workspace/aside-thread.tsx
+index 42d4129..41ecf2e 100644
+--- a/artifacts/ai-workflow-builder/src/features/assistant/workspace/aside-thread.tsx
++++ b/artifacts/ai-workflow-builder/src/features/assistant/workspace/aside-thread.tsx
+@@ -127,6 +127,7 @@ export function AsideInput(props: {
+   const [openSection, setOpenSection] = useState<'workflows' | 'worksheets' | null>(null);
+   const [files, setFiles] = useState<File[]>([]);
+   const [attaching, setAttaching] = useState(false);
++  const [attachmentError, setAttachmentError] = useState('');
+   const [focused, setFocused] = useState(false);
+   const ref = useRef<HTMLTextAreaElement>(null);
+   const fileRef = useRef<HTMLInputElement>(null);
+@@ -160,12 +161,15 @@ export function AsideInput(props: {
+     if (!ready) return;
+     const t = text.trim();
+     const pending = files;
+-    setText(''); setActive(-1); setFiles([]);
++    setAttachmentError('');
+     let note = '';
+     if (pending.length && ctx?.onAttach) {
+       setAttaching(true);
+-      try { note = await ctx.onAttach(pending); } finally { setAttaching(false); }
++      try { note = await ctx.onAttach(pending); }
++      catch (error) { setAttachmentError(error instanceof Error ? error.message : 'The attachment could not be read.'); return; }
++      finally { setAttaching(false); }
+     }
++    setText(''); setActive(-1); setFiles([]);
+     // An armed tool templates the typed query into a message that routes to it (e.g.
+     // "Search the web for: …"), then disarms so the next message is a normal one.
+     const body = armedTool ? formatArmedMessage(armedTool.name, t) : t;
+@@ -226,6 +230,7 @@ export function AsideInput(props: {
+ 
+   return (
+     <div style={{ padding: '8px 16px 16px', position: 'relative' }}>
++      {attachmentError && <p role="alert" className="mb-2 text-sm text-destructive">{attachmentError}</p>}
+       <ChatSourcePicker disabled={busy || attaching} open={showSources} onOpenChange={setShowSources} onDocumentSelect={setDocumentScope} />
+       <div style={{ position: 'relative' }}>
+         {showPalette && (
+diff --git a/artifacts/ai-workflow-builder/src/features/assistant/workspace/workflow-run-flow.tsx b/artifacts/ai-workflow-builder/src/features/assistant/workspace/workflow-run-flow.tsx
+index 25b7304..b9a158b 100644
+--- a/artifacts/ai-workflow-builder/src/features/assistant/workspace/workflow-run-flow.tsx
++++ b/artifacts/ai-workflow-builder/src/features/assistant/workspace/workflow-run-flow.tsx
+@@ -7,6 +7,7 @@ import { Check, Upload, FileUp, ShieldCheck, Loader2, ChevronDown, ExternalLink,
+ import { runTemplateLoop, runTemplateCore, buildOverrideRules, resolveBlocker, type TemplateConfig, type RunState, type RunDetail, type RunOutcome, type SourceRow } from '@/shared/workflow-engine/runtime/workflow-runs';
+ import { buildApiRequest, getApiConnector, withParamDefaults } from '@workspace/source-connectors/connectors';
+ import { parseUploadToRows } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
++import { useWorkbookImport } from '@/features/documents/workbook-import-dialog';
+ import { GoogleSourcePicker, type PickedSource } from '@/features/assistant/workspace/google-source-picker';
+ import { pushTrailAtom, activeRunAtom, setActiveCoworkerAtom, uploadedRowsAtom, runEditsAtom, setRunInputAtom, setRunOverrideAtom, setRunEditsAtom, EMPTY_RUN_EDITS, runFlowAtom, setRunFlowAtom, INITIAL_RUN_FLOW, type RunFlow } from '@/shared/stores/workspace-store';
+ import { scopeYearAtom } from '@/shared/stores/nav-store';
+@@ -439,6 +440,7 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
+   // reloading) restores an in-progress run instead of resetting it to "Document needed". A
+   // workflow never advanced has no entry, so a brand-new run still asks for its source.
+   const flowMap = useAtomValue(runFlowAtom);
++  const { selectWorkbook, importDialog } = useWorkbookImport();
+   const setFlowMap = useSetAtom(setRunFlowAtom);
+   const flow = flowMap[config.id] ?? INITIAL_RUN_FLOW;
+   const setFlow = useCallback(
+@@ -698,7 +700,7 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
+     if (!f) return;
+     setParsing(true); setParseError(null);
+     try {
+-      const { rows, fileName: name } = await parseUploadToRows(f);
++      const { rows, fileName: name } = await parseUploadToRows(f, { selectWorkbook });
+       if (!rows.length) { setParseError('No usable rows found in that workbook. Check the trial-balance sheet has label + amount columns.'); return; }
+       applyRows(name, rows, 'upload');
+     } catch (err) {
+@@ -821,6 +823,7 @@ export function WorkflowRunFlow({ config, onComplete, onOpenPage, onOpenBuilder,
+     // Chat-native: no card chrome — this renders inline in the aside thread,
+     // indented under the run's step, so it reads as part of the conversation.
+     <div data-run-flow={config.id} style={{ width: '100%', maxWidth: '100%', ...(surface === 'light' ? (LIGHT_VARS as React.CSSProperties) : null) }}>
++      {importDialog}
+       <style>{`
+         @keyframes cwpspin{to{transform:rotate(360deg)}}
+         .cwp-spin{animation:cwpspin .9s linear infinite}
+diff --git a/artifacts/ai-workflow-builder/src/features/documents/attach-workflow-source.ts b/artifacts/ai-workflow-builder/src/features/documents/attach-workflow-source.ts
+index 7fb5139..08e0a86 100644
+--- a/artifacts/ai-workflow-builder/src/features/documents/attach-workflow-source.ts
++++ b/artifacts/ai-workflow-builder/src/features/documents/attach-workflow-source.ts
+@@ -1,12 +1,17 @@
+-import { parseUploadToRows } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
++import { parseUploadToRows, type SelectWorkbook, type WorkbookSelection } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
+ import type { UploadedSource } from '@/shared/stores/workspace-store';
+ import { uploadDocument } from './upload-client';
+ import { loadWorkflowSource } from './workflow-source-client';
+ 
+ export async function attachWorkflowSource(
+   file: File,
++  selectWorkbook?: SelectWorkbook,
+ ): Promise<{ source: UploadedSource; notice: string }> {
+-  const parsed = await parseUploadToRows(file);
++  let selection: WorkbookSelection | undefined;
++  const parsed = await parseUploadToRows(file, { selectWorkbook: selectWorkbook ? async workbook => {
++    selection = await selectWorkbook(workbook);
++    return selection;
++  } : undefined });
+   const local = { ...parsed, at: Date.now() };
+   const uploaded = await uploadDocument(file);
+   if (!uploaded.documentId)
+@@ -16,7 +21,7 @@ export async function attachWorkflowSource(
+     };
+   try {
+     return {
+-      source: await loadWorkflowSource(uploaded.documentId),
++      source: await loadWorkflowSource(uploaded.documentId, { selection }),
+       notice: 'Saved in Sources and selected for the next workflow run.',
+     };
+   } catch (error) {
+diff --git a/artifacts/ai-workflow-builder/src/features/documents/workflow-source-client.ts b/artifacts/ai-workflow-builder/src/features/documents/workflow-source-client.ts
+index 25f7111..05d0be2 100644
+--- a/artifacts/ai-workflow-builder/src/features/documents/workflow-source-client.ts
++++ b/artifacts/ai-workflow-builder/src/features/documents/workflow-source-client.ts
+@@ -1,5 +1,5 @@
+ import { apiFetch } from '@/platform/auth/api-fetch';
+-import { parseUploadToRows } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
++import { parseUploadToRows, type UploadOptions } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
+ import type { UploadedSource } from '@/shared/stores/workspace-store';
+ 
+ export type WorkflowSourceDocument = {
+@@ -21,7 +21,7 @@ export function isWorkflowSource(document: WorkflowSourceDocument) {
+   );
+ }
+ 
+-export async function loadWorkflowSource(id: string): Promise<UploadedSource> {
++export async function loadWorkflowSource(id: string, options: UploadOptions = {}): Promise<UploadedSource> {
+   const response = await apiFetch(`/api/documents/${encodeURIComponent(id)}`, {
+     signal: AbortSignal.timeout(30000),
+   });
+@@ -46,7 +46,7 @@ export async function loadWorkflowSource(id: string): Promise<UploadedSource> {
+   const file = new File([bytes], document.fileName, {
+     type: document.mimeType ?? 'application/octet-stream',
+   });
+-  const parsed = await parseUploadToRows(file);
++  const parsed = await parseUploadToRows(file, options);
+   return {
+     ...parsed,
+     at: Date.now(),
+diff --git a/artifacts/ai-workflow-builder/src/shared/workflow-engine/parsing/excel-types.ts b/artifacts/ai-workflow-builder/src/shared/workflow-engine/parsing/excel-types.ts
+index aec65fe..f06ef85 100644
+--- a/artifacts/ai-workflow-builder/src/shared/workflow-engine/parsing/excel-types.ts
++++ b/artifacts/ai-workflow-builder/src/shared/workflow-engine/parsing/excel-types.ts
+@@ -30,6 +30,8 @@ export type ExcelRowData = {
+ };
+ 
+ export type ExcelSheetData = {
++  hidden?: boolean;
++  totalRowCount?: number;
+   sheetName: string;
+   rowCount: number;
+   columnCount: number;
+diff --git a/artifacts/ai-workflow-builder/src/shared/workflow-engine/parsing/excel-utils.ts b/artifacts/ai-workflow-builder/src/shared/workflow-engine/parsing/excel-utils.ts
+index 18ea2ce..fae58e1 100644
+--- a/artifacts/ai-workflow-builder/src/shared/workflow-engine/parsing/excel-utils.ts
++++ b/artifacts/ai-workflow-builder/src/shared/workflow-engine/parsing/excel-utils.ts
+@@ -701,7 +701,7 @@ function getLooseExtractedRows({
+     rowsByKey.set(key, row);
+   }
+ 
+-  return [...rowsByKey.values()].slice(0, MAX_PERSISTED_ROWS_PER_SHEET);
++  return [...rowsByKey.values()].slice(0, sheet.persistedRowLimit);
+ }
+ 
+ function shouldUseLooseExtraction({
+@@ -926,10 +926,12 @@ function createSheetData({
+   cells,
+   sheetName,
+   workbookId,
++  rowLimit = MAX_PERSISTED_ROWS_PER_SHEET,
+ }: {
+   cells: string[][];
+   sheetName: string;
+   workbookId: string;
++  rowLimit?: number;
+ }): ExcelSheetData {
+   const rowCount = getUsedRowCount(cells);
+   const columnCount = Math.max(1, getUsedColumnCount(cells));
+@@ -945,7 +947,7 @@ function createSheetData({
+   const persistedRows = cells
+     .slice(
+       dataStartIndex,
+-      Math.min(rowCount, dataStartIndex + MAX_PERSISTED_ROWS_PER_SHEET)
++      Math.min(rowCount, dataStartIndex + rowLimit)
+     )
+     .map((row, rowIndex) => {
+       const rowNumber = dataStartIndex + rowIndex + 1;
+@@ -978,25 +980,27 @@ function createSheetData({
+ 
+   return {
+     cells: cells
+-      .slice(0, Math.min(rowCount, MAX_PERSISTED_ROWS_PER_SHEET + 1))
++      .slice(0, Math.min(rowCount, rowLimit + 1))
+       .map((row) =>
+         Array.from({ length: columnCount }, (_, index) => row[index] || "")
+       ),
+     columnCount,
+     detectedFirstDataRowNumber: detectedTable.firstDataRowNumber,
+     detectedHeaderRowNumber: detectedTable.headerRowNumber,
++    totalRowCount: rowCount,
+     headers,
+     inferredRange,
+-    persistedRowLimit: MAX_PERSISTED_ROWS_PER_SHEET,
++    persistedRowLimit: rowLimit,
+     rowCount: persistedRows.length,
+     rows: persistedRows,
+     sheetName,
+-    truncated: rowCount > MAX_PERSISTED_ROWS_PER_SHEET + 1,
++    truncated: rowCount > rowLimit + 1,
+   };
+ }
+ 
+ export async function parseExcelWorkbookFile(
+-  file: File
++  file: File,
++  options: { sheetName?: string; rowLimit?: number } = {},
+ ): Promise<ExcelWorkbookSourceData> {
+   const extension = file.name.split(".").pop()?.toLowerCase();
+   if (extension !== "xlsx" && extension !== "xls") {
+@@ -1011,7 +1015,12 @@ export async function parseExcelWorkbookFile(
+   });
+   const uploadedAt = new Date().toISOString();
+   const workbookId = `workbook-${Date.now().toString(36)}`;
+-  const sheets = workbook.SheetNames.map((sheetName) => {
++  if (options.sheetName && !workbook.SheetNames.includes(options.sheetName))
++    throw new Error(`Sheet "${options.sheetName}" is no longer available.`);
++  const rowLimit = options.rowLimit ?? MAX_PERSISTED_ROWS_PER_SHEET;
++  if (!Number.isInteger(rowLimit) || rowLimit < 1 || rowLimit > 50000)
++    throw new Error('The worksheet row limit must be between 1 and 50,000.');
++  const sheets = workbook.SheetNames.filter(name => !options.sheetName || name === options.sheetName).map((sheetName) => {
+     const worksheet = workbook.Sheets[sheetName];
+     const rows = XLSX.utils.sheet_to_json<unknown[]>(worksheet, {
+       blankrows: true,
+@@ -1023,8 +1032,11 @@ export async function parseExcelWorkbookFile(
+     const cells = rows.map((row) =>
+       Array.isArray(row) ? row.map(formatCellValue) : []
+     );
+-    return createSheetData({ cells, sheetName, workbookId });
+-  }).filter((sheet) => sheet.columnCount > 0);
++    return {
++      ...createSheetData({ cells, sheetName, workbookId, rowLimit }),
++      hidden: Boolean(workbook.Workbook?.Sheets?.find(sheet => sheet.name === sheetName)?.Hidden),
++    };
++  }).filter((sheet) => sheet.cells.some(row => row.some(cell => cell.trim())));
+ 
+   if (sheets.length === 0) {
+     throw new Error("No readable sheets were found in this workbook.");
+@@ -1084,6 +1096,7 @@ export function getExcelColumnMappingFromConfig(
+ }
+ 
+ export function getNormalizedRowsForSheet({
++  allowLooseExtraction = true,
+   defaultCurrency,
+   firstDataRowNumber,
+   headerRowNumber,
+@@ -1093,6 +1106,7 @@ export function getNormalizedRowsForSheet({
+   sheet,
+   workbook,
+ }: {
++  allowLooseExtraction?: boolean;
+   defaultCurrency?: string;
+   firstDataRowNumber?: number;
+   headerRowNumber?: number;
+@@ -1106,13 +1120,13 @@ export function getNormalizedRowsForSheet({
+     firstDataRowNumber,
+     headerRowNumber,
+   });
+-  const currency = defaultCurrency || detectSheetCurrency(sheet.cells);
++  const currency = defaultCurrency ?? detectSheetCurrency(sheet.cells);
+   const tableRows = sheet.cells
+     .slice(
+       table.firstDataRowNumber - 1,
+       Math.min(
+         sheet.cells.length,
+-        table.firstDataRowNumber - 1 + MAX_PERSISTED_ROWS_PER_SHEET
++        table.firstDataRowNumber - 1 + sheet.persistedRowLimit
+       )
+     )
+     .map((row, rowIndex) => {
+@@ -1150,6 +1164,7 @@ export function getNormalizedRowsForSheet({
+   if (includeRowsWithoutAmount && !mapping.amount && !mapping.debit && !mapping.credit) {
+     return tableRows;
+   }
++  if (!allowLooseExtraction) return tableRows;
+   const fallbackRows = getLooseExtractedRows({
+     defaultCurrency: currency,
+     includeTotalRows,
+@@ -1167,6 +1182,8 @@ export function getNormalizedRowsForSheet({
+ }
+ 
+ export function buildExcelSourceConfigPatch({
++  allowLooseExtraction = true,
++  defaultCurrency,
+   existingConfig = {},
+   firstDataRowNumber,
+   headerRowNumber,
+@@ -1177,6 +1194,8 @@ export function buildExcelSourceConfigPatch({
+   selectedSheetName,
+   workbook,
+ }: {
++  allowLooseExtraction?: boolean;
++  defaultCurrency?: string;
+   workbook: ExcelWorkbookSourceData;
+   existingConfig?: Record<string, unknown>;
+   firstDataRowNumber?: number;
+@@ -1213,6 +1232,8 @@ export function buildExcelSourceConfigPatch({
+     includeRowsWithoutAmount ??
+     existingConfig.includeRowsWithoutAmount === true;
+   const rows = getNormalizedRowsForSheet({
++    allowLooseExtraction,
++    defaultCurrency,
+     firstDataRowNumber: table.firstDataRowNumber,
+     headerRowNumber: table.headerRowNumber,
+     includeRowsWithoutAmount: nextIncludeRowsWithoutAmount,
+diff --git a/artifacts/ai-workflow-builder/src/shared/workflow-engine/runtime/workflow-runs/parse-upload.ts b/artifacts/ai-workflow-builder/src/shared/workflow-engine/runtime/workflow-runs/parse-upload.ts
+index 7b9a584..707a5cd 100644
+--- a/artifacts/ai-workflow-builder/src/shared/workflow-engine/runtime/workflow-runs/parse-upload.ts
++++ b/artifacts/ai-workflow-builder/src/shared/workflow-engine/runtime/workflow-runs/parse-upload.ts
+@@ -1,14 +1,23 @@
+-
+-
+ import {
+   buildExcelSourceConfigPatch,
+   detectExcelColumnMapping,
+   parseExcelNumber,
+   parseExcelWorkbookFile,
++  getExcelTableSelection,
++  type ExcelColumnMapping,
++  type ExcelWorkbookSourceData,
+ } from '@/shared/workflow-engine/parsing/excel-utils';
+ import type { SourceRow } from './engine';
+ 
+ export type ParsedUpload = { fileName: string; rows: SourceRow[] };
++export type WorkbookSelection = {
++  sheetName: string;
++  currency?: string;
++  headerRowNumber?: number;
++  mapping?: ExcelColumnMapping;
++};
++export type SelectWorkbook = (workbook: ExcelWorkbookSourceData) => Promise<WorkbookSelection>;
++export type UploadOptions = { selectWorkbook?: SelectWorkbook; selection?: WorkbookSelection };
+ 
+ /**
+  * Parse an uploaded workbook into the engine's SourceRow[] using the SAME
+@@ -18,38 +27,118 @@ export type ParsedUpload = { fileName: string; rows: SourceRow[] };
+  *
+  * Throws (with a human message) if the file isn't a readable .xlsx/.xls.
+  */
+-export async function parseUploadToRows(file: File): Promise<ParsedUpload> {
++export async function parseUploadToRows(
++  file: File,
++  options: UploadOptions = {},
++): Promise<ParsedUpload> {
+   if (file.size > 20 * 1024 * 1024) throw new Error('Use a source file smaller than 20 MB.');
+   if (/\.json$/i.test(file.name)) {
+     const records: unknown = JSON.parse(await file.text());
+-    if (!Array.isArray(records) || !records.length || records.some(row => !row || typeof row !== 'object' || Array.isArray(row))) throw new Error('Use a non-empty JSON array of source records.');
+-    return { fileName: file.name, rows: records.map((r, i) => ({ ...r, rowId: String(r.rowId ?? `upload-${i + 1}`), label: String(r.label ?? r.entity ?? r.owner ?? `Record ${i + 1}`), amount: typeof r.amount === 'boolean' || r.amount == null || String(r.amount).trim() === '' ? NaN : Number(r.amount) })) };
++    if (
++      !Array.isArray(records) ||
++      !records.length ||
++      records.some((row) => !row || typeof row !== 'object' || Array.isArray(row))
++    )
++      throw new Error('Use a non-empty JSON array of source records.');
++    return {
++      fileName: file.name,
++      rows: records.map((r, i) => ({
++        ...r,
++        rowId: String(r.rowId ?? `upload-${i + 1}`),
++        label: String(r.label ?? r.entity ?? r.owner ?? `Record ${i + 1}`),
++        amount:
++          typeof r.amount === 'boolean' || r.amount == null || String(r.amount).trim() === ''
++            ? NaN
++            : Number(r.amount),
++      })),
++    };
++  }
++  let workbook = await parseExcelWorkbookFile(file);
++  const candidates = workbook.sheets.filter((sheet) => !sheet.hidden);
++  if (!candidates.length) throw new Error('This workbook has no visible data sheets.');
++  const selection =
++    options.selection ??
++    (options.selectWorkbook
++      ? await options.selectWorkbook({ ...workbook, sheets: candidates })
++      : undefined);
++  if (!selection && candidates.length !== 1)
++    throw new Error(
++      'Choose a worksheet and its columns using the chat attachment or workflow upload dialog.',
++    );
++  let sheet =
++    candidates.find((item) => item.sheetName === selection?.sheetName) ??
++    (!selection ? candidates[0] : undefined);
++  if (!sheet)
++    throw new Error('The selected worksheet is unavailable. Select a visible data sheet.');
++  if (sheet.truncated) {
++    workbook = await parseExcelWorkbookFile(file, { sheetName: sheet.sheetName, rowLimit: 50000 });
++    sheet = workbook.sheets[0];
++  }
++  if (sheet.truncated)
++    throw new Error(
++      'This sheet exceeds 50,000 rows. Import a smaller source; no partial data was attached.',
++    );
++  const headerRowNumber = selection?.headerRowNumber ?? sheet.detectedHeaderRowNumber;
++  if (
++    !Number.isInteger(headerRowNumber) ||
++    headerRowNumber < 1 ||
++    headerRowNumber >= sheet.cells.length
++  )
++    throw new Error('Choose a header row followed by data rows.');
++  const table = getExcelTableSelection(sheet, {
++    headerRowNumber,
++    firstDataRowNumber: headerRowNumber + 1,
++  });
++  const mapping = { ...detectExcelColumnMapping(table.headers), ...selection?.mapping };
++  for (const column of Object.values(mapping)) {
++    if (column && !table.headers.includes(column))
++      throw new Error(`Column "${column}" is unavailable. Review the column mapping.`);
+   }
+-  const workbook = await parseExcelWorkbookFile(file);
+-  const sheet = workbook.sheets[0];
+-  if (sheet.truncated) throw new Error('This sheet exceeds the parser row limit. Select a smaller source so no records are silently omitted.');
+-  const mapping = detectExcelColumnMapping(sheet.headers);
+   const hasAmounts = Boolean(mapping.amount || mapping.debit || mapping.credit);
+-  const patch = buildExcelSourceConfigPatch({ workbook, includeRowsWithoutAmount: !hasAmounts });
+-  const raw = Array.isArray(patch.rows) ? (patch.rows as Array<Record<string, unknown>>) : [];
+-  for (const row of raw) {
+-    const values = row.raw as Record<string, unknown> | undefined;
++  // Check original cells before normalization can discard unreadable amounts.
++  for (const [index, cells] of sheet.cells.slice(headerRowNumber).entries()) {
+     for (const column of [mapping.amount, mapping.debit, mapping.credit]) {
+-      const value = column && values?.[column];
+-      if (column && value !== undefined && String(value).trim() && parseExcelNumber(value) === null)
+-        throw new Error(`Row ${row.rowNumber}: ${column} must contain a readable number.`);
++      const value = column ? cells[table.headers.indexOf(column)] : undefined;
++      if (value?.trim() && parseExcelNumber(value) === null)
++        throw new Error(
++          `Row ${headerRowNumber + index + 1}: ${column} must contain a readable number.`,
++        );
+     }
+   }
++  const patch = buildExcelSourceConfigPatch({
++    workbook,
++    selectedSheetName: sheet.sheetName,
++    headerRowNumber,
++    firstDataRowNumber: headerRowNumber + 1,
++    mapping,
++    includeRowsWithoutAmount: !hasAmounts,
++    allowLooseExtraction: !selection,
++    defaultCurrency: selection ? (selection.currency?.trim().toUpperCase() ?? '') : undefined,
++  });
++  const raw = Array.isArray(patch.rows) ? (patch.rows as Array<Record<string, unknown>>) : [];
+   const rows: SourceRow[] = raw.map((r, i) => ({
+     ...(r.raw && typeof r.raw === 'object' ? r.raw : {}),
+     ...r,
++    sourceSelection: {
++      sheetName: sheet.sheetName,
++      headerRowNumber,
++      mapping,
++      currency: selection?.currency,
++    },
+     rowId: String(r.rowId ?? `upload-row-${i + 1}`),
+     account: r.account ? String(r.account) : undefined,
+     label: String(r.label ?? r.description ?? `Row ${i + 1}`),
+     description: r.description ? String(r.description) : undefined,
+-    amount: !hasAmounts || typeof r.amount === 'boolean' || r.amount == null || String(r.amount).trim() === '' ? NaN : Number(r.amount),
++    amount:
++      !hasAmounts ||
++      typeof r.amount === 'boolean' ||
++      r.amount == null ||
++      String(r.amount).trim() === ''
++        ? NaN
++        : Number(r.amount),
+     currency: r.currency ? String(r.currency) : undefined,
+   }));
+-  if (!rows.length) throw new Error('No source records were found. Check the sheet and its column headings.');
++  if (!rows.length)
++    throw new Error('No source records were found. Check the sheet and its column headings.');
+   return { fileName: workbook.fileName, rows };
+ }
+diff --git a/e2e/source-library.spec.ts b/e2e/source-library.spec.ts
+index a80f491..8ed6590 100644
+--- a/e2e/source-library.spec.ts
++++ b/e2e/source-library.spec.ts
+@@ -1,4 +1,85 @@
+ import { test, expect } from './workflow-audit-isolation';
++import { createRequire } from 'node:module';
++import path from 'node:path';
++
++test('chat spreadsheet selection preserves drafts on cancel and imports a complete mapped sheet', async ({
++  page,
++}) => {
++  const XLSX = createRequire(path.resolve('artifacts/ai-workflow-builder/package.json'))('xlsx');
++  const workbook = XLSX.utils.book_new();
++  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([]), 'Hidden SAP metadata');
++  XLSX.utils.book_append_sheet(
++    workbook,
++    XLSX.utils.aoa_to_sheet([['Cover'], ['Instructions']]),
++    'Summary',
++  );
++  XLSX.utils.book_append_sheet(
++    workbook,
++    XLSX.utils.aoa_to_sheet([
++      ['G/L Account', 'Jrnl.Entry Item Text', 'Amount in CC Crcy'],
++      ...Array.from({ length: 1100 }, (_, i) => [41000 + i, `Record ${i + 1}`, i + 1]),
++    ]),
++    'SAP EXPORT',
++  );
++  workbook.Workbook = { Sheets: [{ Hidden: 2 }, { Hidden: 0 }, { Hidden: 0 }] };
++  await page.route('**/api/documents**', (route) =>
++    route.fulfill({
++      status: route.request().method() === 'POST' ? 503 : 200,
++      json:
++        route.request().method() === 'POST'
++          ? { error: 'STORAGE_NOT_CONFIGURED' }
++          : { documents: [] },
++    }),
++  );
++  await page.route('**/api/copilotkit**', (route) =>
++    route.fulfill({ status: 503, json: { error: 'No live model in this test.' } }),
++  );
++  await page.route('**/api/chat/threads**', (route) => route.fulfill({ json: { threads: [] } }));
++  await page.goto('/');
++  const composer = page.locator('.lc-console');
++  const draft = composer.getByRole('textbox');
++  await draft.fill('Use this workbook');
++  await composer.getByRole('button', { name: 'Attach files', exact: true }).click();
++  const chooser = page.waitForEvent('filechooser');
++  await page.getByRole('menuitem', { name: 'Upload from laptop' }).click();
++  await (
++    await chooser
++  ).setFiles({
++    name: 'synthetic-sap.xlsx',
++    mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
++    buffer: XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' }),
++  });
++  await draft.press('Enter');
++  const dialog = page.getByRole('dialog', { name: 'Choose spreadsheet data' });
++  await expect(dialog).toBeVisible();
++  await expect(dialog.getByLabel('Worksheet').locator('option')).toHaveText([
++    'Choose a worksheet…',
++    'Summary',
++    'SAP EXPORT',
++  ]);
++  await dialog.getByRole('button', { name: 'Cancel import' }).click();
++  await expect(draft).toHaveValue('Use this workbook');
++  await expect(composer.getByText('synthetic-sap.xlsx', { exact: true })).toBeVisible();
++  await draft.press('Enter');
++  await dialog.getByLabel('Worksheet').selectOption('SAP EXPORT');
++  await dialog.getByLabel('Account column', { exact: true }).selectOption('G/L Account');
++  await dialog
++    .getByLabel('Description column', { exact: true })
++    .selectOption('Jrnl.Entry Item Text');
++  await dialog.getByLabel('Amount column', { exact: true }).selectOption('Amount in CC Crcy');
++  await dialog.getByLabel('Source currency').fill('EUR');
++  await dialog.getByRole('button', { name: 'Use selected data' }).click();
++  await expect
++    .poll(async () =>
++      page.evaluate(() => {
++        const source = JSON.parse(
++          localStorage.getItem('taxflow:uploaded-source-rows') ?? '{}',
++        ).__unassigned__;
++        return source ? { count: source.rows.length, last: source.rows.at(-1).amount } : null;
++      }),
++    )
++    .toEqual({ count: 1100, last: 1100 });
++});
+ 
+ const active = {
+   id: '00000000-0000-4000-8000-000000000101',
+diff --git a/tests/unit/chat-workbook-parsing.test.ts b/tests/unit/chat-workbook-parsing.test.ts
+index e33e3bd..6bc8f90 100644
+--- a/tests/unit/chat-workbook-parsing.test.ts
++++ b/tests/unit/chat-workbook-parsing.test.ts
+@@ -7,6 +7,153 @@ const XLSX = createRequire(
+   new URL('../../artifacts/ai-workflow-builder/package.json', import.meta.url),
+ )('xlsx');
+ 
++function multiSheetFile() {
++  const workbook = XLSX.utils.book_new();
++  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([]), 'SAP metadata');
++  XLSX.utils.book_append_sheet(
++    workbook,
++    XLSX.utils.aoa_to_sheet([['Read me'], ['Cover notes']]),
++    'Summary',
++  );
++  XLSX.utils.book_append_sheet(
++    workbook,
++    XLSX.utils.aoa_to_sheet([
++      ['Company export'],
++      [],
++      ['G/L Account', 'Jrnl.Entry Item Text', 'Amount in CC Crcy'],
++      ...Array.from({ length: 2163 }, (_, i) => [41000000 + i, `Entry ${i + 1}`, i + 1]),
++    ]),
++    'SAP EXPORT',
++  );
++  workbook.Workbook = {
++    Sheets: [
++      { name: 'SAP metadata', Hidden: 2 },
++      { name: 'Summary', Hidden: 0 },
++      { name: 'SAP EXPORT', Hidden: 0 },
++    ],
++  };
++  return new File(
++    [XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })],
++    'synthetic-sap.xlsx',
++  );
++}
++
++test('SAP-style workbook requires selection and imports all selected rows with explicit headings', async () => {
++  const file = multiSheetFile();
++  await assert.rejects(() => parseUploadToRows(file), /Choose a worksheet/);
++  const parsed = await parseUploadToRows(file, {
++    selectWorkbook: async (workbook) => {
++      assert.deepEqual(
++        workbook.sheets.map((sheet) => sheet.sheetName),
++        ['Summary', 'SAP EXPORT'],
++      );
++      return {
++        sheetName: 'SAP EXPORT',
++        headerRowNumber: 3,
++        mapping: {
++          account: 'G/L Account',
++          description: 'Jrnl.Entry Item Text',
++          amount: 'Amount in CC Crcy',
++        },
++      };
++    },
++  });
++  assert.equal(parsed.rows.length, 2163);
++  assert.equal(parsed.rows[0].rowNumber, 4);
++  assert.equal(parsed.rows[2162].rowNumber, 2166);
++  assert.equal(parsed.rows[2162].amount, 2163);
++  assert.equal(
++    parsed.rows.reduce((sum, row) => sum + row.amount, 0),
++    2340366,
++  );
++  assert.deepEqual(JSON.parse(JSON.stringify(parsed.rows[0].sourceSelection)), {
++    sheetName: 'SAP EXPORT',
++    headerRowNumber: 3,
++    mapping: {
++      account: 'G/L Account',
++      description: 'Jrnl.Entry Item Text',
++      amount: 'Amount in CC Crcy',
++    },
++  });
++});
++
++test('missing selected sheets and cancellation never fall back to another sheet', async () => {
++  const file = multiSheetFile();
++  await assert.rejects(
++    () => parseUploadToRows(file, { selection: { sheetName: 'Missing' } }),
++    /unavailable/,
++  );
++  await assert.rejects(
++    () =>
++      parseUploadToRows(file, {
++        selectWorkbook: async () => {
++          throw new Error('Cancelled');
++        },
++      }),
++    /Cancelled/,
++  );
++});
++
++test('oversized sheets are rejected rather than truncated', async () => {
++  const workbook = XLSX.utils.book_new();
++  XLSX.utils.book_append_sheet(
++    workbook,
++    XLSX.utils.aoa_to_sheet([
++      ['Label', 'Amount'],
++      ...Array.from({ length: 50001 }, () => ['Entry', 1]),
++    ]),
++    'Data',
++  );
++  const file = new File([XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })], 'large.xlsx');
++  await assert.rejects(
++    () => parseUploadToRows(file, { selection: { sheetName: 'Data', headerRowNumber: 1 } }),
++    /exceeds 50,000/,
++  );
++});
++
++test('selected exports use the confirmed currency and do not assume USD', async () => {
++  const selection = {
++    sheetName: 'SAP EXPORT',
++    headerRowNumber: 3,
++    mapping: {
++      account: 'G/L Account',
++      amount: 'Amount in CC Crcy',
++    },
++  };
++  const file = multiSheetFile();
++  const unknown = await parseUploadToRows(file, { selection });
++  assert.equal(unknown.rows[0].currency, undefined);
++  const euro = await parseUploadToRows(file, { selection: { ...selection, currency: 'EUR' } });
++  assert.equal(euro.rows[0].currency, 'EUR');
++});
++
++test('explicit mapping never extracts other adjacent numbers', async () => {
++  const workbook = XLSX.utils.book_new();
++  XLSX.utils.book_append_sheet(
++    workbook,
++    XLSX.utils.aoa_to_sheet([
++      ['Label', 'Chosen amount', 'Other number'],
++      ['Entry', '', 900],
++    ]),
++    'Data',
++  );
++  const file = new File(
++    [XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })],
++    'mapping.xlsx',
++  );
++  await assert.rejects(
++    () =>
++      parseUploadToRows(file, {
++        selection: {
++          sheetName: 'Data',
++          headerRowNumber: 1,
++          mapping: { label: 'Label', amount: 'Chosen amount' },
++        },
++      }),
++    /No source records/,
++  );
++});
++
+ test('chat workbook import skips financial headings and totals while preserving physical Excel rows and currency', async () => {
+   const workbook = XLSX.utils.book_new();
+   XLSX.utils.book_append_sheet(
+diff --git a/artifacts/ai-workflow-builder/src/features/documents/workbook-import-dialog.tsx b/artifacts/ai-workflow-builder/src/features/documents/workbook-import-dialog.tsx
+new file mode 100644
+--- /dev/null
++++ b/artifacts/ai-workflow-builder/src/features/documents/workbook-import-dialog.tsx
+@@ -0,0 +1,267 @@
++import { useEffect, useRef, useState } from 'react';
++import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/dialog';
++import {
++  detectExcelColumnMapping,
++  getExcelTableSelection,
++  type ExcelColumnMapping,
++  type ExcelWorkbookSourceData,
++} from '@/shared/workflow-engine/parsing/excel-utils';
++import type {
++  SelectWorkbook,
++  WorkbookSelection,
++} from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
++
++const fields: [keyof ExcelColumnMapping, string][] = [
++  ['account', 'Account'],
++  ['label', 'Label'],
++  ['description', 'Description'],
++  ['amount', 'Amount'],
++  ['debit', 'Debit'],
++  ['credit', 'Credit'],
++  ['currency', 'Currency'],
++];
++
++export function WorkbookImportDialog({
++  workbook,
++  onSelect,
++  onCancel,
++}: {
++  workbook: ExcelWorkbookSourceData;
++  onSelect: (selection: WorkbookSelection) => void;
++  onCancel: () => void;
++}) {
++  const [sheetName, setSheetName] = useState('');
++  const [headerRow, setHeaderRow] = useState(1);
++  const [mapping, setMapping] = useState<ExcelColumnMapping>({});
++  const [currency, setCurrency] = useState('');
++  const sheet = workbook.sheets.find((item) => item.sheetName === sheetName);
++  const validHeader =
++    !!sheet && Number.isInteger(headerRow) && headerRow >= 1 && headerRow < sheet.cells.length;
++  const table =
++    sheet && validHeader
++      ? getExcelTableSelection(sheet, {
++          headerRowNumber: headerRow,
++          firstDataRowNumber: headerRow + 1,
++        })
++      : undefined;
++  const changeSelection = (name: string, row?: number) => {
++    const selected = workbook.sheets.find((item) => item.sheetName === name);
++    const header = row ?? selected?.detectedHeaderRowNumber ?? 1;
++    setSheetName(name);
++    setCurrency('');
++    setHeaderRow(header);
++    setMapping(
++      selected && Number.isInteger(header) && header > 0
++        ? detectExcelColumnMapping(
++            getExcelTableSelection(selected, {
++              headerRowNumber: header,
++              firstDataRowNumber: header + 1,
++            }).headers,
++          )
++        : {},
++    );
++  };
++  const hasIdentity = !!(mapping.label || mapping.description || mapping.account);
++  const needsCurrency = !!(mapping.amount || mapping.debit || mapping.credit) && !mapping.currency;
++  const tooLarge = !!sheet && (sheet.totalRowCount ?? sheet.rowCount) > 50001;
++  return (
++    <Dialog
++      open
++      onOpenChange={(open) => {
++        if (!open) onCancel();
++      }}
++    >
++      <DialogContent className="max-h-[90vh] overflow-auto sm:max-w-3xl">
++        <DialogTitle>Choose spreadsheet data</DialogTitle>
++        <DialogDescription>
++          Select the worksheet and columns to use. Hidden and empty sheets are excluded. The
++          original file is kept unchanged.
++        </DialogDescription>
++        <p className="break-all text-sm">{workbook.fileName}</p>
++        <label className="grid gap-1 text-sm">
++          Worksheet
++          <select
++            className="rounded border bg-background p-2"
++            value={sheetName}
++            onChange={(e) => changeSelection(e.target.value)}
++          >
++            <option value="">Choose a worksheet…</option>
++            {workbook.sheets.map((item) => (
++              <option key={item.sheetName} value={item.sheetName}>
++                {item.sheetName}
++              </option>
++            ))}
++          </select>
++        </label>
++        {sheet && (
++          <>
++            <label className="grid gap-1 text-sm">
++              Header row
++              <input
++                type="number"
++                min={1}
++                max={sheet.cells.length - 1}
++                className="rounded border bg-background p-2"
++                value={headerRow}
++                onChange={(e) => changeSelection(sheetName, Number(e.target.value))}
++              />
++            </label>
++            <p className="text-sm">
++              Preview shows the first five data rows. All rows from the selected sheet are read on
++              import, up to 50,000.
++            </p>
++            {table && (
++              <>
++                <div className="grid grid-cols-2 gap-3">
++                  {fields.map(([key, label]) => (
++                    <label key={key} className="grid gap-1 text-sm">
++                      {label} column
++                      <select
++                        className="min-w-0 rounded border bg-background p-2"
++                        value={mapping[key] ?? ''}
++                        onChange={(e) =>
++                          setMapping((previous) => ({
++                            ...previous,
++                            [key]: e.target.value || undefined,
++                          }))
++                        }
++                      >
++                        <option value="">Not mapped</option>
++                        {table.headers.map((header) => (
++                          <option key={header} value={header}>
++                            {header}
++                          </option>
++                        ))}
++                      </select>
++                    </label>
++                  ))}
++                </div>
++                <div className="max-h-48 overflow-auto rounded border">
++                  <table className="w-full text-left text-xs">
++                    <thead>
++                      <tr>
++                        {table.headers.map((header) => (
++                          <th className="whitespace-nowrap p-2" key={header}>
++                            {header}
++                          </th>
++                        ))}
++                      </tr>
++                    </thead>
++                    <tbody>
++                      {sheet.cells.slice(headerRow, headerRow + 5).map((row, index) => (
++                        <tr key={index}>
++                          {table.headers.map((header, col) => (
++                            <td className="max-w-64 truncate border-t p-2" key={header}>
++                              {row[col]}
++                            </td>
++                          ))}
++                        </tr>
++                      ))}
++                    </tbody>
++                  </table>
++                </div>
++              </>
++            )}
++            {needsCurrency && (
++              <label className="grid gap-1 text-sm">
++                Source currency
++                <input
++                  className="rounded border bg-background p-2"
++                  placeholder="Three-letter code, e.g. EUR"
++                  maxLength={3}
++                  value={currency}
++                  onChange={(e) => setCurrency(e.target.value.toUpperCase())}
++                />
++                <span>Enter the currency used by the selected amounts.</span>
++              </label>
++            )}
++            {!hasIdentity && (
++              <p role="status">
++                Map an account, label, or description column to identify the records.
++              </p>
++            )}
++            {!mapping.amount && !mapping.debit && !mapping.credit && (
++              <p role="status">
++                No amount column selected. These records cannot supply financial amounts until a
++                numeric column is mapped.
++              </p>
++            )}
++            {tooLarge && (
++              <p role="alert">
++                This sheet exceeds 50,000 rows. Use a smaller source; partial imports are not
++                allowed.
++              </p>
++            )}
++          </>
++        )}
++        <div className="flex justify-end gap-2">
++          <button type="button" className="rounded border px-4 py-2" onClick={onCancel}>
++            Cancel import
++          </button>
++          <button
++            type="button"
++            className="rounded bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50"
++            disabled={
++              !validHeader ||
++              !hasIdentity ||
++              tooLarge ||
++              (needsCurrency && !/^[A-Z]{3}$/.test(currency))
++            }
++            onClick={() =>
++              onSelect({
++                sheetName,
++                headerRowNumber: headerRow,
++                mapping,
++                currency: needsCurrency ? currency : undefined,
++              })
++            }
++          >
++            Use selected data
++          </button>
++        </div>
++      </DialogContent>
++    </Dialog>
++  );
++}
++
++/** The caller retains the file until selection completes; cancellation never submits chat. */
++export function useWorkbookImport() {
++  const [workbook, setWorkbook] = useState<ExcelWorkbookSourceData | null>(null);
++  const pending = useRef<{
++    resolve: (selection: WorkbookSelection) => void;
++    reject: (error: Error) => void;
++  } | null>(null);
++  useEffect(
++    () => () => {
++      pending.current?.reject(new Error('Spreadsheet import cancelled.'));
++      pending.current = null;
++    },
++    [],
++  );
++  const selectWorkbook: SelectWorkbook = (data) =>
++    new Promise((resolve, reject) => {
++      pending.current?.reject(new Error('Another spreadsheet import was started.'));
++      pending.current = { resolve, reject };
++      setWorkbook(data);
++    });
++  const finish = (selection?: WorkbookSelection) => {
++    if (selection) pending.current?.resolve(selection);
++    else
++      pending.current?.reject(
++        new Error('Spreadsheet import cancelled. Your file and message have been kept for retry.'),
++      );
++    pending.current = null;
++    setWorkbook(null);
++  };
++  return {
++    selectWorkbook,
++    importDialog: workbook ? (
++      <WorkbookImportDialog
++        key={workbook.workbookId}
++        workbook={workbook}
++        onSelect={finish}
++        onCancel={() => finish()}
++      />
++    ) : null,
++  };
++}

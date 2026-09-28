@@ -18,6 +18,9 @@ import {
 } from './workflows-store';
 
 export type SessionRef = { workflowId: string; runId: string };
+export const workflowInspectionAtom = atom<
+  (SessionRef & { blockId: string; attemptIndex: number | null }) | null
+>(null);
 export const activeSessionAtom = atom<SessionRef | null>(null);
 export const chatWorkflowIdsAtom = atom<string[]>([]);
 export function openWorkflowSession(
