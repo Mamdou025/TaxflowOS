@@ -1,0 +1,12 @@
+
+> workspace@0.0.0 test:workflow-reliability C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-browser-tests.mjs reliability "--grep" "Mkoro shows tool progress"
+
+Test run 04a727d1-a6ec594c-65e2-4321-bdd9-ecf3575112be; reports and logs: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-a6ec594c-65e2-4321-bdd9-ecf3575112be
+Preparing the isolated browser dependency cache…
+
+Running 1 test using 1 worker
+
+  ok 1 e2e\mkoro-chat.spec.ts:204:5 › Mkoro shows tool progress, requests permission once and waits for stop confirmation (26.9s)
+
+  1 passed (35.2s)

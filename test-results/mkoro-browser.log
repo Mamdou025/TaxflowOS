@@ -1,0 +1,16 @@
+
+> workspace@0.0.0 test:workflow-reliability C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-browser-tests.mjs reliability "--grep" "Mkoro"
+
+Test run 04a727d1-6dfa06c0-e518-41a1-9842-a9c1ccf6467f; reports and logs: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-6dfa06c0-e518-41a1-9842-a9c1ccf6467f
+Preparing the isolated browser dependency cache…
+
+Running 5 tests using 1 worker
+
+  ok 1 e2e\mkoro-chat.spec.ts:172:5 › switching between Sina and offline Mkoro preserves drafts and offers pairing (24.7s)
+  ok 2 e2e\mkoro-chat.spec.ts:204:5 › Mkoro shows tool progress, requests permission once and waits for stop confirmation (24.8s)
+  ok 3 e2e\mkoro-chat.spec.ts:283:7 › Mkoro blocks sends after malformed status even with a previously online computer (18.7s)
+  ok 4 e2e\mkoro-chat.spec.ts:283:7 › Mkoro blocks sends after unavailable status even with a previously online computer (25.3s)
+  ok 5 e2e\mkoro-chat.spec.ts:309:5 › saved Mkoro conversation survives reload without repeating an old computer task (38.1s)
+
+  5 passed (2.5m)

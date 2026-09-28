@@ -1,0 +1,49 @@
+
+> workspace@0.0.0 test:workflow-persistence C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-browser-tests.mjs persistence "--grep" "a workflow and its result recover"
+
+Test run 04a727d1-a0324439-1193-4815-9299-89a24015dd4d; reports and logs: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-a0324439-1193-4815-9299-89a24015dd4d
+Preparing the isolated browser dependency cache…
+
+Running 1 test using 1 worker
+
+  x  1 e2e\workflow-storage-recovery.spec.ts:4:5 › a workflow and its result recover in another browser; backups, offline retry, and conflict protection work (4.0m)
+
+
+  1) e2e\workflow-storage-recovery.spec.ts:4:5 › a workflow and its result recover in another browser; backups, offline retry, and conflict protection work 
+
+    Test timeout of 180000ms exceeded.
+
+    Error: apiRequestContext.delete: Target page, context or browser has been closed
+
+      104 |   } finally {
+      105 |     if (code)
+    > 106 |       await request.delete('/api/workflow-library', { headers: { 'x-taxflow-workspace': code } });
+          |                           ^
+      107 |     await secondContext.close();
+      108 |   }
+      109 | });
+        at C:\Users\Mamad\Sinaxe\TaxflowOS\e2e\workflow-storage-recovery.spec.ts:106:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-a0324439-1193-4815-9299-89a24015dd4d\artifacts\workflow-storage-recovery--206ca-nd-conflict-protection-work\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-a0324439-1193-4815-9299-89a24015dd4d\artifacts\workflow-storage-recovery--206ca-nd-conflict-protection-work\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\phase2\04a727d1-a0324439-1193-4815-9299-89a24015dd4d\artifacts\workflow-storage-recovery--206ca-nd-conflict-protection-work\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-a0324439-1193-4815-9299-89a24015dd4d\artifacts\workflow-storage-recovery--206ca-nd-conflict-protection-work\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\phase2\04a727d1-a0324439-1193-4815-9299-89a24015dd4d\artifacts\workflow-storage-recovery--206ca-nd-conflict-protection-work\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    e2e\workflow-storage-recovery.spec.ts:4:5 › a workflow and its result recover in another browser; backups, offline retry, and conflict protection work 
+playwright exited 1; see C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-a0324439-1193-4815-9299-89a24015dd4d\playwright.log
+ ELIFECYCLE  Command failed with exit code 1.

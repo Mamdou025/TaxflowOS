@@ -70,6 +70,37 @@ test('first save roundtrips the frozen backup with server-authorized workspace o
   assert.equal(rows[0].revision, 1);
 });
 
+test('guided run revisions and pause state roundtrip through the real workspace library', async () => {
+  const code = await key();
+  const library = JSON.parse(fixture);
+  const entry = Object.values(library)[0];
+  entry.versions = [{ number: 1, savedAt: '2026-09-16T00:00:00.000Z', definition: entry.draft }];
+  entry.runs = [];
+  entry.sessions = [
+    {
+      id: 'guided-storage-test',
+      version: 1,
+      revision: 7,
+      createdAt: '2026-09-16T00:00:00.000Z',
+      paused: true,
+      results: {},
+      stale: [],
+      reviewed: [],
+      sources: [],
+      attempts: [],
+    },
+  ];
+  await save(code, JSON.stringify(library), 0);
+  const restored = JSON.parse((await (await request('GET', code)).json()).payload);
+  assert.deepEqual(restored[entry.id].sessions, entry.sessions);
+  const stale = await request('PUT', code, { payload: JSON.stringify(library), revision: 0 });
+  assert.equal(stale.status, 409);
+  assert.deepEqual(
+    JSON.parse((await (await request('GET', code)).json()).payload)[entry.id].sessions,
+    entry.sessions,
+  );
+});
+
 test('invalid request envelopes do not advance a saved revision', async () => {
   const code = await key();
   await save(code, fixture, 0);

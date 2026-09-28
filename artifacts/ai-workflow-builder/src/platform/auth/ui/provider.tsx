@@ -22,7 +22,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       checking = true;
       const controller = new AbortController();
       pending = controller;
-      const timeout = setTimeout(() => controller.abort(), 10000);
+      // Session and workspace verification are two sequential requests. Leave
+      // room for both when the local frontend proxy is busy, but remain bounded.
+      const timeout = setTimeout(() => controller.abort(), 30000);
       try {
         const session = await apiFetch('/api/session', { signal: controller.signal });
         if (session.status === 401) {
@@ -33,8 +35,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           return;
         }
-        if (!session.ok)
-          throw new Error('The app service is not ready yet. Try demo again in a moment.');
+        if (!session.ok) {
+          if (!cancelled && session.status === 403) setState(undefined);
+          throw new Error('The app service is temporarily unavailable. Please retry.');
+        }
         const { user } = SessionSchema.parse(await session.json());
         const response = await apiFetch(user.isDemo ? '/api/workspaces/demo' : '/api/workspaces', {
           signal: controller.signal,
@@ -42,7 +46,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }
             : {}),
         });
-        if (!response.ok) throw new Error('Workspace access could not be verified.');
+        if (response.status === 401) {
+          if (!cancelled) {
+            setError('');
+            setState(null);
+            if (workspaceContext) forgetSession();
+          }
+          return;
+        }
+        if (!response.ok) {
+          if (!cancelled && response.status === 403) setState(undefined);
+          throw new Error('Workspace access could not be verified.');
+        }
         const { workspaces } = WorkspaceListSchema.parse(await response.json());
         if (cancelled) return;
         if (workspaceContext && workspaceContext.userId !== user.id) {
@@ -66,7 +81,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setError('');
       } catch (e) {
         if (!cancelled) {
-          setState(undefined);
+          // A timeout/network/5xx failure is not proof of logout. Keep an already
+          // verified tree mounted (but hidden and inert below) so retrying cannot
+          // erase uploads, open editors or unsent drafts. Explicit denials above
+          // still discard it, as do membership/account/role changes.
           setError(
             controller.signal.aborted
               ? 'The app service is taking too long to respond. Please retry.'
@@ -99,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('storage', changed);
     };
   }, [attempt]);
-  if (error)
+  if (error && !state)
     return (
       <SignIn
         accessError={error}
@@ -121,18 +139,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
   return (
     <>
-      {!state.isDemo && (
-        <WorkspaceMenu userId={state.userId} workspaces={state.workspaces} active={active} />
-      )}
-      {active.role === 'viewer' && (
-        <div
-          role="status"
-          className="fixed bottom-2 left-1/2 z-50 rounded border bg-background px-3 py-1 text-xs"
+      <div
+        style={{ display: error ? 'none' : 'contents' }}
+        inert={!!error}
+        aria-hidden={error ? true : undefined}
+      >
+        {!state.isDemo && (
+          <WorkspaceMenu userId={state.userId} workspaces={state.workspaces} active={active} />
+        )}
+        {active.role === 'viewer' && (
+          <div
+            role="status"
+            className="fixed bottom-2 left-1/2 z-50 rounded border bg-background px-3 py-1 text-xs"
+          >
+            Viewer access: server data is read-only. Local previews cannot be saved.
+          </div>
+        )}
+        {children}
+      </div>
+      {error && (
+        <main
+          role="alert"
+          className="grid h-dvh place-content-center gap-4 bg-background p-6 text-center"
         >
-          Viewer access: server data is read-only. Local previews cannot be saved.
-        </div>
+          <h1 className="text-xl font-semibold">Connection interrupted</h1>
+          <p>{error}</p>
+          <p>
+            Your workspace and drafts are kept in place. Access must be verified before you
+            continue.
+          </p>
+          <button
+            type="button"
+            className="rounded border px-4 py-2"
+            onClick={() => setAttempt((value) => value + 1)}
+          >
+            Retry access check
+          </button>
+        </main>
       )}
-      {children}
     </>
   );
 }

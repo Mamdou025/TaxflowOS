@@ -297,6 +297,40 @@ test('authenticated chat reports an unavailable provider without fabricating a r
   assert.equal(response.status, 503);
   assert.equal((await response.json()).code, 'AI_PROVIDER_NOT_CONFIGURED');
 });
+
+test('large agent requests pass parsing, preserve access checks and retain a bounded allowance', async () => {
+  const body = { system: 'Detailed instructions. '.repeat(15000), messages: [] };
+  const response = await editor.request('/copilotkit', { workspace, method: 'POST', body });
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).code, 'AI_PROVIDER_NOT_CONFIGURED');
+
+  for (const path of ['/agent-lab', '/AGENT-LAB/', '/copilotkit', '/COPILOTKIT/']) {
+    assert.equal(
+      (await viewer.request(path, { workspace, method: 'POST', body })).status,
+      403,
+      path,
+    );
+    assert.equal(
+      (await editor.request(path, { workspace: other, method: 'POST', body })).status,
+      403,
+      path,
+    );
+    const oversized = await editor.request(path, {
+      workspace,
+      method: 'POST',
+      body: { system: 'x'.repeat(4 * 1024 * 1024) },
+    });
+    assert.equal(oversized.status, 413, path);
+    const error = await oversized.json();
+    assert.equal(error.code, 'AGENT_REQUEST_TOO_LARGE');
+    assert.equal(error.limitBytes, 4194304);
+  }
+  assert.equal(
+    (await editor.request('/agent-actions/grants', { workspace, method: 'POST', body })).status,
+    413,
+    'Unrelated routes retain their existing allowance',
+  );
+});
 test('connector operations return a traceable receipt even when validation fails', async () => {
   const response = await editor.request('/http-source', {
     workspace,

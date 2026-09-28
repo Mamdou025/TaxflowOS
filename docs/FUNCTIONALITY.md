@@ -31,6 +31,28 @@ computation, human approval and server synchronization remain separate states.
 
 ## Implementation and checks
 
+Chat includes **Sina** and **Mkoro** tabs. Mkoro uses a paired, locally running
+Goose companion and displays saved messages, tool activity, individual permission
+requests, cancellation requests and connection status. It requires a configured
+Goose CLI and model on the connected computer. It does not embed the Goose desktop
+application, stream a live desktop, or automatically transfer browser logins and
+generated files. A finished model turn is not proof that a workflow succeeded.
+Read [Mkoro setup and limits](mkoro-connection.md) before a live test.
+
+Agent Builder (`/api/agent-lab`) and live chat (`/api/copilotkit`) accept JSON
+requests up to 4 MiB, including instructions, conversation history and documents.
+Agent Builder checks the serialized UTF-8 body before sending any model column;
+an oversized request leaves the draft and instructions intact. Retrieval mode
+still uploads document text and counts toward this transport limit. Model context
+limits are separate and provider-enforced; the displayed token count is only an
+estimate, not a guarantee that a particular model can process the request.
+
+After a successful access check, a temporary background verification failure
+hides and disables the workspace without unmounting its editors or discarding
+drafts. Retry or the next successful periodic check restores that same workspace.
+Initial access remains gated; confirmed logout, denied access, membership removal,
+and account/role changes still clear or reload the scoped UI as appropriate.
+
 - Workflow commands and graph rules: `lib/workflow-core`.
 - Shared deterministic executors: `lib/workflow-executors`; old editor import paths
   are compatibility exports with no second implementation.

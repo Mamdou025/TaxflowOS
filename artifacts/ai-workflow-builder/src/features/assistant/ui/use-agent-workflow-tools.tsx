@@ -15,6 +15,7 @@ import {
 } from '@workspace/workflow-core/agent-commands';
 import { Button } from '@/shared/ui/button';
 import { workflowLibraryAtom } from '@/features/workflows-hub/workflow-library';
+import { WORKFLOW_CONFIGS } from '@/shared/workflow-engine/runtime/workflow-runs';
 import {
   authorizeAgentAction,
   createAgentGrant,
@@ -290,9 +291,23 @@ function parseResult(value: unknown): ProposalResult {
 export function useAgentWorkflowTools() {
   const store = useStore();
   useCopilotAction({
+    name: 'listAvailableWorkflows',
+    description:
+      'List executable built-in workflow templates, including their exact runWorkflow IDs and required source columns. These are available even when the workspace has no saved workflow drafts. Listing does not start a run or supply sample data. Saved drafts and versions are separate; use listSavedWorkflows for those.',
+    parameters: [],
+    handler: async () =>
+      Object.values(WORKFLOW_CONFIGS).map((config) => ({
+        workflowId: config.id,
+        name: config.name,
+        kind: 'built-in-template',
+        source: config.documentLabel,
+        requiredColumns: config.requiredColumns,
+      })),
+  });
+  useCopilotAction({
     name: 'listSavedWorkflows',
     description:
-      'List exact saved workflow IDs before reading or proposing a change. Never guess an ID from a name.',
+      'List only workspace-saved workflow drafts before reading or proposing a change. An empty list does NOT mean no workflows are available: built-in templates such as FAPI are separate. Use listAvailableWorkflows for the executable template catalog. Never guess a saved ID from a name.',
     parameters: [],
     handler: async () =>
       Object.values(store.get(workflowLibraryAtom)).map((entry) => ({

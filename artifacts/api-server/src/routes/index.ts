@@ -16,6 +16,7 @@ import httpSourceRouter from './http-source';
 import paramOptionsRouter from './param-options';
 import agentActionsRouter from './agent-actions';
 import workflowRunsRouter from './workflow-runs';
+import mkoroRouter from './mkoro';
 
 const router: IRouter = Router();
 
@@ -44,5 +45,6 @@ router.use('/genui', genuiRouter);
 router.use('/documents', documentsRouter);
 router.use('/agent-actions', agentActionsRouter);
 router.use('/workflow-runs', workflowRunsRouter);
+router.use('/mkoro', mkoroRouter);
 
 export default router;

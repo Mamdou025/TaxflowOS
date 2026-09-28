@@ -1,3 +1,4 @@
+import { WorkflowSessionPanel } from '@/features/workflows-hub/workflow-session-panel';
 // ─────────────────────────────────────────────────────────────────────────────
 // AssistantThread — the presentational chat column (light neumorphic). Shared by
 // the Scope focus mode (ChatWorkspace) and the docked AssistantPanel. Renders the
@@ -7,7 +8,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { type CSSProperties, useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { ArrowRight, Calendar, ChevronDown, Database, Play, X } from 'lucide-react';
 import { CopilotChat } from '@copilotkit/react-ui';
@@ -38,7 +39,7 @@ import { ToolResultCard } from './tool-result-card';
 import { DataFilesPanel, DataFilesPanelStyles } from './data-files-panel';
 import { workIdFor, workItemsChronoAtom, type WorkItem } from '@/lib/work-store';
 import { ThreadMessages, PinnedThreadContext } from './thread-messages';
-import { RunWorkflowRender, type Assistant } from './use-assistant';
+import { type Assistant } from './use-assistant';
 
 import { CHAT_THEME } from './chat-theme';
 
@@ -52,13 +53,14 @@ Style: ALWAYS reply with a short, natural sentence FIRST — acknowledge the req
 
 INTENT — ask vs. do (read this first):
 - A workflow NAME is not a command. Someone mentioning FAPI, or asking what it is / how it works / what inputs it needs, wants an ANSWER — explain it, do NOT call runWorkflow.
-- Only REQUEST a workflow run (runWorkflow) when the user gives a clear instruction to act: "start/run/launch/calculate the FAPI workflow", "démarre la FAPI", or an equivalent imperative. The tool checks a scoped grant and otherwise presents the exact run for approval.
+- When the user asks to start/run/launch/calculate a workflow, call runWorkflow to OPEN its shared step panel. Opening does not calculate or approve anything. Do not ask for "Approve this run" before showing the steps; the user starts/resumes execution in that panel.
 - Hypotheticals ("what if…", "roughly", "could we", "we may have FAPI", "I'm considering") and negations/holds ("don't run it", "not yet", "only explain", "sans lancer", "pas encore") are NEVER a reason to start or modify anything — answer or offer, don't act.
 - If a message you receive contains a routing note in [assistant-routing] brackets, treat it as an authoritative instruction about what to do this turn (it is added by the system, not the user).
 - When unsure whether the user wants an answer or an action, ANSWER or OFFER — never start, finalize, or change a protected value on a guess. In this workspace a wrong action is worse than an extra question.
 
 CRITICAL tool routing:
-- To RUN / START / EXECUTE a catalog workflow, call runWorkflow with an id from its current executable catalog. For a selected or attached file, set sourceMode to uploaded and omit recordsJson: the handler reads the original rows directly. Use sourceMode records only for records supplied inline, and sample only when explicitly requested. Execution requires a scoped grant or review-card approval. If no source exists, ask the user to Choose source or attach a workbook. Report returned errors and findings; never claim approval or filing. Removed demos are unavailable.
+- To discover executable built-in workflows, use listAvailableWorkflows. Built-in templates (including FAPI) exist independently of workspace-saved drafts. An empty listSavedWorkflows result means there are no saved drafts, not that no workflows are available. Never substitute a built-in template for an explicitly requested saved version.
+- To RUN / START / EXECUTE a catalog workflow, call runWorkflow with its exact workflowId. OMIT version for built-in templates and whenever the user did not explicitly request a saved version; never assume version 1. For a requested saved version, use openSavedWorkflowVersion with the exact saved workflow ID and version returned by listSavedWorkflows/readSavedWorkflow. runWorkflow accepts only workflowId and must not be used for a specific saved version. Attachments are selected in the shared panel, or through controlWorkflowRun with the exact source block ID; do not transcribe the workbook into tool arguments. Even when no source exists, open runWorkflow so the exact steps appear. The user can attach a workbook in the shared run panel. Use controlWorkflowRun to pause, resume or rerun a block; inspectWorkflowBlock reads actual results. Agent commands that execute or change sources still require a scoped grant or action review. Report returned errors and findings; never claim approval or filing. Removed demos are unavailable.
 - To inspect or modify an existing saved workflow, call listSavedWorkflows, then readSavedWorkflow with an exact ID. Use proposeSavedWorkflowDraft for edits. The proposal does not mutate the draft without an applicable scoped grant; otherwise the user reviews its changed fields and base revision before approval. If the user asked to preserve the accepted draft as an immutable version, call saveSavedWorkflowVersion after the draft change is applied. Saving has separate authorization and never executes the workflow. Never substitute a similarly named workflow or bypass a validation finding.
 - To open/show a worksheet for viewing → openPage.
 - To highlight a specific figure/section on a page → focusAnchor.
@@ -575,8 +577,6 @@ export function AssistantThread({
   const pinnedNode = hasPinned ? (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
       {pinnedRuns.map((wid) => {
-        const cfg = getWorkflowConfig(wid);
-        if (!cfg) return null;
         return (
           <div
             key={`run:${wid}`}
@@ -584,11 +584,7 @@ export function AssistantThread({
             data-work-id={workIdFor('workflow-run', wid)}
           >
             <div className="flex-1">
-              <RunWorkflowRender
-                config={cfg}
-                onOpenPage={(pk) => launchOpenPage(pk)}
-                onOpenBuilder={(blockId) => openInlineBuilder(cfg.id, blockId)}
-              />
+              <WorkflowSessionPanel workflowId={wid} />
             </div>
             <button
               onClick={() => setPinnedRuns((p) => p.filter((x) => x !== wid))}
@@ -612,6 +608,7 @@ export function AssistantThread({
       {pinnedElements.map((el) => {
         const cfg = getWorkflowConfig(el.workflowId);
         if (!cfg) return null;
+
         return (
           <div key={`${el.workflowId}:${el.element}`} className="flex items-start gap-2">
             <div className="flex-1">
@@ -735,6 +732,7 @@ export function AssistantThread({
         </div>
       )}
       <div className="flex-1 min-h-0 flex flex-col">
+        {assistant.importDialog}
         <AsideComposerContext.Provider
           value={{
             search: composerSearch,
@@ -746,117 +744,108 @@ export function AssistantThread({
             setArmedTool,
           }}
         >
-          <AnimatePresence mode="wait" initial={false}>
-            {showHero ? (
-              <motion.div
-                key="hero"
-                className="flex-1 min-h-0 flex flex-col"
-                style={{ padding: docked ? '10px' : '20px' }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
-                {/* "InScope" lockup — the full wordmark beside the animated dial mark,
+          {/* The home and composer must render even when animation frames are suspended. */}
+          {showHero ? (
+            <div
+              key="hero"
+              className="flex-1 min-h-0 flex flex-col"
+              style={{ padding: docked ? '10px' : '20px' }}
+            >
+              {/* "InScope" lockup — the full wordmark beside the animated dial mark,
                     pinned TOP CENTRE. On chat start the dial flies to the header (shared
                     layoutId="scope-orb") and the wordmark is left behind (fades). The dial
                     is pulled in close to the word (negative margin absorbs its transparent
                     ring). Focus only; theme-aware (wordmark = .isneu-wordmark embossed
                     neumorphic in globals.css, dial themes itself). */}
-                {!docked && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 6,
-                      paddingTop: 12,
-                      flexShrink: 0,
-                    }}
+              {!docked && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    paddingTop: 12,
+                    flexShrink: 0,
+                  }}
+                >
+                  <motion.span
+                    className="isneu-wordmark"
+                    style={{ fontSize: 38, fontWeight: 400, letterSpacing: '-0.02em' }}
+                    layout="position"
                   >
-                    <motion.span
-                      className="isneu-wordmark"
-                      style={{ fontSize: 38, fontWeight: 400, letterSpacing: '-0.02em' }}
-                      layout="position"
-                    >
-                      InScope
-                    </motion.span>
-                    <ScopeOrbButton
-                      size={116}
-                      layoutId="scope-orb"
-                      onClick={() => openClientSwitcher(true)}
-                      label=""
-                    />
-                  </div>
-                )}
-                {/* Greeting + composer + suggestions — centred in the space below the orb.
+                    InScope
+                  </motion.span>
+                  <ScopeOrbButton
+                    size={116}
+                    layoutId="scope-orb"
+                    onClick={() => openClientSwitcher(true)}
+                    label=""
+                  />
+                </div>
+              )}
+              {/* Greeting + composer + suggestions — centred in the space below the orb.
                     `overflow-y-auto` + `margin:auto` (not items-center) so that when the
                     content is taller than the viewport (short/small windows) it SCROLLS
                     from the top instead of overflowing UPWARD into the orb/wordmark lockup. */}
-                <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
-                  <div style={{ width: '100%', maxWidth: docked ? 'none' : 720, margin: 'auto' }}>
-                    <div style={{ textAlign: 'center', marginBottom: docked ? 10 : 20 }}>
-                      <div
-                        style={{
-                          fontSize: docked ? 22 : 34,
-                          fontWeight: 700,
-                          color: LC.title,
-                          letterSpacing: '-0.02em',
-                        }}
-                      >
-                        {greeting}, Sophia
-                      </div>
-                      <div
-                        style={{
-                          fontSize: docked ? 13 : 16,
-                          fontWeight: 400,
-                          color: LC.muted,
-                          marginTop: 6,
-                        }}
-                      >
-                        What would you like to work on?
-                      </div>
+              <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
+                <div style={{ width: '100%', maxWidth: docked ? 'none' : 720, margin: 'auto' }}>
+                  <div style={{ textAlign: 'center', marginBottom: docked ? 10 : 20 }}>
+                    <div
+                      style={{
+                        fontSize: docked ? 22 : 34,
+                        fontWeight: 700,
+                        color: LC.title,
+                        letterSpacing: '-0.02em',
+                      }}
+                    >
+                      {greeting}, Sophia
                     </div>
-                    <AsideInput onSend={(t) => say(String(t))} />
-                    {!docked && (
-                      <HeroLaunchpad
-                        onAskSources={() => say('What sources are available in this workspace?')}
-                        onBuild={() => launchOpenPage('workflows')}
-                        onRun={() => say('Help me choose and run a workflow.')}
-                        onResume={onOpenWork}
-                      />
-                    )}
+                    <div
+                      style={{
+                        fontSize: docked ? 13 : 16,
+                        fontWeight: 400,
+                        color: LC.muted,
+                        marginTop: 6,
+                      }}
+                    >
+                      What would you like to work on?
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="thread"
-                className="flex-1 min-h-0 flex flex-col aside-thread"
-                style={{ overflow: 'hidden' }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-              >
-                <div className="flex-1 min-h-0">
-                  {/* One scroll: pinned runs/cards render INSIDE the message stream (via
-                      the custom ThreadMessages), with the composer fixed at the bottom. */}
-                  <PinnedThreadContext.Provider value={pinnedNode}>
-                    <CopilotChat
-                      className="h-full"
-                      instructions={applyLiveConfig(INSTRUCTIONS(), agentConfig)}
-                      labels={{ title: 'Assistant', initial: '', placeholder: 'Message Scope…' }}
-                      AssistantMessage={AsideAssistantMessage}
-                      UserMessage={AsideUserMessage}
-                      Input={AsideInput}
-                      Messages={ThreadMessages}
+                  <AsideInput onSend={(t) => say(String(t))} />
+                  {!docked && (
+                    <HeroLaunchpad
+                      onAskSources={() => say('What sources are available in this workspace?')}
+                      onBuild={() => launchOpenPage('workflows')}
+                      onRun={() => say('Help me choose and run a workflow.')}
+                      onResume={onOpenWork}
                     />
-                  </PinnedThreadContext.Provider>
+                  )}
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </div>
+            </div>
+          ) : (
+            <div
+              key="thread"
+              className="flex-1 min-h-0 flex flex-col aside-thread"
+              style={{ overflow: 'hidden' }}
+            >
+              <div className="flex-1 min-h-0">
+                {/* One scroll: pinned runs/cards render INSIDE the message stream (via
+                      the custom ThreadMessages), with the composer fixed at the bottom. */}
+                <PinnedThreadContext.Provider value={pinnedNode}>
+                  <CopilotChat
+                    className="h-full"
+                    instructions={applyLiveConfig(INSTRUCTIONS(), agentConfig)}
+                    labels={{ title: 'Assistant', initial: '', placeholder: 'Message Scope…' }}
+                    AssistantMessage={AsideAssistantMessage}
+                    UserMessage={AsideUserMessage}
+                    Input={AsideInput}
+                    Messages={ThreadMessages}
+                  />
+                </PinnedThreadContext.Provider>
+              </div>
+            </div>
+          )}
         </AsideComposerContext.Provider>
       </div>
     </div>

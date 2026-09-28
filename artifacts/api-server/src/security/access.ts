@@ -109,6 +109,7 @@ export const authorizeOperation: RequestHandler = (req, res, next) => {
   // Express routes are case-insensitive and accept a trailing slash by default.
   const path = req.path.toLowerCase().replace(/\/+$/, '');
   const execute =
+    (path.startsWith('/mkoro/') && !['GET', 'HEAD'].includes(req.method)) ||
     (req.method === 'POST' && /^\/workflow-runs(?:\/[^/]+\/(?:cancel|retry))?$/.test(path)) ||
     /^\/(copilotkit|agent-lab|agent-actions|genui|http-source|fx-rate|param-options|assistant\/tools)(?:\/|$)/.test(
       path,

@@ -127,6 +127,7 @@ export function AsideInput(props: {
   const [openSection, setOpenSection] = useState<'workflows' | 'worksheets' | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [attaching, setAttaching] = useState(false);
+  const [attachmentError, setAttachmentError] = useState('');
   const [focused, setFocused] = useState(false);
   const ref = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -160,12 +161,15 @@ export function AsideInput(props: {
     if (!ready) return;
     const t = text.trim();
     const pending = files;
-    setText(''); setActive(-1); setFiles([]);
+    setAttachmentError('');
     let note = '';
     if (pending.length && ctx?.onAttach) {
       setAttaching(true);
-      try { note = await ctx.onAttach(pending); } finally { setAttaching(false); }
+      try { note = await ctx.onAttach(pending); }
+      catch (error) { setAttachmentError(error instanceof Error ? error.message : 'The attachment could not be read.'); return; }
+      finally { setAttaching(false); }
     }
+    setText(''); setActive(-1); setFiles([]);
     // An armed tool templates the typed query into a message that routes to it (e.g.
     // "Search the web for: …"), then disarms so the next message is a normal one.
     const body = armedTool ? formatArmedMessage(armedTool.name, t) : t;
@@ -226,6 +230,7 @@ export function AsideInput(props: {
 
   return (
     <div style={{ padding: '8px 16px 16px', position: 'relative' }}>
+      {attachmentError && <p role="alert" className="mb-2 text-sm text-destructive">{attachmentError}</p>}
       <ChatSourcePicker disabled={busy || attaching} open={showSources} onOpenChange={setShowSources} onDocumentSelect={setDocumentScope} />
       <div style={{ position: 'relative' }}>
         {showPalette && (

@@ -53,6 +53,9 @@ try {
     const url = new URL(route.request().url());
     if (url.origin !== baseURL) return route.abort();
     if (!url.pathname.startsWith('/api/')) return route.continue();
+    if (url.pathname === '/api/mkoro/workers') return route.fulfill({ json: { workers: [] } });
+    if (url.pathname === '/api/mkoro/conversations')
+      return route.fulfill({ json: { conversations: [] } });
     const json =
       url.pathname === '/api/session'
         ? syntheticSession
@@ -83,6 +86,15 @@ try {
   );
   const draft = page.locator('.lc-console').getByRole('textbox');
   await draft.fill('Preserve this draft across deferred pages');
+  await measure(
+    'mkoro-first-open',
+    () => page.getByRole('tab', { name: 'Mkoro', exact: true }).click(),
+    page.getByRole('heading', { name: 'Work with Mkoro here' }),
+  );
+  await expect(page.getByRole('button', { name: 'Send to Mkoro' })).toBeDisabled();
+  await page.getByRole('textbox', { name: 'Message Mkoro' }).fill('Keep my Mkoro draft');
+  await page.getByRole('tab', { name: 'Sina', exact: true }).click();
+  await expect(draft).toHaveValue('Preserve this draft across deferred pages');
   await page.getByRole('button', { name: 'Chat agent: Sina' }).click();
   await measure(
     'agent-first-open',

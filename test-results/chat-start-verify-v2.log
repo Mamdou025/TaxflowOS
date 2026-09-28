@@ -1,0 +1,166 @@
+
+> workspace@0.0.0 verify C:\Users\Mamad\Sinaxe\TaxflowOS
+> pnpm run doctor && pnpm run contracts:check && pnpm run check:architecture && pnpm run format:check && pnpm run typecheck && pnpm run typecheck:tests && pnpm run test:unit && pnpm run typecheck:workflow-core-tests && pnpm run test:workflow-core
+
+
+> workspace@0.0.0 doctor C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/check-toolchain.mjs
+
+Toolchain runtime and configuration verified: Node 24.21.0, pnpm@10.33.2.
+This checks versions/configuration, not live database or model-provider availability.
+
+> workspace@0.0.0 contracts:check C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/generate-workflow-schemas.mjs --check
+
+Workflow runtime schemas match the domain contracts.
+
+> workspace@0.0.0 check:architecture C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/check-architecture.mjs
+
+Architecture checks passed across 956 source files.
+
+> workspace@0.0.0 format:check C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/format-maintained.mjs
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> workspace@0.0.0 typecheck C:\Users\Mamad\Sinaxe\TaxflowOS
+> pnpm run typecheck:libs && pnpm -r --filter "./artifacts/**" --filter "./scripts" --if-present run typecheck
+
+
+> workspace@0.0.0 typecheck:libs C:\Users\Mamad\Sinaxe\TaxflowOS
+> tsc --build
+
+Scope: 5 of 16 workspace projects
+artifacts/ai-workflow-builder typecheck$ tsc -p tsconfig.json --noEmit
+artifacts/api-server typecheck$ tsc -p tsconfig.json --noEmit
+artifacts/mockup-sandbox typecheck$ tsc -p tsconfig.json --noEmit
+artifacts/inscope-pitch typecheck$ tsc -p tsconfig.json --noEmit
+artifacts/inscope-pitch typecheck: Done
+scripts typecheck$ tsc -p tsconfig.json --noEmit
+scripts typecheck: Done
+artifacts/mockup-sandbox typecheck: Done
+artifacts/api-server typecheck: Done
+artifacts/ai-workflow-builder typecheck: Done
+
+> workspace@0.0.0 typecheck:tests C:\Users\Mamad\Sinaxe\TaxflowOS
+> tsc -p tests/tsconfig.json --noEmit
+
+
+> workspace@0.0.0 test:unit C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-unit-tests.mjs
+
+✔ read, proposal and authorized retrieval capabilities are implicit (17.8787ms)
+✔ one-time approval is bound to agent, resource, revision, operation and request (4.3732ms)
+✔ reusable grants avoid repeated approval only inside their exact scope (1.5495ms)
+✔ expired, revoked and already-used approvals fail visibly (1.7767ms)
+✔ external writes reject reusable or unbound approvals (4.7998ms)
+✔ agent request allowance accepts detailed instructions and checks the exact byte boundary (21.0531ms)
+✔ agent request size includes UTF-8, JSON escaping and retrieval documents (187.5249ms)
+✔ workspace tools validate model arguments and pass trusted context through ports (15.6795ms)
+✔ invalid or unknown tool requests never reach a workspace port (9.2175ms)
+✔ mutating tool definitions expose distinct capabilities for policy evaluation (1.2762ms)
+✔ request correlation accepts bounded IDs and replaces unsafe input (7.4626ms)
+✔ calculation editor tokens preserve references, functions, operators and numeric literals (19.5506ms)
+✔ legacy formula operations receive the same editable expression representation (1.2321ms)
+✔ calculation config filtering and token keys reject malformed ambiguity (2.3417ms)
+✔ SAP column headings are recognized without manual column mapping (1617.6695ms)
+✔ SAP-style workbook requires selection and imports all selected rows with explicit headings (531.9608ms)
+✔ missing selected sheets and cancellation never fall back to another sheet (302.1554ms)
+✔ oversized sheets are rejected rather than truncated (3900.0606ms)
+✔ selected exports use the confirmed currency and do not assume USD (486.943ms)
+✔ explicit mapping never extracts other adjacent numbers (11.1903ms)
+✔ chat workbook import skips financial headings and totals while preserving physical Excel rows and currency (13.4251ms)
+✔ structured workbooks without an amount column retain their records (9.7873ms)
+✔ invalid financial amounts cannot turn into zero during chat import (11.4562ms)
+✔ explicit uploaded source uses the original rows even when the model emits an empty array (145.3075ms)
+✔ approval input is a frozen snapshot even if the selected source changes (0.9635ms)
+✔ missing uploads cannot fall back to inline or sample data (2.8525ms)
+✔ explicit invalid inline records remain invalid despite an available uploaded source (1.6578ms)
+✔ sample execution remains explicit and overrides neither the uploaded source nor its contents (2.9562ms)
+✔ the frozen legacy backup migrates aliases in drafts and history without mutating its input (35.3182ms)
+✔ legacy import survives compressed v1 export and repeated restore (50.2979ms)
+✔ a synthetic calculation retains explicit zero and credit adjustments (102.1105ms)
+✔ row mapping preserves explicit zero and applies defaultAmount only without a numeric value (14.1226ms)
+✔ HTTP JSON retrieval retries transient responses and records its attempts (172.133ms)
+✔ HTTP JSON retrieval does not retry an invalid successful response (11.0573ms)
+✔ invalid URLs and unknown connector IDs fail predictably (5.1733ms)
+✔ selected sources rank first and selected-only excludes unselected library sources (23.956ms)
+✔ retrieval excludes cross-workspace, cross-client, archived and deleted candidates (6.4244ms)
+✔ Editors can archive and soft-delete; only Owners can restore or purge (4.3218ms)
+✔ Chat and builder adapters obey the same version, calculation and recorded-run contract (536.7644ms)
+✔ the shared Chat command validates input before requesting an execution or saved identity (2.467ms)
+✔ legacy trigger relationships migrate and every catalog source has valid metadata (27.3084ms)
+✔ legacy bare libraries and v1 backup envelopes preserve saved definitions (151.9521ms)
+✔ restore rejects malformed nested workflow data and duplicate version numbers (68.6859ms)
+✔ version saving is immutable and reuses an unchanged version (52.7838ms)
+✔ explicit missing versions fail before invoking the executor (8.8572ms)
+✔ storage client rejects invalid server revisions (86.669ms)
+✔ all executable templates roundtrip their actual graph results through validated storage (2350.9165ms)
+✔ unreadable local data remains byte-for-byte available for recovery (1.4679ms)
+✔ tool composition rejects silent overrides and invalid aliases (1.1499ms)
+✔ modular executor ownership cannot overlap with legacy local tools (1.2488ms)
+✔ durable workflow requests share strict identifiers, filters, errors and paths (2.5996ms)
+✔ every registered browser tool is admitted by the server executor (163.4979ms)
+✔ all executable template snapshots retain outputs, errors and provenance on the server (482.2012ms)
+✔ Chat opens a built-in step preview without needing a saved version or starting a run (35.3048ms)
+✔ a guessed built-in version is rejected with actionable guidance, never silently substituted (1.9456ms)
+✔ Chat preserves an exact saved version and rejects unavailable IDs and versions (50.9582ms)
+✔ edits made during an in-flight save stay dirty and use the returned revision (104.3946ms)
+✔ revision conflicts stop subsequent writes until an explicit workspace open (5.9966ms)
+✔ offline failures retain dirty state and can be retried (6.5058ms)
+✔ an intentional empty local library is saved instead of resurrecting deleted workflows (60.8865ms)
+✔ a stale request failure cannot change the status of the newly opened workspace (19.1863ms)
+✔ invalid remote backups are never applied or replaced by local data (6.607ms)
+✔ all workpapers reject each missing required field (32.6376ms)
+✔ independent expected arithmetic for ledger and tax workpaper samples (6.4775ms)
+✔ ownership composes economic interests and rejects cycles (10.017ms)
+✔ T106 keeps currencies and payment directions in separate groups (2.6551ms)
+✔ document calculation uses supplied rows; empty records never select sample data (121.7597ms)
+ℹ tests 67
+ℹ suites 0
+ℹ pass 67
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9842.2416
+
+> workspace@0.0.0 typecheck:workflow-core-tests C:\Users\Mamad\Sinaxe\TaxflowOS
+> tsc -p tests/core/tsconfig.json --noEmit
+
+
+> workspace@0.0.0 test:workflow-core C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-workflow-core-tests.mjs
+
+✔ agent proposals identify changes, preserve history and invalidate affected approval state (73.158ms)
+✔ mismatched authorization and stale proposals cannot mutate a workflow (14.2022ms)
+✔ saving and executing are separately authorized and execution targets an immutable version (16.2511ms)
+✔ durable runtime executes explicit saved values without sample substitution (40.4595ms)
+✔ durable runtime rejects unsupported tools before enqueue (5.5358ms)
+✔ durable runtime reports missing explicit values as an execution error (5.7034ms)
+✔ formula rejects each unresolved operand instead of calculating a partial result (13.8227ms)
+✔ formula preserves zero, negative numbers and qualified references (5.1058ms)
+✔ a historical API reference never becomes a fabricated numeric value (4.0788ms)
+✔ formula retains named aggregate references and rejects ambiguous short names (8.7753ms)
+✔ cross-workflow run history keeps exact run identity and newest-first ordering (87.5761ms)
+✔ portable graph orders dependencies and produces 400 without a browser or model (3.3315ms)
+✔ cycles and missing dependencies fail before executing tools (5.9515ms)
+✔ partial runs require an existing selection and validate only relevant dependencies (6.6443ms)
+✔ missing tools never report an ordinary successful calculation (5.7506ms)
+✔ code, formula, source and governance edits create immutable saved versions (52.9219ms)
+✔ stale draft writes and explicit missing or ambiguous versions do not execute (10.1121ms)
+✔ saved runs preserve identity and initiator, deduplicate retries and reject conflicting reuse (32.9983ms)
+✔ executors and queries cannot mutate saved history or attach foreign run results (8.9559ms)
+✔ guided execution freezes Build version and records real block results with dependency invalidation (122.0652ms)
+✔ source replacement and addition preserve evidence and reject ambiguous or oversized operations (179.764ms)
+✔ missing tools and checkpoints do not fabricate success or advance dependents (18.1927ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1455.421

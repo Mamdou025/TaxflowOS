@@ -30,6 +30,8 @@ export type ExcelRowData = {
 };
 
 export type ExcelSheetData = {
+  hidden?: boolean;
+  totalRowCount?: number;
   sheetName: string;
   rowCount: number;
   columnCount: number;

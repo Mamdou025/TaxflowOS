@@ -1,4 +1,5 @@
 import { apiFetch } from '@/platform/auth/api-fetch';
+import { agentRequestSizeError } from '@workspace/api-zod/agent-requests';
 import { workspaceStorage } from '@/platform/auth/workspace-context';
 
 
@@ -386,7 +387,6 @@ export default function AgentLabPage({ embedded = false }: { embedded?: boolean 
       return;
     }
     setError('');
-    setInputText('');
 
     const turnDocs = activeDocs.map((d) => ({ name: d.name, text: d.text }));
     const docNames = activeDocs.map((d) => d.name);
@@ -420,10 +420,33 @@ export default function AgentLabPage({ embedded = false }: { embedded?: boolean 
       sentSystem = `${fiscalPreamble(fiscal)}\n\n${sentSystem}`;
     }
 
+    // Check every lane before clearing the draft or sending any request. Retrieval
+    // mode still uploads document text, even though it is not all model context.
+    const requests = snapshot.map((lane) => {
+      const body = JSON.stringify({
+        model: lane.customModel.trim() || lane.model,
+        system: sentSystem,
+        temperature,
+        maxSteps,
+        enabledTools: sentTools,
+        messages: [...lane.messages, userMsg].map((m) => ({ role: m.role, content: m.content })),
+        documents: turnDocs,
+        docMode,
+        effort: effort === 'auto' ? undefined : effort,
+      });
+      return { lane, body, error: agentRequestSizeError(new TextEncoder().encode(body).byteLength) };
+    });
+    const oversized = requests.find((request) => request.error);
+    if (oversized?.error) {
+      setError(oversized.error);
+      return;
+    }
+    setInputText('');
+
     // Optimistic: show the user message + spinner in every column.
     setLanes((prev) => prev.map((l) => ({ ...l, messages: [...l.messages, userMsg], loading: true })));
 
-    for (const lane of snapshot) {
+    for (const { lane, body } of requests) {
       const laneModel = lane.customModel.trim() || lane.model;
       const nextMessages = [...lane.messages, userMsg];
       const turnContext: TurnContext = { model: laneModel, system: sentSystem, enabledTools: sentTools, messageCount: nextMessages.length, documents: docNames, effort, scope, selection, fiscal: fiscalStamp };
@@ -432,17 +455,7 @@ export default function AgentLabPage({ embedded = false }: { embedded?: boolean 
           const res = await apiFetch('/api/agent-lab', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              model: laneModel,
-              system: sentSystem,
-              temperature,
-              maxSteps,
-              enabledTools: sentTools,
-              messages: nextMessages.map((m) => ({ role: m.role, content: m.content })),
-              documents: turnDocs,
-              docMode,
-              effort: effort === 'auto' ? undefined : effort,
-            }),
+            body,
           });
           const data = (await res.json()) as AgentLabResponse;
           const assistantMsg: ChatMessage = data.error
@@ -861,7 +874,8 @@ export default function AgentLabPage({ embedded = false }: { embedded?: boolean 
             )}
           </div>
 
-          {error && <p className="text-[13px] text-red-500">{error}</p>}
+          <p className="text-xs text-neutral-500">Up to 4 MiB per request, including instructions, history and documents. The selected model's context limit also applies; leave room for its reply. Keep required rules in Instructions and reference material in documents.</p>
+          {error && <p role="alert" className="text-[13px] text-red-500">{error}</p>}
 
           {allEmpty && (
             <button

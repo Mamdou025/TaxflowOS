@@ -20,6 +20,7 @@
     "format:check": "node scripts/format-maintained.mjs",
     "format": "node scripts/format-maintained.mjs --write",
     "test:unit": "node scripts/run-unit-tests.mjs",
+    "test:mkoro-worker": "node --test scripts/mkoro/*.test.mjs",
     "test:api-startup": "node --test tests/smoke/api-startup.mjs",
     "recovery:verify": "node scripts/node_modules/tsx/dist/cli.mjs scripts/src/recovery-verification.ts",
     "performance:check": "node scripts/check-performance-budgets.mjs",
@@ -27,7 +28,7 @@
     "release:check:persistence": "pnpm run test:integration && pnpm run test:workflow-persistence",
     "release:check:full": "pnpm run release:check && pnpm run release:check:persistence",
     "typecheck:tests": "tsc -p tests/tsconfig.json --noEmit",
-    "verify": "pnpm run doctor && pnpm run contracts:check && pnpm run check:architecture && pnpm run format:check && pnpm run typecheck && pnpm run typecheck:tests && pnpm run test:unit && pnpm run typecheck:workflow-core-tests && pnpm run test:workflow-core",
+    "verify": "pnpm run doctor && pnpm run contracts:check && pnpm run check:architecture && pnpm run format:check && pnpm run typecheck && pnpm run typecheck:tests && pnpm run test:unit && pnpm run test:mkoro-worker && pnpm run typecheck:workflow-core-tests && pnpm run test:workflow-core",
     "test:workflow-core": "node scripts/run-workflow-core-tests.mjs",
     "typecheck:workflow-core-tests": "tsc -p tests/core/tsconfig.json --noEmit",
     "test:production-ui": "node tests/smoke/production-ui.mjs"

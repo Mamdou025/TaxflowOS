@@ -19,6 +19,7 @@ export const PersonalWorkflowSchema: z.ZodType<import("./library-types").Persona
   "savedAt": z.string(),
   "definition": LocalWorkflowSnapshotSchema,
 }).passthrough()),
+  "sessions": z.array(WorkflowSessionSchema).optional(),
   "runs": z.array(z.object({
   "version": z.number().finite(),
   "at": z.string(),
@@ -67,6 +68,32 @@ export const LocalWorkflowSnapshotSchema: z.ZodType<import("./domain/workflow-ty
 }).passthrough().optional(),
   "aiProposals": z.array(AiProposalSchema),
   "events": z.array(WorkflowEventSchema),
+}).passthrough());
+
+export const WorkflowSessionSchema: z.ZodType<import("./library-types").WorkflowSession, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+  "id": z.string(),
+  "version": z.number().finite(),
+  "revision": z.number().finite(),
+  "createdAt": z.string(),
+  "paused": z.boolean(),
+  "approvedAt": z.string().optional(),
+  "results": z.record(ToolRunResultSchema),
+  "stale": z.array(z.string()),
+  "reviewed": z.array(z.string()),
+  "sources": z.array(z.object({
+  "id": z.string(),
+  "blockId": z.string(),
+  "name": z.string(),
+  "at": z.string(),
+  "mode": z.union([z.literal("replace"), z.literal("add")]),
+  "rows": z.array(z.record(z.unknown())),
+}).passthrough()),
+  "attempts": z.array(z.object({
+  "at": z.string(),
+  "revision": z.number().finite(),
+  "blockId": z.string(),
+  "result": LocalToolRunnerResultSchema,
+}).passthrough()),
 }).passthrough());
 
 export const LocalToolRunnerResultSchema: z.ZodType<import("./execution-result").LocalToolRunnerResult, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
@@ -234,6 +261,37 @@ export const WorkflowEventSchema: z.ZodType<import("./domain/workflow-types").Wo
   "details": z.record(z.unknown()).optional(),
 }).passthrough());
 
+export const ToolRunResultSchema: z.ZodType<import("./tool-types").ToolRunResult, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+  "blockTest": z.object({
+  "mode": z.literal("isolated"),
+  "inputs": z.union([z.literal("none"), z.literal("examples"), z.literal("recorded")]),
+}).passthrough().optional(),
+  "configSignature": z.string().optional(),
+  "input": z.record(z.unknown()).optional(),
+  "inputTransfers": z.array(z.object({
+  "edgeId": z.string(),
+  "sourceBlockId": z.string(),
+  "sourceLabel": z.string(),
+  "sourceOutputRole": z.string().optional(),
+  "targetInputRole": z.string().optional(),
+  "delivered": z.boolean(),
+  "output": z.record(z.unknown()),
+}).passthrough()).optional(),
+  "runId": z.string(),
+  "blockId": z.string(),
+  "toolId": z.string(),
+  "status": ToolRunStatusSchema,
+  "output": z.record(z.unknown()),
+  "logs": z.array(ToolRunLogSchema),
+  "warnings": z.array(z.string()),
+  "errors": z.array(z.string()),
+  "evidenceRefs": z.array(EvidenceRefSchema),
+  "sourceTrace": z.array(SourceTraceRefSchema),
+  "confidence": z.number().finite().optional(),
+  "startedAt": z.string(),
+  "completedAt": z.string(),
+}).passthrough());
+
 export const LocalEdgeRunStatusSchema: z.ZodType<import("./execution-result").LocalEdgeRunStatus, z.ZodTypeDef, unknown> = z.lazy(() => z.union([z.literal("error"), z.literal("success"), z.literal("warning")]));
 
 export const LocalRunRecordSchema: z.ZodType<import("./domain/workflow-types").LocalRunRecord, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
@@ -366,6 +424,36 @@ export const AiProposalHistoryEntrySchema: z.ZodType<import("./domain/workflow-t
 
 export const WorkflowEventTypeSchema: z.ZodType<import("./domain/workflow-types").WorkflowEventType, z.ZodTypeDef, unknown> = z.lazy(() => z.union([z.literal("ai_proposal_approved"), z.literal("ai_proposal_created"), z.literal("ai_proposal_rejected"), z.literal("export_workflow"), z.literal("import_workflow"), z.literal("migration"), z.literal("publish_snapshot"), z.literal("reset_sample"), z.literal("save_draft"), z.literal("validation_warning"), z.literal("workflow_command")]));
 
+export const ToolRunStatusSchema: z.ZodType<import("./tool-types").ToolRunStatus, z.ZodTypeDef, unknown> = z.lazy(() => z.union([z.literal("skipped"), z.literal("error"), z.literal("success"), z.literal("warning"), z.literal("needs_review")]));
+
+export const ToolRunLogSchema: z.ZodType<import("./tool-types").ToolRunLog, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+  "id": z.string(),
+  "at": z.string(),
+  "level": z.union([z.literal("error"), z.literal("warning"), z.literal("info")]),
+  "message": z.string(),
+  "details": z.record(z.unknown()).optional(),
+}).passthrough());
+
+export const EvidenceRefSchema: z.ZodType<import("./tool-types").EvidenceRef, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+  "evidenceId": z.string(),
+  "sourceBlockId": z.string(),
+  "sourceLabel": z.string(),
+  "immutable": z.literal(true),
+  "label": z.string().optional(),
+  "locator": z.string().optional(),
+  "rowId": z.string().optional(),
+  "valuePreview": z.string().optional(),
+}).passthrough());
+
+export const SourceTraceRefSchema: z.ZodType<import("./tool-types").SourceTraceRef, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+  "sourceBlockId": z.string(),
+  "sourceLabel": z.string(),
+  "evidenceRefId": z.string().optional(),
+  "relationshipPath": z.array(z.string()),
+  "rowId": z.string().optional(),
+  "valuePreview": z.string().optional(),
+}).passthrough());
+
 export const LocalWorkflowExecutionSchema: z.ZodType<import("./domain/workflow-types").LocalWorkflowExecution, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
   "id": z.string(),
   "workflowId": z.string(),
@@ -391,47 +479,6 @@ export const LocalExecutionLogSchema: z.ZodType<import("./domain/workflow-types"
   "error": z.union([z.null(), z.string()]),
 }).passthrough());
 
-export const ToolRunStatusSchema: z.ZodType<import("./tool-types").ToolRunStatus, z.ZodTypeDef, unknown> = z.lazy(() => z.union([z.literal("skipped"), z.literal("error"), z.literal("success"), z.literal("warning"), z.literal("needs_review")]));
-
-export const ToolRunResultSchema: z.ZodType<import("./tool-types").ToolRunResult, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
-  "blockTest": z.object({
-  "mode": z.literal("isolated"),
-  "inputs": z.union([z.literal("none"), z.literal("examples"), z.literal("recorded")]),
-}).passthrough().optional(),
-  "configSignature": z.string().optional(),
-  "input": z.record(z.unknown()).optional(),
-  "inputTransfers": z.array(z.object({
-  "edgeId": z.string(),
-  "sourceBlockId": z.string(),
-  "sourceLabel": z.string(),
-  "sourceOutputRole": z.string().optional(),
-  "targetInputRole": z.string().optional(),
-  "delivered": z.boolean(),
-  "output": z.record(z.unknown()),
-}).passthrough()).optional(),
-  "runId": z.string(),
-  "blockId": z.string(),
-  "toolId": z.string(),
-  "status": ToolRunStatusSchema,
-  "output": z.record(z.unknown()),
-  "logs": z.array(ToolRunLogSchema),
-  "warnings": z.array(z.string()),
-  "errors": z.array(z.string()),
-  "evidenceRefs": z.array(EvidenceRefSchema),
-  "sourceTrace": z.array(SourceTraceRefSchema),
-  "confidence": z.number().finite().optional(),
-  "startedAt": z.string(),
-  "completedAt": z.string(),
-}).passthrough());
-
-export const ToolRunLogSchema: z.ZodType<import("./tool-types").ToolRunLog, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
-  "id": z.string(),
-  "at": z.string(),
-  "level": z.union([z.literal("error"), z.literal("warning"), z.literal("info")]),
-  "message": z.string(),
-  "details": z.record(z.unknown()).optional(),
-}).passthrough());
-
 export const RuntimeUiRowSchema: z.ZodType<import("./domain/workflow-types").RuntimeUiRow, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
   "id": z.string(),
   "blockId": z.string(),
@@ -447,25 +494,5 @@ export const RuntimeUiRowSchema: z.ZodType<import("./domain/workflow-types").Run
   "protectedLocked": z.boolean(),
   "outputKey": z.string().optional(),
   "allowedActions": z.array(z.string()),
-}).passthrough());
-
-export const EvidenceRefSchema: z.ZodType<import("./tool-types").EvidenceRef, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
-  "evidenceId": z.string(),
-  "sourceBlockId": z.string(),
-  "sourceLabel": z.string(),
-  "immutable": z.literal(true),
-  "label": z.string().optional(),
-  "locator": z.string().optional(),
-  "rowId": z.string().optional(),
-  "valuePreview": z.string().optional(),
-}).passthrough());
-
-export const SourceTraceRefSchema: z.ZodType<import("./tool-types").SourceTraceRef, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
-  "sourceBlockId": z.string(),
-  "sourceLabel": z.string(),
-  "evidenceRefId": z.string().optional(),
-  "relationshipPath": z.array(z.string()),
-  "rowId": z.string().optional(),
-  "valuePreview": z.string().optional(),
 }).passthrough());
 

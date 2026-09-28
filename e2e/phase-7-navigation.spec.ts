@@ -1,11 +1,154 @@
 import { test, expect } from './workflow-audit-isolation';
 import type { Page } from '@playwright/test';
+import { createRequire } from 'node:module';
+import path from 'node:path';
+import { syntheticContext, syntheticSession } from '../scripts/testing/browser-fixtures.mjs';
 
 async function mockWorkspaceReads(page: Page) {
   await page.route('**/api/documents**', (route) => route.fulfill({ json: { documents: [] } }));
   await page.route('**/api/integrations**', (route) => route.fulfill({ json: [] }));
   await page.route('**/api/chat/threads**', (route) => route.fulfill({ json: { threads: [] } }));
 }
+
+test('background access failures preserve Lab drafts and still enforce revoked access', async ({
+  browser,
+}) => {
+  const context = await browser.newContext();
+  // Unlike the shared fixture, seed only once so a real logout can remove the
+  // workspace context without the next navigation putting it back.
+  await context.addInitScript((value) => {
+    if (!sessionStorage.getItem('access-recovery-seeded')) {
+      sessionStorage.setItem('taxflow:authenticated-workspace', JSON.stringify(value));
+      sessionStorage.setItem('access-recovery-seeded', '1');
+    }
+  }, syntheticContext);
+  const page = await context.newPage();
+  try {
+    await page.clock.install();
+    await mockWorkspaceReads(page);
+    let sessionStatus = 200;
+    let workspaceStatus = 200;
+    let workspaces = [syntheticContext.workspace];
+    await page.route('**/api/session', (route) =>
+      route.fulfill({
+        status: sessionStatus,
+        json: sessionStatus === 200 ? syntheticSession : { error: 'Synthetic access failure' },
+      }),
+    );
+    await page.route('**/api/workspaces', (route) =>
+      route.fulfill({
+        status: workspaceStatus,
+        json: { workspaces },
+      }),
+    );
+    await page.goto('/agent-lab');
+    const draft = page.getByPlaceholder('Message Sina…');
+    await draft.fill('Preserve this draft across a temporary outage');
+    for (const failingEndpoint of ['session', 'workspace']) {
+      if (failingEndpoint === 'session') sessionStatus = 503;
+      else workspaceStatus = 503;
+      await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+      await expect(page.getByRole('heading', { name: 'Connection interrupted' })).toBeVisible();
+      await expect(draft).toBeHidden();
+      await expect(draft).toHaveValue('Preserve this draft across a temporary outage');
+      await expect(page.getByRole('button', { name: 'Try demo', exact: true })).toHaveCount(0);
+      sessionStatus = 200;
+      workspaceStatus = 200;
+      await page.getByRole('button', { name: 'Retry access check', exact: true }).click();
+      await expect(draft).toBeVisible();
+      await expect(draft).toHaveValue('Preserve this draft across a temporary outage');
+    }
+    // The same failure also occurs without an upload, on the minute-long timer.
+    sessionStatus = 503;
+    await page.clock.fastForward(60000);
+    await expect(page.getByRole('heading', { name: 'Connection interrupted' })).toBeVisible();
+    sessionStatus = 200;
+    await page.clock.fastForward(60000);
+    await expect(draft).toBeVisible();
+    await expect(draft).toHaveValue('Preserve this draft across a temporary outage');
+    workspaces = [];
+    await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+    await expect(page.getByText('Choose a workspace', { exact: true })).toBeVisible();
+    await expect(draft).toHaveCount(0);
+    sessionStatus = 401;
+    await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+    await expect(page.getByRole('button', { name: 'Try demo', exact: true })).toBeVisible();
+  } finally {
+    await context.close();
+  }
+});
+
+test('agent lab Excel uploads preserve the workspace and unsent drafts', async ({ page }) => {
+  await mockWorkspaceReads(page);
+  const XLSX = createRequire(path.resolve('artifacts/ai-workflow-builder/package.json'))('xlsx');
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.aoa_to_sheet([
+      ['Account', 'Amount'],
+      ['Synthetic revenue', 12345],
+    ]),
+    'Trial balance',
+  );
+  const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+  await page.goto('/');
+  const chatDraft = page.locator('.lc-console').getByRole('textbox');
+  await chatDraft.fill('Keep my main chat draft');
+  await page.getByRole('button', { name: 'Chat agent: Sina' }).click();
+  await page.getByRole('menuitem', { name: 'Customize agent' }).click();
+  await page.getByRole('button', { name: 'Lab', exact: true }).click();
+  const labDraft = page.getByPlaceholder('Message Sina…');
+  await labDraft.fill('Keep my lab draft');
+  const origin = await page.evaluate(() => performance.timeOrigin);
+  for (const name of ['first.xlsx', 'second.xlsx']) {
+    const chooser = page.waitForEvent('filechooser');
+    await page.getByRole('button', { name: '+ Add files', exact: true }).click();
+    await (
+      await chooser
+    ).setFiles({
+      name,
+      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      buffer,
+    });
+    // Native file pickers return focus to the window; setInputFiles alone does not.
+    await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+    await expect(page.getByText(name, { exact: true }).first()).toBeVisible();
+    await expect(chatDraft).toHaveValue('Keep my main chat draft');
+    await expect(labDraft).toHaveValue('Keep my lab draft');
+    expect(await page.evaluate(() => performance.timeOrigin)).toBe(origin);
+  }
+});
+
+test('agent builder sends long instructions intact and preserves oversized drafts', async ({
+  page,
+}) => {
+  await mockWorkspaceReads(page);
+  const sent: { system: string; messages: { content: string }[] }[] = [];
+  await page.route('**/api/agent-lab', async (route) => {
+    sent.push(route.request().postDataJSON());
+    await route.fulfill({ json: { text: 'Instructions received intact.' } });
+  });
+  await page.goto('/agent-lab');
+  const instructions = page.getByPlaceholder('Instructions for this section…').first();
+  const longInstructions = 'Follow this detailed instruction. '.repeat(5000) + 'END_REQUIRED_RULES';
+  await instructions.fill(longInstructions);
+  const draft = page.getByPlaceholder('Message Sina…');
+  await draft.fill('Use my detailed instructions');
+  await page.getByRole('button', { name: 'Send', exact: true }).click();
+  await expect(page.getByText('Instructions received intact.', { exact: true })).toBeVisible();
+  expect(sent).toHaveLength(1);
+  expect(sent[0].system).toContain(longInstructions);
+  expect(sent[0].messages.at(-1)?.content).toBe('Use my detailed instructions');
+
+  const oversizedInstructions = '界'.repeat(1400000);
+  await instructions.fill(oversizedInstructions);
+  await draft.fill('Keep this unsent draft');
+  await page.getByRole('button', { name: 'Send', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('exceeds 4 MiB');
+  await expect(draft).toHaveValue('Keep this unsent draft');
+  await expect(instructions).toHaveValue(oversizedInstructions);
+  expect(sent).toHaveLength(1);
+});
 
 test('page summaries defer editors and preserve drafts while switching pages', async ({ page }) => {
   await mockWorkspaceReads(page);

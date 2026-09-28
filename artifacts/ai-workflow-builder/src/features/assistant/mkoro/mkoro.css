@@ -1,0 +1,435 @@
+.mkoro-chat-agents {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  color: var(--sx-text, #242738);
+}
+.mkoro-agent-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px 16px 8px;
+  border-bottom: 1px solid var(--sx-divider, #dce0e8);
+}
+.mkoro-agent-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  padding: 7px 16px;
+  font-size: 13px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.mkoro-agent-tabs button[aria-selected='true'] {
+  background: var(--sx-accent-soft, #e2e7f8);
+  color: var(--sx-accent, #4c62a8);
+  border-color: var(--sx-divider, #dce0e8);
+  font-weight: 650;
+}
+.mkoro-agent-panel {
+  flex: 1;
+  min-height: 0;
+}
+.mkoro-agent-panel[hidden] {
+  display: none;
+}
+.mkoro-panel {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.mkoro-panel button {
+  cursor: pointer;
+}
+.mkoro-panel button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.mkoro-panel button:focus-visible,
+.mkoro-panel select:focus-visible,
+.mkoro-panel input:focus-visible,
+.mkoro-panel textarea:focus-visible,
+.mkoro-agent-tabs button:focus-visible {
+  outline: 2px solid var(--sx-accent, #4c62a8);
+  outline-offset: 3px;
+}
+.mkoro-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 20px 10px;
+}
+.mkoro-avatar,
+.mkoro-empty-icon {
+  display: grid;
+  place-items: center;
+  background: var(--sx-accent-soft, #e2e7f8);
+  color: var(--sx-accent, #4c62a8);
+  border-radius: 12px;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+}
+.mkoro-heading {
+  flex: 1;
+}
+.mkoro-heading h2 {
+  font-size: 15px;
+  font-weight: 650;
+  margin: 0;
+}
+.mkoro-heading p {
+  margin: 1px 0 0;
+  font-size: 11px;
+  opacity: 0.65;
+}
+.mkoro-icon-button {
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  border-radius: 7px;
+  width: 30px;
+  height: 30px;
+}
+.mkoro-icon-button:hover {
+  background: #818ba51a;
+}
+.mkoro-connection-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px 10px;
+  font-size: 11px;
+}
+.mkoro-connection-bar select {
+  min-width: 0;
+  flex: 1;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  text-overflow: ellipsis;
+}
+.mkoro-connection-state {
+  margin-left: auto;
+  text-transform: capitalize;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: #838b981a;
+}
+.mkoro-connection-state.is-online {
+  background: #15803d14;
+  color: #26714d;
+}
+.mkoro-connections {
+  margin: 0 20px 8px;
+  font-size: 12px;
+}
+.mkoro-connections > summary {
+  cursor: pointer;
+  opacity: 0.75;
+}
+.mkoro-connections p {
+  margin: 8px 0;
+}
+.mkoro-controls,
+.mkoro-permission-buttons,
+.mkoro-suggestions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+.mkoro-controls button,
+.mkoro-permission-buttons button,
+.mkoro-suggestions button,
+.mkoro-pairing > button:not(.mkoro-close),
+.mkoro-warning button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 7px;
+  border: 1px solid var(--sx-divider, #dce0e8);
+  background: transparent;
+  color: inherit;
+  font-size: 12px;
+}
+.mkoro-connections label,
+.mkoro-pairing label {
+  display: grid;
+  gap: 4px;
+}
+.mkoro-connections select,
+.mkoro-pairing input {
+  width: 100%;
+  border: 1px solid var(--sx-divider, #dce0e8);
+  padding: 6px 9px;
+  border-radius: 7px;
+  background: transparent;
+  color: inherit;
+}
+.mkoro-pairing {
+  position: relative;
+  margin: 4px 20px 12px;
+  border: 1px solid var(--sx-divider, #dce0e8);
+  padding: 16px;
+  border-radius: 12px;
+  max-height: 45%;
+  overflow: auto;
+}
+.mkoro-pairing p {
+  font-size: 12px;
+  margin: 8px 0;
+}
+.mkoro-pairing pre {
+  font-size: 11px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 9px;
+  border-radius: 6px;
+  background: #818ba510;
+}
+.mkoro-pairing input {
+  font-family: monospace;
+  font-size: 11px;
+}
+.mkoro-pairing small {
+  display: block;
+  opacity: 0.65;
+  margin-top: 6px;
+}
+.mkoro-pairing > button:not(.mkoro-close) {
+  margin-top: 8px;
+}
+.mkoro-close {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+}
+.mkoro-warning,
+.mkoro-notice {
+  margin: 8px 20px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  background: #a76b1712;
+  overflow-wrap: anywhere;
+}
+.mkoro-warning button {
+  margin-left: 8px;
+}
+.mkoro-transcript {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px 22px 20px;
+  scroll-behavior: smooth;
+}
+.mkoro-empty {
+  max-width: 430px;
+  margin: 30px auto;
+}
+.mkoro-empty-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  margin-bottom: 15px;
+}
+.mkoro-empty h3 {
+  font-size: 21px;
+  font-weight: 600;
+  margin: 8px 0;
+  letter-spacing: -0.4px;
+}
+.mkoro-empty p {
+  opacity: 0.7;
+  margin: 8px 0 16px;
+}
+.mkoro-primary {
+  border: 0;
+  border-radius: 8px;
+  background: var(--sx-accent, #4c62a8);
+  color: white;
+  padding: 9px 14px;
+}
+.mkoro-turn {
+  max-width: 800px;
+  margin: 0 auto 28px;
+}
+.mkoro-user-message {
+  margin: 0 0 18px auto;
+  padding: 11px 15px;
+  width: fit-content;
+  max-width: 90%;
+  border-radius: 14px 14px 4px 14px;
+  background: #818ba514;
+}
+.mkoro-user-message span {
+  display: block;
+  opacity: 0.6;
+  font-size: 10px;
+  margin-bottom: 3px;
+}
+.mkoro-user-message p,
+.mkoro-message-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 0;
+}
+.mkoro-speaker {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 8px;
+  color: var(--sx-accent, #4c62a8);
+}
+.mkoro-message-text {
+  margin: 8px 0 12px;
+}
+.mkoro-tool {
+  border: 1px solid var(--sx-divider, #dce0e8);
+  border-radius: 8px;
+  margin: 8px 0;
+}
+.mkoro-tool summary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  padding: 8px 10px;
+  list-style: none;
+}
+.mkoro-tool summary span {
+  flex: 1;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.mkoro-tool summary small {
+  opacity: 0.6;
+  font-size: 10px;
+}
+.mkoro-tool pre,
+.mkoro-permission pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+  max-height: 250px;
+  overflow: auto;
+  margin: 0;
+  padding: 10px;
+  border-top: 1px solid var(--sx-divider, #dce0e8);
+}
+.mkoro-task-status {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  font-size: 11px;
+  opacity: 0.65;
+  margin-top: 10px;
+}
+.mkoro-agent-message .mkoro-warning {
+  margin-left: 0;
+  margin-right: 0;
+}
+.mkoro-permission {
+  padding: 12px;
+  border-radius: 9px;
+  background: #b08a1710;
+  border: 1px solid #b08a1730;
+  margin-top: 10px;
+}
+.mkoro-permission p {
+  margin: 5px 0;
+}
+.mkoro-permission details {
+  font-size: 11px;
+}
+.mkoro-file {
+  display: flex;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid var(--sx-divider, #dce0e8);
+  border-radius: 8px;
+}
+.mkoro-file p {
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+}
+.mkoro-composer {
+  margin: 0 18px 16px;
+  padding: 11px 13px 8px;
+  border: 1px solid var(--sx-divider, #dce0e8);
+  border-radius: 13px;
+  background: #818ba508;
+  flex-shrink: 0;
+}
+.mkoro-composer textarea {
+  display: block;
+  width: 100%;
+  resize: vertical;
+  max-height: 160px;
+  min-height: 55px;
+  background: transparent;
+  color: inherit;
+  border: 0;
+  font: inherit;
+}
+.mkoro-composer textarea:focus-visible {
+  outline-offset: 1px;
+}
+.mkoro-composer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 5px;
+}
+.mkoro-composer-footer > span {
+  font-size: 10px;
+  opacity: 0.55;
+}
+.mkoro-send {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--sx-accent, #4c62a8);
+  color: white;
+}
+.mkoro-stop {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--sx-divider, #dce0e8);
+  background: transparent;
+  color: inherit;
+  border-radius: 7px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.mkoro-spin {
+  animation: mkoro-spin 1.4s linear infinite;
+}
+@keyframes mkoro-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mkoro-spin {
+    animation: none;
+  }
+  .mkoro-transcript {
+    scroll-behavior: auto;
+  }
+}

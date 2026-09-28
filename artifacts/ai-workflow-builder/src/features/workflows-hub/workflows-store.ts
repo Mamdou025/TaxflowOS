@@ -3,6 +3,7 @@
 // one source of truth.
 
 import { atom } from 'jotai';
+import { atomWithStorage } from '@/platform/auth/workspace-atoms';
 import { builderFocusTargetAtom } from '@/shared/workflow-engine/state/workflow-store';
 import { getPortfolioWorkflowDef } from '@/shared/workflow-engine/templates/portfolio/portfolio-workflows';
 
@@ -14,16 +15,25 @@ export const NEW_WORKFLOW_ID = '__new__';
 
 /** The workflow selected on the Workflows surface (a portfolio def id like pf-t1134,
  *  or NEW_WORKFLOW_ID for a blank draft). */
-export const selectedWorkflowIdAtom = atom<string | null>(null);
+export const selectedWorkflowIdAtom = atomWithStorage<string | null>(
+  'taxflow:workflow-selection',
+  null,
+);
 
 /** Library, one workflow, and cross-workflow run history are modes of Workflows. */
-export const workflowSurfaceAtom = atom<WorkflowSurface>('library');
+export const workflowSurfaceAtom = atomWithStorage<WorkflowSurface>(
+  'taxflow:workflow-surface',
+  'library',
+);
 
 /** Exact run selected from Chat or global history. Null means the latest run. */
-export const selectedWorkflowRunIdAtom = atom<string | null>(null);
+export const selectedWorkflowRunIdAtom = atomWithStorage<string | null>(
+  'taxflow:workflow-run-selection',
+  null,
+);
 
 /** The active mode for the selected workflow. */
-export const workflowTabAtom = atom<WorkflowTab>('overview');
+export const workflowTabAtom = atomWithStorage<WorkflowTab>('taxflow:workflow-tab', 'overview');
 
 /** Aim the Workflows surface at one workflow's Build tab, optionally focused on a
  *  single block — the shared half of every "open (this block) in the builder"

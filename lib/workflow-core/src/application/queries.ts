@@ -20,8 +20,8 @@ export type WorkflowRunSummary = {
  */
 export function listWorkflowRuns(library: WorkflowLibrary): WorkflowRunSummary[] {
   return Object.values(library)
-    .flatMap((entry) =>
-      entry.runs.map((run) => ({
+    .flatMap((entry) => [
+      ...entry.runs.map((run) => ({
         workflowId: entry.id,
         workflowName: entry.draft.name,
         runId: run.result.record.execution.id,
@@ -30,7 +30,21 @@ export function listWorkflowRuns(library: WorkflowLibrary): WorkflowRunSummary[]
         status: run.result.result.status,
         initiatedBy: run.initiatedBy ? { ...run.initiatedBy } : undefined,
       })),
-    )
+      ...(entry.sessions ?? [])
+        .filter(
+          (session) => !entry.runs.some((run) => run.result.record.execution.id === session.id),
+        )
+        .map((session) => ({
+          workflowId: entry.id,
+          workflowName:
+            entry.versions.find((version) => version.number === session.version)?.definition.name ??
+            entry.draft.name,
+          runId: session.id,
+          version: session.version,
+          at: session.createdAt,
+          status: session.approvedAt ? 'approved' : session.paused ? 'paused' : 'in progress',
+        })),
+    ])
     .sort(
       (left, right) => right.at.localeCompare(left.at) || right.runId.localeCompare(left.runId),
     );

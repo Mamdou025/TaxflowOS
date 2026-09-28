@@ -1,0 +1,10 @@
+Integration evidence: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-9323dbef-7fa2-4ce6-97f5-31c2f8f7fea1
+✔ guided run revisions and pause state roundtrip through the real workspace library (68076.4047ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 72715.8667

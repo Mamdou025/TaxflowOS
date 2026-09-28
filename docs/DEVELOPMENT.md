@@ -12,6 +12,13 @@ patch with `doctor` before claiming the same environment was verified there.
 
 ## Choose one dependency environment per checkout
 
+For the optional Mkoro computer assistant, first start the application with its
+normal database migrations (including `0006_mkoro_companion.sql`). Then pair a
+configured local Goose CLI using [the Mkoro setup guide](mkoro-connection.md).
+The companion runs separately from the web/API services and needs no inbound
+port. No Goose installation or model credentials are required for the regular
+application to start, or for the mocked Mkoro browser tests.
+
 Use a separate clone/worktree for native and Docker development. Workspace-local
 `node_modules` links as well as the root dependency directory are platform-specific.
 Do not run a Linux install over a checkout currently used for native Windows work.

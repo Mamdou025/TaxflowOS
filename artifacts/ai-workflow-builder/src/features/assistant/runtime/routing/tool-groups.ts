@@ -25,6 +25,7 @@ export type ToolRiskGroup =
 export const TOOL_GROUP_OF: Record<string, ToolRiskGroup> = {
   // execute
   runWorkflow: 'execute',
+  openSavedWorkflowVersion: 'execute',
   runBuilderWorkflow: 'execute',
   // builder_mutate
   addBlock: 'builder_mutate',

@@ -39,6 +39,16 @@ Database coverage also executes saved table rows through the durable worker.
 
 During iteration, select a case without changing its assertions:
 
+Mkoro coverage includes `pnpm run test:mkoro-worker` (ACP protocol, permission
+handling, local state and delivery tests, included in `verify`),
+`pnpm run test:workflow-reliability --grep "Mkoro"` (chat switching, pairing,
+progress, decisions, Stop and reconnect behavior with synthetic responses), and
+`pnpm exec node --test tests/integration/mkoro.test.mjs` (real sessions and
+disposable Postgres, isolation, denied roles, migrations, idempotency, permissions,
+history pagination and API restart). These checks do not invoke a paid model,
+control a real browser, or verify a Google account. The manual live check is in
+[the Mkoro connection guide](docs/mkoro-connection.md).
+
 `pnpm run test:workflow-core` checks the portable workflow package with no browser,
 frontend path aliases or model provider. `verify` includes these tests and
 `typecheck:workflow-core-tests`. Adapter parity is checked in `test:unit`; browser

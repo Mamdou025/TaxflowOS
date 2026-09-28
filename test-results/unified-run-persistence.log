@@ -1,0 +1,7 @@
+
+> workspace@0.0.0 test:workflow-persistence C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-browser-tests.mjs persistence "--grep" "a workflow and its result recover"
+
+Test run 04a727d1-611f4d39-0d06-4679-994b-2b984830f039; reports and logs: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-611f4d39-0d06-4679-994b-2b984830f039
+Disposable Postgres did not become ready
+ ELIFECYCLE  Command failed with exit code 1.

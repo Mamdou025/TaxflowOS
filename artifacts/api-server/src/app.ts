@@ -2,6 +2,10 @@ import express, { type Express, type Request, type Response } from 'express';
 import cors from 'cors';
 import pinoHttp from 'pino-http';
 import { REQUEST_ID_HEADER } from '@workspace/api-zod/observability';
+import {
+  AGENT_REQUEST_LIMIT_BYTES,
+  AGENT_REQUEST_TOO_LARGE,
+} from '@workspace/api-zod/agent-requests';
 import router from './routes';
 import { logger } from './lib/logger';
 import { resolveRequestId } from './observability/request-id';
@@ -15,6 +19,7 @@ import {
 } from './security/access';
 import workspacesRouter from './routes/workspaces';
 import healthRouter from './routes/health';
+import mkoroWorkerRouter from './routes/mkoro-worker';
 
 const app: Express = express();
 
@@ -63,11 +68,31 @@ app.use(
 app.use(cors({ origin: appOrigin, credentials: true }));
 app.all('/api/auth/*splat', toNodeHandler(auth));
 app.use('/api', healthRouter);
+// The companion dials out using a revocable bearer token. Its router derives
+// actor/workspace from that token and rechecks current membership on every call.
+app.use('/api/mkoro-worker', express.json({ limit: '2mb' }), mkoroWorkerRouter);
 app.use('/api', requireSession, checkOrigin);
 app.get('/api/session', (_req, res) =>
   res.set('Cache-Control', 'no-store').json({ user: res.locals.user }),
 );
 app.use('/api/workflow-library', express.json({ limit: '24mb' }));
+// Agent turns include instructions, history and documents. Keep this allowance
+// scoped to chat; session/origin checks above still run before body parsing.
+app.use(
+  ['/api/agent-lab', '/api/copilotkit'],
+  express.json({ limit: AGENT_REQUEST_LIMIT_BYTES }),
+  (err: unknown, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (typeof err === 'object' && err !== null && 'status' in err && err.status === 413) {
+      res.status(413).json({
+        code: 'AGENT_REQUEST_TOO_LARGE',
+        error: AGENT_REQUEST_TOO_LARGE,
+        limitBytes: AGENT_REQUEST_LIMIT_BYTES,
+      });
+      return;
+    }
+    next(err);
+  },
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

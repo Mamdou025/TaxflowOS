@@ -22,6 +22,7 @@ import { workspaces } from './workspaces';
 export * from './auth';
 export * from './workspaces';
 export * from './agent-actions';
+export * from './mkoro';
 
 // Durable personal workflow library. The recovery code is hashed, never stored.
 export const personalWorkflowLibraries = pgTable('personal_workflow_libraries', {

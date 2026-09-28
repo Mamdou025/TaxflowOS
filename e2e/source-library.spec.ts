@@ -1,4 +1,123 @@
 import { test, expect } from './workflow-audit-isolation';
+import { createRequire } from 'node:module';
+import path from 'node:path';
+
+test('chat home remains visible when animation frames are suspended', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.requestAnimationFrame = () => 0;
+  });
+  await page.route('**/api/chat/threads**', (route) => route.fulfill({ json: { threads: [] } }));
+  await page.goto('/');
+  const composer = page.getByRole('textbox', { name: 'Ask Scope, or describe a task…' });
+  await expect(composer).toBeVisible();
+  await expect(page.getByText('What would you like to work on?', { exact: true })).toBeVisible();
+  expect(
+    await composer.evaluate((element) => {
+      for (let node: Element | null = element; node; node = node.parentElement) {
+        if (getComputedStyle(node).opacity === '0') return false;
+      }
+      return true;
+    }),
+  ).toBe(true);
+  await page.reload();
+  await expect(composer).toBeVisible();
+  await composer.fill('Ready to chat');
+  await expect(composer).toHaveValue('Ready to chat');
+});
+
+test('chat spreadsheet selection preserves drafts on cancel and imports a complete mapped sheet', async ({
+  page,
+}) => {
+  const XLSX = createRequire(path.resolve('artifacts/ai-workflow-builder/package.json'))('xlsx');
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([]), 'Hidden SAP metadata');
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.aoa_to_sheet([['Cover'], ['Instructions']]),
+    'Summary',
+  );
+  XLSX.utils.book_append_sheet(
+    workbook,
+    XLSX.utils.aoa_to_sheet([
+      ['G/L Account', 'Jrnl.Entry Item Text', 'Amount in CC Crcy'],
+      ...Array.from({ length: 1100 }, (_, i) => [41000 + i, `Record ${i + 1}`, i + 1]),
+    ]),
+    'SAP EXPORT',
+  );
+  workbook.Workbook = { Sheets: [{ Hidden: 2 }, { Hidden: 0 }, { Hidden: 0 }] };
+  await page.route('**/api/documents**', (route) =>
+    route.fulfill({
+      status: route.request().method() === 'POST' ? 503 : 200,
+      json:
+        route.request().method() === 'POST'
+          ? { error: 'STORAGE_NOT_CONFIGURED' }
+          : { documents: [] },
+    }),
+  );
+  await page.route('**/api/copilotkit**', (route) =>
+    route.fulfill({ status: 503, json: { error: 'No live model in this test.' } }),
+  );
+  await page.route('**/api/chat/threads**', (route) => route.fulfill({ json: { threads: [] } }));
+  await page.goto('/');
+  const composer = page.locator('.lc-console');
+  const draft = composer.getByRole('textbox');
+  await draft.fill('Use this workbook');
+  await composer.getByRole('button', { name: 'Attach files', exact: true }).click();
+  const chooser = page.waitForEvent('filechooser');
+  await page.getByRole('menuitem', { name: 'Upload from laptop' }).click();
+  await (
+    await chooser
+  ).setFiles({
+    name: 'synthetic-sap.xlsx',
+    mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    buffer: XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' }),
+  });
+  await draft.press('Enter');
+  const dialog = page.getByRole('dialog', { name: 'Choose spreadsheet data' });
+  await expect(dialog).toBeVisible();
+  await page.mouse.click(5, 5);
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByLabel('Worksheet').locator('option')).toHaveText([
+    'Choose a worksheet…',
+    'Summary',
+    'SAP EXPORT',
+  ]);
+  await dialog.getByRole('button', { name: 'Cancel import' }).click();
+  await expect(draft).toHaveValue('Use this workbook');
+  await expect(composer.getByText('synthetic-sap.xlsx', { exact: true })).toBeVisible();
+  await draft.press('Enter');
+  await dialog.getByLabel('Worksheet').selectOption('SAP EXPORT');
+  await expect(dialog.getByRole('combobox', { name: 'Account column', exact: true })).toHaveValue(
+    'G/L Account',
+  );
+  await expect(dialog.getByRole('combobox', { name: 'Amount column', exact: true })).toHaveValue(
+    'Amount in CC Crcy',
+  );
+  await dialog
+    .getByRole('combobox', { name: 'Account column', exact: true })
+    .selectOption('G/L Account');
+  await dialog
+    .getByRole('combobox', { name: 'Description column', exact: true })
+    .selectOption('Jrnl.Entry Item Text');
+  await dialog
+    .getByRole('combobox', { name: 'Amount column', exact: true })
+    .selectOption('Amount in CC Crcy');
+  await dialog.getByLabel('Source currency').fill('EUR');
+  await dialog.getByRole('button', { name: 'Use selected data' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'synthetic-sap.xlsx' })).toContainText(
+    '1100 records',
+  );
+  await expect
+    .poll(async () =>
+      page.evaluate(() => {
+        const context = JSON.parse(sessionStorage.getItem('taxflow:authenticated-workspace')!);
+        const key = `taxflow:scope:${encodeURIComponent(context.userId)}:${context.workspace.id}:taxflow:uploaded-source-rows`;
+        const source = JSON.parse(localStorage.getItem(key) ?? '{}').__unassigned__;
+        return source ? { count: source.rows.length, last: source.rows.at(-1).amount } : null;
+      }),
+    )
+    .toEqual({ count: 1100, last: 1100 });
+});
 
 const active = {
   id: '00000000-0000-4000-8000-000000000101',

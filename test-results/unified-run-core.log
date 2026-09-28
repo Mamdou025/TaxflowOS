@@ -1,0 +1,34 @@
+
+> workspace@0.0.0 test:workflow-core C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-workflow-core-tests.mjs
+
+✔ agent proposals identify changes, preserve history and invalidate affected approval state (174.1228ms)
+✔ mismatched authorization and stale proposals cannot mutate a workflow (36.4454ms)
+✔ saving and executing are separately authorized and execution targets an immutable version (48.6942ms)
+✔ durable runtime executes explicit saved values without sample substitution (83.4588ms)
+✔ durable runtime rejects unsupported tools before enqueue (14.0081ms)
+✔ durable runtime reports missing explicit values as an execution error (15.0637ms)
+✔ formula rejects each unresolved operand instead of calculating a partial result (27.9951ms)
+✔ formula preserves zero, negative numbers and qualified references (15.7646ms)
+✔ a historical API reference never becomes a fabricated numeric value (12.6862ms)
+✔ formula retains named aggregate references and rejects ambiguous short names (18.5863ms)
+✔ cross-workflow run history keeps exact run identity and newest-first ordering (260.6821ms)
+✔ portable graph orders dependencies and produces 400 without a browser or model (16.0545ms)
+✔ cycles and missing dependencies fail before executing tools (17.0617ms)
+✔ partial runs require an existing selection and validate only relevant dependencies (19.4539ms)
+✔ missing tools never report an ordinary successful calculation (17.8541ms)
+✔ code, formula, source and governance edits create immutable saved versions (154.795ms)
+✔ stale draft writes and explicit missing or ambiguous versions do not execute (25.8297ms)
+✔ saved runs preserve identity and initiator, deduplicate retries and reject conflicting reuse (78.3905ms)
+✔ executors and queries cannot mutate saved history or attach foreign run results (40.9161ms)
+✔ guided execution freezes Build version and records real block results with dependency invalidation (279.429ms)
+✔ source replacement and addition preserve evidence and reject ambiguous or oversized operations (37.469ms)
+✔ missing tools and checkpoints do not fabricate success or advance dependents (85.8857ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 19217.5075
