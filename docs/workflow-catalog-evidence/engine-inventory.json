@@ -1868,7 +1868,7 @@
     },
     "configured": {
       "status": "error",
-      "elapsedMs": 14,
+      "elapsedMs": 12,
       "errors": [
         "Circular calculation dependency: HOURS_FLOOR.",
         "Circular calculation dependency: HOURS_CEILING.",
@@ -5474,7 +5474,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 0,
+      "elapsedMs": 1,
       "errors": [
         "Keyword Mapper needs Data rows input.",
         "Keyword Mapper needs Keyword rules input.",
@@ -7382,7 +7382,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 1,
+      "elapsedMs": 7,
       "errors": [
         "Keyword Mapper needs Keyword rules input.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -13862,7 +13862,7 @@
     },
     "perturbation": {
       "status": "warning",
-      "elapsedMs": 7,
+      "elapsedMs": 6,
       "errors": [],
       "warnings": [
         "1 row(s) were not matched by keyword rules."
@@ -16017,7 +16017,7 @@
     },
     "configured": {
       "status": "error",
-      "elapsedMs": 1,
+      "elapsedMs": 2,
       "errors": [
         "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -22439,7 +22439,7 @@
     },
     "perturbation": {
       "status": "error",
-      "elapsedMs": 2,
+      "elapsedMs": 3,
       "errors": [
         "Cannot calculate Borne minimale: missing input contrepartie_autre. Provide the value or set an explicit default in Calculation settings.",
         "Cannot calculate Borne maximale (JVM): missing input jvm_total. Provide the value or set an explicit default in Calculation settings.",
@@ -23723,7 +23723,7 @@
     },
     "configured": {
       "status": "warning",
-      "elapsedMs": 9,
+      "elapsedMs": 13,
       "errors": [],
       "warnings": [
         "1 row(s) matched more than one keyword rule.",
@@ -25534,7 +25534,7 @@
     },
     "perturbation": {
       "status": "warning",
-      "elapsedMs": 13,
+      "elapsedMs": 11,
       "errors": [],
       "warnings": [
         "1 row(s) matched more than one keyword rule.",
@@ -27914,7 +27914,7 @@
     },
     "configured": {
       "status": "error",
-      "elapsedMs": 3,
+      "elapsedMs": 4,
       "errors": [
         "Cannot calculate Budget floor (committed): missing input committed_spend. Provide the value or set an explicit default in Calculation settings.",
         "Cannot calculate Budget ceiling: missing input budget_cap. Provide the value or set an explicit default in Calculation settings.",
@@ -28403,7 +28403,7 @@
     },
     "perturbation": {
       "status": "error",
-      "elapsedMs": 2,
+      "elapsedMs": 3,
       "errors": [
         "Cannot calculate Budget floor (committed): missing input committed_spend. Provide the value or set an explicit default in Calculation settings.",
         "Cannot calculate Budget ceiling: missing input budget_cap. Provide the value or set an explicit default in Calculation settings.",
@@ -29552,7 +29552,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "needs_review",
-      "elapsedMs": 5,
+      "elapsedMs": 6,
       "errors": [],
       "warnings": [
         "1 row(s) were not matched by keyword rules.",
