@@ -2,16 +2,16 @@
   "id": "pf-holiday-payroll",
   "inputKind": "bundled sample records",
   "inputRows": 10,
-  "openMs": 4503,
-  "runMs": 480,
-  "totalMs": 15384,
+  "openMs": 3789,
+  "runMs": 213,
+  "totalMs": 8706,
   "browserErrors": [],
   "first": {
-    "id": "custom:ab1fe1a6-b1df-4d46-962c-e26c05adf6ee",
+    "id": "custom:75bfe05a-73fa-4ae6-a71d-0bc0c395978d",
     "name": "Statutory Holiday Payroll Accrual — My workflow",
     "version": 1,
     "runCount": 1,
-    "runId": "local-tool-workflow-1790532201811-us4x58",
+    "runId": "local-tool-workflow-1790711530990-jmn3zj",
     "status": "error",
     "errors": [
       "No API response is saved. Fetch the source or explicitly enable example data.",
@@ -22,7 +22,7 @@
     ],
     "sources": [
       {
-        "id": "444bb3cf-4c1d-4176-a431-0226e490ae9d",
+        "id": "69d07491-adb3-429f-904c-f84e9e21331c",
         "connected": false,
         "consumedBy": []
       }
@@ -124,7 +124,7 @@
         ]
       },
       {
-        "blockId": "444bb3cf-4c1d-4176-a431-0226e490ae9d",
+        "blockId": "69d07491-adb3-429f-904c-f84e9e21331c",
         "label": "Document",
         "status": "success",
         "errors": [],
@@ -403,11 +403,11 @@
     ]
   },
   "second": {
-    "id": "custom:ab1fe1a6-b1df-4d46-962c-e26c05adf6ee",
+    "id": "custom:75bfe05a-73fa-4ae6-a71d-0bc0c395978d",
     "name": "Statutory Holiday Payroll Accrual — My workflow",
     "version": 1,
     "runCount": 2,
-    "runId": "local-tool-workflow-1790532211478-0ns722",
+    "runId": "local-tool-workflow-1790711535021-4ffei9",
     "status": "error",
     "errors": [
       "No API response is saved. Fetch the source or explicitly enable example data.",
@@ -418,7 +418,7 @@
     ],
     "sources": [
       {
-        "id": "444bb3cf-4c1d-4176-a431-0226e490ae9d",
+        "id": "69d07491-adb3-429f-904c-f84e9e21331c",
         "connected": false,
         "consumedBy": []
       }
@@ -520,7 +520,7 @@
         ]
       },
       {
-        "blockId": "444bb3cf-4c1d-4176-a431-0226e490ae9d",
+        "blockId": "69d07491-adb3-429f-904c-f84e9e21331c",
         "label": "Document",
         "status": "success",
         "errors": [],

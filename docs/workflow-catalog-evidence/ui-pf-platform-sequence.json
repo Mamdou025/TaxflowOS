@@ -2,16 +2,16 @@
   "id": "pf-platform-sequence",
   "inputKind": "generic upload probe; not domain-complete input",
   "inputRows": 2,
-  "openMs": 4465,
-  "runMs": 195,
-  "totalMs": 9834,
+  "openMs": 3865,
+  "runMs": 158,
+  "totalMs": 8267,
   "browserErrors": [],
   "first": {
-    "id": "custom:80e35753-1657-4ff6-8fe3-c26752d509b4",
+    "id": "custom:1651587a-0b51-4e77-8b78-7a6a76563a6d",
     "name": "Platform Services · Universal Execution Sequence — My workflow",
     "version": 1,
     "runCount": 1,
-    "runId": "local-tool-workflow-1790532217227-rydoch",
+    "runId": "local-tool-workflow-1790711539872-g92uce",
     "status": "error",
     "errors": [
       "Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.",
@@ -332,11 +332,11 @@
     ]
   },
   "second": {
-    "id": "custom:80e35753-1657-4ff6-8fe3-c26752d509b4",
+    "id": "custom:1651587a-0b51-4e77-8b78-7a6a76563a6d",
     "name": "Platform Services · Universal Execution Sequence — My workflow",
     "version": 1,
     "runCount": 2,
-    "runId": "local-tool-workflow-1790532221659-sj2v2c",
+    "runId": "local-tool-workflow-1790711543521-vf4k5v",
     "status": "error",
     "errors": [
       "Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.",
