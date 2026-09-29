@@ -98,9 +98,12 @@ export async function revokeWorker(scope: Scope, id: string) {
 }
 
 // Claim once. An interrupted response is an unknown outcome, never permission to replay a prompt.
-export async function pollCommands(scope: WorkerScope) {
+export async function pollCommands(scope: WorkerScope, capabilities?: string[]) {
   return transaction(async (client) => {
-    await client.query('UPDATE mkoro_workers SET last_seen_at=now() WHERE id=$1', [scope.workerId]);
+    await client.query(
+      'UPDATE mkoro_workers SET last_seen_at=now(),capabilities=COALESCE($2::jsonb,capabilities) WHERE id=$1',
+      [scope.workerId, capabilities ? JSON.stringify(capabilities) : null],
+    );
     const { rows } = await client.query(
       `UPDATE mkoro_commands SET delivered_at=now() WHERE id IN (
         SELECT c.id FROM mkoro_commands c JOIN mkoro_tasks t ON t.id=c.task_id

@@ -1,138 +1,164 @@
-# Mkoro inside Inscope
+# Mkoro computer tasks inside Sina chat
 
-Mkoro is a second assistant in Chat, beside Sina. Inscope provides its interface;
-a companion process on your computer runs Goose and returns messages and tool
-activity. You do not need the Goose desktop window open. The companion and its
-computer must remain running for tasks to continue.
+Sina leads one conversation in Inscope. It handles platform tools, sources,
+retrieval, ordinary web search and workflows, and delegates a bounded computer
+step to Mkoro only when those capabilities cannot do the work. Mkoro runs Goose
+on the selected laptop or virtual computer. Its progress, permissions, Stop
+control and optional desktop view appear in the same chat; Goose Desktop need
+not be open. The companion and its computer must remain running.
 
-## Start a first connection
+## Connect or update a computer
 
-1. Run the current Inscope frontend and API using the normal development setup and
-   migrations. Migration `0006_mkoro_companion.sql` adds the companion's tables.
-   This source change does not update an already deployed site.
-2. Install/configure a Goose CLI that supports ACP and `session/set_mode` with
-   `approve`. Configure its paid or local model and the extensions you intend to use.
-   A Goose desktop installation alone is not proof that `goose` is on your PATH.
-3. Sign in to Inscope as an Owner or Editor. Open **Chat → Mkoro → Connect your
+1. Run the matching frontend/API and apply the normal committed migrations using
+   [development setup](DEVELOPMENT.md). `0006_mkoro_companion.sql` creates companion
+   records; `0007_mkoro_sina_delegation.sql` adds the Sina thread and delegation
+   metadata. Updating source alone does not update a deployed app.
+2. Install a Goose CLI supporting ACP v1 and `session/set_mode` with `approve`.
+   Configure its model and computer extensions locally. Goose Desktop alone does
+   not guarantee that `goose` is on the terminal's PATH. Keep native Inscope tools
+   out of the companion's configured extensions.
+3. As an Owner or Editor, open Chat's computer settings and choose **Connect a
    computer**. Copy the one-use pairing code; it expires after ten minutes.
-4. From this repository, run the companion in PowerShell:
+4. On the computer that will do the work, run from this repository:
 
    ```powershell
    New-Item -ItemType Directory -Force "$env:USERPROFILE\Mkoro" | Out-Null
    node scripts/mkoro/companion.mjs --server http://localhost:5173 --workspace "$env:USERPROFILE\Mkoro"
    ```
 
-   Replace the server with the exact URL of your running Inscope app. Use HTTPS
-   for a remote server. Local HTTP is supported on loopback addresses only. Pass
-   `--goose "C:\path\to\goose.exe"` when the CLI is not on PATH. Paste the pairing
-   code into the companion's private prompt, not into an agent conversation.
-   See the [companion reference](../scripts/mkoro/README.md) for configuration and
-   troubleshooting.
+   Use the actual Inscope origin. `localhost` works only when Inscope runs on that
+   same computer; a separate laptop needs the configured reachable HTTPS app or
+   worker-relay origin. Pass `--goose` for an explicit CLI path when necessary.
+   Paste the code into the companion's private prompt, never into chat. Keep the
+   process running. See the [companion reference](../scripts/mkoro/README.md).
 
-5. Keep that terminal running. Once the computer is Online in Inscope, send:
+5. Select the Online computer in chat settings. Ask Sina to list files in the
+   working folder without modifying anything. Review each tool request using
+   **Allow once** or **Reject once**. Silence never approves an action.
 
-   > Check your working folder and available tools. List the names of files in
-   > the current folder and report whether browser tools are available. Do not
-   > modify any files or sign into any account.
+For an existing connection, wait for the current task to finish, stop the old
+companion, copy the complete updated `scripts/mkoro` runtime, and restart with the
+same server, working folder and state options. Include `capture.mjs`,
+`capture-windows.ps1` and `delegation.mjs`. Valid saved pairing credentials can be
+reused; do not add `--pair` just for an upgrade. Polling advertises the new
+`sina-delegation-v1` and Windows `desktop-screenshots-v1` capabilities. The API
+rejects incompatible companions instead of sending them unrestricted work.
 
-   Approve or reject individual requested actions in the Mkoro conversation.
-   Confirm the reported folder and tools match your actual computer.
+A worker relay must pass the exact **POST `/api/mkoro-worker/screen`** route in
+addition to pairing, polling and events. Keep application pages, session cookies
+and unrelated APIs out of that relay. The earlier temporary gateway/download
+bundle needs this explicit update; repository changes do not replace it.
 
-The Google Drive and Drive-to-FAPI test is a separate live check. Goose needs the
-appropriate browser extension/profile or a Drive connector configured locally.
-Inscope pairing does not copy Google cookies, log in to Drive, install browser
-tools, or import the existing Goose recipe automatically. Put the recipe in the
-companion's working folder, then ask Mkoro to read it and first verify connections.
-Use the existing workflow's required inputs and review gates; do not assume a
-completed agent turn means the workflow calculation or approval succeeded.
+## What Sina delegates
 
-## What appears in Inscope
+Each delegation names a task type, exact external target, objective, expected
+output and reason an existing platform tool cannot do the step. Allowed types
+cover external files, a browser, a desktop application and local files. The
+application rejects native Inscope targets and unsupported task types before
+dispatch. Every Goose prompt restates these responsibilities:
 
-- Separate Sina and Mkoro tabs preserve their drafts when switching.
-- Mkoro has a computer selector, pairing/revocation controls and saved chats.
-- Messages and tool events update by polling, normally every 1.5 seconds.
-- Tool detail, requested permissions, errors and disconnected states are visible.
-- Permission buttons allow or reject the offered action once. Permanent grants
-  are not accepted by the bridge. Multiple pending requests remain separate.
-- Stop requests cancellation and waits for the worker's acknowledgement. It does
-  not undo actions already taken.
+| Sina owns                                                                          | Mkoro handles when delegated                                                     |
+| ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Conversation, platform sources/connectors, retrieval and ordinary web search       | External account/browser work unavailable through a platform tool                |
+| Workflow definitions, validation, calculation, execution, review and saved results | Local files and desktop applications needed for the bounded task                 |
+| Deciding the next platform action from actual evidence                             | Reporting observations, file locations, changes, blockers and remaining handoffs |
 
-The chat displays text and tool activity. It does not embed arbitrary generated
-HTML, Goose Apps, the desktop UI or a live browser video. File paths may be shown
-when reported, but this version does not upload local output files to Inscope or
-provide platform download links. Those are separate integration features.
+Mkoro must not open Inscope to run its workflows, talk to Sina through the website,
+or recreate the platform's calculation rules. A downloaded workbook remains a
+local file: **automatic companion-to-Inscope source upload is not implemented**.
+Use a supported platform connector/import or an explicit manual upload before
+Sina can run the workflow with that source. A reported path is not an upload.
 
-## Ownership and access
+The Sina adapter permits one bounded computer job per user message. Its retry key
+comes from the saved chat and originating user-message IDs. Retrying the exact
+request returns the existing task; rephrasing it or choosing another computer
+under that key produces a conflict, not another execution. A separate job needs
+a new user request. Saving the chat must succeed before dispatch; changing chats
+must not attach another conversation's task or result to the current one.
 
-| Layer             | Owner and responsibility                                                                                  |
-| ----------------- | --------------------------------------------------------------------------------------------------------- |
-| Chat UI           | `features/assistant/mkoro`: tabs, validated status, transcript, pairing and decisions                     |
-| Shared contract   | `lib/api-zod/src/mkoro.ts`: validated API and event shapes                                                |
-| Authenticated API | `routes/mkoro.ts`: derives actor from session and checks workspace membership and execution role          |
-| Worker API        | `routes/mkoro-worker.ts`: checks the companion bearer token and current membership                        |
-| Durable state     | API `lib/mkoro` and DB migration/schema: credentials, conversations, turns, commands, events, permissions |
-| Local execution   | `scripts/mkoro`: bounded ACP transport, fixed working folder, local Goose settings and task delivery      |
-| Workflow behavior | Existing workflow application commands, validation, execution and review rules                            |
+## Watch the computer
 
-Each computer and conversation belongs to one actor in one workspace. Another
-workspace member, including an Owner, cannot access it merely by guessing an ID.
-Viewers can read their existing personal history but cannot pair, execute, decide
-permissions or revoke through the API. Changing membership removes the companion's
-authority at its next authenticated request. Pairing and bearer tokens are stored
-as hashes on the server; the bearer credential is stored privately on the local
-computer so it can reconnect. Disconnect in Inscope revokes that credential.
+During an active Windows task, choose **View Mkoro's computer** on its task card.
+Opening this view enables capture for that exact task and computer. The viewer
+renews a ten-second lease about every five seconds; the companion captures about
+every two seconds. It includes visible monitors in the companion's Windows
+session, resized to a longest edge of 1600 pixels and a JPEG at most 512 KiB.
+Transport or capture delays can make refreshes slower. This is view-only, with
+no remote mouse or keyboard takeover.
 
-Conversation text and tool activity are stored in the Inscope database. Treat
-them as workspace data when choosing what to ask the agent to inspect. The local
-working folder is a starting directory, not an operating-system sandbox: the
-configured Goose tools run with the computer user's permissions. Pair only a
-computer you intend this account to control.
+Keep the Windows session unlocked and the browser visible in that same session.
+A headless browser or another logged-in user's desktop will not appear. The
+helper checks for an interactive, normal input desktop; unavailable capture is
+reported explicitly. Other windows and private information visible on the desktop
+can appear while viewing is enabled.
 
-## Execution and recovery
+Closing or hiding the view stops renewal and requests release. Capture stops on
+lease expiry, cancellation, task completion, failed polling or shutdown; revoked
+access is checked on authenticated requests. Pending old captures are discarded.
+The API retains only the latest frame in memory, with a fifteen-second freshness
+limit and earlier removal when its lease ends. Responses use `no-store`; the UI
+clears stale or unavailable images. Viewer frames are not written to screenshot
+files, durable events, chat history, or Sina/Goose model context. API restarts
+discard them. Multiple API processes need sticky routing or shared ephemeral
+transport; durable screenshot storage is not provided.
 
-The companion opens outbound HTTP requests to Inscope and runs `goose acp` over
-standard input/output. There is no inbound companion port or public Goose server.
-It uses a separate local Goose profile based on the configured model/extensions,
-without copying saved tool permission grants, and requires approval mode before
-prompts. See the companion reference for the local configuration/credential copy.
+## Access and tool boundaries
 
-A conversation maps to a Goose session; each sent message creates a new task
-record for that prompt turn. Only one turn can be active per companion. Finishing
-a turn records that Goose stopped responding, not independent verification that
-an external job succeeded. The agent may still need an answer from you.
+Computers and task records belong to the authenticated actor within one workspace.
+Another member, including an Owner, cannot gain control by guessing identifiers.
+Pairing, delegation, decisions, cancellation, revocation, enabling a view **and
+reading its screenshots** require current execution permission (Owner or Editor).
+Viewers may read their existing personal history, but cannot watch a live desktop.
+Membership and bearer-token checks also apply to worker polls and screen uploads.
 
-Commands are claimed once; an uncertain response is never permission to resend a
-model prompt automatically. Progress events have stable IDs so network retries do
-not duplicate history. API restarts preserve records. Companion interruption can
-leave an external action's outcome uncertain: inspect the actual browser/files
-before instructing a retry. Cancellation and revocation cannot reverse a completed
-external side effect. Offline status is based on a stale heartbeat (45 seconds).
+Raw computer activity and screenshots remain personal to the actor. Text that
+Sina summarizes into its saved conversation follows the existing workspace chat
+sharing rules; other authorized workspace members can read that resulting answer.
+Combining the chats does not make the live desktop or computer controls shared.
 
-If a crash or lost command response leaves a turn permanently active, this first
-version cannot resume or reconcile that turn. Stop the companion, inspect the
-actual result, disconnect the old computer entry, and pair again with a fresh
-code and `--pair`. Start a new chat on the new connection; the old record remains
-available for inspection. Reconnecting alone must not be mistaken for resumed
-execution of the interrupted turn.
+Pairing does not copy Google cookies, log into accounts, install tools, or send
+platform session credentials to Goose. The companion uses outbound HTTP and local
+ACP, with no inbound computer port. Its private local Goose profile copies the
+configured provider/extensions and any file-based provider secrets on that same
+computer; those secrets are not sent to Inscope. Saved permanent tool approvals
+are not copied. Every turn requires Goose's manual approval mode.
 
-History initially loads the latest 500 activity events and can load earlier
-activity. After a long disconnection, a gap causes the view to reload the latest
-contiguous page rather than silently join incomplete chunks. The current UI/API
-shows the latest 100 conversations and latest 100 turns per conversation; older
-turns remain stored but do not yet have a turn-pagination interface. Each turn
-accepts at most 10,000 events, and payloads are bounded. Start a new chat for long
-independent work.
+The bridge supplies no Inscope MCP tools. Goose can still load its configured
+extensions, and an approved generic browser or shell action has the local user's
+authority. The working folder and prompt are **not an OS or network sandbox**.
+Strict restriction of those tools would require a separate controlled environment.
+Text progress and bounded permission previews are stored in Inscope; preview
+redaction is best effort, so do not put credentials into chat.
 
-## Verification boundary
+## History, recovery and verification
 
-Automated worker tests use an ACP test process; browser tests use synthetic
-responses; integration tests use real sessions and disposable Postgres. They
-exercise protocol, persistence and access behavior without a paid model or a real
-Google account. A live acceptance test additionally requires your actual Goose
-CLI, configured model/extensions, signed-in browser and this version of Inscope.
-Confirm a harmless tool action, a permission decision, Stop and a returning chat
-before attempting the Drive-to-FAPI workflow.
+Computer settings retain all personal computer-task history, including former
+standalone Mkoro chats and tasks whose Sina chat was deleted. They are not replayed
+or used as a second composer. Owners and Editors can still decide pending one-action
+permissions or stop their existing active tasks there. Screenshots and Sina result
+review are available only inside a bound chat. New work belongs to the saved Sina
+chat and selected computer. Task cards retain progress, errors, pending one-action
+permissions and cancellation.
+Opening another chat stops Sina's current reply before replacing its messages;
+it does not cancel Mkoro's separate computer job. Status lookup reads the latest
+200 task events and returns bounded text, not the full transcript.
 
-Goose's [ACP guide](https://goose-docs.ai/docs/gdk/acp/) describes the protocol
-used by this bridge. Compatibility depends on the installed CLI; unsupported
-approval mode fails before sending the task to the model.
+Only one task can run per companion. Goose's `end_turn` means its turn ended; it
+does not independently verify a download, source upload, fiscal result or saved
+workflow. Sina treats returned text as reported evidence, not new authorization.
+Stop requests cancellation and cannot undo external actions already completed.
+
+Claimed commands and model prompts are never automatically replayed. Event retries
+use stable IDs; buffered progress can be lost if the companion crashes. A stale
+heartbeat marks the computer offline after 45 seconds. API restarts preserve
+durable task records, but do not resume an uncertain external action. If a crash
+leaves a task permanently active, inspect the actual results, stop the companion,
+disconnect the old entry and pair afresh before a new request. Reconnecting alone
+is not proof that an interrupted task resumed.
+
+Automated checks use synthetic ACP/capture responses, mocked browser services and
+disposable databases as applicable. They do not prove a real Google account,
+Goose installation, Windows Cloud PC or fiscal workflow works. Live acceptance
+still requires a harmless delegated action, permission decision, desktop-view
+open/close, Stop and returning-chat check on the actual connected computer. See
+[test guidance](../TEST.md) and Goose's [ACP guide](https://goose-docs.ai/docs/gdk/acp/).

@@ -433,3 +433,100 @@
     scroll-behavior: auto;
   }
 }
+
+.mkoro-settings-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--sx-divider, #dce0e8);
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.mkoro-settings-trigger small {
+  opacity: 0.65;
+  text-transform: capitalize;
+}
+.mkoro-settings-dialog {
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.mkoro-settings-body {
+  height: auto;
+}
+.mkoro-settings-body .mkoro-connection-bar,
+.mkoro-settings-body .mkoro-transcript {
+  padding: 0;
+}
+.mkoro-settings-body .mkoro-connections,
+.mkoro-settings-body .mkoro-pairing,
+.mkoro-settings-body .mkoro-notice,
+.mkoro-settings-body .mkoro-warning {
+  margin-left: 0;
+  margin-right: 0;
+}
+.mkoro-chat-tasks {
+  margin: 14px 0;
+  font-size: 13px;
+  color: var(--sx-text, #242738);
+}
+.mkoro-chat-tasks > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mkoro-task-card {
+  margin: 10px 0;
+  padding: 14px;
+  border: 1px solid var(--sx-divider, #dce0e8);
+  border-radius: 12px;
+}
+.mkoro-task-card .mkoro-turn {
+  margin-bottom: 0;
+}
+.mkoro-task-card .mkoro-user-message {
+  margin: 6px 0 14px;
+  max-width: 100%;
+  width: 100%;
+  border-radius: 8px;
+}
+.mkoro-task-computer {
+  font-size: 11px;
+  opacity: 0.65;
+}
+.mkoro-chat-tasks button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.mkoro-chat-tasks button:focus-visible,
+.mkoro-settings-trigger:focus-visible {
+  outline: 2px solid var(--sx-accent, #4c62a8);
+  outline-offset: 3px;
+}
+.mkoro-screen-view {
+  padding: 10px;
+  border: 1px solid var(--sx-divider, #dce0e8);
+  border-radius: 9px;
+}
+.mkoro-screen-view p {
+  margin: 6px 0;
+  font-size: 12px;
+}
+.mkoro-screen-view img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 55vh;
+  object-fit: contain;
+  background: #17191d;
+  border-radius: 4px;
+}
+.mkoro-screen-view small {
+  display: block;
+  margin-top: 6px;
+  font-size: 10px;
+  opacity: 0.65;
+}

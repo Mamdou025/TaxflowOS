@@ -53,7 +53,19 @@ try {
     (value) => sessionStorage.setItem('taxflow:authenticated-workspace', JSON.stringify(value)),
     syntheticContext,
   );
-  await page.goto(`${baseURL}/w/pf-document-calculator`);
+  // Import a test-only saved graph; the retired example is not in the public catalog.
+  await page.goto(`${baseURL}/w/pf-fapi`);
+  await page.getByLabel('Workflow storage status').click();
+  await page
+    .getByLabel('Import workflow backup')
+    .setInputFiles(path.resolve('tests/fixtures/backups/document-calculation-v1.json'));
+  const imported = page.getByRole('button', {
+    name: 'Synthetic document calculation — Imported',
+    exact: true,
+  });
+  await expect(imported).toBeVisible();
+  await page.getByLabel('Workflow storage status').click();
+  await imported.click();
   await page.getByRole('button', { name: 'Run', exact: true }).first().click();
   await page.getByRole('button', { name: 'Start guided workflow' }).click();
   let panel = page.getByRole('region', { name: 'Workflow execution' });

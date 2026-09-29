@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { validateWorkflowLibrary, workflowBackup } from '../../lib/workflow-contracts/src/library';
-import { executeWorkflowCommand } from '../../artifacts/ai-workflow-builder/src/features/assistant/runtime/workflow-command';
+import { executeLegacyTemplateCommand as executeWorkflowCommand } from '../fixtures/legacy-template-runtime';
 import {
   parseSharedJSON,
   stringifySharedJSON,

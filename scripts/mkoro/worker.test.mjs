@@ -45,6 +45,7 @@ function fixture(options = {}) {
   const acp = new FakeAcp();
   const posts = [];
   const api = {
+    server: 'https://inscope.example',
     async post(endpoint, body) {
       posts.push({ endpoint, body });
       return endpoint === 'poll' ? { commands: [] } : { ok: true, accepted: body.events.length };
@@ -62,7 +63,19 @@ function fixture(options = {}) {
     id: randomUUID(),
     taskId: randomUUID(),
     type: 'message',
-    payload: { message: 'List the files.', conversationId: randomUUID() },
+    payload: {
+      message: 'List the files.',
+      conversationId: randomUUID(),
+      threadId: 'sina-thread',
+      platformOrigin: 'https://inscope.example',
+      delegation: {
+        taskType: 'local_file',
+        target: 'C:\\Mkoro',
+        objective: 'List the files.',
+        expectedOutput: 'The names of files in the folder.',
+        reasonNoPlatformTool: 'This folder is on the paired computer.',
+      },
+    },
   };
   return { acp, posts, api, saved, worker, command };
 }
@@ -99,10 +112,90 @@ test('forces manual approval before prompt and ignores any remote cwd or executa
   );
   assert.equal(f.acp.requests[0].params.cwd, 'C:\\Mkoro');
   assert.equal(f.acp.requests[1].params.modeId, 'approve');
+  assert.match(f.acp.requests[2].params.prompt[0].text, /Sina owns user conversation/);
+  assert.match(f.acp.requests[2].params.prompt[0].text, /List the files/);
   assert.equal(f.saved[0][f.command.payload.conversationId], 'goose-session');
   f.acp.finish({ stopReason: 'end_turn' });
   await f.worker.turn;
   assert.equal(f.worker.outbox.at(-1).type, 'task_completed');
+});
+
+test('unstructured legacy chat and native platform targets fail before a Goose session starts', async () => {
+  for (const change of [
+    (payload) => delete payload.delegation,
+    (payload) => (payload.delegation.target = 'https://inscope.example/workflows'),
+    (payload) => (payload.delegation.taskType = 'workflow_run'),
+  ]) {
+    const f = fixture();
+    change(f.command.payload);
+    await start(f);
+    assert.equal(f.acp.requests.length, 0);
+    assert.equal(f.worker.outbox.at(-1).type, 'task_failed');
+  }
+});
+
+test('cancellation, terminal events and failed polls stop desktop viewing independently of progress', async () => {
+  const f = fixture();
+  await start(f);
+  let stopped = 0;
+  f.worker.screenshots.stop = () => stopped++;
+  f.worker.cancel();
+  assert.equal(stopped, 1);
+  f.acp.finish({ stopReason: 'cancelled' });
+  await f.worker.turn;
+  assert.equal(stopped, 2);
+  f.api.post = async () => {
+    throw new Error('Offline');
+  };
+  await assert.rejects(f.worker.tick(), /Offline/);
+  assert.equal(stopped, 3);
+});
+
+test('a slow desktop capture does not hold up permission and cancellation polling', async () => {
+  let finishCapture;
+  let captureSignal;
+  const f = fixture({
+    capture: ({ signal }) => {
+      captureSignal = signal;
+      return new Promise((resolve) => {
+        finishCapture = resolve;
+      });
+    },
+  });
+  await start(f);
+  let pollCount = 0;
+  f.api.post = async (endpoint, body) => {
+    f.posts.push({ endpoint, body });
+    if (endpoint === 'poll') {
+      pollCount++;
+      return {
+        commands:
+          pollCount === 2
+            ? [{ id: randomUUID(), taskId: f.command.taskId, type: 'cancel', payload: {} }]
+            : [],
+        screenLease: {
+          taskId: f.command.taskId,
+          leaseId: f.command.id,
+          expiresAt: new Date(Date.now() + 10_000).toISOString(),
+        },
+      };
+    }
+    return { ok: true };
+  };
+  await f.worker.tick();
+  assert.equal(captureSignal.aborted, false);
+  permission(f);
+  await f.worker.tick();
+  assert.equal(captureSignal.aborted, true);
+  assert.equal(f.acp.responses[0].result.outcome.outcome, 'cancelled');
+  finishCapture({ data: 'late private image' });
+  await f.worker.screenshots.pending;
+  assert.equal(
+    f.posts.some((post) => post.endpoint === 'screen'),
+    false,
+  );
+  f.acp.finish({ stopReason: 'cancelled' });
+  await f.worker.turn;
 });
 
 test('failure to set approve mode prevents prompt execution', async () => {

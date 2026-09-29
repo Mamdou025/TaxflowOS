@@ -1,0 +1,498 @@
+{
+  "format": "taxflow-workflow-backup-v1",
+  "library": {
+    "custom:synthetic-document-calculation": {
+      "id": "custom:synthetic-document-calculation",
+      "templateId": "pf-document-calculator",
+      "draft": {
+        "aiProposals": [],
+        "blocks": [
+          {
+            "id": "pf-document-calculator--start",
+            "family": "Trigger",
+            "subtype": "Manual / On Demand",
+            "label": "Start",
+            "description": "Readiness is advisory; you can always start a manual test.",
+            "status": "configured",
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "config": {
+              "fiscalStage": "trigger",
+              "blockFamily": "Trigger",
+              "outputs": "triggerPayload",
+              "readinessConditions": [
+                {
+                  "id": "document-ready",
+                  "kind": "document",
+                  "sourceId": "pf-document-calculator--document"
+                }
+              ],
+              "blockSubtype": "Manual / On Demand",
+              "catalogId": "trigger:manual"
+            },
+            "runtime": {
+              "visible": true,
+              "editableInRuntime": false,
+              "generatedUiLocked": false,
+              "masked": false,
+              "showInRuns": true,
+              "outputKey": "triggerPayload"
+            },
+            "catalogId": "trigger:manual",
+            "sample": true,
+            "createdBy": "workflow-studio",
+            "createdAt": "2026-04-28T12:00:00.000Z",
+            "updatedBy": "workflow-studio",
+            "updatedAt": "2026-04-28T12:00:00.000Z"
+          },
+          {
+            "id": "pf-document-calculator--document",
+            "family": "Source",
+            "subtype": "Excel / Workbook",
+            "label": "Document",
+            "description": "Upload a document and choose its text and numeric fields.",
+            "status": "configured",
+            "position": {
+              "x": 340,
+              "y": 0
+            },
+            "config": {
+              "owner": "Tax Operations",
+              "inputs": "workbook",
+              "outputs": "workbookRows",
+              "rulebookRef": "Workbook rows are immutable source evidence.",
+              "sourceLocator": "workbook://sheet/range",
+              "toolId": "source.manual_table",
+              "sourceKind": "manual_table",
+              "rows": [],
+              "manualRows": [],
+              "requireUpload": true,
+              "fiscalStage": "source",
+              "blockFamily": "Source",
+              "blockSubtype": "Excel / Workbook",
+              "catalogId": "source:excel-workbook"
+            },
+            "source": {
+              "sourceType": "Excel / Workbook",
+              "locator": "workbook://sheet/range",
+              "immutable": true,
+              "treatedAsEvidence": true,
+              "labelLocked": true,
+              "locatorLocked": true,
+              "valuesLocked": true
+            },
+            "runtime": {
+              "visible": true,
+              "editableInRuntime": false,
+              "generatedUiLocked": true,
+              "masked": false,
+              "showInRuns": true,
+              "outputKey": "workbookRows"
+            },
+            "catalogId": "source:excel-workbook",
+            "sample": true,
+            "createdBy": "workflow-studio",
+            "createdAt": "2026-04-28T12:00:00.000Z",
+            "updatedBy": "workflow-studio",
+            "updatedAt": "2026-04-28T12:00:00.000Z"
+          },
+          {
+            "id": "pf-document-calculator--rules",
+            "family": "Logic",
+            "subtype": "Classification / Mapping",
+            "label": "Keyword rules",
+            "description": "Edit the example keyword or add your own categories.",
+            "status": "configured",
+            "position": {
+              "x": 680,
+              "y": 0
+            },
+            "config": {
+              "owner": "Fiscal Systems",
+              "inputs": "source rows",
+              "outputs": "mappedRows",
+              "rulebookRef": "Mappings are downstream annotations, not source edits.",
+              "toolGroup": "mapping",
+              "toolId": "logic.keyword_mapper",
+              "matchFields": ["label", "description"],
+              "keywordRules": [
+                {
+                  "ruleId": "items",
+                  "categoryId": "items",
+                  "categoryLabel": "Items",
+                  "keyword": "Item",
+                  "matchType": "contains",
+                  "matchField": "label",
+                  "priority": 1,
+                  "confidence": 1,
+                  "enabled": true
+                }
+              ],
+              "unmatchedStrategy": "send_to_review",
+              "fiscalStage": "logic",
+              "blockFamily": "Logic",
+              "blockSubtype": "Classification / Mapping",
+              "catalogId": "logic:classification-mapping"
+            },
+            "runtime": {
+              "visible": true,
+              "editableInRuntime": false,
+              "generatedUiLocked": false,
+              "masked": false,
+              "showInRuns": true,
+              "outputKey": "mappedRows"
+            },
+            "catalogId": "logic:classification-mapping",
+            "sample": true,
+            "createdBy": "workflow-studio",
+            "createdAt": "2026-04-28T12:00:00.000Z",
+            "updatedBy": "workflow-studio",
+            "updatedAt": "2026-04-28T12:00:00.000Z"
+          },
+          {
+            "id": "pf-document-calculator--groups",
+            "family": "Logic",
+            "subtype": "Category Rollup Aggregator",
+            "label": "Aggregation groups",
+            "description": "Combine categories into named totals.",
+            "status": "configured",
+            "position": {
+              "x": 1020,
+              "y": 0
+            },
+            "config": {
+              "owner": "Fiscal Systems",
+              "inputs": "mapped_rows, rollup_rules",
+              "outputs": "category_totals, rollup_totals, named_values, included_rows_by_category, included_rows_by_rollup, excluded_rows, rollup_formula_trace, rollup_summary",
+              "rulebookRef": "Category Rollup Aggregator only groups and sums mapped rows.",
+              "toolGroup": "calculation",
+              "toolId": "logic.category_rollup_aggregator",
+              "rollupRules": [
+                {
+                  "rollupId": "item_total",
+                  "label": "Item total",
+                  "operation": "sum",
+                  "includeCategoryIds": ["items"]
+                }
+              ],
+              "fiscalStage": "logic",
+              "blockFamily": "Logic",
+              "blockSubtype": "Category Rollup Aggregator",
+              "catalogId": "logic:category-rollup-aggregator"
+            },
+            "runtime": {
+              "visible": true,
+              "editableInRuntime": false,
+              "generatedUiLocked": false,
+              "masked": false,
+              "showInRuns": true,
+              "outputKey": "category_totals, rollup_totals, named_values, included_rows_by_category, included_rows_by_rollup, excluded_rows, rollup_formula_trace, rollup_summary"
+            },
+            "catalogId": "logic:category-rollup-aggregator",
+            "sample": true,
+            "createdBy": "workflow-studio",
+            "createdAt": "2026-04-28T12:00:00.000Z",
+            "updatedBy": "workflow-studio",
+            "updatedAt": "2026-04-28T12:00:00.000Z"
+          },
+          {
+            "id": "pf-document-calculator--calculate",
+            "family": "Logic",
+            "subtype": "Calculation Engine",
+            "label": "Calculate",
+            "description": "Use groups, connected fields, or numbers. Keep precision unless you explicitly round.",
+            "status": "configured",
+            "position": {
+              "x": 1360,
+              "y": 0
+            },
+            "config": {
+              "owner": "Fiscal Systems",
+              "inputs": "named_values, protected_inputs",
+              "outputs": "calculated_results, formula_trace, calculation_summary, named_values",
+              "rulebookRef": "Calculation Engine evaluates formulas without grouping source rows.",
+              "toolGroup": "calculation",
+              "toolId": "logic.calculation_engine",
+              "mode": "inline",
+              "outputCurrency": "USD",
+              "rounding": {
+                "moneyDecimals": 2
+              },
+              "formulas": [
+                {
+                  "calculationId": "total",
+                  "resultKey": "RESULT",
+                  "label": "Adjusted total",
+                  "operands": [],
+                  "operation": "pass_through",
+                  "formulaExpression": "item_total * 2",
+                  "unit": "units"
+                }
+              ],
+              "fiscalStage": "logic",
+              "blockFamily": "Logic",
+              "blockSubtype": "Calculation Engine",
+              "catalogId": "logic:calculation-engine"
+            },
+            "runtime": {
+              "visible": true,
+              "editableInRuntime": false,
+              "generatedUiLocked": false,
+              "masked": false,
+              "showInRuns": true,
+              "outputKey": "calculated_results, formula_trace, calculation_summary, named_values"
+            },
+            "catalogId": "logic:calculation-engine",
+            "sample": true,
+            "createdBy": "workflow-studio",
+            "createdAt": "2026-04-28T12:00:00.000Z",
+            "updatedBy": "workflow-studio",
+            "updatedAt": "2026-04-28T12:00:00.000Z"
+          },
+          {
+            "id": "pf-document-calculator--result",
+            "family": "Output",
+            "subtype": "Canonical JSON",
+            "label": "Final result",
+            "description": "Review final values or export their structured representation.",
+            "status": "configured",
+            "position": {
+              "x": 1700,
+              "y": 0
+            },
+            "config": {
+              "owner": "Tax Delivery",
+              "inputs": "approved graph state",
+              "outputs": "canonicalJson",
+              "rulebookRef": "Canonical JSON is a local v1 export artifact.",
+              "toolId": "output.canonical_json",
+              "fiscalStage": "output",
+              "blockFamily": "Output",
+              "blockSubtype": "Canonical JSON",
+              "catalogId": "output:canonical-json"
+            },
+            "runtime": {
+              "visible": true,
+              "editableInRuntime": false,
+              "generatedUiLocked": false,
+              "masked": false,
+              "showInRuns": true,
+              "outputKey": "canonicalJson"
+            },
+            "catalogId": "output:canonical-json",
+            "sample": true,
+            "createdBy": "workflow-studio",
+            "createdAt": "2026-04-28T12:00:00.000Z",
+            "updatedBy": "workflow-studio",
+            "updatedAt": "2026-04-28T12:00:00.000Z"
+          }
+        ],
+        "description": "Synthetic upload-to-result regression fixture: classify Item rows, sum their amounts and double the total.",
+        "edges": [
+          {
+            "id": "pf-document-calculator--edge-0-start-document",
+            "sourceBlockId": "pf-document-calculator--start",
+            "targetBlockId": "pf-document-calculator--document",
+            "relationshipType": "initiates",
+            "reason": "Manual start",
+            "bindingLabel": "Start",
+            "bindingStatus": "valid",
+            "status": "active",
+            "createdBy": "workflow-studio",
+            "createdAt": "2026-04-28T12:00:00.000Z",
+            "confidence": 1,
+            "notes": "",
+            "history": [
+              {
+                "id": "pf-document-calculator--edge-0-start-document-created",
+                "action": "created",
+                "by": "workflow-studio",
+                "at": "2026-04-28T12:00:00.000Z",
+                "notes": "Manual start"
+              }
+            ]
+          },
+          {
+            "id": "pf-document-calculator--edge-1-document-rules",
+            "sourceBlockId": "pf-document-calculator--document",
+            "targetBlockId": "pf-document-calculator--rules",
+            "relationshipType": "provides_data_to",
+            "reason": "Classify uploaded text",
+            "sourceOutputRole": "rows",
+            "targetInputRole": "rows",
+            "bindingLabel": "Document records",
+            "bindingStatus": "valid",
+            "status": "active",
+            "createdBy": "workflow-studio",
+            "createdAt": "2026-04-28T12:00:00.000Z",
+            "confidence": 1,
+            "notes": "",
+            "history": [
+              {
+                "id": "pf-document-calculator--edge-1-document-rules-created",
+                "action": "created",
+                "by": "workflow-studio",
+                "at": "2026-04-28T12:00:00.000Z",
+                "notes": "Classify uploaded text"
+              }
+            ]
+          },
+          {
+            "id": "pf-document-calculator--edge-2-rules-groups",
+            "sourceBlockId": "pf-document-calculator--rules",
+            "targetBlockId": "pf-document-calculator--groups",
+            "relationshipType": "provides_data_to",
+            "reason": "Aggregate matched records",
+            "sourceOutputRole": "mapped_rows",
+            "targetInputRole": "mapped_rows",
+            "bindingLabel": "Classified records",
+            "bindingStatus": "valid",
+            "status": "active",
+            "createdBy": "workflow-studio",
+            "createdAt": "2026-04-28T12:00:00.000Z",
+            "confidence": 1,
+            "notes": "",
+            "history": [
+              {
+                "id": "pf-document-calculator--edge-2-rules-groups-created",
+                "action": "created",
+                "by": "workflow-studio",
+                "at": "2026-04-28T12:00:00.000Z",
+                "notes": "Aggregate matched records"
+              }
+            ]
+          },
+          {
+            "id": "pf-document-calculator--edge-3-groups-calculate",
+            "sourceBlockId": "pf-document-calculator--groups",
+            "targetBlockId": "pf-document-calculator--calculate",
+            "relationshipType": "provides_data_to",
+            "reason": "Use named totals in calculations",
+            "sourceOutputRole": "named_values",
+            "targetInputRole": "named_values",
+            "bindingLabel": "Group totals",
+            "bindingStatus": "valid",
+            "status": "active",
+            "createdBy": "workflow-studio",
+            "createdAt": "2026-04-28T12:00:00.000Z",
+            "confidence": 1,
+            "notes": "",
+            "history": [
+              {
+                "id": "pf-document-calculator--edge-3-groups-calculate-created",
+                "action": "created",
+                "by": "workflow-studio",
+                "at": "2026-04-28T12:00:00.000Z",
+                "notes": "Use named totals in calculations"
+              }
+            ]
+          },
+          {
+            "id": "pf-document-calculator--edge-4-calculate-result",
+            "sourceBlockId": "pf-document-calculator--calculate",
+            "targetBlockId": "pf-document-calculator--result",
+            "relationshipType": "provides_data_to",
+            "reason": "Publish final values",
+            "sourceOutputRole": "calculated_results",
+            "targetInputRole": "calculated_results",
+            "bindingLabel": "Calculated results",
+            "bindingStatus": "valid",
+            "status": "active",
+            "createdBy": "workflow-studio",
+            "createdAt": "2026-04-28T12:00:00.000Z",
+            "confidence": 1,
+            "notes": "",
+            "history": [
+              {
+                "id": "pf-document-calculator--edge-4-calculate-result-created",
+                "action": "created",
+                "by": "workflow-studio",
+                "at": "2026-04-28T12:00:00.000Z",
+                "notes": "Publish final values"
+              }
+            ]
+          }
+        ],
+        "events": [],
+        "id": "custom:synthetic-document-calculation",
+        "metadata": {
+          "createdAt": "2026-09-28T00:00:00.000Z",
+          "createdBy": "workflow-studio",
+          "kind": "generic-fiscal-workflow",
+          "notes": "Test-only saved graph. Not an advertised workflow template.",
+          "tags": ["synthetic", "regression-fixture"],
+          "updatedAt": "2026-09-28T00:00:00.000Z",
+          "updatedBy": "workflow-studio"
+        },
+        "mockRuns": [],
+        "name": "Synthetic document calculation",
+        "outputMappingPreview": {
+          "id": "output-mapping-local-fiscal-studio",
+          "sourceWorkflowId": "custom:synthetic-document-calculation",
+          "generatedAt": "2026-09-28T00:00:00.000Z",
+          "outputs": []
+        },
+        "runtimeUiConfig": {
+          "runtimeConfigId": "runtime-config-local-fiscal-studio",
+          "sourceWorkflowId": "custom:synthetic-document-calculation",
+          "generatedAt": "2026-09-28T00:00:00.000Z",
+          "sections": [],
+          "visibleRows": [],
+          "hiddenRows": [],
+          "reviewerOnlyRows": [],
+          "advancedRows": [],
+          "allowedActions": []
+        },
+        "schemaVersion": "workflow-studio.local.v1",
+        "status": "draft",
+        "structure": {
+          "layout": "canvas-columns",
+          "entryBlockId": "pf-document-calculator--start",
+          "blockOrder": [
+            "pf-document-calculator--start",
+            "pf-document-calculator--document",
+            "pf-document-calculator--rules",
+            "pf-document-calculator--groups",
+            "pf-document-calculator--calculate",
+            "pf-document-calculator--result"
+          ],
+          "columns": [
+            {
+              "id": "trigger",
+              "family": "Trigger",
+              "label": "Trigger",
+              "blockIds": ["pf-document-calculator--start"]
+            },
+            {
+              "id": "source",
+              "family": "Source",
+              "label": "Source",
+              "blockIds": ["pf-document-calculator--document"]
+            },
+            {
+              "id": "logic",
+              "family": "Logic",
+              "label": "Logic",
+              "blockIds": [
+                "pf-document-calculator--rules",
+                "pf-document-calculator--groups",
+                "pf-document-calculator--calculate"
+              ]
+            },
+            {
+              "id": "output",
+              "family": "Output",
+              "label": "Output",
+              "blockIds": ["pf-document-calculator--result"]
+            }
+          ]
+        },
+        "versionSnapshots": []
+      },
+      "versions": [],
+      "runs": []
+    }
+  }
+}

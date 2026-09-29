@@ -1,3 +1,4 @@
+import { openDocumentCalculationFixture } from './retired-workflow-fixtures';
 import { test, expect as baseExpect } from '@playwright/test';
 const expect = baseExpect.configure({ timeout: 20000 });
 
@@ -52,7 +53,7 @@ test('Try demo opens Chat without credentials, saves a real run and exits cleanl
     JSON.parse(sessionStorage.getItem('taxflow:authenticated-workspace')!),
   );
   expect(first.isDemo).toBe(true);
-  await page.goto('/w/pf-document-calculator');
+  await openDocumentCalculationFixture(page);
   await page.getByRole('button', { name: 'Build', exact: true }).click();
   await page.getByText('Test data — upload document or enter examples', { exact: true }).click();
   await page.getByLabel('Upload test document').setInputFiles({
@@ -78,7 +79,7 @@ test('Try demo opens Chat without credentials, saves a real run and exits cleanl
       () => JSON.parse(sessionStorage.getItem('taxflow:authenticated-workspace')!).workspace.id,
     ),
   ).toBe(first.workspace.id);
-  await page.goto('/w/pf-document-calculator');
+  await page.goto('/w/pf-fapi');
   await page.getByRole('button', { name: 'My password-free run', exact: true }).click();
   await page.getByRole('button', { name: 'Run', exact: true }).first().click();
   await expect(page.getByRole('region', { name: 'Final workflow results' })).toContainText('60');
@@ -101,7 +102,7 @@ test('Try demo opens Chat without credentials, saves a real run and exits cleanl
   );
   expect(next.userId).not.toBe(first.userId);
   expect(next.workspace.id).not.toBe(first.workspace.id);
-  await page.goto('/w/pf-document-calculator');
+  await page.goto('/w/pf-fapi');
   await expect(page.getByRole('button', { name: 'My password-free run', exact: true })).toHaveCount(
     0,
   );

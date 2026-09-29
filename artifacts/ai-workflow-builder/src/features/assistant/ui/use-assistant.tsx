@@ -32,7 +32,7 @@ import type { ReactNode } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useAtom, useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useRouter, usePathname } from '@/lib/router';
-import { Globe, FileText, Workflow, Bot, GitBranch, SquarePen, Play, Sparkles } from 'lucide-react';
+import { Globe, FileText, Workflow, Bot, GitBranch, Play, Sparkles } from 'lucide-react';
 import {
   useCopilotAction,
   useCopilotReadable,
@@ -97,9 +97,10 @@ import type { ToolResult } from './tool-result-card';
 import { useWorkspaceRetrievalTools } from './use-workspace-retrieval-tools';
 import { useAgentWorkflowTools } from './use-agent-workflow-tools';
 import { useLiveDataTools } from './use-live-data-tools';
+import { useMkoroDelegation } from './use-mkoro-delegation';
 
 // ── Work-item classification ────────────────────────────────────────────────────
-const WORKSHEET_KEYS = new Set(['fapi', 't1134', 'surplus', 'expense']);
+const WORKSHEET_KEYS = new Set(['fapi', 't1134', 'surplus']);
 function pageWorkType(pageKey: string): WorkItemType {
   return WORKSHEET_KEYS.has(pageKey) ? 'worksheet' : 'page';
 }
@@ -109,7 +110,7 @@ function shortWorkTitle(text: string, max = 46): string {
 }
 
 // ── Composer search ────────────────────────────────────────────────────────────
-// Portfolio template IDs open the builder; execution uses the separate runtime ID.
+// Portfolio IDs and runtime IDs refer to the same available workflow definitions.
 const PORTFOLIO_BLUEPRINTS = PORTFOLIO_WORKFLOWS.map((w) => ({
   workflowId: w.id,
   runWorkflowId: getWorkflowConfig(w.id.replace(/^pf-/, ''))?.id ?? null,
@@ -461,7 +462,7 @@ export function useAssistant() {
           isActiveRun: cfg.id === activeId,
           source: up
             ? { fileName: up.fileName, rowCount: up.rows.length }
-            : 'sample data (nothing uploaded yet)',
+            : 'No source records supplied',
           snapshot,
         },
       ];
@@ -470,14 +471,13 @@ export function useAssistant() {
 
   useCopilotReadable({
     description:
-      'The workflows you are actually working on and their REAL current data — any workflow with an uploaded source, an edited input/override, or an active run. Each `snapshot` is computed by the same engine the worksheet renders (lines, summary with CAD, FX rate, classification buckets), so these ARE the on-screen numbers even when no worksheet page is open. Answer figure questions from here; for a formula or operand breakdown call whyWorksheetValue / explainWorksheetLine with the workflowId. Workflows NOT listed have no live data yet (they would run on sample data).',
+      'Supplied source records and legacy input edits for available workflows. A snapshot without source records has no calculated values; never substitute examples. These previews are separate from saved-version run results: inspect the exact workflow run for its actual calculations and approvals. For a preview formula or operand breakdown call whyWorksheetValue / explainWorksheetLine with the workflowId.',
     value: liveWorkflowContext.length
       ? liveWorkflowContext
       : 'No workflow has live data yet — nothing has been uploaded, edited, or run.',
   });
 
-  // Sinaxe portfolio blueprints — the assistant knows these exist so it can list
-  // them and offer to open them, WITHOUT treating them as runnable.
+  // Available built-in templates are independent of the user's saved drafts.
   useCopilotReadable({
     description:
       'Built-in portfolio templates, independent of saved workspace drafts. workflowId opens the template; runWorkflowId is the exact execution ID, or null when no runtime is available. Discover executable templates with listAvailableWorkflows. Use supplied records and required columns; do not claim a workpaper prepares or files a complete statutory return. Never invent missing records, rates or applicability decisions.',
@@ -516,7 +516,7 @@ export function useAssistant() {
   useCopilotAction({
     name: 'focusAnchor',
     description:
-      'Open a page and scroll to + highlight one specific part of it (an anchor id like "fapi:fx").',
+      'Open a page and highlight an anchor listed in the current page catalog. Do not invent an anchor for a workflow source or result.',
     followUp: false,
     parameters: [{ name: 'anchor', type: 'string', description: 'the anchor id', required: true }],
     handler: async ({ anchor }: { anchor: string }) => {
@@ -544,7 +544,7 @@ export function useAssistant() {
   useCopilotAction({
     name: 'editField',
     description:
-      'Bring an editable worksheet field INTO the chat so the user can view/modify it inline (it syncs to the worksheet AND the workflow run — one shared value). Use for "show me the FX rate", "let me change the dividend", etc. Do NOT open the worksheet. Prefer the exact fieldId from the editable-fields context (e.g. "fx"), but a loose reference ("fx rate", the line key) is resolved too.',
+      'Bring a field listed in the current editable-fields catalog into chat. If that catalog is empty, no inline field is available. Workflow source and input changes use the shared workflow panel or controlWorkflowRun with an exact source block ID and action review.',
     followUp: false,
     parameters: [
       {
@@ -624,15 +624,14 @@ export function useAssistant() {
       },
     ],
     handler: async ({ workflowId }: { workflowId?: string }) => {
-      if (
-        workflowId &&
-        (getWorkflowConfig(workflowId) || PORTFOLIO_WORKFLOWS.some((w) => w.id === workflowId))
-      ) {
+      if (workflowId) {
+        if (!getWorkflowConfig(workflowId.replace(/^pf-/, '')))
+          return `Workflow "${workflowId}" is unavailable. Choose an available template or open a saved workflow by its exact ID.`;
         openInlineBuilder(workflowId);
         return `Opening ${workflowId} in the workflow builder.`;
       }
       launchOpenPage('workflows');
-      return 'Opening the workflow builder.';
+      return 'Opening Workflows. Select a workflow to build or create a blank workflow.';
     },
   });
 
@@ -747,6 +746,10 @@ export function useAssistant() {
   // Server-side persistence: autosaves each turn + restores saved threads. Additive
   // — it observes CopilotKit, doesn't change how the chat runs. See use-chat-persistence.
   const persistence = useChatPersistence();
+  const mkoro = useMkoroDelegation(
+    persistence.ensureThread,
+    !persistence.restoring && !persistence.restoreError,
+  );
   const [sent, setSent] = useState(false); // flips the hero → conversation the instant you send
   const [pinnedFields, setPinnedFields] = useState<string[]>([]); // fields brought in via search
   const [pinnedElements, setPinnedElements] = useState<PinnedElement[]>([]); // workflow source/output summoned in
@@ -758,7 +761,7 @@ export function useAssistant() {
     setSent(true);
   };
   const threadEmpty = (visibleMessages?.length ?? 0) === 0;
-  const showHero = threadEmpty && !sent && pinnedRuns.length === 0; // centered composer until the first message
+  const showHero = threadEmpty && !sent && pinnedRuns.length === 0 && !persistence.activeThreadId;
   // Clear the parts of a conversation that live OUTSIDE the CopilotKit message store:
   // deterministically-pinned run cards + summoned fields/elements. These are per-chat
   // UI state, so switching chats (new or restored) must wipe them or the previous
@@ -882,15 +885,7 @@ export function useAssistant() {
       icon: <Workflow size={14} />,
       run: () => launchOpenPage('workflows'),
     },
-    // Bring a live element into the chat (synced to the worksheet)
-    {
-      key: 'cmd:edit-fx',
-      title: 'Edit the FX rate inline',
-      sub: 'Live field, synced to the worksheet',
-      kind: 'inline',
-      icon: <SquarePen size={14} />,
-      run: () => launchPinField('fx'),
-    },
+    // Bring supplied source records or their preview into the chat.
     {
       key: 'cmd:fapi-source',
       title: 'Show FAPI source document',
@@ -1067,6 +1062,10 @@ export function useAssistant() {
     openThread,
     activeThreadId: persistence.activeThreadId,
     saving: persistence.saving,
+    restoring: persistence.restoring,
+    restoreError: persistence.restoreError,
+    reviewMkoroTask: mkoro.reviewMkoroTask,
+    mkoroNoticeError: mkoro.mkoroNoticeError,
     // pinned inline cards
     pinnedFields,
     pinnedElements,

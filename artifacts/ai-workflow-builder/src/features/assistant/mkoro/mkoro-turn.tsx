@@ -15,6 +15,7 @@ export function MkoroTurn({
   busy,
   canAct,
   onPermission,
+  delegated = false,
 }: {
   task: MkoroTask;
   events: MkoroEvent[];
@@ -22,13 +23,18 @@ export function MkoroTurn({
   canAct: boolean;
   permissions: z.infer<typeof MkoroPendingPermissionSchema>[];
   onPermission: (taskId: string, requestId: string, optionId: string) => void;
+  delegated?: boolean;
 }) {
   const items = useMemo(() => projectMkoroEvents(events), [events]);
   return (
-    <article className="mkoro-turn" aria-label="Mkoro conversation turn">
+    <article
+      className="mkoro-turn"
+      aria-label={delegated ? 'Mkoro delegated task' : 'Mkoro conversation turn'}
+    >
       <div className="mkoro-user-message">
-        <span>You</span>
-        <p>{task.message}</p>
+        <span>{delegated ? 'Delegated by Sina' : 'You'}</span>
+        <p>{task.delegation?.objective ?? task.message}</p>
+        {task.delegation && <small>Target: {task.delegation.target}</small>}
       </div>
       <div className="mkoro-agent-message">
         <strong className="mkoro-speaker">Mkoro</strong>

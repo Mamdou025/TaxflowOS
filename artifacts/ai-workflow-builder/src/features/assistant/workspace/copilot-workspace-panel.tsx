@@ -49,7 +49,6 @@ import {
 import { getPage } from '@/shared/stores/resource-registry';
 import { useAssistant } from '@/features/assistant/ui/use-assistant';
 import { AssistantThread } from '@/features/assistant/ui/assistant-thread';
-import { ChatAgents } from '@/features/assistant/mkoro/chat-agents';
 import { InScopeNeuMark } from '@/components/inscope-neu-mark';
 import { ChatHistory } from '@/features/assistant/ui/chat-history';
 import { LC } from '@/lib/librechat-theme';
@@ -82,7 +81,6 @@ const scopeSidebarCollapsedAtom = atomWithStorage('inscope.scope-sidebar.collaps
 // user drags to is remembered across sessions (replaces the old hardcoded clamp), so
 // the chat settles at a predictable size instead of an arbitrary one on every open.
 const scopeSplitRatioAtom = atomWithStorage('inscope.scope-split.chat-ratio', 0.4);
-const chatAgentAtom = atomWithStorage<'sina' | 'mkoro'>('inscope.chat.agent', 'sina');
 
 // The ground for the inline page bodies — a flat darker neumorphic gray (no grid)
 // that reads as the recessed space behind the menus, a shade darker than the
@@ -353,12 +351,7 @@ export function ChatWorkspace() {
   );
   const pageBodyRef = useRef<HTMLDivElement>(null);
   const a = useAssistant();
-  const [chatAgent, setChatAgent] = useAtom(chatAgentAtom);
-  const [mkoroNewChatKey, setMkoroNewChatKey] = useState(0);
-  const newChat = () => {
-    if (chatAgent === 'mkoro') setMkoroNewChatKey((value) => value + 1);
-    else a.newChat();
-  };
+  const newChat = a.newChat;
   const pageMenus = useAtomValue(pageMenusAtom);
   const pageSidebars = useAtomValue(pageSidebarsAtom);
   const [mode, setMode] = useAtom(chatPanelModeAtom);
@@ -692,7 +685,6 @@ export function ChatWorkspace() {
               <ChatHistory
                 activeThreadId={a.activeThreadId}
                 onOpen={(id) => {
-                  setChatAgent('sina');
                   void a.openThread(id);
                 }}
               />
@@ -962,9 +954,7 @@ export function ChatWorkspace() {
             </div>
           )}
           <div className="flex-1 min-h-0">
-            <ChatAgents agent={chatAgent} onSelect={setChatAgent} newChatKey={mkoroNewChatKey}>
-              <AssistantThread assistant={a} variant={chatFull ? 'focus' : 'docked'} />
-            </ChatAgents>
+            <AssistantThread assistant={a} variant={chatFull ? 'focus' : 'docked'} />
           </div>
         </div>
 

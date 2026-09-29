@@ -97,8 +97,6 @@ const TAB_LABELS: { id: WorkflowTab; label: string }[] = [
 ];
 
 const GROUPS: { id: PortfolioWorkflowGroup; label: string; Icon: typeof Boxes }[] = [
-  // Runnable end-to-end, listed first so a demo is one click away.
-  { id: 'demo', label: 'Runnable demos', Icon: Play },
   { id: 'platform', label: 'Platform services', Icon: Boxes },
   { id: 'foundation', label: 'Foundation', Icon: Database },
   { id: 'tier1', label: 'Tier 1', Icon: FileText },

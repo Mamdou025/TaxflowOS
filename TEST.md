@@ -19,8 +19,10 @@ development test cannot.
 The release gate runs it after the build and performance check. All external
 requests are blocked; its success does not verify live providers.
 
-The unit suite includes full output/warning/error/provenance parity for the 17
-executable template snapshots and admission coverage for every shared tool entry.
+The unit suite includes full output/warning/error/provenance parity for the 15
+available executable templates and admission coverage for every shared tool entry.
+Retired demonstration templates remain explicit test fixtures for independent
+arithmetic and saved-version compatibility; they are not public catalog entries.
 Database coverage also executes saved table rows through the durable worker.
 
 | Command                              | What it checks                                                                                                                                   | Needs Docker |
@@ -39,14 +41,16 @@ Database coverage also executes saved table rows through the durable worker.
 
 During iteration, select a case without changing its assertions:
 
-Mkoro coverage includes `pnpm run test:mkoro-worker` (ACP protocol, permission
-handling, local state and delivery tests, included in `verify`),
-`pnpm run test:workflow-reliability --grep "Mkoro"` (chat switching, pairing,
-progress, decisions, Stop and reconnect behavior with synthetic responses), and
+Mkoro coverage includes `pnpm run test:mkoro-worker` (ACP protocol, permissions,
+typed delegation, local state and bounded screenshot leases, included in `verify`),
+`pnpm run test:workflow-reliability --grep "Mkoro"` (one Sina composer, pairing,
+thread-bound progress, decisions, Stop, opt-in previews and recovery with synthetic responses), and
 `pnpm exec node --test tests/integration/mkoro.test.mjs` (real sessions and
 disposable Postgres, isolation, denied roles, migrations, idempotency, permissions,
-history pagination and API restart). These checks do not invoke a paid model,
-control a real browser, or verify a Google account. The manual live check is in
+history pagination, screenshot privacy/expiry, retired direct writes and API restart).
+Unit tests cover native-target rejection, thread binding, idempotency and bounded
+text-only model observations. These checks do not invoke a paid model, capture a
+real desktop or verify a Google account. The manual live check is in
 [the Mkoro connection guide](docs/mkoro-connection.md).
 
 `pnpm run test:workflow-core` checks the portable workflow package with no browser,

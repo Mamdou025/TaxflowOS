@@ -1,15 +1,12 @@
 import { atom } from 'jotai';
 import { toast } from 'sonner';
-import {
-  createBlankWorkflow,
-  createPortfolioWorkflowById,
-} from '@/shared/workflow-engine/workflow/templates/portfolio';
+import { createBlankWorkflow } from '@/shared/workflow-engine/workflow/templates/portfolio';
 import {
   createWorkflowDefinitionFromCanvas,
   workflowDefinitionToCanvas,
 } from '@/shared/workflow-engine/workflow/canvas';
 import { type WorkflowDefinition } from '@/shared/workflow-engine/workflow/contracts';
-import { getWorkflowConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
+import { buildRunnableWorkflowSnapshot } from '@/shared/workflow-engine/runtime/workflow-runs';
 import { type LocalToolRunnerResult } from '@/shared/workflow-engine/local-tool-runner';
 import {
   currentWorkflowNameAtom,
@@ -34,11 +31,7 @@ import { activeSessionAtom } from './workflow-session-store';
 import { startSession } from '@workspace/workflow-core/sessions';
 
 export function templateDefinition(id: string): WorkflowDefinition | null {
-  return (
-    getWorkflowConfig(id.replace(/^pf-/, ''))?.buildSnapshot() ??
-    createPortfolioWorkflowById(id) ??
-    null
-  );
+  return buildRunnableWorkflowSnapshot(id);
 }
 
 // Project a recorded execution onto the existing canvas; never alter its graph or configuration.

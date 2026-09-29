@@ -1,21 +1,27 @@
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import {
-  MkoroCreateConversationSchema,
-  MkoroMessageRequestSchema,
+  MkoroDelegationRequestSchema,
+  MkoroScreenViewRequestSchema,
+  MkoroThreadIdSchema,
   MkoroPermissionRequestSchema,
   MkoroIdSchema,
 } from '@workspace/api-zod/mkoro';
 import { createPairing, listWorkers, revokeWorker } from '../lib/mkoro/workers';
 import {
-  createConversation,
   listConversations,
   conversationDetail,
-  createMessage,
   taskEvents,
   cancelTask,
   decidePermission,
 } from '../lib/mkoro/tasks';
 import { MkoroError } from '../lib/mkoro/common';
+import { createDelegation, threadConversations } from '../lib/mkoro/delegations';
+import {
+  forgetTaskScreen,
+  forgetWorkerScreens,
+  readScreen,
+  setScreenView,
+} from '../lib/mkoro/screens';
 
 const router = Router();
 const scope = (req: Request) => ({ actorId: req.userId, workspaceId: req.workspaceId });
@@ -35,18 +41,33 @@ router.post('/pairings', async (req, res) => {
   res.status(201).json(await createPairing(scope(req)));
 });
 router.delete('/workers/:id', async (req, res) => {
-  await revokeWorker(scope(req), id(req.params.id));
+  const workerId = id(req.params.id);
+  await revokeWorker(scope(req), workerId);
+  forgetWorkerScreens(workerId);
   res.json({ ok: true });
 });
 router.get('/conversations', async (req, res) => {
   res.json({ conversations: await listConversations(scope(req)) });
 });
-router.post('/conversations', async (req, res) => {
-  const parsed = MkoroCreateConversationSchema.safeParse(req.body);
-  if (!parsed.success) throw new MkoroError(400, 'Choose a companion and a valid chat title.');
-  res.status(201).json({
-    conversation: await createConversation(scope(req), parsed.data.workerId, parsed.data.title),
-  });
+// New work enters through Sina's typed delegation tool; legacy history stays readable.
+router.post(['/conversations', '/conversations/:id/messages'], (_req, res) => {
+  res
+    .status(410)
+    .json({ error: 'Start computer tasks in Sina chat. Direct Mkoro messages have been retired.' });
+});
+router.post('/delegations', async (req, res) => {
+  const parsed = MkoroDelegationRequestSchema.safeParse(req.body);
+  if (!parsed.success)
+    throw new MkoroError(
+      400,
+      'Supply a Sina thread, companion and complete computer task delegation.',
+    );
+  res.status(202).json(await createDelegation(scope(req), parsed.data));
+});
+router.get('/threads/:threadId/conversations', async (req, res) => {
+  const parsed = MkoroThreadIdSchema.safeParse(req.params.threadId);
+  if (!parsed.success) throw new MkoroError(400, 'Invalid Sina conversation identifier.');
+  res.json({ conversations: await threadConversations(scope(req), parsed.data) });
 });
 router.get('/conversations/:id', async (req, res) => {
   const before = req.query.before === undefined ? undefined : Number(req.query.before);
@@ -54,25 +75,30 @@ router.get('/conversations/:id', async (req, res) => {
     throw new MkoroError(400, 'Invalid event cursor.');
   res.json(await conversationDetail(scope(req), id(req.params.id), before));
 });
-router.post('/conversations/:id/messages', async (req, res) => {
-  const parsed = MkoroMessageRequestSchema.safeParse(req.body);
-  if (!parsed.success) throw new MkoroError(400, 'Supply a message and a unique request ID.');
-  res.status(202).json({
-    task: await createMessage(
-      scope(req),
-      id(req.params.id),
-      parsed.data.message,
-      parsed.data.requestId,
-    ),
-  });
-});
 router.get('/tasks/:id/events', async (req, res) => {
+  const latest = req.query.latest === 'true';
+  if (req.query.latest !== undefined && !latest)
+    throw new MkoroError(400, 'Invalid latest-event selection.');
+  if (latest && req.query.after !== undefined)
+    throw new MkoroError(400, 'Choose either the latest events or an event cursor.');
   const after = req.query.after === undefined ? 0 : Number(req.query.after);
   if (!Number.isSafeInteger(after) || after < 0) throw new MkoroError(400, 'Invalid event cursor.');
-  res.json(await taskEvents(scope(req), id(req.params.id), after));
+  res.json(await taskEvents(scope(req), id(req.params.id), after, latest));
 });
 router.post('/tasks/:id/cancel', async (req, res) => {
-  res.json({ task: await cancelTask(scope(req), id(req.params.id)) });
+  const taskId = id(req.params.id);
+  const task = await cancelTask(scope(req), taskId);
+  forgetTaskScreen(taskId);
+  res.json({ task });
+});
+// Both reading a live preview and authorizing capture require execute role.
+router.get('/tasks/:id/screen', async (req, res) => {
+  res.json(await readScreen(scope(req), id(req.params.id)));
+});
+router.post('/tasks/:id/screen-view', async (req, res) => {
+  const parsed = MkoroScreenViewRequestSchema.safeParse(req.body);
+  if (!parsed.success) throw new MkoroError(400, 'Choose whether the computer screen is visible.');
+  res.json(await setScreenView(scope(req), id(req.params.id), parsed.data.enabled));
 });
 router.post('/tasks/:id/permission', async (req, res) => {
   const parsed = MkoroPermissionRequestSchema.safeParse(req.body);

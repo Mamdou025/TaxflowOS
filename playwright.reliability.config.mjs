@@ -4,6 +4,7 @@ export default defineConfig({
   ...browserConfig(),
   testMatch: [
     'mkoro-chat.spec.ts',
+    'mkoro-delegation.spec.ts',
     'workflow-session.spec.ts',
     'workflow-traceability.spec.ts',
     'workflow-reliability.spec.ts',

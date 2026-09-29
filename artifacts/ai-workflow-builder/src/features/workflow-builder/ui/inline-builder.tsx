@@ -28,11 +28,10 @@ import { useOverlay } from '@/shared/ui/overlays/overlay-provider';
 import { selectedWorkflowIdAtom } from '@/features/workflows-hub/workflows-store';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { createWorkflowDefinitionFromCanvas, workflowDefinitionToCanvas } from "@/shared/workflow-engine/workflow/canvas";
-import { createBlankWorkflow, createPortfolioWorkflowById } from "@/shared/workflow-engine/workflow/templates/portfolio";
-import { createWorkingSourceRulesDemoWorkflow } from "@/shared/workflow-engine/workflow/templates/working-source";
+import { createBlankWorkflow } from "@/shared/workflow-engine/workflow/templates/portfolio";
 import { LOCAL_WORKFLOW_ID } from "@/shared/workflow-engine/workflow/contracts";
 import { loadLocalWorkflowSnapshotResult, saveWorkflowDefinitionSnapshot } from "@/shared/workflow-engine/workflow/storage";
-import { getWorkflowConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
+import { buildRunnableWorkflowSnapshot } from '@/shared/workflow-engine/runtime/workflow-runs';
 import {
   executionLogsAtom,
   currentWorkflowIdAtom,
@@ -107,34 +106,25 @@ export function InlineBuilder({ workflowId, blank }: { workflowId?: string; blan
         ? focus.blockId
         : "";
 
-    // A specific workflow (the Build tab of a workflow page) loads THAT graph —
-    // a portfolio blueprint (pf-*) or a runnable config — WITHOUT clobbering the
-    // user's saved local workflow. No workflowId → the usual saved-local load.
+    // Saved graphs retain their content; new templates use the runnable registry.
+    // No workflowId loads the saved local graph, or a blank workflow when absent.
     let snapshot;
     if (blank) {
       snapshot = createBlankWorkflow();
     } else if (workflowId && initialLibrary.current[workflowId]) {
       snapshot = initialLibrary.current[workflowId].draft;
     } else if (workflowId) {
-      const cfg = getWorkflowConfig(workflowId.replace(/^pf-/, ""));
-      const runnableSnapshot = cfg
-        ? (cfg.buildSnapshot() as ReturnType<
-            typeof createWorkingSourceRulesDemoWorkflow
-          >)
-        : null;
-      const blueprint = createPortfolioWorkflowById(workflowId);
-      // Build the executable graph whenever the template provides one.
-      snapshot =
-        runnableSnapshot || blueprint || createBlankWorkflow();
-      if (!runnableSnapshot && !blueprint) toast.error('This workflow is unavailable. Choose one from the executable catalog.');
+      const runnableSnapshot = buildRunnableWorkflowSnapshot(workflowId);
+      snapshot = runnableSnapshot ?? createBlankWorkflow();
+      if (!runnableSnapshot) toast.error('This workflow is unavailable. Choose one from the executable catalog.');
     } else {
       const loadResult = loadLocalWorkflowSnapshotResult();
       if (loadResult.warning) {
         toast.warning(
-          "Saved local workflow could not be loaded. Restored the working Excel workflow.",
+          "Saved local workflow could not be loaded. Opened a blank workflow.",
         );
       }
-      snapshot = loadResult.snapshot || createWorkingSourceRulesDemoWorkflow();
+      snapshot = loadResult.snapshot ?? createBlankWorkflow();
     }
     const latestRun = workflowId ? initialLibrary.current[workflowId]?.runs.at(-1)?.result : undefined;
     const graph = workflowDefinitionToCanvas(snapshot);

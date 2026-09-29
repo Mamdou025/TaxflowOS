@@ -26,14 +26,12 @@ import { nanoid } from 'nanoid';
 import { toast } from 'sonner';
 import { builderBridgeAtom } from '@/lib/builder-bridge';
 import { BLOCK_CATALOG } from "@/shared/workflow-engine/block-catalog-data";
-import { createFapiTemplateWorkflow } from "@/shared/workflow-engine/workflow/templates/fapi";
-import { createPortfolioWorkflowById } from "@/shared/workflow-engine/workflow/templates/portfolio";
 import { createWorkflowBlockFromCatalog, createWorkflowNodeFromBlock } from "@/shared/workflow-engine/workflow/block-factory";
 import { getBlockCatalogItem } from "@/shared/workflow-engine/workflow/visuals";
 import { PORTFOLIO_WORKFLOWS } from "@/shared/workflow-engine/templates/portfolio/portfolio-workflows";
 import { saveWorkflowDefinitionSnapshot } from "@/shared/workflow-engine/workflow/storage";
 import { workflowDefinitionToCanvas } from "@/shared/workflow-engine/workflow/canvas";
-import { getWorkflowConfig, WORKFLOW_CONFIGS } from '@/shared/workflow-engine/runtime/workflow-runs';
+import { buildRunnableWorkflowSnapshot, WORKFLOW_CONFIGS } from '@/shared/workflow-engine/runtime/workflow-runs';
 import { usePageChat } from '@/lib/page-chat-store';
 import {
   addNodeAtom,
@@ -88,7 +86,7 @@ const BUILT_WORKFLOWS = Object.entries(WORKFLOW_CONFIGS).map(([id, cfg]) => ({
 }));
 
 // Sinaxe portfolio blueprints — also loadable onto the canvas via loadWorkflow,
-// but structural (not runnable). Canadian Corporate Tax Portfolio + Platform Services.
+// using the same executable definitions as their Run surfaces.
 const PORTFOLIO_BLUEPRINTS = PORTFOLIO_WORKFLOWS.map((w) => ({
   workflowId: w.id,
   name: w.name,
@@ -247,7 +245,7 @@ export function BuilderCopilot() {
 
   // GROUNDING — the pre-built (runnable) workflows the chat can open with loadWorkflow.
   useCopilotReadable({
-    description: 'The pre-built RUNNABLE workflows that can be opened onto the canvas with the loadWorkflow action, by workflowId (fapi, expense, document-calculator and the portfolio workpapers). Loading one replaces whatever is currently open.',
+    description: 'The available runnable workflows that can be opened onto the canvas with the loadWorkflow action, by workflowId (FAPI and the portfolio workpapers). Use the exact IDs listed here. Loading one replaces whatever is currently open and does not execute it.',
     value: BUILT_WORKFLOWS,
   });
 
@@ -441,14 +439,11 @@ export function BuilderCopilot() {
   // Load a pre-built workflow onto the canvas (replaces what's open).
   useCopilotAction({
     name: 'loadWorkflow',
-    description: 'Open a pre-built workflow OR a Sinaxe portfolio blueprint onto the builder canvas, replacing whatever is currently open. workflowId is either a runnable id ("fapi", "expense", "document-calculator") or a blueprint id from the portfolio-blueprints context (e.g. "pf-t1134", "pf-scope-service", "pf-eifel").',
+    description: 'Open an available workflow onto the builder canvas, replacing whatever is currently open. Use an exact runnable ID from the workflow catalog or its pf-prefixed template ID (e.g. "fapi", "pf-t1134", "pf-scope-service"). Retired demos are unavailable. Loading does not execute the workflow.',
     followUp: false,
     parameters: [{ name: 'workflowId', type: 'string', description: 'id of the workflow or blueprint to open', required: true }],
     handler: async ({ workflowId }: { workflowId: string }) => {
-      const cfg = getWorkflowConfig(workflowId);
-      const snapshot = (cfg
-        ? cfg.buildSnapshot()
-        : createPortfolioWorkflowById(workflowId)) as ReturnType<typeof createFapiTemplateWorkflow> | null;
+      const snapshot = buildRunnableWorkflowSnapshot(workflowId);
       if (!snapshot) {
         return `"${workflowId}" is not a known workflow. Runnable: ${BUILT_WORKFLOWS.map((w) => w.workflowId).join(', ')}. Blueprints: ${PORTFOLIO_BLUEPRINTS.map((w) => w.workflowId).join(', ')}.`;
       }

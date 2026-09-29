@@ -27,7 +27,25 @@ test.describe('Guided run-state persistence', () => {
     await page.getByRole('button', { name: 'Start guided workflow' }).click();
     await expect(page.getByRole('button', { name: 'Approve completed results' })).toBeDisabled();
     await expect(page.getByRole('list', { name: 'Execution steps' })).toContainText('pending');
+    await page.goto('/run/ownership-graph');
+    await expect(page.getByRole('button', { name: 'Start guided workflow' })).toBeEnabled();
+    await expect(page.getByRole('list', { name: 'Execution steps' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Approve completed results' })).toHaveCount(0);
+  });
+  test('a retired workflow route is unavailable and cannot create a new session', async ({
+    page,
+  }) => {
     await page.goto('/run/expense');
-    await expect(page.getByRole('button', { name: 'Start guided workflow' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Requested workflow version unavailable', exact: true }),
+    ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Start guided workflow' })).toBeDisabled();
+    await expect(page.getByRole('list', { name: 'Execution steps' })).toHaveCount(0);
+    const sessions = await page.evaluate(async () => {
+      const { readWorkflowLibrary } =
+        await import('/src/features/workflows-hub/workflow-library.ts');
+      return Object.values(readWorkflowLibrary()).flatMap((entry) => entry.sessions ?? []);
+    });
+    expect(sessions).toEqual([]);
   });
 });

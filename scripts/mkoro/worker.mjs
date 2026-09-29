@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import { DesktopScreenshots } from './capture.mjs';
+import { companionCapabilities, delegatedPrompt } from './delegation.mjs';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const clip = (value, limit) => (typeof value === 'string' ? value.slice(0, limit) : '');
@@ -33,13 +35,15 @@ export class WorkerApi {
     this.fetchImpl = fetchImpl;
   }
 
-  async post(endpoint, body) {
+  async post(endpoint, body, { signal } = {}) {
     let response;
     try {
       response = await this.fetchImpl(`${this.server}/api/mkoro-worker/${endpoint}`, {
         method: 'POST',
         redirect: 'error',
-        signal: AbortSignal.timeout(15_000),
+        signal: signal
+          ? AbortSignal.any([signal, AbortSignal.timeout(15_000)])
+          : AbortSignal.timeout(15_000),
         headers: {
           'content-type': 'application/json',
           ...(this.token ? { authorization: `Bearer ${this.token}` } : {}),
@@ -157,6 +161,8 @@ export class MkoroWorker {
     sessions = {},
     saveSessions = async () => {},
     log = () => {},
+    capture,
+    capabilities = companionCapabilities(),
   }) {
     this.api = api;
     this.acp = acp;
@@ -172,6 +178,8 @@ export class MkoroWorker {
     this.permissions = new Map();
     this.active = null;
     this.stopping = false;
+    this.capabilities = capabilities;
+    this.screenshots = new DesktopScreenshots({ api, capture, getActive: () => this.active });
     acp.on('update', (params) => this.onUpdate(params));
     acp.on('permission', (request) => this.onPermission(request));
   }
@@ -191,7 +199,10 @@ export class MkoroWorker {
           'Mkoro reached its progress event limit and stopped Goose. Some work may already have completed; inspect local results before retrying.',
       };
     }
-    if (terminalTaskEvents.has(type)) this.terminalTasks.add(taskId);
+    if (terminalTaskEvents.has(type)) {
+      this.terminalTasks.add(taskId);
+      if (this.active?.taskId === taskId) this.screenshots.stop();
+    }
     this.sequences.set(taskId, seq + 1);
     this.outbox.push({ id: randomUUID(), taskId, seq, type, payload });
     if (exhausted) {
@@ -211,11 +222,17 @@ export class MkoroWorker {
 
   async tick() {
     // Keep polls alive even with buffered progress, so a waiting tool can receive its decision.
-    const result = await this.api.post('poll', {});
-    if (!Array.isArray(result?.commands))
-      throw new Error('Inscope returned invalid worker commands.');
-    for (const command of result.commands) this.handle(command);
-    await this.flush();
+    try {
+      const result = await this.api.post('poll', { capabilities: this.capabilities });
+      if (!Array.isArray(result?.commands))
+        throw new Error('Inscope returned invalid worker commands.');
+      for (const command of result.commands) this.handle(command);
+      await this.flush();
+      this.screenshots.update(result.screenLease ?? null);
+    } catch (error) {
+      this.screenshots.stop();
+      throw error;
+    }
   }
 
   handle(command) {
@@ -230,13 +247,11 @@ export class MkoroWorker {
     this.handled.add(command.id);
     const payload = command.payload ?? {};
     if (command.type === 'message') {
-      if (
-        typeof payload.message !== 'string' ||
-        !payload.message.trim() ||
-        payload.message.length > 16_000 ||
-        !UUID.test(payload.conversationId)
-      ) {
-        this.emit(command.taskId, 'task_failed', { message: 'Invalid Mkoro message command.' });
+      let prompt;
+      try {
+        prompt = delegatedPrompt(payload, this.api.server);
+      } catch (error) {
+        this.emit(command.taskId, 'task_failed', { message: error.message });
         return;
       }
       if (this.active) {
@@ -253,7 +268,7 @@ export class MkoroWorker {
         tools: new Map(),
       };
       this.active = active;
-      this.turn = this.runMessage(active, payload);
+      this.turn = this.runMessage(active, { ...payload, prompt });
       // The turn handles failures itself; polling must remain available while it runs.
       this.turn.catch(() => {
         this.stopping = true;
@@ -307,7 +322,7 @@ export class MkoroWorker {
         'session/prompt',
         {
           sessionId: active.sessionId,
-          prompt: [{ type: 'text', text: payload.message }],
+          prompt: [{ type: 'text', text: payload.prompt }],
         },
         0,
       );
@@ -425,6 +440,7 @@ export class MkoroWorker {
   cancel() {
     if (!this.active) return;
     this.active.cancelled = true;
+    this.screenshots.stop();
     this.cancelPermissions(this.active.taskId);
     if (this.active.sessionId && !this.acp.closed)
       this.acp.notify('session/cancel', { sessionId: this.active.sessionId });
@@ -432,6 +448,7 @@ export class MkoroWorker {
 
   async stop() {
     this.stopping = true;
+    this.screenshots.stop();
     this.cancel();
     if (this.turn) {
       let timer;

@@ -44,21 +44,31 @@ export const mkoroPairings = pgTable('mkoro_pairings', {
   usedAt: time('used_at'),
   createdAt: time('created_at').notNull().defaultNow(),
 });
-export const mkoroConversations = pgTable('mkoro_conversations', {
-  id: text('id').primaryKey(),
-  workspaceId: text('workspace_id')
-    .notNull()
-    .references(() => workspaces.id),
-  actorId: text('actor_id')
-    .notNull()
-    .references(() => users.id),
-  workerId: text('worker_id')
-    .notNull()
-    .references(() => mkoroWorkers.id),
-  title: text('title').notNull(),
-  createdAt: time('created_at').notNull().defaultNow(),
-  updatedAt: time('updated_at').notNull().defaultNow(),
-});
+export const mkoroConversations = pgTable(
+  'mkoro_conversations',
+  {
+    id: text('id').primaryKey(),
+    workspaceId: text('workspace_id')
+      .notNull()
+      .references(() => workspaces.id),
+    actorId: text('actor_id')
+      .notNull()
+      .references(() => users.id),
+    workerId: text('worker_id')
+      .notNull()
+      .references(() => mkoroWorkers.id),
+    title: text('title').notNull(),
+    // Historical companion activity survives deletion of its Sina thread.
+    sinaThreadId: text('sina_thread_id'),
+    createdAt: time('created_at').notNull().defaultNow(),
+    updatedAt: time('updated_at').notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('mkoro_sina_thread_worker')
+      .on(t.workspaceId, t.actorId, t.sinaThreadId, t.workerId)
+      .where(sql`${t.sinaThreadId} IS NOT NULL`),
+  ],
+);
 export const mkoroTasks = pgTable(
   'mkoro_tasks',
   {
@@ -71,6 +81,7 @@ export const mkoroTasks = pgTable(
       .references(() => mkoroWorkers.id),
     requestId: text('request_id').notNull(),
     message: text('message').notNull(),
+    delegation: jsonb('delegation').$type<Record<string, unknown>>(),
     status: text('status').notNull().default('queued'),
     error: text('error'),
     cancelRequested: boolean('cancel_requested').notNull().default(false),

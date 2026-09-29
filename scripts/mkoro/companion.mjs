@@ -9,6 +9,7 @@ import { Writable } from 'node:stream';
 import { setTimeout as delay } from 'node:timers/promises';
 import { AcpClient } from './acp-client.mjs';
 import { MkoroWorker, WorkerApi, serverOrigin } from './worker.mjs';
+import { companionCapabilities } from './delegation.mjs';
 
 export const HELP = `Mkoro local Goose companion
 
@@ -237,7 +238,7 @@ export async function main(args = process.argv.slice(2)) {
       const result = await api.post('pair', {
         pairingToken,
         name: options.name,
-        capabilities: ['goose-acp', 'manual-approval', 'text-chat', 'tool-progress'],
+        capabilities: companionCapabilities(),
       });
       if (typeof result?.token !== 'string' || !result.token || typeof result.workerId !== 'string')
         throw new Error('Inscope returned invalid pairing credentials.');
@@ -266,9 +267,15 @@ export async function main(args = process.argv.slice(2)) {
     acp.on('disconnect', () => {
       shutdown.abort();
     });
-    console.log('Mkoro is connected. Open its chat in Inscope; keep this terminal running.');
+    console.log(
+      'Mkoro is connected. Ask Sina to delegate a computer task; keep this terminal running.',
+    );
     console.log(`Working folder: ${options.workspace}`);
     console.log('Goose manual approval is required for every turn. Review requests in Inscope.');
+    if (process.platform === 'win32')
+      console.log(
+        'Desktop screenshots are captured only while the task viewer is open in Inscope.',
+      );
     const interval = Math.min(5000, Math.max(500, Number(state.pollIntervalMs) || 1500));
     let lastContact = Date.now();
     let warned = false;

@@ -110,6 +110,8 @@ export const authorizeOperation: RequestHandler = (req, res, next) => {
   const path = req.path.toLowerCase().replace(/\/+$/, '');
   const execute =
     (path.startsWith('/mkoro/') && !['GET', 'HEAD'].includes(req.method)) ||
+    // A live desktop preview retains the same execute authority as capture control.
+    /^\/mkoro\/tasks\/[^/]+\/screen$/.test(path) ||
     (req.method === 'POST' && /^\/workflow-runs(?:\/[^/]+\/(?:cancel|retry))?$/.test(path)) ||
     /^\/(copilotkit|agent-lab|agent-actions|genui|http-source|fx-rate|param-options|assistant\/tools)(?:\/|$)/.test(
       path,

@@ -1,13 +1,15 @@
+import { openDocumentCalculationFixture } from './retired-workflow-fixtures';
+import type { Page } from '@playwright/test';
 import { test, expect } from './workflow-audit-isolation';
 
 test('isolated execution runs only the selected block, supports constants and leaves the workflow untouched', async ({ page }) => {
   await page.goto('/');
   const result = await page.evaluate(async () => {
-    const { templateDefinition } = await import('/src/features/workflows-hub/saved-workflow-run.tsx');
+    const { DOCUMENT_CALCULATOR_CONFIG } = await import('/src/shared/workflow-engine/runtime/workflow-runs/document-calculator.ts');
     const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/workflow/canvas.ts');
     const { runLocalWorkflowTools } = await import('/src/shared/workflow-engine/local-tool-runner.ts');
     const { exampleInput } = await import('/src/shared/workflow-engine/block-test-inputs.ts');
-    const definition = templateDefinition('pf-document-calculator')!;
+    const definition = DOCUMENT_CALCULATOR_CONFIG.buildSnapshot();
     const block = definition.blocks.find(b => b.label === 'Calculate')!;
     const canvas = workflowDefinitionToCanvas(definition);
     const before = JSON.stringify(canvas);
@@ -34,11 +36,11 @@ test('isolated execution runs only the selected block, supports constants and le
 test('individual keyword, aggregate, compute and output blocks pass real data between recorded tests', async ({ page }) => {
   await page.goto('/');
   const result = await page.evaluate(async () => {
-    const { templateDefinition } = await import('/src/features/workflows-hub/saved-workflow-run.tsx');
+    const { DOCUMENT_CALCULATOR_CONFIG } = await import('/src/shared/workflow-engine/runtime/workflow-runs/document-calculator.ts');
     const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/workflow/canvas.ts');
     const { runLocalWorkflowTools } = await import('/src/shared/workflow-engine/local-tool-runner.ts');
     const { exampleInput, recordedBlockInput } = await import('/src/shared/workflow-engine/block-test-inputs.ts');
-    const definition = templateDefinition('pf-document-calculator')!;
+    const definition = DOCUMENT_CALCULATOR_CONFIG.buildSnapshot();
     const canvas = workflowDefinitionToCanvas(definition);
     const records = [];
     const run = (label: string, inputs: any[], mode = 'recorded') => {
@@ -73,6 +75,7 @@ test('individual keyword, aggregate, compute and output blocks pass real data be
 test('source and rulebook tests execute themselves and report missing documents', async ({ page }) => {
   await page.goto('/');
   const result = await page.evaluate(async () => {
+    const { DOCUMENT_CALCULATOR_CONFIG } = await import('/src/shared/workflow-engine/runtime/workflow-runs/document-calculator.ts');
     const { templateDefinition } = await import('/src/features/workflows-hub/saved-workflow-run.tsx');
     const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/workflow/canvas.ts');
     const { runLocalWorkflowTools } = await import('/src/shared/workflow-engine/local-tool-runner.ts');
@@ -81,7 +84,7 @@ test('source and rulebook tests execute themselves and report missing documents'
     const rulebook = createWorkflowBlockFromCatalog('source:keyword-rules', { id: 'test-rulebook', label: 'Keyword Rulebook', position: { x: 0, y: 0 }, config: { keywordRules: [{ ruleId: 'items', categoryId: 'items', keyword: 'Item', matchType: 'contains', enabled: true }] } });
     definition.blocks.push(rulebook);
     const run = runLocalWorkflowTools({ ...workflowDefinitionToCanvas(definition), workflowName: definition.name, mode: 'isolated', selectedBlockId: rulebook.id });
-    const neutral = templateDefinition('pf-document-calculator')!;
+    const neutral = DOCUMENT_CALCULATOR_CONFIG.buildSnapshot();
     const document = neutral.blocks.find(b => b.label === 'Document')!;
     const missing = runLocalWorkflowTools({ ...workflowDefinitionToCanvas(neutral), workflowName: neutral.name, mode: 'isolated', selectedBlockId: document.id });
     return { id: rulebook.id, result: run.result, missing: missing.result };
@@ -93,8 +96,16 @@ test('source and rulebook tests execute themselves and report missing documents'
   expect(result.missing.errors.join(' ')).toMatch(/upload|document/i);
 });
 
-async function openTest(page, label: string) {
-  await page.goto('/w/pf-document-calculator');
+const documentFixturePages = new WeakSet<Page>();
+
+async function openTest(page: Page, label: string) {
+  if (documentFixturePages.has(page)) {
+    await page.goto('/w/pf-fapi');
+    await page.getByRole('button', { name: 'Document calculation fixture — Imported', exact: true }).click();
+  } else {
+    await openDocumentCalculationFixture(page);
+    documentFixturePages.add(page);
+  }
   await page.getByRole('button', { name: 'Build', exact: true }).click();
   await page.getByRole('button', { name: label, exact: true }).click();
   await page.getByRole('button', { name: 'Test block', exact: true }).click();
@@ -215,13 +226,13 @@ test('large example imports paginate editable records and process every row', as
 test('isolated calculation combines an aggregate snapshot with a source-qualified API field and literal numbers', async ({ page }) => {
   await page.goto('/');
   const result = await page.evaluate(async () => {
-    const { templateDefinition } = await import('/src/features/workflows-hub/saved-workflow-run.tsx');
+    const { DOCUMENT_CALCULATOR_CONFIG } = await import('/src/shared/workflow-engine/runtime/workflow-runs/document-calculator.ts');
     const { createWorkflowBlockFromCatalog } = await import('/src/shared/workflow-engine/workflow/block-factory.ts');
     const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/workflow/canvas.ts');
     const { runLocalWorkflowTools } = await import('/src/shared/workflow-engine/local-tool-runner.ts');
     const { exampleInput } = await import('/src/shared/workflow-engine/block-test-inputs.ts');
     const { calculationValueKey } = await import('/src/shared/workflow-engine/calculation-values.ts');
-    const d = templateDefinition('pf-document-calculator')!;
+    const d = DOCUMENT_CALCULATOR_CONFIG.buildSnapshot();
     const compute = d.blocks.find(b => b.label === 'Calculate')!;
     const api = createWorkflowBlockFromCatalog('source:api-http-request', { id: 'api-rate', label: 'Exchange rate API', position: { x: 0, y: 0 } });
     const apiInput = exampleInput({ rawRows: [{ rate: 2.5 }] });

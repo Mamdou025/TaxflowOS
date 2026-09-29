@@ -5,7 +5,7 @@ import {
   createWorkflow,
   executeSavedWorkflow,
 } from '../../lib/workflow-core/src/application/commands';
-import { getWorkflowConfig } from '../../artifacts/ai-workflow-builder/src/shared/workflow-engine/runtime/workflow-runs';
+import { resolveLegacyTemplate } from '../fixtures/legacy-template-runtime';
 import { executeWorkflowDefinition } from '../../artifacts/ai-workflow-builder/src/shared/workflow-engine/workflow/execute';
 import { executeSavedWorkflow as builderExecute } from '../../artifacts/ai-workflow-builder/src/features/workflows-hub/services/workflow-commands';
 import { validateWorkflowLibrary } from '../../lib/workflow-contracts/src/library';
@@ -18,7 +18,7 @@ test('Chat and builder adapters obey the same version, calculation and recorded-
     },
     undefined,
     {
-      resolveTemplate: getWorkflowConfig,
+      resolveTemplate: resolveLegacyTemplate,
       execute: executeWorkflowDefinition,
       createWorkflowId: () => 'custom:chat-contract',
       context: {
@@ -73,7 +73,7 @@ test('the shared Chat command validates input before requesting an execution or 
   let executions = 0,
     identities = 0;
   const runtime = {
-    resolveTemplate: getWorkflowConfig,
+    resolveTemplate: resolveLegacyTemplate,
     execute: () => {
       executions++;
       throw new Error('Unexpected execution');

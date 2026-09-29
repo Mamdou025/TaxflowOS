@@ -8,9 +8,13 @@ import {
   unsupportedDurableToolIds,
 } from '../../artifacts/api-server/src/lib/workflow-runs/executor';
 import { LOCAL_TOOL_REGISTRY } from '../../lib/workflow-executors/src/tools/registry';
+import {
+  executeLegacyTemplateCommand,
+  resolveLegacyTemplate,
+} from '../fixtures/legacy-template-runtime';
 
 test('every registered browser tool is admitted by the server executor', () => {
-  const command = executeWorkflowCommand({ workflowId: 'document-calculator', useSample: true });
+  const command = executeWorkflowCommand({ workflowId: 'fapi', useSample: true });
   assert.ok(command.core);
   for (const [toolId, tool] of Object.entries(LOCAL_TOOL_REGISTRY)) {
     const definition: WorkflowDefinition = structuredClone(command.core.definition);
@@ -20,10 +24,18 @@ test('every registered browser tool is admitted by the server executor', () => {
   }
 });
 
-test('all executable template snapshots retain outputs, errors and provenance on the server', (t) => {
+test('current and retired template snapshots retain outputs, errors and provenance on the server', (t) => {
   t.mock.timers.enable({ apis: ['Date'], now: new Date('2026-09-15T12:00:00Z') });
-  for (const config of Object.values(WORKFLOW_CONFIGS)) {
-    const command = executeWorkflowCommand({ workflowId: config.id, useSample: true });
+  const historicalConfigs = ['document-calculator', 'expense'].map((id) => {
+    const config = resolveLegacyTemplate(id);
+    assert.ok(config, `Historical fixture ${id} must remain available.`);
+    return config;
+  });
+  for (const config of [...Object.values(WORKFLOW_CONFIGS), ...historicalConfigs]) {
+    const execute = historicalConfigs.includes(config)
+      ? executeLegacyTemplateCommand
+      : executeWorkflowCommand;
+    const command = execute({ workflowId: config.id, useSample: true });
     assert.ok(command.core, config.id);
     const durable = executeDurableWorkflow(
       command.core.definition,

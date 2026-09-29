@@ -4,7 +4,7 @@ import {
   WORKPAPER_SPECS,
   executeWorkpaper,
 } from '../../artifacts/ai-workflow-builder/src/shared/workflow-engine/portfolio-workpapers';
-import { executeWorkflowCommand } from '../../artifacts/ai-workflow-builder/src/features/assistant/runtime/workflow-command';
+import { executeLegacyTemplateCommand as executeWorkflowCommand } from '../fixtures/legacy-template-runtime';
 
 function sample(id: string) {
   return structuredClone(WORKPAPER_SPECS.find((spec) => spec.id === id)!.sample);

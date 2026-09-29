@@ -1,4 +1,5 @@
 import { test, expect } from './workflow-audit-isolation';
+import { openDocumentCalculationFixture } from './retired-workflow-fixtures';
 
 test.beforeEach(async ({ page, baseURL }) => {
   await page.route(`${baseURL}/`, (route) =>
@@ -14,7 +15,7 @@ test('all advertised workflows execute from chat data and export actual results'
   page,
 }) => {
   const findings = await page.evaluate(async () => {
-    const { WORKFLOW_CONFIGS, runTemplateCore } =
+    const { WORKFLOW_CONFIGS } =
       await import('/src/shared/workflow-engine/runtime/workflow-runs/index.ts');
     const { executeWorkflowCommand } =
       await import('/src/features/assistant/runtime/workflow-command.ts');
@@ -43,20 +44,12 @@ test('all advertised workflows execute from chat data and export actual results'
           rows: core.detail.workpaperRows,
           target: resolveWorkflowTarget(`Run ${config.name}`).id,
           required: executeWorkflowCommand({ workflowId: config.id }).required,
-          alteredExpense:
-            config.id === 'expense'
-              ? runTemplateCore(config, {
-                  rows: config.sampleRows,
-                  overrides: [],
-                  inputs: { mealCap: 100 },
-                }).summaryValues.NET_PAYABLE
-              : undefined,
         };
       }),
     };
   });
   console.log(JSON.stringify(findings.runs.map(({ rows, exportData, ...r }) => r)));
-  expect(findings.runs).toHaveLength(17);
+  expect(findings.runs).toHaveLength(15);
   for (const run of findings.runs) {
     expect(run.errors, run.id).toEqual([]);
     expect(run.status, run.id).not.toBe('error');
@@ -65,10 +58,7 @@ test('all advertised workflows execute from chat data and export actual results'
     for (const count of run.exportRows) expect(count, run.id).toBeGreaterThan(0);
     if (run.rows) for (const exported of run.exportData) expect(exported, run.id).toEqual(run.rows);
   }
-  expect(findings.runs.find((r) => r.id === 'document-calculator')!.summary.RESULT).toBe(400);
   expect(findings.runs.find((r) => r.id === 'fapi')!.summary.NET_FAPI).toBe(24600);
-  expect(findings.runs.find((r) => r.id === 'expense')!.summary.NET_PAYABLE).toBe(2325);
-  expect(findings.runs.find((r) => r.id === 'expense')!.alteredExpense).toBe(2175);
   for (const id of findings.catalog)
     expect(findings.runs.some((r) => `pf-${r.id}` === id)).toBe(true);
 });
@@ -81,10 +71,12 @@ test('invalid graphs and input records cannot claim completion or substitute sam
       await import('/src/shared/workflow-engine/runtime/workflow-runs/index.ts');
     const { executeWorkflowCommand } =
       await import('/src/features/assistant/runtime/workflow-command.ts');
+    const { DOCUMENT_CALCULATOR_CONFIG } =
+      await import('/src/shared/workflow-engine/runtime/workflow-runs/document-calculator.ts');
     const bad = {
-      ...WORKFLOW_CONFIGS['document-calculator'],
+      ...DOCUMENT_CALCULATOR_CONFIG,
       buildSnapshot: () => {
-        const snapshot = WORKFLOW_CONFIGS['document-calculator'].buildSnapshot();
+        const snapshot = DOCUMENT_CALCULATOR_CONFIG.buildSnapshot();
         snapshot.blocks.find((b) => b.id === 'pf-document-calculator--calculate')!.config.formulas =
           [];
         return snapshot;
@@ -113,6 +105,8 @@ test('invalid graphs and input records cannot claim completion or substitute sam
       { workflowId: 'campaign', useSample: true },
       { workflowId: 'roulement', useSample: true },
       { workflowId: 'holiday-payroll', useSample: true },
+      { workflowId: 'document-calculator', useSample: true },
+      { workflowId: 'expense', useSample: true },
     ]) {
       try {
         executeWorkflowCommand(args);
@@ -141,7 +135,15 @@ test('invalid graphs and input records cannot claim completion or substitute sam
     expect(run.blocker?.kind).toBe('error');
     expect(run.headline).toBeUndefined();
   }
-  expect(checks.rejected).toHaveLength(5);
+  expect(checks.rejected).toEqual([
+    'fapi',
+    'fapi',
+    'campaign',
+    'roulement',
+    'holiday-payroll',
+    'document-calculator',
+    'expense',
+  ]);
   expect(checks.mappedAmounts).toEqual([1, 1]);
   expect(checks.blankDefault).toBeUndefined();
 });
@@ -267,13 +269,13 @@ test('editing calculation inputs invalidates prior approval and sample previews 
     const { WORKFLOW_CONFIGS, runToCompletion } =
       await import('/src/shared/workflow-engine/runtime/workflow-runs/index.ts');
     const store = createStore();
-    store.set(runFlowAtom, { expense: { uploaded: true, approved: true, elected: null } });
-    store.set(setRunInputAtom, { id: 'expense', key: 'mealCap', value: 100 });
+    store.set(runFlowAtom, { fapi: { uploaded: true, approved: true, elected: null } });
+    store.set(setRunInputAtom, { id: 'fapi', key: 'fxRate', value: 1.4 });
     const { resolveWorkflowTarget } =
       await import('/src/features/assistant/runtime/routing/workflow-targets.ts');
     return {
-      approved: store.get(runFlowAtom).expense.approved,
-      preview: runToCompletion(WORKFLOW_CONFIGS['document-calculator']),
+      approved: store.get(runFlowAtom).fapi.approved,
+      preview: runToCompletion(WORKFLOW_CONFIGS.fapi),
       target: resolveWorkflowTarget('Run FAPI with records: [{"label":"expense","amount":5}]').id,
       ambiguous: resolveWorkflowTarget('Run FAPI and the rollover').ambiguous,
     };
@@ -283,6 +285,106 @@ test('editing calculation inputs invalidates prior approval and sample previews 
   expect(state.preview.blocker?.kind).toBe('approval');
   expect(state.target).toBe('fapi');
   expect(state.ambiguous).toBe(true);
+});
+
+test('workflow menus exclude retired demos and a blank builder loads the executable FAPI template', async ({
+  page,
+  baseURL,
+}) => {
+  await page.unroute(`${baseURL}/`);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Workflows', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'New workflow', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('button', {
+      name: /Document Calculator|Employee Expense Reimbursement|Holiday Payroll|Roulement fiscal/,
+    }),
+  ).toHaveCount(0);
+  await expect(page.getByText('Runnable demos', { exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'New workflow', exact: true }).click();
+  await expect(page.locator('.react-flow')).toBeVisible({ timeout: 30000 });
+  // Blank workflows contain a Start trigger and no source, calculation or output blocks.
+  await expect(page.locator('.react-flow__node')).toHaveCount(1);
+  await expect(page.locator('.react-flow__node')).toHaveAttribute('data-id', 'new-workflow--start');
+  await expect(page.locator('.react-flow__edge')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Reset.*Sample/ })).toHaveCount(0);
+  // The embedded builder uses the workspace catalogue, not the standalone File menu.
+  await page.getByRole('button', { name: 'FAPI Calculation (portfolio)', exact: true }).click();
+  await page.getByRole('button', { name: 'Build', exact: true }).click();
+  await expect(
+    page.locator('.react-flow__node[data-id="fapi-source-trial-balance"]'),
+  ).toBeAttached();
+  const expectedIds = await page.evaluate(async () => {
+    const { FAPI_CONFIG } =
+      await import('/src/shared/workflow-engine/runtime/workflow-runs/fapi.ts');
+    return FAPI_CONFIG.buildSnapshot()
+      .blocks.map((block) => block.id)
+      .sort();
+  });
+  await expect
+    .poll(() =>
+      page
+        .locator('.react-flow__node')
+        .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-id')).sort()),
+    )
+    .toEqual(expectedIds);
+  await expect(page.locator('.react-flow__node[data-id="fapi-logic-lines-engine"]')).toBeAttached();
+  await expect(
+    page.locator('.react-flow__node[data-id="fapi-logic-summary-engine"]'),
+  ).toBeAttached();
+});
+
+test('an imported retired-template workflow still saves and reruns its exact version', async ({
+  page,
+  baseURL,
+}) => {
+  await page.unroute(`${baseURL}/`);
+  await openDocumentCalculationFixture(page);
+  await page.getByRole('button', { name: 'Run', exact: true }).first().click();
+  await page.getByText('Test data — upload document or enter examples', { exact: true }).click();
+  await page.getByLabel('Upload test document').setInputFiles({
+    name: 'retained-calculation.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(
+      JSON.stringify([
+        { label: 'Item one', amount: 120 },
+        { label: 'Item two', amount: 80 },
+      ]),
+    ),
+  });
+  await page.getByRole('button', { name: 'Use this test data', exact: true }).click();
+  await page.getByRole('button', { name: 'Save changes and preview', exact: true }).click();
+  const read = () =>
+    page.evaluate(async () => {
+      const { readWorkflowLibrary } =
+        await import('/src/features/workflows-hub/workflow-library.ts');
+      return Object.values(readWorkflowLibrary()).find(
+        (entry) => entry.templateId === 'pf-document-calculator',
+      )!;
+    });
+  await expect.poll(async () => (await read())?.runs.length).toBe(1);
+  const before = await read();
+  const result = (entry: typeof before) =>
+    entry.runs
+      .at(-1)!
+      .result.result.results.find((block) => block.blockId === 'pf-document-calculator--calculate')!
+      .output.calculatedResults.RESULT;
+  expect(result(before)).toBe(400);
+  await page.reload();
+  await page.getByRole('button', { name: 'Workflows', exact: true }).click();
+  await page.getByRole('button', { name: before.draft.name, exact: true }).click();
+  await page.getByRole('button', { name: 'Run', exact: true }).first().click();
+  await page
+    .getByRole('button', { name: 'Preview saved version 1 in this browser', exact: true })
+    .click();
+  await expect.poll(async () => (await read())?.runs.length).toBe(2);
+  const after = await read();
+  expect(after.versions).toEqual(before.versions);
+  expect(after.runs[1].version).toBe(1);
+  expect(result(after)).toBe(400);
+  await expect(page.getByRole('button', { name: 'Document Calculator', exact: true })).toHaveCount(
+    0,
+  );
 });
 
 test('workpaper upload, run, business results and saved rerun agree in the app', async ({
@@ -325,7 +427,9 @@ test('workpaper upload, run, business results and saved rerun agree in the app',
   await page.getByRole('button', { name: 'Workflows', exact: true }).click();
   await page.getByRole('button', { name: before.draft.name, exact: true }).click();
   await page.getByRole('button', { name: 'Run', exact: true }).first().click();
-  await page.getByRole('button', { name: 'Preview saved version 1 in this browser', exact: true }).click();
+  await page
+    .getByRole('button', { name: 'Preview saved version 1 in this browser', exact: true })
+    .click();
   await expect(results.getByRole('cell', { name: '40', exact: true })).toBeVisible();
   await results.scrollIntoViewIfNeeded();
   await page.screenshot({

@@ -87,13 +87,14 @@ try {
   const draft = page.locator('.lc-console').getByRole('textbox');
   await draft.fill('Preserve this draft across deferred pages');
   await measure(
-    'mkoro-first-open',
-    () => page.getByRole('tab', { name: 'Mkoro', exact: true }).click(),
-    page.getByRole('heading', { name: 'Work with Mkoro here' }),
+    'computer-settings-first-open',
+    () => page.getByRole('button', { name: 'Mkoro computer settings' }).click(),
+    page.getByRole('dialog'),
   );
-  await expect(page.getByRole('button', { name: 'Send to Mkoro' })).toBeDisabled();
-  await page.getByRole('textbox', { name: 'Message Mkoro' }).fill('Keep my Mkoro draft');
-  await page.getByRole('tab', { name: 'Sina', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Connect a computer', exact: true })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Message Mkoro' })).toHaveCount(0);
+  await expect(page.getByRole('tab', { name: 'Mkoro', exact: true })).toHaveCount(0);
+  await page.getByRole('dialog').getByRole('button', { name: 'Close', exact: true }).click();
   await expect(draft).toHaveValue('Preserve this draft across deferred pages');
   await page.getByRole('button', { name: 'Chat agent: Sina' }).click();
   await measure(
@@ -143,7 +144,7 @@ try {
     page.getByText('Models — pick one per column', { exact: true }),
   );
   await page.getByRole('button', { name: 'Workflows', exact: true }).first().click();
-  await page.getByRole('button', { name: 'Document Calculator', exact: true }).click();
+  await page.getByRole('button', { name: 'FAPI Calculation (portfolio)', exact: true }).click();
   await page.getByRole('button', { name: 'Results', exact: true }).click();
   await expect(page.getByText('No results yet.', { exact: false })).toBeVisible();
   await expect(draft).toHaveValue('Preserve this draft across deferred pages');

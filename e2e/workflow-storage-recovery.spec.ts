@@ -1,3 +1,4 @@
+import { openDocumentCalculationFixture } from './retired-workflow-fixtures';
 import { test, expect } from './authenticated-fixture';
 import { readFileSync } from 'node:fs';
 
@@ -21,7 +22,7 @@ test('a workflow and its result recover in another browser; backups, offline ret
     { userId: workspaceSession.userId, workspace: workspaceSession.workspace },
   );
   try {
-    await page.goto('/w/pf-document-calculator');
+    await openDocumentCalculationFixture(page);
     await page.getByRole('button', { name: 'Build', exact: true }).click();
     await page.getByText('Test data — upload document or enter examples', { exact: true }).click();
     await page
@@ -47,7 +48,7 @@ test('a workflow and its result recover in another browser; backups, offline ret
     await download.saveAs(backup);
 
     const second = await secondContext.newPage();
-    await second.goto('/w/pf-document-calculator');
+    await second.goto('/w/pf-fapi');
     await second.getByRole('button', { name: 'Recovery rehearsal', exact: true }).click();
     await second.getByRole('button', { name: 'Run', exact: true }).first().click();
     await expect(second.getByRole('region', { name: 'Final workflow results' })).toContainText(

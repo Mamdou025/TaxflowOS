@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { prepareWorkflowRunInput } from '../../artifacts/ai-workflow-builder/src/features/assistant/runtime/workflow-run-input';
 import { executeWorkflowCommand } from '../../lib/workflow-core/src/application/template-command';
-import { getWorkflowConfig } from '../../artifacts/ai-workflow-builder/src/shared/workflow-engine/runtime/workflow-runs';
+import { resolveLegacyTemplate } from '../fixtures/legacy-template-runtime';
 import { executeWorkflowDefinition } from '../../artifacts/ai-workflow-builder/src/shared/workflow-engine/workflow/execute';
 
 const source = () => ({
@@ -14,7 +14,7 @@ const source = () => ({
   ],
 });
 const runtime = {
-  resolveTemplate: getWorkflowConfig,
+  resolveTemplate: resolveLegacyTemplate,
   execute: executeWorkflowDefinition,
   createWorkflowId: () => 'test-source-run',
 };

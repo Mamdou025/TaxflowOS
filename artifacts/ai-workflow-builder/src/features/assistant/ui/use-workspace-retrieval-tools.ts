@@ -46,10 +46,11 @@ export function useWorkspaceRetrievalTools() {
     if (worksheet) {
       const query = worksheet.toLowerCase();
       config =
-        WORKFLOW_CONFIGS[worksheet] ??
+        WORKFLOW_CONFIGS[worksheet.replace(/^pf-/, '')] ??
         Object.values(WORKFLOW_CONFIGS).find((item) => item.name.toLowerCase().includes(query)) ??
         null;
     }
+    if (worksheet && !config) return null;
     if (!config) {
       const withData = Object.values(WORKFLOW_CONFIGS).filter(hasData);
       config =

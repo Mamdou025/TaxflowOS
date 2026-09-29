@@ -41,15 +41,29 @@ commands, source revisions, checkpoint behavior and runtime boundaries.
 
 ## Ownership
 
-Chat also offers a personal Mkoro computer assistant alongside Sina. The
-`features/assistant/mkoro` adapter presents its conversations and tool activity;
-`/api/mkoro` owns authenticated pairing, commands and history, while
-`/api/mkoro-worker` accepts bearer-authenticated outbound companion polling.
-`scripts/mkoro` runs Goose through ACP on the connected computer. These records
-are scoped to both the session actor and workspace; sharing a workspace does not
-grant control of another member's computer. Mkoro does not duplicate workflow
-definitions, calculations or approval rules. See [the Mkoro connection](mkoro-connection.md)
-for ownership, transport, recovery and current limitations.
+Chat is led by Sina. `features/assistant/runtime/computer-delegation` and its UI
+adapter expose one structured computer delegation tool; Sina retains platform
+workflow commands, sources, retrieval and web search. `features/assistant/mkoro`
+renders bound task progress, decisions, connection settings and optional desktop
+previews inside that conversation. There is no second agent composer.
+
+`/api/mkoro/delegations` binds the task to a saved workspace chat, session actor
+and personal worker, checks its capability/heartbeat and deduplicates retries.
+Migration `0007_mkoro_sina_delegation.sql` adds the nullable binding and structured
+task data; old records remain readable. Legacy direct-message writes return 410.
+Worker tokens only authorize `/api/mkoro-worker`; no platform session or tool
+credentials are sent to Goose. Typed categories and platform-target validation
+constrain admission, while prompts define the handoff. They are not a sandbox for
+the companion's generic browser/shell tools.
+
+The companion polls outbound and runs Goose through ACP. A separately authorized
+10-second screen-view lease enables Windows capture for an active task. Bounded
+JPEGs are held only in API process memory, expire, and are served with no-store
+headers. No frames enter events, chat storage or model context. This transport
+currently requires one API process or sticky routing; scaling requires a shared
+ephemeral lease/frame service. Both tasks and previews retain actor/workspace
+isolation. See [the Mkoro connection](mkoro-connection.md) for setup, recovery and
+the file-transfer and live-verification limits.
 
 Phase 4 adds a portable workflow core and application layer. The full boundary,
 compatibility adapters and remaining limits are in [the Phase 4 record](phase-4-workflows.md).
@@ -96,6 +110,13 @@ referenced by active source and browser tests. Resolving a block's tool ID remai
 independent of looking up an executor.
 
 ## Extending workflows
+
+The available built-in templates are registered in
+`src/shared/workflow-engine/runtime/workflow-runs/index.ts`. Its runnable snapshot
+resolver supplies the same executable graph to template consumers; portfolio
+metadata is not a substitute execution graph. Retired demo definitions remain
+internal fixtures and are excluded from new-work discovery. Saved personal
+definitions and immutable versions execute independently of catalog membership.
 
 1. Define the workflow's graph and source data requirements in its template module.
 2. Prefer an existing executor. Add definitions, schemas and runners under

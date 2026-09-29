@@ -1,23 +1,36 @@
 import { attachSessionWorkbook } from './workflow-session-fixtures';
 import { test, expect } from './workflow-audit-isolation';
+import { openDocumentCalculationFixture } from './retired-workflow-fixtures';
 
-test('Chat starts a real workflow and Build verifies exact paused evidence and source revisions', async ({
+test('Chat starts a catalog workflow and Build verifies exact imported evidence and source revisions', async ({
   page,
 }) => {
   await page.route('**/api/chat/threads**', (route) => route.fulfill({ json: { threads: [] } }));
   await page.goto('/');
   const composer = page.getByRole('textbox', { name: 'Ask Scope, or describe a task…' });
   await expect(composer).toBeEditable();
-  await composer.fill('Document Calculator');
+  await composer.fill('Calculate FAPI');
   await composer.press('ArrowDown');
   await composer.press('Enter');
   let panel = page.getByRole('region', { name: 'Workflow execution' }).last();
+  await expect(panel).toBeVisible();
+  await expect(panel).toContainText('Trial Balance');
+  // Keep the independently specified arithmetic fixture for the evidence checks;
+  // importing a saved graph does not make its retired template a catalog option.
+  await openDocumentCalculationFixture(page);
+  await page.getByRole('button', { name: 'Run', exact: true }).first().click();
+  await page.getByRole('button', { name: 'Start guided workflow', exact: true }).click();
+  panel = page.getByRole('region', { name: 'Workflow execution' }).last();
+  await panel.getByRole('button', { name: 'Continue in Chat' }).click();
+  panel = page.getByRole('region', { name: 'Workflow execution' }).last();
   await expect(panel).toBeVisible();
   const read = () =>
     page.evaluate(async () => {
       const { readWorkflowLibrary } =
         await import('/src/features/workflows-hub/workflow-library.ts');
-      const entry = Object.values(readWorkflowLibrary()).find((item) => item.sessions?.length)!;
+      const entry = Object.values(readWorkflowLibrary()).find(
+        (item) => item.templateId === 'pf-document-calculator' && item.sessions?.length,
+      )!;
       return { entry, session: entry.sessions!.at(-1)! };
     });
   await attachSessionWorkbook(page, panel, 'audit-original.xlsx', 200);

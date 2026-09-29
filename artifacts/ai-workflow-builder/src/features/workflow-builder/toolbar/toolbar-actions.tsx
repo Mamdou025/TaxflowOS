@@ -11,7 +11,6 @@ import {
   Play,
   Plus,
   Redo2,
-  RotateCcw,
   Save,
   Settings2,
   Trash2,
@@ -264,7 +263,6 @@ export function ToolbarActions({
         <SaveButton handleSave={actions.handleSave} state={state} />
         <DownloadButton actions={actions} state={state} />
         {state.isLocal && <ImportButton actions={actions} state={state} />}
-        {state.isLocal && <ResetSampleButton actions={actions} state={state} />}
       </ButtonGroup>
 
       {/* Save/Download - Desktop Horizontal */}
@@ -272,7 +270,6 @@ export function ToolbarActions({
         <SaveButton handleSave={actions.handleSave} state={state} />
         <DownloadButton actions={actions} state={state} />
         {state.isLocal && <ImportButton actions={actions} state={state} />}
-        {state.isLocal && <ResetSampleButton actions={actions} state={state} />}
       </ButtonGroup>
 
       {/* Visibility Toggle */}
@@ -410,27 +407,6 @@ function ImportButton({
         type="file"
       />
     </>
-  );
-}
-
-function ResetSampleButton({
-  state,
-  actions,
-}: {
-  state: ReturnType<typeof useWorkflowState>;
-  actions: ReturnType<typeof useWorkflowActions>;
-}) {
-  return (
-    <Button
-      className="border hover:bg-black/5 disabled:opacity-100 dark:hover:bg-white/5 disabled:[&>svg]:text-muted-foreground"
-      disabled={state.isGenerating}
-      onClick={actions.handleResetSample}
-      size="icon"
-      title="Reset sample workflow"
-      variant="secondary"
-    >
-      <RotateCcw className="size-4" />
-    </Button>
   );
 }
 

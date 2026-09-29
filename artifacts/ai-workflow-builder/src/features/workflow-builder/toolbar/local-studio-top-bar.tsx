@@ -397,36 +397,6 @@ export function LocalStudioTopBar({
                   New from template
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="w-60">
-                  <DropdownMenuLabel className="text-xs text-muted-foreground">
-                    Starter templates
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="flex flex-col items-start gap-0.5 py-2"
-                    onClick={() => {
-                      actions.handleLoadWorkingSourceDemo();
-                      updatePublishStatus('draft');
-                      setLatestPublishedVersion(null);
-                    }}
-                  >
-                    <span className="text-sm font-medium">FAPI Calculation</span>
-                    <span className="text-xs text-muted-foreground">
-                      Trial balance → classify → rollup → compute → display
-                    </span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="flex flex-col items-start gap-0.5 py-2"
-                    onClick={() => {
-                      actions.handleLoadRoullementFiscalTemplate();
-                      updatePublishStatus('draft');
-                      setLatestPublishedVersion(null);
-                    }}
-                  >
-                    <span className="text-sm font-medium">Roulement fiscal</span>
-                    <span className="text-xs text-muted-foreground">
-                      Biens → classification → PBR → élection art. 85 → T2057
-                    </span>
-                  </DropdownMenuItem>
                   {(
                     [
                       ['platform', 'Sinaxe portfolio · Platform services'],
@@ -654,53 +624,6 @@ export function LocalStudioTopBar({
             />
             Settings
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                className="neu-action px-1.5 text-(--neu-text) opacity-40 hover:opacity-80"
-                disabled={state.isGenerating}
-                size="sm"
-                title="Dev tools"
-                variant="ghost"
-              >
-                <ChevronDown className="size-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuLabel className="text-xs text-muted-foreground">
-                Dev tools
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => {
-                  actions.handleLoadSingleItemDemo();
-                  updatePublishStatus('draft');
-                  setLatestPublishedVersion(null);
-                }}
-              >
-                Load Z Demo
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  actions.handleLoadExpandedDemo();
-                  updatePublishStatus('draft');
-                  setLatestPublishedVersion(null);
-                }}
-              >
-                Load Expanded Demo
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => {
-                  actions.handleResetSample();
-                  updatePublishStatus('draft');
-                  setLatestPublishedVersion(null);
-                }}
-              >
-                Reset FAPI Sample
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
 
           <div className="mx-1 h-4 w-px shrink-0 bg-(--neu-text)/15" />
 

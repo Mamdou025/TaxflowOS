@@ -18,6 +18,7 @@ export const taskView = (row: Row) =>
     workerId: row.worker_id,
     requestId: row.request_id,
     message: row.message,
+    delegation: row.delegation ?? null,
     status: row.status,
     cancelRequested: row.cancel_requested,
     error: row.error ?? null,
@@ -39,24 +40,15 @@ export const eventView = (row: Row) =>
     cursor: Number(row.cursor),
     createdAt: iso(row.created_at),
   });
-const conversationView = (row: Row) =>
+export const conversationView = (row: Row) =>
   MkoroConversationSchema.parse({
     id: row.id,
     workerId: row.worker_id,
     title: row.title,
+    threadId: row.sina_thread_id ?? null,
     createdAt: iso(row.created_at),
     updatedAt: iso(row.updated_at),
   });
-export async function createConversation(scope: Scope, workerId: string, title = 'New Mkoro chat') {
-  const { rows } = await pool.query(
-    `INSERT INTO mkoro_conversations(id,workspace_id,actor_id,worker_id,title)
-     SELECT $1,workspace_id,actor_id,id,$2 FROM mkoro_workers
-     WHERE id=$3 AND actor_id=$4 AND workspace_id=$5 AND revoked_at IS NULL RETURNING *`,
-    [randomUUID(), title, workerId, scope.actorId, scope.workspaceId],
-  );
-  if (!rows[0]) throw new MkoroError(404, 'Companion not found.');
-  return conversationView(rows[0]);
-}
 export async function listConversations(scope: Scope) {
   const { rows } = await pool.query(
     'SELECT * FROM mkoro_conversations WHERE actor_id=$1 AND workspace_id=$2 ORDER BY updated_at DESC LIMIT 100',
@@ -114,79 +106,19 @@ export async function conversationDetail(scope: Scope, id: string, before?: numb
     pendingPermissions: await pendingPermissions(id),
   };
 }
-export async function taskEvents(scope: Scope, id: string, after: number) {
+export async function taskEvents(scope: Scope, id: string, after: number, latest = false) {
   const task = await getTask(scope, id);
   const { rows } = await pool.query(
-    'SELECT * FROM mkoro_events WHERE task_id=$1 AND cursor>$2 ORDER BY cursor LIMIT 200',
+    `SELECT * FROM mkoro_events WHERE task_id=$1 AND cursor>$2 ORDER BY cursor ${latest ? 'DESC' : 'ASC'} LIMIT 200`,
     [id, after],
   );
-  const events = rows.map(eventView);
+  const events = (latest ? rows.reverse() : rows).map(eventView);
   return {
     task,
     events,
     cursor: events.at(-1)?.cursor ?? after,
     pendingPermissions: await pendingPermissions(task.conversationId, id),
   };
-}
-export async function createMessage(
-  scope: Scope,
-  conversationId: string,
-  message: string,
-  requestId: string,
-) {
-  const id = await transaction(async (client) => {
-    const { rows } = await client.query(
-      `SELECT c.worker_id,w.revoked_at,w.last_seen_at FROM mkoro_conversations c JOIN mkoro_workers w ON w.id=c.worker_id
-       WHERE c.id=$1 AND c.actor_id=$2 AND c.workspace_id=$3 FOR UPDATE OF w`,
-      [conversationId, scope.actorId, scope.workspaceId],
-    );
-    const worker = rows[0];
-    if (!worker) throw new MkoroError(404, 'Conversation not found.');
-    const prior = await client.query(
-      'SELECT id,message FROM mkoro_tasks WHERE conversation_id=$1 AND request_id=$2',
-      [conversationId, requestId],
-    );
-    if (prior.rows[0]) {
-      if (prior.rows[0].message !== message)
-        throw new MkoroError(409, 'This request ID already identifies another message.');
-      return String(prior.rows[0].id);
-    }
-    if (
-      worker.revoked_at ||
-      !worker.last_seen_at ||
-      Date.now() - new Date(worker.last_seen_at).getTime() >= MKORO_OFFLINE_MS
-    )
-      throw new MkoroError(409, 'Companion is offline. Reconnect it before sending a message.');
-    const busy = await client.query(
-      'SELECT id FROM mkoro_tasks WHERE worker_id=$1 AND status=ANY($2::text[])',
-      [worker.worker_id, activeStatuses],
-    );
-    if (busy.rowCount)
-      throw new MkoroError(
-        409,
-        'This companion already has an active task. Finish or cancel it first.',
-      );
-    const taskId = randomUUID();
-    await client.query(
-      'INSERT INTO mkoro_tasks(id,conversation_id,worker_id,request_id,message) VALUES($1,$2,$3,$4,$5)',
-      [taskId, conversationId, worker.worker_id, requestId, message],
-    );
-    await client.query(
-      'INSERT INTO mkoro_commands(id,worker_id,task_id,type,payload) VALUES($1,$2,$3,$4,$5)',
-      [
-        randomUUID(),
-        worker.worker_id,
-        taskId,
-        'message',
-        JSON.stringify({ message, conversationId }),
-      ],
-    );
-    await client.query('UPDATE mkoro_conversations SET updated_at=now() WHERE id=$1', [
-      conversationId,
-    ]);
-    return taskId;
-  });
-  return getTask(scope, id);
 }
 export async function cancelTask(scope: Scope, id: string) {
   await transaction(async (client) => {

@@ -139,6 +139,17 @@ export function projectMessages(messages: AguiMessage[]): ProjectedMessage[] {
   return out;
 }
 
+/** Save only completed tool exchanges while a frontend action is still running. */
+export function projectCompleteMessages(messages: AguiMessage[]): ProjectedMessage[] {
+  const resultIds = new Set(
+    messages.filter((message) => message.role === "tool").map((message) => message.toolCallId)
+  );
+  const pending = messages.findIndex((message) =>
+    message.role === "assistant" && message.toolCalls?.some((call) => !call.id || !resultIds.has(call.id))
+  );
+  return projectMessages(pending < 0 ? messages : messages.slice(0, pending));
+}
+
 /**
  * Rebuild AG-UI message objects from stored rows (ordered by seq), ready to hand to
  * `useCopilotChatInternal().setMessages`. Tool renders re-attach by the tool `name`

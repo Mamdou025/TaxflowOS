@@ -31,7 +31,7 @@ signedInTest(
         { userId: user.id, workspace: { ...workspaceSession.workspace, role: 'viewer' } },
       );
       const viewer = await viewerContext.newPage();
-      await viewer.goto('/w/pf-document-calculator');
+      await viewer.goto('/w/pf-fapi');
       await expect(
         viewer.getByText('Workspace: Browser test workspace (viewer)', { exact: true }),
       ).toBeVisible();
@@ -86,7 +86,7 @@ test('account creation, workspace switching, sign-out and sign-in keep local lib
     data: { payload: backup, revision: 0 },
   });
   expect(saved.status(), await saved.text()).toBe(200);
-  await page.goto('/w/pf-document-calculator');
+  await page.goto('/w/pf-fapi');
   await expect(
     page.getByRole('button', { name: 'Synthetic archived draft', exact: true }),
   ).toBeVisible();
@@ -96,7 +96,7 @@ test('account creation, workspace switching, sign-out and sign-in keep local lib
   await expect(
     page.getByText('Workspace: Second private workspace (owner)', { exact: true }),
   ).toBeVisible();
-  await page.goto('/w/pf-document-calculator');
+  await page.goto('/w/pf-fapi');
   await expect(
     page.getByRole('button', { name: 'Synthetic archived draft', exact: true }),
   ).toHaveCount(0);
@@ -105,7 +105,7 @@ test('account creation, workspace switching, sign-out and sign-in keep local lib
   await expect(
     page.getByText('Workspace: First private workspace (owner)', { exact: true }),
   ).toBeVisible();
-  await page.goto('/w/pf-document-calculator');
+  await page.goto('/w/pf-fapi');
   await expect(
     page.getByRole('button', { name: 'Synthetic archived draft', exact: true }),
   ).toBeVisible();
@@ -129,7 +129,7 @@ test('account creation, workspace switching, sign-out and sign-in keep local lib
   await expect(
     page.getByText('Workspace: First private workspace (owner)', { exact: true }),
   ).toBeVisible();
-  await page.goto('/w/pf-document-calculator');
+  await page.goto('/w/pf-fapi');
   await expect(
     page.getByRole('button', { name: 'Synthetic archived draft', exact: true }),
   ).toBeVisible();
@@ -146,7 +146,7 @@ test('account creation, workspace switching, sign-out and sign-in keep local lib
   await expect(
     page.getByText('Workspace: Other account workspace (owner)', { exact: true }),
   ).toBeVisible();
-  await page.goto('/w/pf-document-calculator');
+  await page.goto('/w/pf-fapi');
   await expect(
     page.getByRole('button', { name: 'Synthetic archived draft', exact: true }),
   ).toHaveCount(0);

@@ -71,7 +71,12 @@ test('background access failures preserve Lab drafts and still enforce revoked a
     await expect(page.getByText('Choose a workspace', { exact: true })).toBeVisible();
     await expect(draft).toHaveCount(0);
     sessionStatus = 401;
-    await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+    // Revocation intentionally reloads the page to clear workspace-scoped stores.
+    // Wait for that navigation before checking the resulting signed-out screen.
+    await Promise.all([
+      page.waitForEvent('load'),
+      page.evaluate(() => window.dispatchEvent(new Event('focus'))),
+    ]);
     await expect(page.getByRole('button', { name: 'Try demo', exact: true })).toBeVisible();
   } finally {
     await context.close();
@@ -297,9 +302,9 @@ test('attaching workflow scope preserves the draft and does not execute it', asy
   await mockWorkspaceReads(page);
   await page.goto('/');
   const payload = await page.evaluate(async () => {
-    const { templateDefinition } =
-      await import('/src/features/workflows-hub/workflow-execution.ts');
-    const draft = templateDefinition('pf-document-calculator')!;
+    const { DOCUMENT_CALCULATOR_CONFIG } =
+      await import('/src/shared/workflow-engine/runtime/workflow-runs/document-calculator.ts');
+    const draft = DOCUMENT_CALCULATOR_CONFIG.buildSnapshot();
     return JSON.stringify({
       'custom:scope-workflow': {
         id: 'custom:scope-workflow',
@@ -354,4 +359,83 @@ test('direct Sources, Connections and workflow-history links use the Chat worksp
   await expect(page.getByRole('heading', { name: 'Workflow run history' })).toBeVisible({
     timeout: 30_000,
   });
+});
+
+test('worksheet compatibility links open canonical workflow controls without running examples', async ({
+  page,
+}) => {
+  await mockWorkspaceReads(page);
+  const executions: string[] = [];
+  const modelCalls: string[] = [];
+  const loadedModules: string[] = [];
+  page.on('request', (request) => {
+    if (request.method() === 'POST' && /workflow-runs|\/execute/.test(request.url()))
+      executions.push(request.url());
+    if (request.resourceType() === 'script') loadedModules.push(new URL(request.url()).pathname);
+  });
+  // Runtime discovery may occur on mount, but navigating a worksheet must never
+  // generate a model response. Intercept every request so no provider is called.
+  await page.route('**/api/copilotkit**', (route) => {
+    const request = route.request();
+    let metadataRequest = false;
+    try {
+      // CopilotKit also uses POST /api/copilotkit { method: 'info' } for discovery.
+      metadataRequest = request.postDataJSON()?.method === 'info';
+    } catch {
+      // A body outside that explicit discovery shape is still counted below.
+    }
+    if (
+      request.method() !== 'GET' &&
+      !new URL(request.url()).pathname.endsWith('/info') &&
+      !metadataRequest
+    )
+      modelCalls.push(request.url());
+    // Use the isolated tests' unavailable runtime response for discovery too;
+    // an empty successful agent list would unregister CopilotKit's default agent.
+    return route.fulfill({ status: 503, json: { error: 'Models are disabled in this test.' } });
+  });
+  await page.goto('/');
+  const draft = page.locator('.lc-console').getByRole('textbox');
+  await draft.fill('Keep this draft while opening workpapers');
+
+  for (const [command, template] of [
+    ['Open FAPI worksheet', 'FAPI Calculation (portfolio)'],
+    ['Open T1134 worksheet', 'T1134 Affiliate Reporting Workpaper'],
+    ['Open Surplus worksheet', 'Foreign Affiliate Surplus Continuity Workpaper'],
+  ]) {
+    await page.getByRole('button', { name: 'Add — search, workflows, worksheets' }).click();
+    await page.getByRole('button', { name: 'Worksheets Open a worksheet', exact: true }).click();
+    await page.getByRole('button', { name: command, exact: true }).click();
+
+    await expect(page.locator('.lc-tab[data-active="true"]')).toContainText('Workflows');
+    await expect(
+      page.locator('.cwp-page-in').getByText(template, { exact: true }).first(),
+    ).toBeVisible();
+    for (const label of ['Overview', 'Build', 'Run', 'Results'])
+      await expect(page.getByRole('button', { name: label, exact: true }).first()).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Workflow execution' })).toHaveCount(0);
+    await expect(page.getByText('sample trial balance', { exact: false })).toHaveCount(0);
+    await expect(draft).toHaveValue('Keep this draft while opening workpapers');
+
+    await page.getByRole('button', { name: 'Results', exact: true }).first().click();
+    await expect(
+      page.getByText(
+        'No results yet. Run the workflow to see what each block receives and produces.',
+      ),
+    ).toBeVisible();
+    // Check browser-owned execution too: absence of an HTTP execute request alone
+    // would not prove that a guided session or local calculation did not start.
+    expect(
+      await page.evaluate(async () => {
+        const { readWorkflowLibrary } =
+          await import('/src/features/workflows-hub/workflow-library.ts');
+        return Object.keys(readWorkflowLibrary());
+      }),
+    ).toEqual([]);
+  }
+  expect(executions).toEqual([]);
+  expect(modelCalls).toEqual([]);
+  expect(
+    loadedModules.some((url) => /fapi-worksheet|T1134Worksheet|SurplusWorksheet/.test(url)),
+  ).toBe(false);
 });

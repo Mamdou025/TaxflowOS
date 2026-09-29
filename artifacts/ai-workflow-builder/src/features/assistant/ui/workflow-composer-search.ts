@@ -25,7 +25,7 @@ export function searchWorkspace(q: string): SearchHit[] {
   for (const w of WORKFLOWS)
     if (`${w.name} ${w.sub}`.toLowerCase().includes(t))
       hits.push({ kind: 'workflow', id: w.id, label: w.name, sub: w.sub, ready: w.ready });
-  // Sinaxe portfolio blueprints — openable in the builder (not runnable).
+  // Available portfolio templates are openable in the builder and shared Run surface.
   for (const w of PORTFOLIO_WORKFLOWS)
     if (`${w.name} ${w.sub} ${w.group}`.toLowerCase().includes(t))
       hits.push({ kind: 'blueprint', id: w.id, label: w.name, sub: w.sub });

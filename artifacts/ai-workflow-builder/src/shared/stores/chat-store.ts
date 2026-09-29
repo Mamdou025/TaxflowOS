@@ -2,8 +2,7 @@ import { atom } from 'jotai';
 import { atomWithStorage } from '@/platform/auth/workspace-atoms';
 
 // The conversation itself is now owned by CopilotKit (see CopilotWorkspacePanel).
-// These two atoms are all that remains: the panel's open state and a small
-// page-context label that pages set (e.g. the OrbitalStage breadcrumb).
+// These atoms hold the saved thread identity and workspace display state.
 
 /**
  * The id of the conversation currently shown in the chat. Persisted to
@@ -14,7 +13,10 @@ import { atomWithStorage } from '@/platform/auth/workspace-atoms';
  */
 export const activeChatThreadIdAtom = atomWithStorage<string | null>(
   'inscope.chat.activeThreadId',
-  null
+  null,
+  // Restoration decides what to load on the first render. Read the account- and
+  // workspace-scoped ID immediately rather than hydrating it after that decision.
+  { getOnInit: true },
 );
 
 export type ChatPageContext = {

@@ -1,11 +1,12 @@
 import { attachSessionWorkbook } from './workflow-session-fixtures';
 import { test, expect } from './workflow-audit-isolation';
+import { openDocumentCalculationFixture } from './retired-workflow-fixtures';
 
 test('guided run shares exact progress with Chat and preserves source revisions on reload', async ({
   page,
 }) => {
   await page.route('**/api/chat/threads**', (route) => route.fulfill({ json: { threads: [] } }));
-  await page.goto('/w/pf-document-calculator');
+  await openDocumentCalculationFixture(page);
   await page.getByRole('button', { name: 'Run', exact: true }).first().click();
   await page.getByRole('button', { name: 'Start guided workflow', exact: true }).click();
   let panel = page.getByRole('region', { name: 'Workflow execution' });

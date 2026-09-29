@@ -58,7 +58,7 @@ function identifiers(expr: string): string[] {
 export type TemplateIntelState = { rows?: TemplateConfig['sampleRows']; inputs?: Record<string, number>; overrides?: Record<string, string>; live?: boolean };
 
 export function createTemplateIntel(config: TemplateConfig, state: TemplateIntelState = {}): WorksheetIntel {
-  const rows = state.rows?.length ? state.rows : config.sampleRows;
+  const rows = state.rows ?? [];
 
   // Editable-input defaults merged with live values — resolves operands that are
   // user inputs (fxRate, pCoefficient, jvm_total, taux_inclusion, …).
@@ -69,7 +69,7 @@ export function createTemplateIntel(config: TemplateConfig, state: TemplateIntel
   // Honor the shared category overrides (from runEditsAtom) so the assistant's
   // answers ABOUT the worksheet match what the sheet renders after a re-categorization.
   let core: CoreResult | null;
-  try { core = runTemplateCore(config, { rows, overrides: buildOverrideRules(config, rows, state.overrides ?? {}), inputs }); } catch { core = null; }
+  try { core = rows.length ? runTemplateCore(config, { rows, overrides: buildOverrideRules(config, rows, state.overrides ?? {}), inputs }) : null; } catch { core = null; }
 
   const rules: FormulaRule[] = [
     ...((config.linesRules as unknown as FormulaRule[]) ?? []),
@@ -152,7 +152,7 @@ export function createTemplateIntel(config: TemplateConfig, state: TemplateIntel
 
   // ── Interface implementation ───────────────────────────────────────────────
   function describe(): WorksheetSnapshot {
-    if (!core) return { id: config.id, title: config.name, status: 'error', message: `${config.name} could not be computed right now.` };
+    if (!core) return { id: config.id, title: config.name, status: 'error', message: rows.length ? `${config.name} could not be computed right now.` : `Supply source records for ${config.name} before requesting calculated values.` };
     const fx = core.summaryValues.FX_RATE;
     const lines = catalog
       .filter((e) => e.kind === 'line')
@@ -170,7 +170,7 @@ export function createTemplateIntel(config: TemplateConfig, state: TemplateIntel
       status: core.status === 'error' ? 'error' : core.status,
       currency: config.currency,
       fxRate: fx != null ? fmtRate(fx) : undefined,
-      source: { fileRows: rows.length, usingSample: !state.rows?.length },
+      source: { fileRows: rows.length, usingSample: false },
       lines,
       summary,
       classification: {

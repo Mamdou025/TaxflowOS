@@ -288,8 +288,8 @@ test('chat chooses a saved source without uploading and freezes its records for 
     store.set(uploadedRowsAtom, sources);
     const result = await requestAgentWorkflowRun(
       store,
-      { workflowId: 'document-calculator', sourceMode: 'uploaded', recordsJson: '[]' },
-      'Document Calculator',
+      { workflowId: 'fapi', sourceMode: 'uploaded', recordsJson: '[]' },
+      'FAPI',
     );
     if (!isAgentRunReviewResult(result)) throw new Error('Expected workflow approval.');
     sources.__unassigned__.rows[0].amount = 9999;

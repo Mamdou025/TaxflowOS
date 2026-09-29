@@ -25,6 +25,14 @@ Arrows describe allowed capability use, not unrestricted access to another
 system's database or UI state. Shared identity and authorization apply at every
 owning service boundary, regardless of how the caller reached it.
 
+The [confirmed Sina/Mkoro boundary](decisions.md#d-07--sina-and-mkoro-responsibility-boundary)
+keeps the agent runtime led by Sina. Its native workflow/source/connector tools
+remain authoritative. Mkoro is a personal computer executor for a bounded task
+that those tools cannot perform. Computer activity and optional view-only desktop
+previews appear in the same chat; they do not create another workflow engine or
+grant a companion access to platform credentials. Source handoff must go through
+the Sources interface before a local file can be used as a platform input.
+
 ## Responsibility and data ownership
 
 | System                    | Owns                                                                                                         | Public capability                                                                 | Must not become                                                                 |
@@ -106,18 +114,18 @@ pack does not claim the existing code already satisfies all of them.
 
 ## Existing implementation anchors and gaps
 
-| Inspected implementation                                                                                          | Existing responsibility / gap relative to target                                                                            |
-| ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| [App.tsx](../../artifacts/ai-workflow-builder/src/App.tsx)                                                        | Root already opens Chat; legacy/direct workflow and document routes coexist                                                 |
-| [Workspace store](../../artifacts/ai-workflow-builder/src/shared/stores/workspace-store.ts)                       | Opens detail surfaces and tracks chat workspace activity; target navigation/state behavior needs dedicated acceptance tests |
-| [Workflow commands](../../lib/workflow-core/src/application/commands.ts)                                           | Owns draft replacement, versions, exact queries and recorded execution; browser adapters supply concrete tools              |
-| [Chat workflow command](../../lib/workflow-core/src/application/template-command.ts)                               | Validates template inputs and records execution through the same commands as Build/Run; model and Jotai state stay outside  |
-| [Workflow contracts](../../lib/workflow-contracts/src/library.ts)                                                 | Deep restore validation exists; arbitrary block configuration still needs executor-specific contracts                       |
-| [Sync service](../../artifacts/ai-workflow-builder/src/features/workflows-hub/services/workflow-sync-service.ts)  | Owns local/server synchronization; it is not a durable server execution scheduler                                           |
-| [Agent runtime](../../lib/agent-runtime/src/agent.ts)                                                             | Shared server agent implementation; full product capability separation remains future work                                  |
-| [Source connectors](../../lib/source-connectors/src/http-json.ts)                                                 | Shared HTTP parsing/mapping exists; full connection/source lifecycle is broader                                             |
-| [Document API](../../artifacts/api-server/src/routes/documents.ts)                                                | Phase 3 scopes resources by authenticated workspace membership; source revision and retrieval interfaces remain future work |
-| [Server application](../../artifacts/api-server/src/app.ts)                                                       | Verifies Better Auth sessions and workspace membership; operation policy is enforced before protected routes                |
+| Inspected implementation                                                                                         | Existing responsibility / gap relative to target                                                                            |
+| ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| [App.tsx](../../artifacts/ai-workflow-builder/src/App.tsx)                                                       | Root already opens Chat; legacy/direct workflow and document routes coexist                                                 |
+| [Workspace store](../../artifacts/ai-workflow-builder/src/shared/stores/workspace-store.ts)                      | Opens detail surfaces and tracks chat workspace activity; target navigation/state behavior needs dedicated acceptance tests |
+| [Workflow commands](../../lib/workflow-core/src/application/commands.ts)                                         | Owns draft replacement, versions, exact queries and recorded execution; browser adapters supply concrete tools              |
+| [Chat workflow command](../../lib/workflow-core/src/application/template-command.ts)                             | Validates template inputs and records execution through the same commands as Build/Run; model and Jotai state stay outside  |
+| [Workflow contracts](../../lib/workflow-contracts/src/library.ts)                                                | Deep restore validation exists; arbitrary block configuration still needs executor-specific contracts                       |
+| [Sync service](../../artifacts/ai-workflow-builder/src/features/workflows-hub/services/workflow-sync-service.ts) | Owns local/server synchronization; it is not a durable server execution scheduler                                           |
+| [Agent runtime](../../lib/agent-runtime/src/agent.ts)                                                            | Shared server agent implementation; full product capability separation remains future work                                  |
+| [Source connectors](../../lib/source-connectors/src/http-json.ts)                                                | Shared HTTP parsing/mapping exists; full connection/source lifecycle is broader                                             |
+| [Document API](../../artifacts/api-server/src/routes/documents.ts)                                               | Phase 3 scopes resources by authenticated workspace membership; source revision and retrieval interfaces remain future work |
+| [Server application](../../artifacts/api-server/src/app.ts)                                                      | Verifies Better Auth sessions and workspace membership; operation policy is enforced before protected routes                |
 
 See [the Phase 4 boundary](../phase-4-workflows.md) for the migrated workflow layer,
 [current architecture](../ARCHITECTURE.md) for the rest of the implementation,

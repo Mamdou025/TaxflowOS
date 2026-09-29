@@ -7,12 +7,11 @@ import { toast } from "sonner";
 import { WorksheetPageView } from "@/features/workflow-builder/ui/worksheet-page-view";
 import { WORKFLOWS } from "@/lib/agents";
 import { createFapiTemplateWorkflow } from "@/shared/workflow-engine/workflow/templates/fapi";
-import { createPortfolioWorkflow } from "@/shared/workflow-engine/workflow/templates/portfolio";
 import { PORTFOLIO_WORKFLOWS } from "@/shared/workflow-engine/templates/portfolio/portfolio-workflows";
 import { saveWorkflowDefinitionSnapshot } from "@/shared/workflow-engine/workflow/storage";
 import { type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
 import { workflowDefinitionToCanvas } from "@/shared/workflow-engine/workflow/canvas";
-import { getWorkflowConfig } from "@/shared/workflow-engine/runtime/workflow-runs";
+import { buildRunnableWorkflowSnapshot } from "@/shared/workflow-engine/runtime/workflow-runs";
 import {
   activeRightPanelAtom,
   type ActiveRightPanel,
@@ -204,34 +203,24 @@ function WorkflowsListContent({ onLoaded }: { onLoaded: () => void }) {
 
   // Build each registered workflow's snapshot once — reused for the name shown,
   // the "currently open" highlight, and the click-to-load (no rebuild). Only
-  // workflows with a runnable run-config are listed (surplus is not built yet).
+  // workflows with a runnable configuration are listed.
   const built: BuiltWorkflow[] = useMemo(
     () =>
       WORKFLOWS.flatMap((w) => {
-        const cfg = getWorkflowConfig(w.id);
-        if (!cfg) return [];
-        const snapshot = cfg.buildSnapshot() as ReturnType<
-          typeof createFapiTemplateWorkflow
-        >;
+        const snapshot = buildRunnableWorkflowSnapshot(w.id);
+        if (!snapshot) return [];
         return [{ id: w.id, name: w.name, sub: w.sub, snapshot }];
       }),
     []
   );
 
-  // Sinaxe portfolio blueprints (Canadian Corporate Tax Workflow Portfolio +
-  // Platform Services). Built here so they show up on the builder page itself,
-  // not only in the toolbar's template menu.
+  // Portfolio choices load the same runnable graphs as the toolbar menu.
   const portfolio: (BuiltWorkflow & { group: string })[] = useMemo(
     () =>
-      PORTFOLIO_WORKFLOWS.map((def) => ({
-        id: def.id,
-        name: def.name,
-        sub: def.sub,
-        group: def.group,
-        snapshot: createPortfolioWorkflow(def) as ReturnType<
-          typeof createFapiTemplateWorkflow
-        >,
-      })),
+      PORTFOLIO_WORKFLOWS.flatMap((def) => {
+        const snapshot = buildRunnableWorkflowSnapshot(def.id);
+        return snapshot ? [{ id: def.id, name: def.name, sub: def.sub, group: def.group, snapshot }] : [];
+      }),
     []
   );
 

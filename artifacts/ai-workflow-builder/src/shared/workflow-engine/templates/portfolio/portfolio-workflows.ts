@@ -1,6 +1,7 @@
 import type { WorkflowRelationshipType } from '@workspace/workflow-contracts/domain/edge-types';
 import { DOCUMENT_CALCULATOR } from './document-calculator';
 import { EXECUTABLE_WORKPAPERS } from './executable-workpapers';
+import { FAPI_TEMPLATE_BLOCK_SPECS, FAPI_TEMPLATE_EDGE_SPECS } from '../sample-workflows/fapi-template';
 import { EXPENSE_TEMPLATE_BLOCK_SPECS, EXPENSE_TEMPLATE_EDGE_SPECS } from '../sample-workflows/expense-reimbursement-template';
 import {
   HOLIDAY_TEMPLATE_BLOCK_SPECS,
@@ -948,7 +949,18 @@ const EXPENSE_REIMBURSEMENT: PortfolioWorkflowDef = {
   blocks: EXPENSE_TEMPLATE_BLOCK_SPECS.map(block => ({ id: block.id, catalogId: block.catalogId, label: block.label, description: block.description, config: block.config, stage: Math.round((block.position.x + 520) / 460), row: Math.round(block.position.y / 400) })),
   edges: EXPENSE_TEMPLATE_EDGE_SPECS.map(edge => ({ from: edge.sourceBlockId, to: edge.targetBlockId, label: edge.bindingLabel, reason: edge.reason, rel: edge.relationshipType, fromRole: edge.sourceOutputRole, toRole: edge.targetInputRole })),
 };
-export const PORTFOLIO_WORKFLOWS: PortfolioWorkflowDef[] = [DOCUMENT_CALCULATOR, EXPENSE_REIMBURSEMENT, FAPI, ...EXECUTABLE_WORKPAPERS];
+// The public overview describes the same configured stages that Build and Run use.
+const EXECUTABLE_FAPI: PortfolioWorkflowDef = {
+  id: 'pf-fapi',
+  name: FAPI.name,
+  group: 'tier1',
+  sub: 'Trial balance → keyword mapping → rollup → FAPI calculations',
+  description: 'Calculate FAPI from supplied trial-balance rows, configured classification rules, preparer inputs and an FX rate. Review applicability, classifications, rates and adjustments before relying on the result. Produces calculation displays, canonical JSON and an evidence pack; it does not determine a complete tax position or file a return.',
+  canvasFromRunnable: true,
+  blocks: FAPI_TEMPLATE_BLOCK_SPECS.map(block => ({ id: block.id, catalogId: block.catalogId, label: block.label, description: block.description, config: block.config, stage: Math.round((block.position.x + 520) / 460), row: Math.round(block.position.y / 400) })),
+  edges: FAPI_TEMPLATE_EDGE_SPECS.map(edge => ({ from: edge.sourceBlockId, to: edge.targetBlockId, label: edge.bindingLabel, reason: edge.reason, rel: edge.relationshipType as WorkflowRelationshipType, fromRole: edge.sourceOutputRole, toRole: edge.targetInputRole })),
+};
+export const PORTFOLIO_WORKFLOWS: PortfolioWorkflowDef[] = [EXECUTABLE_FAPI, ...EXECUTABLE_WORKPAPERS];
 
 export function getPortfolioWorkflowDef(id: string): PortfolioWorkflowDef | null {
   return PORTFOLIO_WORKFLOWS.find((w) => w.id === id) ?? null;

@@ -1,3 +1,4 @@
+import { openDocumentCalculationFixture } from './retired-workflow-fixtures';
 import { test, expect } from './authenticated-fixture';
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -5,9 +6,9 @@ import { readFileSync } from 'node:fs';
 test('missing and blank values stop calculations; explicit defaults preserve real zero; intermediate precision survives', async ({ page }) => {
   await page.goto('/');
   const results = await page.evaluate(async () => {
-    const { templateDefinition } = await import('/src/features/workflows-hub/saved-workflow-run.tsx');
+    const { DOCUMENT_CALCULATOR_CONFIG } = await import('/src/shared/workflow-engine/runtime/workflow-runs/document-calculator.ts');
     const { runCalculationEngine } = await import('/src/shared/workflow-engine/execution/blocks/logic/calculation-engine/run.ts');
-    const block = templateDefinition('pf-document-calculator')!.blocks.find(b => b.config.toolId === 'logic.calculation_engine')!;
+    const block = DOCUMENT_CALCULATOR_CONFIG.buildSnapshot().blocks.find(b => b.config.toolId === 'logic.calculation_engine')!;
     const formula = (key: string, expression: string, roundingDigits?: number) => ({ calculationId: key, resultKey: key, label: key, formulaExpression: expression, operation: 'pass_through', operands: [], roundingDigits });
     const run = (formulas: any[], namedValues = {}, inputDefaults = {}) => {
       const config = { mode: 'inline', formulas, inputDefaults };
@@ -41,10 +42,10 @@ test('document parsing preserves quoted records, zero, decimal conventions and n
 test('neutral template executes without fiscal inputs', async ({ page }) => {
   await page.goto('/');
   const results = await page.evaluate(async () => {
-    const { templateDefinition } = await import('/src/features/workflows-hub/saved-workflow-run.tsx');
+    const { DOCUMENT_CALCULATOR_CONFIG } = await import('/src/shared/workflow-engine/runtime/workflow-runs/document-calculator.ts');
     const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/workflow/canvas.ts');
     const { runLocalWorkflowTools } = await import('/src/shared/workflow-engine/local-tool-runner.ts');
-    const definition = templateDefinition('pf-document-calculator')!;
+    const definition = DOCUMENT_CALCULATOR_CONFIG.buildSnapshot();
     const source = definition.blocks.find(b => b.config.toolId === 'source.manual_table')!;
     source.config = { ...source.config, requireUpload: false, rows: [{ label: 'Item one', amount: 10 }, { label: 'Item two', amount: 20 }] };
     return runLocalWorkflowTools({ ...workflowDefinitionToCanvas(definition), workflowName: definition.name }).result.results.map(result => ({ block: result.blockId, status: result.status, errors: result.errors, output: result.output }));
@@ -71,7 +72,7 @@ test('server saves require membership, reject stale writes and survive a fresh r
 
 test('PDF extraction review creates numeric columns and produces a neutral final result', async ({ page }) => {
   await page.route('**/api/workflow-library', route => route.fulfill({ json: route.request().method() === 'GET' ? { revision: 0, payload: null } : { revision: 1 } }));
-  await page.goto('/w/pf-document-calculator');
+  await openDocumentCalculationFixture(page);
   await page.getByRole('button', { name: 'Build', exact: true }).click();
   await page.getByText('Test data — upload document or enter examples', { exact: true }).click();
   await page.getByLabel('Upload test document').setInputFiles('e2e/fixtures/demo/sales-check.pdf');
@@ -95,10 +96,10 @@ test('PDF extraction review creates numeric columns and produces a neutral final
 test('precision survives a connection between separate calculation blocks', async ({ page }) => {
   await page.goto('/');
   const values = await page.evaluate(async () => {
-    const { templateDefinition } = await import('/src/features/workflows-hub/saved-workflow-run.tsx');
+    const { DOCUMENT_CALCULATOR_CONFIG } = await import('/src/shared/workflow-engine/runtime/workflow-runs/document-calculator.ts');
     const { workflowDefinitionToCanvas } = await import('/src/shared/workflow-engine/workflow/canvas.ts');
     const { runLocalWorkflowTools } = await import('/src/shared/workflow-engine/local-tool-runner.ts');
-    const definition = templateDefinition('pf-document-calculator')!;
+    const definition = DOCUMENT_CALCULATOR_CONFIG.buildSnapshot();
     const first = definition.blocks.find(block => block.config.toolId === 'logic.calculation_engine')!;
     const formula = (key: string, expression: string) => ({ calculationId: key, resultKey: key, label: key, operands: [], operation: 'pass_through', formulaExpression: expression });
     first.config = { toolId: 'logic.calculation_engine', mode: 'inline', formulas: [formula('A', '1 / 3')] };
@@ -137,7 +138,7 @@ test('documents without a text layer explicitly require OCR; reviewed OCR record
     requestedOcr = route.request().postData()?.includes('name="ocr"') ?? false;
     return route.fulfill({ json: requestedOcr ? { text: 'Item scanned 45\nItem other 5', method: 'ocr' } : { needsOcr: true, ocrAvailable: true, text: '' } });
   });
-  await page.goto('/w/pf-document-calculator'); await page.getByRole('button', { name: 'Build', exact: true }).click();
+  await openDocumentCalculationFixture(page); await page.getByRole('button', { name: 'Build', exact: true }).click();
   await page.getByText('Test data — upload document or enter examples', { exact: true }).click();
   await page.getByLabel('Upload test document').setInputFiles('e2e/fixtures/demo/no-text.pdf');
   await expect(page.getByText(/no readable text layer/)).toBeVisible();
@@ -156,9 +157,9 @@ test('documents without a text layer explicitly require OCR; reviewed OCR record
 test('known empty categories total zero but matched rows with missing numbers cannot disappear', async ({ page }) => {
   await page.goto('/');
   const results = await page.evaluate(async () => {
-    const { templateDefinition } = await import('/src/features/workflows-hub/saved-workflow-run.tsx');
+    const { DOCUMENT_CALCULATOR_CONFIG } = await import('/src/shared/workflow-engine/runtime/workflow-runs/document-calculator.ts');
     const { runCategoryRollupAggregator } = await import('/src/shared/workflow-engine/execution/blocks/logic/category-rollup-aggregator/run.ts');
-    const block = templateDefinition('pf-document-calculator')!.blocks.find(block => block.config.toolId === 'logic.category_rollup_aggregator')!;
+    const block = DOCUMENT_CALCULATOR_CONFIG.buildSnapshot().blocks.find(block => block.config.toolId === 'logic.category_rollup_aggregator')!;
     const config = { rollupRules: [{ rollupId: 'total', label: 'Total', operation: 'sum', includeCategoryIds: ['present', 'empty'] }] };
     const run = (extra: any[]) => runCategoryRollupAggregator({ block: { ...block, config }, config, inputsByRole: {
       mapping_summary: [{ rulesUsed: [{ categoryId: 'present' }, { categoryId: 'empty' }] }],
@@ -188,9 +189,9 @@ test('numeric fields reject partial numbers and unknown aggregation categories f
 test('ordinary output can finish while workflows requiring a protected result retain that gate', async ({ page }) => {
   await page.goto('/');
   const results = await page.evaluate(async () => {
-    const { templateDefinition } = await import('/src/features/workflows-hub/saved-workflow-run.tsx');
+    const { DOCUMENT_CALCULATOR_CONFIG } = await import('/src/shared/workflow-engine/runtime/workflow-runs/document-calculator.ts');
     const { getToolForBlock } = await import('/src/shared/workflow-engine/tools/lookup.ts');
-    const workflow = templateDefinition('pf-document-calculator')!;
+    const workflow = DOCUMENT_CALCULATOR_CONFIG.buildSnapshot();
     const output = workflow.blocks.find(block => block.id.endsWith('--result'))!;
     const calculate = workflow.blocks.find(block => block.id.endsWith('--calculate'))!;
     const source = { blockId: calculate.id, toolId: 'logic.calculation_engine', status: 'success', output: { calculatedResults: { RESULT: 60 } }, warnings: [], errors: [], evidenceRefs: [], sourceTrace: [], logs: [] };

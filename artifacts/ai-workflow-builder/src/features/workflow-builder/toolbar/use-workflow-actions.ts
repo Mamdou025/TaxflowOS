@@ -3,19 +3,13 @@ import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { api } from '@/platform/api-client';
 import { authClient } from '@/platform/auth/auth-client';
-import { createExpandedMappingPipelineDemoWorkflow } from '@/shared/workflow-engine/workflow/templates/expanded-mapping';
-import {
-  createFapiSampleWorkflow,
-  createFapiTemplateWorkflow,
-} from '@/shared/workflow-engine/workflow/templates/fapi';
-import { createRoullementFiscalWorkflow } from '@/shared/workflow-engine/workflow/templates/roulement';
-import { createSingleItemPipelineDemoWorkflow } from '@/shared/workflow-engine/workflow/templates/single-item';
+import { buildRunnableWorkflowSnapshot } from '@/shared/workflow-engine/runtime/workflow-runs';
 import {
   createWorkflowBlockFromCatalog,
   createWorkflowNodeFromBlock,
 } from '@/shared/workflow-engine/workflow/block-factory';
 import { createWorkflowEvent } from '@/shared/workflow-engine/workflow/events';
-import { createPortfolioWorkflow } from '@/shared/workflow-engine/workflow/templates/portfolio';
+import { createBlankWorkflow } from '@/shared/workflow-engine/workflow/templates/portfolio';
 import { type PortfolioWorkflowDef } from '@/shared/workflow-engine/templates/portfolio/portfolio-workflows';
 import { LOCAL_WORKFLOW_ID } from '@/shared/workflow-engine/workflow/contracts';
 import {
@@ -184,25 +178,25 @@ export function useWorkflowActions(state: ReturnType<typeof useWorkflowState>) {
           return;
         }
         if (isLocal) {
-          const sample = {
-            ...createFapiSampleWorkflow(),
+          const blank = {
+            ...createBlankWorkflow(),
             events: [
               createWorkflowEvent({
-                type: 'reset_sample',
-                message: 'Local studio reset to the FAPI-inspired sample.',
+                type: 'save_draft',
+                message: 'Local workflow deleted. Opened a blank workflow.',
               }),
             ],
           };
-          const canvas = workflowDefinitionToCanvas(sample);
+          const canvas = workflowDefinitionToCanvas(blank);
           setNodes(canvas.nodes);
           setEdges(canvas.edges);
-          setCurrentWorkflowName(sample.name);
+          setCurrentWorkflowName(blank.name);
           setSelectedNodeId(canvas.nodes[0]?.id ?? null);
           setSelectedExecutionId(null);
           setExecutionLogs({});
-          saveWorkflowDefinitionSnapshot(sample);
+          saveWorkflowDefinitionSnapshot(blank);
           setHasUnsavedChanges(false);
-          toast.success('Local sample restored');
+          toast.success('Local workflow deleted');
           return;
         }
         try {
@@ -498,184 +492,38 @@ export function useWorkflowActions(state: ReturnType<typeof useWorkflowState>) {
           : 'Excel workbook loaded into Source',
       );
     },
-    handleLoadSingleItemDemo: () => {
-      openOverlay(ConfirmOverlay, {
-        title: 'Load Z Demo',
-        message:
-          'Load the Single Item Pipeline Demo? Current local nodes and connections will be replaced.',
-        confirmLabel: 'Load Demo',
-        confirmVariant: 'default' as const,
-        onConfirm: () => {
-          const demo = {
-            ...createSingleItemPipelineDemoWorkflow(),
-            events: [
-              createWorkflowEvent({
-                type: 'reset_sample',
-                message: 'Local studio loaded the Single Item Pipeline Demo.',
-              }),
-            ],
-          };
-          const canvas = workflowDefinitionToCanvas(demo);
-          setNodes(canvas.nodes);
-          setEdges(canvas.edges);
-          setCurrentWorkflowName(demo.name);
-          setSelectedNodeId(canvas.nodes[0]?.id ?? null);
-          setSelectedExecutionId(null);
-          setExecutionLogs({});
-          saveWorkflowDefinitionSnapshot(demo);
-          setHasUnsavedChanges(false);
-          toast.success('Single Item Pipeline Demo loaded');
-        },
-      });
-    },
-    handleLoadExpandedDemo: () => {
-      openOverlay(ConfirmOverlay, {
-        confirmLabel: 'Load Expanded Demo',
-        confirmVariant: 'default' as const,
-        message:
-          'Load the Expanded Mapping Pipeline Demo? Current local nodes and connections will be replaced.',
-        onConfirm: () => {
-          const demo = {
-            ...createExpandedMappingPipelineDemoWorkflow(),
-            events: [
-              createWorkflowEvent({
-                message: 'Local studio loaded the Expanded Mapping Pipeline Demo.',
-                type: 'reset_sample',
-              }),
-            ],
-          };
-          const canvas = workflowDefinitionToCanvas(demo);
-          setNodes(canvas.nodes);
-          setEdges(canvas.edges);
-          setCurrentWorkflowName(demo.name);
-          setSelectedNodeId(canvas.nodes[0]?.id ?? null);
-          setSelectedExecutionId(null);
-          setExecutionLogs({});
-          saveWorkflowDefinitionSnapshot(demo);
-          setHasUnsavedChanges(false);
-          toast.success('Expanded Mapping Pipeline Demo loaded');
-        },
-        title: 'Load Expanded Demo',
-      });
-    },
-    handleLoadWorkingSourceDemo: () => {
-      openOverlay(ConfirmOverlay, {
-        confirmLabel: 'Open FAPI Calculation Template',
-        confirmVariant: 'default' as const,
-        message:
-          'Open the FAPI Calculation Template? Current local nodes and connections will be replaced.',
-        onConfirm: () => {
-          const demo = {
-            ...createFapiTemplateWorkflow(),
-            events: [
-              createWorkflowEvent({
-                message: 'Local studio loaded the FAPI Calculation Template.',
-                type: 'reset_sample',
-              }),
-            ],
-          };
-          const canvas = workflowDefinitionToCanvas(demo);
-          setNodes(canvas.nodes);
-          setEdges(canvas.edges);
-          setCurrentWorkflowName(demo.name);
-          setSelectedNodeId(canvas.nodes[0]?.id ?? null);
-          setSelectedExecutionId(null);
-          setExecutionLogs({});
-          saveWorkflowDefinitionSnapshot(demo);
-          setHasUnsavedChanges(false);
-          toast.success('FAPI Calculation Template loaded');
-        },
-        title: 'Open FAPI Calculation Template',
-      });
-    },
-    handleLoadRoullementFiscalTemplate: () => {
-      openOverlay(ConfirmOverlay, {
-        confirmLabel: 'Ouvrir le gabarit',
-        confirmVariant: 'default' as const,
-        message:
-          'Ouvrir le gabarit Roulement fiscal (art. 85 LIR) ? Les nœuds et connexions locaux seront remplacés.',
-        onConfirm: () => {
-          const demo = {
-            ...createRoullementFiscalWorkflow(),
-            events: [
-              createWorkflowEvent({
-                message: 'Studio local — gabarit Roulement fiscal art. 85 chargé.',
-                type: 'reset_sample',
-              }),
-            ],
-          };
-          const canvas = workflowDefinitionToCanvas(demo);
-          setNodes(canvas.nodes);
-          setEdges(canvas.edges);
-          setCurrentWorkflowName(demo.name);
-          setSelectedNodeId(canvas.nodes[0]?.id ?? null);
-          setSelectedExecutionId(null);
-          setExecutionLogs({});
-          saveWorkflowDefinitionSnapshot(demo);
-          setHasUnsavedChanges(false);
-          toast.success('Roulement fiscal — art. 85 LIR chargé');
-        },
-        title: 'Gabarit Roulement fiscal',
-      });
-    },
     handleLoadPortfolioWorkflow: (def: PortfolioWorkflowDef) => {
       openOverlay(ConfirmOverlay, {
         confirmLabel: `Open ${def.name}`,
         confirmVariant: 'default' as const,
         message: `Open “${def.name}”? Current local nodes and connections will be replaced.`,
         onConfirm: () => {
-          const demo = {
-            ...createPortfolioWorkflow(def),
+          const template = buildRunnableWorkflowSnapshot(def.id);
+          if (!template) {
+            toast.error('This workflow is unavailable. Choose one from the executable catalog.');
+            return;
+          }
+          const snapshot = {
+            ...template,
             events: [
               createWorkflowEvent({
                 message: `Local studio loaded ${def.name}.`,
-                type: 'reset_sample',
+                type: 'save_draft',
               }),
             ],
           };
-          const canvas = workflowDefinitionToCanvas(demo);
+          const canvas = workflowDefinitionToCanvas(snapshot);
           setNodes(canvas.nodes);
           setEdges(canvas.edges);
-          setCurrentWorkflowName(demo.name);
+          setCurrentWorkflowName(snapshot.name);
           setSelectedNodeId(canvas.nodes[0]?.id ?? null);
           setSelectedExecutionId(null);
           setExecutionLogs({});
-          saveWorkflowDefinitionSnapshot(demo);
+          saveWorkflowDefinitionSnapshot(snapshot);
           setHasUnsavedChanges(false);
           toast.success(`${def.name} loaded`);
         },
         title: def.name,
-      });
-    },
-    handleResetSample: () => {
-      openOverlay(ConfirmOverlay, {
-        title: 'Reset Sample',
-        message:
-          'Reset the local studio to the FAPI-inspired sample workflow? Current local nodes and connections will be replaced.',
-        confirmLabel: 'Reset Sample',
-        confirmVariant: 'destructive' as const,
-        destructive: true,
-        onConfirm: () => {
-          const sample = {
-            ...createFapiSampleWorkflow(),
-            events: [
-              createWorkflowEvent({
-                type: 'reset_sample',
-                message: 'Local studio reset to the FAPI-inspired sample.',
-              }),
-            ],
-          };
-          const canvas = workflowDefinitionToCanvas(sample);
-          setNodes(canvas.nodes);
-          setEdges(canvas.edges);
-          setCurrentWorkflowName(sample.name);
-          setSelectedNodeId(canvas.nodes[0]?.id ?? null);
-          setSelectedExecutionId(null);
-          setExecutionLogs({});
-          saveWorkflowDefinitionSnapshot(sample);
-          setHasUnsavedChanges(false);
-          toast.success('FAPI-inspired sample restored');
-        },
       });
     },
   };

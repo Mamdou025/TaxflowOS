@@ -1,16 +1,17 @@
 import { test, expect } from './workflow-audit-isolation';
+import { openDocumentCalculationFixture } from './retired-workflow-fixtures';
 
 test('Build runs in place; Run and Build retain one execution and the original blocks', async ({
   page,
 }) => {
-  await page.goto('/w/pf-document-calculator');
+  await openDocumentCalculationFixture(page);
   await page.getByRole('button', { name: 'Build', exact: true }).click();
   // Build is a lazy-loaded module; cold development compilation is not execution time.
   await expect(page.locator('.react-flow')).toBeVisible({ timeout: 30000 });
   const original = await page.evaluate(async () => {
-    const { templateDefinition } =
-      await import('/src/features/workflows-hub/workflow-execution.ts');
-    return templateDefinition('pf-document-calculator')!;
+    const { DOCUMENT_CALCULATOR_CONFIG } =
+      await import('/src/shared/workflow-engine/runtime/workflow-runs/document-calculator.ts');
+    return DOCUMENT_CALCULATOR_CONFIG.buildSnapshot();
   });
   // The first Run is the view tab; the last is the Build action.
   await page.getByRole('button', { name: 'Run', exact: true }).last().click();

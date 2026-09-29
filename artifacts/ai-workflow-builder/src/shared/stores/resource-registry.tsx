@@ -10,7 +10,6 @@ import {
   Layers,
   LayoutGrid,
   PlugZap,
-  Receipt,
   Workflow,
 } from 'lucide-react';
 
@@ -116,6 +115,13 @@ const Loading = () => (
 );
 const lazyPage = (loader: () => Promise<{ default: ComponentType }>) =>
   dynamic(loader, { ssr: false, loading: Loading });
+const lazyWorkflowPage = (workflowId: string) =>
+  lazyPage(async () => {
+    const { default: WorkflowPageAlias } = await import(
+      '@/features/assistant/workspace/workflow-page-alias'
+    );
+    return { default: () => <WorkflowPageAlias workflowId={workflowId} /> };
+  });
 
 // ─── The registry ───────────────────────────────────────────────────────────
 export const RESOURCES: Resource[] = [
@@ -225,7 +231,7 @@ export const RESOURCES: Resource[] = [
     open: { as: 'page', pageKey: 'worksheets' },
     page: {
       title: 'Worksheets',
-      subtitle: 'FAPI · T1134 · Surplus · Executive Overview',
+      subtitle: 'FAPI · T1134 · Surplus workpapers',
       icon: LayoutGrid,
       Component: lazyPage(() => import('@/features/assistant/workspace/worksheets-hub')),
     },
@@ -290,188 +296,46 @@ export const RESOURCES: Resource[] = [
     note: 'IRL research agent',
   },
 
-  // ── FAPI — one resource that is a chip (FAPI-WORKFLOW), a page (fapi), and a
-  //    set of addressable/editable anchors. Previously split across all four
-  //    registries; now a single entry. ────────────────────────────────────────
+  // Compatibility page keys open the canonical workflow surface. Its shared
+  // sessions own source selection, inputs, execution and historical results.
   {
     id: 'fapi',
     kind: 'workflow',
     token: 'FAPI-WORKFLOW',
     mentions: ['fapi-workflow', 'fapi workflow'],
     keywords: ['fapi', 'foreign accrual', 'accrual property'],
-    note: 'FAPI calculation workflow',
+    note: 'FAPI calculation workflow — supply and review source records before execution',
     open: { as: 'page', pageKey: 'fapi' },
     page: {
-      title: 'FAPI Worksheet',
+      title: 'FAPI Workflow',
       subtitle: 'Foreign accrual property income',
       icon: Globe,
-      Component: lazyPage(() => import('@/features/worksheets/components/fapi-worksheet')),
-    },
-    anchors: [
-      // Order: most specific first (first keyword match wins on navigate).
-      {
-        anchor: 'fapi:fx',
-        label: 'Annual Average FX Rate',
-        keywords: ['fx rate', 'exchange rate', 'annual average', 'currency conversion', 'fx'],
-        field: {
-          id: 'fx',
-          tag: 'FX',
-          ccy: 'RATE',
-          default: '1.35',
-          hint: 'USD → CAD annual average',
-          editKeywords: ['fx rate', 'exchange rate', 'fx', 'annual average'],
-          // Bridge to the FAPI engine's fxRate input — one value across chat, sheet, run.
-          binding: { workflowId: 'fapi', inputKey: 'fxRate' },
-        },
-      },
-      {
-        anchor: 'fapi:a',
-        label: 'Property Income (A)',
-        keywords: ['property income', 'dividend', 'component a', 'line a'],
-      },
-      {
-        anchor: 'fapi:a-div',
-        label: 'Property Income — Dividendes',
-        keywords: [], // navigation is via 'fapi:a'; this row is reached by *edit* intent
-        field: {
-          id: 'a-div',
-          tag: 'A',
-          ccy: 'CAD',
-          default: '0.00',
-          hint: 'Manual entry',
-          editKeywords: ['dividend', 'dividendes', 'property income'],
-        },
-      },
-      {
-        anchor: 'fapi:allowable-expenses',
-        label: 'Allowable Expenses',
-        keywords: ['allowable expenses', 'expenses', 'deductions'],
-      },
-      {
-        anchor: 'fapi:b',
-        label: 'Gains From Disposition (B)',
-        keywords: ['component b', 'gains from disposition', 'disposition', 'gains'],
-      },
-      {
-        anchor: 'fapi:95-2',
-        label: 'Canadian Rules 95(2)',
-        keywords: ['95(2)', '95-2', 'canadian rules', 'recharacterization', 'recharacterize'],
-      },
-      {
-        anchor: 'fapi:a1',
-        label: 'Debt Forgiveness (A.1)',
-        keywords: ['debt forgiveness', 'a.1', 'a1'],
-      },
-      { anchor: 'fapi:a2', label: 'Prior Year G (A.2)', keywords: ['prior year', 'a.2', 'a2'] },
-    ],
-  },
-
-  // ── Expense Reimbursement — a non-fiscal workflow that HAS its own worksheet.
-  //    A chip (EXPENSE-WORKFLOW), a page (expense), and the run's result surface.
-  {
-    id: 'expense',
-    kind: 'workflow',
-    token: 'EXPENSE-WORKFLOW',
-    mentions: ['expense-workflow', 'expense workflow', 'reimbursement workflow'],
-    keywords: ['expense', 'reimbursement', 'expense report', 'receipts', 'per diem', 'per-diem'],
-    note: 'Employee expense reimbursement workflow',
-    open: { as: 'page', pageKey: 'expense' },
-    page: {
-      title: 'Expense Reimbursement',
-      subtitle: 'Receipts · policy caps · net payable',
-      icon: Receipt,
-      Component: lazyPage(() => import('@/features/worksheets/components/expense-worksheet')),
+      Component: lazyWorkflowPage('pf-fapi'),
     },
   },
-
-  // ── Other registered pages ─────────────────────────────────────────────────
   {
     id: 'surplus',
-    kind: 'worksheet',
+    kind: 'workflow',
     keywords: ['surplus', 'exempt surplus', 'taxable surplus'],
     open: { as: 'page', pageKey: 'surplus' },
     page: {
-      title: 'Surplus Worksheet',
-      subtitle: 'Exempt / taxable surplus',
+      title: 'Surplus Workpaper',
+      subtitle: 'Supplied surplus movements and continuity',
       icon: Layers,
-      Component: lazyPage(() => import('@/features/worksheets/legacy/pages/SurplusWorksheet')),
+      Component: lazyWorkflowPage('pf-surplus'),
     },
-    anchors: [
-      {
-        anchor: 'surplus:opening',
-        label: 'Opening Balance',
-        keywords: ['opening balance', 'opening surplus'],
-      },
-      {
-        anchor: 'surplus:fs-income',
-        label: 'Income per Financial Statements',
-        keywords: ['income per financial', 'financial statements income', 'net income'],
-      },
-      {
-        anchor: 'surplus:book-tax',
-        label: 'Book-to-Tax Adjustments',
-        keywords: ['book-to-tax', 'book to tax'],
-      },
-      {
-        anchor: 'surplus:reg-5907',
-        label: 'Reg. 5907(2) Adjustments',
-        keywords: ['reg. 5907', 'reg 5907', '5907'],
-      },
-      {
-        anchor: 'surplus:taxes',
-        label: 'Income Taxes Paid / Refunded',
-        keywords: ['income taxes', 'taxes paid', 'withholding'],
-      },
-      {
-        anchor: 'surplus:dividends',
-        label: 'Dividends Paid / Received',
-        keywords: ['dividends paid', 'dividends received', 'dividends'],
-      },
-    ],
   },
   {
     id: 't1134',
-    kind: 'worksheet',
+    kind: 'workflow',
     keywords: ['t1134', '1134', 'foreign affiliate', 'affiliate reporting'],
     open: { as: 'page', pageKey: 't1134' },
     page: {
       title: 'T1134 Workpaper',
-      subtitle: 'Foreign affiliate reporting',
+      subtitle: 'Supplied foreign affiliate reporting records',
       icon: FileText,
-      Component: lazyPage(() => import('@/features/worksheets/legacy/pages/T1134Worksheet')),
+      Component: lazyWorkflowPage('pf-t1134'),
     },
-    anchors: [
-      {
-        anchor: 't1134:part1',
-        label: 'Part I — Summary',
-        keywords: ['part i', 'part 1', 't1134 summary', 'summary form'],
-      },
-      {
-        anchor: 't1134:part2-s1',
-        label: 'Part II · Section 1 — Foreign Affiliate Information',
-        keywords: ['foreign affiliate information', 'section 1', 'fa information'],
-      },
-      {
-        anchor: 't1134:part2-s2',
-        label: 'Part II · Section 2 — Financial Information',
-        keywords: ['financial information', 'section 2'],
-      },
-      {
-        anchor: 't1134:part2-s3a',
-        label: 'Part II · Section 3A — Surplus Accounts & Dividends',
-        keywords: ['surplus accounts', 'section 3a'],
-      },
-      {
-        anchor: 't1134:part3-fapi',
-        label: 'Part III · Section 3 — FAPI / FAPL / FACL',
-        keywords: ['facl', 'fapl', 'fapi section', 'part iii section 3'],
-      },
-      {
-        anchor: 't1134:part4',
-        label: 'Part IV — Disclosure',
-        keywords: ['disclosure', 'part iv', 'part 4'],
-      },
-    ],
   },
 ];
 

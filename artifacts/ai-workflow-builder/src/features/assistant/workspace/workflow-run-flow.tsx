@@ -264,12 +264,11 @@ export function WorkflowElementCard({ config, element, onOpenPage, onOpenBuilder
   const uploaded = useAtomValue(uploadedRowsAtom);
   const allEdits = useAtomValue(runEditsAtom);
   const isSource = element === 'source';
-  // Use the SAME live data the run + worksheet use (uploaded rows + the shared run
-  // edits), NOT the static sample config — so this summoned card can never disagree
-  // with the worksheet/run for the same workflow. Mirrors fapi-worksheet's compute.
-  const sourceRows = uploaded[config.id]?.rows?.length ? uploaded[config.id]!.rows : config.sampleRows;
+  // Summoned cards may describe supplied records, but never fill a missing source
+  // with built-in examples. Saved run results remain in the shared run panel.
+  const sourceRows = uploaded[config.id]?.rows ?? [];
   const outcome = useMemo(() => {
-    if (element !== 'output') return null;
+    if (element !== 'output' || !sourceRows.length) return null;
     const edits = allEdits[config.id] ?? EMPTY_RUN_EDITS;
     const defaults = Object.fromEntries((config.editableInputs ?? []).filter((i) => !i.classificationFed).map((i) => [i.key, i.default]));
     const inputs = { ...defaults, ...edits.inputs };
@@ -294,6 +293,7 @@ export function WorkflowElementCard({ config, element, onOpenPage, onOpenBuilder
         {isSource ? (
           <>
             <div style={{ fontSize: 12.5, fontWeight: 550, color: INK, marginBottom: 6 }}>{config.documentLabel}</div>
+            {!sourceRows.length && <div style={{ fontSize: 12, color: FAINT }}>No source records supplied. Open the workflow to attach a source.</div>}
             {sourceRows.map((r) => <KV key={r.rowId} l={r.label} sub={r.account ? `acct ${r.account}` : undefined} v={`${num(r.amount)} ${r.currency ?? ''}`} />)}
           </>
         ) : outcome?.detail ? (

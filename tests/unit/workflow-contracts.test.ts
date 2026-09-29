@@ -126,7 +126,7 @@ test('storage client rejects invalid server revisions', async () => {
 });
 
 test('all executable templates roundtrip their actual graph results through validated storage', () => {
-  assert.equal(Object.keys(WORKFLOW_CONFIGS).length, 17);
+  assert.equal(Object.keys(WORKFLOW_CONFIGS).length, 15);
   for (const config of Object.values(WORKFLOW_CONFIGS)) {
     const command = executeWorkflowCommand({ workflowId: config.id, useSample: true });
     assert.ok(command.core, config.id);

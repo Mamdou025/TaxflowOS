@@ -6,14 +6,15 @@ rationale. Update this register and affected acceptance criteria together.
 
 ## Confirmed direction from the conversation
 
-| ID   | Decision                                                                                                  | Basis                                                                                      |
-| ---- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| C-01 | Chat is the home page and main starting point                                                             | User explicitly required chat as the main page                                             |
-| C-02 | Runs are within Workflows; no primary Runs menu                                                           | User rejected a standalone Runs menu; accepted the revised planning direction              |
-| C-03 | Chat provides a little of each capability without overwhelming the conversation                           | User explicitly described this experience                                                  |
-| C-04 | Workflows, agent actions, source-aware answers, documents and integrations are core platform capabilities | User's stated platform vision                                                              |
-| C-05 | Subsystems should be independently maintainable through explicit boundaries                               | User asked to work on workflows without unintentionally changing the agent, and vice versa |
-| C-06 | Phase 0 produces the product/navigation/ownership/journey blueprint before further implementation         | User authorized Phase 0 after the revised plan                                             |
+| ID   | Decision                                                                                                         | Basis                                                                                      |
+| ---- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| C-01 | Chat is the home page and main starting point                                                                    | User explicitly required chat as the main page                                             |
+| C-02 | Runs are within Workflows; no primary Runs menu                                                                  | User rejected a standalone Runs menu; accepted the revised planning direction              |
+| C-03 | Chat provides a little of each capability without overwhelming the conversation                                  | User explicitly described this experience                                                  |
+| C-04 | Workflows, agent actions, source-aware answers, documents and integrations are core platform capabilities        | User's stated platform vision                                                              |
+| C-05 | Subsystems should be independently maintainable through explicit boundaries                                      | User asked to work on workflows without unintentionally changing the agent, and vice versa |
+| C-06 | Phase 0 produces the product/navigation/ownership/journey blueprint before further implementation                | User authorized Phase 0 after the revised plan                                             |
+| C-07 | One Sina-led chat delegates external computer work to Mkoro, with task progress and opt-in refreshed screenshots | User explicitly approved this integration and screenshot approach on 2026-09-28            |
 
 ## Baseline design recommendations
 
@@ -143,6 +144,30 @@ initial CSS and the largest JavaScript chunk. A failing ceiling must lead to a
 smaller build or a reviewed design change; the baseline is not regenerated to make
 the check pass. Hardware-dependent interaction timings remain observations until a
 representative device and service-level objective are selected.
+
+## D-07 — Sina and Mkoro responsibility boundary
+
+**Status: Confirmed by the user on 2026-09-28.**
+
+Sina owns the conversation and native platform tools, workflows and sources.
+Mkoro receives bounded external/local computer tasks only when those tools cannot
+perform the step. Enforce the boundary through structured routing and tool access
+as well as instructions. Keep task progress, individual permissions and Stop in
+the same chat; preserve old Mkoro history without a second direct-message path.
+
+The initial desktop view uses explicitly opened, refreshed screenshots. It is
+view-only. Implementation choices: a renewable 10-second lease, approximately
+two-second capture interval, bounded in-memory JPEGs, no stored image history and
+no screenshots in model context. Closing/hiding the view, stopping/finishing the
+task or losing access clears the preview. These defaults can be revised without
+changing workflow rules. They do not authorize remote input or background capture.
+
+Acceptance: native workflow tools remain Sina-owned; typed delegations bind to a
+verified chat/user/workspace/computer; direct Mkoro submissions are retired;
+progress and one-time decisions remain usable; previews require current access
+and an active task and never leak across chats. A local output path is not an
+uploaded Source. Generic Goose tools remain subject to the local computer's
+permissions, so admission checks must not be advertised as an OS sandbox.
 
 ## Deferred implementation decisions
 
