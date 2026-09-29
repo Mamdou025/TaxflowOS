@@ -39,6 +39,19 @@ computation, human approval and server synchronization remain separate states.
 
 ## Supported scope
 
+Guided runs capture PDF page text, DOCX paragraph text and selected Excel/JSON
+records with source revisions and content hashes. Chat and Build expose the same
+recorded evidence, and Sina can inspect exact document locations. Parser blocks
+reject missing/incompatible evidence; PDF table interpretation remains unavailable.
+Original-file storage failures are explicit. See
+[document evidence boundaries](unified-workflow-execution.md#captured-document-evidence).
+
+Sina can propose document interpretation notes containing company/period/currency
+observations, source quotations and open questions. Users explicitly save notes
+to a paused run; stale proposals fail. These notes remain proposed interpretations
+and do not set calculation inputs or approve tax treatment. See
+[document interpretation notes](unified-workflow-execution.md#document-interpretation-notes).
+
 | Area         | Current behavior                                                    | Boundary                                                                                                                                                          |
 | ------------ | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Sources      | Upload, extract, validate and save rows or connector responses      | Runs replay the saved inputs. Missing evidence is not replaced with examples. Explicit example mode remains available.                                            |
@@ -52,12 +65,28 @@ computation, human approval and server synchronization remain separate states.
 
 ## Implementation and checks
 
-Chat has one **Sina-led conversation**. Sina owns native platform tools, sources,
+Chat has one conversation with **Sina by default**, or **MicroSina through Foundry**
+when selected before sending the first message. Saved chats retain their agent;
+old chats reopen as Sina. MicroSina requires backend Azure authentication and an
+explicit saved Foundry version. Connection failures do not fall back to Sina.
+Both agents use the same tool and review surfaces; agent-specific permissions
+remain separate. Local integration checks do not establish live model parity.
+See [MicroSina setup and verification](microsina-foundry/README.md).
+
+Sina owns native platform tools, sources,
 retrieval and workflows. It can delegate a structured external/local computer task
 to a paired Goose companion when no native tool can do that step. The same chat
 shows task progress, one-time permissions, Stop and optional refreshed desktop
 screenshots. Computer settings retain the former Mkoro history and controls for
 already active tasks. New direct Mkoro messages are no longer accepted.
+Settings explain which computer runs Goose, distinguish connection from delegation
+readiness, confirm access revocation, and offer fresh pairing for revoked computers.
+Reconnection creates a new entry; old credentials remain revoked and history stays available.
+Each personal computer also has an optional saved automatic-approval setting for
+Mkoro tool requests, including pending ones. Server decisions remain one-action,
+auditable and subject to Stop and current access; permanent Goose grants are not used.
+The desktop viewer gives setup guidance when no screenshot arrives. A local
+capture diagnostic in the updated companion bundle does not save or upload pixels.
 
 Windows previews require the updated companion in the same interactive session
 as Goose. They refresh roughly every two seconds while explicitly opened, are

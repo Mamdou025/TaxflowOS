@@ -3,6 +3,7 @@ import { pool } from '@workspace/db';
 import { MKORO_OFFLINE_MS, MkoroWorkerSchema, MkoroCommandSchema } from '@workspace/api-zod/mkoro';
 import { permits, WorkspaceRoleSchema } from '@workspace/api-zod/access';
 import { iso, MkoroError, transaction, type Scope, type WorkerScope } from './common';
+import { approvePendingTools } from './automatic-approval';
 
 const hash = (token: string) => createHash('sha256').update(token).digest('hex');
 const secret = () => randomBytes(32).toString('base64url');
@@ -77,6 +78,7 @@ export async function listWorkers(scope: Scope) {
     MkoroWorkerSchema.parse({
       id: row.id,
       name: row.name,
+      autoApprove: row.auto_approve,
       capabilities: row.capabilities,
       status: row.revoked_at
         ? 'revoked'
@@ -87,6 +89,16 @@ export async function listWorkers(scope: Scope) {
       createdAt: iso(row.created_at),
     }),
   );
+}
+
+export async function setAutomaticApproval(scope: Scope, id: string, autoApprove: boolean) {
+  const result = await pool.query(
+    `UPDATE mkoro_workers SET auto_approve=$4
+     WHERE id=$1 AND actor_id=$2 AND workspace_id=$3 AND revoked_at IS NULL RETURNING id`,
+    [id, scope.actorId, scope.workspaceId, autoApprove],
+  );
+  if (!result.rowCount) throw new MkoroError(404, 'Active companion not found.');
+  return { ok: true };
 }
 
 export async function revokeWorker(scope: Scope, id: string) {
@@ -100,6 +112,7 @@ export async function revokeWorker(scope: Scope, id: string) {
 // Claim once. An interrupted response is an unknown outcome, never permission to replay a prompt.
 export async function pollCommands(scope: WorkerScope, capabilities?: string[]) {
   return transaction(async (client) => {
+    await approvePendingTools(client, scope);
     await client.query(
       'UPDATE mkoro_workers SET last_seen_at=now(),capabilities=COALESCE($2::jsonb,capabilities) WHERE id=$1',
       [scope.workerId, capabilities ? JSON.stringify(capabilities) : null],

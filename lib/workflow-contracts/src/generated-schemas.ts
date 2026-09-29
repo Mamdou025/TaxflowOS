@@ -21,6 +21,7 @@ export const PersonalWorkflowSchema: z.ZodType<import("./library-types").Persona
 }).passthrough()),
   "sessions": z.array(WorkflowSessionSchema).optional(),
   "runs": z.array(z.object({
+  "documentReviews": z.array(DocumentReviewSchema).optional(),
   "version": z.number().finite(),
   "at": z.string(),
   "result": LocalToolRunnerResultSchema,
@@ -80,6 +81,7 @@ export const WorkflowSessionSchema: z.ZodType<import("./library-types").Workflow
   "results": z.record(ToolRunResultSchema),
   "stale": z.array(z.string()),
   "reviewed": z.array(z.string()),
+  "documentReviews": z.array(DocumentReviewSchema).optional(),
   "sources": z.array(z.object({
   "id": z.string(),
   "blockId": z.string(),
@@ -87,6 +89,7 @@ export const WorkflowSessionSchema: z.ZodType<import("./library-types").Workflow
   "at": z.string(),
   "mode": z.union([z.literal("replace"), z.literal("add")]),
   "rows": z.array(z.record(z.unknown())),
+  "extraction": DocumentExtractionSchema.optional(),
 }).passthrough()),
   "attempts": z.array(z.object({
   "at": z.string(),
@@ -94,6 +97,18 @@ export const WorkflowSessionSchema: z.ZodType<import("./library-types").Workflow
   "blockId": z.string(),
   "result": LocalToolRunnerResultSchema,
 }).passthrough()),
+}).passthrough());
+
+export const DocumentReviewSchema: z.ZodType<import("./domain/document-review").DocumentReview, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+  "id": z.string(),
+  "at": z.string(),
+  "sessionRevision": z.number().finite(),
+  "sourceId": z.string(),
+  "sourceRevision": z.number().finite(),
+  "sourceHash": z.string(),
+  "fileName": z.string(),
+  "blockId": z.string(),
+  "draft": DocumentReviewDraftSchema,
 }).passthrough());
 
 export const LocalToolRunnerResultSchema: z.ZodType<import("./execution-result").LocalToolRunnerResult, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
@@ -292,6 +307,41 @@ export const ToolRunResultSchema: z.ZodType<import("./tool-types").ToolRunResult
   "completedAt": z.string(),
 }).passthrough());
 
+export const DocumentExtractionSchema: z.ZodType<import("./domain/document-extraction").DocumentExtraction, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+  "id": z.string(),
+  "revision": z.number().finite(),
+  "fileName": z.string(),
+  "contentHash": z.string(),
+  "extractedAt": z.string(),
+  "method": z.union([z.literal("json"), z.literal("pdf_text"), z.literal("docx_text"), z.literal("ocr"), z.literal("workbook")]),
+  "originalDocumentId": z.string().optional(),
+  "segments": z.array(z.object({
+  "id": z.string(),
+  "location": z.string(),
+  "page": z.number().finite().optional(),
+  "text": z.string(),
+}).passthrough()),
+  "rows": z.array(z.record(z.unknown())),
+  "issues": z.array(z.object({
+  "code": z.string(),
+  "message": z.string(),
+}).passthrough()),
+}).passthrough());
+
+export const DocumentReviewDraftSchema: z.ZodType<import("./domain/document-review").DocumentReviewDraft, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+  "observations": z.array(z.object({
+  "field": DocumentReviewFieldSchema,
+  "value": z.string(),
+  "citations": z.array(DocumentReviewCitationSchema),
+}).passthrough()),
+  "questions": z.array(z.object({
+  "field": DocumentReviewFieldSchema,
+  "kind": z.union([z.literal("missing"), z.literal("ambiguous"), z.literal("conflict")]),
+  "question": z.string(),
+  "citations": z.array(DocumentReviewCitationSchema),
+}).passthrough()),
+}).passthrough());
+
 export const LocalEdgeRunStatusSchema: z.ZodType<import("./execution-result").LocalEdgeRunStatus, z.ZodTypeDef, unknown> = z.lazy(() => z.union([z.literal("error"), z.literal("success"), z.literal("warning")]));
 
 export const LocalRunRecordSchema: z.ZodType<import("./domain/workflow-types").LocalRunRecord, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
@@ -452,6 +502,13 @@ export const SourceTraceRefSchema: z.ZodType<import("./tool-types").SourceTraceR
   "relationshipPath": z.array(z.string()),
   "rowId": z.string().optional(),
   "valuePreview": z.string().optional(),
+}).passthrough());
+
+export const DocumentReviewFieldSchema: z.ZodType<import("./domain/document-review").DocumentReviewField, z.ZodTypeDef, unknown> = z.lazy(() => z.union([z.literal("currency"), z.literal("document_type"), z.literal("company"), z.literal("reporting_period"), z.literal("fact"), z.literal("workflow_relevance")]));
+
+export const DocumentReviewCitationSchema: z.ZodType<import("./domain/document-review").DocumentReviewCitation, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+  "segmentId": z.string(),
+  "quote": z.string(),
 }).passthrough());
 
 export const LocalWorkflowExecutionSchema: z.ZodType<import("./domain/workflow-types").LocalWorkflowExecution, z.ZodTypeDef, unknown> = z.lazy(() => z.object({

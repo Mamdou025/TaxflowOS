@@ -9,6 +9,7 @@ import type {
 import { type ToolRunResult, type ToolExecutionContext, type ToolDefinition } from './types';
 import { asRecord } from './primitives';
 import { getToolInputSchema, getToolOutputSchema } from './ports';
+import { replayDocumentEvidence } from '../document-evidence';
 
 export const BACKEND_ADAPTED_TOOL_IDS = [
   'source.manual_table',
@@ -468,8 +469,19 @@ export function createBackendAdaptedTool(toolId: string): ToolDefinition | null 
     defaultConfig: backendDefinition.defaultConfig,
     description: backendDefinition.description,
     displayName: backendDefinition.displayName,
-    execute: (context) =>
-      adaptBackendResult(executeBackendTool(toolId, toBackendExecutionContext(context))),
+    execute: (context) => {
+      const capture = toolId === 'source.manual_table' ? replayDocumentEvidence(context) : null;
+      if (capture?.status === 'error') return capture;
+      const result = adaptBackendResult(
+        executeBackendTool(toolId, toBackendExecutionContext(context)),
+      );
+      if (capture) {
+        result.output.extractions = capture.output.extractions;
+        result.warnings.push(...capture.warnings);
+        if (result.status === 'success' && capture.warnings.length) result.status = 'warning';
+      }
+      return result;
+    },
     family: backendDefinition.family,
     inputRoles: backendDefinition.inputRoles,
     inputSchema: getToolInputSchema(

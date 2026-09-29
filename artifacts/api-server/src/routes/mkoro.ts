@@ -5,8 +5,14 @@ import {
   MkoroThreadIdSchema,
   MkoroPermissionRequestSchema,
   MkoroIdSchema,
+  MkoroApprovalSettingsSchema,
 } from '@workspace/api-zod/mkoro';
-import { createPairing, listWorkers, revokeWorker } from '../lib/mkoro/workers';
+import {
+  createPairing,
+  listWorkers,
+  revokeWorker,
+  setAutomaticApproval,
+} from '../lib/mkoro/workers';
 import {
   listConversations,
   conversationDetail,
@@ -39,6 +45,12 @@ router.get('/workers', async (req, res) => {
 });
 router.post('/pairings', async (req, res) => {
   res.status(201).json(await createPairing(scope(req)));
+});
+// Writes execution policy for the actor's own computer; execute role is required.
+router.patch('/workers/:id/approval', async (req, res) => {
+  const input = MkoroApprovalSettingsSchema.safeParse(req.body);
+  if (!input.success) throw new MkoroError(400, 'Choose whether to approve tools automatically.');
+  res.json(await setAutomaticApproval(scope(req), id(req.params.id), input.data.autoApprove));
 });
 router.delete('/workers/:id', async (req, res) => {
   const workerId = id(req.params.id);

@@ -87,11 +87,28 @@ export function validateWorkflowLibrary(input: unknown): WorkflowLibrary {
           ...session.reviewed,
           ...session.sources.map((source) => source.blockId),
           ...session.attempts.map((attempt) => attempt.blockId),
+          ...(session.documentReviews ?? []).map((review) => review.blockId),
         ].some((id) => !blocks.has(id))
       )
         throw new Error('A guided run references a block outside its saved version.');
       if (Object.entries(session.results).some(([id, result]) => result.blockId !== id))
         throw new Error('A guided run contains a result for a different block.');
+      const reviews = session.documentReviews ?? [];
+      uniqueIds(reviews, 'document review');
+      for (const review of reviews) {
+        const source = session.sources.find((item) => item.id === review.sourceId);
+        if (
+          !source?.extraction ||
+          source.blockId !== review.blockId ||
+          source.name !== review.fileName ||
+          source.extraction.revision !== review.sourceRevision ||
+          source.extraction.contentHash !== review.sourceHash ||
+          !Number.isSafeInteger(review.sessionRevision) ||
+          review.sessionRevision < 1 ||
+          review.sessionRevision > session.revision
+        )
+          throw new Error('A document review does not match its recorded source or run revision.');
+      }
     }
   }
   return library;

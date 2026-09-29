@@ -39,7 +39,27 @@ Interactive Chat and Run views share a saved-version session and component. See
 [shared interactive workflow execution](unified-workflow-execution.md) for block
 commands, source revisions, checkpoint behavior and runtime boundaries.
 
+Document acquisition stays in upload/API adapters; the synchronous workflow
+executors replay saved `DocumentExtraction` snapshots. `workflow-contracts` owns
+the optional persisted evidence shape, `workflow-core` owns source revisions and
+bounded evidence inspection, and Chat/Run/Build render the recorded result.
+Original bytes use the existing Sources storage API; run persistence retains
+extracted evidence and a hash, with storage failures shown separately.
+
+Workflow-specific document interpretations are optional run annotations owned by
+workflow contracts and commands. The command validates source quotations and
+revision identity; Sina prepares proposals and the shared UI lets a user save
+them. Annotation history is separate from calculated outputs and approval.
+
 ## Ownership
+
+Chat also offers MicroSina through the same CopilotKit endpoint and tool adapters.
+The server selects the Foundry adapter from an allowlisted provider header after
+the existing session/workspace execute checks. Foundry owns MicroSina's pinned
+agent definition and model; Inscope supplies context, function tools and the
+existing review flow. The first saved message carries non-prompt `chatAgent`
+metadata; legacy chats select Sina. No schema migration is required.
+See [MicroSina integration and limits](microsina-foundry/README.md).
 
 Chat is led by Sina. `features/assistant/runtime/computer-delegation` and its UI
 adapter expose one structured computer delegation tool; Sina retains platform
@@ -55,6 +75,12 @@ Worker tokens only authorize `/api/mkoro-worker`; no platform session or tool
 credentials are sent to Goose. Typed categories and platform-target validation
 constrain admission, while prompts define the handoff. They are not a sandbox for
 the companion's generic browser/shell tools.
+
+Migration `0008_mkoro_automatic_approval.sql` adds a personal worker setting and
+permission decision provenance. Authenticated polling consumes pending offered
+one-action approvals when that setting is enabled, under task/permission locks.
+Cancellation and ownership remain server-owned; no permanent Goose grant or
+browser-only automatic approval loop is introduced.
 
 The companion polls outbound and runs Goose through ACP. A separately authorized
 10-second screen-view lease enables Windows capture for an active task. Bounded

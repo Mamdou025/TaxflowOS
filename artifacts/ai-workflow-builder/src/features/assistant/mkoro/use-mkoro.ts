@@ -134,6 +134,15 @@ export function useMkoroActions() {
     busy,
     error,
     clearPairing: () => setPairing(null),
+    setAutomaticApproval: (id: string, autoApprove: boolean) =>
+      act(async () => {
+        z.object({ ok: z.literal(true) }).parse(
+          await apiJSON(`${MKORO_PATH}/workers/${id}/approval`, {
+            ...mkoroPost({ autoApprove }),
+            method: 'PATCH',
+          }),
+        );
+      }),
     createPairing: () =>
       act(async () => {
         setPairing(

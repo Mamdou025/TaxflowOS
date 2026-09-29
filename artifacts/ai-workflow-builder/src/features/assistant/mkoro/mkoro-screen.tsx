@@ -48,6 +48,7 @@ export function MkoroScreen({
     let nextRenew = 0;
     let nextRead = 0;
     let expiresAt = 0;
+    const waitingSince = Date.now();
     const tick = async () => {
       const now = Date.now();
       setFrame((previous) =>
@@ -99,7 +100,9 @@ export function MkoroScreen({
                 ? 'Screen sharing stopped.'
                 : result.status === 'unavailable'
                   ? 'The computer could not capture its desktop.'
-                  : 'Waiting for a current screenshot from the computer…'),
+                  : Date.now() - waitingSince > 15000
+                    ? 'No screenshot has arrived. On the Goose computer, update the complete companion bundle, keep Windows unlocked, and run Check-MkoroScreen.cmd. Check that the relay allows screenshot uploads.'
+                    : 'Waiting for a current screenshot from the computer…'),
           );
         }
       } catch (cause) {

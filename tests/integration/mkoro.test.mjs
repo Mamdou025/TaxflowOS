@@ -85,6 +85,95 @@ const event = (task, seq, type, payload = {}) => ({
   payload,
 });
 
+test('automatic approvals are personal, optional, recorded once, reversible and respect Stop', async () => {
+  const companion = await pair();
+  const endpoint = `/workers/${companion.workerId}/approval`;
+  const getWorker = async () =>
+    (await json(await request('/workers', undefined, 'GET'))).workers.find(
+      (item) => item.id === companion.workerId,
+    );
+  assert.equal((await getWorker()).autoApprove, false);
+  for (const path of [endpoint, endpoint.toUpperCase() + '/']) {
+    assert.equal((await request(path, { autoApprove: true }, 'PATCH', viewer)).status, 403);
+  }
+  assert.equal((await request(endpoint, { autoApprove: true }, 'PATCH', editor)).status, 404);
+  assert.equal((await request(endpoint, { autoApprove: true }, 'PATCH', owner, other)).status, 404);
+  assert.equal((await request(endpoint, { autoApprove: 'true' }, 'PATCH')).status, 400);
+  const chat = await conversation(companion);
+  const { task } = await message(chat);
+  await json(await workerRequest('/poll', {}, companion.token));
+  const permission = (
+    seq,
+    requestId,
+    options = [
+      { optionId: 'always', name: 'Always', kind: 'allow_always' },
+      { optionId: 'once', name: 'Once', kind: 'allow_once' },
+    ],
+  ) => event(task, seq, 'permission_required', { requestId, options });
+  await json(
+    await workerRequest(
+      '/events',
+      { events: [event(task, 0, 'task_started'), permission(1, 'first')] },
+      companion.token,
+    ),
+  );
+  assert.deepEqual((await json(await workerRequest('/poll', {}, companion.token))).commands, []);
+  await json(await request(endpoint, { autoApprove: true }, 'PATCH'));
+  assert.equal((await getWorker()).autoApprove, true);
+  const polls = await Promise.all([
+    workerRequest('/poll', {}, companion.token),
+    workerRequest('/poll', {}, companion.token),
+  ]);
+  const commands = (await Promise.all(polls.map((response) => json(response)))).flatMap(
+    (body) => body.commands,
+  );
+  assert.equal(commands.length, 1);
+  assert.deepEqual(commands[0].payload, { requestId: 'first', optionId: 'once' });
+  const audit = await stack.db.query(
+    'SELECT decision,decision_source FROM mkoro_permissions WHERE task_id=$1 AND request_id=$2',
+    [task.id, 'first'],
+  );
+  assert.deepEqual(audit.rows, [{ decision: 'once', decision_source: 'automatic' }]);
+  assert.equal(
+    (await json(await request(`/tasks/${task.id}/events`, undefined, 'GET'))).task.status,
+    'running',
+  );
+  await json(
+    await workerRequest(
+      '/events',
+      {
+        events: [
+          permission(2, 'permanent-only', [
+            { optionId: 'always', name: 'Always', kind: 'allow_always' },
+          ]),
+        ],
+      },
+      companion.token,
+    ),
+  );
+  assert.deepEqual((await json(await workerRequest('/poll', {}, companion.token))).commands, []);
+  await json(await request(endpoint, { autoApprove: false }, 'PATCH'));
+  await json(
+    await workerRequest('/events', { events: [permission(3, 'manual-again')] }, companion.token),
+  );
+  assert.deepEqual((await json(await workerRequest('/poll', {}, companion.token))).commands, []);
+  await json(await request(`/tasks/${task.id}/cancel`, {}));
+  await json(await request(endpoint, { autoApprove: true }, 'PATCH'));
+  const stopped = await json(await workerRequest('/poll', {}, companion.token));
+  assert.ok(stopped.commands.every((command) => command.type === 'cancel'));
+  assert.equal(
+    (
+      await stack.db.query(
+        'SELECT decision FROM mkoro_permissions WHERE task_id=$1 AND request_id=$2',
+        [task.id, 'manual-again'],
+      )
+    ).rows[0].decision,
+    null,
+  );
+  await json(await request(`/workers/${companion.workerId}`, undefined, 'DELETE'));
+  assert.equal((await request(endpoint, { autoApprove: true }, 'PATCH')).status, 404);
+});
+
 test('cookie APIs deny unauthenticated and Viewer writes, including case and trailing slash variants', async () => {
   assert.equal((await fetch(stack.baseURL + '/api/mkoro/workers')).status, 401);
   for (const path of [

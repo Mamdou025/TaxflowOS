@@ -79,6 +79,16 @@ configuration and permission files remain unchanged. Model and extension
 settings are copied again when the companion restarts; already saved sessions
 may retain their own configuration, so use a new Mkoro chat to apply tool changes.
 
+Inscope's per-computer automatic-approval setting can answer those one-action
+requests without clicks, including pending requests. The server records automatic
+decisions and checks current access. The companion still uses ACP approval mode;
+permanent grants are not required. Stop still cancels pending work.
+
+To diagnose a missing desktop view, run `node scripts/mkoro/check-screen.mjs`
+on the Goose computer (or `Check-MkoroScreen.cmd` in the Windows bundle).
+The check discards pixels and reports dimensions or failure without saving or
+uploading an image. Update all companion files together before restarting.
+
 Global recipes, custom prompt folders, plugins and saved desktop sessions are not
 copied. Workspace hints and skills can still be discovered by Goose normally.
 The browser profile/login used by a configured browser extension remains that

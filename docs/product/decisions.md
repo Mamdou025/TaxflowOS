@@ -169,6 +169,20 @@ and an active task and never leak across chats. A local output path is not an
 uploaded Source. Generic Goose tools remain subject to the local computer's
 permissions, so admission checks must not be advertised as an OS sandbox.
 
+### D-07 follow-up — automatic Mkoro tool approval
+
+**Confirmed by the user on 2026-09-29:** repeated tool approvals make Mkoro
+impractical; provide automatic approval for the connected computer.
+
+Implementation: a saved, personal, per-computer setting, initially off for other
+connections. When enabled, the server answers offered `allow_once` requests,
+including pending requests, during authenticated worker polling. It records the
+decision as automatic and never selects a permanent Goose grant. Stop, revoked
+credentials and current workspace execution permissions still apply. Disabling
+the setting affects subsequent decisions; it cannot undo an already approved
+action. This covers browser, file and shell tool requests within delegated tasks.
+It does not authorize new tasks, expand Sina's scope, or enable desktop capture.
+
 ## Deferred implementation decisions
 
 | Decision                                        | When to settle                  | Required evidence                                                         |

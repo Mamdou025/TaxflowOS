@@ -12,6 +12,7 @@ import {
 } from '../runtime/agent-action-client';
 import { WorkflowCommandResult } from './workflow-command-result';
 import { uploadedRowsAtom } from '@/shared/stores/workspace-store';
+import { chatAgentAtom } from '@/shared/stores/chat-store';
 import { prepareWorkflowRunInput, type AgentTemplateRunArgs } from '../runtime/workflow-run-input';
 
 export type { AgentTemplateRunArgs } from '../runtime/workflow-run-input';
@@ -83,7 +84,7 @@ export async function requestAgentWorkflowRun(
   args = prepared.args;
   const request: AgentActionRequest = {
     operationId: crypto.randomUUID(),
-    agentId: 'sina',
+    agentId: store.get(chatAgentAtom),
     capability: 'workflow:execute',
     resourceType: 'workflow',
     resourceId: normalizedId,

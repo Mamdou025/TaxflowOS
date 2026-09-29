@@ -171,6 +171,14 @@ async function mockMkoro(page: Page, { modelReady = false } = {}) {
             },
       );
     }
+    if (method === 'PATCH' && pathname === `/api/mkoro/workers/${workerId}/approval`) {
+      const body = request.postDataJSON();
+      state.writes.push({ path: pathname, body });
+      state.workers = state.workers.map((item) =>
+        item.id === workerId ? { ...item, autoApprove: body.autoApprove } : item,
+      );
+      return route.fulfill({ json: { ok: true } });
+    }
     if (method === 'GET' && pathname === '/api/mkoro/conversations')
       return route.fulfill({ json: { conversations: state.conversations } });
     if (method === 'GET' && pathname.startsWith('/api/mkoro/threads/'))
@@ -307,6 +315,131 @@ test('one Sina composer remains while computer settings offer pairing and preser
   await settings.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(sinaDraft).toHaveValue('Keep this unsent Sina request.');
   expect(state.writes.map((write) => write.path)).toEqual(['/api/mkoro/pairings']);
+  expect(state.unexpected).toEqual([]);
+});
+
+test('Mkoro reconnects a revoked computer with fresh pairing and a selectable new entry', async ({
+  page,
+}) => {
+  const state = await mockMkoro(page);
+  state.workers = [{ ...worker, name: 'Surface Book', status: 'revoked' }];
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Mkoro computer settings' }).click();
+  const settings = page.getByRole('dialog', { name: 'Mkoro computer', exact: true });
+  await expect(settings.getByRole('option', { name: 'Surface Book · revoked' })).toBeDisabled();
+  await settings.getByRole('button', { name: 'Reconnect Surface Book', exact: true }).click();
+  const pairing = settings.getByRole('region', { name: 'Pair your computer' });
+  await expect(pairing).toContainText('original startup command with --pair added');
+  await expect(pairing).toContainText('same server or relay address');
+  await expect(pairing).toContainText('Creating a code does not connect the computer');
+  await expect(pairing.getByRole('textbox', { name: 'Pairing code' })).toHaveValue(
+    'synthetic-pairing-token-for-browser-test-only',
+  );
+  await expect(settings.getByText(/^Delegation ready/)).toHaveCount(0);
+  const replacementId = '10000000-0000-4000-8000-000000000002';
+  state.workers.push({ ...worker, id: replacementId, name: 'Mkoro - Surface Book' });
+  await settings.getByRole('button', { name: 'Refresh Mkoro status' }).click();
+  await settings.getByRole('combobox', { name: 'Mkoro computer' }).selectOption(replacementId);
+  await expect(settings.getByRole('combobox', { name: 'Mkoro computer' })).toHaveValue(
+    replacementId,
+  );
+  await expect(settings.getByText(/^Delegation ready/)).toBeVisible();
+  await expect(settings.getByRole('option', { name: 'Surface Book · revoked' })).toBeDisabled();
+  expect(state.writes.map((write) => write.path)).toEqual(['/api/mkoro/pairings']);
+  expect(state.unexpected).toEqual([]);
+});
+
+test('Mkoro distinguishes online legacy companions from delegation readiness', async ({ page }) => {
+  const state = await mockMkoro(page);
+  state.workers = [{ ...worker, capabilities: ['goose-acp'] }];
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Mkoro computer settings' }).click();
+  const settings = page.getByRole('dialog', { name: 'Mkoro computer', exact: true });
+  await expect(
+    settings.getByText('Connected — companion update required before delegation.'),
+  ).toBeVisible();
+  await expect(settings.getByText(/^Delegation ready/)).toHaveCount(0);
+  state.workers = [worker];
+  await settings.getByRole('button', { name: 'Refresh Mkoro status' }).click();
+  await expect(settings.getByText(/^Delegation ready/)).toBeVisible();
+  state.workerResponse = 'unavailable';
+  await settings.getByRole('button', { name: 'Refresh Mkoro status' }).click();
+  await expect(settings.getByText('Unverified', { exact: true })).toBeVisible();
+  await expect(settings.getByText(/^Delegation ready/)).toHaveCount(0);
+  expect(state.writes).toEqual([]);
+});
+
+test('Mkoro saves automatic approval per computer and can turn it off', async ({ page }) => {
+  const state = await mockMkoro(page);
+  state.workers = [worker];
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Mkoro computer settings' }).click();
+  const toggle = page.getByRole('checkbox', { name: /Automatically approve Mkoro tools/ });
+  await expect(toggle).not.toBeChecked();
+  // This control reflects the saved server value after the request and refresh.
+  await toggle.click();
+  await expect(toggle).toBeChecked();
+  await page.reload();
+  await page.getByRole('button', { name: 'Mkoro computer settings' }).click();
+  await expect(toggle).toBeChecked();
+  await toggle.click();
+  await expect(toggle).not.toBeChecked();
+  expect(state.writes.map((write) => write.body)).toEqual([
+    { autoApprove: true },
+    { autoApprove: false },
+  ]);
+  expect(state.unexpected).toEqual([]);
+});
+
+test('Mkoro explains missing screenshot uploads instead of waiting indefinitely', async ({
+  page,
+}) => {
+  const state = await mockMkoro(page);
+  await openTask(page, state);
+  await page.getByRole('button', { name: 'View Mkoro’s computer' }).click();
+  await expect(page.getByRole('region', { name: 'Mkoro desktop view' })).toContainText(
+    'No screenshot has arrived.',
+    { timeout: 25000 },
+  );
+  await expect(page.getByRole('region', { name: 'Mkoro desktop view' })).toContainText(
+    'Check-MkoroScreen.cmd',
+  );
+  await expect(page.getByRole('img', { name: `Mkoro desktop on ${worker.name}` })).toHaveCount(0);
+});
+
+test('Mkoro requires confirmation before revoking and offers recovery afterward', async ({
+  page,
+}) => {
+  const state = await mockMkoro(page);
+  state.workers = [worker];
+  const deletions: string[] = [];
+  await page.route(`**/api/mkoro/workers/${workerId}`, (route) => {
+    if (route.request().method() !== 'DELETE') return route.fallback();
+    deletions.push(workerId);
+    state.workers = [{ ...worker, status: 'revoked' }];
+    return route.fulfill({ json: { ok: true } });
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Mkoro computer settings' }).click();
+  const settings = page.getByRole('dialog', { name: 'Mkoro computer', exact: true });
+  const revoke = settings.getByRole('button', {
+    name: `Revoke access to ${worker.name}`,
+    exact: true,
+  });
+  await revoke.click();
+  await expect(settings.getByRole('region', { name: 'Confirm revocation' })).toContainText(
+    'requires a fresh code',
+  );
+  expect(deletions).toEqual([]);
+  await settings.getByRole('button', { name: 'Keep connected', exact: true }).click();
+  await expect(settings.getByRole('region', { name: 'Confirm revocation' })).toHaveCount(0);
+  expect(deletions).toEqual([]);
+  await revoke.click();
+  await settings.getByRole('button', { name: 'Confirm revoke access', exact: true }).click();
+  await expect(
+    settings.getByRole('button', { name: `Reconnect ${worker.name}`, exact: true }),
+  ).toBeVisible();
+  expect(deletions).toEqual([workerId]);
   expect(state.unexpected).toEqual([]);
 });
 

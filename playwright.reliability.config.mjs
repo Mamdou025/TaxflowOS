@@ -3,6 +3,7 @@ import { browserConfig } from './scripts/testing/playwright-config.mjs';
 export default defineConfig({
   ...browserConfig(),
   testMatch: [
+    'microsina-chat.spec.ts',
     'mkoro-chat.spec.ts',
     'mkoro-delegation.spec.ts',
     'workflow-session.spec.ts',

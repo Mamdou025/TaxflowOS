@@ -15,9 +15,11 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import { useCopilotChat } from '@copilotkit/react-core';
 import { activeCoworkerAtom, activeRunAtom, setActiveCoworkerAtom } from '@/shared/stores/workspace-store';
 import { SINA } from '@/lib/coworkers';
+import { chatAgentAtom } from '@/shared/stores/chat-store';
 
 export function SpecialistPresence() {
   const { isLoading } = useCopilotChat();
+  const chatAgent = useAtomValue(chatAgentAtom);
   const run = useAtomValue(activeRunAtom);
   const active = useAtomValue(activeCoworkerAtom);
   const setCoworker = useSetAtom(setActiveCoworkerAtom);
@@ -27,16 +29,19 @@ export function SpecialistPresence() {
     if (run && run.phase !== 'done') return;
 
     // Only ever touch the Sina hat WE set — never clear the engine/other actors.
-    const mine = active?.coworker.id === SINA.id;
+    const mine = active?.coworker.id === SINA.id || active?.coworker.id === 'microsina';
 
     if (isLoading) {
       if (!mine) {
-        setCoworker({ coworker: SINA, status: 'Reviewing your question…' });
+        const coworker = chatAgent === 'microsina'
+          ? { ...SINA, id: 'microsina', name: 'MicroSina', initials: 'MS' }
+          : SINA;
+        setCoworker({ coworker, status: 'Reviewing your question…' });
       }
     } else if (mine) {
       setCoworker(null); // reply finished → clear our hat
     }
-  }, [isLoading, run, active, setCoworker]);
+  }, [isLoading, run, active, setCoworker, chatAgent]);
 
   return null;
 }

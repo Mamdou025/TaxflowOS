@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAtom } from 'jotai';
-import { Copy, Monitor, RefreshCw, X } from 'lucide-react';
+import { Monitor, RefreshCw } from 'lucide-react';
 import { permits } from '@workspace/api-zod/access';
 import { workspaceContext } from '@/platform/auth/workspace-context';
 import {
@@ -12,6 +12,7 @@ import {
   DialogTrigger,
 } from '@/shared/ui/dialog';
 import { MkoroConversationActivity } from './mkoro-chat-tasks';
+import { MkoroPairing } from './mkoro-pairing';
 import { useMkoroConversations } from './use-mkoro-history';
 import { mkoroSettingsOpenAtom, useMkoroActions, useMkoroConnection } from './use-mkoro';
 import './mkoro.css';
@@ -24,11 +25,16 @@ function ComputerSettingsBody() {
   const selectedConversation = legacy.conversations.find(
     (conversation) => conversation.id === selectedHistory,
   );
-  const [copied, setCopied] = useState(false);
+  const [reconnecting, setReconnecting] = useState('');
+  const [revokeId, setRevokeId] = useState('');
   const canExecute = !!workspaceContext && permits(workspaceContext.workspace.role, 'execute');
   const worker = connection.worker;
-  const pairingExpired = !!actions.pairing && Date.parse(actions.pairing.expiresAt) <= Date.now();
-  const setupCommand = `New-Item -ItemType Directory -Force "$env:USERPROFILE\\Mkoro" | Out-Null\nnode scripts/mkoro/companion.mjs --server '${window.location.origin}' --workspace "$env:USERPROFILE\\Mkoro"`;
+  const revoked = connection.workers.filter((item) => item.status === 'revoked');
+  const startPairing = (name = '') => {
+    setReconnecting(name);
+    actions.clearPairing();
+    void actions.createPairing();
+  };
   return (
     <div className="mkoro-panel mkoro-settings-body">
       <div className="mkoro-connection-bar">
@@ -38,7 +44,10 @@ function ComputerSettingsBody() {
             aria-label="Mkoro computer"
             value={connection.workerId}
             disabled={!canExecute || actions.busy}
-            onChange={(event) => connection.setWorkerId(event.target.value)}
+            onChange={(event) => {
+              setRevokeId('');
+              connection.setWorkerId(event.target.value);
+            }}
           >
             <option value="">Choose a computer</option>
             {connection.workers.map((item) => (
@@ -65,12 +74,23 @@ function ComputerSettingsBody() {
         </button>
       </div>
       <p>
-        Sina delegates computer tasks here when a platform tool cannot do the work. Keep the
-        companion running on the selected computer.
+        Use Sina chat on this computer. Mkoro’s companion and Goose run on the computer doing the
+        work, such as your Surface. Keep that computer awake and its companion running.
       </p>
+      {worker && worker.status !== 'revoked' && !connection.readError && (
+        <p role="status">
+          {worker.status !== 'online'
+            ? 'Offline — start the companion on the Goose computer and check its connection log.'
+            : worker.capabilities.includes('sina-delegation-v1')
+              ? 'Delegation ready — the companion is online and supports Sina tasks. Goose tools are checked when a task runs.'
+              : 'Connected — companion update required before delegation.'}
+        </p>
+      )}
       {worker?.status === 'online' && !worker.capabilities.includes('sina-delegation-v1') && (
         <p className="mkoro-warning" role="status">
-          Update and restart the companion on this computer before Sina can delegate tasks.
+          Update the complete Mkoro companion folder on the computer running Goose, then restart its
+          launcher. Keep its existing server or relay address. There is no delegation switch to
+          enable.
         </p>
       )}
       {worker && !worker.capabilities.includes('desktop-screenshots-v1') && (
@@ -80,26 +100,77 @@ function ComputerSettingsBody() {
         </p>
       )}
       <div className="mkoro-controls">
-        <button
-          type="button"
-          disabled={!canExecute || actions.busy}
-          onClick={() => {
-            setCopied(false);
-            void actions.createPairing();
-          }}
-        >
+        {worker && worker.status !== 'revoked' && (
+          <label>
+            <input
+              type="checkbox"
+              checked={worker.autoApprove ?? false}
+              disabled={!canExecute || actions.busy || !!connection.readError}
+              onChange={(event) =>
+                void actions.setAutomaticApproval(worker.id, event.target.checked)
+              }
+            />
+            Automatically approve Mkoro tools on this computer
+            <small>
+              {' '}
+              Covers browser, file and shell actions in delegated tasks, including pending requests.
+              Stop remains available. Turning this off does not undo actions already approved.
+            </small>
+          </label>
+        )}
+        <button type="button" disabled={!canExecute || actions.busy} onClick={() => startPairing()}>
           Connect a computer
         </button>
         {worker && worker.status !== 'revoked' && (
           <button
             type="button"
             disabled={!canExecute || actions.busy}
-            onClick={() => void actions.revoke(worker.id)}
+            onClick={() => setRevokeId(worker.id)}
           >
-            Disconnect {worker.name}
+            Revoke access to {worker.name}
           </button>
         )}
       </div>
+      {worker && worker.status !== 'revoked' && revokeId === worker.id && (
+        <section className="mkoro-warning" aria-label="Confirm revocation">
+          <p>
+            Revoking {worker.name} invalidates its saved connection credential. Reconnecting
+            requires a fresh code on the Goose computer. Saved task history remains available. To
+            pause work, use Stop on the task instead.
+          </p>
+          <button
+            type="button"
+            disabled={!canExecute || actions.busy}
+            onClick={() => void actions.revoke(worker.id)}
+          >
+            Confirm revoke access
+          </button>
+          <button type="button" onClick={() => setRevokeId('')}>
+            Keep connected
+          </button>
+        </section>
+      )}
+      {revoked.length > 0 && (
+        <section aria-label="Revoked computers">
+          <strong>Reconnect a revoked computer</strong>
+          <p>
+            These entries cannot receive tasks. Pair again to create a new connection for the same
+            computer.
+          </p>
+          <div className="mkoro-controls">
+            {revoked.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                disabled={!canExecute || actions.busy}
+                onClick={() => startPairing(item.name)}
+              >
+                Reconnect {item.name}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
       {!canExecute && (
         <p className="mkoro-notice">
           Viewer access: you can read your saved history. Connecting, controlling or viewing a
@@ -114,54 +185,20 @@ function ComputerSettingsBody() {
           </button>
         </div>
       )}
-      {actions.pairing && (
-        <div className="mkoro-pairing" role="region" aria-label="Pair your computer">
-          <button
-            type="button"
-            className="mkoro-icon-button mkoro-close"
-            aria-label="Hide pairing code"
-            onClick={actions.clearPairing}
-          >
-            <X size={15} />
-          </button>
-          <strong>Pair your computer</strong>
-          <p>
-            From your Inscope project folder, run this in PowerShell. Install Node.js and configure
-            the Goose CLI with a model first.
-          </p>
-          <pre>{setupCommand}</pre>
-          <p>
-            Paste the code only into the companion when prompted. It links that computer to your
-            account in this workspace.
-          </p>
-          <label>
-            Pairing code
-            <input
-              readOnly
-              value={
-                pairingExpired ? 'Expired — generate a new code' : actions.pairing.pairingToken
-              }
-              onFocus={(event) => event.currentTarget.select()}
-            />
-          </label>
-          <button
-            type="button"
-            disabled={pairingExpired}
-            onClick={() =>
-              void navigator.clipboard.writeText(actions.pairing?.pairingToken ?? '').then(
-                () => setCopied(true),
-                () => setCopied(false),
-              )
-            }
-          >
-            <Copy size={13} aria-hidden />
-            {copied ? 'Copied' : 'Copy code'}
-          </button>
-          <small>
-            Expires {new Date(actions.pairing.expiresAt).toLocaleTimeString()} · Single use
-          </small>
-        </div>
-      )}
+      <MkoroPairing
+        key={actions.pairing?.pairingToken}
+        actions={actions}
+        computerName={reconnecting}
+      />
+      <details className="mkoro-connections">
+        <summary>Test delegation and watch the browser</summary>
+        <p>
+          Ask Sina to delegate opening example.com in a visible browser and report its heading.
+          While the task is active, choose “View Mkoro’s computer” on its chat card and review tool
+          requests with “Allow once”. Keep the Goose computer unlocked with its browser visible.
+        </p>
+        <p>The view shows refreshed desktop screenshots and ends when the task finishes.</p>
+      </details>
       <details className="mkoro-connections">
         <summary>Computer task history</summary>
         <p>
@@ -220,7 +257,8 @@ export function MkoroComputerSettings() {
         <DialogHeader>
           <DialogTitle>Mkoro computer</DialogTitle>
           <DialogDescription>
-            Connect a computer for tasks Sina delegates. All new requests stay in your Sina chat.
+            Connect the computer running Goose to Sina. Pairing, readiness and recovery are managed
+            here.
           </DialogDescription>
         </DialogHeader>
         <ComputerSettingsBody />

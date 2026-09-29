@@ -1,5 +1,9 @@
 import { atom } from 'jotai';
 import { atomWithStorage } from '@/platform/auth/workspace-atoms';
+export type ChatAgent = 'sina' | 'microsina';
+
+/** Selected provider; scoped to the signed-in account and workspace like the thread ID. */
+export const chatAgentAtom = atomWithStorage<ChatAgent>('inscope.chat.agent', 'sina', { getOnInit: true });
 
 // The conversation itself is now owned by CopilotKit (see CopilotWorkspacePanel).
 // These atoms hold the saved thread identity and workspace display state.

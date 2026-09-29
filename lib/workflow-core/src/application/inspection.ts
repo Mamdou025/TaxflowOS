@@ -36,6 +36,7 @@ export function inspectWorkflowRun(entry: PersonalWorkflow, runId: string) {
     results,
     steps,
     sources: session?.sources ?? [],
+    documentReviews: session?.documentReviews ?? record?.documentReviews ?? [],
     attempts: session?.attempts ?? [],
     revision: session?.revision,
     paused: session?.paused,
@@ -43,3 +44,10 @@ export function inspectWorkflowRun(entry: PersonalWorkflow, runId: string) {
     kind: session ? ('session' as const) : ('record' as const),
   });
 }
+export { inspectDocumentEvidence, inspectCapturedDocuments } from './document-inspection';
+export {
+  prepareDocumentReview,
+  makeDocumentReview,
+  documentReviewSummaries,
+  currentDocumentSourceIds,
+} from './document-review';

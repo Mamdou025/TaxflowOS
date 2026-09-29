@@ -27,6 +27,29 @@ before(
 );
 after(() => run.close());
 
+test('MicroSina uses the same session and execute-role boundary as Sina', async () => {
+  for (const path of ['/copilotkit', '/COPILOTKIT/', '/copilotkit/info']) {
+    const headers = { 'x-inscope-agent': 'microsina' };
+    assert.equal(
+      (
+        await fetch(stack.baseURL + '/api' + path, {
+          method: 'POST',
+          headers: { ...headers, 'x-taxflow-workspace': workspace },
+        })
+      ).status,
+      401,
+    );
+    assert.equal(
+      (await viewer.request(path, { workspace, method: 'POST', body: {}, headers })).status,
+      403,
+    );
+    assert.equal(
+      (await editor.request(path, { workspace: other, method: 'POST', body: {}, headers })).status,
+      403,
+    );
+  }
+});
+
 test('password-free demos persist, isolate guests, restrict sharing and revoke on exit', async () => {
   await checkDemoAccess(stack, owner, workspace, backup);
 });

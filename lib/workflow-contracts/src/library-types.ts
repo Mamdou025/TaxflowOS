@@ -1,6 +1,8 @@
 import type { WorkflowDefinition } from './domain/workflow-types';
 import type { LocalToolRunnerResult } from './execution-result';
 import type { ToolRunResult } from './tool-types';
+import type { DocumentExtraction } from './domain/document-extraction';
+import type { DocumentReview } from './domain/document-review';
 export type WorkflowSession = {
   id: string;
   version: number;
@@ -11,6 +13,7 @@ export type WorkflowSession = {
   results: Record<string, ToolRunResult>;
   stale: string[];
   reviewed: string[];
+  documentReviews?: DocumentReview[];
   sources: {
     id: string;
     blockId: string;
@@ -18,6 +21,7 @@ export type WorkflowSession = {
     at: string;
     mode: 'add' | 'replace';
     rows: Record<string, unknown>[];
+    extraction?: DocumentExtraction;
   }[];
   attempts: { at: string; revision: number; blockId: string; result: LocalToolRunnerResult }[];
 };
@@ -28,6 +32,7 @@ export type PersonalWorkflow = {
   versions: { number: number; savedAt: string; definition: WorkflowDefinition }[];
   sessions?: WorkflowSession[];
   runs: {
+    documentReviews?: DocumentReview[];
     version: number;
     at: string;
     result: LocalToolRunnerResult;

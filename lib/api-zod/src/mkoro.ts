@@ -29,11 +29,13 @@ export const MkoroPairingSchema = z.object({ pairingToken: z.string(), expiresAt
 export const MkoroWorkerSchema = z.object({
   id: MkoroIdSchema,
   name: z.string(),
+  autoApprove: z.boolean().optional(),
   capabilities: z.array(z.string()),
   status: z.enum(['online', 'offline', 'revoked']),
   lastSeenAt: date.nullable(),
   createdAt: date,
 });
+export const MkoroApprovalSettingsSchema = z.object({ autoApprove: z.boolean() }).strict();
 export const MkoroWorkersSchema = z.object({ workers: z.array(MkoroWorkerSchema) });
 export const MkoroCreateConversationSchema = z
   .object({

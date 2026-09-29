@@ -26,7 +26,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useCopilotChatInternal } from "@copilotkit/react-core";
 import { useAgent, useCopilotKit } from "@copilotkit/react-core/v2";
 import { useAtom } from "jotai";
-import { activeChatThreadIdAtom } from "@/shared/stores/chat-store";
+import { activeChatThreadIdAtom, chatAgentAtom } from "@/shared/stores/chat-store";
+import { readChatAgent, tagChatAgent } from './chat-agent';
 import { generateId } from "@/lib/utils/id";
 import {
   type AguiMessage,
@@ -79,6 +80,9 @@ export function useChatPersistence(): ChatPersistence {
   const readyChatRef = useRef(agentReady ? { setMessages } : null);
   readyChatRef.current = agentReady ? { setMessages } : null;
   const [activeThreadId, setActiveThreadId] = useAtom(activeChatThreadIdAtom);
+  const [chatAgent, setChatAgent] = useAtom(chatAgentAtom);
+  const chatAgentRef = useRef(chatAgent);
+  chatAgentRef.current = chatAgent;
   const [saving, setSaving] = useState(false);
   const initialThread = useRef(activeThreadId);
   const [restoring, setRestoring] = useState(!!activeThreadId && !(messages?.length));
@@ -100,7 +104,7 @@ export function useChatPersistence(): ChatPersistence {
 
   const doSave = useCallback(async () => {
     if (authFailedRef.current) return;
-    const projected = projectCompleteMessages(messagesRef.current ?? []);
+    const projected = tagChatAgent(projectCompleteMessages(messagesRef.current ?? []), chatAgentRef.current);
     if (projected.length === 0) return;
 
     // Mint a thread id on the first save of a fresh conversation.
@@ -129,7 +133,7 @@ export function useChatPersistence(): ChatPersistence {
   const ensureThread = useCallback(async (expectedUserMessageId: string): Promise<string> => {
     if (switchingRef.current) throw new Error("The chat is changing. No computer task was delegated.");
     assertCurrentChatRequest(messagesRef.current, expectedUserMessageId);
-    const projected = projectCompleteMessages(messagesRef.current ?? []);
+    const projected = tagChatAgent(projectCompleteMessages(messagesRef.current ?? []), chatAgentRef.current);
     if (!projected.some((message) => message.role === "user" && message.id === expectedUserMessageId))
       throw new Error("The request is not part of a complete conversation yet. No computer task was delegated.");
     const generation = threadGeneration.current;
@@ -205,6 +209,9 @@ export function useChatPersistence(): ChatPersistence {
         // Keep this chat's computer tasks accessible even if model discovery
         // failed. A provisional SDK agent cannot safely own restored messages.
         activeIdRef.current = id;
+        const restoredAgent = readChatAgent(rows);
+        chatAgentRef.current = restoredAgent;
+        setChatAgent(restoredAgent);
         setActiveThreadId(id);
         const readyChat = readyChatRef.current;
         if (!readyChat) {
@@ -230,7 +237,7 @@ export function useChatPersistence(): ChatPersistence {
         }
       }
     },
-    [setActiveThreadId, stopGeneration, agent]
+    [setActiveThreadId, setChatAgent, stopGeneration, agent]
   );
 
   const startNewThread = useCallback(async () => {

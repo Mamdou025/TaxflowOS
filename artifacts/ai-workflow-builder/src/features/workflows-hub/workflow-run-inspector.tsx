@@ -15,6 +15,9 @@ import { chatPanelModeAtom } from '@/shared/stores/chat-store';
 import { builderFocusTargetAtom } from '@/shared/workflow-engine/state/workflow-store';
 import { ReadableData } from '@/features/workflow-builder/ui/workspace/readable-data';
 import { LazyDetails } from '@/features/workflow-builder/ui/workspace/lazy-details';
+import { DocumentExtractionEvidence } from '@/features/documents/document-extraction-evidence';
+import { DocumentReviewView } from '@/features/documents/document-review-view';
+import { documentReviewSummaries } from '@workspace/workflow-core/inspection';
 import '@xyflow/react/dist/style.css';
 
 /** Build's evidence mode uses the selected version; it never mounts the mutable draft editor. */
@@ -239,6 +242,7 @@ export function WorkflowRunInspector({ workflowId, runId }: { workflowId: string
             <h4 className="font-medium">Recorded inputs</h4>
             <ReadableData value={result.input ?? {}} />
             <h4 className="font-medium">Recorded outputs</h4>
+            <DocumentExtractionEvidence value={result.output.extractions} />
             <ReadableData value={result.output} />
             <h4 className="font-medium">Source provenance</h4>
             <ReadableData value={result.sourceTrace} />
@@ -249,6 +253,19 @@ export function WorkflowRunInspector({ workflowId, runId }: { workflowId: string
         <LazyDetails summary="Saved rules and configuration">
           <ReadableData value={block.config} />
         </LazyDetails>
+        <DocumentReviewView
+          reviews={(evidence.kind === 'session'
+            ? documentReviewSummaries({
+                sources: evidence.sources,
+                documentReviews: evidence.documentReviews,
+              })
+            : evidence.documentReviews
+          ).filter(
+            (review) =>
+              review.blockId === block.id &&
+              (!attempt || review.sessionRevision <= attempt.revision),
+          )}
+        />
         <LazyDetails summary="Source revision history">
           <p className="text-sm">
             All attachments for this session. Historical attempts above retain the inputs actually
@@ -264,6 +281,9 @@ export function WorkflowRunInspector({ workflowId, runId }: { workflowId: string
                   Source {source.id} · block {source.blockId}
                 </p>
                 <ReadableData value={source.rows} />
+                <DocumentExtractionEvidence
+                  value={source.extraction ? [source.extraction] : undefined}
+                />
               </LazyDetails>
             ))
           ) : (

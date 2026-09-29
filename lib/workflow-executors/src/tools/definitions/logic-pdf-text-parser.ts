@@ -1,7 +1,7 @@
 import { type ToolDefinition } from '../types';
-import { createMockParserTool } from '../parser-tools';
+import { createParserTool } from '../parser-tools';
 
-export const logicPdfTextParserTool: ToolDefinition = createMockParserTool({
+export const logicPdfTextParserTool: ToolDefinition = createParserTool({
   displayName: 'PDF Text Parser',
   subtype: 'PDF Text Parser',
   toolId: 'logic.pdf_text_parser',

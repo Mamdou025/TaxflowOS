@@ -26,6 +26,7 @@ export const mkoroWorkers = pgTable('mkoro_workers', {
     .notNull()
     .references(() => users.id),
   name: text('name').notNull(),
+  autoApprove: boolean('auto_approve').notNull().default(false),
   tokenHash: text('token_hash').notNull().unique(),
   capabilities: jsonb('capabilities').$type<string[]>().notNull().default([]),
   createdAt: time('created_at').notNull().defaultNow(),
@@ -146,8 +147,12 @@ export const mkoroPermissions = pgTable(
     options: jsonb('options').$type<Record<string, unknown>[]>().notNull(),
     toolCall: jsonb('tool_call').$type<unknown>(),
     decision: text('decision'),
+    decisionSource: text('decision_source').notNull().default('manual'),
     createdAt: time('created_at').notNull().defaultNow(),
     decidedAt: time('decided_at'),
   },
-  (t) => [primaryKey({ columns: [t.taskId, t.requestId] })],
+  (t) => [
+    primaryKey({ columns: [t.taskId, t.requestId] }),
+    check('mkoro_permission_decision_source', sql`${t.decisionSource} IN ('manual','automatic')`),
+  ],
 );

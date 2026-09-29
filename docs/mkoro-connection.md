@@ -49,6 +49,23 @@ addition to pairing, polling and events. Keep application pages, session cookies
 and unrelated APIs out of that relay. The earlier temporary gateway/download
 bundle needs this explicit update; repository changes do not replace it.
 
+## Recover a revoked computer
+
+In Chat’s computer settings, choose **Reconnect [computer name]** under revoked
+computers to create a fresh pairing code. On the computer running Goose (for
+example, a Surface while Inscope chat is open on an Asus), stop the old companion
+and run its original startup command with `--pair` added. Preserve its server or
+relay address, working folder, Goose path and state options. Paste the code into
+the companion’s private prompt, then refresh settings and select the new entry.
+Creating a code alone does not establish a connection. The old credential stays
+revoked and the old task history remains available.
+
+Settings distinguish online companions that need an update from those ready for
+Sina delegation. Readiness reflects heartbeat and advertised capability; it does
+not prove the configured Goose model or browser tools will succeed. Revocation
+now has an explicit confirmation explaining that fresh pairing will be needed.
+Use a task’s Stop control when the intention is to stop that task.
+
 ## What Sina delegates
 
 Each delegation names a task type, exact external target, objective, expected
@@ -76,6 +93,17 @@ under that key produces a conflict, not another execution. A separate job needs
 a new user request. Saving the chat must succeed before dispatch; changing chats
 must not attach another conversation's task or result to the current one.
 
+## Automatic approvals
+
+Computer settings offer **Automatically approve Mkoro tools on this computer**.
+This saved personal setting lets the server answer each offered one-action
+approval during worker polling, including already pending requests. It covers
+browser, file and shell tools in delegated tasks. New connections start with it
+off. Turning it off restores manual decisions for subsequent requests; Stop
+remains available and cannot undo actions already approved. The server records
+automatic decisions separately from manual ones. This does not start new tasks
+or enable screenshots, and requires the same Owner/Editor access as execution.
+
 ## Watch the computer
 
 During an active Windows task, choose **View Mkoro's computer** on its task card.
@@ -91,6 +119,15 @@ A headless browser or another logged-in user's desktop will not appear. The
 helper checks for an interactive, normal input desktop; unavailable capture is
 reported explicitly. Other windows and private information visible on the desktop
 can appear while viewing is enabled.
+
+If the viewer reports that no screenshot has arrived, update the **complete**
+companion bundle on the Goose computer, including `capture.mjs`,
+`capture-windows.ps1`, `delegation.mjs` and `worker.mjs`. The older temporary
+download bundle omitted capture files. Restart using the same server/workspace/state
+options so pairing is reused. Run the bundle's `Check-MkoroScreen.cmd`, or
+`node scripts/mkoro/check-screen.mjs` from this repository on that computer, to
+check local capture. It prints only success/dimensions or a failure message;
+it never saves or uploads the image. Server polling alone does not prove capture.
 
 Closing or hiding the view stops renewal and requests release. Capture stops on
 lease expiry, cancellation, task completion, failed polling or shutdown; revoked

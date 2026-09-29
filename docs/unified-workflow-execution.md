@@ -31,6 +31,65 @@ the existing draft/version authorization flow and starting a new version.
 
 ## Persistence and runtime boundaries
 
+### Captured document evidence
+
+The guided run uploader accepts PDF, DOCX, Excel and JSON. Native PDF extraction
+preserves page text; DOCX preserves extracted paragraph locations (not original
+page layout). Each attachment records its content hash, extraction method, issues
+and source revision. Excel/JSON captures preserve selected records and available
+sheet/row locations. These are evidence snapshots, not a completeness or financial
+interpretation guarantee.
+
+Original files are uploaded through the existing Sources API. If storage fails,
+the run retains extracted evidence and displays an explicit missing-original
+warning. Downloading an available original checks its hash against the snapshot.
+Replacing or adding sources preserves prior attempts and invalidates dependent
+results. Text and structured records must use separate source blocks when added;
+Replace can change the source format.
+
+Run, Chat and the immutable Build inspector render the same recorded evidence.
+Sina's `inspectWorkflowBlock` can list documents, list their locations and read
+text in bounded pages using exact extraction/segment IDs. Evidence is untrusted
+document content; reading it does not execute steps or authorize actions.
+
+The five parser tools no longer fall back to default rows. Text, workbook and
+JSON readers require compatible captured evidence or supported explicit legacy
+records. OCR reads an explicitly acquired OCR capture; the guided uploader reports
+image-only PDFs as requiring OCR. PDF table parsing reports unavailable instead
+of treating text as a verified table. No new external extraction provider, fiscal
+interpretation, approximate matching or automatic document refresh is introduced.
+
+The extraction snapshot is optional in the persisted source contract. Historical
+backups remain readable. These changes target guided uploads; they do not migrate
+old attachments or refresh frozen durable workflow versions automatically.
+
+### Document interpretation notes
+
+Sina can use `inspectRunDocuments` to read current attachments before any block
+executes, then `proposeDocumentReview` to prepare a review card. A review addresses
+document type, company, reporting period and currency, with cited observations
+or explicit questions. Other observations can describe facts and workflow
+relevance. Missing information, ambiguities and conflicts stay visible.
+
+Workflow commands check that every quotation exists in the selected source
+segment. This validates the quotation's origin, not the interpretation's accuracy.
+Review notes remain proposals; they neither populate calculation inputs nor
+approve tax treatment. No automatic inference of missing values is implemented.
+
+The user selects **Save interpretation notes** to append the proposal to the
+paused run. The command rejects changed run revisions and replaced documents.
+Earlier notes remain available; Run and Build distinguish replaced sources and
+earlier interpretations. The latest notes for current sources accompany the
+approved run snapshot and do not change when later notes are saved. Backups
+validate note/source identity; old backups without notes remain readable.
+Saving notes does not execute, change calculated results or approve the run.
+Existing workspace synchronization reports server persistence separately.
+
+Sina's operating instructions explain this sequence. Live model interpretation
+quality still requires a reviewed document benchmark. Company-history retrieval,
+rulebook applicability, financial table interpretation and mapping acceptance are
+separate future work.
+
 Sessions are an optional additive field in the existing workflow library contract.
 Older backups remain readable. Current workspace storage and revision conflict
 handling also cover guided sessions; server persistence is reported by the

@@ -6,6 +6,18 @@ import type { WorkflowDefinition } from '@workspace/workflow-contracts/domain/wo
 import type { GraphRuntime } from '../core/ports';
 import { executeGraph } from '../core/graph';
 import { getSavedVersion, recordWorkflowExecution, WorkflowCommandError } from './commands';
+import type { DocumentExtraction } from '@workspace/workflow-contracts/domain/document-extraction';
+import { DocumentExtractionSchema } from '@workspace/workflow-contracts/generated-schemas';
+import { makeDocumentReview, documentReviewSummaries } from './document-review';
+import type { DocumentReviewDraft } from '@workspace/workflow-contracts/domain/document-review';
+
+export function isDocumentSource(block: WorkflowDefinition['blocks'][number]) {
+  return (
+    block.family === 'Source' &&
+    (/excel|workbook|uploaded|manual_table|pdf_document/.test(String(block.config.sourceKind)) ||
+      ['source.manual_table', 'source.pdf_document'].includes(String(block.config.toolId)))
+  );
+}
 
 function fail(message: string): never {
   throw new WorkflowCommandError('INVALID_REQUEST', message);
@@ -80,19 +92,35 @@ export function sessionDefinition(
     const attachments = session.sources.filter((item) => item.blockId === block.id);
     if (!attachments.length) continue;
     let rows: Record<string, unknown>[] = [];
+    let extractions: DocumentExtraction[] = [];
     for (const source of attachments) {
-      if (source.mode === 'replace') rows = [];
-      rows.push(
-        ...source.rows.map((row, index) => ({
-          ...row,
-          rowId: `${source.id}:${String(row.rowId ?? index + 1)}`,
-          sourceFileName: source.name,
-        })),
-      );
+      if (source.mode === 'replace') {
+        rows = [];
+        extractions = [];
+      }
+      const sourceRows = source.rows.map((row, index) => ({
+        ...row,
+        rowId: `${source.id}:${String(row.rowId ?? index + 1)}`,
+        sourceFileName: source.name,
+        ...(source.extraction
+          ? {
+              sourceExtractionId: source.extraction.id,
+              sourceRevision: source.extraction.revision,
+              sourceContentHash: source.extraction.contentHash,
+            }
+          : {}),
+      }));
+      rows.push(...sourceRows);
+      if (source.extraction) extractions.push({ ...source.extraction, rows: sourceRows });
     }
+    const textSource = extractions.some((item) =>
+      ['pdf_text', 'docx_text', 'ocr'].includes(item.method),
+    );
     block.config = {
       ...block.config,
-      sourceKind: 'manual_table',
+      sourceKind: textSource ? 'pdf_document' : 'manual_table',
+      toolId: textSource ? 'source.pdf_document' : 'source.manual_table',
+      documentExtractions: extractions.length ? extractions : undefined,
       requireUpload: false,
       rows,
       manualRows: rows,
@@ -123,6 +151,7 @@ function invalidate(session: WorkflowSession, ids: string[]) {
   session.stale = [...new Set([...session.stale, ...ids.filter((id) => !!session.results[id])])];
 }
 export type SessionAction =
+  | { kind: 'document_review'; sourceId: string; reviewId: string; draft: DocumentReviewDraft }
   | { kind: 'pause' | 'resume' | 'approve' }
   | { kind: 'block'; blockId: string }
   | { kind: 'review'; blockId: string }
@@ -133,6 +162,7 @@ export type SessionAction =
       name: string;
       mode: 'add' | 'replace';
       rows: Record<string, unknown>[];
+      extraction?: DocumentExtraction;
     };
 export function sessionContext(entry: PersonalWorkflow, session: WorkflowSession) {
   const definition = sessionDefinition(entry, session);
@@ -172,7 +202,25 @@ export function sessionContext(entry: PersonalWorkflow, session: WorkflowSession
     revision: session.revision,
     paused: session.paused,
     approvedAt: session.approvedAt,
-    sources: session.sources.map(({ rows, ...source }) => ({ ...source, records: rows.length })),
+    documentReviews: documentReviewSummaries(session).map(({ draft, ...review }) => ({
+      ...review,
+      observations: draft.observations.length,
+      questions: draft.questions.length,
+    })),
+    sources: session.sources.map(({ rows, extraction, ...source }) => ({
+      ...source,
+      records: rows.length,
+      extraction: extraction
+        ? {
+            id: extraction.id,
+            revision: extraction.revision,
+            method: extraction.method,
+            segments: extraction.segments.length,
+            issues: extraction.issues,
+            contentHash: extraction.contentHash,
+          }
+        : undefined,
+    })),
     steps,
   };
 }
@@ -191,26 +239,30 @@ export function changeSession(
       'The run changed. Review its current state before retrying.',
     );
   const definition = sessionDefinition(entry, session);
+  if (action.kind === 'document_review') {
+    if (!session.paused) fail('Pause the run before saving document interpretation notes.');
+    const review = makeDocumentReview(session, action.sourceId, action.draft, action.reviewId, at);
+    session.documentReviews = [...(session.documentReviews ?? []), review];
+  }
   if (action.kind === 'pause') session.paused = true;
   if (action.kind === 'resume') {
     session.paused = false;
   }
   if (action.kind === 'source') {
     const block = definition.blocks.find((item) => item.id === action.blockId);
-    if (
-      !block ||
-      block.family !== 'Source' ||
-      !/excel|workbook|uploaded|manual_table/.test(String(block.config.sourceKind))
-    )
+    if (!block || !isDocumentSource(block))
       fail('Choose an existing document source block from this run.');
+    if (action.extraction && !DocumentExtractionSchema.safeParse(action.extraction).success)
+      fail('Supply a valid captured extraction for this document.');
     if (
       !action.name.trim() ||
       !action.sourceId.trim() ||
-      !action.rows.length ||
+      (!action.rows.length &&
+        !action.extraction?.segments.some((segment) => segment.text.trim())) ||
       action.rows.length > 50000 ||
       action.rows.some((row) => !row || typeof row !== 'object' || Array.isArray(row))
     )
-      fail('Supply a named source containing 1–50,000 records.');
+      fail('Supply a named source containing document text or 1–50,000 records.');
     if (
       new Set(action.rows.map((row, index) => String(row.rowId ?? index + 1))).size !==
       action.rows.length
@@ -219,6 +271,40 @@ export function changeSession(
     if (session.sources.some((item) => item.id === action.sourceId))
       fail('This source operation already exists.');
     const previous = session.sources.filter((item) => item.blockId === block.id);
+    if (action.mode === 'add') {
+      const text = (method: string | undefined) =>
+        ['pdf_text', 'docx_text', 'ocr'].includes(method ?? '');
+      const reverseIndex = [...previous].reverse().findIndex((source) => source.mode === 'replace');
+      const lastReplacement = reverseIndex < 0 ? 0 : previous.length - reverseIndex - 1;
+      if (
+        previous
+          .slice(Math.max(0, lastReplacement))
+          .some((source) => text(source.extraction?.method) !== text(action.extraction?.method))
+      )
+        fail(
+          'Use separate source blocks for text documents and structured records, or replace the current source.',
+        );
+    }
+    let extraction: DocumentExtraction | undefined;
+    if (action.extraction) {
+      const parsed = DocumentExtractionSchema.safeParse(action.extraction);
+      if (
+        !parsed.success ||
+        parsed.data.fileName !== action.name ||
+        !/^sha256:[a-f0-9]{64}$/.test(parsed.data.contentHash) ||
+        parsed.data.segments.some((segment) => !segment.id || !segment.location) ||
+        new Set(parsed.data.segments.map((segment) => segment.id)).size !==
+          parsed.data.segments.length ||
+        parsed.data.segments.reduce((size, segment) => size + segment.text.length, 0) > 1_000_000
+      )
+        fail('Supply a valid captured extraction for this document.');
+      extraction = {
+        ...parsed.data,
+        id: action.sourceId,
+        revision: previous.length + 1,
+        rows: structuredClone(action.rows),
+      };
+    }
     if (action.mode === 'add' && !previous.length)
       fail('Attach the first source with Replace, then add further sources.');
     session.sources.push({
@@ -228,6 +314,7 @@ export function changeSession(
       at,
       mode: action.mode,
       rows: structuredClone(action.rows),
+      ...(extraction ? { extraction } : {}),
     });
     if (
       (
@@ -343,6 +430,21 @@ export function changeSession(
       },
       at,
     );
+    entry = {
+      ...entry,
+      runs: entry.runs.map((run) =>
+        run.result.record.execution.id === recordedId
+          ? {
+              ...run,
+              documentReviews: structuredClone(
+                documentReviewSummaries(session)
+                  .filter((review) => review.status === 'current')
+                  .map(({ status, ...review }) => review),
+              ),
+            }
+          : run,
+      ),
+    };
   }
   session.revision += 1;
   return put(entry, session);

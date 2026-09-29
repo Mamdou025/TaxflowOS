@@ -1,4 +1,5 @@
 import type { ToolSchemaField } from '@workspace/workflow-contracts/tool-types';
+import { replayDocumentEvidence } from './document-evidence';
 // ─────────────────────────────────────────────────────────────────────────────
 // Executors for the catalog entries that had none.
 //
@@ -174,6 +175,10 @@ function makePinnedSourceTool(input: {
     toolGroup: 'source',
     toolId: input.toolId,
     execute: (context) => {
+      if (input.toolId === 'source.pdf_document') {
+        const captured = replayDocumentEvidence(context);
+        if (captured) return captured;
+      }
       const config = context.config;
       const rows = pinnedRows(config);
       const locator =

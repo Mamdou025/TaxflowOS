@@ -1,7 +1,7 @@
 import { type ToolDefinition } from '../types';
-import { createMockParserTool } from '../parser-tools';
+import { createParserTool } from '../parser-tools';
 
-export const logicApiResponseParserTool: ToolDefinition = createMockParserTool({
+export const logicApiResponseParserTool: ToolDefinition = createParserTool({
   displayName: 'API Response Parser',
   subtype: 'API Response Parser',
   toolId: 'logic.api_response_parser',

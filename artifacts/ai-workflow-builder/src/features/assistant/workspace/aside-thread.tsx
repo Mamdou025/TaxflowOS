@@ -22,7 +22,8 @@ import { detectComposerIntent } from '@/lib/composer-intent';
 import { formatArmedMessage } from '@/features/assistant/ui/runnable-tools';
 import { ChatSourcePicker } from '../ui/chat-source-picker';
 import { ComposerAgentMenu, ComposerAttachmentMenu } from '../ui/composer-menus';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
+import { chatAgentAtom } from '@/shared/stores/chat-store';
 import { selectedChatDocumentAtom, selectedChatWorkflowAtom } from '../runtime/chat/source-selection';
 
 // Accent + the reference's soft focus ring (rgba of --is-accent-ring). The composer
@@ -83,7 +84,11 @@ export function AsideAssistantMessage(props: {
   // map is always empty now (one unified agent) but kept as an override seam. Never
   // overrides a specific tool attribution.
   const specialistMap = useContext(MessageSpecialistContext);
-  const own: Coworker = coworkerForMessage(props.message);
+  const chatAgent = useAtomValue(chatAgentAtom);
+  const attributed = coworkerForMessage(props.message);
+  const own: Coworker = chatAgent === 'microsina' && attributed.id === SINA.id
+    ? { ...attributed, id: 'microsina', name: 'MicroSina', initials: 'MS' }
+    : attributed;
   const msgId = typeof props.message === 'object' ? props.message?.id : undefined;
   const specialist = msgId ? specialistMap[msgId] : undefined;
   const coworker: Coworker = specialist && own.id === WORKSPACE_ASSISTANT.id ? specialist : own;

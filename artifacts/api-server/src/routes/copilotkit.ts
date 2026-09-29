@@ -46,6 +46,7 @@ import OpenAI from "openai";
 import { Router } from "express";
 import type { IncomingMessage, ServerResponse } from "http";
 import { repairOrphanToolCalls } from "../lib/copilot-orphan-repair";
+import { createFoundryAdapter } from "../lib/foundry-model";
 
 const router = Router();
 
@@ -80,13 +81,13 @@ const gatewayBaseUrl =
 const gatewayApiKey = replitGatewayApiKey ?? vercelGatewayApiKey;
 const configuredModel = process.env.OPENAI_CHAT_MODEL ?? "gpt-4o";
 
-function createHandler() {
+function createHandler(foundry = false) {
   // A missing optional provider must not prevent the rest of the API from booting.
-  if (!gatewayBaseUrl || !gatewayApiKey) return undefined;
+  if (!foundry && (!gatewayBaseUrl || !gatewayApiKey)) return undefined;
 
-  const serviceAdapter = new OpenAIAdapter({
+  const serviceAdapter = foundry ? createFoundryAdapter() : new OpenAIAdapter({
     openai: new OpenAI({
-      apiKey: gatewayApiKey,
+      apiKey: gatewayApiKey ?? 'unused-foundry-adapter',
       baseURL: gatewayBaseUrl,
     }),
     model:
@@ -98,9 +99,13 @@ function createHandler() {
   // Explicit default agent + middleware pipeline. Middleware runs before the
   // BuiltInAgent converts input.messages for the AI SDK, so the exact thread
   // the SDK validates is always in good shape.
-  const agent = new BuiltInAgent({ model: serviceAdapter.getLanguageModel() });
+  const agent = new BuiltInAgent(foundry ? {
+    model: serviceAdapter.getLanguageModel(),
+    overridableProperties: [],
+    providerOptions: { openai: { store: false, systemMessageMode: 'developer' } },
+  } : { model: serviceAdapter.getLanguageModel() });
 
-  const isStrict = needsStrictSystemHandling(configuredModel);
+  const isStrict = !foundry && needsStrictSystemHandling(configuredModel);
 
   agent.use((input, next) => {
     // ── 1. Orphan repair ────────────────────────────────────────────────────
@@ -121,7 +126,7 @@ function createHandler() {
     // inside BuiltInAgent without touching the adapter or runtime internals.
     // For permissive chat-completions models, forwardedProps is passed through
     // unchanged — zero overhead and zero behaviour change for those paths.
-    const fp = input.forwardedProps as Record<string, unknown> | undefined;
+    const fp = (foundry ? undefined : input.forwardedProps) as Record<string, unknown> | undefined;
     const forwardedProps: Record<string, unknown> | undefined = isStrict
       ? {
           ...fp,
@@ -151,9 +156,18 @@ function createHandler() {
 }
 
 const handler = createHandler();
+const foundryHandler = createHandler(true);
 
 router.use("/", (req, res, next) => {
-  if (!handler) {
+  // This selects a provider only; the shared session/workspace middleware still
+  // authorizes execution before either handler is reached.
+  const selection = req.get('x-inscope-agent') ?? 'sina';
+  if (selection !== 'sina' && selection !== 'microsina') {
+    res.status(400).json({ error: 'Unknown chat agent.' });
+    return;
+  }
+  const selectedHandler = selection === 'microsina' ? foundryHandler : handler;
+  if (!selectedHandler) {
     res.status(503).json({
       code: "AI_PROVIDER_NOT_CONFIGURED",
       error:
@@ -169,7 +183,7 @@ router.use("/", (req, res, next) => {
   // Wrap in Promise.resolve() so .catch() is always valid regardless of which
   // branch the runtime takes.
   Promise.resolve(
-    handler(req as unknown as IncomingMessage, res as unknown as ServerResponse),
+    selectedHandler(req as unknown as IncomingMessage, res as unknown as ServerResponse),
   ).catch(next);
 });
 

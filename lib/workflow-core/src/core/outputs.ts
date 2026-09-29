@@ -14,6 +14,9 @@ export function presentToolOutput(
   runtime: Pick<GraphRuntime, 'getTool' | 'resolveToolId'>,
 ): Record<string, unknown> {
   if (result.toolId === 'test.example_input') return result.output;
+  if (Array.isArray(result.output.extractions)) {
+    return { extractions: result.output.extractions, rows: result.output.rows ?? [] };
+  }
   const tool = block ? runtime.getTool(runtime.resolveToolId(block)) : null;
   if (block?.family === 'Source' && Array.isArray(result.output.rows)) {
     return { rows: result.output.rows };

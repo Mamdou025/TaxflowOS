@@ -2,6 +2,8 @@ import { workspaceContext } from '@/platform/auth/workspace-context';
 
 import { usePathname } from '@/lib/router';
 import { useEffect, type ReactNode } from 'react';
+import { useAtomValue } from 'jotai';
+import { chatAgentAtom } from '@/shared/stores/chat-store';
 import { CopilotKit } from '@copilotkit/react-core';
 import { GlobalTopNav } from '@/components/global-top-nav';
 import { GlobalClientSwitcher } from '@/components/global-client-switcher';
@@ -15,6 +17,7 @@ const COPILOT_DEVTOOLS = import.meta.env.VITE_COPILOT_DEV_CONSOLE === '1';
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const chatAgent = useAtomValue(chatAgentAtom);
 
   // The SDK mounts its <cpk-web-inspector> launcher (a floating 48px button pinned
   // top-right at the maximum z-index) on its own, regardless of `showDevConsole`.
@@ -59,7 +62,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     // VITE_COPILOT_DEV_CONSOLE=1 when you want the banners back.
     <CopilotKit
       runtimeUrl="/api/copilotkit"
-      headers={{ 'x-taxflow-workspace': workspaceContext?.workspace.id ?? '' }}
+      headers={{ 'x-taxflow-workspace': workspaceContext?.workspace.id ?? '', 'x-inscope-agent': chatAgent }}
       showDevConsole={COPILOT_DEVTOOLS}
     >
       {/* Fixed canvas layer — only active on builder/workflow pages */}

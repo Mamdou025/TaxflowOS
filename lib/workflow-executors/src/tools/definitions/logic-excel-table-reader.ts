@@ -1,7 +1,7 @@
 import { type ToolDefinition } from '../types';
-import { createMockParserTool } from '../parser-tools';
+import { createParserTool } from '../parser-tools';
 
-export const logicExcelTableReaderTool: ToolDefinition = createMockParserTool({
+export const logicExcelTableReaderTool: ToolDefinition = createParserTool({
   displayName: 'Excel Table Reader',
   subtype: 'Excel Table Reader',
   toolId: 'logic.excel_table_reader',

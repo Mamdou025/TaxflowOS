@@ -4,6 +4,7 @@ import { useAtomValue, useStore } from 'jotai';
 import {
   sessionContext,
   sessionDefinition,
+  isDocumentSource,
   type SessionAction,
 } from '@workspace/workflow-core/sessions';
 import { definitionFingerprint } from '@workspace/workflow-core/commands';
@@ -19,7 +20,10 @@ import {
   type SessionRef,
 } from './workflow-session-store';
 import { useWorkbookImport } from '@/features/documents/workbook-import-dialog';
-import { parseUploadToRows } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
+import { captureWorkflowDocument } from '@/features/documents/capture-workflow-document';
+import { DocumentExtractionEvidence } from '@/features/documents/document-extraction-evidence';
+import { DocumentReviewView } from '@/features/documents/document-review-view';
+import { documentReviewSummaries } from '@workspace/workflow-core/inspection';
 import { uploadedRowsAtom } from '@/shared/stores/workspace-store';
 import { ReadableData } from '@/features/workflow-builder/ui/workspace/readable-data';
 import { presentToolOutput } from '@/shared/workflow-engine/present-tool-output';
@@ -125,11 +129,7 @@ export function WorkflowSessionPanel({
   const context = sessionContext(entry, session);
   const definition = sessionDefinition(entry, session);
   const saved = entry.versions.find((item) => item.number === session.version)!;
-  const sources = definition.blocks.filter(
-    (block) =>
-      block.family === 'Source' &&
-      /excel|workbook|uploaded|manual_table/.test(String(block.config.sourceKind)),
-  );
+  const sources = definition.blocks.filter(isDocumentSource);
   const sourceId = target || (sources.length === 1 ? sources[0].id : '');
   const act = async (action: SessionAction) => {
     try {
@@ -274,7 +274,7 @@ export function WorkflowSessionPanel({
           <input
             aria-label="Upload run source"
             type="file"
-            accept=".xlsx,.xls,.json"
+            accept=".xlsx,.xls,.json,.pdf,.docx"
             disabled={!sourceId}
             onChange={async (event) => {
               const file = event.target.files?.[0];
@@ -283,8 +283,16 @@ export function WorkflowSessionPanel({
               setBusy(true);
               setError('');
               try {
-                const parsed = await parseUploadToRows(file, { selectWorkbook });
-                await attach(parsed.fileName, parsed.rows);
+                const extraction = await captureWorkflowDocument(file, { selectWorkbook });
+                await act({
+                  kind: 'source',
+                  blockId: sourceId,
+                  sourceId: extraction.id,
+                  name: extraction.fileName,
+                  rows: extraction.rows,
+                  extraction,
+                  mode,
+                });
               } catch (err) {
                 setError(err instanceof Error ? err.message : 'Import failed.');
               } finally {
@@ -312,6 +320,9 @@ export function WorkflowSessionPanel({
             </p>
           ))}
         </fieldset>
+      )}
+      {session.sources.some((source) => source.extraction) && (
+        <DocumentReviewView reviews={documentReviewSummaries(session)} />
       )}
       <ol className="space-y-2" aria-label="Execution steps">
         {context.steps.map((step, index) => {
@@ -348,6 +359,7 @@ export function WorkflowSessionPanel({
                     <h4 className="mt-2 font-medium">Input</h4>
                     <ReadableData value={result.input ?? {}} />
                     <h4 className="mt-2 font-medium">Result</h4>
+                    <DocumentExtractionEvidence value={result.output.extractions} />
                     <ReadableData
                       value={presentToolOutput(
                         result,
