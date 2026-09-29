@@ -2,16 +2,16 @@
   "id": "pf-fapi",
   "inputKind": "bundled sample records",
   "inputRows": 8,
-  "openMs": 6052,
-  "runMs": 339,
-  "totalMs": 15940,
+  "openMs": 4333,
+  "runMs": 267,
+  "totalMs": 9626,
   "browserErrors": [],
   "first": {
-    "id": "custom:9bec9f8f-0b5e-491d-9a94-80799fe2db8b",
+    "id": "custom:d296cc22-059d-4aa6-94c3-9bacd5384b5c",
     "name": "FAPI Calculation Template — My workflow",
     "version": 1,
     "runCount": 1,
-    "runId": "local-tool-workflow-1790532302947-19557g",
+    "runId": "local-tool-workflow-1790711614739-5jjqkb",
     "status": "warning",
     "errors": [],
     "warnings": [
@@ -324,11 +324,11 @@
     ]
   },
   "second": {
-    "id": "custom:9bec9f8f-0b5e-491d-9a94-80799fe2db8b",
+    "id": "custom:d296cc22-059d-4aa6-94c3-9bacd5384b5c",
     "name": "FAPI Calculation Template — My workflow",
     "version": 1,
     "runCount": 2,
-    "runId": "local-tool-workflow-1790532311758-wfn3kv",
+    "runId": "local-tool-workflow-1790711618978-lzlz11",
     "status": "warning",
     "errors": [],
     "warnings": [

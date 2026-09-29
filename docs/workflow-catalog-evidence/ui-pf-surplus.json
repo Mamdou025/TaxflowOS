@@ -2,16 +2,16 @@
   "id": "pf-surplus",
   "inputKind": "bundled sample records",
   "inputRows": 6,
-  "openMs": 4630,
-  "runMs": 332,
-  "totalMs": 11854,
+  "openMs": 7397,
+  "runMs": 259,
+  "totalMs": 15205,
   "browserErrors": [],
   "first": {
-    "id": "custom:cdede1ed-10a6-482d-b5d8-7f79a926f142",
+    "id": "custom:47200b5f-f9a1-4086-b9ae-a6d054713f00",
     "name": "Foreign Affiliate Surplus — My workflow",
     "version": 1,
     "runCount": 1,
-    "runId": "local-tool-workflow-1790532317565-wmvaja",
+    "runId": "local-tool-workflow-1790711627472-0f8b13",
     "status": "error",
     "errors": [
       "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
@@ -181,11 +181,11 @@
     ]
   },
   "second": {
-    "id": "custom:cdede1ed-10a6-482d-b5d8-7f79a926f142",
+    "id": "custom:47200b5f-f9a1-4086-b9ae-a6d054713f00",
     "name": "Foreign Affiliate Surplus — My workflow",
     "version": 1,
     "runCount": 2,
-    "runId": "local-tool-workflow-1790532323881-752d5m",
+    "runId": "local-tool-workflow-1790711634497-4y57gl",
     "status": "error",
     "errors": [
       "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
