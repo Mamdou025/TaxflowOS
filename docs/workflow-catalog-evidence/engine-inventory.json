@@ -39,15 +39,12 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 11,
+      "elapsedMs": 3,
       "errors": [
-        "Keyword Mapper needs Data rows input.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
+        "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "warnings": [
-        "No document records supplied. Upload a document or enter example data.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "results": [
@@ -75,11 +72,11 @@
           "blockId": "pf-document-calculator--document",
           "label": "Document",
           "toolId": "source.manual_table",
-          "status": "success",
-          "errors": [],
-          "warnings": [
+          "status": "error",
+          "errors": [
             "No document records supplied. Upload a document or enter example data."
           ],
+          "warnings": [],
           "outputKeys": [
             "bindingValidation",
             "backendOutputs",
@@ -126,27 +123,17 @@
           "toolId": "logic.keyword_mapper",
           "status": "error",
           "errors": [
-            "Keyword Mapper needs Data rows input."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
-          "warnings": [],
+          "warnings": [
+            "A preceding block could not execute. Resolve its message and test again."
+          ],
           "outputKeys": [
             "bindingValidation",
-            "backendOutputs",
-            "primaryOutputRole",
-            "mappedRows",
-            "mappedRowsCount",
-            "unmatchedRows",
-            "unmatchedRowsCount",
-            "lowConfidenceRows",
-            "lowConfidenceRowsCount",
-            "conflictCount",
-            "conflicts",
-            "mappingSummary",
-            "rulesUsed",
+            "reason",
+            "skipped",
             "upstreamBlockIds"
           ],
-          "mappedCount": 0,
-          "unmatchedCount": 0,
           "transfers": [
             {
               "sourceBlockId": "pf-document-calculator--document",
@@ -183,10 +170,10 @@
           "toolId": "logic.category_rollup_aggregator",
           "status": "error",
           "errors": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "warnings": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "outputKeys": [
             "bindingValidation",
@@ -202,18 +189,8 @@
               "targetInputRole": "mapped_rows",
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             }
@@ -287,7 +264,7 @@
     },
     "configured": {
       "status": "success",
-      "elapsedMs": 22,
+      "elapsedMs": 7,
       "errors": [],
       "warnings": [],
       "results": [
@@ -635,7 +612,7 @@
     },
     "perturbation": {
       "status": "success",
-      "elapsedMs": 5,
+      "elapsedMs": 2,
       "errors": [],
       "warnings": [],
       "results": [
@@ -1180,7 +1157,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 11,
+      "elapsedMs": 3,
       "errors": [
         "No API response is saved. Fetch the source or explicitly enable example data.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -1891,7 +1868,7 @@
     },
     "configured": {
       "status": "error",
-      "elapsedMs": 25,
+      "elapsedMs": 14,
       "errors": [
         "Circular calculation dependency: HOURS_FLOOR.",
         "Circular calculation dependency: HOURS_CEILING.",
@@ -2838,7 +2815,7 @@
     },
     "perturbation": {
       "status": "error",
-      "elapsedMs": 16,
+      "elapsedMs": 5,
       "errors": [
         "Circular calculation dependency: HOURS_FLOOR.",
         "Circular calculation dependency: HOURS_CEILING.",
@@ -4311,7 +4288,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 5,
+      "elapsedMs": 2,
       "errors": [
         "Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.",
         "Cannot calculate A1: missing input debtForgiveness. Provide the value or set an explicit default in Calculation settings.",
@@ -5133,7 +5110,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 2,
+      "elapsedMs": 1,
       "errors": [
         "Keyword Mapper needs Data rows input.",
         "Keyword Mapper needs Keyword rules input.",
@@ -5497,7 +5474,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 2,
+      "elapsedMs": 0,
       "errors": [
         "Keyword Mapper needs Data rows input.",
         "Keyword Mapper needs Keyword rules input.",
@@ -6181,7 +6158,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 3,
+      "elapsedMs": 1,
       "errors": [
         "Keyword Mapper needs Keyword rules input.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -7405,7 +7382,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 3,
+      "elapsedMs": 1,
       "errors": [
         "Keyword Mapper needs Keyword rules input.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -8525,7 +8502,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 2,
+      "elapsedMs": 1,
       "errors": [
         "Keyword Mapper needs Data rows input.",
         "Keyword Mapper needs Keyword rules input.",
@@ -9654,7 +9631,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 3,
+      "elapsedMs": 1,
       "errors": [
         "Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.",
         "Cannot calculate A1: missing input debtForgiveness. Provide the value or set an explicit default in Calculation settings.",
@@ -10355,15 +10332,12 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 1,
+      "elapsedMs": 0,
       "errors": [
-        "Keyword Mapper needs Data rows input.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
+        "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "warnings": [
-        "No document records supplied. Upload a document or enter example data.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "results": [
@@ -10391,11 +10365,11 @@
           "blockId": "bp-run-t1134--src",
           "label": "Source data",
           "toolId": "source.manual_table",
-          "status": "success",
-          "errors": [],
-          "warnings": [
+          "status": "error",
+          "errors": [
             "No document records supplied. Upload a document or enter example data."
           ],
+          "warnings": [],
           "outputKeys": [
             "bindingValidation",
             "backendOutputs",
@@ -10442,27 +10416,17 @@
           "toolId": "logic.keyword_mapper",
           "status": "error",
           "errors": [
-            "Keyword Mapper needs Data rows input."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
-          "warnings": [],
+          "warnings": [
+            "A preceding block could not execute. Resolve its message and test again."
+          ],
           "outputKeys": [
             "bindingValidation",
-            "backendOutputs",
-            "primaryOutputRole",
-            "mappedRows",
-            "mappedRowsCount",
-            "unmatchedRows",
-            "unmatchedRowsCount",
-            "lowConfidenceRows",
-            "lowConfidenceRowsCount",
-            "conflictCount",
-            "conflicts",
-            "mappingSummary",
-            "rulesUsed",
+            "reason",
+            "skipped",
             "upstreamBlockIds"
           ],
-          "mappedCount": 0,
-          "unmatchedCount": 0,
           "transfers": [
             {
               "sourceBlockId": "bp-run-t1134--src",
@@ -10497,10 +10461,10 @@
           "toolId": "logic.category_rollup_aggregator",
           "status": "error",
           "errors": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "warnings": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "outputKeys": [
             "bindingValidation",
@@ -10514,18 +10478,8 @@
               "delivered": true,
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             }
@@ -10625,7 +10579,7 @@
     },
     "configured": {
       "status": "error",
-      "elapsedMs": 7,
+      "elapsedMs": 2,
       "errors": [
         "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -10928,7 +10882,7 @@
     },
     "perturbation": {
       "status": "error",
-      "elapsedMs": 4,
+      "elapsedMs": 1,
       "errors": [
         "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -11598,15 +11552,12 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 2,
+      "elapsedMs": 1,
       "errors": [
-        "Keyword Mapper needs Data rows input.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
+        "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "warnings": [
-        "No document records supplied. Upload a document or enter example data.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "results": [
@@ -11632,11 +11583,11 @@
           "blockId": "fapi-source-trial-balance",
           "label": "Trial Balance",
           "toolId": "source.manual_table",
-          "status": "success",
-          "errors": [],
-          "warnings": [
+          "status": "error",
+          "errors": [
             "No document records supplied. Upload a document or enter example data."
           ],
+          "warnings": [],
           "outputKeys": [
             "bindingValidation",
             "backendOutputs",
@@ -11722,27 +11673,17 @@
           "toolId": "logic.keyword_mapper",
           "status": "error",
           "errors": [
-            "Keyword Mapper needs Data rows input."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
-          "warnings": [],
+          "warnings": [
+            "A preceding block could not execute. Resolve its message and test again."
+          ],
           "outputKeys": [
             "bindingValidation",
-            "backendOutputs",
-            "primaryOutputRole",
-            "mappedRows",
-            "mappedRowsCount",
-            "unmatchedRows",
-            "unmatchedRowsCount",
-            "lowConfidenceRows",
-            "lowConfidenceRowsCount",
-            "conflictCount",
-            "conflicts",
-            "mappingSummary",
-            "rulesUsed",
+            "reason",
+            "skipped",
             "upstreamBlockIds"
           ],
-          "mappedCount": 0,
-          "unmatchedCount": 0,
           "transfers": [
             {
               "sourceBlockId": "fapi-source-trial-balance",
@@ -11779,10 +11720,10 @@
           "toolId": "logic.category_rollup_aggregator",
           "status": "error",
           "errors": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "warnings": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "outputKeys": [
             "bindingValidation",
@@ -11798,18 +11739,8 @@
               "targetInputRole": "mapped_rows",
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             }
@@ -12033,18 +11964,8 @@
               "targetInputRole": "mapped_rows",
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -12099,18 +12020,8 @@
               "targetInputRole": "mapped_rows",
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -12132,7 +12043,7 @@
     },
     "configured": {
       "status": "warning",
-      "elapsedMs": 29,
+      "elapsedMs": 7,
       "errors": [],
       "warnings": [
         "1 row(s) were not matched by keyword rules."
@@ -13951,7 +13862,7 @@
     },
     "perturbation": {
       "status": "warning",
-      "elapsedMs": 18,
+      "elapsedMs": 7,
       "errors": [],
       "warnings": [
         "1 row(s) were not matched by keyword rules."
@@ -15859,15 +15770,12 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 1,
+      "elapsedMs": 0,
       "errors": [
-        "Keyword Mapper needs Data rows input.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
+        "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "warnings": [
-        "No document records supplied. Upload a document or enter example data.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "results": [
@@ -15895,11 +15803,11 @@
           "blockId": "bp-run-surplus--src",
           "label": "Source data",
           "toolId": "source.manual_table",
-          "status": "success",
-          "errors": [],
-          "warnings": [
+          "status": "error",
+          "errors": [
             "No document records supplied. Upload a document or enter example data."
           ],
+          "warnings": [],
           "outputKeys": [
             "bindingValidation",
             "backendOutputs",
@@ -15946,27 +15854,17 @@
           "toolId": "logic.keyword_mapper",
           "status": "error",
           "errors": [
-            "Keyword Mapper needs Data rows input."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
-          "warnings": [],
+          "warnings": [
+            "A preceding block could not execute. Resolve its message and test again."
+          ],
           "outputKeys": [
             "bindingValidation",
-            "backendOutputs",
-            "primaryOutputRole",
-            "mappedRows",
-            "mappedRowsCount",
-            "unmatchedRows",
-            "unmatchedRowsCount",
-            "lowConfidenceRows",
-            "lowConfidenceRowsCount",
-            "conflictCount",
-            "conflicts",
-            "mappingSummary",
-            "rulesUsed",
+            "reason",
+            "skipped",
             "upstreamBlockIds"
           ],
-          "mappedCount": 0,
-          "unmatchedCount": 0,
           "transfers": [
             {
               "sourceBlockId": "bp-run-surplus--src",
@@ -16001,10 +15899,10 @@
           "toolId": "logic.category_rollup_aggregator",
           "status": "error",
           "errors": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "warnings": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "outputKeys": [
             "bindingValidation",
@@ -16018,18 +15916,8 @@
               "delivered": true,
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             }
@@ -16129,7 +16017,7 @@
     },
     "configured": {
       "status": "error",
-      "elapsedMs": 4,
+      "elapsedMs": 1,
       "errors": [
         "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -16432,7 +16320,7 @@
     },
     "perturbation": {
       "status": "error",
-      "elapsedMs": 4,
+      "elapsedMs": 1,
       "errors": [
         "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -16796,15 +16684,12 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 1,
+      "elapsedMs": 0,
       "errors": [
-        "Keyword Mapper needs Data rows input.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
+        "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "warnings": [
-        "No document records supplied. Upload a document or enter example data.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "results": [
@@ -16832,11 +16717,11 @@
           "blockId": "bp-run-t106--src",
           "label": "Source data",
           "toolId": "source.manual_table",
-          "status": "success",
-          "errors": [],
-          "warnings": [
+          "status": "error",
+          "errors": [
             "No document records supplied. Upload a document or enter example data."
           ],
+          "warnings": [],
           "outputKeys": [
             "bindingValidation",
             "backendOutputs",
@@ -16883,27 +16768,17 @@
           "toolId": "logic.keyword_mapper",
           "status": "error",
           "errors": [
-            "Keyword Mapper needs Data rows input."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
-          "warnings": [],
+          "warnings": [
+            "A preceding block could not execute. Resolve its message and test again."
+          ],
           "outputKeys": [
             "bindingValidation",
-            "backendOutputs",
-            "primaryOutputRole",
-            "mappedRows",
-            "mappedRowsCount",
-            "unmatchedRows",
-            "unmatchedRowsCount",
-            "lowConfidenceRows",
-            "lowConfidenceRowsCount",
-            "conflictCount",
-            "conflicts",
-            "mappingSummary",
-            "rulesUsed",
+            "reason",
+            "skipped",
             "upstreamBlockIds"
           ],
-          "mappedCount": 0,
-          "unmatchedCount": 0,
           "transfers": [
             {
               "sourceBlockId": "bp-run-t106--src",
@@ -16938,10 +16813,10 @@
           "toolId": "logic.category_rollup_aggregator",
           "status": "error",
           "errors": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "warnings": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "outputKeys": [
             "bindingValidation",
@@ -16955,18 +16830,8 @@
               "delivered": true,
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             }
@@ -17066,7 +16931,7 @@
     },
     "configured": {
       "status": "error",
-      "elapsedMs": 4,
+      "elapsedMs": 1,
       "errors": [
         "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -17369,7 +17234,7 @@
     },
     "perturbation": {
       "status": "error",
-      "elapsedMs": 3,
+      "elapsedMs": 1,
       "errors": [
         "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -17733,15 +17598,12 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 1,
+      "elapsedMs": 0,
       "errors": [
-        "Keyword Mapper needs Data rows input.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
+        "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "warnings": [
-        "No document records supplied. Upload a document or enter example data.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "results": [
@@ -17769,11 +17631,11 @@
           "blockId": "bp-run-eifel--src",
           "label": "Source data",
           "toolId": "source.manual_table",
-          "status": "success",
-          "errors": [],
-          "warnings": [
+          "status": "error",
+          "errors": [
             "No document records supplied. Upload a document or enter example data."
           ],
+          "warnings": [],
           "outputKeys": [
             "bindingValidation",
             "backendOutputs",
@@ -17820,27 +17682,17 @@
           "toolId": "logic.keyword_mapper",
           "status": "error",
           "errors": [
-            "Keyword Mapper needs Data rows input."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
-          "warnings": [],
+          "warnings": [
+            "A preceding block could not execute. Resolve its message and test again."
+          ],
           "outputKeys": [
             "bindingValidation",
-            "backendOutputs",
-            "primaryOutputRole",
-            "mappedRows",
-            "mappedRowsCount",
-            "unmatchedRows",
-            "unmatchedRowsCount",
-            "lowConfidenceRows",
-            "lowConfidenceRowsCount",
-            "conflictCount",
-            "conflicts",
-            "mappingSummary",
-            "rulesUsed",
+            "reason",
+            "skipped",
             "upstreamBlockIds"
           ],
-          "mappedCount": 0,
-          "unmatchedCount": 0,
           "transfers": [
             {
               "sourceBlockId": "bp-run-eifel--src",
@@ -17875,10 +17727,10 @@
           "toolId": "logic.category_rollup_aggregator",
           "status": "error",
           "errors": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "warnings": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "outputKeys": [
             "bindingValidation",
@@ -17892,18 +17744,8 @@
               "delivered": true,
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             }
@@ -18003,7 +17845,7 @@
     },
     "configured": {
       "status": "error",
-      "elapsedMs": 3,
+      "elapsedMs": 1,
       "errors": [
         "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -18306,7 +18148,7 @@
     },
     "perturbation": {
       "status": "error",
-      "elapsedMs": 5,
+      "elapsedMs": 1,
       "errors": [
         "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -18670,15 +18512,12 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 1,
+      "elapsedMs": 0,
       "errors": [
-        "Keyword Mapper needs Data rows input.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
+        "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "warnings": [
-        "No document records supplied. Upload a document or enter example data.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "results": [
@@ -18706,11 +18545,11 @@
           "blockId": "bp-run-t2-suite--src",
           "label": "Source data",
           "toolId": "source.manual_table",
-          "status": "success",
-          "errors": [],
-          "warnings": [
+          "status": "error",
+          "errors": [
             "No document records supplied. Upload a document or enter example data."
           ],
+          "warnings": [],
           "outputKeys": [
             "bindingValidation",
             "backendOutputs",
@@ -18757,27 +18596,17 @@
           "toolId": "logic.keyword_mapper",
           "status": "error",
           "errors": [
-            "Keyword Mapper needs Data rows input."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
-          "warnings": [],
+          "warnings": [
+            "A preceding block could not execute. Resolve its message and test again."
+          ],
           "outputKeys": [
             "bindingValidation",
-            "backendOutputs",
-            "primaryOutputRole",
-            "mappedRows",
-            "mappedRowsCount",
-            "unmatchedRows",
-            "unmatchedRowsCount",
-            "lowConfidenceRows",
-            "lowConfidenceRowsCount",
-            "conflictCount",
-            "conflicts",
-            "mappingSummary",
-            "rulesUsed",
+            "reason",
+            "skipped",
             "upstreamBlockIds"
           ],
-          "mappedCount": 0,
-          "unmatchedCount": 0,
           "transfers": [
             {
               "sourceBlockId": "bp-run-t2-suite--src",
@@ -18812,10 +18641,10 @@
           "toolId": "logic.category_rollup_aggregator",
           "status": "error",
           "errors": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "warnings": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "outputKeys": [
             "bindingValidation",
@@ -18829,18 +18658,8 @@
               "delivered": true,
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             }
@@ -18940,7 +18759,7 @@
     },
     "configured": {
       "status": "error",
-      "elapsedMs": 3,
+      "elapsedMs": 1,
       "errors": [
         "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -19243,7 +19062,7 @@
     },
     "perturbation": {
       "status": "error",
-      "elapsedMs": 4,
+      "elapsedMs": 1,
       "errors": [
         "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -19607,15 +19426,12 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 1,
+      "elapsedMs": 0,
       "errors": [
-        "Keyword Mapper needs Data rows input.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
+        "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "warnings": [
-        "No document records supplied. Upload a document or enter example data.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "results": [
@@ -19643,11 +19459,11 @@
           "blockId": "bp-run-tax-provision--src",
           "label": "Source data",
           "toolId": "source.manual_table",
-          "status": "success",
-          "errors": [],
-          "warnings": [
+          "status": "error",
+          "errors": [
             "No document records supplied. Upload a document or enter example data."
           ],
+          "warnings": [],
           "outputKeys": [
             "bindingValidation",
             "backendOutputs",
@@ -19694,27 +19510,17 @@
           "toolId": "logic.keyword_mapper",
           "status": "error",
           "errors": [
-            "Keyword Mapper needs Data rows input."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
-          "warnings": [],
+          "warnings": [
+            "A preceding block could not execute. Resolve its message and test again."
+          ],
           "outputKeys": [
             "bindingValidation",
-            "backendOutputs",
-            "primaryOutputRole",
-            "mappedRows",
-            "mappedRowsCount",
-            "unmatchedRows",
-            "unmatchedRowsCount",
-            "lowConfidenceRows",
-            "lowConfidenceRowsCount",
-            "conflictCount",
-            "conflicts",
-            "mappingSummary",
-            "rulesUsed",
+            "reason",
+            "skipped",
             "upstreamBlockIds"
           ],
-          "mappedCount": 0,
-          "unmatchedCount": 0,
           "transfers": [
             {
               "sourceBlockId": "bp-run-tax-provision--src",
@@ -19749,10 +19555,10 @@
           "toolId": "logic.category_rollup_aggregator",
           "status": "error",
           "errors": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "warnings": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "outputKeys": [
             "bindingValidation",
@@ -19766,18 +19572,8 @@
               "delivered": true,
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             }
@@ -19877,7 +19673,7 @@
     },
     "configured": {
       "status": "error",
-      "elapsedMs": 4,
+      "elapsedMs": 1,
       "errors": [
         "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -20180,7 +19976,7 @@
     },
     "perturbation": {
       "status": "error",
-      "elapsedMs": 4,
+      "elapsedMs": 1,
       "errors": [
         "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -20544,15 +20340,12 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 1,
+      "elapsedMs": 0,
       "errors": [
-        "Keyword Mapper needs Data rows input.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
+        "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "warnings": [
-        "No document records supplied. Upload a document or enter example data.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "results": [
@@ -20580,11 +20373,11 @@
           "blockId": "bp-run-part-xiii--src",
           "label": "Source data",
           "toolId": "source.manual_table",
-          "status": "success",
-          "errors": [],
-          "warnings": [
+          "status": "error",
+          "errors": [
             "No document records supplied. Upload a document or enter example data."
           ],
+          "warnings": [],
           "outputKeys": [
             "bindingValidation",
             "backendOutputs",
@@ -20631,27 +20424,17 @@
           "toolId": "logic.keyword_mapper",
           "status": "error",
           "errors": [
-            "Keyword Mapper needs Data rows input."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
-          "warnings": [],
+          "warnings": [
+            "A preceding block could not execute. Resolve its message and test again."
+          ],
           "outputKeys": [
             "bindingValidation",
-            "backendOutputs",
-            "primaryOutputRole",
-            "mappedRows",
-            "mappedRowsCount",
-            "unmatchedRows",
-            "unmatchedRowsCount",
-            "lowConfidenceRows",
-            "lowConfidenceRowsCount",
-            "conflictCount",
-            "conflicts",
-            "mappingSummary",
-            "rulesUsed",
+            "reason",
+            "skipped",
             "upstreamBlockIds"
           ],
-          "mappedCount": 0,
-          "unmatchedCount": 0,
           "transfers": [
             {
               "sourceBlockId": "bp-run-part-xiii--src",
@@ -20686,10 +20469,10 @@
           "toolId": "logic.category_rollup_aggregator",
           "status": "error",
           "errors": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "warnings": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "outputKeys": [
             "bindingValidation",
@@ -20703,18 +20486,8 @@
               "delivered": true,
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             }
@@ -20814,7 +20587,7 @@
     },
     "configured": {
       "status": "error",
-      "elapsedMs": 4,
+      "elapsedMs": 1,
       "errors": [
         "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -21117,7 +20890,7 @@
     },
     "perturbation": {
       "status": "error",
-      "elapsedMs": 3,
+      "elapsedMs": 1,
       "errors": [
         "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
         "A preceding block could not execute. Resolve its message and test again."
@@ -21625,15 +21398,12 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 2,
+      "elapsedMs": 1,
       "errors": [
-        "Keyword Mapper needs Data rows input.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
+        "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "warnings": [
-        "No document records supplied. Upload a document or enter example data.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "results": [
@@ -21641,11 +21411,11 @@
           "blockId": "roulement-source-biens",
           "label": "Biens transférés",
           "toolId": "source.manual_table",
-          "status": "success",
-          "errors": [],
-          "warnings": [
+          "status": "error",
+          "errors": [
             "No document records supplied. Upload a document or enter example data."
           ],
+          "warnings": [],
           "outputKeys": [
             "bindingValidation",
             "backendOutputs",
@@ -21715,27 +21485,17 @@
           "toolId": "logic.keyword_mapper",
           "status": "error",
           "errors": [
-            "Keyword Mapper needs Data rows input."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
-          "warnings": [],
+          "warnings": [
+            "A preceding block could not execute. Resolve its message and test again."
+          ],
           "outputKeys": [
             "bindingValidation",
-            "backendOutputs",
-            "primaryOutputRole",
-            "mappedRows",
-            "mappedRowsCount",
-            "unmatchedRows",
-            "unmatchedRowsCount",
-            "lowConfidenceRows",
-            "lowConfidenceRowsCount",
-            "conflictCount",
-            "conflicts",
-            "mappingSummary",
-            "rulesUsed",
+            "reason",
+            "skipped",
             "upstreamBlockIds"
           ],
-          "mappedCount": 0,
-          "unmatchedCount": 0,
           "transfers": [
             {
               "sourceBlockId": "roulement-source-biens",
@@ -21772,10 +21532,10 @@
           "toolId": "logic.category_rollup_aggregator",
           "status": "error",
           "errors": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "warnings": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "outputKeys": [
             "bindingValidation",
@@ -21791,18 +21551,8 @@
               "targetInputRole": "mapped_rows",
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             }
@@ -22026,18 +21776,8 @@
               "targetInputRole": "mapped_rows",
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -22092,18 +21832,8 @@
               "targetInputRole": "mapped_rows",
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -22125,7 +21855,7 @@
     },
     "configured": {
       "status": "error",
-      "elapsedMs": 6,
+      "elapsedMs": 3,
       "errors": [
         "Cannot calculate Borne minimale: missing input contrepartie_autre. Provide the value or set an explicit default in Calculation settings.",
         "Cannot calculate Borne maximale (JVM): missing input jvm_total. Provide the value or set an explicit default in Calculation settings.",
@@ -22709,7 +22439,7 @@
     },
     "perturbation": {
       "status": "error",
-      "elapsedMs": 6,
+      "elapsedMs": 2,
       "errors": [
         "Cannot calculate Borne minimale: missing input contrepartie_autre. Provide the value or set an explicit default in Calculation settings.",
         "Cannot calculate Borne maximale (JVM): missing input jvm_total. Provide the value or set an explicit default in Calculation settings.",
@@ -23526,15 +23256,12 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 2,
+      "elapsedMs": 1,
       "errors": [
-        "Keyword Mapper needs Data rows input.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
+        "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "warnings": [
-        "No document records supplied. Upload a document or enter example data.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "results": [
@@ -23560,11 +23287,11 @@
           "blockId": "expense-source-receipts",
           "label": "Expense Report",
           "toolId": "source.manual_table",
-          "status": "success",
-          "errors": [],
-          "warnings": [
+          "status": "error",
+          "errors": [
             "No document records supplied. Upload a document or enter example data."
           ],
+          "warnings": [],
           "outputKeys": [
             "bindingValidation",
             "backendOutputs",
@@ -23650,27 +23377,17 @@
           "toolId": "logic.keyword_mapper",
           "status": "error",
           "errors": [
-            "Keyword Mapper needs Data rows input."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
-          "warnings": [],
+          "warnings": [
+            "A preceding block could not execute. Resolve its message and test again."
+          ],
           "outputKeys": [
             "bindingValidation",
-            "backendOutputs",
-            "primaryOutputRole",
-            "mappedRows",
-            "mappedRowsCount",
-            "unmatchedRows",
-            "unmatchedRowsCount",
-            "lowConfidenceRows",
-            "lowConfidenceRowsCount",
-            "conflictCount",
-            "conflicts",
-            "mappingSummary",
-            "rulesUsed",
+            "reason",
+            "skipped",
             "upstreamBlockIds"
           ],
-          "mappedCount": 0,
-          "unmatchedCount": 0,
           "transfers": [
             {
               "sourceBlockId": "expense-source-receipts",
@@ -23707,10 +23424,10 @@
           "toolId": "logic.category_rollup_aggregator",
           "status": "error",
           "errors": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "warnings": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "outputKeys": [
             "bindingValidation",
@@ -23726,18 +23443,8 @@
               "targetInputRole": "mapped_rows",
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             }
@@ -23961,18 +23668,8 @@
               "targetInputRole": "mapped_rows",
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -24026,7 +23723,7 @@
     },
     "configured": {
       "status": "warning",
-      "elapsedMs": 19,
+      "elapsedMs": 9,
       "errors": [],
       "warnings": [
         "1 row(s) matched more than one keyword rule.",
@@ -27825,13 +27522,10 @@
       "status": "error",
       "elapsedMs": 1,
       "errors": [
-        "Keyword Mapper needs Data rows input.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
+        "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "warnings": [
-        "No document records supplied. Upload a document or enter example data.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "results": [
@@ -27839,11 +27533,11 @@
           "blockId": "campaign-source-requests",
           "label": "Spend Requests",
           "toolId": "source.manual_table",
-          "status": "success",
-          "errors": [],
-          "warnings": [
+          "status": "error",
+          "errors": [
             "No document records supplied. Upload a document or enter example data."
           ],
+          "warnings": [],
           "outputKeys": [
             "bindingValidation",
             "backendOutputs",
@@ -27892,27 +27586,17 @@
           "toolId": "logic.keyword_mapper",
           "status": "error",
           "errors": [
-            "Keyword Mapper needs Data rows input."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
-          "warnings": [],
+          "warnings": [
+            "A preceding block could not execute. Resolve its message and test again."
+          ],
           "outputKeys": [
             "bindingValidation",
-            "backendOutputs",
-            "primaryOutputRole",
-            "mappedRows",
-            "mappedRowsCount",
-            "unmatchedRows",
-            "unmatchedRowsCount",
-            "lowConfidenceRows",
-            "lowConfidenceRowsCount",
-            "conflictCount",
-            "conflicts",
-            "mappingSummary",
-            "rulesUsed",
+            "reason",
+            "skipped",
             "upstreamBlockIds"
           ],
-          "mappedCount": 0,
-          "unmatchedCount": 0,
           "transfers": [
             {
               "sourceBlockId": "campaign-source-requests",
@@ -27949,10 +27633,10 @@
           "toolId": "logic.category_rollup_aggregator",
           "status": "error",
           "errors": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "warnings": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "outputKeys": [
             "bindingValidation",
@@ -27968,18 +27652,8 @@
               "targetInputRole": "mapped_rows",
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             }
@@ -28185,18 +27859,8 @@
               "targetInputRole": "mapped_rows",
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -28250,7 +27914,7 @@
     },
     "configured": {
       "status": "error",
-      "elapsedMs": 5,
+      "elapsedMs": 3,
       "errors": [
         "Cannot calculate Budget floor (committed): missing input committed_spend. Provide the value or set an explicit default in Calculation settings.",
         "Cannot calculate Budget ceiling: missing input budget_cap. Provide the value or set an explicit default in Calculation settings.",
@@ -28739,7 +28403,7 @@
     },
     "perturbation": {
       "status": "error",
-      "elapsedMs": 5,
+      "elapsedMs": 2,
       "errors": [
         "Cannot calculate Budget floor (committed): missing input committed_spend. Provide the value or set an explicit default in Calculation settings.",
         "Cannot calculate Budget ceiling: missing input budget_cap. Provide the value or set an explicit default in Calculation settings.",
@@ -29301,7 +28965,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "success",
-      "elapsedMs": 6,
+      "elapsedMs": 3,
       "errors": [],
       "warnings": [],
       "results": [
@@ -29888,7 +29552,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "needs_review",
-      "elapsedMs": 14,
+      "elapsedMs": 5,
       "errors": [],
       "warnings": [
         "1 row(s) were not matched by keyword rules.",
@@ -31066,28 +30730,24 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 11,
+      "elapsedMs": 2,
       "errors": [
-        "Keyword Mapper needs Data rows input.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
+        "No document records supplied. Upload a document or enter example data.",
         "A preceding block could not execute. Resolve its message and test again."
       ],
       "warnings": [
-        "No document records supplied. Upload a document or enter example data.",
-        "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation.",
-        "A preceding block could not execute. Resolve its message and test again.",
-        "Missing required input: trial_balance_rows."
+        "A preceding block could not execute. Resolve its message and test again."
       ],
       "results": [
         {
           "blockId": "working-source-uploaded-rows",
           "label": "Uploaded Workbook",
           "toolId": "source.manual_table",
-          "status": "success",
-          "errors": [],
-          "warnings": [
+          "status": "error",
+          "errors": [
             "No document records supplied. Upload a document or enter example data."
           ],
+          "warnings": [],
           "outputKeys": [
             "bindingValidation",
             "backendOutputs",
@@ -31207,27 +30867,17 @@
           "toolId": "logic.keyword_mapper",
           "status": "error",
           "errors": [
-            "Keyword Mapper needs Data rows input."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
-          "warnings": [],
+          "warnings": [
+            "A preceding block could not execute. Resolve its message and test again."
+          ],
           "outputKeys": [
             "bindingValidation",
-            "backendOutputs",
-            "primaryOutputRole",
-            "mappedRows",
-            "mappedRowsCount",
-            "unmatchedRows",
-            "unmatchedRowsCount",
-            "lowConfidenceRows",
-            "lowConfidenceRowsCount",
-            "conflictCount",
-            "conflicts",
-            "mappingSummary",
-            "rulesUsed",
+            "reason",
+            "skipped",
             "upstreamBlockIds"
           ],
-          "mappedCount": 0,
-          "unmatchedCount": 0,
           "transfers": [
             {
               "sourceBlockId": "working-source-uploaded-rows",
@@ -31327,10 +30977,10 @@
           "toolId": "logic.category_rollup_aggregator",
           "status": "error",
           "errors": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "warnings": [
-            "A preceding record has no numerical value. Choose a number field or enter example numbers to test this calculation."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "outputKeys": [
             "bindingValidation",
@@ -31346,18 +30996,8 @@
               "targetInputRole": "mapped_rows",
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -31410,18 +31050,8 @@
               "targetInputRole": "checked_items",
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             }
@@ -31452,18 +31082,8 @@
               "targetInputRole": "checked_items",
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             }
@@ -31511,22 +31131,17 @@
           "blockId": "working-review-required-inputs",
           "label": "Required Input Check",
           "toolId": "review.required_input_check",
-          "status": "needs_review",
-          "errors": [],
+          "status": "error",
+          "errors": [
+            "A preceding block could not execute. Resolve its message and test again."
+          ],
           "warnings": [
-            "Missing required input: trial_balance_rows."
+            "A preceding block could not execute. Resolve its message and test again."
           ],
           "outputKeys": [
             "bindingValidation",
-            "blocking",
-            "missingItems",
-            "missingRequiredKeys",
-            "pass",
-            "checkedBlockIds",
-            "requiredInputResult",
-            "required_input_result",
-            "validationResult",
-            "validation_result",
+            "reason",
+            "skipped",
             "upstreamBlockIds"
           ],
           "transfers": [
@@ -31791,15 +31406,8 @@
               "targetInputRole": "validation_result",
               "keys": [
                 "bindingValidation",
-                "blocking",
-                "missingItems",
-                "missingRequiredKeys",
-                "pass",
-                "checkedBlockIds",
-                "requiredInputResult",
-                "required_input_result",
-                "validationResult",
-                "validation_result",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -31866,15 +31474,8 @@
               "targetInputRole": "validation_result",
               "keys": [
                 "bindingValidation",
-                "blocking",
-                "missingItems",
-                "missingRequiredKeys",
-                "pass",
-                "checkedBlockIds",
-                "requiredInputResult",
-                "required_input_result",
-                "validationResult",
-                "validation_result",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -31953,15 +31554,8 @@
               "targetInputRole": "validation_result",
               "keys": [
                 "bindingValidation",
-                "blocking",
-                "missingItems",
-                "missingRequiredKeys",
-                "pass",
-                "checkedBlockIds",
-                "requiredInputResult",
-                "required_input_result",
-                "validationResult",
-                "validation_result",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -32040,15 +31634,8 @@
               "targetInputRole": "validation_result",
               "keys": [
                 "bindingValidation",
-                "blocking",
-                "missingItems",
-                "missingRequiredKeys",
-                "pass",
-                "checkedBlockIds",
-                "requiredInputResult",
-                "required_input_result",
-                "validationResult",
-                "validation_result",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -32127,15 +31714,8 @@
               "targetInputRole": "validation_result",
               "keys": [
                 "bindingValidation",
-                "blocking",
-                "missingItems",
-                "missingRequiredKeys",
-                "pass",
-                "checkedBlockIds",
-                "requiredInputResult",
-                "required_input_result",
-                "validationResult",
-                "validation_result",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -32214,15 +31794,8 @@
               "targetInputRole": "validation_result",
               "keys": [
                 "bindingValidation",
-                "blocking",
-                "missingItems",
-                "missingRequiredKeys",
-                "pass",
-                "checkedBlockIds",
-                "requiredInputResult",
-                "required_input_result",
-                "validationResult",
-                "validation_result",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -32301,15 +31874,8 @@
               "targetInputRole": "validation_result",
               "keys": [
                 "bindingValidation",
-                "blocking",
-                "missingItems",
-                "missingRequiredKeys",
-                "pass",
-                "checkedBlockIds",
-                "requiredInputResult",
-                "required_input_result",
-                "validationResult",
-                "validation_result",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -32388,15 +31954,8 @@
               "targetInputRole": "validation_result",
               "keys": [
                 "bindingValidation",
-                "blocking",
-                "missingItems",
-                "missingRequiredKeys",
-                "pass",
-                "checkedBlockIds",
-                "requiredInputResult",
-                "required_input_result",
-                "validationResult",
-                "validation_result",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -32475,15 +32034,8 @@
               "targetInputRole": "validation_result",
               "keys": [
                 "bindingValidation",
-                "blocking",
-                "missingItems",
-                "missingRequiredKeys",
-                "pass",
-                "checkedBlockIds",
-                "requiredInputResult",
-                "required_input_result",
-                "validationResult",
-                "validation_result",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -32562,15 +32114,8 @@
               "targetInputRole": "validation_result",
               "keys": [
                 "bindingValidation",
-                "blocking",
-                "missingItems",
-                "missingRequiredKeys",
-                "pass",
-                "checkedBlockIds",
-                "requiredInputResult",
-                "required_input_result",
-                "validationResult",
-                "validation_result",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -32649,15 +32194,8 @@
               "targetInputRole": "validation_result",
               "keys": [
                 "bindingValidation",
-                "blocking",
-                "missingItems",
-                "missingRequiredKeys",
-                "pass",
-                "checkedBlockIds",
-                "requiredInputResult",
-                "required_input_result",
-                "validationResult",
-                "validation_result",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -32736,15 +32274,8 @@
               "targetInputRole": "validation_result",
               "keys": [
                 "bindingValidation",
-                "blocking",
-                "missingItems",
-                "missingRequiredKeys",
-                "pass",
-                "checkedBlockIds",
-                "requiredInputResult",
-                "required_input_result",
-                "validationResult",
-                "validation_result",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -32823,15 +32354,8 @@
               "targetInputRole": "validation_result",
               "keys": [
                 "bindingValidation",
-                "blocking",
-                "missingItems",
-                "missingRequiredKeys",
-                "pass",
-                "checkedBlockIds",
-                "requiredInputResult",
-                "required_input_result",
-                "validationResult",
-                "validation_result",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -32910,15 +32434,8 @@
               "targetInputRole": "validation_result",
               "keys": [
                 "bindingValidation",
-                "blocking",
-                "missingItems",
-                "missingRequiredKeys",
-                "pass",
-                "checkedBlockIds",
-                "requiredInputResult",
-                "required_input_result",
-                "validationResult",
-                "validation_result",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -32997,15 +32514,8 @@
               "targetInputRole": "validation_result",
               "keys": [
                 "bindingValidation",
-                "blocking",
-                "missingItems",
-                "missingRequiredKeys",
-                "pass",
-                "checkedBlockIds",
-                "requiredInputResult",
-                "required_input_result",
-                "validationResult",
-                "validation_result",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -33084,15 +32594,8 @@
               "targetInputRole": "validation_result",
               "keys": [
                 "bindingValidation",
-                "blocking",
-                "missingItems",
-                "missingRequiredKeys",
-                "pass",
-                "checkedBlockIds",
-                "requiredInputResult",
-                "required_input_result",
-                "validationResult",
-                "validation_result",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -33171,15 +32674,8 @@
               "targetInputRole": "validation_result",
               "keys": [
                 "bindingValidation",
-                "blocking",
-                "missingItems",
-                "missingRequiredKeys",
-                "pass",
-                "checkedBlockIds",
-                "requiredInputResult",
-                "required_input_result",
-                "validationResult",
-                "validation_result",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -33258,15 +32754,8 @@
               "targetInputRole": "validation_result",
               "keys": [
                 "bindingValidation",
-                "blocking",
-                "missingItems",
-                "missingRequiredKeys",
-                "pass",
-                "checkedBlockIds",
-                "requiredInputResult",
-                "required_input_result",
-                "validationResult",
-                "validation_result",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -33345,15 +32834,8 @@
               "targetInputRole": "validation_result",
               "keys": [
                 "bindingValidation",
-                "blocking",
-                "missingItems",
-                "missingRequiredKeys",
-                "pass",
-                "checkedBlockIds",
-                "requiredInputResult",
-                "required_input_result",
-                "validationResult",
-                "validation_result",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -33432,15 +32914,8 @@
               "targetInputRole": "validation_result",
               "keys": [
                 "bindingValidation",
-                "blocking",
-                "missingItems",
-                "missingRequiredKeys",
-                "pass",
-                "checkedBlockIds",
-                "requiredInputResult",
-                "required_input_result",
-                "validationResult",
-                "validation_result",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -33723,15 +33198,8 @@
               "targetInputRole": "validation_result",
               "keys": [
                 "bindingValidation",
-                "blocking",
-                "missingItems",
-                "missingRequiredKeys",
-                "pass",
-                "checkedBlockIds",
-                "requiredInputResult",
-                "required_input_result",
-                "validationResult",
-                "validation_result",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -34041,18 +33509,8 @@
               "targetInputRole": "mapped_rows",
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -34422,18 +33880,8 @@
               "targetInputRole": "mapped_rows",
               "keys": [
                 "bindingValidation",
-                "backendOutputs",
-                "primaryOutputRole",
-                "mappedRows",
-                "mappedRowsCount",
-                "unmatchedRows",
-                "unmatchedRowsCount",
-                "lowConfidenceRows",
-                "lowConfidenceRowsCount",
-                "conflictCount",
-                "conflicts",
-                "mappingSummary",
-                "rulesUsed",
+                "reason",
+                "skipped",
                 "upstreamBlockIds"
               ]
             },
@@ -34573,7 +34021,7 @@
     "danglingEdges": [],
     "baseline": {
       "status": "error",
-      "elapsedMs": 17,
+      "elapsedMs": 6,
       "errors": [
         "Rollup & Calculation Engine needs mapped_rows input.",
         "Rollup & Calculation Engine needs aggregation_rules input.",

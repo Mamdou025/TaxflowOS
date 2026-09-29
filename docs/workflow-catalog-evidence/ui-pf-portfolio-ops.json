@@ -2,16 +2,16 @@
   "id": "pf-portfolio-ops",
   "inputKind": "generic upload probe; not domain-complete input",
   "inputRows": 2,
-  "openMs": 3388,
-  "runMs": 159,
-  "totalMs": 7588,
+  "openMs": 6669,
+  "runMs": 222,
+  "totalMs": 12644,
   "browserErrors": [],
   "first": {
-    "id": "custom:ed7b83e4-e04f-4df7-ab87-4143f7cc0390",
+    "id": "custom:6aa87a40-e7c1-4a47-a5c1-a38b784ea01c",
     "name": "Portfolio Tax Calendar, Client Requests & Review — My workflow",
     "version": 1,
     "runCount": 1,
-    "runId": "local-tool-workflow-1789509935501-m694pz",
+    "runId": "local-tool-workflow-1790532277107-ihgf2k",
     "status": "error",
     "errors": [
       "Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.",
@@ -44,7 +44,7 @@
     ],
     "sources": [
       {
-        "id": "624e8b5e-1c6b-4b84-b243-c6a3a41c50d9",
+        "id": "d6b9e634-0613-457e-9cde-a625773cef1c",
         "connected": false,
         "consumedBy": []
       }
@@ -70,7 +70,7 @@
         ]
       },
       {
-        "blockId": "624e8b5e-1c6b-4b84-b243-c6a3a41c50d9",
+        "blockId": "d6b9e634-0613-457e-9cde-a625773cef1c",
         "label": "Document",
         "status": "success",
         "errors": [],
@@ -432,11 +432,11 @@
     ]
   },
   "second": {
-    "id": "custom:ed7b83e4-e04f-4df7-ab87-4143f7cc0390",
+    "id": "custom:6aa87a40-e7c1-4a47-a5c1-a38b784ea01c",
     "name": "Portfolio Tax Calendar, Client Requests & Review — My workflow",
     "version": 1,
     "runCount": 2,
-    "runId": "local-tool-workflow-1789509939069-31auqw",
+    "runId": "local-tool-workflow-1790532282244-d1ar7q",
     "status": "error",
     "errors": [
       "Cannot calculate A: missing input income_bucket, expense_bucket. Provide the value or set an explicit default in Calculation settings.",
@@ -469,7 +469,7 @@
     ],
     "sources": [
       {
-        "id": "624e8b5e-1c6b-4b84-b243-c6a3a41c50d9",
+        "id": "d6b9e634-0613-457e-9cde-a625773cef1c",
         "connected": false,
         "consumedBy": []
       }
@@ -495,7 +495,7 @@
         ]
       },
       {
-        "blockId": "624e8b5e-1c6b-4b84-b243-c6a3a41c50d9",
+        "blockId": "d6b9e634-0613-457e-9cde-a625773cef1c",
         "label": "Document",
         "status": "success",
         "errors": [],

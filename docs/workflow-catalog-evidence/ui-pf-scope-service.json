@@ -2,16 +2,16 @@
   "id": "pf-scope-service",
   "inputKind": "generic upload probe; not domain-complete input",
   "inputRows": 2,
-  "openMs": 9321,
-  "runMs": 555,
-  "totalMs": 20856,
+  "openMs": 4128,
+  "runMs": 190,
+  "totalMs": 9912,
   "browserErrors": [],
   "first": {
-    "id": "custom:9d32ee78-c572-477b-a3d0-5e5b4045159a",
+    "id": "custom:53f92e17-b075-46ff-aa6c-7494f86e246b",
     "name": "Platform Services · Scope Service — My workflow",
     "version": 1,
     "runCount": 1,
-    "runId": "local-tool-workflow-1789009047898-adq2jv",
+    "runId": "local-tool-workflow-1790532226827-f1kfmh",
     "status": "error",
     "errors": [
       "Keyword Mapper needs Data rows input.",
@@ -24,7 +24,7 @@
     ],
     "sources": [
       {
-        "id": "6a22f05c-b33f-4371-9456-45aa478cc674",
+        "id": "a0b915f0-50f6-4fad-aa31-9f3e7fe044e2",
         "connected": false,
         "consumedBy": []
       }
@@ -49,7 +49,7 @@
         ]
       },
       {
-        "blockId": "6a22f05c-b33f-4371-9456-45aa478cc674",
+        "blockId": "a0b915f0-50f6-4fad-aa31-9f3e7fe044e2",
         "label": "Document",
         "status": "success",
         "errors": [],
@@ -226,11 +226,11 @@
     ]
   },
   "second": {
-    "id": "custom:9d32ee78-c572-477b-a3d0-5e5b4045159a",
+    "id": "custom:53f92e17-b075-46ff-aa6c-7494f86e246b",
     "name": "Platform Services · Scope Service — My workflow",
     "version": 1,
     "runCount": 2,
-    "runId": "local-tool-workflow-1789009056949-mebsgt",
+    "runId": "local-tool-workflow-1790532231811-drgube",
     "status": "error",
     "errors": [
       "Keyword Mapper needs Data rows input.",
@@ -243,7 +243,7 @@
     ],
     "sources": [
       {
-        "id": "6a22f05c-b33f-4371-9456-45aa478cc674",
+        "id": "a0b915f0-50f6-4fad-aa31-9f3e7fe044e2",
         "connected": false,
         "consumedBy": []
       }
@@ -268,7 +268,7 @@
         ]
       },
       {
-        "blockId": "6a22f05c-b33f-4371-9456-45aa478cc674",
+        "blockId": "a0b915f0-50f6-4fad-aa31-9f3e7fe044e2",
         "label": "Document",
         "status": "success",
         "errors": [],

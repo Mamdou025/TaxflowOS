@@ -2,16 +2,16 @@
   "id": "pf-t106",
   "inputKind": "bundled sample records",
   "inputRows": 6,
-  "openMs": 3313,
-  "runMs": 154,
-  "totalMs": 7707,
+  "openMs": 4902,
+  "runMs": 298,
+  "totalMs": 15235,
   "browserErrors": [],
   "first": {
-    "id": "custom:ca5ff150-c94f-4650-a9ba-5c99d2dcf523",
+    "id": "custom:9aad26b3-09d0-41ab-a20e-77112dfb072b",
     "name": "T106 Related-Party Transaction Reporting — My workflow",
     "version": 1,
     "runCount": 1,
-    "runId": "local-tool-workflow-1789509966315-lzflf9",
+    "runId": "local-tool-workflow-1790532329878-fbabq0",
     "status": "error",
     "errors": [
       "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
@@ -181,11 +181,11 @@
     ]
   },
   "second": {
-    "id": "custom:ca5ff150-c94f-4650-a9ba-5c99d2dcf523",
+    "id": "custom:9aad26b3-09d0-41ab-a20e-77112dfb072b",
     "name": "T106 Related-Party Transaction Reporting — My workflow",
     "version": 1,
     "runCount": 2,
-    "runId": "local-tool-workflow-1789509970098-0oqfws",
+    "runId": "local-tool-workflow-1790532339183-2bqqs4",
     "status": "error",
     "errors": [
       "No formulas found. Add inline formulas to the Calculation Engine block config, or connect a Calculation Rules Source.",
