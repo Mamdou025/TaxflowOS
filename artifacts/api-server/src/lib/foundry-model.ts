@@ -9,6 +9,7 @@ type FoundryConfig = {
   tenant: string;
   client: string;
   secret: string;
+  publicToolSearch: boolean;
 };
 
 export function readFoundryConfig(env: Environment): FoundryConfig {
@@ -39,33 +40,72 @@ export function readFoundryConfig(env: Environment): FoundryConfig {
       'MicroSina requires a valid Azure tenant and an explicit numeric agent version.',
     );
   }
-  return { endpoint, name: 'MicroSina', version, tenant, client, secret };
+  const publicToolSearch = env.MICROSINA_PUBLIC_TOOL_SEARCH;
+  if (publicToolSearch && !['true', 'false'].includes(publicToolSearch)) {
+    throw new Error('MICROSINA_PUBLIC_TOOL_SEARCH must be true or false.');
+  }
+  return {
+    endpoint,
+    name: 'MicroSina',
+    version,
+    tenant,
+    client,
+    secret,
+    publicToolSearch: publicToolSearch === 'true',
+  };
 }
 
-/** Keep the Foundry definition authoritative; only supply this turn and host tools. */
+/** Foundry stores schemas; Inscope restricts each turn to currently available tools. */
 export function foundryResponseBody(
   body: Record<string, unknown>,
-  config: Pick<FoundryConfig, 'name' | 'version'>,
+  config: Pick<FoundryConfig, 'name' | 'version' | 'publicToolSearch'>,
 ) {
   if (!Array.isArray(body.input) && typeof body.input !== 'string') {
     throw new Error('MicroSina requires a Responses API input.');
   }
-  const tools = Array.isArray(body.tools) ? body.tools : [];
+  const offeredTools = Array.isArray(body.tools) ? body.tools : [];
+  // BuiltInAgent injects these generic AG-UI state mutators on every run.
+  // Inscope uses its registered action handlers, not coagent state mutations.
+  const tools = offeredTools.filter(
+    (tool) => !['AGUISendStateSnapshot', 'AGUISendStateDelta'].includes(tool?.name),
+  );
   if (tools.some((tool) => tool.type !== 'function' || typeof tool.name !== 'string')) {
     throw new Error('MicroSina accepts only Inscope function tools.');
   }
+  const allowedTools: Record<string, string>[] = tools.map((tool) => ({
+    type: 'function',
+    name: tool.name,
+  }));
+  // Only the reviewed, version-pinned public toolbox is attached under this label.
+  // Never accept remote tool configuration or approval policy from the browser.
+  if (config.publicToolSearch) {
+    for (const name of ['tool_search', 'call_tool']) {
+      allowedTools.push({ type: 'mcp', server_label: 'inscope_public_tools', name });
+    }
+  }
   return {
     agent_reference: { type: 'agent_reference', name: config.name, version: config.version },
-    input: body.input,
+    // The OpenAI SDK omits this discriminator on easy-input messages. Foundry's
+    // saved-agent API requires it when developer/workspace context is present.
+    input: Array.isArray(body.input)
+      ? body.input.map((item) =>
+          item &&
+          typeof item === 'object' &&
+          item.type === undefined &&
+          ['system', 'developer', 'user', 'assistant'].includes(item.role)
+            ? { ...item, type: 'message' }
+            : item,
+        )
+      : body.input,
     stream: body.stream === true,
     store: false,
-    tools,
+    // Saved agents reject request-time schemas. Register these on the pinned version.
     // Also constrain inherited Foundry tools (including the portal's default Bing tool).
-    tool_choice: tools.length
+    tool_choice: allowedTools.length
       ? {
           type: 'allowed_tools',
           mode: 'auto',
-          tools: tools.map((tool) => ({ type: 'function', name: tool.name })),
+          tools: allowedTools,
         }
       : 'none',
   };
@@ -116,13 +156,17 @@ export function createFoundryFetch(
     if (typeof init?.body !== 'string')
       throw new Error('MicroSina received an invalid model request.');
     const body = foundryResponseBody(JSON.parse(init.body), config);
-    const response = await transport(`${config.endpoint}/openai/v1/responses`, {
-      method: 'POST',
-      redirect: 'error',
-      signal,
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${cached.token}` },
-      body: JSON.stringify(body),
-    });
+    // Agent-scoped RBAC is evaluated on the agent endpoint, not the project API.
+    const response = await transport(
+      `${config.endpoint}/agents/${encodeURIComponent(config.name)}/endpoint/protocols/openai/responses?api-version=v1`,
+      {
+        method: 'POST',
+        redirect: 'error',
+        signal,
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${cached.token}` },
+        body: JSON.stringify(body),
+      },
+    );
     if (!response.ok) {
       if (response.status === 401) cached = undefined;
       // Never echo provider response bodies, which can contain request content.

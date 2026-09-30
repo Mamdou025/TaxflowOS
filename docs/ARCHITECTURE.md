@@ -59,6 +59,10 @@ the existing session/workspace execute checks. Foundry owns MicroSina's pinned
 agent definition and model; Inscope supplies context, function tools and the
 existing review flow. The first saved message carries non-prompt `chatAgent`
 metadata; legacy chats select Sina. No schema migration is required.
+An optional server setting allows MicroSina's pinned public toolbox to perform
+`tool_search` and `call_tool` in Foundry, alongside the native functions executed
+by Inscope. It defaults off until the candidate agent version is verified. The
+browser cannot configure remote servers; private source connectors are separate.
 See [MicroSina integration and limits](microsina-foundry/README.md).
 
 Chat is led by Sina. `features/assistant/runtime/computer-delegation` and its UI

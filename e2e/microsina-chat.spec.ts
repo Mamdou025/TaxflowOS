@@ -1,4 +1,20 @@
 import { test, expect } from './workflow-audit-isolation';
+import fs from 'node:fs';
+
+function schemaShape(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(schemaShape);
+  if (value && typeof value === 'object')
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(
+          ([key, entry]) =>
+            key !== 'description' &&
+            !(key === 'required' && Array.isArray(entry) && entry.length === 0),
+        )
+        .map(([key, entry]) => [key, schemaShape(entry)]),
+    );
+  return value;
+}
 
 test('MicroSina selection reaches the backend, locks during a conversation and restores from history', async ({
   page,
@@ -111,6 +127,22 @@ test('MicroSina selection reaches the backend, locks during a conversation and r
   expect(runs[0].agent).toBe('microsina');
   expect(JSON.stringify(runs[0].body)).toContain('delegateComputerTask');
   expect(JSON.stringify(runs[0].body)).toContain('listAvailableWorkflows');
+  const captured = runs[0].body as { body?: { tools?: unknown[] }; tools?: unknown[] };
+  const tools = captured.body?.tools ?? captured.tools;
+  expect(Array.isArray(tools)).toBe(true);
+  const registered = JSON.parse(fs.readFileSync('docs/microsina-foundry/tools.json', 'utf8')) as {
+    name: string;
+    parameters: unknown;
+  }[];
+  for (const tool of tools as { name: string; parameters: unknown }[]) {
+    const saved = registered.find((entry) => entry.name === tool.name);
+    expect(saved, `Missing Foundry schema: ${tool.name}`).toBeDefined();
+    expect(schemaShape(saved?.parameters), tool.name).toEqual(schemaShape(tool.parameters));
+  }
+  await test.info().attach('microsina-tool-catalog.json', {
+    body: JSON.stringify(tools, null, 2),
+    contentType: 'application/json',
+  });
   expect(JSON.stringify(runs[0].body)).not.toContain('You are Sina, the assistant inside InScope');
   await expect(selector).toBeDisabled();
   await expect.poll(() => saves.length).toBeGreaterThan(0);
