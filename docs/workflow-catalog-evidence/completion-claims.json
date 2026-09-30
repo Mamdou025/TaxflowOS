@@ -1,28 +1,5 @@
 [
   {
-    "id": "document-calculator",
-    "representative": false,
-    "coreStatus": "success",
-    "done": false,
-    "headline": {
-      "label": "Adjusted total",
-      "value": 400,
-      "currency": "units"
-    },
-    "blocker": {
-      "kind": "approval",
-      "message": "All inputs are resolved and computed. Each figure below shows how it was derived. Approve to finalize.",
-      "figures": [
-        {
-          "key": "RESULT",
-          "label": "Adjusted total",
-          "value": 400,
-          "formula": "item_total × 2"
-        }
-      ]
-    }
-  },
-  {
     "id": "fapi",
     "representative": false,
     "coreStatus": "warning",
@@ -101,59 +78,6 @@
           "label": "Net FAPI CAD",
           "value": 33210,
           "formula": "Net FAPI CAD = NET_FAPI × FX_RATE"
-        }
-      ]
-    }
-  },
-  {
-    "id": "expense",
-    "representative": false,
-    "coreStatus": "warning",
-    "done": false,
-    "headline": {
-      "label": "Net payable to employee",
-      "value": 2325,
-      "currency": "USD"
-    },
-    "blocker": {
-      "kind": "approval",
-      "message": "All inputs are resolved and computed. Each figure below shows how it was derived. Approve to finalize.",
-      "figures": [
-        {
-          "key": "SUBMITTED_TOTAL",
-          "label": "Submitted total",
-          "value": 2462,
-          "formula": "Submitted total = every receipt across all categories"
-        },
-        {
-          "key": "TOTAL_REIMBURSABLE",
-          "label": "Total reimbursable",
-          "value": 2325,
-          "formula": "Total reimbursable = sum of the five reimbursable category lines"
-        },
-        {
-          "key": "POLICY_DISALLOWED",
-          "label": "Policy-disallowed",
-          "value": 137,
-          "formula": "Disallowed = non-reimbursable items + meals over cap"
-        },
-        {
-          "key": "NET_PAYABLE",
-          "label": "Net payable to employee",
-          "value": 2325,
-          "formula": "Net payable to employee = total reimbursable"
-        },
-        {
-          "key": "FX_RATE",
-          "label": "FX rate (USD → CAD)",
-          "value": 1.35,
-          "formula": "Annual-average USD→CAD rate (Bank of Canada)"
-        },
-        {
-          "key": "NET_PAYABLE_CAD",
-          "label": "Net payable (CAD)",
-          "value": 3138.75,
-          "formula": "Net payable (CAD) = net payable × FX rate"
         }
       ]
     }
