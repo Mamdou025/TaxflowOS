@@ -21,6 +21,7 @@ export const PersonalWorkflowSchema: z.ZodType<import("./library-types").Persona
 }).passthrough()),
   "sessions": z.array(WorkflowSessionSchema).optional(),
   "runs": z.array(z.object({
+  "sessionSnapshot": WorkflowSessionSchema.optional(),
   "documentReviews": z.array(DocumentReviewSchema).optional(),
   "version": z.number().finite(),
   "at": z.string(),
@@ -78,6 +79,8 @@ export const WorkflowSessionSchema: z.ZodType<import("./library-types").Workflow
   "createdAt": z.string(),
   "paused": z.boolean(),
   "approvedAt": z.string().optional(),
+  "endedAt": z.string().optional(),
+  "inputOverrides": z.record(z.record(z.unknown())).optional(),
   "results": z.record(ToolRunResultSchema),
   "stale": z.array(z.string()),
   "reviewed": z.array(z.string()),

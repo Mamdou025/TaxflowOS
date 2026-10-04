@@ -1,3 +1,5 @@
+import { prepareSessionInputProposal } from '@/features/workflows-hub/session-input-proposal';
+import { workspaceContext } from '@/platform/auth/workspace-context';
 import { inspectWorkflowRun, inspectDocumentEvidence } from '@workspace/workflow-core/inspection';
 import { ReadableData } from '@/features/workflow-builder/ui/workspace/readable-data';
 import { getWorkflowConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
@@ -5,16 +7,25 @@ import { useState } from 'react';
 import { atom, useAtomValue, useStore } from 'jotai';
 import { useCopilotAction, useCopilotReadable } from '@copilotkit/react-core';
 import type { AgentActionRequest } from '@workspace/agent-runtime/capabilities';
-import { getSession, sessionContext, type SessionAction } from '@workspace/workflow-core/sessions';
+import {
+  getSession,
+  sessionContext,
+  sessionDefinition,
+  type SessionAction,
+} from '@workspace/workflow-core/sessions';
 import { workflowLibraryAtom } from '@/features/workflows-hub/workflow-library';
 import {
   activeSessionAtom,
+  chatSessionAtom,
+  bindChatSession,
+  openWorkflowSession,
   workflowInspectionAtom,
   advanceSession,
   applySessionAction,
+  submitSessionInput,
   type SessionRef,
 } from '@/features/workflows-hub/workflow-session-store';
-import { WorkflowSessionPanel } from '@/features/workflows-hub/workflow-session-panel';
+import { ChatWorkflowCard } from './chat-workflow-thread';
 import {
   authorizeAgentAction,
   createAgentGrant,
@@ -23,6 +34,7 @@ import {
 } from '../runtime/agent-action-client';
 import { uploadedRowsAtom } from '@/shared/stores/workspace-store';
 import { chatAgentAtom } from '@/shared/stores/chat-store';
+import { chatAgentName } from '../runtime/chat/chat-agent';
 import { workflowSessionRequest } from '../runtime/workflow-session-request';
 import { useDocumentReviewTools } from './use-document-review-tools';
 
@@ -31,8 +43,10 @@ type Proposal = {
   revision: number;
   action: SessionAction;
   request: AgentActionRequest;
+  before?: Record<string, unknown>;
+  workspaceId: string;
 };
-const proposalsAtom = atom<Record<string, Proposal>>({});
+export const proposalsAtom = atom<Record<string, Proposal>>({});
 function preview(value: unknown, depth = 0): unknown {
   if (depth > 5) return '[Nested details available in the block panel]';
   if (Array.isArray(value))
@@ -49,7 +63,7 @@ function preview(value: unknown, depth = 0): unknown {
     ? value.slice(0, 1000) + ' [truncated]'
     : value;
 }
-function SessionActionReview({ operationId }: { operationId: string }) {
+export function SessionActionReview({ operationId }: { operationId: string }) {
   const store = useStore();
   const proposal = useAtomValue(proposalsAtom)[operationId];
   const [error, setError] = useState('');
@@ -60,11 +74,28 @@ function SessionActionReview({ operationId }: { operationId: string }) {
     <div className="space-y-3">
       {!done && (
         <div className="rounded border p-3">
+          <p className="text-xs text-muted-foreground">
+            Proposed by {chatAgentName(proposal.request.agentId)}
+          </p>
           <p>
             Review workflow action: {proposal.action.kind}
             {'blockId' in proposal.action ? ` — ${proposal.action.blockId}` : ''}. Previous results
             are retained; affected downstream results will need review.
           </p>
+          {proposal.action.kind === 'inputs' && (
+            <ReadableData
+              value={preview({ before: proposal.before, after: proposal.action.patch })}
+            />
+          )}
+          {proposal.action.kind === 'source' && (
+            <ReadableData
+              value={{
+                file: proposal.action.name,
+                mode: proposal.action.mode,
+                records: proposal.action.rows.length,
+              }}
+            />
+          )}
           <button
             disabled={pending}
             className="rounded border px-3 py-2"
@@ -72,11 +103,23 @@ function SessionActionReview({ operationId }: { operationId: string }) {
               setPending(true);
               setError('');
               try {
+                if (workspaceContext?.workspace.id !== proposal.workspaceId)
+                  throw new Error('The workspace changed. Request a fresh proposal.');
+                const current = store.get(workflowLibraryAtom)[proposal.ref.workflowId];
+                if (
+                  !current ||
+                  getSession(current, proposal.ref.runId).revision !== proposal.revision
+                )
+                  throw new Error('The run changed. Review a fresh proposal.');
                 await createAgentGrant({ ...proposal.request, kind: 'one-time' });
                 const decision = await authorizeAgentAction(proposal.request);
                 if (!decision.allowed || !decision.authorization)
                   throw new Error(decision.message ?? 'This action is not authorized.');
-                applySessionAction(store, proposal.ref, proposal.revision, proposal.action);
+                if (workspaceContext?.workspace.id !== proposal.workspaceId)
+                  throw new Error('The workspace changed. Request a fresh proposal.');
+                if (proposal.action.kind === 'inputs' || proposal.action.kind === 'source')
+                  await submitSessionInput(store, proposal.ref, proposal.revision, proposal.action);
+                else applySessionAction(store, proposal.ref, proposal.revision, proposal.action);
                 if (proposal.action.kind === 'resume') await advanceSession(store, proposal.ref);
                 await recordAgentActionOutcome(
                   proposal.request.operationId,
@@ -96,11 +139,7 @@ function SessionActionReview({ operationId }: { operationId: string }) {
         </div>
       )}
       {error && <p role="alert">{error}</p>}
-      <WorkflowSessionPanel
-        workflowId={proposal.ref.workflowId}
-        runId={proposal.ref.runId}
-        focusBlockId={'blockId' in proposal.action ? proposal.action.blockId : undefined}
-      />
+      <ChatWorkflowCard workflowId={proposal.ref.workflowId} runId={proposal.ref.runId} />
     </div>
   );
 }
@@ -108,14 +147,33 @@ export function useSessionTools() {
   useDocumentReviewTools();
   const store = useStore();
   const library = useAtomValue(workflowLibraryAtom);
-  const active = useAtomValue(activeSessionAtom);
+  const selected = useAtomValue(activeSessionAtom);
+  const chatSession = useAtomValue(chatSessionAtom);
+  const active = chatSession ?? selected;
   const entry = active ? library[active.workflowId] : undefined;
   const session = entry?.sessions?.find((item) => item.id === active?.runId);
+  const openChatWorkflow = (workflowId: string, version?: number) => {
+    const request = workflowSessionRequest(
+      store.get(workflowLibraryAtom),
+      (id) => !!getWorkflowConfig(id.replace(/^pf-/, '')),
+      workflowId,
+      version,
+    );
+    if ('error' in request) return request;
+    try {
+      const ref = openWorkflowSession(store, request.workflowId, request.version);
+      bindChatSession(store, ref);
+      return { ...ref, version: request.version };
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : 'Workflow unavailable.' };
+    }
+  };
   const renderOpen = ({ result, status }: { result: unknown; status: string }) => {
     if (status !== 'complete') return <p>Opening workflow…</p>;
     return result && typeof result === 'object' && 'workflowId' in result ? (
-      <WorkflowSessionPanel
+      <ChatWorkflowCard
         workflowId={String(result.workflowId)}
+        runId={'runId' in result ? String(result.runId) : undefined}
         version={
           'version' in result && typeof result.version === 'number' ? result.version : undefined
         }
@@ -135,26 +193,21 @@ export function useSessionTools() {
     followUp: false,
     parameters: [{ name: 'workflowId', type: 'string', required: true }],
     handler: ({ workflowId, version }: { workflowId: string; version?: number }) => {
-      return workflowSessionRequest(
-        store.get(workflowLibraryAtom),
-        (id) => !!getWorkflowConfig(id.replace(/^pf-/, '')),
-        workflowId,
-        version,
-      );
+      return openChatWorkflow(workflowId, version);
     },
     render: renderOpen,
   });
   useCopilotAction({
     name: 'openSavedWorkflowVersion',
     description:
-      'Open the shared step panel for a specific saved version explicitly requested by the user. Get the exact saved workflow ID and existing version from readSavedWorkflow first. Never use a built-in catalog ID. This only opens a preview and never executes or approves results. For ordinary starts use runWorkflow.',
+      'Open the shared step panel for a specific saved version explicitly requested by the user. Get the exact saved workflow ID and existing version from readSavedWorkflow first. Never use a built-in catalog ID. This opens a paused saved-version session and never executes or approves results. For ordinary starts use runWorkflow.',
     followUp: false,
     parameters: [
       { name: 'workflowId', type: 'string', required: true },
       { name: 'version', type: 'number', required: true },
     ],
     handler: ({ workflowId, version }: { workflowId: string; version: number }) =>
-      workflowSessionRequest(store.get(workflowLibraryAtom), () => false, workflowId, version),
+      openChatWorkflow(workflowId, version),
     render: renderOpen,
   });
   useCopilotReadable({
@@ -218,8 +271,9 @@ export function useSessionTools() {
           return { error: error instanceof Error ? error.message : 'Evidence unavailable.' };
         }
       }
-      const ref = store.get(activeSessionAtom);
-      if (!ref) return { error: 'Open a workflow first.' };
+      const binding = store.get(chatSessionAtom) ?? store.get(activeSessionAtom);
+      if (!binding) return { error: 'Open a workflow first.' };
+      const ref = { workflowId: binding.workflowId, runId: binding.runId };
       const current = store.get(workflowLibraryAtom)[ref.workflowId];
       if (!current) return { error: 'This workflow is no longer in the current workspace.' };
       const run = getSession(current, ref.runId);
@@ -250,11 +304,7 @@ export function useSessionTools() {
             <ReadableData value={result} />
           </div>
         ) : (
-          <WorkflowSessionPanel
-            workflowId={String(result.workflowId)}
-            runId={String(result.runId)}
-            focusBlockId={String(result.blockId)}
-          />
+          <ChatWorkflowCard workflowId={String(result.workflowId)} runId={String(result.runId)} />
         )
       ) : (
         <p>{status === 'complete' ? 'The requested block is unavailable.' : 'Reading block…'}</p>
@@ -263,26 +313,63 @@ export function useSessionTools() {
   useCopilotAction({
     name: 'controlWorkflowRun',
     description:
-      'Control the exact active workflow: pause, resume, rerun one existing block, or add/replace the attached source in an existing document source block. Block runs use real current dependencies, preserve old results and invalidate downstream results. Never use this to change mapping rules; edit Build and start a new version for rule changes. Source rows come from the actual attachment, never model-generated JSON. Approval is presented before executing or changing sources. Final result approval remains a user action in the panel.',
+      'Control the exact active workflow: pause, resume, end, propose inputs using valuesJson, rerun one existing block, or add/replace the attached source in an existing document source block. Block runs use real current dependencies, preserve old results and invalidate downstream results. Input proposals require user review and apply only to current work, recalculating affected results. Pause before proposing changes while executing. Never use this to change mapping rules; edit Build and start a new version for rule changes. Source rows come from the actual attachment, never model-generated JSON. Approval is presented before executing or changing sources. Final result approval remains a user action in the panel.',
     followUp: false,
     parameters: [
       {
         name: 'action',
         type: 'string',
-        enum: ['pause', 'resume', 'block', 'add_source', 'replace_source'],
+        enum: ['pause', 'resume', 'end', 'inputs', 'block', 'add_source', 'replace_source'],
         required: true,
       },
       { name: 'blockId', type: 'string', required: false },
+      {
+        name: 'valuesJson',
+        type: 'string',
+        required: false,
+        description:
+          'JSON object of requested input field changes. Use exact inputKeys from the run context. Never fabricate file rows.',
+      },
     ],
-    handler: async ({ action, blockId }: { action: string; blockId?: string }) => {
-      const ref = store.get(activeSessionAtom);
-      if (!ref) return { error: 'Open a workflow first.' };
+    handler: async ({
+      action,
+      blockId,
+      valuesJson,
+    }: {
+      action: string;
+      blockId?: string;
+      valuesJson?: string;
+    }) => {
+      const binding = store.get(chatSessionAtom) ?? store.get(activeSessionAtom);
+      if (!binding) return { error: 'Open a workflow first.' };
+      const ref = { workflowId: binding.workflowId, runId: binding.runId };
       const current = store.get(workflowLibraryAtom)[ref.workflowId];
       if (!current) return { error: 'This workflow is no longer in the current workspace.' };
       const run = getSession(current, ref.runId);
       let command: SessionAction;
-      if (action === 'pause' || action === 'resume') command = { kind: action };
-      else if (action === 'block' && blockId) command = { kind: 'block', blockId };
+      if (action === 'pause' || action === 'resume' || action === 'end') command = { kind: action };
+      else if (action === 'inputs' && blockId && valuesJson) {
+        try {
+          const patch: unknown = JSON.parse(valuesJson);
+          if (!patch || typeof patch !== 'object' || Array.isArray(patch))
+            throw new Error('Supply an input object.');
+          if (
+            Object.keys(patch).some((key) =>
+              ['rows', 'excelWorkbook', 'workbookFile', 'fetchedRows'].includes(key),
+            )
+          )
+            throw new Error('Use the actual file or source form to supply records.');
+          const block = sessionDefinition(current, run).blocks.find((item) => item.id === blockId);
+          if (!block) throw new Error('Choose an existing input block.');
+          command = {
+            kind: 'inputs',
+            blockId,
+            patch: prepareSessionInputProposal(block, patch as Record<string, unknown>),
+          };
+        } catch (error) {
+          return { error: error instanceof Error ? error.message : 'Invalid input patch.' };
+        }
+      } else if (action === 'block' && blockId) command = { kind: 'block', blockId };
       else if ((action === 'add_source' || action === 'replace_source') && blockId) {
         const source = store.get(uploadedRowsAtom).__unassigned__;
         if (!source?.rows.length) return { error: 'Attach a source first.' };
@@ -295,9 +382,9 @@ export function useSessionTools() {
           mode: action === 'add_source' ? 'add' : 'replace',
         };
       } else return { error: 'Choose a valid action and an exact block ID from the run context.' };
-      if (command.kind === 'pause') {
+      if (command.kind === 'pause' || command.kind === 'end') {
         applySessionAction(store, ref, run.revision, command);
-        return { paused: true, ...ref };
+        return { paused: true, ended: command.kind === 'end', ...ref };
       }
       const request: AgentActionRequest = {
         operationId: crypto.randomUUID(),
@@ -308,24 +395,26 @@ export function useSessionTools() {
         resourceRevision: `session:${ref.runId}:${run.revision}`,
         requestFingerprint: await fingerprintAgentPayload({ ref, revision: run.revision, command }),
       };
-      const decision = await authorizeAgentAction(request);
-      if (decision.allowed && decision.authorization) {
-        applySessionAction(store, ref, run.revision, command);
-        if (command.kind === 'resume') await advanceSession(store, ref);
-        await recordAgentActionOutcome(
-          request.operationId,
-          'succeeded',
-          'Workflow action applied.',
-        );
-        return {
-          applied: true,
-          ...ref,
-          blockId: 'blockId' in command ? command.blockId : undefined,
-        };
-      }
       store.set(proposalsAtom, (previous) => ({
         ...previous,
-        [request.operationId]: { ref, revision: run.revision, action: command, request },
+        [request.operationId]: {
+          ref,
+          revision: run.revision,
+          action: command,
+          request,
+          workspaceId: workspaceContext?.workspace.id ?? '',
+          before:
+            command.kind === 'inputs'
+              ? Object.fromEntries(
+                  Object.keys(command.patch).map((key) => [
+                    key,
+                    sessionDefinition(current, run).blocks.find(
+                      (block) => block.id === command.blockId,
+                    )?.config[key] ?? null,
+                  ]),
+                )
+              : undefined,
+        },
       }));
       return {
         operationId: request.operationId,
@@ -350,19 +439,15 @@ export function useSessionTools() {
         'runId' in result
       )
         return (
-          <WorkflowSessionPanel
-            workflowId={String(result.workflowId)}
-            runId={String(result.runId)}
-            focusBlockId={
-              'blockId' in result && result.blockId ? String(result.blockId) : undefined
-            }
-          />
+          <ChatWorkflowCard workflowId={String(result.workflowId)} runId={String(result.runId)} />
         );
       return (
         <p>
           {result && typeof result === 'object' && 'error' in result
             ? String(result.error)
-            : 'Workflow paused. You can continue asking questions.'}
+            : result && typeof result === 'object' && 'ended' in result && result.ended
+              ? 'Workflow ended. History is retained.'
+              : 'Workflow paused. You can continue asking questions.'}
         </p>
       );
     },

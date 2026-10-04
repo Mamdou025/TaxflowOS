@@ -1,3 +1,4 @@
+import { workspaceContext } from '@/platform/auth/workspace-context';
 import { builderFocusTargetAtom } from '@/shared/workflow-engine/state/workflow-store';
 import { useEffect, useState } from 'react';
 import { useAtomValue, useStore } from 'jotai';
@@ -17,14 +18,16 @@ import {
   activeSessionAtom,
   chatWorkflowIdsAtom,
   showSessionInRun,
+  bindChatSession,
+  chatSessionAtom,
   type SessionRef,
 } from './workflow-session-store';
-import { useWorkbookImport } from '@/features/documents/workbook-import-dialog';
-import { captureWorkflowDocument } from '@/features/documents/capture-workflow-document';
+import { SessionSourceFiles } from './session-source-files';
+import { SessionInputForms } from './session-input-forms';
+import { ChatWorkflowSteps } from './chat-workflow-steps';
 import { DocumentExtractionEvidence } from '@/features/documents/document-extraction-evidence';
 import { DocumentReviewView } from '@/features/documents/document-review-view';
 import { documentReviewSummaries } from '@workspace/workflow-core/inspection';
-import { uploadedRowsAtom } from '@/shared/stores/workspace-store';
 import { ReadableData } from '@/features/workflow-builder/ui/workspace/readable-data';
 import { presentToolOutput } from '@/shared/workflow-engine/present-tool-output';
 import { ExecutionLifetimeNotice } from './execution-lifetime-notice';
@@ -40,13 +43,16 @@ export function WorkflowSessionPanel({
   runId,
   focusBlockId,
   version,
+  presentation = 'run',
 }: {
   workflowId: string;
   runId?: string;
   focusBlockId?: string;
   version?: number;
+  presentation?: 'chat' | 'run';
 }) {
   const store = useStore();
+  const workspaceId = workspaceContext?.workspace.id;
   const router = useRouter();
   const library = useAtomValue(workflowLibraryAtom);
   const active = useAtomValue(activeSessionAtom);
@@ -72,13 +78,6 @@ export function WorkflowSessionPanel({
       ? (entry?.draft ?? templateDefinition(workflowId))
       : entry?.versions.find((item) => item.number === version)?.definition;
   const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [target, setTarget] = useState('');
-  const [mode, setMode] = useState<'replace' | 'add'>('replace');
-  const { selectWorkbook, importDialog } = useWorkbookImport();
-  const attached = useAtomValue(uploadedRowsAtom);
-  const cached =
-    attached.__unassigned__ ?? attached[(entry?.templateId ?? workflowId).replace(/^pf-/, '')];
   useEffect(() => {
     if (entry && session) store.set(activeSessionAtom, { workflowId: entry.id, runId: session.id });
     if (entry && session && !session.paused && !isSessionAdvancing(session.id))
@@ -89,9 +88,15 @@ export function WorkflowSessionPanel({
   const start = (fresh = false) => {
     try {
       setError('');
-      setOpened(
-        openWorkflowSession(store, entry?.id ?? workflowId, fresh ? undefined : version, fresh),
+      const next = openWorkflowSession(
+        store,
+        entry?.id ?? workflowId,
+        fresh ? undefined : version,
+        fresh,
       );
+      setOpened(next);
+      const bound = store.get(chatSessionAtom);
+      if (bound && bound.runId === session?.id) bindChatSession(store, next);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not open workflow.');
     }
@@ -128,12 +133,14 @@ export function WorkflowSessionPanel({
   const ref = { workflowId: entry.id, runId: session.id };
   const context = sessionContext(entry, session);
   const definition = sessionDefinition(entry, session);
+  const chat = presentation === 'chat';
   const saved = entry.versions.find((item) => item.number === session.version)!;
   const sources = definition.blocks.filter(isDocumentSource);
-  const sourceId = target || (sources.length === 1 ? sources[0].id : '');
   const act = async (action: SessionAction) => {
     try {
       setError('');
+      if (workspaceContext?.workspace.id !== workspaceId)
+        throw new Error('The workspace changed. Open the workflow again.');
       applySessionAction(store, ref, session.revision, action);
       if (action.kind === 'resume') await advanceSession(store, ref);
     } catch (err) {
@@ -149,33 +156,112 @@ export function WorkflowSessionPanel({
     store.set(openWorkspaceWindowAtom, { pageKey: 'workflows', title: 'Workflows' });
     router.push('/');
   };
-  const attach = async (name: string, rows: Record<string, unknown>[]) => {
-    await act({
-      kind: 'source',
-      blockId: sourceId,
-      sourceId: crypto.randomUUID(),
-      name,
-      rows,
-      mode,
-    });
+  const inputForms = (blockId?: string) => (
+    <>
+      <SessionSourceFiles
+        templateId={entry.templateId}
+        blockId={blockId}
+        sources={blockId ? sources.filter((block) => block.id === blockId) : sources}
+        session={session}
+        act={async (action) => {
+          if (workspaceContext?.workspace.id !== workspaceId)
+            throw new Error('The workspace changed. Open the workflow again.');
+          applySessionAction(store, ref, session.revision, action);
+        }}
+      />
+      <SessionInputForms workflowId={entry.id} runId={session.id} blockId={blockId} />
+      {session.sources.some(
+        (source) => source.extraction && (!blockId || source.blockId === blockId),
+      ) && (
+        <DocumentReviewView
+          reviews={documentReviewSummaries(session).filter(
+            (review) => !blockId || review.blockId === blockId,
+          )}
+        />
+      )}
+    </>
+  );
+  const stepDetails = (step: (typeof context.steps)[number]) => {
+    const result = session.results[step.id];
+    return (
+      <>
+        <p className="my-2 text-xs">
+          {step.family} ·{' '}
+          {step.dependencies.length
+            ? `Depends on: ${step.dependencies.map((id) => context.steps.find((item) => item.id === id)?.label ?? id).join(', ')}`
+            : 'No preceding steps'}
+        </p>
+        {step.status === 'outdated' && (
+          <p role="status">Previous result — rerun before using it.</p>
+        )}
+        {[...step.errors, ...step.warnings].map((message, i) => (
+          <p key={i} className="text-sm text-amber-700">
+            {message}
+          </p>
+        ))}
+        <button className="text-sm underline" onClick={() => verifyInBuild(step.id)}>
+          Verify this block in Build
+        </button>
+        {result && (
+          <>
+            <h4 className="mt-2 font-medium">Input</h4>
+            <ReadableData value={result.input ?? {}} />
+            <h4 className="mt-2 font-medium">Result</h4>
+            <DocumentExtractionEvidence value={result.output.extractions} />
+            <ReadableData
+              value={presentToolOutput(
+                result,
+                definition.blocks.find((block) => block.id === step.id),
+              )}
+            />
+          </>
+        )}
+        <button
+          className="mt-2 rounded border px-3 py-1 disabled:opacity-50"
+          disabled={!!session.endedAt || !session.paused || !step.ready}
+          onClick={() => void act({ kind: 'block', blockId: step.id })}
+        >
+          {result ? 'Rerun this block' : 'Run this block'}
+        </button>
+        {['needs_review', 'warning'].includes(step.status) && (
+          <button
+            className="ml-2 rounded border px-3 py-1"
+            onClick={() => void act({ kind: 'review', blockId: step.id })}
+          >
+            Acknowledge checkpoint
+          </button>
+        )}
+      </>
+    );
   };
   return (
     <section
       aria-label="Workflow execution"
       data-run-flow
-      className="space-y-4 rounded-xl border bg-background p-4 text-foreground"
+      className={
+        chat
+          ? 'space-y-4 rounded-2xl border border-violet-200/70 bg-background p-5 text-foreground shadow-sm'
+          : 'space-y-4 rounded-xl border bg-background p-4 text-foreground'
+      }
     >
       <header>
+        {chat && (
+          <span className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-violet-600">
+            Workflow · current work
+          </span>
+        )}
         <h3 className="font-semibold">{definition.name}</h3>
-        <p className="text-xs text-muted-foreground">
+        <p className="break-all text-xs text-muted-foreground">
           Version {session.version} · Run {session.id}
         </p>
         <p role="status">
-          {session.approvedAt
-            ? 'Completed — approved'
-            : session.paused
-              ? 'Paused — ready when you are'
-              : 'Running — you can ask questions or pause'}
+          {session.endedAt
+            ? 'Ended — history retained'
+            : session.approvedAt
+              ? 'Completed — approved'
+              : session.paused
+                ? 'Paused — ready when you are'
+                : 'Running — you can ask questions or pause'}
         </p>
       </header>
       <a
@@ -193,19 +279,21 @@ export function WorkflowSessionPanel({
       >
         Open this workflow in Run
       </a>
-      <button
-        className="ml-3 text-sm underline"
-        onClick={() => {
-          store.set(activeSessionAtom, ref);
-          store.set(chatWorkflowIdsAtom, (previous) =>
-            previous.includes(entry.id) ? previous : [...previous, entry.id],
-          );
-          store.set(chatPanelModeAtom, 'expanded');
-          router.push('/');
-        }}
-      >
-        Continue in Chat
-      </button>
+      {!chat && (
+        <button
+          className="ml-3 text-sm underline"
+          onClick={() => {
+            bindChatSession(store, ref);
+            store.set(chatWorkflowIdsAtom, (previous) =>
+              previous.includes(entry.id) ? previous : [...previous, entry.id],
+            );
+            store.set(chatPanelModeAtom, 'expanded');
+            router.push('/');
+          }}
+        >
+          Continue in Chat
+        </button>
+      )}
       <button className="ml-3 text-sm underline" onClick={() => verifyInBuild()}>
         Verify this run in Build
       </button>
@@ -222,6 +310,7 @@ export function WorkflowSessionPanel({
       <div className="flex flex-wrap gap-2">
         <button
           className="rounded border px-3 py-1"
+          disabled={!!session.endedAt}
           onClick={() => void act({ kind: session.paused ? 'resume' : 'pause' })}
         >
           {session.paused ? 'Resume workflow' : 'Pause workflow'}
@@ -232,6 +321,7 @@ export function WorkflowSessionPanel({
         <button
           className="rounded border px-3 py-1 disabled:opacity-50"
           disabled={
+            !!session.endedAt ||
             !!session.approvedAt ||
             context.steps.some((step) => !['success', 'warning', 'reviewed'].includes(step.status))
           }
@@ -240,154 +330,40 @@ export function WorkflowSessionPanel({
           Approve completed results
         </button>
       </div>
-      {sources.length > 0 && (
-        <fieldset className="space-y-2 rounded border p-3" disabled={busy || !session.paused}>
-          <legend>Sources</legend>
-          <label className="block text-sm">
-            Source block{' '}
-            <select
-              aria-label="Run source block"
-              className="rounded border bg-background p-1"
-              value={sourceId}
-              onChange={(event) => setTarget(event.target.value)}
-            >
-              <option value="">Choose a source block</option>
-              {sources.map((source) => (
-                <option key={source.id} value={source.id}>
-                  {source.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm">
-            Source action{' '}
-            <select
-              aria-label="Source action"
-              className="rounded border bg-background p-1"
-              value={mode}
-              onChange={(event) => setMode(event.target.value as 'replace' | 'add')}
-            >
-              <option value="replace">Replace source records</option>
-              <option value="add">Add another source</option>
-            </select>
-          </label>
-          <input
-            aria-label="Upload run source"
-            type="file"
-            accept=".xlsx,.xls,.json,.pdf,.docx"
-            disabled={!sourceId}
-            onChange={async (event) => {
-              const file = event.target.files?.[0];
-              event.target.value = '';
-              if (!file) return;
-              setBusy(true);
-              setError('');
-              try {
-                const extraction = await captureWorkflowDocument(file, { selectWorkbook });
-                await act({
-                  kind: 'source',
-                  blockId: sourceId,
-                  sourceId: extraction.id,
-                  name: extraction.fileName,
-                  rows: extraction.rows,
-                  extraction,
-                  mode,
-                });
-              } catch (err) {
-                setError(err instanceof Error ? err.message : 'Import failed.');
-              } finally {
-                setBusy(false);
-              }
-            }}
-          />
-          {cached && (
-            <button
-              className="rounded border px-3 py-1"
-              disabled={!sourceId}
-              onClick={() => void attach(cached.fileName, cached.rows)}
-            >
-              Use attached file: {cached.fileName}
-            </button>
+      {chat ? (
+        <ChatWorkflowSteps
+          key={`${entry.id}:${session.id}`}
+          steps={context.steps}
+          blocks={definition.blocks}
+          initialBlockId={focusBlockId}
+          renderStep={(step) => (
+            <>
+              {inputForms(step.id)}
+              {stepDetails(step)}
+            </>
           )}
-          <p className="text-xs text-muted-foreground">
-            Source changes preserve previous evidence and mark affected results as outdated. Pause
-            before changing sources.
-          </p>
-          {session.sources.map((source) => (
-            <p key={source.id} className="text-xs">
-              {source.name} · {source.rows.length} records · {source.mode} ·{' '}
-              {new Date(source.at).toLocaleString()}
-            </p>
-          ))}
-        </fieldset>
-      )}
-      {session.sources.some((source) => source.extraction) && (
-        <DocumentReviewView reviews={documentReviewSummaries(session)} />
-      )}
-      <ol className="space-y-2" aria-label="Execution steps">
-        {context.steps.map((step, index) => {
-          const result = session.results[step.id];
-          return (
-            <li key={step.id} className="rounded border p-3">
-              <LazyDetails
-                key={`${step.id}:${step.status}:${step.id === focusBlockId}`}
-                defaultOpen={
-                  step.id === focusBlockId ||
-                  ['error', 'needs_review', 'outdated'].includes(step.status)
-                }
-                summary={`${index + 1}. ${step.label} · ${step.status.replaceAll('_', ' ')}`}
-              >
-                <p className="my-2 text-xs">
-                  {step.family} ·{' '}
-                  {step.dependencies.length
-                    ? `Depends on: ${step.dependencies.map((id) => context.steps.find((item) => item.id === id)?.label ?? id).join(', ')}`
-                    : 'No preceding steps'}
-                </p>
-                {step.status === 'outdated' && (
-                  <p role="status">Previous result — rerun before using it.</p>
-                )}
-                {[...step.errors, ...step.warnings].map((message, i) => (
-                  <p key={i} className="text-sm text-amber-700">
-                    {message}
-                  </p>
-                ))}
-                <button className="text-sm underline" onClick={() => verifyInBuild(step.id)}>
-                  Verify this block in Build
-                </button>
-                {result && (
-                  <>
-                    <h4 className="mt-2 font-medium">Input</h4>
-                    <ReadableData value={result.input ?? {}} />
-                    <h4 className="mt-2 font-medium">Result</h4>
-                    <DocumentExtractionEvidence value={result.output.extractions} />
-                    <ReadableData
-                      value={presentToolOutput(
-                        result,
-                        definition.blocks.find((block) => block.id === step.id),
-                      )}
-                    />
-                  </>
-                )}
-                <button
-                  className="mt-2 rounded border px-3 py-1 disabled:opacity-50"
-                  disabled={!session.paused || !step.ready}
-                  onClick={() => void act({ kind: 'block', blockId: step.id })}
+        />
+      ) : (
+        <>
+          <div className="space-y-4">{inputForms()}</div>
+          <ol className="space-y-2" aria-label="Execution steps">
+            {context.steps.map((step, index) => (
+              <li key={step.id} className="rounded border p-3">
+                <LazyDetails
+                  key={`${step.id}:${step.status}:${step.id === focusBlockId}`}
+                  defaultOpen={
+                    step.id === focusBlockId ||
+                    ['error', 'needs_review', 'outdated'].includes(step.status)
+                  }
+                  summary={`${index + 1}. ${step.label} · ${step.status.replaceAll('_', ' ')}`}
                 >
-                  {result ? 'Rerun this block' : 'Run this block'}
-                </button>
-                {['needs_review', 'warning'].includes(step.status) && (
-                  <button
-                    className="ml-2 rounded border px-3 py-1"
-                    onClick={() => void act({ kind: 'review', blockId: step.id })}
-                  >
-                    Acknowledge checkpoint
-                  </button>
-                )}
-              </LazyDetails>
-            </li>
-          );
-        })}
-      </ol>
+                  {stepDetails(step)}
+                </LazyDetails>
+              </li>
+            ))}
+          </ol>
+        </>
+      )}
       <LazyDetails summary={`Execution history (${session.attempts.length})`}>
         {session.attempts.map((attempt, i) => (
           <LazyDetails
@@ -398,13 +374,22 @@ export function WorkflowSessionPanel({
           </LazyDetails>
         ))}
       </LazyDetails>
+      <button
+        className="rounded border px-3 py-1 text-sm disabled:opacity-50"
+        disabled={!!session.endedAt}
+        onClick={() => void act({ kind: 'end' })}
+      >
+        End workflow
+      </button>
+      <p className="text-xs text-muted-foreground">
+        Ending stops further execution. Completed external actions cannot be undone here.
+      </p>
       <ExecutionLifetimeNotice />
       {error && (
         <p role="alert" className="text-red-700">
           {error}
         </p>
       )}
-      {importDialog}
     </section>
   );
 }

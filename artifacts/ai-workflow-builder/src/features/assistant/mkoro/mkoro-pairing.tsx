@@ -41,14 +41,15 @@ export function MkoroPairing({
           Sina and Goose chat.
         </li>
         <li>
-          Keep the companion running. Return here, refresh the list and select the new computer
-          entry.
+          Keep the companion running. Return here, refresh the list and select the computer
+          connection when it is online.
         </li>
       </ol>
       <p>
         Creating a code does not connect the computer. Wait for it to appear online with delegation
         ready.
-        {computerName && ' The old entry stays revoked; its saved task history remains available.'}
+        {computerName &&
+          ' Reconnecting restores this connection and keeps its saved task history. Automatic tool approval starts off.'}
       </p>
       <label>
         Pairing code
@@ -76,7 +77,7 @@ export function MkoroPairing({
         disabled={actions.busy}
         onClick={() => {
           setCopied(false);
-          void actions.createPairing();
+          void actions.createPairing(actions.pairing?.reconnectWorkerId);
         }}
       >
         Generate a new code

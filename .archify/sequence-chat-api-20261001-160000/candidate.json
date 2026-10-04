@@ -1,0 +1,45 @@
+{
+  "schema_version":1,
+  "diagram_type":"sequence",
+  "meta":{
+    "title":"TaxflowOS: chat, model and native tool communication",
+    "output":".archify/sequence-chat-api-20261001-160000/chat-api.html",
+    "quality_profile":"showcase",
+    "column_fit":"spread",
+    "repository":{"url":"https://github.com/Mamdou025/TaxflowOS.git","revision":"444d6e0fc84928e35b9635a65eb8392520b09df2","link_mode":"local-only"}
+  },
+  "participants":[
+    {"id":"chat","type":"frontend","label":"Chat UI","sublabel":"browser SDK","sources":[{"path":"artifacts/ai-workflow-builder/src/components/app-shell.tsx","line":63,"end_line":67,"label":"Endpoint and agent selection"},{"path":"artifacts/ai-workflow-builder/src/features/assistant/ui/use-assistant.tsx","line":735,"end_line":755,"label":"Tool hooks and saved chat"}]},
+    {"id":"copilot","type":"backend","label":"Chat API","sublabel":"CopilotKit","sources":[{"path":"artifacts/api-server/src/app.ts","line":68,"end_line":100,"label":"Access checks before routes"},{"path":"artifacts/api-server/src/security/access.ts","line":108,"end_line":121,"label":"Chat requires execute role"},{"path":"artifacts/api-server/src/routes/copilotkit.ts","line":149,"end_line":187,"label":"Allowed provider selection"}]},
+    {"id":"model","type":"cloud","label":"Model route","sublabel":"configured","sources":[{"path":"artifacts/api-server/src/routes/copilotkit.ts","line":76,"end_line":106,"label":"Sina provider and model choice"},{"path":"artifacts/api-server/src/lib/foundry-model.ts","line":58,"end_line":111,"label":"Foundry pinned agent and tools"},{"path":"artifacts/api-server/src/lib/foundry-model.ts","line":159,"end_line":192,"label":"Responses endpoint and model hint"}]},
+    {"id":"tools","type":"frontend","label":"Native tools","sublabel":"browser hooks","sources":[{"path":"artifacts/ai-workflow-builder/src/features/assistant/ui/use-workspace-retrieval-tools.ts","line":127,"end_line":166,"label":"Source search API adapter"},{"path":"artifacts/ai-workflow-builder/src/features/assistant/ui/use-agent-workflow-tools.tsx","line":345,"end_line":440,"label":"Scoped workflow actions"},{"path":"artifacts/ai-workflow-builder/src/features/assistant/ui/use-mkoro-delegation.tsx","line":128,"end_line":170,"label":"Conditional computer tool"}]},
+    {"id":"domain","type":"backend","label":"Domain APIs","sublabel":"scoped routes","sources":[{"path":"artifacts/api-server/src/routes/index.ts","line":25,"end_line":48,"label":"Source, action and run routes"},{"path":"artifacts/api-server/src/lib/mkoro/delegations.ts","line":27,"end_line":85,"label":"Delegation admission checks"},{"path":"artifacts/api-server/src/security/access.ts","line":72,"end_line":121,"label":"Every domain request authorized"}]},
+    {"id":"mkoro","type":"external","label":"Mkoro","sublabel":"optional worker","sources":[{"path":"scripts/mkoro/worker.mjs","line":31,"end_line":65,"label":"Outbound worker API"},{"path":"scripts/mkoro/worker.mjs","line":218,"end_line":238,"label":"Events and command polling"},{"path":"scripts/mkoro/worker.mjs","line":306,"end_line":328,"label":"Local Goose ACP prompt"}]}
+  ],
+  "segments":[
+    {"from":150,"to":390,"label":"One model turn"},
+    {"from":410,"to":670,"label":"When a native tool is requested"},
+    {"from":695,"to":900,"label":"Optional computer branch"},
+    {"from":920,"to":1010,"label":"Return to the conversation"}
+  ],
+  "messages":[
+    {"id":"start","from":"chat","to":"copilot","y":175,"label":"POST /api/copilotkit","note":"Session + membership + execute permission","variant":"security"},
+    {"id":"provider","from":"copilot","to":"model","y":250,"label":"history + tools","note":"Sina gateway OR pinned MicroSina agent","variant":"emphasis"},
+    {"id":"model-output","from":"model","to":"copilot","y":320,"label":"text / tool request","variant":"return"},
+    {"id":"stream","from":"copilot","to":"chat","y":370,"label":"stream events","variant":"return"},
+    {"id":"dispatch","from":"chat","to":"tools","y":440,"label":"dispatch registered tool handler","variant":"emphasis"},
+    {"id":"domain-request","from":"tools","to":"domain","y":515,"label":"tool-specific HTTP","note":"Sources / grants / saved runs","variant":"security"},
+    {"id":"domain-result","from":"domain","to":"tools","y":595,"label":"result / review needed","variant":"return"},
+    {"id":"tool-result","from":"tools","to":"chat","y":650,"label":"native result + UI card","variant":"return"},
+    {"id":"delegate","from":"tools","to":"domain","y":725,"label":"IF computer needed","note":"Online paired worker + admitted task","variant":"dashed"},
+    {"id":"poll","from":"mkoro","to":"domain","y":800,"label":"poll + task events","note":"Worker token; outbound requests","variant":"dashed"},
+    {"id":"command","from":"domain","to":"mkoro","y":870,"label":"offered commands","variant":"return"},
+    {"id":"continue","from":"chat","to":"copilot","y":945,"label":"continue with tool result","variant":"emphasis"},
+    {"id":"final","from":"copilot","to":"chat","y":995,"label":"next model response","variant":"return"}
+  ],
+  "cards":[
+    {"dot":"cyan","title":"The model proposes; handlers act","items":["The browser registers context and tools. Native handlers call shared workflow commands or authenticated domain APIs.","The illustrated messages are a logical sequence, not a captured runtime trace. Local reads may need no HTTP call."]},
+    {"dot":"violet","title":"Which model answers?","items":["Sina uses the configured Replit or Vercel gateway and OPENAI_CHAT_MODEL (code default: gpt-4o). Live configuration was not inspected.","MicroSina uses a version-pinned Foundry agent. The adapter's gpt-5 string is a serialization hint, not proof of its deployed model."]},
+    {"dot":"rose","title":"Conditions matter","items":["Server checks apply again to each domain call. Workflow writes can require review or a matching scoped grant.","Mkoro is optional: the personal companion polls and runs Goose locally. Native workflow and source ownership stays in the platform.","Foundry public toolbox access is optional and defaults off; this diagram does not assert it is enabled."]}
+  ]
+}

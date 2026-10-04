@@ -1,0 +1,2299 @@
+{
+  "modules": [
+    {
+      "id": "browser-shell",
+      "label": "Browser shell",
+      "summary": "Routes and workspace composition. Chat remains mounted while registered detail surfaces open.",
+      "prefixes": [
+        "artifacts/ai-workflow-builder/src/App.tsx",
+        "artifacts/ai-workflow-builder/src/main.tsx",
+        "artifacts/ai-workflow-builder/src/app-workspace",
+        "artifacts/ai-workflow-builder/src/components/app-shell",
+        "artifacts/ai-workflow-builder/src/features/assistant/workspace/copilot-workspace-panel.tsx",
+        "artifacts/ai-workflow-builder/src/shared/stores/resource-registry.tsx"
+      ],
+      "owner": "Frontend application"
+    },
+    {
+      "id": "browser-auth",
+      "label": "Browser access & scope",
+      "summary": "Session gating, active workspace and account-scoped browser caches.",
+      "prefixes": ["artifacts/ai-workflow-builder/src/platform/auth/"],
+      "owner": "Frontend access adapter"
+    },
+    {
+      "id": "chat",
+      "label": "AI chat",
+      "summary": "Conversation UI, context, tool registration, chat persistence and workflow handoffs.",
+      "prefixes": ["artifacts/ai-workflow-builder/src/features/assistant/"],
+      "owner": "Chat feature"
+    },
+    {
+      "id": "computer-ui",
+      "label": "Computer task UI",
+      "summary": "Mkoro connection, task events, permissions, cancellation and opt-in desktop preview.",
+      "prefixes": [
+        "artifacts/ai-workflow-builder/src/features/assistant/mkoro/",
+        "artifacts/ai-workflow-builder/src/features/assistant/runtime/computer-delegation.ts",
+        "artifacts/ai-workflow-builder/src/features/assistant/ui/use-mkoro-delegation.tsx"
+      ],
+      "owner": "Chat computer adapter"
+    },
+    {
+      "id": "builder",
+      "label": "Workflow builder",
+      "summary": "Canvas, block editors, input acquisition and result presentation.",
+      "prefixes": ["artifacts/ai-workflow-builder/src/features/workflow-builder/"],
+      "owner": "Workflow builder adapter"
+    },
+    {
+      "id": "workflows",
+      "label": "Workflow library & Run",
+      "summary": "Saved workflows, exact-version sessions, nested history and revision-aware synchronization.",
+      "prefixes": ["artifacts/ai-workflow-builder/src/features/workflows-hub/"],
+      "owner": "Workflows feature"
+    },
+    {
+      "id": "sources",
+      "label": "Source documents",
+      "summary": "Document library, attachment parsing and selected evidence UI.",
+      "prefixes": ["artifacts/ai-workflow-builder/src/features/documents/"],
+      "owner": "Sources feature"
+    },
+    {
+      "id": "connections",
+      "label": "Connections & settings",
+      "summary": "Provider settings and connector UI. Configuration does not prove a service is available.",
+      "prefixes": [
+        "artifacts/ai-workflow-builder/src/platform/settings/",
+        "artifacts/ai-workflow-builder/src/platform/integrations/",
+        "artifacts/ai-workflow-builder/src/plugins/"
+      ],
+      "owner": "Connections adapters"
+    },
+    {
+      "id": "agent-builder",
+      "label": "Agent Builder",
+      "summary": "Model comparison and configurable agent experiments through the Agent Lab API.",
+      "prefixes": ["artifacts/ai-workflow-builder/src/features/agent-lab/"],
+      "owner": "Agent Builder feature"
+    },
+    {
+      "id": "genui",
+      "label": "Generated UI",
+      "summary": "Render model-produced UI through the supported component registry.",
+      "prefixes": ["artifacts/ai-workflow-builder/src/features/genui/"],
+      "owner": "Generated UI adapter"
+    },
+    {
+      "id": "browser-engine",
+      "label": "Browser workflow adapters",
+      "summary": "Canvas conversion, browser tool composition, templates and workflow presentation state.",
+      "prefixes": ["artifacts/ai-workflow-builder/src/shared/workflow-engine/"],
+      "owner": "Browser workflow adapter"
+    },
+    {
+      "id": "browser-api",
+      "label": "Browser API clients",
+      "summary": "HTTP clients for resource APIs and durable runs. Requests carry current workspace context.",
+      "prefixes": [
+        "artifacts/ai-workflow-builder/src/platform/api-client.ts",
+        "artifacts/ai-workflow-builder/src/platform/workflow-runs-client.ts"
+      ],
+      "owner": "Platform client adapters"
+    },
+    {
+      "id": "api-runtime",
+      "label": "API process",
+      "summary": "Express startup, middleware, routes and background worker startup.",
+      "prefixes": [
+        "artifacts/api-server/src/app.ts",
+        "artifacts/api-server/src/index.ts",
+        "artifacts/api-server/src/observability/"
+      ],
+      "owner": "API application"
+    },
+    {
+      "id": "api-access",
+      "label": "Server access & grants",
+      "summary": "Server sessions, membership, read/write/execute policy and agent action authorizations.",
+      "prefixes": [
+        "artifacts/api-server/src/security/",
+        "artifacts/api-server/src/routes/agent-actions.ts",
+        "artifacts/api-server/src/routes/workspaces.ts",
+        "artifacts/api-server/src/routes/demo-workspace.ts"
+      ],
+      "owner": "Server security boundary"
+    },
+    {
+      "id": "api-workflows",
+      "label": "Workflow API & worker",
+      "summary": "Revisioned library storage and durable exact-version jobs, cancellation, retries and results.",
+      "prefixes": [
+        "artifacts/api-server/src/routes/workflow-library.ts",
+        "artifacts/api-server/src/routes/workflow-runs.ts",
+        "artifacts/api-server/src/routes/workflows.ts",
+        "artifacts/api-server/src/lib/workflow-runs/",
+        "artifacts/api-server/src/lib/workflow-run-worker.ts",
+        "artifacts/api-server/src/storage/"
+      ],
+      "owner": "Workflow server adapters"
+    },
+    {
+      "id": "api-sources",
+      "label": "Sources API & retrieval",
+      "summary": "Document metadata, private object access, extraction, ingestion and workspace-filtered retrieval.",
+      "prefixes": [
+        "artifacts/api-server/src/routes/documents.ts",
+        "artifacts/api-server/src/routes/workflow-extract.ts",
+        "artifacts/api-server/src/routes/assistant-extract.ts",
+        "artifacts/api-server/src/lib/rag/",
+        "artifacts/api-server/src/lib/ingest-worker.ts",
+        "artifacts/api-server/src/lib/storage.ts",
+        "artifacts/api-server/src/lib/workflow-document-extraction.ts"
+      ],
+      "owner": "Sources server adapters"
+    },
+    {
+      "id": "api-agents",
+      "label": "Chat & model APIs",
+      "summary": "CopilotKit, Foundry, Agent Lab and assistant routes. Provider settings remain server-side.",
+      "prefixes": [
+        "artifacts/api-server/src/routes/copilotkit.ts",
+        "artifacts/api-server/src/routes/agent-lab.ts",
+        "artifacts/api-server/src/routes/genui.ts",
+        "artifacts/api-server/src/routes/assistant-tools.ts",
+        "artifacts/api-server/src/routes/chat.ts",
+        "artifacts/api-server/src/routes/memory.ts",
+        "artifacts/api-server/src/lib/foundry-model.ts",
+        "artifacts/api-server/src/lib/copilot-orphan-repair.ts"
+      ],
+      "owner": "Agent server adapters"
+    },
+    {
+      "id": "api-mkoro",
+      "label": "Mkoro API",
+      "summary": "Personal worker pairing, chat-bound delegation, commands, events and short-lived screen leases.",
+      "prefixes": [
+        "artifacts/api-server/src/routes/mkoro.ts",
+        "artifacts/api-server/src/routes/mkoro-worker.ts",
+        "artifacts/api-server/src/lib/mkoro/"
+      ],
+      "owner": "Computer delegation server"
+    },
+    {
+      "id": "api-routes",
+      "label": "Other API adapters",
+      "summary": "Remaining Express routes, connector request adapters and server utilities.",
+      "prefixes": ["artifacts/api-server/src/"],
+      "owner": "API application"
+    },
+    {
+      "id": "workflow-core",
+      "label": "Portable workflow core",
+      "summary": "Graph rules and commands own drafts, immutable versions, run records and guided session changes.",
+      "prefixes": ["lib/workflow-core/"],
+      "owner": "Workflow domain and application"
+    },
+    {
+      "id": "workflow-contracts",
+      "label": "Workflow contracts",
+      "summary": "Persisted types, generated runtime validators and portable backup/storage wire formats.",
+      "prefixes": ["lib/workflow-contracts/"],
+      "owner": "Workflow persisted contracts"
+    },
+    {
+      "id": "workflow-executors",
+      "label": "Deterministic block executors",
+      "summary": "Shared calculation, mapping, validation, review and output tools used by browser and server.",
+      "prefixes": ["lib/workflow-executors/"],
+      "owner": "Workflow calculation implementation"
+    },
+    {
+      "id": "source-core",
+      "label": "Source rules & provenance",
+      "summary": "Source identity, revisions, citations, retrieval selection and lifecycle transitions.",
+      "prefixes": ["lib/source-core/"],
+      "owner": "Source domain"
+    },
+    {
+      "id": "source-connectors",
+      "label": "Source connectors",
+      "summary": "Reusable HTTP JSON acquisition, record mapping and connector definitions.",
+      "prefixes": ["lib/source-connectors/"],
+      "owner": "Connector domain"
+    },
+    {
+      "id": "agent-runtime",
+      "label": "Agent runtime",
+      "summary": "Agent loop, model policy, capability contracts and injected workspace tool ports.",
+      "prefixes": ["lib/agent-runtime/"],
+      "owner": "Agent orchestration"
+    },
+    {
+      "id": "api-contracts",
+      "label": "API contracts",
+      "summary": "Shared access, request, Mkoro and durable-run schemas and validators.",
+      "prefixes": ["lib/api-zod/"],
+      "owner": "API wire contracts"
+    },
+    {
+      "id": "database",
+      "label": "Database & migrations",
+      "summary": "PostgreSQL schema, Drizzle access and committed migration history.",
+      "prefixes": ["lib/db/"],
+      "owner": "Persistence"
+    },
+    {
+      "id": "api-generated",
+      "label": "API specification & generated client",
+      "summary": "OpenAPI specification and generated React client; generated coverage is limited.",
+      "prefixes": ["lib/api-spec/", "lib/api-client-react/"],
+      "owner": "API code generation"
+    },
+    {
+      "id": "companion",
+      "label": "Local computer companion",
+      "summary": "Outbound worker polling, Goose ACP bridge and optional Windows capture.",
+      "prefixes": ["scripts/mkoro/"],
+      "owner": "Local companion"
+    },
+    {
+      "id": "frontend",
+      "label": "Other frontend modules",
+      "summary": "Shared UI, utilities and remaining browser feature files. A path here does not establish runtime reachability.",
+      "prefixes": ["artifacts/ai-workflow-builder/"],
+      "owner": "Frontend application"
+    },
+    {
+      "id": "libraries",
+      "label": "Other shared library files",
+      "summary": "Remaining shared root-level definitions and registries.",
+      "prefixes": ["lib/"],
+      "owner": "Shared library support"
+    },
+    {
+      "id": "scripts",
+      "label": "Development scripts",
+      "summary": "Build, verification, recovery and local tooling scripts.",
+      "prefixes": ["scripts/"],
+      "owner": "Developer tooling"
+    },
+    {
+      "id": "tests",
+      "label": "Verification",
+      "summary": "Unit, integration, browser and smoke checks; a test link is evidence location, not a passing result.",
+      "prefixes": ["tests/", "artifacts/ai-workflow-builder/e2e/"],
+      "owner": "Verification"
+    },
+    {
+      "id": "tooling",
+      "label": "Workspace configuration",
+      "summary": "Workspace manifests, TypeScript, Vite and toolchain configuration.",
+      "prefixes": [
+        "package.json",
+        "pnpm-workspace.yaml",
+        "tsconfig",
+        ".node-version",
+        "Dockerfile",
+        "docker-compose",
+        "compose",
+        ".github/"
+      ],
+      "owner": "Development environment"
+    }
+  ],
+  "views": [
+    {
+      "id": "system",
+      "title": "Whole system · frontend / backend",
+      "description": "Follow the running application from its browser surfaces through the API to shared rules, workers and storage. Select a block to open its modules and files.",
+      "nodes": [
+        {
+          "id": "browser",
+          "label": "Browser workspace",
+          "detail": "React keeps Chat at home with Workflows, Sources and Connections as detail surfaces. UI adapters coordinate editing, input selection and presentation.",
+          "moduleIds": ["browser-shell", "chat", "builder", "workflows", "sources", "connections"],
+          "filePaths": [
+            "artifacts/ai-workflow-builder/src/features/assistant/workspace/copilot-workspace-panel.tsx"
+          ],
+          "kind": "frontend",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": "api",
+          "label": "Express API",
+          "detail": "The server mounts authenticated resource routes. Actor identity comes from the session; workspace membership and operation type are checked before protected routes.",
+          "moduleIds": ["api-runtime", "api-access", "api-routes"],
+          "filePaths": [
+            "artifacts/api-server/src/app.ts",
+            "artifacts/api-server/src/security/access.ts"
+          ],
+          "kind": "backend",
+          "x": 1,
+          "y": 0
+        },
+        {
+          "id": "models",
+          "label": "AI provider adapters",
+          "detail": "Sina uses a configured OpenAI-compatible gateway. MicroSina uses a pinned Foundry agent. Agent Builder has a separate model routing path.",
+          "moduleIds": ["api-agents", "agent-runtime"],
+          "filePaths": [
+            "artifacts/api-server/src/routes/copilotkit.ts",
+            "artifacts/api-server/src/lib/foundry-model.ts",
+            "lib/agent-runtime/src/agent.ts"
+          ],
+          "kind": "external",
+          "x": 2,
+          "y": 0
+        },
+        {
+          "id": "core",
+          "label": "Workflow rules & tools",
+          "detail": "Shared commands preserve versions and run identity. Injected deterministic executors calculate from pinned inputs in both execution paths.",
+          "moduleIds": [
+            "workflow-core",
+            "workflow-contracts",
+            "workflow-executors",
+            "browser-engine"
+          ],
+          "filePaths": [
+            "lib/workflow-core/src/application/commands.ts",
+            "lib/workflow-core/src/core/graph.ts"
+          ],
+          "kind": "shared",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "id": "workers",
+          "label": "Background workers",
+          "detail": "The API starts ingestion and durable workflow workers. Queued workflows survive the initiating tab; browser previews and guided sessions still execute in the browser.",
+          "moduleIds": ["api-workflows", "api-sources"],
+          "filePaths": [
+            "artifacts/api-server/src/index.ts",
+            "artifacts/api-server/src/lib/workflow-run-worker.ts",
+            "artifacts/api-server/src/lib/ingest-worker.ts"
+          ],
+          "kind": "backend",
+          "x": 1,
+          "y": 1
+        },
+        {
+          "id": "postgres",
+          "label": "PostgreSQL",
+          "detail": "Persists sessions, memberships, chats, revisioned libraries, source metadata/chunks, grants, jobs and computer task records.",
+          "moduleIds": ["database"],
+          "filePaths": [
+            "lib/db/src/schema/index.ts",
+            "lib/db/src/schema/workspaces.ts",
+            "lib/db/src/schema/mkoro.ts"
+          ],
+          "kind": "storage",
+          "x": 2,
+          "y": 1
+        },
+        {
+          "id": "connectors",
+          "label": "Sources & connectors",
+          "detail": "Acquire documents or external JSON before running. Retrieval selects permitted passages with source revision and citation identity.",
+          "moduleIds": ["source-core", "source-connectors", "api-sources"],
+          "filePaths": [
+            "lib/source-core/src/index.ts",
+            "artifacts/api-server/src/routes/http-source.ts",
+            "artifacts/api-server/src/lib/rag/retrieve.ts"
+          ],
+          "kind": "shared",
+          "x": 0,
+          "y": 2
+        },
+        {
+          "id": "computer",
+          "label": "Mkoro companion",
+          "detail": "A personal outbound-polling worker delegates computer work to the user's configured Goose CLI. Its results are observations, not proof of platform workflow completion.",
+          "moduleIds": ["api-mkoro", "computer-ui", "companion"],
+          "filePaths": [
+            "artifacts/api-server/src/lib/mkoro/delegations.ts",
+            "scripts/mkoro/worker.mjs"
+          ],
+          "kind": "external",
+          "x": 1,
+          "y": 2
+        },
+        {
+          "id": "objects",
+          "label": "Private object storage",
+          "detail": "Supabase Storage holds original document bytes. The API issues signed URLs; ingestion downloads originals for extraction.",
+          "moduleIds": ["api-sources"],
+          "filePaths": [
+            "artifacts/api-server/src/lib/storage.ts",
+            "artifacts/api-server/src/routes/documents.ts"
+          ],
+          "kind": "storage",
+          "x": 2,
+          "y": 2
+        }
+      ],
+      "edges": [
+        {
+          "from": "browser",
+          "to": "api",
+          "label": "Scoped HTTP / chat",
+          "kind": "runtime"
+        },
+        {
+          "from": "api",
+          "to": "models",
+          "label": "Model requests",
+          "kind": "runtime"
+        },
+        {
+          "from": "browser",
+          "to": "core",
+          "label": "Local previews & sessions",
+          "kind": "runtime"
+        },
+        {
+          "from": "api",
+          "to": "workers",
+          "label": "Queue / worker startup",
+          "kind": "runtime"
+        },
+        {
+          "from": "workers",
+          "to": "core",
+          "label": "Execute saved graph",
+          "kind": "runtime"
+        },
+        {
+          "from": "api",
+          "to": "postgres",
+          "label": "Read / write records",
+          "kind": "data"
+        },
+        {
+          "from": "workers",
+          "to": "postgres",
+          "label": "Claim / complete jobs",
+          "kind": "data"
+        },
+        {
+          "from": "api",
+          "to": "connectors",
+          "label": "Acquire / retrieve",
+          "kind": "runtime"
+        },
+        {
+          "from": "computer",
+          "to": "api",
+          "label": "Poll, events, permissions",
+          "kind": "runtime"
+        },
+        {
+          "from": "browser",
+          "to": "objects",
+          "label": "Signed file transfer",
+          "kind": "data"
+        },
+        {
+          "from": "workers",
+          "to": "objects",
+          "label": "Read originals",
+          "kind": "data"
+        }
+      ],
+      "notes": [
+        "This view combines reviewed relationships at module level; it is not an observed runtime trace.",
+        "Archives and generated build output are outside the active application map.",
+        "Computation, human approval and server synchronization remain separate states."
+      ]
+    },
+    {
+      "id": "tech-stack",
+      "title": "Technology stack",
+      "description": "The concrete technologies and package boundaries used by the current checkout. Installed dependencies do not prove every feature is configured or enabled.",
+      "nodes": [
+        {
+          "id": "ui",
+          "label": "React · Vite · TypeScript",
+          "detail": "Vite builds the browser app; React renders the workspace. Jotai binds shared state; XYFlow powers the workflow canvas. Tailwind/Radix provide UI building blocks.",
+          "moduleIds": ["frontend", "browser-shell", "builder"],
+          "filePaths": [
+            "artifacts/ai-workflow-builder/package.json",
+            "artifacts/ai-workflow-builder/src/main.tsx"
+          ],
+          "kind": "frontend",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": "sdk",
+          "label": "CopilotKit · AI SDK",
+          "detail": "CopilotKit connects chat context and function actions to the server runtime. The separate Agent Lab loop uses AI SDK generateText and configured model routing.",
+          "moduleIds": ["chat", "api-agents", "agent-runtime"],
+          "filePaths": [
+            "artifacts/ai-workflow-builder/src/features/assistant/ui/use-assistant.tsx",
+            "artifacts/api-server/src/routes/copilotkit.ts",
+            "lib/agent-runtime/src/agent.ts"
+          ],
+          "kind": "shared",
+          "x": 1,
+          "y": 0
+        },
+        {
+          "id": "providers",
+          "label": "Gateway · Foundry · Goose",
+          "detail": "Sina gateway configuration, optional MicroSina Foundry agent, and the companion's own Goose provider are separate model configurations.",
+          "moduleIds": ["api-agents", "companion"],
+          "filePaths": [
+            "artifacts/api-server/src/routes/copilotkit.ts",
+            "artifacts/api-server/src/lib/foundry-model.ts",
+            "scripts/mkoro/companion.mjs"
+          ],
+          "kind": "external",
+          "x": 2,
+          "y": 0
+        },
+        {
+          "id": "schemas",
+          "label": "TypeScript contracts · Zod",
+          "detail": "Domain types and generated schemas define saved workflows; shared Zod validators protect API shapes, access roles and runtime inputs.",
+          "moduleIds": ["workflow-contracts", "api-contracts"],
+          "filePaths": [
+            "lib/workflow-contracts/src/generated-schemas.ts",
+            "lib/api-zod/src/access.ts",
+            "lib/api-zod/src/workflow-runs.ts"
+          ],
+          "kind": "shared",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "id": "node",
+          "label": "Node.js · Express · Better Auth",
+          "detail": "Express 5 serves API routes. Better Auth owns sessions. Pino logs accepted request IDs and outcomes. Middleware binds workspace authorization.",
+          "moduleIds": ["api-runtime", "api-access"],
+          "filePaths": [
+            "artifacts/api-server/package.json",
+            "artifacts/api-server/src/app.ts",
+            "artifacts/api-server/src/security/auth.ts"
+          ],
+          "kind": "backend",
+          "x": 1,
+          "y": 1
+        },
+        {
+          "id": "db",
+          "label": "Drizzle · pg · PostgreSQL",
+          "detail": "The pg pool and Drizzle access the same database. PostgreSQL stores jobs and records; vector columns support document similarity retrieval.",
+          "moduleIds": ["database", "api-sources"],
+          "filePaths": [
+            "lib/db/src/index.ts",
+            "lib/db/src/schema/index.ts",
+            "artifacts/api-server/src/lib/rag/retrieve.ts"
+          ],
+          "kind": "storage",
+          "x": 2,
+          "y": 1
+        },
+        {
+          "id": "rules",
+          "label": "Portable TypeScript rules",
+          "detail": "workflow-core and workflow-executors compute results without React or model-provider dependencies. Source and agent packages have distinct responsibilities.",
+          "moduleIds": [
+            "workflow-core",
+            "workflow-executors",
+            "source-core",
+            "source-connectors",
+            "agent-runtime"
+          ],
+          "filePaths": [
+            "lib/workflow-core/src/core/graph.ts",
+            "lib/workflow-executors/src/tools/registry.ts"
+          ],
+          "kind": "shared",
+          "x": 0,
+          "y": 2
+        },
+        {
+          "id": "checks",
+          "label": "pnpm · Playwright · node:test",
+          "detail": "The workspace has direct unit/core tests, isolated database integration suites, browser tests and architecture checks. This explorer links tests without claiming they ran.",
+          "moduleIds": ["scripts", "tests", "tooling"],
+          "filePaths": ["package.json", "scripts/check-architecture.mjs", "TEST.md"],
+          "kind": "shared",
+          "x": 1,
+          "y": 2
+        },
+        {
+          "id": "bytes",
+          "label": "Supabase · extraction · embeddings",
+          "detail": "Originals use private Supabase Storage. Extraction libraries and configured OCR/embedding providers feed source indexing; missing integrations remain unavailable.",
+          "moduleIds": ["api-sources"],
+          "filePaths": [
+            "artifacts/api-server/src/lib/storage.ts",
+            "artifacts/api-server/src/lib/rag/ingest.ts",
+            "artifacts/api-server/src/lib/rag/embeddings.ts"
+          ],
+          "kind": "external",
+          "x": 2,
+          "y": 2
+        }
+      ],
+      "edges": [
+        {
+          "from": "ui",
+          "to": "sdk",
+          "label": "Chat components",
+          "kind": "dependency"
+        },
+        {
+          "from": "sdk",
+          "to": "providers",
+          "label": "Configured model calls",
+          "kind": "runtime"
+        },
+        {
+          "from": "ui",
+          "to": "schemas",
+          "label": "Validate / share types",
+          "kind": "dependency"
+        },
+        {
+          "from": "ui",
+          "to": "node",
+          "label": "Same-origin API",
+          "kind": "runtime"
+        },
+        {
+          "from": "node",
+          "to": "schemas",
+          "label": "Validate requests",
+          "kind": "dependency"
+        },
+        {
+          "from": "node",
+          "to": "db",
+          "label": "Persist / query",
+          "kind": "data"
+        },
+        {
+          "from": "ui",
+          "to": "rules",
+          "label": "Browser tools",
+          "kind": "dependency"
+        },
+        {
+          "from": "node",
+          "to": "rules",
+          "label": "Server tools",
+          "kind": "dependency"
+        },
+        {
+          "from": "node",
+          "to": "bytes",
+          "label": "Source services",
+          "kind": "runtime"
+        },
+        {
+          "from": "checks",
+          "to": "rules",
+          "label": "Verify contracts",
+          "kind": "dependency"
+        }
+      ],
+      "notes": [
+        "Technology names come from manifests and inspected source; no live-provider availability was tested.",
+        "The workspace package pin is authoritative for commands. No runtime or dependency upgrade is part of this explorer."
+      ]
+    },
+    {
+      "id": "api-models",
+      "title": "API communication & models",
+      "description": "Where browser requests go, which operations execute work, and how model and persisted-data boundaries fit together.",
+      "nodes": [
+        {
+          "id": "client",
+          "label": "Browser requests",
+          "detail": "apiFetch adds the active workspace header, request ID and same-origin credentials. It does not grant authority to the browser's role or identity.",
+          "moduleIds": ["browser-api", "browser-auth"],
+          "filePaths": [
+            "artifacts/ai-workflow-builder/src/platform/auth/api-fetch.ts",
+            "artifacts/ai-workflow-builder/src/platform/workflow-runs-client.ts"
+          ],
+          "kind": "frontend",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": "policy",
+          "label": "Session → workspace → action",
+          "detail": "Protected /api routes validate the live session and current membership. Route policy classifies read, write or execute; resource checks still apply inside handlers.",
+          "moduleIds": ["api-access", "api-runtime"],
+          "filePaths": [
+            "artifacts/api-server/src/app.ts",
+            "artifacts/api-server/src/security/access.ts",
+            "lib/api-zod/src/access.ts"
+          ],
+          "kind": "security",
+          "x": 1,
+          "y": 0
+        },
+        {
+          "id": "chat",
+          "label": "/api/copilotkit · /agent-lab",
+          "detail": "Chat streams through CopilotKit. Agent Lab calls the shared server agent loop. Both are execute operations with bounded request bodies.",
+          "moduleIds": ["api-agents", "agent-runtime"],
+          "filePaths": [
+            "artifacts/api-server/src/routes/copilotkit.ts",
+            "artifacts/api-server/src/routes/agent-lab.ts",
+            "lib/agent-runtime/src/agent.ts"
+          ],
+          "kind": "backend",
+          "x": 2,
+          "y": 0
+        },
+        {
+          "id": "resources",
+          "label": "Resource APIs",
+          "detail": "/workflow-library saves revisioned portable bytes; /chat stores messages; /documents manages sources and search. These are distinct persistence and retrieval paths.",
+          "moduleIds": ["api-workflows", "api-sources", "api-agents"],
+          "filePaths": [
+            "artifacts/api-server/src/routes/workflow-library.ts",
+            "artifacts/api-server/src/routes/chat.ts",
+            "artifacts/api-server/src/routes/documents.ts"
+          ],
+          "kind": "backend",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "id": "execute",
+          "label": "Execution APIs",
+          "detail": "/workflow-runs queues an exact saved version. /http-source acquires external JSON. /agent-actions checks scoped operations. Executing a request is not the same as approving a result.",
+          "moduleIds": ["api-workflows", "api-access", "api-routes"],
+          "filePaths": [
+            "artifacts/api-server/src/routes/workflow-runs.ts",
+            "artifacts/api-server/src/routes/http-source.ts",
+            "artifacts/api-server/src/routes/agent-actions.ts"
+          ],
+          "kind": "backend",
+          "x": 1,
+          "y": 1
+        },
+        {
+          "id": "providers",
+          "label": "Model selection",
+          "detail": "Sina reads OPENAI_CHAT_MODEL with a code default of gpt-4o and gateway settings. MicroSina uses MICROSINA_AGENT_VERSION in Foundry. Agent Lab model routing is separately selected.",
+          "moduleIds": ["api-agents", "agent-runtime"],
+          "filePaths": [
+            "artifacts/api-server/src/routes/copilotkit.ts",
+            "artifacts/api-server/src/lib/foundry-model.ts",
+            "lib/agent-runtime/src/agent.ts",
+            "lib/agent-runtime/src/model-router.ts"
+          ],
+          "kind": "external",
+          "x": 2,
+          "y": 1
+        },
+        {
+          "id": "records",
+          "label": "Persisted data model",
+          "detail": "Workspace libraries contain drafts, versions and recorded sessions/runs. workflow_run_jobs snapshots durable definitions. Chat, source metadata/chunks and grants have separate tables.",
+          "moduleIds": ["database", "workflow-contracts"],
+          "filePaths": [
+            "lib/db/src/schema/index.ts",
+            "lib/db/src/schema/workspaces.ts",
+            "lib/workflow-contracts/src/library-types.ts"
+          ],
+          "kind": "storage",
+          "x": 0,
+          "y": 2
+        },
+        {
+          "id": "worker",
+          "label": "Separate worker credential path",
+          "detail": "/api/mkoro-worker authenticates a revocable bearer token and rechecks membership. It is mounted outside browser session middleware and only exposes worker operations.",
+          "moduleIds": ["api-mkoro", "companion"],
+          "filePaths": [
+            "artifacts/api-server/src/app.ts",
+            "artifacts/api-server/src/routes/mkoro-worker.ts",
+            "artifacts/api-server/src/lib/mkoro/workers.ts"
+          ],
+          "kind": "security",
+          "x": 1,
+          "y": 2
+        },
+        {
+          "id": "outside",
+          "label": "External JSON & source storage",
+          "detail": "Server connectors acquire external data; signed URLs carry original file bytes. Provider-specific credentials stay in their configured server or companion context.",
+          "moduleIds": ["source-connectors", "api-sources"],
+          "filePaths": [
+            "artifacts/api-server/src/routes/http-source.ts",
+            "artifacts/api-server/src/lib/storage.ts",
+            "lib/source-connectors/src/http-json.ts"
+          ],
+          "kind": "external",
+          "x": 2,
+          "y": 2
+        }
+      ],
+      "edges": [
+        {
+          "from": "client",
+          "to": "policy",
+          "label": "Protected /api request",
+          "kind": "runtime"
+        },
+        {
+          "from": "policy",
+          "to": "chat",
+          "label": "Execute",
+          "kind": "runtime"
+        },
+        {
+          "from": "policy",
+          "to": "resources",
+          "label": "Read / write",
+          "kind": "runtime"
+        },
+        {
+          "from": "policy",
+          "to": "execute",
+          "label": "Execute",
+          "kind": "runtime"
+        },
+        {
+          "from": "chat",
+          "to": "providers",
+          "label": "Model input / streamed response",
+          "kind": "runtime"
+        },
+        {
+          "from": "resources",
+          "to": "records",
+          "label": "Read / write",
+          "kind": "data"
+        },
+        {
+          "from": "execute",
+          "to": "records",
+          "label": "Queue / grant records",
+          "kind": "data"
+        },
+        {
+          "from": "execute",
+          "to": "outside",
+          "label": "Acquire data",
+          "kind": "runtime"
+        },
+        {
+          "from": "resources",
+          "to": "outside",
+          "label": "Signed URL / extraction",
+          "kind": "runtime"
+        },
+        {
+          "from": "worker",
+          "to": "records",
+          "label": "Task / event records",
+          "kind": "data"
+        }
+      ],
+      "notes": [
+        "Model names shown here are source configuration, not a claim about secrets or the model active in a deployed environment.",
+        "POST /documents/search is a read operation; HTTP method alone does not define authorization.",
+        "The generated OpenAPI client covers only a subset; handwritten clients remain part of the active API surface."
+      ]
+    },
+    {
+      "id": "chat-connections",
+      "title": "How AI chat connects",
+      "description": "The model chooses from offered tools; adapters execute those tools through the owning rules and APIs. The chat UI also shows evidence, review cards and computer task progress.",
+      "nodes": [
+        {
+          "id": "conversation",
+          "label": "Chat conversation",
+          "detail": "useAssistant registers readable workspace context, actions and shared session UI. Saved threads preserve conversation history and chosen chat agent.",
+          "moduleIds": ["chat", "browser-shell"],
+          "filePaths": [
+            "artifacts/ai-workflow-builder/src/features/assistant/ui/use-assistant.tsx",
+            "artifacts/ai-workflow-builder/src/features/assistant/runtime/chat/use-chat-persistence.ts",
+            "artifacts/ai-workflow-builder/src/features/assistant/runtime/chat/chat-agent.ts"
+          ],
+          "kind": "frontend",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": "model",
+          "label": "Sina / MicroSina",
+          "detail": "CopilotKit forwards a turn to the selected server adapter. Responses may request registered function actions; provider availability does not expand permissions.",
+          "moduleIds": ["api-agents"],
+          "filePaths": [
+            "artifacts/api-server/src/routes/copilotkit.ts",
+            "artifacts/api-server/src/lib/foundry-model.ts"
+          ],
+          "kind": "external",
+          "x": 1,
+          "y": 0
+        },
+        {
+          "id": "tools",
+          "label": "Browser tool adapters",
+          "detail": "React hooks register workflow, session, retrieval, live-data, document-review and computer delegation actions. Tool results return through the chat turn.",
+          "moduleIds": ["chat"],
+          "filePaths": [
+            "artifacts/ai-workflow-builder/src/features/assistant/ui/use-agent-workflow-tools.tsx",
+            "artifacts/ai-workflow-builder/src/features/assistant/ui/use-session-tools.tsx",
+            "artifacts/ai-workflow-builder/src/features/assistant/ui/use-live-data-tools.tsx"
+          ],
+          "kind": "frontend",
+          "x": 2,
+          "y": 0
+        },
+        {
+          "id": "navigation",
+          "label": "Open a surface",
+          "detail": "Resource registry maps workflow/source/connection targets to their existing detail views. Opening an existing run selects it rather than executing it again.",
+          "moduleIds": ["browser-shell", "workflows"],
+          "filePaths": [
+            "artifacts/ai-workflow-builder/src/shared/stores/resource-registry.tsx",
+            "artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-session-store.ts"
+          ],
+          "kind": "frontend",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "id": "workflow",
+          "label": "Workflow commands & review",
+          "detail": "Draft proposals, saved versions and session actions go through workflow-core. Scoped grants can authorize matching operations; otherwise the adapter shows a review card.",
+          "moduleIds": ["workflow-core", "api-access", "workflows"],
+          "filePaths": [
+            "lib/workflow-core/src/application/agent-commands.ts",
+            "artifacts/ai-workflow-builder/src/features/assistant/ui/use-agent-workflow-tools.tsx",
+            "artifacts/api-server/src/routes/agent-actions.ts"
+          ],
+          "kind": "shared",
+          "x": 1,
+          "y": 1
+        },
+        {
+          "id": "evidence",
+          "label": "Read source evidence",
+          "detail": "Document search returns permitted passages with source revision and citation IDs. Worksheet tools explain recorded values; missing data stays visible.",
+          "moduleIds": ["source-core", "api-sources", "sources"],
+          "filePaths": [
+            "artifacts/ai-workflow-builder/src/features/assistant/ui/use-workspace-retrieval-tools.ts",
+            "artifacts/api-server/src/lib/rag/retrieve.ts",
+            "lib/source-core/src/index.ts"
+          ],
+          "kind": "shared",
+          "x": 2,
+          "y": 1
+        },
+        {
+          "id": "live",
+          "label": "Acquire live data",
+          "detail": "Native source adapters handle public JSON calls, supported connectors and other offered tools. Workflow source responses are pinned before deterministic replay.",
+          "moduleIds": ["source-connectors", "api-routes", "chat"],
+          "filePaths": [
+            "artifacts/ai-workflow-builder/src/features/assistant/ui/use-live-data-tools.tsx",
+            "artifacts/api-server/src/routes/http-source.ts"
+          ],
+          "kind": "backend",
+          "x": 0,
+          "y": 2
+        },
+        {
+          "id": "computer",
+          "label": "Delegate computer work",
+          "detail": "A structured task binds to the saved chat, actor and personal worker. Status, one-action decisions and Stop remain in the conversation.",
+          "moduleIds": ["computer-ui", "api-mkoro", "companion"],
+          "filePaths": [
+            "artifacts/ai-workflow-builder/src/features/assistant/runtime/computer-delegation.ts",
+            "artifacts/api-server/src/lib/mkoro/delegations.ts",
+            "scripts/mkoro/worker.mjs"
+          ],
+          "kind": "external",
+          "x": 1,
+          "y": 2
+        },
+        {
+          "id": "calculation",
+          "label": "Calculate & record",
+          "detail": "Shared executors produce outputs and provenance from pinned inputs. Chat sessions use the browser runtime; durable queue execution is a separate path.",
+          "moduleIds": ["workflow-core", "workflow-executors", "browser-engine"],
+          "filePaths": [
+            "lib/workflow-core/src/application/sessions.ts",
+            "lib/workflow-core/src/core/graph.ts",
+            "artifacts/ai-workflow-builder/src/shared/workflow-engine/workflow/execute.ts"
+          ],
+          "kind": "shared",
+          "x": 2,
+          "y": 2
+        }
+      ],
+      "edges": [
+        {
+          "from": "conversation",
+          "to": "model",
+          "label": "Context + offered tools",
+          "kind": "runtime"
+        },
+        {
+          "from": "model",
+          "to": "tools",
+          "label": "Function requests",
+          "kind": "runtime"
+        },
+        {
+          "from": "tools",
+          "to": "navigation",
+          "label": "Open / select",
+          "kind": "runtime"
+        },
+        {
+          "from": "tools",
+          "to": "workflow",
+          "label": "Propose / authorize",
+          "kind": "runtime"
+        },
+        {
+          "from": "tools",
+          "to": "evidence",
+          "label": "Search / inspect",
+          "kind": "runtime"
+        },
+        {
+          "from": "tools",
+          "to": "live",
+          "label": "Acquire",
+          "kind": "runtime"
+        },
+        {
+          "from": "tools",
+          "to": "computer",
+          "label": "Delegate",
+          "kind": "runtime"
+        },
+        {
+          "from": "workflow",
+          "to": "calculation",
+          "label": "Execute selected steps",
+          "kind": "runtime"
+        },
+        {
+          "from": "evidence",
+          "to": "conversation",
+          "label": "Cited passages",
+          "kind": "data"
+        },
+        {
+          "from": "computer",
+          "to": "conversation",
+          "label": "Bounded progress / decisions",
+          "kind": "data"
+        }
+      ],
+      "notes": [
+        "A model-generated request is not its own authorization. Current workspace access, grants and domain validation remain authoritative.",
+        "Computer screenshots stay out of chat storage and model context. Worker text is not proof of workflow success.",
+        "The source defines Sina's normal path and optional MicroSina. Live parity was not tested."
+      ]
+    },
+    {
+      "id": "work-journey",
+      "title": "How work gets done",
+      "description": "From a user request and source evidence to saved workflow definitions, execution, inspection and explicit review. Select a step to find its owning files.",
+      "nodes": [
+        {
+          "id": "intent",
+          "label": "1 · Choose the work",
+          "detail": "Start in Chat or open a workflow directly. Select the exact saved workflow or an executable template and the intended source records.",
+          "moduleIds": ["chat", "workflows"],
+          "filePaths": [
+            "artifacts/ai-workflow-builder/src/features/assistant/ui/use-assistant.tsx",
+            "artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-session-store.ts"
+          ],
+          "kind": "frontend",
+          "x": 0,
+          "y": 0
+        },
+        {
+          "id": "sources",
+          "label": "2 · Acquire evidence",
+          "detail": "Upload/parse a file or fetch a supported connector response. Record its source identity, revision and extraction; acquisition failures stay visible.",
+          "moduleIds": ["sources", "api-sources", "source-connectors"],
+          "filePaths": [
+            "artifacts/api-server/src/routes/documents.ts",
+            "artifacts/api-server/src/lib/workflow-document-extraction.ts",
+            "artifacts/api-server/src/routes/http-source.ts"
+          ],
+          "kind": "backend",
+          "x": 1,
+          "y": 0
+        },
+        {
+          "id": "definition",
+          "label": "3 · Edit & save a version",
+          "detail": "Builder and agent adapters use shared draft/version commands. A version is an immutable graph snapshot; an explicit missing version fails.",
+          "moduleIds": ["builder", "workflow-core", "workflow-contracts"],
+          "filePaths": ["lib/workflow-core/src/application/commands.ts"],
+          "kind": "shared",
+          "x": 2,
+          "y": 0
+        },
+        {
+          "id": "sync",
+          "label": "4 · Synchronize library",
+          "detail": "Local edits queue a revision-aware save. A conflict pauses writes and asks for recovery; a calculated result is not proof of server save.",
+          "moduleIds": ["workflows", "api-workflows"],
+          "filePaths": [
+            "artifacts/ai-workflow-builder/src/features/workflows-hub/services/workflow-sync-service.ts",
+            "artifacts/api-server/src/routes/workflow-library.ts"
+          ],
+          "kind": "storage",
+          "x": 0,
+          "y": 1
+        },
+        {
+          "id": "local",
+          "label": "5a · Guided / local run",
+          "detail": "Chat and Run share session commands and browser execution. Source changes invalidate dependent results; Pause takes effect between block calls.",
+          "moduleIds": ["workflows", "workflow-core", "browser-engine"],
+          "filePaths": [
+            "artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-session-store.ts",
+            "lib/workflow-core/src/application/sessions.ts"
+          ],
+          "kind": "frontend",
+          "x": 1,
+          "y": 1
+        },
+        {
+          "id": "durable",
+          "label": "5b · Durable run",
+          "detail": "Queue a synchronized exact version through /workflow-runs. A server worker claims the job, computes with shared executors, then persists result/status.",
+          "moduleIds": ["api-workflows", "workflow-executors"],
+          "filePaths": [
+            "artifacts/api-server/src/routes/workflow-runs.ts",
+            "artifacts/api-server/src/lib/workflow-run-worker.ts",
+            "artifacts/api-server/src/lib/workflow-runs/queue.ts"
+          ],
+          "kind": "backend",
+          "x": 2,
+          "y": 1
+        },
+        {
+          "id": "inspect",
+          "label": "6 · Inspect the recorded result",
+          "detail": "Open the exact run and inspect block output, evidence and warnings. History selection does not invoke execution; local and durable records retain their runtime limits.",
+          "moduleIds": ["workflows", "workflow-core"],
+          "filePaths": [
+            "artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-run-history.tsx",
+            "artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-run-inspector.tsx",
+            "lib/workflow-core/src/application/inspection.ts"
+          ],
+          "kind": "frontend",
+          "x": 0,
+          "y": 2
+        },
+        {
+          "id": "review",
+          "label": "7 · Review & deliver",
+          "detail": "Review gates and document interpretation annotations have their own rules. Output exports do not silently grant approval or invent missing evidence.",
+          "moduleIds": ["workflow-core", "workflow-executors", "workflows"],
+          "filePaths": [
+            "lib/workflow-core/src/application/document-review.ts",
+            "lib/workflow-executors/src/output-tools.ts",
+            "lib/workflow-executors/src/tools/finality.ts"
+          ],
+          "kind": "shared",
+          "x": 1,
+          "y": 2
+        }
+      ],
+      "edges": [
+        {
+          "from": "intent",
+          "to": "sources",
+          "label": "Supply records",
+          "kind": "runtime"
+        },
+        {
+          "from": "sources",
+          "to": "definition",
+          "label": "Pin inputs",
+          "kind": "data"
+        },
+        {
+          "from": "definition",
+          "to": "sync",
+          "label": "Save portable library",
+          "kind": "data"
+        },
+        {
+          "from": "definition",
+          "to": "local",
+          "label": "Interactive execution",
+          "kind": "runtime"
+        },
+        {
+          "from": "sync",
+          "to": "durable",
+          "label": "Queue saved version",
+          "kind": "runtime"
+        },
+        {
+          "from": "local",
+          "to": "inspect",
+          "label": "Session record",
+          "kind": "data"
+        },
+        {
+          "from": "durable",
+          "to": "inspect",
+          "label": "Persisted job result",
+          "kind": "data"
+        },
+        {
+          "from": "inspect",
+          "to": "review",
+          "label": "Evidence + warnings",
+          "kind": "data"
+        }
+      ],
+      "notes": [
+        "The diagram shows alternative local and server execution paths; the UI does not automatically make every chat action a durable job.",
+        "A schedule block records trigger context; it does not install a recurring scheduler.",
+        "How-to examples below describe current capabilities, with links to the code that owns each step."
+      ]
+    }
+  ],
+  "notes": [
+    {
+      "path": "artifacts/api-server/src/app.ts",
+      "summary": "Assembles the active Express application and orders its access boundaries before resource routes.",
+      "reads": ["Request path, body, session cookie, origin and request ID"],
+      "writes": ["Response status/body and structured request logs"],
+      "rules": [
+        "Auth and health routes mount before protected resource middleware.",
+        "The worker token router has its own credential boundary.",
+        "Agent request bodies have a scoped size limit."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/app.ts",
+          "line": 72,
+          "endLine": 116
+        }
+      ],
+      "tests": ["tests/integration/workspace-access.test.mjs"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "62e53d168e184933f8ba54502041fc34714d79029f7a4de8cd8e9a7b9f706d51"
+    },
+    {
+      "path": "artifacts/api-server/src/security/access.ts",
+      "summary": "Derives the actor from Better Auth, rechecks the session row, loads current membership and classifies operations as read, write or execute.",
+      "reads": ["Better Auth session, sessions table, workspace_members, method/path and origin"],
+      "writes": ["Authorized request scope fields or a denied response"],
+      "rules": [
+        "Browser-provided identity or role does not grant access.",
+        "Case and trailing-slash variants use the same operation classification.",
+        "Document search POST is read; chat, durable enqueue and connector calls are execute."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/security/access.ts",
+          "line": 13,
+          "endLine": 122
+        }
+      ],
+      "tests": ["tests/integration/workspace-access.test.mjs"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "7fc34776d80a828cb04fcd4d492669c9b78aa349df201bbe3472ac0c631733f0"
+    },
+    {
+      "path": "artifacts/api-server/src/routes/copilotkit.ts",
+      "summary": "Builds the live CopilotKit endpoint, repairs orphan tool-call history, and selects Sina or optional MicroSina from an allowlisted agent header.",
+      "reads": [
+        "Server gateway settings, OPENAI_CHAT_MODEL, conversation messages and offered tools"
+      ],
+      "writes": ["Streamed model response or explicit provider-unavailable error"],
+      "rules": [
+        "Sina's code default is gpt-4o; environment configuration can choose another model.",
+        "Provider selection follows shared execute authorization.",
+        "Unknown agents fail; unavailable provider configuration does not fabricate a reply."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/routes/copilotkit.ts",
+          "line": 82,
+          "endLine": 190
+        }
+      ],
+      "tests": ["tests/integration/workspace-access.test.mjs"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "82477d1d3f7f279018e79ae590e488b0f9bd8dea98fb1e028965115d258b6a47"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/foundry-model.ts",
+      "summary": "Adapts MicroSina to an explicitly versioned Foundry agent and restricts each turn to supported offered tools.",
+      "reads": [
+        "Azure project endpoint, server identity, numeric agent version, offered function tools"
+      ],
+      "writes": ["Foundry request body and provider response stream through its adapter"],
+      "rules": [
+        "The browser cannot set remote tool servers or approval policy.",
+        "Public tool_search/call_tool is a separate server-controlled optional setting.",
+        "Missing or malformed configuration fails explicitly."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/lib/foundry-model.ts",
+          "line": 15,
+          "endLine": 95
+        }
+      ],
+      "tests": ["tests/unit/microsina-foundry.test.ts"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "ee281f8b942e337f15da3c201722d2e684fde3ab8f5dd5fad0c00ebc94cf2106"
+    },
+    {
+      "path": "artifacts/ai-workflow-builder/src/platform/auth/ui/provider.tsx",
+      "summary": "Gates the workspace using session and membership checks and retains already-mounted drafts during temporary verification failures.",
+      "reads": [
+        "/api/session, /api/workspaces or guest workspace endpoint, current browser workspace context"
+      ],
+      "writes": ["React access state and workspace activation/reload through scoped adapters"],
+      "rules": [
+        "An explicit denied session clears access.",
+        "A temporary timeout or server error hides/disables a verified tree rather than discarding drafts.",
+        "Server membership remains authoritative."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/ai-workflow-builder/src/platform/auth/ui/provider.tsx",
+          "line": 8,
+          "endLine": 97
+        }
+      ],
+      "tests": ["tests/integration/workspace-access.test.mjs"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "a61c2b6129ad5a174645b07b9df77f7e947367cc1aab470a7125d8ff10611c14"
+    },
+    {
+      "path": "artifacts/ai-workflow-builder/src/platform/auth/api-fetch.ts",
+      "summary": "Adds workspace scope, same-origin credentials and a request ID to relative application API requests.",
+      "reads": ["Current workspace context and caller RequestInit"],
+      "writes": ["HTTP request headers and fetch response"],
+      "rules": [
+        "Only application /api requests receive these additions.",
+        "The workspace header selects scope; the server must authorize it."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/ai-workflow-builder/src/platform/auth/api-fetch.ts",
+          "line": 1,
+          "endLine": 25
+        }
+      ],
+      "tests": [],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "384dedaf75a251ccb11e6ef590a3fbe61d9829f52afd686a0174177dccb2d713"
+    },
+    {
+      "path": "artifacts/ai-workflow-builder/src/features/assistant/workspace/copilot-workspace-panel.tsx",
+      "summary": "Composes the Chat-first workspace and its registered detail surfaces while keeping conversation state in the owning adapters.",
+      "reads": ["Workspace window/navigation atoms, resource registry and assistant hook"],
+      "writes": ["Selected workspace detail surface and navigation UI state"],
+      "rules": [
+        "Primary items are Chat, Workflows, Sources and Connections.",
+        "Run history belongs within Workflows rather than a new primary product menu."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/ai-workflow-builder/src/features/assistant/workspace/copilot-workspace-panel.tsx",
+          "line": 115,
+          "endLine": 146
+        }
+      ],
+      "tests": [],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "d7bc932ffe17f4a0ab0555e753277e0dd2d359d6b886844af6f546d8032c4579"
+    },
+    {
+      "path": "artifacts/ai-workflow-builder/src/features/assistant/ui/use-assistant.tsx",
+      "summary": "Connects the conversation UI to CopilotKit context and actions, source attachment, workflow sessions and surface navigation.",
+      "reads": [
+        "Chat state, workflow library, selected sources, resource catalog and workspace context"
+      ],
+      "writes": ["Registered readable context/actions and user-driven UI state through adapters"],
+      "rules": [
+        "WorkflowSessionPanel and session-store commands are shared with the Run surface.",
+        "Individual tool adapters and domain commands own the operation rules."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/ai-workflow-builder/src/features/assistant/ui/use-assistant.tsx",
+          "line": 1,
+          "endLine": 93
+        },
+        {
+          "path": "artifacts/ai-workflow-builder/src/features/assistant/ui/use-assistant.tsx",
+          "line": 735,
+          "endLine": 759
+        }
+      ],
+      "tests": [],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "9ece1b22308226588f795c6ebaa05a19b14d33209524153290933744d78219f2"
+    },
+    {
+      "path": "artifacts/ai-workflow-builder/src/features/assistant/ui/use-agent-workflow-tools.tsx",
+      "summary": "Offers saved-workflow listing, reading, draft proposals and version saves as chat actions with authorization and review cards.",
+      "reads": [
+        "Workflow library, complete proposed draft, revision/fingerprint and scoped action decision"
+      ],
+      "writes": ["Authorized draft/version command result or a review-required card"],
+      "rules": [
+        "A matching existing grant can authorize the requested operation; otherwise the UI asks for review.",
+        "Saving a version is separately authorized and never executes it.",
+        "Missing saved IDs are explicit errors."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/ai-workflow-builder/src/features/assistant/ui/use-agent-workflow-tools.tsx",
+          "line": 291,
+          "endLine": 445
+        }
+      ],
+      "tests": ["tests/core/agent-workflow-commands.test.ts"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "8fcbca8101a2521b52d2e17ac2f0477931c29ca14207a70cd1c2f370221a8cda"
+    },
+    {
+      "path": "artifacts/ai-workflow-builder/src/features/assistant/ui/use-workspace-retrieval-tools.ts",
+      "summary": "Provides worksheet explanations and source document search to Chat, including source revision and citation IDs in returned passages.",
+      "reads": [
+        "Live worksheet intelligence, uploaded inputs, selected document and /api/documents/search"
+      ],
+      "writes": ["Bounded cited search results or explicit empty/unavailable result for the model"],
+      "rules": [
+        "It does not fill missing source records with sample data.",
+        "Document passages are retrieved evidence; they do not grant operation authority."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/ai-workflow-builder/src/features/assistant/ui/use-workspace-retrieval-tools.ts",
+          "line": 145,
+          "endLine": 188
+        }
+      ],
+      "tests": ["tests/unit/source-core.test.ts"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "14aef8e5d5b0d7cd712bebf1103876317a3f8d7b059b71be65dcba4bf728561a"
+    },
+    {
+      "path": "artifacts/ai-workflow-builder/src/features/assistant/runtime/computer-delegation.ts",
+      "summary": "Builds one idempotent computer request per user message, validates worker readiness and rejects a response bound to another chat, worker or request.",
+      "reads": ["Structured delegation, verified selected worker, current chat and user message"],
+      "writes": ["Delegation POST via injected callback and bounded textual task context"],
+      "rules": [
+        "A changing chat does not silently resend accepted work.",
+        "Worker observations and local paths are not proof of platform success or uploaded sources.",
+        "Screenshots and raw permission arguments stay out of model context here."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/ai-workflow-builder/src/features/assistant/runtime/computer-delegation.ts",
+          "line": 10,
+          "endLine": 102
+        }
+      ],
+      "tests": ["tests/unit/computer-delegation.test.ts"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "f2ac5944461af425d4d230e190be50b5d620be72b7ab3e13bab8f3245c8bda23"
+    },
+    {
+      "path": "artifacts/ai-workflow-builder/src/features/workflows-hub/services/workflow-sync-service.ts",
+      "summary": "Owns one workspace's save lifecycle with injected storage and transport, revision checks and protection from stale in-flight requests.",
+      "reads": ["Local library, sync revision/dirty state and remote portable library"],
+      "writes": ["Revisioned remote saves, local sync metadata and visible status"],
+      "rules": [
+        "Failed writes remain dirty.",
+        "Revision conflicts stop automatic writes.",
+        "An older workspace request cannot overwrite the current workspace's status."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/ai-workflow-builder/src/features/workflows-hub/services/workflow-sync-service.ts",
+          "line": 26,
+          "endLine": 148
+        }
+      ],
+      "tests": ["tests/unit/workflow-sync.test.ts"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "63205dda83a74f29027e0c244458bec26e2726b8332d17df69ee6dec27345966"
+    },
+    {
+      "path": "artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-session-store.ts",
+      "summary": "Binds portable session commands to Jotai and the browser graph runtime, sharing one run identity between Chat and Run.",
+      "reads": ["Saved workflow/template, session revision and current block readiness"],
+      "writes": ["Workflow library session updates, active selection and block progression"],
+      "rules": [
+        "An explicit version is resolved exactly.",
+        "Opening Run changes selection; advanceSession performs block work.",
+        "Pause is observed between block calls; this loop still needs the browser."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-session-store.ts",
+          "line": 26,
+          "endLine": 109
+        }
+      ],
+      "tests": ["tests/core/workflow-sessions.test.ts"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "66888ccbc780426169f27c610fb513e842168e8b0635dda095acfa8ea4b2050a"
+    },
+    {
+      "path": "artifacts/ai-workflow-builder/src/shared/workflow-engine/workflow/execute.ts",
+      "summary": "Adapts saved definitions to browser execution, expanding legacy canvas defaults before calling the portable graph runner.",
+      "reads": ["Workflow definition and browser tool registry"],
+      "writes": ["Calculation result from executeGraph"],
+      "rules": [
+        "Legacy normalization preserves original source timestamps.",
+        "Shared core does not import canvas or browser stores.",
+        "The adapter returns computation; it does not confirm a server save."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/ai-workflow-builder/src/shared/workflow-engine/workflow/execute.ts",
+          "line": 1,
+          "endLine": 38
+        }
+      ],
+      "tests": [
+        "tests/unit/workflow-adapters.test.ts",
+        "tests/unit/workflow-durable-parity.test.ts"
+      ],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "299288060b7d94027fc2092b9c43079bf88214f08fe513455a17f059a01adea5"
+    },
+    {
+      "path": "lib/workflow-core/src/application/commands.ts",
+      "summary": "Owns workflow creation, draft replacement, immutable version saving, exact-version lookup and execution recording.",
+      "reads": ["Validated definitions, expected fingerprints, run options and injected executor"],
+      "writes": ["New workflow entry, version snapshot or recorded run returned to caller"],
+      "rules": [
+        "An explicit missing version fails rather than selecting another.",
+        "Executors receive cloned saved definitions.",
+        "A reused request ID cannot execute a different version."
+      ],
+      "sources": [
+        {
+          "path": "lib/workflow-core/src/application/commands.ts",
+          "line": 44,
+          "endLine": 187
+        }
+      ],
+      "tests": ["tests/core/workflow-core.test.ts"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "de9df233af348e0ca6d2af0468c69c49efa1c07c3c2ad05f6b0141f4b9a337a5"
+    },
+    {
+      "path": "lib/workflow-core/src/core/graph.ts",
+      "summary": "Orders the selected workflow graph and executes each block through injected tool lookup while collecting output, evidence and run records.",
+      "reads": ["Workflow graph, execution mode and injected GraphRuntime"],
+      "writes": ["Block outputs, dependency/run status, messages and execution record"],
+      "rules": [
+        "Tool implementation comes through runtime injection.",
+        "Graph calculation does not imply human approval or database persistence."
+      ],
+      "sources": [
+        {
+          "path": "lib/workflow-core/src/core/graph.ts",
+          "line": 319,
+          "endLine": 409
+        }
+      ],
+      "tests": ["tests/core/workflow-core.test.ts", "tests/unit/workflow-durable-parity.test.ts"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "e036c1ae7a2c33fbc6428308f2f3c065ad866766b4ea17322b2b904226be3e3d"
+    },
+    {
+      "path": "lib/workflow-core/src/application/sessions.ts",
+      "summary": "Owns version-bound guided run state, source revisions, block execution, invalidation, pause/resume and document review annotation commands.",
+      "reads": [
+        "Exact saved version, session revision, source/extraction or block action and GraphRuntime"
+      ],
+      "writes": ["Updated session with recorded source changes, results and revision"],
+      "rules": [
+        "Stale session revisions fail.",
+        "Changed source data invalidates dependent results.",
+        "Document review notes require a paused run and are separate from calculation inputs."
+      ],
+      "sources": [
+        {
+          "path": "lib/workflow-core/src/application/sessions.ts",
+          "line": 227,
+          "endLine": 334
+        }
+      ],
+      "tests": ["tests/core/workflow-sessions.test.ts", "tests/unit/document-evidence.test.ts"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "cbc2c6cda097b31eda265e4d5061bb46a645c40808d6902b8657ebd6a30bbc60"
+    },
+    {
+      "path": "lib/workflow-executors/src/tools/registry.ts",
+      "summary": "Composes the common deterministic tool registry from modular block adapters and other owned tools.",
+      "reads": ["Tool definitions, backend-adapted IDs and explicit alias mapping"],
+      "writes": ["Shared tool registry consumed by both browser and durable execution"],
+      "rules": [
+        "Missing modular executors fail during registry creation.",
+        "Registry composition rejects duplicate ownership.",
+        "The keyword-classifier compatibility name aliases the keyword mapper."
+      ],
+      "sources": [
+        {
+          "path": "lib/workflow-executors/src/tools/registry.ts",
+          "line": 1,
+          "endLine": 17
+        }
+      ],
+      "tests": ["tests/unit/workflow-durable-parity.test.ts"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "e6527e93da794ad087933ef2ecc6cb080557eb3faeab699d2017b33ece955742"
+    },
+    {
+      "path": "lib/workflow-contracts/src/library.ts",
+      "summary": "Validates portable workflow libraries and v0/v1 backup envelopes while preserving saved version and historical run provenance.",
+      "reads": ["Untrusted backup envelope and nested workflow library data"],
+      "writes": ["Validated library or a clear rejection"],
+      "rules": [
+        "Unknown backup formats fail.",
+        "Missing/duplicate IDs and broken saved-version references fail.",
+        "Draft graphs may remain incomplete; restore does not silently repair execution."
+      ],
+      "sources": [
+        {
+          "path": "lib/workflow-contracts/src/library.ts",
+          "line": 5,
+          "endLine": 81
+        }
+      ],
+      "tests": ["tests/unit/workflow-contracts.test.ts"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "1d16229da3a18c9feb3b37ec3d4ab3f91b8a3dd237f01298ab4d097cc273c201"
+    },
+    {
+      "path": "lib/source-core/src/index.ts",
+      "summary": "Defines source identity and citation shapes, filters eligible passages and enforces lifecycle transitions independently of storage and UI.",
+      "reads": [
+        "Candidate source passages, workspace/client scope, selected IDs, role and lifecycle action"
+      ],
+      "writes": ["Selected cited passages or validated lifecycle target"],
+      "rules": [
+        "Only active sources in authorized scope are eligible.",
+        "Selected passages are prioritized while preserving revision/chunk citation identity.",
+        "Restore and purge require owner role under these rules."
+      ],
+      "sources": [
+        {
+          "path": "lib/source-core/src/index.ts",
+          "line": 78,
+          "endLine": 189
+        }
+      ],
+      "tests": ["tests/unit/source-core.test.ts"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "4d627e8f33b9e0420746c982d21855966cdc7b04fc8c1fb6f23d5e391a82e410"
+    },
+    {
+      "path": "artifacts/api-server/src/routes/workflow-runs.ts",
+      "summary": "Validates durable run requests, resolves the exact version from the workspace's stored library and rejects unavailable tools before enqueue.",
+      "reads": ["Authenticated scope, workflow/version/request ID and saved library bytes"],
+      "writes": ["Queued immutable job response, run reads, cancellation or retry request"],
+      "rules": [
+        "It does not accept a browser-provided execution graph as the saved version.",
+        "Unknown tools fail before a job is created.",
+        "The request ID is checked for conflicting reuse."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/routes/workflow-runs.ts",
+          "line": 49,
+          "endLine": 105
+        }
+      ],
+      "tests": [
+        "tests/integration/workspace-access.test.mjs",
+        "tests/core/durable-workflow-execution.test.ts"
+      ],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "baba78bbea5fc4ae61c459e8f8c67fc7d9012e6ae91082b01eabce662d5a440e"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/workflow-runs/queue.ts",
+      "summary": "Persists durable workflow jobs and owns idempotent enqueue, concurrent claims, completion, retry scheduling, cancellation and stalled-job recovery.",
+      "reads": ["Workspace scope, immutable definition, request ID and existing job state"],
+      "writes": ["workflow_run_jobs rows, result/status and attempt/recovery fields"],
+      "rules": [
+        "Claims use FOR UPDATE SKIP LOCKED.",
+        "Enqueue compares a repeated request with the original work.",
+        "Completion checks cancellation state before declaring success."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/lib/workflow-runs/queue.ts",
+          "line": 13,
+          "endLine": 140
+        }
+      ],
+      "tests": ["tests/integration/workspace-access.test.mjs"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "eb128de4b291053d124d4896c1bd6d2316818c7f4e11e207caefe153793ddfe4"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/workflow-runs/executor.ts",
+      "summary": "Runs a server-side graph using the same shared deterministic registry as browser execution.",
+      "reads": ["Saved workflow definition and durable run ID"],
+      "writes": ["Graph result and execution record"],
+      "rules": [
+        "Unavailable tool IDs fail before execution.",
+        "The injected ID preserves the durable job/run relationship.",
+        "It replays pinned inputs; it does not refresh sources itself."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/lib/workflow-runs/executor.ts",
+          "line": 1,
+          "endLine": 32
+        }
+      ],
+      "tests": [
+        "tests/core/durable-workflow-execution.test.ts",
+        "tests/unit/workflow-durable-parity.test.ts"
+      ],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "32617a6e112d1343f83ad4763dae66e8501fb4b4a004bdae81d2eeb3cd111070"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/workflow-run-worker.ts",
+      "summary": "Polls the durable queue, recovers stalled jobs, executes claimed snapshots and writes completion or retry/failure state.",
+      "reads": ["Worker environment settings and claimed database jobs"],
+      "writes": ["Job results/status, retry timing and structured logs"],
+      "rules": [
+        "It runs in the API process unless disabled/configured separately.",
+        "A thrown execution retries only within the job's attempt budget.",
+        "Browser closure does not stop an already queued server job."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/lib/workflow-run-worker.ts",
+          "line": 24,
+          "endLine": 76
+        }
+      ],
+      "tests": ["tests/integration/workspace-access.test.mjs"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "71e94addd03667777c28cb8f4604f0ef96a95ffc4524fb6db9e0594a4c175ae7"
+    },
+    {
+      "path": "artifacts/api-server/src/routes/workflow-library.ts",
+      "summary": "Loads and saves one revisioned portable workflow library per authorized workspace and supports explicit legacy claims.",
+      "reads": ["Workspace scope, validated backup payload and expected revision"],
+      "writes": ["workspace_libraries payload/revision and explicit legacy claim record"],
+      "rules": [
+        "A stale revision returns 409 and retains the newer saved copy.",
+        "Deletion keeps a revisioned empty library so stale writers cannot reuse revision zero.",
+        "Legacy claim is explicit and account-only."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/routes/workflow-library.ts",
+          "line": 12,
+          "endLine": 68
+        }
+      ],
+      "tests": ["tests/integration/workflow-storage.test.mjs"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "fa9c92362184efaa8a05e8630a53883866e31de25f6e1cdc60d20c8dbb3f6fcf"
+    },
+    {
+      "path": "artifacts/api-server/src/routes/chat.ts",
+      "summary": "Persists workspace-scoped conversation threads and messages with validated request shapes.",
+      "reads": ["Session-derived actor/workspace, thread ID and message batch"],
+      "writes": ["chat_threads and chat_messages records"],
+      "rules": [
+        "Thread reads are constrained to the active workspace.",
+        "Conflicting thread identity cannot overwrite another workspace's thread.",
+        "Message content is stored data, not an authorization source."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/routes/chat.ts",
+          "line": 25,
+          "endLine": 86
+        }
+      ],
+      "tests": ["tests/integration/workspace-access.test.mjs"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "d56ed7c610bf43243b8ad8476275c9ace11f420d60b4ee073e6063556f46875e"
+    },
+    {
+      "path": "artifacts/api-server/src/routes/documents.ts",
+      "summary": "Provides source listing, signed upload/download access, completion, search and lifecycle operations.",
+      "reads": ["Workspace-scoped document requests, object metadata and retrieval query"],
+      "writes": ["Document metadata/lifecycle, queued ingestion and signed transfer responses"],
+      "rules": [
+        "Original file bytes live in private object storage.",
+        "Search uses workspace-filtered retrieval.",
+        "A successful upload and completed searchable ingestion are separate states."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/routes/documents.ts",
+          "line": 64,
+          "endLine": 140
+        }
+      ],
+      "tests": ["tests/integration/workspace-access.test.mjs"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "9c616c1afd2e38b8a5ea1c8a7d9a8172163d84a0f5becbbd35f8d79a2cb13070"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/rag/retrieve.ts",
+      "summary": "Embeds a query, queries active source chunks in the workspace and converts eligible candidates into cited source passages.",
+      "reads": [
+        "Query text, active workspace/client scope, selected document IDs and embedding configuration"
+      ],
+      "writes": ["Search result with passages, source identity/revision and explicit limitations"],
+      "rules": [
+        "Missing embeddings produces unavailable rather than invented search results.",
+        "Both chunk and document rows are constrained by workspace.",
+        "Selected-only and selected-and-authorized policies are explicit."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/lib/rag/retrieve.ts",
+          "line": 44,
+          "endLine": 160
+        }
+      ],
+      "tests": ["tests/unit/source-core.test.ts"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "6f78105902c1923b3d120dd1d72dab4e5e328a217ca5cc6fc678c8de1f68f0c6"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/rag/ingest.ts",
+      "summary": "Processes a queued original document into extracted text, chunks and searchable vectors using configured extraction/OCR/embedding services.",
+      "reads": [
+        "Document metadata, private object bytes and configured extraction/embedding providers"
+      ],
+      "writes": ["Document processing state, content hash and document_chunks rows"],
+      "rules": [
+        "Ingestion reports provider/storage failures distinctly.",
+        "Only actual extracted content is indexed."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/lib/rag/ingest.ts",
+          "line": 50,
+          "endLine": 173
+        }
+      ],
+      "tests": [],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "1f20da79a0833ccb4c0b0ae92358483c1c61e2c5e9aff3b0b9a82bd2117a343e"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/storage.ts",
+      "summary": "Brokers private Supabase object storage with server credentials and short-lived signed upload/download URLs.",
+      "reads": ["Storage configuration and document object key"],
+      "writes": ["Signed URLs, downloaded bytes or explicit object deletion"],
+      "rules": [
+        "The service-role key stays in the server adapter.",
+        "Missing configuration makes helpers fail clearly.",
+        "Signed uploads send bytes directly from browser to storage."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/lib/storage.ts",
+          "line": 20,
+          "endLine": 101
+        }
+      ],
+      "tests": [],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "e1ce41a6a752abdd2d38bc0a4d33bf9ea1ab803651dbf4a6cda984784f116e63"
+    },
+    {
+      "path": "artifacts/api-server/src/lib/mkoro/delegations.ts",
+      "summary": "Creates a computer task bound to a saved workspace chat and personal worker, with transactional deduplication and readiness checks.",
+      "reads": [
+        "Session-derived actor/workspace, thread, worker, request ID and structured objective"
+      ],
+      "writes": ["mkoro conversation, task and outbound command records"],
+      "rules": [
+        "Changed worker/objective under the same request ID conflicts.",
+        "Revoked, offline or incompatible workers cannot accept a new task.",
+        "A worker already performing a task is rejected for a new delegation."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/lib/mkoro/delegations.ts",
+          "line": 26,
+          "endLine": 140
+        }
+      ],
+      "tests": ["tests/integration/mkoro.test.mjs"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "aead6b7fb8fe5c22d1371c9a8472cfd323338208d5ef71fe5e8a7ee7679a0bde"
+    },
+    {
+      "path": "artifacts/api-server/src/routes/mkoro-worker.ts",
+      "summary": "Exposes the companion-specific pairing, polling, event and screen-upload endpoints behind worker authentication.",
+      "reads": ["Pairing body or bearer worker token and validated worker payload"],
+      "writes": ["Worker command responses, task events and optional ephemeral screen frame"],
+      "rules": [
+        "Worker authentication derives actor/workspace; the browser session path is separate.",
+        "Worker credentials are for this route family rather than native platform commands."
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/routes/mkoro-worker.ts",
+          "line": 1,
+          "endLine": 50
+        }
+      ],
+      "tests": ["tests/integration/mkoro.test.mjs"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "621913e61b3deff5199b144f5d7c668ae17d584cdcb3b0e9ab72626f37f437bb"
+    },
+    {
+      "path": "scripts/mkoro/worker.mjs",
+      "summary": "Implements the outbound companion HTTP client and worker protocol helpers used around local Goose task execution.",
+      "reads": ["Configured server origin, worker token and bounded protocol payload"],
+      "writes": ["Authenticated /api/mkoro-worker requests and bounded textual tool summaries"],
+      "rules": [
+        "Requests reject redirects and have a timeout.",
+        "Public tool summaries omit raw inputs, resource contents and screenshots.",
+        "Goose uses its own configured local provider and tools."
+      ],
+      "sources": [
+        {
+          "path": "scripts/mkoro/worker.mjs",
+          "line": 17,
+          "endLine": 86
+        }
+      ],
+      "tests": ["scripts/mkoro/worker.test.mjs"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "02ef50a68a5cf0badb8882ce1c1bcaaa2bd5f2c94295ebc2135dcaf49dd0bf6c"
+    },
+    {
+      "path": "lib/agent-runtime/src/agent.ts",
+      "summary": "Implements the separate server-side Agent Lab loop using AI SDK tools, stop conditions and model-routing policy.",
+      "reads": ["Selected model, prompts, documents, messages, tool settings and step cap"],
+      "writes": ["Model response and tool execution results through the agent loop"],
+      "rules": [
+        "This is distinct from live Chat's CopilotKit route.",
+        "Gateway-prefixed model IDs use the gateway; bare IDs use gateway when configured, otherwise the OpenAI adapter.",
+        "Attached document context is bounded."
+      ],
+      "sources": [
+        {
+          "path": "lib/agent-runtime/src/agent.ts",
+          "line": 10,
+          "endLine": 86
+        }
+      ],
+      "tests": [],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "d5eeaa77336121df23da43a9f37ccf6fa29f72ecba34c1322eb0251c62056f07"
+    },
+    {
+      "path": "lib/db/src/index.ts",
+      "summary": "Creates the shared PostgreSQL pool and Drizzle database handle used by server routes and workers.",
+      "reads": ["DATABASE_URL and exported schema definitions"],
+      "writes": ["Database client/pool handles; individual consumers own their queries"],
+      "rules": [
+        "Missing DATABASE_URL fails explicitly.",
+        "This module does not apply schema migrations."
+      ],
+      "sources": [
+        {
+          "path": "lib/db/src/index.ts",
+          "line": 1,
+          "endLine": 19
+        }
+      ],
+      "tests": ["tests/integration/database-migrations.test.mjs"],
+      "reviewedRevision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "reviewedAt": "2026-10-01",
+      "reviewedHash": "8e8774152c1c3b8eca382cd89a3ca4d4ccbd3d9ad7cc67b1f6a8b27eefc5cabe"
+    }
+  ],
+  "journeys": [
+    {
+      "id": "ask-about-data",
+      "title": "Ask Chat to explain a source or figure",
+      "description": "Use selected source evidence and recorded worksheet context to understand an answer.",
+      "steps": [
+        {
+          "title": "Select a source or workflow",
+          "description": "Attach/open the relevant source or saved workflow so the request has a concrete target.",
+          "filePaths": [
+            "artifacts/ai-workflow-builder/src/features/assistant/ui/use-assistant.tsx"
+          ],
+          "moduleIds": ["chat", "sources"]
+        },
+        {
+          "title": "Retrieve permitted evidence",
+          "description": "The chat retrieval adapter calls /documents/search; the server filters active workspace sources and returns revisioned citations.",
+          "filePaths": [
+            "artifacts/ai-workflow-builder/src/features/assistant/ui/use-workspace-retrieval-tools.ts",
+            "artifacts/api-server/src/lib/rag/retrieve.ts"
+          ],
+          "moduleIds": ["chat", "api-sources", "source-core"]
+        },
+        {
+          "title": "Read citations and limits",
+          "description": "Inspect the returned source/revision and any unavailable passages. A missing source remains missing rather than being replaced by example data.",
+          "filePaths": ["lib/source-core/src/index.ts"],
+          "moduleIds": ["source-core"]
+        }
+      ]
+    },
+    {
+      "id": "edit-workflow",
+      "title": "Ask AI to change a saved workflow",
+      "description": "Draft edits and version creation are separate operations with domain validation and scoped authorization.",
+      "steps": [
+        {
+          "title": "Identify the exact saved workflow",
+          "description": "List saved workflows and read the chosen ID before proposing a complete revised draft.",
+          "filePaths": [
+            "artifacts/ai-workflow-builder/src/features/assistant/ui/use-agent-workflow-tools.tsx"
+          ],
+          "moduleIds": ["chat", "workflows"]
+        },
+        {
+          "title": "Authorize and review the proposal",
+          "description": "A matching scoped grant can authorize the operation; otherwise the chat shows a review card. Revision/fingerprint checks protect changed drafts.",
+          "filePaths": [
+            "artifacts/api-server/src/routes/agent-actions.ts",
+            "lib/workflow-core/src/application/agent-commands.ts"
+          ],
+          "moduleIds": ["api-access", "workflow-core"]
+        },
+        {
+          "title": "Save a version and synchronize",
+          "description": "The version command snapshots the validated graph. Library sync persists it with an expected server revision; saving does not execute it.",
+          "filePaths": [
+            "lib/workflow-core/src/application/commands.ts",
+            "artifacts/ai-workflow-builder/src/features/workflows-hub/services/workflow-sync-service.ts"
+          ],
+          "moduleIds": ["workflow-core", "workflows"]
+        }
+      ]
+    },
+    {
+      "id": "guided-run",
+      "title": "Work through a workflow in Chat or Run",
+      "description": "Both surfaces use one saved-version session and the browser runtime.",
+      "steps": [
+        {
+          "title": "Open a version-bound session",
+          "description": "Create or reopen the selected workflow session and retain its exact run ID between surfaces.",
+          "filePaths": [
+            "artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-session-store.ts"
+          ],
+          "moduleIds": ["workflows"]
+        },
+        {
+          "title": "Attach source evidence",
+          "description": "Parse supplied records or document text and apply a source action with revision identity. Downstream results become outdated when their source changes.",
+          "filePaths": [
+            "lib/workflow-core/src/application/sessions.ts",
+            "artifacts/api-server/src/lib/workflow-document-extraction.ts"
+          ],
+          "moduleIds": ["workflow-core", "sources"]
+        },
+        {
+          "title": "Execute ready blocks",
+          "description": "Advance the browser session through ready blocks; use Pause before later block calls. Keep the tab open for this execution path.",
+          "filePaths": [
+            "artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-session-store.ts",
+            "artifacts/ai-workflow-builder/src/shared/workflow-engine/workflow/execute.ts"
+          ],
+          "moduleIds": ["workflows", "browser-engine"]
+        },
+        {
+          "title": "Inspect and review",
+          "description": "Open recorded block outputs and evidence. A completed calculation remains separate from approval and server synchronization.",
+          "filePaths": [
+            "lib/workflow-core/src/application/inspection.ts",
+            "artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-run-inspector.tsx"
+          ],
+          "moduleIds": ["workflow-core", "workflows"]
+        }
+      ]
+    },
+    {
+      "id": "durable-run",
+      "title": "Run a saved version on the server",
+      "description": "Use the durable queue when execution must outlive the initiating browser tab.",
+      "steps": [
+        {
+          "title": "Save and synchronize the exact version",
+          "description": "The API reads the version from the persisted workspace library; it does not trust an arbitrary graph sent with enqueue.",
+          "filePaths": [
+            "artifacts/api-server/src/routes/workflow-library.ts",
+            "artifacts/api-server/src/routes/workflow-runs.ts"
+          ],
+          "moduleIds": ["api-workflows"]
+        },
+        {
+          "title": "Validate and enqueue",
+          "description": "POST /workflow-runs checks execute access, request shape, saved version and tool availability before creating an idempotent job.",
+          "filePaths": [
+            "artifacts/api-server/src/security/access.ts",
+            "artifacts/api-server/src/routes/workflow-runs.ts"
+          ],
+          "moduleIds": ["api-access", "api-workflows"]
+        },
+        {
+          "title": "Compute with shared executors",
+          "description": "A worker claims the snapshot and executes the same deterministic registry, then records completion, retry or error state.",
+          "filePaths": [
+            "artifacts/api-server/src/lib/workflow-run-worker.ts",
+            "artifacts/api-server/src/lib/workflow-runs/executor.ts"
+          ],
+          "moduleIds": ["api-workflows", "workflow-executors"]
+        },
+        {
+          "title": "Return to Workflows → run history",
+          "description": "Read the job result by its exact ID. Opening the historical record does not queue another execution or grant approval.",
+          "filePaths": [
+            "artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-run-history.tsx",
+            "artifacts/api-server/src/routes/workflow-runs.ts"
+          ],
+          "moduleIds": ["workflows", "api-workflows"]
+        }
+      ]
+    },
+    {
+      "id": "computer-work",
+      "title": "Delegate a computer step",
+      "description": "Use a paired personal companion for work outside the native platform tools.",
+      "steps": [
+        {
+          "title": "Form the structured task",
+          "description": "Chat records the target, objective, expected output and why a platform tool cannot perform the step.",
+          "filePaths": [
+            "artifacts/ai-workflow-builder/src/features/assistant/runtime/computer-delegation.ts"
+          ],
+          "moduleIds": ["computer-ui"]
+        },
+        {
+          "title": "Bind and admit the task",
+          "description": "The API verifies the saved chat, current actor/workspace, selected worker capability and heartbeat, and deduplicates the request.",
+          "filePaths": ["artifacts/api-server/src/lib/mkoro/delegations.ts"],
+          "moduleIds": ["api-mkoro"]
+        },
+        {
+          "title": "Poll and execute locally",
+          "description": "The companion dials out with a revocable worker token and runs Goose through ACP using the computer's configured tools and sessions.",
+          "filePaths": ["scripts/mkoro/worker.mjs", "scripts/mkoro/acp-client.mjs"],
+          "moduleIds": ["companion"]
+        },
+        {
+          "title": "Inspect progress and decisions",
+          "description": "Chat shows events, Stop and one-action permission requests. A worker's completion text does not verify a TaxflowOS workflow or upload local files.",
+          "filePaths": [
+            "artifacts/ai-workflow-builder/src/features/assistant/mkoro/mkoro-chat-tasks.tsx",
+            "artifacts/api-server/src/lib/mkoro/tasks.ts"
+          ],
+          "moduleIds": ["computer-ui", "api-mkoro"]
+        }
+      ]
+    }
+  ],
+  "diagrams": [
+    {
+      "id": "frontend-backend",
+      "kind": "Architecture",
+      "title": "Frontend, backend & shared code",
+      "description": "The browser, authenticated API and the portable libraries used inside both runtimes.",
+      "path": "architecture-frontend-backend-20261001-160000/frontend-backend.html"
+    },
+    {
+      "id": "chat-api",
+      "kind": "Sequence",
+      "title": "Chat, API & model communication",
+      "description": "Follow model selection, tool dispatch, scoped domain APIs and the optional computer worker.",
+      "path": "sequence-chat-api-20261001-160000/chat-api.html"
+    },
+    {
+      "id": "system-overview",
+      "kind": "Architecture",
+      "title": "System overview",
+      "description": "The original pilot overview of application, storage, providers and workers.",
+      "path": "architecture-system-overview-20261001-150322/system-overview.html"
+    },
+    {
+      "id": "saved-workflow",
+      "kind": "Workflow",
+      "title": "Saved workflow execution",
+      "description": "Browser preview, exact saved versions and durable execution.",
+      "path": "sequence-saved-workflow-20261001-150322/saved-workflow.html"
+    },
+    {
+      "id": "sina-mkoro",
+      "kind": "Workflow",
+      "title": "Sina to Mkoro",
+      "description": "Computer task admission, companion polling, execution decisions and results.",
+      "path": "workflow-sina-mkoro-20261001-150322/sina-mkoro.html"
+    }
+  ]
+}

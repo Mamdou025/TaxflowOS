@@ -16,13 +16,13 @@ import {
 import { Button } from '@/shared/ui/button';
 import { workflowLibraryAtom } from '@/features/workflows-hub/workflow-library';
 import { WORKFLOW_CONFIGS } from '@/shared/workflow-engine/runtime/workflow-runs';
+import { chatAgentAtom } from '@/shared/stores/chat-store';
+import { chatAgentName } from '../runtime/chat/chat-agent';
 import {
   authorizeAgentAction,
   createAgentGrant,
   recordAgentActionOutcome,
 } from '../runtime/agent-action-client';
-
-const AGENT_ID = 'sina';
 
 type ProposalResult =
   | { status: 'review-required'; workflowName: string; proposal: WorkflowDraftProposal }
@@ -126,6 +126,9 @@ function WorkflowProposalReview({ result }: { result: ProposalResult }) {
     <section aria-label="Workflow change proposal" className="space-y-3 rounded border p-3">
       <div>
         <strong>{result.workflowName}</strong>
+        <p className="text-xs text-muted-foreground">
+          Proposed by {chatAgentName(result.proposal.agentId)}
+        </p>
         <p>{result.proposal.reason}</p>
         <p className="text-xs text-muted-foreground">
           Base revision {result.proposal.baseRevision} · {result.proposal.changedPaths.length}{' '}
@@ -141,14 +144,6 @@ function WorkflowProposalReview({ result }: { result: ProposalResult }) {
         <div className="flex flex-wrap gap-2">
           <Button size="sm" disabled={pending} onClick={() => void run('one-time')}>
             Approve this change
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={pending}
-            onClick={() => void run('reusable')}
-          >
-            Allow draft changes for 24 hours
           </Button>
           <Button
             size="sm"
@@ -242,6 +237,9 @@ function WorkflowSaveReview({ result }: { result: SaveResult }) {
       <div>
         <strong>{result.workflowName}</strong>
         <p>Save the current draft as an immutable workflow version?</p>
+        <p className="text-xs text-muted-foreground">
+          Requested by {chatAgentName(result.request.agentId)}
+        </p>
         <p className="text-xs text-muted-foreground">
           Saving does not execute the workflow or approve its result.
         </p>
@@ -375,20 +373,10 @@ export function useAgentWorkflowTools() {
       try {
         const proposal = createWorkflowDraftProposal(entry, {
           operationId: crypto.randomUUID(),
-          agentId: AGENT_ID,
+          agentId: store.get(chatAgentAtom),
           reason,
           draft: JSON.parse(draftJson) as typeof entry.draft,
         });
-        const decision = await authorizeAgentAction(proposalRequest(proposal));
-        if (decision.allowed && decision.authorization)
-          return {
-            status: 'applied',
-            message: await applyAuthorizedProposal(
-              store,
-              proposal,
-              decision.authorization as AgentWorkflowAuthorization,
-            ),
-          };
         return { status: 'review-required', workflowName: entry.draft.name, proposal };
       } catch (error) {
         return {
@@ -422,7 +410,7 @@ export function useAgentWorkflowTools() {
       const revision = workflowDefinitionRevision(entry.draft);
       const request = workflowActionRequest(entry, {
         operationId: crypto.randomUUID(),
-        agentId: AGENT_ID,
+        agentId: store.get(chatAgentAtom),
         capability: 'workflow:save-version',
         resourceRevision: revision,
         requestFingerprint: `save:${revision}`,

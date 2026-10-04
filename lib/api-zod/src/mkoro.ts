@@ -18,6 +18,10 @@ export const MkoroPairRequestSchema = z
     pairingToken: z.string().min(40).max(200),
     name: z.string().trim().min(1).max(100),
     capabilities: z.array(z.string().max(80)).max(20).default([]),
+    reconnect: z
+      .object({ workerId: MkoroIdSchema, token: z.string().min(40).max(200) })
+      .strict()
+      .optional(),
   })
   .strict();
 export const MkoroPairResponseSchema = z.object({
@@ -25,7 +29,14 @@ export const MkoroPairResponseSchema = z.object({
   token: z.string(),
   pollIntervalMs: z.number().int().positive(),
 });
-export const MkoroPairingSchema = z.object({ pairingToken: z.string(), expiresAt: date });
+export const MkoroCreatePairingSchema = z
+  .object({ reconnectWorkerId: MkoroIdSchema.optional() })
+  .strict();
+export const MkoroPairingSchema = z.object({
+  pairingToken: z.string(),
+  expiresAt: date,
+  reconnectWorkerId: MkoroIdSchema.optional(),
+});
 export const MkoroWorkerSchema = z.object({
   id: MkoroIdSchema,
   name: z.string(),

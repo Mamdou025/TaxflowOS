@@ -23,7 +23,9 @@ import { formatArmedMessage } from '@/features/assistant/ui/runnable-tools';
 import { ChatSourcePicker } from '../ui/chat-source-picker';
 import { ComposerAgentMenu, ComposerAttachmentMenu } from '../ui/composer-menus';
 import { useAtom, useAtomValue } from 'jotai';
-import { chatAgentAtom } from '@/shared/stores/chat-store';
+import { chatAgentAtom, type ChatAgent } from '@/shared/stores/chat-store';
+import { chatAuthorsAtom, chatAgentName } from '../runtime/chat/chat-agent';
+import { MkoroComputerSettings } from '../mkoro/mkoro-panel';
 import { selectedChatDocumentAtom, selectedChatWorkflowAtom } from '../runtime/chat/source-selection';
 
 // Accent + the reference's soft focus ring (rgba of --is-accent-ring). The composer
@@ -41,7 +43,12 @@ export const AsideComposerContext = createContext<{
   tools?: ComposerSuggestion[];
   commands?: ComposerSuggestion[]; // pickable "build functions" — shown when the text starts with "@"
   onAttach?: (files: File[]) => Promise<string>;
+  onInterrupt?: () => Promise<void>;
+  onSend?: (text: string) => Promise<unknown>;
+  replyPending?: boolean;
   onCustomizeAgent?: () => void;
+  onAgentChange?: (agent: ChatAgent) => void;
+  agentSelectionDisabled?: boolean;
   armedTool?: ArmedComposerTool | null; // tool armed via the Tools menu "Use in chat"
   setArmedTool?: (t: ArmedComposerTool | null) => void;
 } | null>(null);
@@ -79,17 +86,18 @@ export function AsideAssistantMessage(props: {
 }) {
   const content = typeof props.message === 'string' ? props.message : props.message?.content ?? '';
 
-  // Avatar: a tool call attributes the message (runWorkflow → Sina, generateUI → UI
-  // Composer, page ops → UI Concierge); a plain reply is Sina. The message-specialist
-  // map is always empty now (one unified agent) but kept as an override seam. Never
-  // overrides a specific tool attribution.
+  // Saved authors stay attached to their turns when the next agent changes.
+  // A tool may still show its own actor avatar; the header identifies who called it.
   const specialistMap = useContext(MessageSpecialistContext);
   const chatAgent = useAtomValue(chatAgentAtom);
+  const authors = useAtomValue(chatAuthorsAtom);
+  const msgId = typeof props.message === 'object' ? props.message?.id : undefined;
+  const callId = props.message?.toolCalls?.[0]?.id;
+  const author = (msgId && authors[msgId]) || (callId && authors[callId]) || chatAgent;
   const attributed = coworkerForMessage(props.message);
-  const own: Coworker = chatAgent === 'microsina' && attributed.id === SINA.id
+  const own: Coworker = author === 'microsina' && attributed.id === SINA.id
     ? { ...attributed, id: 'microsina', name: 'MicroSina', initials: 'MS' }
     : attributed;
-  const msgId = typeof props.message === 'object' ? props.message?.id : undefined;
   const specialist = msgId ? specialistMap[msgId] : undefined;
   const coworker: Coworker = specialist && own.id === WORKSPACE_ASSISTANT.id ? specialist : own;
 
@@ -107,9 +115,10 @@ export function AsideAssistantMessage(props: {
   }
 
   return (
-    <div className="lc-row" data-message-id={typeof props.message === 'object' ? props.message?.id : undefined}>
+    <div className="lc-row" data-message-id={msgId} data-agent={author}>
       <div className="lc-avatar"><CoworkerAvatar coworker={coworker} size={26} /></div>
       <div style={{ minWidth: 0, flex: 1, paddingTop: 2 }}>
+        <div className="mb-1 text-xs font-semibold" style={{ color: LC.muted }}>{chatAgentName(author)}</div>
         {content && <div style={{ fontSize: 14.5, color: LC.body, lineHeight: 1.65, whiteSpace: 'pre-wrap', maxWidth: 760 }}>{md(content)}</div>}
         {props.subComponent && <div style={{ marginTop: content ? 10 : 0 }}>{props.subComponent}</div>}
       </div>
@@ -122,6 +131,8 @@ export function AsideInput(props: {
   onSend?: (text: string) => void | Promise<unknown>;
   onStop?: () => void;
 }) {
+  const [sending, setSending] = useState(false);
+  const sendSequence = useRef(0);
   const [text, setText] = useState('');
   const [active, setActive] = useState(-1);
   const [mode, setMode] = useState<ComposerMode>('ask');
@@ -136,10 +147,10 @@ export function AsideInput(props: {
   const [focused, setFocused] = useState(false);
   const ref = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const busy = !!props.inProgress;
-  const ready = (!!text.trim() || files.length > 0) && !busy && !attaching;
-
   const ctx = useContext(AsideComposerContext);
+  const busy = !!props.inProgress || !!ctx?.replyPending;
+  const ready = (!!text.trim() || files.length > 0) && !sending && !attaching;
+
   // A search tool armed from the Tools menu ("Use in chat") — the next message routes
   // to it (its query is templated in send()). A chip above the composer shows which.
   const armedTool = ctx?.armedTool ?? null;
@@ -164,23 +175,31 @@ export function AsideInput(props: {
 
   const send = async () => {
     if (!ready) return;
+    const sequence = ++sendSequence.current;
     const t = text.trim();
     const pending = files;
     setAttachmentError('');
-    let note = '';
-    if (pending.length && ctx?.onAttach) {
-      setAttaching(true);
-      try { note = await ctx.onAttach(pending); }
-      catch (error) { setAttachmentError(error instanceof Error ? error.message : 'The attachment could not be read.'); return; }
-      finally { setAttaching(false); }
-    }
-    setText(''); setActive(-1); setFiles([]);
-    // An armed tool templates the typed query into a message that routes to it (e.g.
-    // "Search the web for: …"), then disarms so the next message is a normal one.
-    const body = armedTool ? formatArmedMessage(armedTool.name, t) : t;
-    if (armedTool) ctx?.setArmedTool?.(null);
-    props.onSend?.([body, note].filter(Boolean).join('\n\n'));
-    ref.current?.focus();
+    setSending(true);
+    try {
+      if (busy) { if (ctx?.onInterrupt) await ctx.onInterrupt(); else props.onStop?.(); }
+      let note = '';
+      if (pending.length && ctx?.onAttach) {
+        setAttaching(true);
+        try { note = await ctx.onAttach(pending); }
+        catch (error) { setAttachmentError(error instanceof Error ? error.message : 'The attachment could not be read.'); return; }
+        finally { setAttaching(false); }
+      }
+      setText(''); setActive(-1); setFiles([]);
+      // An armed tool templates the typed query into a message that routes to it (e.g.
+      // "Search the web for: …"), then disarms so the next message is a normal one.
+      const body = armedTool ? formatArmedMessage(armedTool.name, t) : t;
+      if (armedTool) ctx?.setArmedTool?.(null);
+      const response = (ctx?.onSend ?? props.onSend)?.([body, note].filter(Boolean).join('\n\n'));
+      setSending(false);
+      await response;
+      ref.current?.focus();
+    } catch (error) { if (sequence !== sendSequence.current) return; setText(current => current || t); setFiles(current => current.length ? current : pending); setAttachmentError(error instanceof Error ? error.message : 'Message could not be sent.'); }
+    finally { if (sequence === sendSequence.current) setSending(false); }
   };
   const pick = (s: ComposerSuggestion) => { setText(''); setActive(-1); setShowTools(false); s.run(); ref.current?.focus(); };
 
@@ -423,15 +442,21 @@ export function AsideInput(props: {
             <button onClick={() => { setShowTools((o) => !o); setOpenSection(null); }} style={{ ...sqBtn, background: showTools ? LC.surfaceHover : 'transparent', color: mode === 'search' ? ACCENT : showTools ? LC.title : LC.muted }} className="hover:bg-black/5" title={mode === 'search' ? 'Search mode on — Enter searches the workspace. Click for options.' : 'Add — search, run a workflow, open a worksheet'} aria-label="Add — search, workflows, worksheets"><Plus size={18} /></button>
             {/* attach */}
             <ComposerAttachmentMenu disabled={busy || attaching} onUpload={() => fileRef.current?.click()} onSources={() => setShowSources(true)} onWorkflow={setWorkflowScope} />
-            <ComposerAgentMenu onCustomize={ctx?.onCustomizeAgent} />
+            <ComposerAgentMenu
+              onCustomize={ctx?.onCustomizeAgent}
+              onAgentChange={ctx?.onAgentChange}
+              selectionDisabled={ctx?.agentSelectionDisabled || busy || sending || attaching}
+              disabledReason={attaching ? 'Finish attaching your files before switching agents.' : undefined}
+            />
+            <MkoroComputerSettings presentation="composer" />
             <span style={{ flex: 1 }} />
 
             {/* Send — dark rounded-square (its icon hints the detected action) */}
             <button
-              onClick={busy && props.onStop ? props.onStop : send}
+              onClick={busy && !ready && props.onStop ? props.onStop : send}
               disabled={!busy && !ready}
-              aria-label={busy ? 'Stop' : showAction && intent ? intent.sendLabel : 'Send'}
-              title={busy ? 'Stop' : showAction && intent ? intent.sendLabel : 'Send'}
+              aria-label={busy && !ready ? 'Stop' : busy ? 'Interrupt reply and send' : showAction && intent ? intent.sendLabel : 'Send'}
+              title={busy && !ready ? 'Stop' : busy ? 'Interrupt reply and send' : showAction && intent ? intent.sendLabel : 'Send'}
               style={{
                 width: 40, height: 40, borderRadius: 12, flexShrink: 0,
                 background: ready || busy ? LC.text : LC.surfaceHover,
@@ -441,7 +466,7 @@ export function AsideInput(props: {
                 color: ready || busy ? '#fff' : LC.faint,
               }}
             >
-              {busy && props.onStop ? <Square size={14} fill="currentColor" /> : showAction ? <VerbIcon size={16} /> : <ArrowUp size={17} />}
+              {busy && !ready && props.onStop ? <Square size={14} fill="currentColor" /> : showAction ? <VerbIcon size={16} /> : <ArrowUp size={17} />}
             </button>
           </div>
         </div>

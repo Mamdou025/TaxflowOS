@@ -1,5 +1,3 @@
-
-
 // ─────────────────────────────────────────────────────────────────────────────
 // WorkMenu — the "current work" switcher in the RIGHT zone of the thread header.
 //
@@ -18,8 +16,23 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, type CSSProperties } from 'react';
-import { useAtomValue, useSetAtom } from 'jotai';
-import { LayoutGrid, Workflow, FileSpreadsheet, FileSearch, Sparkles, File as FileIcon, CornerUpLeft, ChevronDown } from 'lucide-react';
+import { useAtomValue, useSetAtom, useStore } from 'jotai';
+import { useChatWorkflowSummary } from './chat-workflow-thread';
+import { showSessionInRun } from '@/features/workflows-hub/workflow-session-store';
+import { workflowSurfaceAtom } from '@/features/workflows-hub/workflows-store';
+import { openWorkspaceWindowAtom } from '@/shared/stores/workspace-store';
+import { chatPanelModeAtom } from '@/shared/stores/chat-store';
+import { useRouter } from '@/lib/router';
+import {
+  LayoutGrid,
+  Workflow,
+  FileSpreadsheet,
+  FileSearch,
+  Sparkles,
+  File as FileIcon,
+  CornerUpLeft,
+  ChevronDown,
+} from 'lucide-react';
 import {
   workItemsChronoAtom,
   clearWorkItemsAtom,
@@ -79,7 +92,20 @@ function relTime(ts: number): string {
 // = app load), so re-mounting the menu mid-run can't wipe a live run's status.
 let didReconcileStaleWork = false;
 
-export function WorkMenu({ onOpen, compact = false, bare = false, align = 'right' }: { onOpen: (item: WorkItem) => void; compact?: boolean; bare?: boolean; align?: 'left' | 'right' }) {
+export function WorkMenu({
+  onOpen,
+  compact = false,
+  bare = false,
+  align = 'right',
+}: {
+  onOpen: (item: WorkItem) => void;
+  compact?: boolean;
+  bare?: boolean;
+  align?: 'left' | 'right';
+}) {
+  const store = useStore();
+  const router = useRouter();
+  const workflow = useChatWorkflowSummary();
   const items = useAtomValue(workItemsChronoAtom);
   const active = useAtomValue(activeCoworkerAtom);
   const run = useAtomValue(activeRunAtom);
@@ -95,7 +121,8 @@ export function WorkMenu({ onOpen, compact = false, bare = false, align = 'right
 
   // The work you're on now: the live run's item if there is one, else the most recent.
   const currentId = run ? workIdFor('workflow-run', run.workflowId) : null;
-  const current = (currentId ? items.find((i) => i.id === currentId) : undefined) ?? items[0] ?? null;
+  const current =
+    (currentId ? items.find((i) => i.id === currentId) : undefined) ?? items[0] ?? null;
   const hasCurrent = !!current || !!run;
 
   // Is a run live (someone actively working / not finished)? Drives the avatar pulse.
@@ -122,12 +149,17 @@ export function WorkMenu({ onOpen, compact = false, bare = false, align = 'right
     } else {
       const step = `Step ${Math.min(run.stepIndex + 1, run.totalSteps)}/${run.totalSteps}`;
       const needed =
-        run.phase === 'upload' ? `Upload the ${run.documentLabel}`
-        : run.phase === 'categorize' ? 'Categorize a row'
-        : run.phase === 'elect' ? 'Elect an amount'
-        : run.phase === 'approve' ? 'Approve the figures'
-        : 'Your input';
-      detail = status === 'awaiting' ? `${needed} · ${step}` : `${run.stepLabel || 'Working'} · ${step}`;
+        run.phase === 'upload'
+          ? `Upload the ${run.documentLabel}`
+          : run.phase === 'categorize'
+            ? 'Categorize a row'
+            : run.phase === 'elect'
+              ? 'Elect an amount'
+              : run.phase === 'approve'
+                ? 'Approve the figures'
+                : 'Your input';
+      detail =
+        status === 'awaiting' ? `${needed} · ${step}` : `${run.stepLabel || 'Working'} · ${step}`;
     }
   } else if (current) {
     detail = current.detail ?? relTime(current.updatedAt);
@@ -137,22 +169,49 @@ export function WorkMenu({ onOpen, compact = false, bare = false, align = 'right
 
   return (
     <div style={{ position: 'relative', minWidth: 0, maxWidth: '100%' }}>
-      {!hasCurrent ? (
+      {workflow || !hasCurrent ? (
         // Empty — nothing worked on yet: a plain "Work" button.
         <button
           data-testid="work-menu"
+          aria-expanded={open}
           onClick={() => setOpen((o) => !o)}
           className="hover:bg-black/5"
           title="Work — everything the assistant has done"
           style={{
-            display: 'inline-flex', alignItems: 'center', gap: 7, height: compact ? 32 : 38, padding: '0 12px',
-            borderRadius: 999, border: `1px solid ${open ? LC.border : LC.borderSubtle}`,
-            background: open ? LC.surface : 'transparent', color: LC.body, cursor: 'pointer', fontSize: 12.5, fontWeight: 550,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 7,
+            height: compact ? 32 : 38,
+            padding: '0 12px',
+            borderRadius: 999,
+            border: `1px solid ${open ? LC.border : LC.borderSubtle}`,
+            background: open ? LC.surface : 'transparent',
+            color: LC.body,
+            cursor: 'pointer',
+            fontSize: 12.5,
+            fontWeight: 550,
           }}
         >
           <LayoutGrid size={14} style={{ color: LC.muted }} />
           Work
-          <ChevronDown size={13} style={{ color: LC.muted, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 160ms' }} />
+          {workflow && (
+            <span className="max-w-48 truncate text-xs" title={workflow.name}>
+              · {workflow.name}
+            </span>
+          )}
+          {workflow && (
+            <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] text-violet-800">
+              {workflow.status}
+            </span>
+          )}
+          <ChevronDown
+            size={13}
+            style={{
+              color: LC.muted,
+              transform: open ? 'rotate(180deg)' : 'none',
+              transition: 'transform 160ms',
+            }}
+          />
         </button>
       ) : (
         // The current-work bar — WHAT you're on + who + state, and a second line saying
@@ -163,43 +222,118 @@ export function WorkMenu({ onOpen, compact = false, bare = false, align = 'right
           className={bare ? 'hover:bg-black/5' : 'hover:brightness-[0.99]'}
           title="Current work — click to switch between what you're working on"
           style={{
-            display: 'flex', alignItems: 'center', gap: 9, minWidth: 0, maxWidth: '100%',
-            height: compact ? 36 : 48, padding: '0 10px 0 7px', borderRadius: bare ? 10 : 14,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 9,
+            minWidth: 0,
+            maxWidth: '100%',
+            height: compact ? 36 : 48,
+            padding: '0 10px 0 7px',
+            borderRadius: bare ? 10 : 14,
             background: bare ? 'transparent' : LC.surface,
             border: `1px solid ${bare ? 'transparent' : LC.border}`,
             boxShadow: bare ? 'none' : LC.shadowSm,
-            cursor: 'pointer', transition: 'box-shadow 160ms',
+            cursor: 'pointer',
+            transition: 'box-shadow 160ms',
           }}
         >
           {triggerCoworker ? (
             <CoworkerAvatar coworker={triggerCoworker} size={avatarSize} pulse={live} />
           ) : (
-            <span style={{ width: avatarSize, height: avatarSize, borderRadius: 8, background: LC.surfaceHover, color: LC.muted, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+            <span
+              style={{
+                width: avatarSize,
+                height: avatarSize,
+                borderRadius: 8,
+                background: LC.surfaceHover,
+                color: LC.muted,
+                display: 'grid',
+                placeItems: 'center',
+                flexShrink: 0,
+              }}
+            >
               <Workflow size={14} />
             </span>
           )}
 
-          <span style={{ minWidth: 0, flex: '1 1 auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2, lineHeight: 1.15 }}>
+          <span
+            style={{
+              minWidth: 0,
+              flex: '1 1 auto',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-start',
+              gap: 2,
+              lineHeight: 1.15,
+            }}
+          >
             {/* line 1 — workflow · coworker + state pill */}
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, maxWidth: '100%' }}>
-              <span style={{ flex: '0 1 auto', minWidth: 0, fontSize: compact ? 12.5 : 13.5, fontWeight: 650, color: LC.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                minWidth: 0,
+                maxWidth: '100%',
+              }}
+            >
+              <span
+                style={{
+                  flex: '0 1 auto',
+                  minWidth: 0,
+                  fontSize: compact ? 12.5 : 13.5,
+                  fontWeight: 650,
+                  color: LC.text,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 {workflowName ?? 'Work'}
               </span>
               {who && !compact && (
-                <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 500, color: LC.muted, whiteSpace: 'nowrap' }}>· {who}</span>
+                <span
+                  style={{
+                    flexShrink: 0,
+                    fontSize: 12,
+                    fontWeight: 500,
+                    color: LC.muted,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  · {who}
+                </span>
               )}
               {st && (
-                <span style={{ flexShrink: 0, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.03em', textTransform: 'uppercase', color: st.color, background: st.tint, borderRadius: 6, padding: '1px 6px' }}>{st.label}</span>
+                <span
+                  style={{
+                    flexShrink: 0,
+                    fontSize: 9.5,
+                    fontWeight: 700,
+                    letterSpacing: '0.03em',
+                    textTransform: 'uppercase',
+                    color: st.color,
+                    background: st.tint,
+                    borderRadius: 6,
+                    padding: '1px 6px',
+                  }}
+                >
+                  {st.label}
+                </span>
               )}
             </span>
             {/* line 2 — what's needed / step / result */}
             {detail && (
               <span
                 style={{
-                  minWidth: 0, maxWidth: '100%',
-                  fontSize: compact ? 11 : 12, fontWeight: status === 'awaiting' ? 600 : 500,
+                  minWidth: 0,
+                  maxWidth: '100%',
+                  fontSize: compact ? 11 : 12,
+                  fontWeight: status === 'awaiting' ? 600 : 500,
                   color: status === 'awaiting' ? '#b07d38' : LC.muted,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {detail}
@@ -208,9 +342,22 @@ export function WorkMenu({ onOpen, compact = false, bare = false, align = 'right
           </span>
 
           {items.length > 1 && (
-            <span style={{ flexShrink: 0, fontSize: 11, fontWeight: 600, color: LC.faint }} title={`${items.length} work items`}>{items.length}</span>
+            <span
+              style={{ flexShrink: 0, fontSize: 11, fontWeight: 600, color: LC.faint }}
+              title={`${items.length} work items`}
+            >
+              {items.length}
+            </span>
           )}
-          <ChevronDown size={15} style={{ color: LC.muted, flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 160ms' }} />
+          <ChevronDown
+            size={15}
+            style={{
+              color: LC.muted,
+              flexShrink: 0,
+              transform: open ? 'rotate(180deg)' : 'none',
+              transition: 'transform 160ms',
+            }}
+          />
         </button>
       )}
 
@@ -220,23 +367,109 @@ export function WorkMenu({ onOpen, compact = false, bare = false, align = 'right
           <div
             data-testid="work-menu-panel"
             style={{
-              position: 'absolute', top: 'calc(100% + 6px)', ...(align === 'left' ? { left: 0 } : { right: 0 }), zIndex: 41, width: 360, maxHeight: 440,
-              overflowY: 'auto', background: LC.surface, border: `1px solid ${LC.border}`, borderRadius: 14,
+              position: 'absolute',
+              top: 'calc(100% + 6px)',
+              ...(align === 'left' ? { left: 0 } : { right: 0 }),
+              zIndex: 41,
+              width: 360,
+              maxHeight: 440,
+              overflowY: 'auto',
+              background: LC.surface,
+              border: `1px solid ${LC.border}`,
+              borderRadius: 14,
               boxShadow: LC.shadowOut,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px 6px' }}>
-              <span style={{ fontSize: 11, fontWeight: 650, letterSpacing: '0.05em', textTransform: 'uppercase', color: LC.muted }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '10px 14px 6px',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 650,
+                  letterSpacing: '0.05em',
+                  textTransform: 'uppercase',
+                  color: LC.muted,
+                }}
+              >
                 Work {items.length > 0 && <span style={{ color: LC.faint }}>· {items.length}</span>}
               </span>
               {items.length > 0 && (
-                <button onClick={() => clear()} className="hover:brightness-125" style={{ fontSize: 11, color: LC.faint, background: 'none', border: 'none', cursor: 'pointer' }}>Clear</button>
+                <button
+                  onClick={() => clear()}
+                  className="hover:brightness-125"
+                  style={{
+                    fontSize: 11,
+                    color: LC.faint,
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Clear
+                </button>
               )}
             </div>
 
-            {items.length === 0 ? (
-              <div style={{ padding: '18px 14px 22px', fontSize: 12.5, color: LC.muted, lineHeight: 1.5 }}>
-                Nothing yet. Runs, worksheets, source reviews, and generated views will collect here as the assistant works.
+            {workflow && (
+              <section
+                aria-label="Current workflow"
+                className="mx-2 mb-2 space-y-2 rounded-xl border border-violet-200 bg-violet-50/60 p-3"
+              >
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-violet-700">
+                  Current workflow
+                </p>
+                <p className="text-sm font-semibold">{workflow.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  Version {workflow.version} · {workflow.status}
+                </p>
+                <div className="flex flex-wrap gap-3 text-xs">
+                  <button
+                    className="font-medium text-violet-700 hover:underline"
+                    onClick={() => {
+                      setOpen(false);
+                      const card = document.getElementById('chat-workflow');
+                      card?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+                      card?.focus({ preventScroll: true });
+                    }}
+                  >
+                    Return to workflow in chat
+                  </button>
+                  <button
+                    className="text-muted-foreground hover:underline"
+                    onClick={() => {
+                      setOpen(false);
+                      showSessionInRun(store, workflow.ref);
+                      store.set(workflowSurfaceAtom, 'workflow');
+                      store.set(chatPanelModeAtom, 'split');
+                      store.set(openWorkspaceWindowAtom, {
+                        pageKey: 'workflows',
+                        title: 'Workflows',
+                      });
+                      router.push('/');
+                    }}
+                  >
+                    Open workflow details
+                  </button>
+                </div>
+              </section>
+            )}
+            {items.length === 0 && !workflow ? (
+              <div
+                style={{
+                  padding: '18px 14px 22px',
+                  fontSize: 12.5,
+                  color: LC.muted,
+                  lineHeight: 1.5,
+                }}
+              >
+                Nothing yet. Runs, worksheets, source reviews, and generated views will collect here
+                as the assistant works.
               </div>
             ) : (
               <div style={{ padding: '0 6px 6px' }}>
@@ -244,9 +477,15 @@ export function WorkMenu({ onOpen, compact = false, bare = false, align = 'right
                   <WorkRow
                     key={item.id}
                     item={item}
-                    isCurrent={item.id === current?.id}
-                    onOpen={() => { setOpen(false); onOpen(item); }}
-                    onJump={() => { setOpen(false); if (!jumpToWork(item.id)) onOpen(item); }}
+                    isCurrent={!workflow && item.id === current?.id}
+                    onOpen={() => {
+                      setOpen(false);
+                      onOpen(item);
+                    }}
+                    onJump={() => {
+                      setOpen(false);
+                      if (!jumpToWork(item.id)) onOpen(item);
+                    }}
                   />
                 ))}
               </div>
@@ -258,7 +497,17 @@ export function WorkMenu({ onOpen, compact = false, bare = false, align = 'right
   );
 }
 
-function WorkRow({ item, isCurrent, onOpen, onJump }: { item: WorkItem; isCurrent: boolean; onOpen: () => void; onJump: () => void }) {
+function WorkRow({
+  item,
+  isCurrent,
+  onOpen,
+  onJump,
+}: {
+  item: WorkItem;
+  isCurrent: boolean;
+  onOpen: () => void;
+  onJump: () => void;
+}) {
   const Icon = TYPE_ICON[item.type];
   const status = STATUS[item.status];
   const by = item.by;
@@ -267,7 +516,11 @@ function WorkRow({ item, isCurrent, onOpen, onJump }: { item: WorkItem; isCurren
       className="lc-workrow"
       data-testid="work-row"
       style={{
-        display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 10px', borderRadius: 10,
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 10,
+        padding: '9px 10px',
+        borderRadius: 10,
         background: isCurrent ? LC.surfaceHover : undefined,
         boxShadow: isCurrent ? `inset 2px 0 0 ${LC.accent}` : undefined,
       }}
@@ -276,16 +529,37 @@ function WorkRow({ item, isCurrent, onOpen, onJump }: { item: WorkItem; isCurren
       {by ? (
         <span
           style={{
-            width: 26, height: 26, flexShrink: 0, borderRadius: by.kind === 'agent' || by.kind === 'human' ? '50%' : 7,
-            background: by.accent, border: '1px solid rgba(255,255,255,0.16)', color: '#fff',
-            fontSize: by.initials.length > 2 ? 8.5 : 10.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: 26,
+            height: 26,
+            flexShrink: 0,
+            borderRadius: by.kind === 'agent' || by.kind === 'human' ? '50%' : 7,
+            background: by.accent,
+            border: '1px solid rgba(255,255,255,0.16)',
+            color: '#fff',
+            fontSize: by.initials.length > 2 ? 8.5 : 10.5,
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
           title={`${by.name}${by.role ? ` · ${by.role}` : ''}`}
         >
           {by.initials}
         </span>
       ) : (
-        <span style={{ width: 26, height: 26, flexShrink: 0, borderRadius: 7, background: LC.surfaceHover, color: LC.muted, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span
+          style={{
+            width: 26,
+            height: 26,
+            flexShrink: 0,
+            borderRadius: 7,
+            background: LC.surfaceHover,
+            color: LC.muted,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
           <Icon size={13} />
         </span>
       )}
@@ -294,36 +568,114 @@ function WorkRow({ item, isCurrent, onOpen, onJump }: { item: WorkItem; isCurren
       <button
         onClick={onOpen}
         title={isCurrent ? 'This is your current work' : 'Switch to this work'}
-        style={{ minWidth: 0, flex: 1, textAlign: 'left', border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }}
+        style={{
+          minWidth: 0,
+          flex: 1,
+          textAlign: 'left',
+          border: 'none',
+          background: 'transparent',
+          padding: 0,
+          cursor: 'pointer',
+        }}
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <Icon size={12} style={{ color: LC.faint, flexShrink: 0 }} />
-          <span style={{ fontSize: 13, fontWeight: 550, color: LC.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</span>
-          <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: LC.faint }}>{TYPE_LABEL[item.type]}</span>
+          <span
+            style={{
+              fontSize: 13,
+              fontWeight: 550,
+              color: LC.text,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {item.title}
+          </span>
+          <span
+            style={{
+              flexShrink: 0,
+              fontSize: 9,
+              fontWeight: 700,
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
+              color: LC.faint,
+            }}
+          >
+            {TYPE_LABEL[item.type]}
+          </span>
           {isCurrent && (
-            <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: LC.accent, background: 'rgba(167,139,250,0.12)', borderRadius: 5, padding: '1px 5px' }}>Current</span>
+            <span
+              style={{
+                flexShrink: 0,
+                fontSize: 9,
+                fontWeight: 700,
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
+                color: LC.accent,
+                background: 'rgba(167,139,250,0.12)',
+                borderRadius: 5,
+                padding: '1px 5px',
+              }}
+            >
+              Current
+            </span>
           )}
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: status.color, flexShrink: 0 }} />
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: status.color,
+              flexShrink: 0,
+            }}
+          />
           <span style={{ fontSize: 11, fontWeight: 550, color: status.color }}>{status.label}</span>
           {item.detail && (
-            <span style={{ fontSize: 11, color: LC.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>· {item.detail}</span>
+            <span
+              style={{
+                fontSize: 11,
+                color: LC.muted,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              · {item.detail}
+            </span>
           )}
-          <span style={{ fontSize: 11, color: LC.faint, flexShrink: 0 }}>· {relTime(item.updatedAt)}</span>
+          <span style={{ fontSize: 11, color: LC.faint, flexShrink: 0 }}>
+            · {relTime(item.updatedAt)}
+          </span>
         </span>
       </button>
 
       <div className="lc-workrow-actions" style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
-        <button onClick={onJump} className="hover:bg-black/5" title="Jump to where it appeared" style={rowBtn}><CornerUpLeft size={14} /></button>
+        <button
+          onClick={onJump}
+          className="hover:bg-black/5"
+          title="Jump to where it appeared"
+          style={rowBtn}
+        >
+          <CornerUpLeft size={14} />
+        </button>
       </div>
     </div>
   );
 }
 
 const rowBtn: CSSProperties = {
-  display: 'grid', placeItems: 'center', width: 26, height: 26, borderRadius: 7,
-  border: 'none', background: 'transparent', color: LC.muted, cursor: 'pointer',
+  display: 'grid',
+  placeItems: 'center',
+  width: 26,
+  height: 26,
+  borderRadius: 7,
+  border: 'none',
+  background: 'transparent',
+  color: LC.muted,
+  cursor: 'pointer',
 };
 
 export function WorkMenuStyles() {

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TaxflowOS · Architecture explorer</title>
+    <link rel="stylesheet" href="explorer.css" />
+    <script src="explorer-data.js" defer></script>
+    <script src="explorer.js" defer></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <aside class="sidebar" aria-label="Explorer navigation">
+      <a class="brand" href="#"
+        ><span class="brand-icon">T</span
+        ><span>TaxflowOS<small>ARCHITECTURE EXPLORER</small></span></a
+      >
+      <div class="nav-label">PERSPECTIVES</div>
+      <nav id="perspectives" aria-label="System perspectives"></nav>
+      <div class="nav-label">EXPLORE THE CODE</div>
+      <nav aria-label="Code and evidence">
+        <a href="#page=code" data-page="code"><span>⌘</span> Files & dependencies</a>
+        <a href="#page=stack" data-page="stack"><span>▤</span> Package inventory</a>
+        <a href="#page=journeys" data-page="journeys"><span>↳</span> How work gets done</a>
+        <a href="#page=diagrams" data-page="diagrams"><span>◇</span> Archify diagrams</a>
+        <a href="#page=about" data-page="about"><span>ⓘ</span> Evidence & updates</a>
+      </nav>
+      <div class="sidebar-footer">
+        <span class="status-dot"></span> Local documentation
+        <div id="snapshot-short"></div>
+      </div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar">
+        <span class="topbar-label">Understand your system</span>
+        <form id="global-search" role="search">
+          <label class="sr-only" for="search">Search files</label
+          ><input
+            id="search"
+            type="search"
+            placeholder="Find a file, export or module…"
+            autocomplete="off"
+          /><kbd>/</kbd>
+        </form>
+        <button
+          id="reload"
+          class="quiet"
+          title="Reload the last built snapshot. This does not analyze code."
+        >
+          Reload snapshot
+        </button>
+      </header>
+      <div class="content-layout" id="layout">
+        <main id="main" tabindex="-1"></main>
+        <aside id="details" class="details" aria-label="Selected component details" hidden></aside>
+      </div>
+    </div>
+    <noscript
+      >This local explorer needs JavaScript enabled. The standalone Archify HTML files remain
+      available in the sibling folders.</noscript
+    >
+  </body>
+</html>

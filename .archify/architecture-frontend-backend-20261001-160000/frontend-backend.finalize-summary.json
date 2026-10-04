@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\architecture-frontend-backend-20261001-160000\\candidate.json",
+    "sha256": "1767f31d9657f47d3746389c59f0cf60ad0e7963311e1d35d7bedfe898946ce9",
+    "bytes": 5418
+  },
+  "artifact": {
+    "path": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\architecture-frontend-backend-20261001-160000\\frontend-backend.html",
+    "sha256": "7b13ba2b29381c92efef3d48923232089fd5e8f99b6fc70b4296813efdb637dc",
+    "bytes": 760066
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\architecture-frontend-backend-20261001-160000\\frontend-backend.finalize.json",
+    "summaryReceipt": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\architecture-frontend-backend-20261001-160000\\frontend-backend.finalize-summary.json",
+    "browserCheckReceipt": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\architecture-frontend-backend-20261001-160000\\frontend-backend.browser-check.json"
+  },
+  "update": {
+    "status": "unavailable",
+    "installedVersion": null,
+    "availableVersion": null,
+    "releaseNotes": null,
+    "checkedAt": null,
+    "source": null,
+    "noticeRequired": false,
+    "noticeText": null,
+    "reason": "disabled"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 16397
+}

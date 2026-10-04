@@ -535,3 +535,9 @@ export function FamilyNodeShape({
 
   return null;
 }
+
+/** Use the canvas family palette in compact execution progress as well. */
+export function blockProgressColor(block: WorkflowBlock) {
+  const family = /rules|rulebook/.test(String(block.config.sourceKind)) ? 'Review / Validation' : block.family;
+  return FAMILY_NODE_STYLES[family].badgeClassName.split(' ').find(token => token.startsWith('text-')) ?? '';
+}

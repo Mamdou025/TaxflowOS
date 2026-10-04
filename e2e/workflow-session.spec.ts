@@ -1,3 +1,4 @@
+import { createServer } from 'node:http';
 import { attachSessionWorkbook } from './workflow-session-fixtures';
 import { test, expect } from './workflow-audit-isolation';
 import { openDocumentCalculationFixture } from './retired-workflow-fixtures';
@@ -178,25 +179,35 @@ test('guided run shares exact progress with Chat and preserves source revisions 
     Object.values((await read()).run.results).find((result) => result.output.calculatedResults)
       ?.output.calculatedResults,
   ).toEqual({ RESULT: 400 });
-  const runSteps = await panel.getByRole('list', { name: 'Execution steps' }).innerText();
+  const runSteps = await panel
+    .locator('ol[aria-label="Execution steps"] > li > details > summary')
+    .allTextContents();
   await panel.getByRole('button', { name: 'Continue in Chat' }).click();
   await expect(page.getByRole('button', { name: 'Chat', exact: true })).toBeVisible();
   // The workspace retains its Run view behind the expanded Chat surface.
   panel = page.getByRole('region', { name: 'Workflow execution' }).last();
   await expect(panel).toBeVisible();
-  expect(await panel.getByRole('list', { name: 'Execution steps' }).innerText()).toEqual(runSteps);
+  await expect(panel.getByRole('list', { name: 'Execution steps' })).toHaveCount(1);
+  await expect(panel.getByRole('list', { name: 'Workflow progress' })).toHaveCount(0);
+  expect(await panel.locator('[data-step-toggle]').allTextContents()).toEqual(runSteps);
+  await expect(panel.locator('[data-step-toggle][aria-expanded="true"]')).toHaveCount(0);
   await expect(
     page.getByRole('textbox', { name: 'Ask Scope, or describe a task…' }),
   ).toBeEditable();
   expect((await read()).run.id).toBe(original.run.id);
+  await panel.locator('[data-step-id="pf-document-calculator--document"]').click();
   await panel.getByRole('combobox', { name: 'Source action' }).selectOption('add');
   await attachSessionWorkbook(page, panel, 'additional.xlsx', 50);
   await expect.poll(async () => (await read()).run.sources.length).toBe(2);
   await expect(panel.getByRole('button', { name: 'Approve completed results' })).toBeDisabled();
   await expect(panel.getByRole('list', { name: 'Execution steps' })).toContainText('outdated');
+  await panel.getByRole('button', { name: 'Collapse all steps' }).click();
+  await expect(panel.locator('[data-step-toggle][aria-expanded="true"]')).toHaveCount(0);
+  await expect(panel.getByRole('button', { name: 'Resume workflow', exact: true })).toBeEnabled();
   await panel.getByRole('button', { name: 'Resume workflow', exact: true }).click();
   await expect.poll(async () => (await read()).run.paused, { timeout: 30000 }).toBe(true);
   await expect(panel.getByRole('button', { name: 'Approve completed results' })).toBeEnabled();
+  await expect(panel.locator('[data-step-toggle][aria-expanded="true"]')).toHaveCount(0);
   expect(
     Object.values((await read()).run.results).find((result) => result.output.calculatedResults)
       ?.output.calculatedResults,
@@ -275,6 +286,14 @@ test('document evidence follows the exact run from upload to Chat and Build', as
         subtype: 'PDF / Document',
         config: { sourceKind: 'pdf_document', toolId: 'source.pdf_document' },
       },
+      {
+        ...base,
+        id: 'other-document',
+        label: 'Other document',
+        family: 'Source',
+        subtype: 'PDF / Document',
+        config: { sourceKind: 'pdf_document', toolId: 'source.pdf_document' },
+      },
     ],
     edges: [],
   };
@@ -297,29 +316,440 @@ test('document evidence follows the exact run from upload to Chat and Build', as
   await page.getByRole('button', { name: 'Run', exact: true }).first().click();
   await page.getByRole('button', { name: 'Start guided workflow', exact: true }).click();
   let panel = page.getByRole('region', { name: 'Workflow execution' }).first();
+  await panel.getByRole('combobox', { name: 'Run source block' }).selectOption('document');
   await panel
     .getByLabel('Upload run source')
     .setInputFiles({ name: 'sales-check.pdf', mimeType: 'application/pdf', buffer: bytes });
   await expect(panel).toContainText('sales-check.pdf · 0 records');
+  await panel.getByRole('combobox', { name: 'Run source block' }).selectOption('other-document');
+  await attachSessionWorkbook(page, panel, 'other-records.xlsx', 10);
+  await expect(panel).toContainText('other-records.xlsx · 1 records');
   await panel.getByRole('button', { name: 'Resume workflow', exact: true }).click();
+  await expect(panel.getByRole('button', { name: 'Approve completed results' })).toBeEnabled();
   await panel.locator('summary').filter({ hasText: 'Document evidence source' }).first().click();
   await expect(panel.getByRole('region', { name: 'Document evidence', exact: true })).toContainText(
     'source revision 1',
   );
   await panel.getByRole('button', { name: 'Continue in Chat', exact: true }).click();
   panel = page.getByRole('region', { name: 'Workflow execution' }).last();
-  await panel.locator('summary').filter({ hasText: 'Document evidence source' }).first().click();
+  await panel.locator('[data-step-id="other-document"]').click();
+  const otherDocument = panel.getByRole('region', { name: 'Step 2: Other document' });
+  await expect(otherDocument.getByLabel('Upload run source')).toBeVisible();
+  await expect(otherDocument).toContainText('other-records.xlsx · 1 records');
+  await expect(otherDocument).not.toContainText('sales-check.pdf');
+  await panel.locator('[data-step-id="document"]').click();
+  await expect(
+    panel.getByRole('region', { name: 'Step 1: Document evidence source' }),
+  ).toContainText('sales-check.pdf · 0 records');
+  await expect(
+    panel.getByRole('region', { name: 'Step 1: Document evidence source' }),
+  ).not.toContainText('other-records.xlsx');
   const evidence = panel.getByRole('region', { name: 'Document evidence', exact: true });
   await evidence.locator('summary', { hasText: 'Page 1' }).click();
   await expect(evidence).toContainText('Revenue CAD 120');
   await expect(evidence).toContainText('Original file not confirmed saved');
+  const currentRunLink = await panel
+    .getByRole('link', { name: 'Open this workflow in Run' })
+    .getAttribute('href');
+  const currentWorkflowId = decodeURIComponent(
+    new URL(currentRunLink!, page.url()).pathname.split('/').at(-1)!,
+  );
+  const beforeInspection = await page.evaluate(async (workflowId) => {
+    const { readWorkflowLibrary } = await import('/src/features/workflows-hub/workflow-library.ts');
+    return readWorkflowLibrary()[workflowId];
+  }, currentWorkflowId);
+  expect(beforeInspection).toBeDefined();
   await panel.getByRole('button', { name: 'Verify this block in Build' }).click();
   const inspector = page.getByRole('region', { name: 'Run verification in Build' });
   await expect(inspector).toBeVisible();
-  const recorded = inspector
+  await expect(inspector.getByTestId('workflow-canvas')).toBeVisible();
+  await expect(inspector.locator('.react-flow__node-action')).toHaveCount(2);
+  await expect(page.getByRole('button', { name: 'Test block', exact: true })).toHaveCount(0);
+  await expect(page.getByLabel('Verify block', { exact: true })).toHaveValue('document');
+  const recorded = page
+    .getByRole('article', { name: 'Block verification', exact: true })
     .getByRole('region', { name: 'Document evidence', exact: true })
     .first();
   await recorded.locator('summary', { hasText: 'Page 1' }).click();
   await expect(recorded).toContainText('Revenue CAD 120');
   await expect(recorded).toContainText('source revision 1');
+  const afterInspection = await page.evaluate(async (workflowId) => {
+    const { readWorkflowLibrary } = await import('/src/features/workflows-hub/workflow-library.ts');
+    return readWorkflowLibrary()[workflowId];
+  }, currentWorkflowId);
+  expect(afterInspection).toEqual(beforeInspection);
+});
+
+test('inline chat workflow restores its exact run without execution or latest-run substitution', async ({
+  page,
+}) => {
+  const saved = new Map<
+    string,
+    { messages: { id: string; role: string; seq: number; content: Record<string, unknown> }[] }
+  >();
+  let requests = 0;
+  await page.route('**/api/copilotkit**', async (route) => {
+    const data = route.request().method() === 'POST' ? route.request().postDataJSON() : null;
+    if (data?.method === 'agent/run') requests++;
+    return route.fulfill({
+      json: {
+        version: '1.63.2',
+        mode: 'sse',
+        agents: {
+          default: { name: 'default', description: 'Synthetic test', className: 'FixtureAgent' },
+        },
+        audioFileTranscriptionEnabled: false,
+        suggestions: false,
+        telemetryDisabled: true,
+        threadEndpoints: { list: false, inspect: false, mutations: false, realtimeMetadata: false },
+      },
+    });
+  });
+  await page.route('**/api/chat/threads**', async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    const id = path.split('/')[4];
+    if (route.request().method() === 'POST') {
+      saved.set(id, route.request().postDataJSON());
+      return route.fulfill({ json: { ok: true } });
+    }
+    if (!id)
+      return route.fulfill({
+        json: {
+          threads: [...saved.keys()].map((id) => ({
+            id,
+            title: 'Bound workflow chat',
+            updatedAt: new Date().toISOString(),
+          })),
+        },
+      });
+    return route.fulfill({ json: saved.get(id) ?? { messages: [] } });
+  });
+  await openDocumentCalculationFixture(page);
+  await page.getByRole('button', { name: 'Run', exact: true }).first().click();
+  await page.getByRole('button', { name: 'Start guided workflow', exact: true }).click();
+  const original = await page
+    .getByRole('region', { name: 'Workflow execution' })
+    .locator('header p')
+    .first()
+    .innerText();
+  await page.getByRole('button', { name: 'Continue in Chat', exact: true }).click();
+  const side = page.getByRole('region', { name: 'Workflow in chat' });
+  await expect(page.locator('.chat-work-side')).toHaveCount(0);
+  await expect(side.getByLabel('Upload run source')).toBeVisible();
+  await expect(side).toContainText(original);
+  await expect.poll(() => saved.size).toBe(1);
+  const chatId = [...saved.keys()][0];
+  const binding = saved.get(chatId)!.messages[0].content.workflowBinding as {
+    workflowId: string;
+    runId: string;
+  };
+  expect(binding.runId).toBeTruthy();
+  await page.getByRole('button', { name: 'New chat', exact: true }).click();
+  await expect(side).toHaveCount(0);
+  // Add a newer session to the local backup. Reopening must still resolve the older ID.
+  await page.evaluate(async (binding) => {
+    const { readWorkflowLibrary } = await import('/src/features/workflows-hub/workflow-library.ts');
+    const { workspaceStorage } = await import('/src/platform/auth/workspace-context.ts');
+    const { stringifySharedJSON } = await import('/src/shared/workflow-engine/shared-json.ts');
+    const library = readWorkflowLibrary();
+    const entry = library[binding.workflowId];
+    const old = entry.sessions!.find((s) => s.id === binding.runId)!;
+    entry.sessions!.push({ ...structuredClone(old), id: 'newer-run' });
+    workspaceStorage.setItem('taxflow:workflow-library:v1', stringifySharedJSON(library));
+  }, binding);
+  await page.reload();
+  await page.getByTitle('Bound workflow chat', { exact: true }).click();
+  await expect(side).toContainText(original);
+  await page.reload();
+  await expect(side).toContainText(original);
+  await expect(side).not.toContainText('newer-run');
+  expect(requests).toBe(0);
+  const attempts = await page.evaluate(async () => {
+    const { readWorkflowLibrary } = await import('/src/features/workflows-hub/workflow-library.ts');
+    return Object.values(readWorkflowLibrary())
+      .flatMap((w) => w.sessions ?? [])
+      .map((s) => s.attempts.length);
+  });
+  expect(attempts).toEqual([0, 0]);
+  await page.screenshot({ path: test.info().outputPath('chat-work-thread.png'), fullPage: true });
+  // Missing historical run must not be replaced by the newer session.
+  await page.getByRole('button', { name: 'New chat', exact: true }).click();
+  await expect(side).toHaveCount(0);
+  saved.get(chatId)!.messages[0].content.workflowBinding = { ...binding, runId: 'missing-run' };
+  await page.getByTitle('Bound workflow chat', { exact: true }).click();
+  await expect(side).toContainText('This exact run is unavailable. No other run was selected.');
+});
+
+test('inline Chat reuses manual inputs, recalculates current work, retains history and enforces End', async ({
+  page,
+}) => {
+  await page.route('**/api/agent-actions/grants', (route) =>
+    route.fulfill({ json: { grant: { id: 'one-time' } } }),
+  );
+  await page.route('**/api/agent-actions/operations/authorize', (route) =>
+    route.fulfill({ json: { allowed: true, authorization: {}, operationStatus: 'allowed' } }),
+  );
+  await page.route('**/api/agent-actions/operations/*/outcome', (route) =>
+    route.fulfill({ json: { ok: true } }),
+  );
+  await page.goto('/w/pf-fapi');
+  await expect(
+    page.getByRole('textbox', { name: 'Ask Scope, or describe a task…' }),
+  ).toBeEditable();
+  await page.evaluate(
+    async (rootPath) => {
+      const React = await import('/@id/react');
+      const { createRoot } = (await import('/@id/react-dom/client')).default;
+      const { createStore, Provider } = await import('/@id/jotai');
+      const { createWorkflow, saveVersion } = await import(
+        `${rootPath}/lib/workflow-core/src/application/commands.ts`
+      );
+      const { startSession } = await import(
+        `${rootPath}/lib/workflow-core/src/application/sessions.ts`
+      );
+      const { workflowLibraryAtom } =
+        await import('/src/features/workflows-hub/workflow-library.ts');
+      const { chatSessionAtom } =
+        await import('/src/features/workflows-hub/workflow-session-store.ts');
+      const { SessionActionReview, proposalsAtom } =
+        await import('/src/features/assistant/ui/use-session-tools.tsx');
+      const { workspaceContext } = await import('/src/platform/auth/workspace-context.ts');
+      const { ChatWorkflowThread } =
+        await import('/src/features/assistant/ui/chat-workflow-thread.tsx');
+      const { WorkMenu } = await import('/src/features/assistant/ui/work-menu.tsx');
+      const { DOCUMENT_CALCULATOR_CONFIG } =
+        await import('/src/shared/workflow-engine/runtime/workflow-runs/document-calculator.ts');
+      const definition = DOCUMENT_CALCULATOR_CONFIG.buildSnapshot();
+      const source = definition.blocks.find((block) => block.family === 'Source')!;
+      source.id = 'amount';
+      source.label = 'Amount';
+      source.subtype = 'Manual Entry';
+      source.config = { toolId: 'source.manual_value', sourceKind: 'manual_value', value: 200 };
+      definition.blocks = [
+        source,
+        { ...source, id: 'reference', label: 'Reference', config: { ...source.config, value: 10 } },
+      ];
+      definition.edges = [];
+      const entry = startSession(
+        saveVersion(createWorkflow('custom:inputs-ui', 'blank', definition)),
+        1,
+        'inputs-ui',
+        '2026-10-02T12:00:00.000Z',
+      );
+      const store = createStore();
+      store.set(workflowLibraryAtom, { [entry.id]: entry });
+      store.set(chatSessionAtom, { workflowId: entry.id, runId: 'inputs-ui' });
+      store.set(proposalsAtom, {
+        'proposed-input': {
+          ref: { workflowId: entry.id, runId: 'inputs-ui' },
+          revision: 0,
+          workspaceId: workspaceContext!.workspace.id,
+          action: { kind: 'inputs', blockId: 'amount', patch: { value: 225 } },
+          before: { value: 200 },
+          request: {
+            operationId: 'proposed-input',
+            agentId: 'sina',
+            capability: 'workflow:execute',
+            resourceType: 'workflow',
+            resourceId: entry.id,
+            resourceRevision: 'session:inputs-ui:0',
+            requestFingerprint: 'test',
+          },
+        },
+      });
+      const root = document.createElement('div');
+      document.body.replaceChildren(root);
+      createRoot(root).render(
+        React.default.createElement(
+          Provider,
+          { store },
+          React.default.createElement(SessionActionReview, { operationId: 'proposed-input' }),
+          React.default.createElement(WorkMenu, { onOpen: () => {} }),
+          React.default.createElement(ChatWorkflowThread),
+        ),
+      );
+    },
+    `/@fs/${process.cwd().replaceAll('\\', '/')}`,
+  );
+  const card = page.getByRole('region', { name: 'Workflow in chat' });
+  const read = () =>
+    page.evaluate(async () => {
+      const { readWorkflowLibrary } =
+        await import('/src/features/workflows-hub/workflow-library.ts');
+      return readWorkflowLibrary()['custom:inputs-ui'];
+    });
+  await expect(card.getByRole('list', { name: 'Execution steps' })).toHaveCount(1);
+  await expect(card.getByRole('list', { name: 'Workflow progress' })).toHaveCount(0);
+  await expect(card.getByRole('combobox', { name: 'Chat input block' })).toHaveCount(0);
+  await expect(card.locator('[data-step-toggle][aria-expanded="true"]')).toHaveCount(0);
+  await expect(card.getByRole('button', { name: 'Resume workflow' })).toBeEnabled();
+  const openingUrl = page.url();
+  const beforeBrowsing = await read();
+  await card.locator('[data-step-id="amount"]').click();
+  const amount = card.getByRole('region', { name: 'Step 1: Amount' });
+  const reference = card.getByRole('region', { name: 'Step 2: Reference' });
+  await expect(amount.getByPlaceholder('e.g. 1.3978')).toHaveValue('200');
+  await expect(amount.getByPlaceholder('none', { exact: true })).toBeEditable();
+  await expect(amount.getByPlaceholder('Amount', { exact: true })).toBeEditable();
+  await amount.getByPlaceholder('e.g. 1.3978').fill('251');
+  await card.getByRole('button', { name: 'Collapse all steps' }).click();
+  await expect(card.getByRole('region', { name: /^Inputs for / })).toHaveCount(0);
+  await card.locator('[data-step-id="reference"]').click();
+  await expect(reference.getByPlaceholder('e.g. 1.3978')).toHaveValue('10');
+  await card.locator('[data-step-id="amount"]').click();
+  await expect(amount.getByPlaceholder('e.g. 1.3978')).toHaveValue('251');
+  await expect(card.getByRole('region', { name: /^Inputs for / })).toHaveCount(1);
+  expect(page.url()).toBe(openingUrl);
+  expect(await read()).toEqual(beforeBrowsing);
+  expect((await read()).sessions![0].results).toEqual({});
+  expect((await read()).sessions![0].inputOverrides).toBeUndefined();
+  await page.getByRole('button', { name: 'Approve workflow action', exact: true }).click();
+  await expect.poll(async () => (await read()).runs.length).toBe(1);
+  const original = await read();
+  await expect(amount.getByPlaceholder('e.g. 1.3978')).toHaveValue('251');
+  await expect(amount.getByRole('alert')).toContainText('This bloc’s inputs changed');
+  await expect(amount.getByRole('button', { name: 'Apply inputs & recalculate' })).toBeDisabled();
+  await amount.getByRole('button', { name: 'Review my edits on latest inputs' }).click();
+  await expect(amount.getByRole('alert')).toHaveCount(0);
+  await expect(amount.getByRole('button', { name: 'Apply inputs & recalculate' })).toBeEnabled();
+  expect(await read()).toEqual(original);
+  await expect(page.getByTestId('work-menu')).toContainText('Completed');
+  await amount.getByPlaceholder('e.g. 1.3978').fill('');
+  await amount.getByRole('button', { name: 'Apply inputs & recalculate' }).click();
+  await expect(amount.getByRole('alert')).toBeVisible();
+  expect((await read()).sessions![0].results.amount.output.value).toBe(225);
+  expect((await read()).runs).toHaveLength(1);
+  await amount.getByPlaceholder('e.g. 1.3978').fill('250');
+  await card.locator('[data-step-id="reference"]').click();
+  await reference.getByPlaceholder('e.g. 1.3978').fill('11');
+  await reference.getByRole('button', { name: 'Apply inputs & recalculate' }).click();
+  await expect.poll(async () => (await read()).runs.length).toBe(2);
+  await card.locator('[data-step-id="amount"]').click();
+  await expect(amount.getByPlaceholder('e.g. 1.3978')).toHaveValue('250');
+  await expect(
+    amount.getByRole('button', { name: 'Review my edits on latest inputs' }),
+  ).toHaveCount(0);
+  await expect(amount.getByRole('button', { name: 'Apply inputs & recalculate' })).toBeEnabled();
+  await amount.getByPlaceholder('none', { exact: true }).fill('CAD');
+  await amount.getByPlaceholder('Amount', { exact: true }).fill('Reviewed amount');
+  expect((await read()).sessions![0].results.amount.output.value).toBe(225);
+  await amount.getByRole('button', { name: 'Apply inputs & recalculate' }).click();
+  await expect.poll(async () => (await read()).runs.length).toBe(3);
+  const changed = await read();
+  expect(changed.sessions![0].results.amount.output.value).toBe(250);
+  expect(changed.sessions![0].inputOverrides?.amount).toMatchObject({
+    value: 250,
+    unit: 'CAD',
+    valueLabel: 'Reviewed amount',
+  });
+  expect(changed.runs[0]).toEqual(original.runs[0]);
+  expect(changed.versions).toEqual(original.versions);
+  expect(changed.draft).toEqual(original.draft);
+  await card.getByRole('button', { name: 'End workflow', exact: true }).click();
+  await expect(card).toContainText('Ended — history retained');
+  await expect(page.getByTestId('work-menu')).toContainText('Ended');
+  await expect(card.getByRole('button', { name: 'Resume workflow' })).toBeDisabled();
+  await expect(amount.getByPlaceholder('e.g. 1.3978')).toBeDisabled();
+  await page.screenshot({ path: test.info().outputPath('inline-workflow.png'), fullPage: true });
+});
+
+test('a follow-up interrupts the model reply without resetting the conversation', async ({
+  page,
+}) => {
+  let calls = 0;
+  const streamServer = createServer((request, response) => {
+    let body = '';
+    request.on('data', (chunk) => {
+      body += chunk;
+    });
+    request.on('end', () => {
+      const payload = JSON.parse(body);
+      const input = payload.body ?? payload;
+      response.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'no-cache',
+      });
+      response.write(
+        `data: ${JSON.stringify({ type: 'RUN_STARTED', threadId: input.threadId, runId: input.runId })}\n\n`,
+      );
+      response.write(
+        `data: ${JSON.stringify({ type: 'TEXT_MESSAGE_START', messageId: 'partial-reply', role: 'assistant' })}\n\n`,
+      );
+      response.write(
+        `data: ${JSON.stringify({ type: 'TEXT_MESSAGE_CONTENT', messageId: 'partial-reply', delta: 'Let me explain…' })}\n\n`,
+      );
+      // Keep the stream open until the actual browser aborts it.
+    });
+  });
+  await new Promise<void>((resolve) => streamServer.listen(0, '127.0.0.1', resolve));
+  const streamAddress = streamServer.address();
+  if (!streamAddress || typeof streamAddress === 'string') throw new Error('No stream port.');
+  await page.route('**/api/copilotkit**', async (route) => {
+    const data = route.request().postDataJSON();
+    if (data?.method === 'info' || route.request().method() === 'GET')
+      return route.fulfill({
+        json: {
+          version: '1.63.2',
+          mode: 'sse',
+          agents: {
+            default: { name: 'default', description: 'Synthetic', className: 'FixtureAgent' },
+          },
+          audioFileTranscriptionEnabled: false,
+          suggestions: false,
+          telemetryDisabled: true,
+          threadEndpoints: {
+            list: false,
+            inspect: false,
+            mutations: false,
+            realtimeMetadata: false,
+          },
+        },
+      });
+    if (data?.method !== 'agent/run')
+      return route.fulfill({ contentType: 'text/event-stream', body: '' });
+    calls++;
+    if (calls === 1) return route.continue({ url: `http://127.0.0.1:${streamAddress.port}/` });
+    const input = data.body ?? data;
+    const events = [
+      { type: 'RUN_STARTED', threadId: input.threadId, runId: input.runId },
+      { type: 'TEXT_MESSAGE_START', messageId: 'followup-reply', role: 'assistant' },
+      { type: 'TEXT_MESSAGE_CONTENT', messageId: 'followup-reply', delta: 'Follow-up received.' },
+      { type: 'TEXT_MESSAGE_END', messageId: 'followup-reply' },
+      { type: 'RUN_FINISHED', threadId: input.threadId, runId: input.runId },
+    ];
+    return route.fulfill({
+      contentType: 'text/event-stream',
+      body: events.map((event) => `data: ${JSON.stringify(event)}\n\n`).join(''),
+    });
+  });
+  await page.route('**/api/chat/threads**', (route) =>
+    route.fulfill({ json: route.request().method() === 'GET' ? { threads: [] } : { ok: true } }),
+  );
+  try {
+    await page.goto('/');
+    // Set the agent explicitly before opening the synthetic stream.
+    await page.getByRole('button', { name: 'Chat agent: Sina', exact: true }).click();
+    await page.getByRole('menuitemradio', { name: 'MicroSina · Foundry', exact: true }).click();
+    await page.getByRole('button', { name: 'Chat agent: MicroSina', exact: true }).click();
+    await page.getByRole('menuitemradio', { name: 'Sina · Tax specialist', exact: true }).click();
+    const composer = page.getByRole('textbox', { name: 'Ask Scope, or describe a task…' });
+    await composer.fill('Explain this calculation.');
+    await expect(page.getByRole('button', { name: 'Send', exact: true })).toBeEnabled();
+    await page.getByRole('button', { name: 'Send', exact: true }).click();
+    await expect.poll(() => calls).toBe(1);
+    await expect(page.getByText('Let me explain…', { exact: true })).toBeVisible();
+    await composer.fill('First, explain the exchange rate.');
+    await expect(page.getByRole('button', { name: 'Interrupt reply and send' })).toBeEnabled();
+    await composer.press('Enter');
+    await expect.poll(() => calls).toBe(2);
+    await expect(page.getByText('Follow-up received.', { exact: true })).toBeVisible();
+    await expect(page.getByText('Explain this calculation.', { exact: true })).toBeVisible();
+    await expect(
+      page.getByText('First, explain the exchange rate.', { exact: true }),
+    ).toBeVisible();
+  } finally {
+    streamServer.closeAllConnections();
+    await new Promise<void>((resolve) => streamServer.close(() => resolve()));
+  }
 });

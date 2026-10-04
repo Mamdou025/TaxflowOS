@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "cbbe8f62-4d90-403b-8869-8e26ec991709",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\architecture-frontend-backend-20261001-160000\\candidate.json",
+  "output": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\architecture-frontend-backend-20261001-160000\\frontend-backend.html",
+  "specification": {
+    "sha256": "1767f31d9657f47d3746389c59f0cf60ad0e7963311e1d35d7bedfe898946ce9",
+    "bytes": 5418
+  },
+  "artifact": {
+    "sha256": "7b13ba2b29381c92efef3d48923232089fd5e8f99b6fc70b4296813efdb637dc",
+    "bytes": 760066
+  }
+}

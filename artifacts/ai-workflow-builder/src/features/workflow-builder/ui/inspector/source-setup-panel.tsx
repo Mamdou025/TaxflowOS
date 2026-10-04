@@ -19,6 +19,7 @@ type SourceSetupPanelProps = {
   block: WorkflowBlock;
   config: Record<string, unknown>;
   disabled?: boolean;
+  currentWork?: boolean;
   onConfigPatch: (patch: Record<string, unknown>) => void;
   onCreateSourceVersion: () => void;
   onSelectedRulebookItemChange?: (itemId: string) => void;

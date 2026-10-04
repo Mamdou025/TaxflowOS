@@ -6,13 +6,10 @@ import {
   MkoroPermissionRequestSchema,
   MkoroIdSchema,
   MkoroApprovalSettingsSchema,
+  MkoroCreatePairingSchema,
 } from '@workspace/api-zod/mkoro';
-import {
-  createPairing,
-  listWorkers,
-  revokeWorker,
-  setAutomaticApproval,
-} from '../lib/mkoro/workers';
+import { listWorkers, revokeWorker, setAutomaticApproval } from '../lib/mkoro/workers';
+import { createPairing } from '../lib/mkoro/pairing';
 import {
   listConversations,
   conversationDetail,
@@ -44,7 +41,9 @@ router.get('/workers', async (req, res) => {
   res.json({ workers: await listWorkers(scope(req)) });
 });
 router.post('/pairings', async (req, res) => {
-  res.status(201).json(await createPairing(scope(req)));
+  const input = MkoroCreatePairingSchema.safeParse(req.body);
+  if (!input.success) throw new MkoroError(400, 'Choose a valid computer connection to reconnect.');
+  res.status(201).json(await createPairing(scope(req), input.data.reconnectWorkerId));
 });
 // Writes execution policy for the actor's own computer; execute role is required.
 router.patch('/workers/:id/approval', async (req, res) => {

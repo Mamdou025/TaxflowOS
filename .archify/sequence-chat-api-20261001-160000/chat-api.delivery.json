@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "279f1435-71ca-4f60-9d39-a9e36418a57a",
+  "status": "current",
+  "command": "deliver",
+  "type": "sequence",
+  "input": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\sequence-chat-api-20261001-160000\\candidate.json",
+  "output": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\sequence-chat-api-20261001-160000\\chat-api.html",
+  "specification": {
+    "sha256": "f3990cbadf501a18d9d2b58277a0eb6377c81326a7d548ae80496fa69496849f",
+    "bytes": 6150
+  },
+  "artifact": {
+    "sha256": "57a9be3e46db203cca04ed6dc6392675c8a85372a1bc86aad1b369cc8b245460",
+    "bytes": 763393
+  }
+}

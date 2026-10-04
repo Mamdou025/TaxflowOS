@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "TaxflowOS: frontend, API and shared workflow code",
+    "output": ".archify/architecture-frontend-backend-20261001-160000/frontend-backend.html",
+    "quality_profile": "showcase",
+    "repository": {"url":"https://github.com/Mamdou025/TaxflowOS.git","revision":"444d6e0fc84928e35b9635a65eb8392520b09df2","link_mode":"local-only"}
+  },
+  "components": [
+    {"id":"screens","type":"frontend","label":"React screens","sublabel":"Chat, Build and Run","pos":[40,80],"size":[210,76],"sources":[{"path":"artifacts/ai-workflow-builder/src/components/app-shell.tsx","line":39,"end_line":108,"label":"Shell and chat provider"}]},
+    {"id":"browser","type":"frontend","label":"Browser adapters","sublabel":"State, tools and API calls","pos":[430,80],"size":[230,76],"sources":[{"path":"artifacts/ai-workflow-builder/src/platform/auth/api-fetch.ts","line":5,"end_line":25,"label":"Same-origin API transport"},{"path":"artifacts/ai-workflow-builder/src/shared/workflow-engine/workflow/execute.ts","line":7,"end_line":37,"label":"Browser graph adapter"},{"path":"artifacts/ai-workflow-builder/src/features/assistant/ui/use-agent-workflow-tools.tsx","line":345,"end_line":440,"label":"Chat workflow command adapter"}]},
+    {"id":"access","type":"security","label":"Server access checks","sublabel":"Session, membership, role","pos":[850,80],"size":[240,76],"sources":[{"path":"artifacts/api-server/src/app.ts","line":68,"end_line":100,"label":"Middleware order"},{"path":"artifacts/api-server/src/security/access.ts","line":13,"end_line":46,"label":"Session-derived actor"},{"path":"artifacts/api-server/src/security/access.ts","line":72,"end_line":121,"label":"Workspace and operation policy"}]},
+    {"id":"core","type":"backend","icon":"none","label":"Portable workflow core","sublabel":"Commands and graph runner","tag":"In-process library","pos":[430,335],"size":[230,88],"sources":[{"path":"lib/workflow-core/src/application/commands.ts","line":44,"end_line":99,"label":"Draft and version commands"},{"path":"lib/workflow-core/src/core/graph.ts","line":319,"end_line":376,"label":"Graph runner"},{"path":"lib/workflow-core/src/core/ports.ts","line":1,"end_line":25,"label":"Injected runtime ports"}]},
+    {"id":"server","type":"backend","label":"API and run worker","sublabel":"Routes persist; worker runs","pos":[850,335],"size":[240,88],"sources":[{"path":"artifacts/api-server/src/routes/workflow-runs.ts","line":47,"end_line":105,"label":"Exact-version enqueue route"},{"path":"artifacts/api-server/src/lib/workflow-runs/executor.ts","line":1,"end_line":32,"label":"Server graph adapter"},{"path":"artifacts/api-server/src/lib/workflow-run-worker.ts","line":37,"end_line":75,"label":"Claim, execute and save"}]},
+    {"id":"executors","type":"backend","icon":"none","label":"Shared block executors","sublabel":"Deterministic tool registry","tag":"In-process library","pos":[430,600],"size":[230,88],"sources":[{"path":"lib/workflow-executors/src/tools/registry.ts","line":1,"end_line":18,"label":"Registry composition"},{"path":"artifacts/ai-workflow-builder/src/shared/workflow-engine/tools/registry.ts","line":1,"end_line":2,"label":"Browser uses shared registry"},{"path":"artifacts/api-server/src/lib/workflow-runs/executor.ts","line":24,"end_line":31,"label":"Worker injects same tools"}]},
+    {"id":"database","type":"database","label":"PostgreSQL records","sublabel":"Libraries, jobs and results","pos":[850,600],"size":[240,88],"sources":[{"path":"lib/db/src/index.ts","line":1,"end_line":16,"label":"Database pool and ORM"},{"path":"artifacts/api-server/src/routes/workflow-library.ts","line":12,"end_line":49,"label":"Revision-aware library writes"},{"path":"artifacts/api-server/src/lib/workflow-runs/queue.ts","line":52,"end_line":85,"label":"Job claim and result write"}]}
+  ],
+  "connections": [
+    {"id":"ui-adapters","from":"screens","to":"browser","label":"actions","variant":"emphasis"},
+    {"id":"api-request","from":"browser","to":"access","label":"HTTP + session","variant":"security"},
+    {"id":"allowed-request","from":"access","to":"server","label":"allowed requests","variant":"security"},
+    {"id":"preview-core","from":"browser","to":"core","label":"local preview"},
+    {"id":"worker-core","from":"server","to":"core","label":"worker execution"},
+    {"id":"registry-injection","from":"core","to":"executors","label":"invoke injected tools"},
+    {"id":"persist-records","from":"server","to":"database","label":"read / write records"}
+  ],
+  "cards": [
+    {"dot":"cyan","title":"Frontend owns interaction","items":["React renders Chat, the builder and results. Browser adapters own canvas conversion, stores and network calls.","Browser previews call the portable graph runner in the browser process."]},
+    {"dot":"violet","title":"Shared code is a library","items":["workflow-core owns commands and graph rules. workflow-contracts defines persisted types and validators.","workflow-executors supplies the registry injected by both runtimes. These boxes are code packages, not remote services."]},
+    {"dot":"rose","title":"Server owns access and persistence","items":["Every protected browser API request passes session, workspace membership and operation-role checks.","The durable worker claims jobs and stores results. A local preview completing does not itself prove a server save."]}
+  ]
+}

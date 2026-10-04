@@ -74,7 +74,9 @@ function runtime() {
   const tools: Record<string, ToolDefinition> = {};
   for (const [toolId, compute] of Object.entries({
     total: (ctx: ToolExecutionContext) =>
-      (ctx.config.values as number[]).reduce((a, b) => a + b, 0),
+      typeof ctx.config.value === 'number'
+        ? ctx.config.value
+        : (ctx.config.values as number[]).reduce((a, b) => a + b, 0),
     double: (ctx: ToolExecutionContext) => Number(ctx.upstreamResults[0].output.value) * 2,
   }))
     tools[toolId] = {
@@ -427,4 +429,184 @@ test('Build inspection selects the exact paused session and immutable version wi
   );
   assert.equal(inspectWorkflowRun(entry, recordedId).results.double.output.value, 400);
   assert.equal(inspectWorkflowRun(entry, recordedId).version, 1);
+});
+
+test('current-work inputs recalculate, retain historical inputs and never edit the saved definition', () => {
+  const engine = runtime();
+  const draft = definition();
+  const source = draft.blocks.find((block) => block.id === 'total')!;
+  source.family = 'Source';
+  source.subtype = 'Manual Entry';
+  source.config = { toolId: 'total', sourceKind: 'manual_value', value: 200 };
+  let entry = startSession(
+    saveVersion(createWorkflow('custom:core', 'core', draft), instant),
+    1,
+    'inputs',
+    instant,
+  );
+  const saved = structuredClone(entry.versions);
+  const act = (action: Parameters<typeof changeSession>[3]) => {
+    entry = changeSession(
+      entry,
+      'inputs',
+      getSession(entry, 'inputs').revision,
+      action,
+      engine.ports,
+      instant,
+    );
+  };
+  act({ kind: 'block', blockId: 'total' });
+  act({ kind: 'block', blockId: 'double' });
+  act({ kind: 'record' });
+  const earlier = structuredClone(entry.runs[0]);
+  const revision = getSession(entry, 'inputs').revision;
+  act({ kind: 'inputs', blockId: 'total', patch: { value: 250 } });
+  assert.deepEqual(getSession(entry, 'inputs').stale.sort(), ['double', 'total']);
+  assert.throws(
+    () =>
+      changeSession(
+        entry,
+        'inputs',
+        revision,
+        { kind: 'inputs', blockId: 'total', patch: { value: 900 } },
+        engine.ports,
+      ),
+    /run changed/,
+  );
+  act({ kind: 'resume' });
+  act({ kind: 'block', blockId: 'total' });
+  act({ kind: 'block', blockId: 'double' });
+  act({ kind: 'record' });
+  assert.equal(getSession(entry, 'inputs').results.double.output.value, 500);
+  assert.deepEqual(entry.versions, saved);
+  assert.deepEqual(entry.draft, draft);
+  assert.deepEqual(entry.runs[0], earlier);
+  assert.equal(entry.runs.length, 2);
+  const evidence = inspectWorkflowRun(entry, entry.runs[0].result.record.execution.id);
+  assert.equal(evidence.definition.blocks.find((block) => block.id === 'total')!.config.value, 200);
+  assert.equal(evidence.results.double.output.value, 400);
+  assert.equal(
+    validateWorkflowLibrary(JSON.parse(JSON.stringify({ [entry.id]: entry })))[entry.id]
+      .sessions![0].inputOverrides!.total.value,
+    250,
+  );
+  act({ kind: 'end' });
+  for (const action of [
+    { kind: 'resume' },
+    { kind: 'block', blockId: 'total' },
+    { kind: 'inputs', blockId: 'total', patch: { value: 300 } },
+  ] as const)
+    assert.throws(() => act(action), /ended/);
+});
+
+test('specialized manual-catalog sources require their own data rather than a scalar', () => {
+  const draft = definition();
+  const source = draft.blocks.find((block) => block.id === 'total')!;
+  source.family = 'Source';
+  source.subtype = 'Manual Entry';
+  for (const config of [
+    {
+      sourceKind: 'fapi_inputs',
+      toolId: 'source.fapi_inputs',
+      inclusionRate: 0.5,
+      rtf: 4,
+      fatPaid: 100,
+    },
+    {
+      sourceKind: 'api_reference',
+      toolId: 'source.manual_value',
+      sourceLocator: 'https://example.invalid/reference',
+    },
+  ]) {
+    source.config = config;
+    const entry = startSession(
+      saveVersion(createWorkflow('custom:core', 'core', draft), instant),
+      1,
+      'special',
+      instant,
+    );
+    assert.equal(
+      sessionContext(entry, getSession(entry, 'special')).steps.find((step) => step.id === 'total')!
+        .inputRequired,
+      false,
+    );
+  }
+  source.config = { sourceKind: 'api_reference', toolId: 'source.manual_value' };
+  const missing = startSession(
+    saveVersion(createWorkflow('custom:core', 'core', draft), instant),
+    1,
+    'special',
+    instant,
+  );
+  assert.equal(
+    sessionContext(missing, getSession(missing, 'special')).steps.find(
+      (step) => step.id === 'total',
+    )!.inputRequired,
+    true,
+  );
+});
+
+test('trigger readiness and source input allowlist prevent guessed values and rule edits', () => {
+  const engine = runtime();
+  const draft = definition();
+  const source = draft.blocks.find((block) => block.id === 'total')!;
+  source.family = 'Source';
+  source.subtype = 'Manual Entry';
+  source.config = { toolId: 'total', sourceKind: 'manual_value' };
+  const entry = startSession(
+    saveVersion(createWorkflow('custom:core', 'core', draft), instant),
+    1,
+    'missing',
+    instant,
+  );
+  const act = (action: Parameters<typeof changeSession>[3]) =>
+    changeSession(entry, 'missing', 0, action, engine.ports);
+  assert.throws(() => act({ kind: 'resume' }), /Trigger readiness/);
+  assert.throws(() => act({ kind: 'block', blockId: 'total' }), /required inputs/);
+  for (const patch of [{ toolId: 'other' }, { value: '-' }, { value: null }, { formula: 'evil' }])
+    assert.throws(() => act({ kind: 'inputs', blockId: 'total', patch }));
+  assert.equal(engine.calls(), 0);
+});
+
+test('same-currency input is ready without a conversion rate and invalid overrides cannot use a live fallback', () => {
+  const engine = runtime();
+  const draft = definition();
+  const source = draft.blocks.find((block) => block.id === 'total')!;
+  source.family = 'Source';
+  source.config = {
+    toolId: 'total',
+    sourceKind: 'currency_rate',
+    documentCurrency: 'CAD',
+    reportingCurrency: 'CAD',
+  };
+  const entry = startSession(
+    saveVersion(createWorkflow('custom:core', 'core', draft), instant),
+    1,
+    'rate',
+    instant,
+  );
+  assert.equal(
+    sessionContext(entry, getSession(entry, 'rate')).steps.find((step) => step.id === 'total')!
+      .inputRequired,
+    false,
+  );
+  assert.doesNotThrow(() => changeSession(entry, 'rate', 0, { kind: 'resume' }, engine.ports));
+  assert.throws(
+    () =>
+      changeSession(
+        entry,
+        'rate',
+        0,
+        {
+          kind: 'inputs',
+          blockId: 'total',
+          patch: { documentCurrency: 'USD', liveRate: 1.4, overrideRate: -1 },
+        },
+        engine.ports,
+      ),
+    /positive exchange rate/,
+  );
+  const corrupted = structuredClone(entry);
+  corrupted.sessions![0].inputOverrides = { total: { toolId: 'other' } };
+  assert.throws(() => sessionDefinition(corrupted, getSession(corrupted, 'rate')), /input fields/);
 });

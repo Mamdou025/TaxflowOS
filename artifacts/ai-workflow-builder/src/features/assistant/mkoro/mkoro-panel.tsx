@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useAtom } from 'jotai';
-import { Monitor, RefreshCw } from 'lucide-react';
+import { ChevronDown, Monitor, RefreshCw, Settings2 } from 'lucide-react';
 import { permits } from '@workspace/api-zod/access';
+import type { MkoroWorker } from '@workspace/api-zod/mkoro';
 import { workspaceContext } from '@/platform/auth/workspace-context';
+import { LC } from '@/lib/librechat-theme';
 import {
   Dialog,
   DialogContent,
@@ -11,11 +13,24 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/shared/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/shared/ui/dropdown-menu';
 import { MkoroConversationActivity } from './mkoro-chat-tasks';
 import { MkoroPairing } from './mkoro-pairing';
 import { useMkoroConversations } from './use-mkoro-history';
 import { mkoroSettingsOpenAtom, useMkoroActions, useMkoroConnection } from './use-mkoro';
 import './mkoro.css';
+
+const connectionDetails = (worker: MkoroWorker) =>
+  `ID ${worker.id.slice(-8)} · Created ${new Date(worker.createdAt).toLocaleString()} · Last seen ${worker.lastSeenAt ? new Date(worker.lastSeenAt).toLocaleString() : 'never'}`;
 
 function ComputerSettingsBody() {
   const connection = useMkoroConnection();
@@ -30,10 +45,10 @@ function ComputerSettingsBody() {
   const canExecute = !!workspaceContext && permits(workspaceContext.workspace.role, 'execute');
   const worker = connection.worker;
   const revoked = connection.workers.filter((item) => item.status === 'revoked');
-  const startPairing = (name = '') => {
-    setReconnecting(name);
+  const startPairing = (target?: MkoroWorker) => {
+    setReconnecting(target?.name ?? '');
     actions.clearPairing();
-    void actions.createPairing();
+    void actions.createPairing(target?.id);
   };
   return (
     <div className="mkoro-panel mkoro-settings-body">
@@ -52,7 +67,7 @@ function ComputerSettingsBody() {
             <option value="">Choose a computer</option>
             {connection.workers.map((item) => (
               <option key={item.id} value={item.id} disabled={item.status === 'revoked'}>
-                {item.name} · {item.status}
+                {item.name} · {item.status} · {item.id.slice(-8)}
               </option>
             ))}
           </select>
@@ -73,6 +88,7 @@ function ComputerSettingsBody() {
           <RefreshCw size={15} />
         </button>
       </div>
+      {worker && <p className="mkoro-notice">{connectionDetails(worker)}</p>}
       <p>
         Use Sina chat on this computer. Mkoro’s companion and Goose run on the computer doing the
         work, such as your Surface. Keep that computer awake and its companion running.
@@ -121,6 +137,15 @@ function ComputerSettingsBody() {
         <button type="button" disabled={!canExecute || actions.busy} onClick={() => startPairing()}>
           Connect a computer
         </button>
+        {worker?.status === 'offline' && (
+          <button
+            type="button"
+            disabled={!canExecute || actions.busy || !!connection.readError}
+            onClick={() => startPairing(worker)}
+          >
+            Reconnect {worker.name}
+          </button>
+        )}
         {worker && worker.status !== 'revoked' && (
           <button
             type="button"
@@ -152,21 +177,23 @@ function ComputerSettingsBody() {
       )}
       {revoked.length > 0 && (
         <section aria-label="Revoked computers">
-          <strong>Reconnect a revoked computer</strong>
+          <strong>Revoked computer connections</strong>
           <p>
-            These entries cannot receive tasks. Pair again to create a new connection for the same
-            computer.
+            These connections cannot receive tasks. Reconnect the matching connection to restore
+            access and keep its history. Older duplicates stay here until you choose to reuse them.
           </p>
           <div className="mkoro-controls">
             {revoked.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                disabled={!canExecute || actions.busy}
-                onClick={() => startPairing(item.name)}
-              >
-                Reconnect {item.name}
-              </button>
+              <div key={item.id}>
+                <button
+                  type="button"
+                  disabled={!canExecute || actions.busy || !!connection.readError}
+                  onClick={() => startPairing(item)}
+                >
+                  Reconnect {item.name}
+                </button>
+                <small>{connectionDetails(item)}</small>
+              </div>
             ))}
           </div>
         </section>
@@ -234,25 +261,112 @@ function ComputerSettingsBody() {
   );
 }
 
-export function MkoroComputerSettings() {
+export function MkoroComputerSettings({
+  presentation = 'settings',
+}: {
+  presentation?: 'settings' | 'composer';
+}) {
   const [open, setOpen] = useAtom(mkoroSettingsOpenAtom);
   const connection = useMkoroConnection();
-  const status = connection.readError
-    ? 'Unverified'
-    : (connection.worker?.status ?? 'Not connected');
+  const canExecute = !!workspaceContext && permits(workspaceContext.workspace.role, 'execute');
+  const available = connection.workers.filter((worker) => worker.status !== 'revoked');
+  const selected = available.find((worker) => worker.id === connection.workerId);
+  const status = connection.loading
+    ? 'Checking…'
+    : connection.readError
+      ? 'Unverified'
+      : selected
+        ? selected.status[0].toUpperCase() + selected.status.slice(1)
+        : available.length
+          ? 'Not selected'
+          : 'Not connected';
+  const online = !connection.loading && !connection.readError && selected?.status === 'online';
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <button
-          type="button"
-          className="mkoro-settings-trigger"
-          aria-label="Mkoro computer settings"
-        >
-          <Monitor size={15} aria-hidden />
-          <span>Mkoro computer</span>
-          <small>{status}</small>
-        </button>
-      </DialogTrigger>
+      {presentation === 'composer' ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              aria-label={`Computer: ${selected?.name ?? 'Mkoro'} · ${status}`}
+              className="inline-flex h-9 min-w-0 items-center gap-1.5 rounded-full border px-2.5 text-xs font-medium hover:bg-black/5"
+              style={{ borderColor: LC.borderSubtle, color: LC.body }}
+            >
+              <Monitor size={14} aria-hidden />
+              <span className="max-w-28 truncate">{selected?.name ?? 'Computer'}</span>
+              <span
+                className={`size-1.5 shrink-0 rounded-full ${online ? 'bg-emerald-500' : 'bg-slate-400'}`}
+                aria-hidden
+              />
+              <span className="text-[10px]" style={{ color: LC.muted }}>
+                {status}
+              </span>
+              <ChevronDown size={12} aria-hidden />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="top" align="start" className="w-64">
+            <DropdownMenuLabel>Computer connections</DropdownMenuLabel>
+            {available.length > 0 ? (
+              <DropdownMenuRadioGroup
+                value={connection.workerId}
+                onValueChange={(workerId) => {
+                  if (
+                    canExecute &&
+                    !connection.readError &&
+                    connection.workers.some(
+                      (worker) => worker.id === workerId && worker.status !== 'revoked',
+                    )
+                  )
+                    connection.setWorkerId(workerId);
+                }}
+              >
+                {available.map((worker) => (
+                  <DropdownMenuRadioItem
+                    key={worker.id}
+                    value={worker.id}
+                    disabled={!canExecute || !!connection.readError}
+                  >
+                    <span className="min-w-0 flex-1 truncate">
+                      {worker.name}
+                      <small className="block text-muted-foreground">{worker.id.slice(-8)}</small>
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {connection.readError ? 'Unverified' : worker.status}
+                    </span>
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            ) : (
+              <p className="px-2 py-1.5 text-xs text-muted-foreground">
+                {connection.loading
+                  ? 'Checking your computers…'
+                  : connection.readError
+                    ? 'Computer status is unavailable.'
+                    : 'No computer connected yet.'}
+              </p>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => setOpen(true)}>
+              <Settings2 /> Computer settings
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={connection.refresh}>
+              <RefreshCw /> Refresh status
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <DialogTrigger asChild>
+          <button
+            type="button"
+            className="mkoro-settings-trigger"
+            aria-label="Mkoro computer settings"
+          >
+            <Monitor size={15} aria-hidden />
+            <span>Mkoro computer</span>
+            <small>{status}</small>
+          </button>
+        </DialogTrigger>
+      )}
       <DialogContent className="mkoro-settings-dialog">
         <DialogHeader>
           <DialogTitle>Mkoro computer</DialogTitle>

@@ -10,6 +10,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { AcpClient } from './acp-client.mjs';
 import { MkoroWorker, WorkerApi, serverOrigin } from './worker.mjs';
 import { companionCapabilities } from './delegation.mjs';
+import { pairCompanion } from './pairing.mjs';
 
 export const HELP = `Mkoro local Goose companion
 
@@ -207,6 +208,8 @@ export async function main(args = process.argv.slice(2)) {
         state.version !== 1 ||
         typeof state.token !== 'string' ||
         !state.token ||
+        typeof state.workerId !== 'string' ||
+        !state.workerId ||
         state.server !== options.server ||
         state.workspace !== options.workspace
       )
@@ -234,23 +237,13 @@ export async function main(args = process.argv.slice(2)) {
       const pairingToken = await readPairingToken();
       if (pairingToken.length < 40 || pairingToken.length > 200)
         throw new Error('The pairing token is incomplete. Generate a fresh code in Inscope.');
-      api.token = undefined;
-      const result = await api.post('pair', {
+      state = await pairCompanion({
+        api,
+        options,
         pairingToken,
-        name: options.name,
         capabilities: companionCapabilities(),
+        previous: state,
       });
-      if (typeof result?.token !== 'string' || !result.token || typeof result.workerId !== 'string')
-        throw new Error('Inscope returned invalid pairing credentials.');
-      state = {
-        version: 1,
-        server: options.server,
-        workspace: options.workspace,
-        workerId: result.workerId,
-        token: result.token,
-        sessions: {},
-        pollIntervalMs: result.pollIntervalMs,
-      };
       await writeState(options.state, state);
       api.token = state.token;
     }

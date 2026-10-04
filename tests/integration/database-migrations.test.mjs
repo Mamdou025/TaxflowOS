@@ -108,6 +108,75 @@ test(
 );
 
 test(
+  'Mkoro reconnect migration preserves existing identities, active history and untargeted pairing codes',
+  { timeout: 180000 },
+  async () => {
+    const run = createTestRun('mkoro-reconnect-upgrade');
+    try {
+      const stack = await startTestDatabase(run);
+      const previous = path.join(run.output, 'before-reconnect');
+      await fs.cp(migrationsFolder, previous, { recursive: true });
+      const journalFile = path.join(previous, 'meta/_journal.json');
+      const journal = JSON.parse(await fs.readFile(journalFile, 'utf8'));
+      const reconnectIndex = journal.entries.findIndex(
+        (entry) => entry.tag === '0009_mkoro_reconnect',
+      );
+      assert.ok(reconnectIndex > 0);
+      journal.entries = journal.entries.slice(0, reconnectIndex);
+      await fs.writeFile(journalFile, JSON.stringify(journal));
+      await runMigrations(stack.connectionString, 'migrate', previous);
+      await stack.db.query(
+        "INSERT INTO users(id,name,email_verified,created_at,updated_at,is_anonymous) VALUES('upgrade-actor','Synthetic',false,now(),now(),true)",
+      );
+      await stack.db.query(
+        "INSERT INTO workspaces(id,name,created_by) VALUES('upgrade-workspace','Synthetic','upgrade-actor')",
+      );
+      await stack.db.query(
+        "INSERT INTO workspace_members(workspace_id,user_id,role) VALUES('upgrade-workspace','upgrade-actor','editor')",
+      );
+      await stack.db.query(
+        "INSERT INTO mkoro_workers(id,workspace_id,actor_id,name,token_hash,auto_approve) VALUES('upgrade-worker','upgrade-workspace','upgrade-actor','Existing computer','synthetic-worker-hash',true)",
+      );
+      await stack.db.query(
+        "INSERT INTO mkoro_conversations(id,workspace_id,actor_id,worker_id,title) VALUES('upgrade-chat','upgrade-workspace','upgrade-actor','upgrade-worker','Existing history')",
+      );
+      await stack.db.query(
+        "INSERT INTO mkoro_tasks(id,conversation_id,worker_id,request_id,message,status) VALUES('upgrade-task','upgrade-chat','upgrade-worker','upgrade-request','Existing task','running')",
+      );
+      await stack.db.query(
+        "INSERT INTO mkoro_pairings(token_hash,workspace_id,actor_id,expires_at) VALUES('synthetic-pairing-hash','upgrade-workspace','upgrade-actor',now()+interval '10 minutes')",
+      );
+      const worker = (await stack.db.query('SELECT * FROM mkoro_workers')).rows;
+      const tasks = (await stack.db.query('SELECT * FROM mkoro_tasks')).rows;
+      const pairings = (await stack.db.query('SELECT * FROM mkoro_pairings')).rows;
+      await runMigrations(stack.connectionString);
+      assert.deepEqual((await stack.db.query('SELECT * FROM mkoro_workers')).rows, worker);
+      assert.deepEqual((await stack.db.query('SELECT * FROM mkoro_tasks')).rows, tasks);
+      assert.deepEqual(
+        (await stack.db.query('SELECT * FROM mkoro_pairings')).rows,
+        pairings.map((pairing) => ({
+          ...pairing,
+          reconnect_worker_id: null,
+          reconnect_token_hash: null,
+        })),
+      );
+      assert.equal(
+        (await stack.db.query("SELECT role FROM workspace_members WHERE user_id='upgrade-actor'"))
+          .rows[0].role,
+        'editor',
+      );
+      await assert.rejects(
+        stack.db.query("UPDATE mkoro_pairings SET reconnect_worker_id='missing-worker'"),
+        { code: '23503' },
+      );
+      await runMigrations(stack.connectionString);
+    } finally {
+      await run.close();
+    }
+  },
+);
+
+test(
   'baseline adoption refuses schema drift and leaves legacy data unchanged',
   { timeout: 180000 },
   async () => {

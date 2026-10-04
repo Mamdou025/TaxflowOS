@@ -10,6 +10,8 @@ import type { DocumentExtraction } from '@workspace/workflow-contracts/domain/do
 import { DocumentExtractionSchema } from '@workspace/workflow-contracts/generated-schemas';
 import { makeDocumentReview, documentReviewSummaries } from './document-review';
 import type { DocumentReviewDraft } from '@workspace/workflow-contracts/domain/document-review';
+import { runInputKeys, validateRunInputPatch, hasRunExchangeRate } from './session-inputs';
+export { runInputKeys, validateRunInputPatch } from './session-inputs';
 
 export function isDocumentSource(block: WorkflowDefinition['blocks'][number]) {
   return (
@@ -17,6 +19,33 @@ export function isDocumentSource(block: WorkflowDefinition['blocks'][number]) {
     (/excel|workbook|uploaded|manual_table|pdf_document/.test(String(block.config.sourceKind)) ||
       ['source.manual_table', 'source.pdf_document'].includes(String(block.config.toolId)))
   );
+}
+
+function inputRequired(block: WorkflowDefinition['blocks'][number]) {
+  const config = block.config;
+  if (isDocumentSource(block))
+    return !(
+      ['rows', 'manualRows', 'tableRows'].some(
+        (key) => Array.isArray(config[key]) && config[key].length > 0,
+      ) ||
+      (Array.isArray(config.documentExtractions) && config.documentExtractions.length > 0)
+    );
+  if (config.sourceKind === 'currency_rate') return !hasRunExchangeRate(config);
+  // Specialized sources can share the Manual Entry catalog subtype without being scalars.
+  if (config.sourceKind === 'fapi_inputs') return false;
+  if (config.sourceKind === 'api_reference') {
+    const locator = config.sourceLocator || block.source?.locator;
+    return typeof locator !== 'string' || !locator.trim();
+  }
+  if (
+    config.toolId === 'source.manual_value' ||
+    config.sourceKind === 'manual_value' ||
+    block.subtype === 'Manual Entry'
+  )
+    return !['value', 'manualValue', 'scalarValue', 'valuePreview'].some(
+      (key) => typeof config[key] === 'number' && Number.isFinite(config[key]),
+    );
+  return false;
 }
 
 function fail(message: string): never {
@@ -89,6 +118,23 @@ export function sessionDefinition(
 ): WorkflowDefinition {
   const definition = getSavedVersion(entry, session.version).definition;
   for (const block of definition.blocks) {
+    block.config = {
+      ...block.config,
+      ...(session.inputOverrides?.[block.id]
+        ? validateRunInputPatch(block, session.inputOverrides[block.id])
+        : {}),
+    };
+    if (isDocumentSource(block) && Array.isArray(session.inputOverrides?.[block.id]?.rows)) {
+      block.config = {
+        ...block.config,
+        requireUpload: false,
+        sourceKind: 'manual_table',
+        toolId: 'source.manual_table',
+        manualRows: block.config.rows,
+        tableRows: block.config.rows,
+      };
+      continue;
+    }
     const attachments = session.sources.filter((item) => item.blockId === block.id);
     if (!attachments.length) continue;
     let rows: Record<string, unknown>[] = [];
@@ -151,8 +197,9 @@ function invalidate(session: WorkflowSession, ids: string[]) {
   session.stale = [...new Set([...session.stale, ...ids.filter((id) => !!session.results[id])])];
 }
 export type SessionAction =
+  | { kind: 'inputs'; blockId: string; patch: Record<string, unknown> }
   | { kind: 'document_review'; sourceId: string; reviewId: string; draft: DocumentReviewDraft }
-  | { kind: 'pause' | 'resume' | 'approve' }
+  | { kind: 'pause' | 'resume' | 'approve' | 'end' | 'record' }
   | { kind: 'block'; blockId: string }
   | { kind: 'review'; blockId: string }
   | {
@@ -190,6 +237,8 @@ export function sessionContext(entry: PersonalWorkflow, session: WorkflowSession
       dependencies,
       status,
       ready,
+      inputKeys: runInputKeys(block),
+      inputRequired: inputRequired(block),
       warnings: result?.warnings ?? [],
       errors: result?.errors ?? [],
     };
@@ -201,6 +250,7 @@ export function sessionContext(entry: PersonalWorkflow, session: WorkflowSession
     version: session.version,
     revision: session.revision,
     paused: session.paused,
+    endedAt: session.endedAt,
     approvedAt: session.approvedAt,
     documentReviews: documentReviewSummaries(session).map(({ draft, ...review }) => ({
       ...review,
@@ -239,6 +289,23 @@ export function changeSession(
       'The run changed. Review its current state before retrying.',
     );
   const definition = sessionDefinition(entry, session);
+  if (session.endedAt && action.kind !== 'pause')
+    fail('This workflow has ended. Start a new run to execute or change inputs.');
+  if (action.kind === 'end') {
+    session.endedAt = at;
+    session.paused = true;
+  }
+  if (action.kind === 'inputs') {
+    if (!session.paused) fail('Pause execution before applying input changes.');
+    const block = definition.blocks.find((item) => item.id === action.blockId);
+    if (!block) fail('Choose an existing input block.');
+    const patch = validateRunInputPatch(block, action.patch);
+    session.inputOverrides = {
+      ...session.inputOverrides,
+      [block.id]: { ...session.inputOverrides?.[block.id], ...patch },
+    };
+    invalidate(session, descendants(definition, block.id));
+  }
   if (action.kind === 'document_review') {
     if (!session.paused) fail('Pause the run before saving document interpretation notes.');
     const review = makeDocumentReview(session, action.sourceId, action.draft, action.reviewId, at);
@@ -246,9 +313,15 @@ export function changeSession(
   }
   if (action.kind === 'pause') session.paused = true;
   if (action.kind === 'resume') {
+    const missing = definition.blocks.filter(inputRequired);
+    if (missing.length)
+      fail(
+        `Trigger readiness: provide inputs for ${missing.map((block) => block.label).join(', ')} before execution.`,
+      );
     session.paused = false;
   }
   if (action.kind === 'source') {
+    if (!session.paused) fail('Pause execution before applying source changes.');
     const block = definition.blocks.find((item) => item.id === action.blockId);
     if (!block || !isDocumentSource(block))
       fail('Choose an existing document source block from this run.');
@@ -316,6 +389,7 @@ export function changeSession(
       rows: structuredClone(action.rows),
       ...(extraction ? { extraction } : {}),
     });
+    if (session.inputOverrides) delete session.inputOverrides[block.id];
     if (
       (
         sessionDefinition(entry, session).blocks.find((item) => item.id === block.id)?.config
@@ -330,6 +404,7 @@ export function changeSession(
     const block = definition.blocks.find((item) => item.id === action.blockId);
     if (!block) fail('Choose an existing block from this run.');
     const step = sessionContext(entry, session).steps.find((item) => item.id === block.id)!;
+    if (step.inputRequired) fail('Provide this block’s required inputs before execution.');
     if (!step.ready) fail('Run the missing or outdated dependencies first.');
     // Supply only actual, current direct predecessors. Never fabricate test inputs.
     const inputs = step.dependencies.map((blockId) => ({
@@ -368,18 +443,23 @@ export function changeSession(
       fail('Only a current review checkpoint or finding can be acknowledged.');
     session.reviewed = [...new Set([...session.reviewed, action.blockId])];
   }
-  if (action.kind === 'approve') {
+  if (action.kind === 'approve' || action.kind === 'record') {
     const steps = sessionContext(entry, session).steps;
     if (
       !steps.length ||
       steps.some((step) => !['success', 'warning', 'reviewed'].includes(step.status))
     )
       fail('Complete all steps and resolve outdated or blocked results before approving.');
-    session.approvedAt = at;
+    if (action.kind === 'approve') session.approvedAt = at;
     session.paused = true;
     const last = session.attempts.at(-1);
     if (!last) fail('This run has no execution evidence.');
-    const recordedId = `${session.id}:${session.revision}`;
+    const recordedId =
+      action.kind === 'approve'
+        ? `${session.id}:${session.revision}`
+        : `${session.id}:history:${session.attempts.length}`;
+    if (entry.runs.some((run) => run.result.record.execution.id === recordedId))
+      return put(entry, session);
     const results = Object.values(session.results).map((result) => ({
       ...structuredClone(result),
       runId: recordedId,
@@ -436,6 +516,7 @@ export function changeSession(
         run.result.record.execution.id === recordedId
           ? {
               ...run,
+              sessionSnapshot: structuredClone(session),
               documentReviews: structuredClone(
                 documentReviewSummaries(session)
                   .filter((review) => review.status === 'current')

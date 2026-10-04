@@ -12,6 +12,7 @@ import type { DocumentReview } from '@workspace/workflow-contracts/domain/docume
 import { workflowLibraryAtom } from '@/features/workflows-hub/workflow-library';
 import {
   activeSessionAtom,
+  chatSessionAtom,
   applySessionAction,
   workflowInspectionAtom,
   type SessionRef,
@@ -83,9 +84,11 @@ export function useDocumentReviewTools() {
       throw new Error(
         'Return to the current run to inspect attached documents or propose new interpretation notes. Historical block evidence remains available through inspectWorkflowBlock.',
       );
-    const ref = store.get(activeSessionAtom);
-    const entry = ref && store.get(workflowLibraryAtom)[ref.workflowId];
-    if (!ref || !entry) throw new Error('Open an exact workflow run first.');
+    const binding = store.get(chatSessionAtom) ?? store.get(activeSessionAtom);
+    if (!binding) throw new Error('Open an exact workflow run first.');
+    const ref = { workflowId: binding.workflowId, runId: binding.runId };
+    const entry = store.get(workflowLibraryAtom)[ref.workflowId];
+    if (!entry) throw new Error('Open an exact workflow run first.');
     return { ref, run: getSession(entry, ref.runId) };
   };
   useCopilotAction({
@@ -126,23 +129,19 @@ export function useDocumentReviewTools() {
           return {
             ...ref,
             revision: run.revision,
-            documents: sources
-              .slice(offset, offset + 20)
-              .map((source) => ({
-                sourceId: source.id,
-                blockId: source.blockId,
-                name: source.name,
-                captured: !!source.extraction,
-                sourceRevision: source.extraction?.revision,
-                issues: source.extraction?.issues,
-              })),
-            reviews: reviews
-              .slice(offset, offset + 20)
-              .map(({ draft, ...review }) => ({
-                ...review,
-                observations: draft.observations.length,
-                questions: draft.questions.length,
-              })),
+            documents: sources.slice(offset, offset + 20).map((source) => ({
+              sourceId: source.id,
+              blockId: source.blockId,
+              name: source.name,
+              captured: !!source.extraction,
+              sourceRevision: source.extraction?.revision,
+              issues: source.extraction?.issues,
+            })),
+            reviews: reviews.slice(offset, offset + 20).map(({ draft, ...review }) => ({
+              ...review,
+              observations: draft.observations.length,
+              questions: draft.questions.length,
+            })),
             nextOffset: offset + 20 < Math.max(sources.length, reviews.length) ? offset + 20 : null,
           };
         }

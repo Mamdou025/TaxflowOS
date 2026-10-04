@@ -26,12 +26,31 @@ try {
   page = await browser.newPage({ serviceWorkers: 'block' });
   page.setDefaultTimeout(30000);
   const failures = [];
+  const chats = new Map();
   page.on('pageerror', (error) => failures.push(error.message));
   await page.route('**/*', (route) => {
     const request = route.request();
     const url = new URL(request.url());
     if (url.origin !== baseURL) return route.abort();
     if (!url.pathname.startsWith('/api/')) return route.continue();
+    if (url.pathname.startsWith('/api/chat/threads')) {
+      const id = url.pathname.split('/')[4];
+      if (request.method() === 'POST' && id) {
+        chats.set(id, request.postDataJSON());
+        return route.fulfill({ json: { ok: true } });
+      }
+      return route.fulfill({
+        json: id
+          ? (chats.get(id) ?? { messages: [] })
+          : {
+              threads: [...chats.keys()].map((id) => ({
+                id,
+                title: 'Workflow conversation',
+                updatedAt: new Date().toISOString(),
+              })),
+            },
+      });
+    }
     const json =
       url.pathname === '/api/session'
         ? syntheticSession
@@ -96,7 +115,10 @@ try {
       timeout: 30000,
     });
     const step = panel.getByRole('list', { name: 'Execution steps' }).locator(':scope > li').last();
-    await step.locator('summary').first().click();
+    const chatToggle = step.locator('[data-step-toggle]');
+    if (await chatToggle.count()) {
+      if ((await chatToggle.getAttribute('aria-expanded')) !== 'true') await chatToggle.click();
+    } else await step.locator('summary').first().click();
     await expect(step.getByText(String(expected), { exact: true }).last()).toBeVisible();
   }
   await attach('records.xlsx', 200);
@@ -107,6 +129,10 @@ try {
   await page
     .getByRole('textbox', { name: 'Ask Scope, or describe a task…' })
     .fill('Explain the mapping before we continue');
+  await panel
+    .locator('[data-step-toggle][data-step-id="pf-document-calculator--document"]')
+    .click();
+  await expect(panel.getByRole('region', { name: 'Step 2: Document', exact: true })).toBeVisible();
   await panel.getByRole('combobox', { name: 'Source action' }).selectOption('add');
   await attach('additional.xlsx', 50);
   await expect(panel.getByRole('button', { name: 'Approve completed results' })).toBeDisabled();
@@ -137,9 +163,22 @@ try {
   panel = page.getByRole('region', { name: 'Workflow execution' }).first();
   await expect(panel.locator('header p').first()).toHaveText(identity);
   await expect(panel).toContainText('Completed — approved');
+  await panel.getByRole('button', { name: 'Verify this run in Build', exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Run verification in Build' })).toBeVisible();
+  await expect(
+    page.getByRole('region', { name: 'Run verification in Build' }).locator('header').first(),
+  ).toContainText(identity);
+  await expect(
+    page.getByRole('region', { name: 'Run verification in Build' }).getByTestId('workflow-canvas'),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('article', { name: 'Block verification', exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel('Verify block', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Test block', exact: true })).toHaveCount(0);
   expect(failures).toEqual([]);
   console.log(
-    `Built-app Excel, Run/Chat, recomputation, approval and reload passed: ${run.output}`,
+    `Built-app Excel, Run/Chat/Build, recomputation, approval and reload passed: ${run.output}`,
   );
 } catch (error) {
   await page

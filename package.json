@@ -5,6 +5,10 @@
   "scripts": {
     "preinstall": "node scripts/check-package-manager.mjs",
     "doctor": "node scripts/check-toolchain.mjs",
+    "explorer:build": "node scripts/architecture-explorer/build.mjs",
+    "explorer:check": "node scripts/architecture-explorer/build.mjs --check",
+    "explorer:watch": "node scripts/architecture-explorer/build.mjs --watch",
+    "test:architecture-explorer": "node --test scripts/architecture-explorer/indexer.test.mjs",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",

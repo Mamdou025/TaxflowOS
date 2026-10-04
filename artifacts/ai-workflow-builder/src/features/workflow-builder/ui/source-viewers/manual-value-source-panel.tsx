@@ -20,6 +20,7 @@ type ManualValueSourcePanelProps = {
   block: WorkflowBlock;
   config: Record<string, unknown>;
   disabled?: boolean;
+  currentWork?: boolean;
   onConfigPatch: (patch: Record<string, unknown>) => void;
   sourceLocked: boolean;
   sourceVersion: number;
@@ -40,7 +41,7 @@ function stringValue(value: unknown, fallback = "") {
 function configuredValue(config: Record<string, unknown>) {
   for (const key of VALUE_KEYS) {
     const raw = config[key];
-    const parsed = typeof raw === "string" ? Number(raw) : raw;
+    const parsed = typeof raw === "string" && raw.trim() ? Number(raw) : raw;
     if (typeof parsed === "number" && Number.isFinite(parsed)) {
       return parsed;
     }
@@ -77,6 +78,7 @@ export function ManualValueSourcePanel({
   onConfigPatch,
   sourceLocked,
   sourceVersion,
+  currentWork,
 }: ManualValueSourcePanelProps) {
   const readOnly = Boolean(disabled) || sourceLocked;
   const committed = configuredValue(config);
@@ -97,9 +99,7 @@ export function ManualValueSourcePanel({
       return;
     }
     const parsed = Number(next);
-    if (Number.isFinite(parsed)) {
-      onConfigPatch({ value: parsed });
-    }
+    onConfigPatch({ value: Number.isFinite(parsed) ? parsed : next });
   };
 
   return (
@@ -107,9 +107,9 @@ export function ManualValueSourcePanel({
       <div>
         <h3 className="font-semibold text-foreground text-sm">Manual Entry</h3>
         <p className="mt-1 text-muted-foreground text-xs leading-relaxed">
-          A value entered by hand and treated as source evidence. Set it while the
+          {currentWork ? 'A source value for this work. Apply to recalculate; the saved workflow stays unchanged.' : <>A value entered by hand and treated as source evidence. Set it while the
           block is a draft — once it is published or used in a run it freezes, and
-          corrections belong downstream in Logic.
+          corrections belong downstream in Logic.</>}
         </p>
       </div>
 
@@ -147,8 +147,8 @@ export function ManualValueSourcePanel({
 
       {committed === null ? (
         <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-amber-700 text-xs leading-relaxed dark:text-amber-400">
-          No value set. The block still runs — it infers one from its label — so the
-          result would rest on a figure nobody entered. Type the value above.
+          {currentWork ? 'Enter a numeric value before running. No inferred value will be used.' : <>No value set. The block still runs — it infers one from its label — so the
+          result would rest on a figure nobody entered. Type the value above.</>}
         </div>
       ) : null}
 

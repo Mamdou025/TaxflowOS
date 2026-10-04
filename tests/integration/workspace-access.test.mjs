@@ -710,6 +710,57 @@ test('chat batch message IDs cannot overwrite another thread or workspace', asyn
   );
   assert.equal((await save(workspace, first, 'Authorized edit')).status, 200);
 });
+test('chat workflow binding roundtrips without granting cross-workspace or viewer writes', async () => {
+  const id = randomUUID();
+  const content = {
+    chatAgent: 'sina',
+    selectedChatAgent: 'microsina',
+    workflowBinding: {
+      workflowId: 'synthetic-workflow',
+      runId: 'exact-old-run',
+      afterMessageId: 'opening-message',
+    },
+  };
+  const messages = [
+    { id: `${id}:workflow-binding`, role: 'system', seq: 0, content },
+    {
+      id: `${id}:sina-reply`,
+      role: 'assistant',
+      seq: 1,
+      content: { text: 'First reply', authorAgent: 'sina' },
+    },
+    {
+      id: `${id}:micro-reply`,
+      role: 'assistant',
+      seq: 2,
+      content: { text: 'Next reply', authorAgent: 'microsina' },
+    },
+  ];
+  const body = { messages };
+  assert.equal(
+    (await owner.request(`/chat/threads/${id}/messages`, { workspace, method: 'POST', body }))
+      .status,
+    200,
+  );
+  const restored = await (await viewer.request(`/chat/threads/${id}`, { workspace })).json();
+  assert.deepEqual(restored.messages[0].content, content);
+  assert.deepEqual(
+    restored.messages.map((message) => ({
+      id: message.id,
+      role: message.role,
+      seq: message.seq,
+      content: message.content,
+    })),
+    messages,
+  );
+  assert.equal(
+    (await viewer.request(`/chat/threads/${id}/messages`, { workspace, method: 'POST', body }))
+      .status,
+    403,
+  );
+  assert.equal((await owner.request(`/chat/threads/${id}`, { workspace: other })).status, 404);
+});
+
 test('only Owners manage membership and concurrent changes preserve a last Owner', async () => {
   assert.equal(
     (

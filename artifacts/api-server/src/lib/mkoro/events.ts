@@ -86,7 +86,11 @@ export async function recordEvents(scope: WorkerScope, events: MkoroWorkerEvent[
         task.conversation_id,
       ]);
     }
-    await client.query('UPDATE mkoro_workers SET last_seen_at=now() WHERE id=$1', [scope.workerId]);
+    const worker = await client.query(
+      'UPDATE mkoro_workers SET last_seen_at=now() WHERE id=$1 AND token_hash=$2 AND revoked_at IS NULL RETURNING id',
+      [scope.workerId, scope.credentialHash],
+    );
+    if (!worker.rowCount) throw new MkoroError(401, 'Companion authorization changed. Reconnect.');
     return events.length; // Idempotent retries acknowledge the complete, atomically accepted batch.
   });
 }

@@ -166,7 +166,7 @@
   {
     "type": "function",
     "name": "controlWorkflowRun",
-    "description": "Control the exact active workflow: pause, resume, rerun one existing block, or add/replace the attached source in an existing document source block. Block runs use real current dependencies, preserve old results and invalidate downstream results. Never use this to change mapping rules; edit Build and start a new version for rule changes. Source rows come from the actual attachment, never model-generated JSON. Approval is presented before executing or changing sources. Final result approval remains a user action in the panel.",
+    "description": "Control the exact active workflow: pause, resume, end, propose inputs using valuesJson, rerun one existing block, or add/replace the attached source in an existing document source block. Block runs use real current dependencies, preserve old results and invalidate downstream results. Input proposals require user review and apply only to current work, recalculating affected results. Pause before proposing changes while executing. Never use this to change mapping rules; edit Build and start a new version for rule changes. Source rows come from the actual attachment, never model-generated JSON. Approval is presented before executing or changing sources. Final result approval remains a user action in the panel.",
     "parameters": {
       "type": "object",
       "properties": {
@@ -175,6 +175,8 @@
           "enum": [
             "pause",
             "resume",
+            "end",
+            "inputs",
             "block",
             "add_source",
             "replace_source"
@@ -182,6 +184,10 @@
         },
         "blockId": {
           "type": "string"
+        },
+        "valuesJson": {
+          "type": "string",
+          "description": "JSON object of requested input field changes. Use exact inputKeys from the run context. Never fabricate file rows."
         }
       },
       "required": [

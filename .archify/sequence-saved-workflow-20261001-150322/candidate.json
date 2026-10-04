@@ -1,0 +1,141 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Run a saved workflow — two execution routes",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "backend": { "label": "Workflow logic" },
+        "database": { "label": "Saved state" },
+        "security": { "label": "Access / validation" },
+        "messagebus": { "label": "Sync / recovery" }
+      }
+    },
+    "output": ".archify/sequence-saved-workflow-20261001-150322/saved-workflow.html",
+    "repository": {
+      "url": "https://github.com/Mamdou025/TaxflowOS.git",
+      "revision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "link_mode": "local-only"
+    }
+  },
+  "lanes": [
+    { "id": "browser", "label": "Browser preview + library sync" },
+    { "id": "server", "label": "Durable run: server + PostgreSQL" },
+    { "id": "exceptions", "label": "Denied, invalid or interrupted", "variant": "exception" }
+  ],
+  "mainPath": ["choose", "access", "admit", "queue", "worker", "job", "read"],
+  "nodes": [
+    {
+      "id": "choose", "lane": "browser", "col": 0, "type": "frontend",
+      "label": "Choose a version", "sublabel": "Preview or durable run", "width": 148,
+      "sources": [{ "path": "artifacts/ai-workflow-builder/src/features/workflows-hub/saved-workflow-run.tsx", "line": 172, "end_line": 203, "label": "Version selector and both actions" }]
+    },
+    {
+      "id": "version", "lane": "browser", "col": 1, "type": "backend",
+      "label": "Core command", "sublabel": "Clone exact saved version", "width": 148,
+      "sources": [{ "path": "lib/workflow-core/src/application/commands.ts", "line": 148, "end_line": 191, "label": "Execute, validate and record" }, { "path": "lib/workflow-core/src/application/commands.ts", "line": 81, "end_line": 115, "label": "Immutable save and exact lookup" }]
+    },
+    {
+      "id": "preview", "lane": "browser", "col": 2, "type": "backend",
+      "label": "Browser runner", "sublabel": "Replay saved inputs", "width": 148,
+      "sources": [{ "path": "artifacts/ai-workflow-builder/src/shared/workflow-engine/workflow/execute.ts", "line": 1, "end_line": 38, "label": "Browser adapter injects tools" }, { "path": "lib/workflow-executors/src/execution/blocks/source/http-json/run.ts", "line": 22, "end_line": 85, "label": "Pinned rows and missing-input errors" }, { "path": "lib/workflow-executors/src/document-evidence.ts", "line": 5, "end_line": 65, "label": "Replay captured document evidence" }]
+    },
+    {
+      "id": "local", "lane": "browser", "col": 3, "type": "database",
+      "label": "Local run record", "sublabel": "Result linked to version", "width": 148,
+      "sources": [{ "path": "lib/workflow-core/src/application/commands.ts", "line": 123, "end_line": 131, "label": "Append immutable run result" }, { "path": "artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-execution.ts", "line": 112, "end_line": 165, "label": "Record session and show result" }, { "path": "artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-library.ts", "line": 28, "end_line": 46, "label": "Local backup and queued sync" }]
+    },
+    {
+      "id": "sync", "lane": "browser", "col": 4, "type": "messagebus",
+      "label": "Library sync", "sublabel": "Async revision check", "width": 148,
+      "sources": [{ "path": "artifacts/ai-workflow-builder/src/features/workflows-hub/services/workflow-sync-service.ts", "line": 85, "end_line": 142, "label": "Dirty state, save and conflicts" }]
+    },
+    {
+      "id": "library", "lane": "browser", "col": 5, "type": "database",
+      "label": "Server library", "sublabel": "Authorized write succeeds", "width": 148,
+      "sources": [{ "path": "artifacts/api-server/src/routes/workflow-library.ts", "line": 19, "end_line": 51, "label": "Validate backup; compare revision" }, { "path": "artifacts/api-server/src/security/access.ts", "line": 96, "end_line": 121, "label": "Server read/write/execute policy" }]
+    },
+    {
+      "id": "access", "lane": "server", "col": 0, "type": "security",
+      "label": "API access gate", "sublabel": "Session + execution role", "width": 148,
+      "sources": [{ "path": "artifacts/api-server/src/security/access.ts", "line": 13, "end_line": 121, "label": "Session, membership and operation" }, { "path": "artifacts/api-server/src/app.ts", "line": 74, "end_line": 100, "label": "Checks wrap platform routes" }, { "path": "lib/api-zod/src/access.ts", "line": 4, "end_line": 10, "label": "Owners and editors can execute" }]
+    },
+    {
+      "id": "admit", "lane": "server", "col": 1, "type": "security",
+      "label": "Admit exact version", "sublabel": "Server copy + tools exist", "width": 148,
+      "sources": [{ "path": "artifacts/api-server/src/routes/workflow-runs.ts", "line": 49, "end_line": 97, "label": "Read saved version before enqueue" }, { "path": "artifacts/api-server/src/lib/workflow-runs/executor.ts", "line": 7, "end_line": 13, "label": "Reject unsupported tool IDs" }]
+    },
+    {
+      "id": "queue", "lane": "server", "col": 2, "type": "database",
+      "label": "Persist queued job", "sublabel": "Definition + request ID", "width": 148,
+      "sources": [{ "path": "artifacts/api-server/src/lib/workflow-runs/queue.ts", "line": 13, "end_line": 70, "label": "Insert, deduplicate and claim" }, { "path": "artifacts/api-server/src/routes/workflow-runs.ts", "line": 84, "end_line": 104, "label": "Accepted, replayed or conflict" }]
+    },
+    {
+      "id": "worker", "lane": "server", "col": 3, "type": "backend",
+      "label": "Worker executes", "sublabel": "Shared graph + tools", "width": 148,
+      "sources": [{ "path": "artifacts/api-server/src/lib/workflow-run-worker.ts", "line": 24, "end_line": 75, "label": "Poll, claim and execute jobs" }, { "path": "artifacts/api-server/src/lib/workflow-runs/executor.ts", "line": 15, "end_line": 32, "label": "Inject shared registry into graph" }, { "path": "lib/workflow-executors/src/tools/registry.ts", "line": 1, "end_line": 18, "label": "Shared executor registry" }]
+    },
+    {
+      "id": "job", "lane": "server", "col": 4, "type": "database",
+      "label": "Persist job result", "sublabel": "Success / error / cancelled", "width": 148,
+      "sources": [{ "path": "artifacts/api-server/src/lib/workflow-runs/queue.ts", "line": 73, "end_line": 85, "label": "Persist result or cancellation" }, { "path": "artifacts/api-server/src/lib/workflow-runs/queue.ts", "line": 105, "end_line": 138, "label": "Failure and cancellation writes" }, { "path": "artifacts/api-server/src/routes/workflow-runs.ts", "line": 147, "end_line": 180, "label": "Manual retry reuses original definition" }]
+    },
+    {
+      "id": "read", "lane": "server", "col": 5, "type": "frontend",
+      "label": "Read durable status", "sublabel": "Workspace-scoped polling", "width": 148,
+      "sources": [{ "path": "artifacts/ai-workflow-builder/src/features/workflows-hub/saved-workflow-run.tsx", "line": 44, "end_line": 58, "label": "Poll pending and running jobs" }, { "path": "artifacts/api-server/src/routes/workflow-runs.ts", "line": 107, "end_line": 130, "label": "Read APIs return persisted jobs" }, { "path": "artifacts/api-server/src/lib/workflow-runs/queue.ts", "line": 141, "end_line": 169, "label": "Reads filter by current workspace" }]
+    },
+    {
+      "id": "denied", "lane": "exceptions", "col": 0, "type": "security",
+      "label": "Access denied", "sublabel": "No queued execution", "width": 148,
+      "sources": [{ "path": "artifacts/api-server/src/security/access.ts", "line": 72, "end_line": 105, "label": "Missing membership or denied role" }]
+    },
+    {
+      "id": "invalid", "lane": "exceptions", "col": 1, "type": "security",
+      "label": "Version rejected", "sublabel": "Missing copy or tool", "width": 148,
+      "sources": [{ "path": "artifacts/api-server/src/routes/workflow-runs.ts", "line": 55, "end_line": 81, "label": "404 missing version; 422 tool" }]
+    },
+    {
+      "id": "retry", "lane": "exceptions", "col": 3, "type": "messagebus",
+      "label": "Retry or stop", "sublabel": "Throw / stalled worker", "width": 148,
+      "sources": [{ "path": "artifacts/api-server/src/lib/workflow-run-worker.ts", "line": 62, "end_line": 74, "label": "Thrown errors retry or exhaust" }, { "path": "artifacts/api-server/src/lib/workflow-runs/queue.ts", "line": 172, "end_line": 192, "label": "Recover stale claims or mark error" }]
+    }
+  ],
+  "edges": [
+    { "id": "preview-choice", "from": "choose", "to": "version", "label": "Preview" },
+    { "id": "invoke-browser", "from": "version", "to": "preview" },
+    { "id": "record-local", "from": "preview", "to": "local" },
+    { "id": "schedule-sync", "from": "local", "to": "sync", "variant": "dashed", "role": "async" },
+    { "id": "sync-success", "from": "sync", "to": "library", "label": "Save accepted", "variant": "dashed", "role": "async" },
+    { "id": "durable-choice", "from": "choose", "to": "access", "label": "Durably", "variant": "emphasis" },
+    { "id": "authorized", "from": "access", "to": "admit", "label": "Allowed", "variant": "security" },
+    { "id": "admitted", "from": "admit", "to": "queue", "label": "Valid", "variant": "emphasis" },
+    { "id": "claim-job", "from": "queue", "to": "worker", "label": "Claim", "variant": "emphasis", "role": "async" },
+    { "id": "complete-job", "from": "worker", "to": "job", "label": "Complete", "variant": "emphasis" },
+    { "id": "poll-result", "from": "job", "to": "read", "label": "GET", "variant": "dashed", "role": "return" },
+    { "id": "denied-role", "from": "access", "to": "denied", "label": "Denied", "variant": "security", "role": "error" },
+    { "id": "invalid-version", "from": "admit", "to": "invalid", "label": "Reject", "variant": "security", "role": "error" },
+    { "id": "worker-error", "from": "worker", "to": "retry", "label": "Interrupted", "variant": "security", "role": "error" },
+    { "id": "requeue", "from": "retry", "to": "queue", "label": "Attempts remain", "variant": "dashed", "role": "return" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Two routes, one saved definition", "items": [
+      "Preview runs in this browser and requires the tab to stay open. The command clones the chosen version before execution.",
+      "Durable runs use the server library's exact version. The queued definition survives closing the tab; an enabled worker processes it.",
+      "Both runners inject the shared executor registry into workflow-core. Browser normalization preserves legacy canvas defaults."
+    ] },
+    { "dot": "amber", "title": "Inputs, computation and saving differ", "items": [
+      "HTTP source rows and captured document evidence are replayed from saved configuration. Running does not refresh those sources.",
+      "Missing HTTP input fails unless example data was explicitly enabled; malformed document captures fail. Block findings remain in the result.",
+      "A preview result is recorded locally before asynchronous library sync. A failed save stays dirty; a revision conflict blocks later writes."
+    ] },
+    { "dot": "rose", "title": "Access, failures and recovery", "items": [
+      "Durable POST, cancel and retry require a current session and Owner/Editor membership. Viewers can read; local preview is a separate path.",
+      "A missing server version or unavailable tool rejects admission. Wait for a successful library save before starting a newly saved version durably.",
+      "Worker throws retry within the attempt limit; block errors are recorded. A cancellation flag suppresses the completed result; it is not mid-block interruption.",
+      "The UI can retry a failed/cancelled run using its original definition. Evidence describes committed code at 444d6e0, not a live execution test."
+    ] }
+  ]
+}

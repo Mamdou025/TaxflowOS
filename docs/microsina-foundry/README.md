@@ -144,28 +144,36 @@ This is not a claim about Azure's service-level retention or logging policy.
 Workspace fiscal settings and additional operator instructions still layer onto
 the dynamic context for both agents; Agent Lab is not fully migrated by this change.
 
-The Chat agent selector is enabled only in an empty, unsaved conversation.
-Its choice is saved as `chatAgent` metadata on the first stored message, outside
-the model text. Legacy records without metadata select Sina; unsupported values
-fail restoration rather than choosing another provider. A browser-scoped cache
-keeps the selected agent during reload, while saved metadata restores it across
-devices. Existing server session and workspace membership checks remain in force.
-Workflow approval requests use the selected agent ID. A grant scoped to Sina is
-not automatically a grant for MicroSina.
+The Chat agent selector chooses who answers next in the same conversation, including
+its current workflow. It waits for an active reply or tool turn to settle before
+allowing a switch. Switching does not execute a workflow or alter computer tasks.
+`selectedChatAgent` on the first stored message records the next provider, while
+`authorAgent` on assistant and tool rows preserves each turn's author. These fields
+are metadata outside model text. The original `chatAgent` remains the fallback for
+legacy rows; records without it belong to Sina. Unsupported agent values fail
+restoration rather than being reassigned. Changing only the selector also autosaves
+the choice for an existing chat. Existing server session and workspace membership
+checks remain in force.
+
+New workflow requests use the agent that creates them. Pending approval cards keep
+their originating agent, request fingerprint and approval scope after a switch;
+they are not new requests from the selected agent. A grant scoped to Sina is not
+automatically a grant for MicroSina. Session-action previews remain transient and
+expire on reload as before; durable workflow proposal results retain their author.
 
 ### Required backend configuration
 
 Place these variables in the API server's environment (Replit Secrets for the
 Replit deployment), never in frontend `VITE_` variables or source control:
 
-| Variable                    | Meaning                                                                               |
-| --------------------------- | ------------------------------------------------------------------------------------- |
-| `AZURE_AI_PROJECT_ENDPOINT` | `https://fapi-resource.services.ai.azure.com/api/projects/fapi`                       |
-| `MICROSINA_AGENT_VERSION`   | `4` locally, with public toolbox version 1; change deliberately after verification |
+| Variable                       | Meaning                                                                                 |
+| ------------------------------ | --------------------------------------------------------------------------------------- |
+| `AZURE_AI_PROJECT_ENDPOINT`    | `https://fapi-resource.services.ai.azure.com/api/projects/fapi`                         |
+| `MICROSINA_AGENT_VERSION`      | `4` locally, with public toolbox version 1; change deliberately after verification      |
 | `MICROSINA_PUBLIC_TOOL_SEARCH` | Optional `true` after verifying a version with public toolbox v1 attached; defaults off |
-| `AZURE_TENANT_ID`           | Microsoft Entra directory containing the application identity                         |
-| `AZURE_CLIENT_ID`           | Application/client ID of the backend identity                                         |
-| `AZURE_CLIENT_SECRET`       | Secret value for that identity; keep it only in server secrets                        |
+| `AZURE_TENANT_ID`              | Microsoft Entra directory containing the application identity                           |
+| `AZURE_CLIENT_ID`              | Application/client ID of the backend identity                                           |
+| `AZURE_CLIENT_SECRET`          | Secret value for that identity; keep it only in server secrets                          |
 
 The identity needs Foundry Agent Consumer at MicroSina's agent scope (or a parent
 scope). Agent-scoped access requires the agent endpoint used by this adapter;
@@ -427,3 +435,12 @@ Foundry ownership and unverified model parity. The product blueprint is unchange
   After the user created version 3, a live streamed function call and synthetic
   result round trip passed. Actual application tool handlers, approval UI, saved
   chat behavior with the live provider and Replit activation remain unverified.
+
+## Pending tool-schema update: conversational workflow inputs
+
+The repository tool catalog now includes `controlWorkflowRun` actions `inputs` and
+`end`, with optional `valuesJson`. Input changes remain explicitly reviewed and
+limited to current work. The locally registered Sina tools expose this schema.
+Existing saved Foundry agent versions need a separate authorized catalog import
+before MicroSina can select these new arguments. This implementation does not
+update or publish the remote agent.

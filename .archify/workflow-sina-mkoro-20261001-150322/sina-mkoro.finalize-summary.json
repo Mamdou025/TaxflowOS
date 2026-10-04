@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "workflow",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\workflow-sina-mkoro-20261001-150322\\candidate.json",
+    "sha256": "103e289cd6c07096335118e99b1469a9c55a16ee631b6f82d07a3bd9fea4103e",
+    "bytes": 16889
+  },
+  "artifact": {
+    "path": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\workflow-sina-mkoro-20261001-150322\\sina-mkoro.html",
+    "sha256": "3d341ab367113afe63cf7c4390d909d066cd83bb6e160155a387430b565961ed",
+    "bytes": 782342
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\workflow-sina-mkoro-20261001-150322\\sina-mkoro.finalize.json",
+    "summaryReceipt": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\workflow-sina-mkoro-20261001-150322\\sina-mkoro.finalize-summary.json",
+    "browserCheckReceipt": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\workflow-sina-mkoro-20261001-150322\\sina-mkoro.browser-check.json"
+  },
+  "update": {
+    "status": "unavailable",
+    "installedVersion": null,
+    "availableVersion": null,
+    "releaseNotes": null,
+    "checkedAt": null,
+    "source": null,
+    "noticeRequired": false,
+    "noticeText": null,
+    "reason": "disabled"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 9712,
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "routesOverSuggestedBends": 4,
+      "routesOverSuggestedStretch": 3
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [],
+      "detours": [
+        {
+          "relationship": {
+            "id": "cancel",
+            "from": "stop",
+            "to": "poll",
+            "label": "cancel on poll",
+            "collectionIndex": 3,
+            "artifactIndex": 4
+          },
+          "bends": 2,
+          "stretch": 6.131,
+          "directCorridorBlockers": [
+            {
+              "id": "goose",
+              "label": "Goose via ACP",
+              "box": [
+                702.4,
+                578,
+                168,
+                68
+              ]
+            }
+          ]
+        },
+        {
+          "relationship": {
+            "id": "live_progress",
+            "from": "goose",
+            "to": "events",
+            "label": "progress + outcome",
+            "collectionIndex": 5,
+            "artifactIndex": 6
+          },
+          "bends": 4,
+          "stretch": 1.054
+        },
+        {
+          "relationship": {
+            "id": "native_scope",
+            "from": "sina",
+            "to": "native",
+            "label": "platform work",
+            "collectionIndex": 6,
+            "artifactIndex": 7
+          },
+          "bends": 3,
+          "stretch": 1.209,
+          "directCorridorBlockers": [
+            {
+              "id": "handoff",
+              "label": "Computer task",
+              "box": [
+                48,
+                186,
+                168,
+                68
+              ]
+            }
+          ]
+        },
+        {
+          "relationship": {
+            "id": "offer",
+            "from": "goose",
+            "to": "tool_request",
+            "label": "when offered",
+            "collectionIndex": 7,
+            "artifactIndex": 8
+          },
+          "bends": 3,
+          "stretch": 1.824
+        },
+        {
+          "relationship": {
+            "id": "prompt",
+            "from": "poll",
+            "to": "goose",
+            "label": "start turn",
+            "collectionIndex": 10,
+            "artifactIndex": 11
+          },
+          "bends": 3,
+          "stretch": 1.293
+        },
+        {
+          "relationship": {
+            "id": "report_after_choice",
+            "from": "resume",
+            "to": "events",
+            "label": "",
+            "collectionIndex": 13,
+            "artifactIndex": 14
+          },
+          "bends": 2,
+          "stretch": 3.12
+        }
+      ],
+      "truncated": false
+    },
+    "hints": [
+      "goose → events needs 4 bends: move node goose or events so they share a row or column with matching centers, or sit diagonally with a clear corner.",
+      "goose → tool_request needs 3 bends: move node goose or tool_request so they share a row or column with matching centers, or sit diagonally with a clear corner.",
+      "poll → goose needs 3 bends: move node poll or goose so they share a row or column with matching centers, or sit diagonally with a clear corner.",
+      "resume → events needs 2 bends: move node resume or events so they share a row or column with matching centers, or sit diagonally with a clear corner."
+    ],
+    "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
+  }
+}

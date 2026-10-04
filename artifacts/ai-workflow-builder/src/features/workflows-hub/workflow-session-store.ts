@@ -1,3 +1,4 @@
+import { workspaceContext } from '@/platform/auth/workspace-context';
 import { atom } from 'jotai';
 import type { Store } from 'jotai/vanilla/store';
 import { createWorkflow, saveVersion, getSavedVersion } from '@workspace/workflow-core/commands';
@@ -22,6 +23,25 @@ export const workflowInspectionAtom = atom<
   (SessionRef & { blockId: string; attemptIndex: number | null }) | null
 >(null);
 export const activeSessionAtom = atom<SessionRef | null>(null);
+/** Exact run attached to this conversation; persisted by chat, never inferred from latest. */
+export const chatSessionAtom = atom<(SessionRef & { afterMessageId?: string | null }) | null>(null);
+/** Read the live chat at the moment of binding, without copying an execution into chat. */
+export const chatMessageAnchorAtom = atom<{ read: () => string | null } | null>(null);
+export function bindChatSession(store: Pick<Store, 'get' | 'set'>, ref: SessionRef) {
+  const current = store.get(chatSessionAtom);
+  const sameRun = current?.workflowId === ref.workflowId && current.runId === ref.runId;
+  store.set(
+    chatSessionAtom,
+    sameRun
+      ? current
+      : {
+          ...ref,
+          afterMessageId: store.get(chatMessageAnchorAtom)?.read() ?? null,
+        },
+  );
+  store.set(activeSessionAtom, ref);
+  store.set(workflowInspectionAtom, null);
+}
 export const chatWorkflowIdsAtom = atom<string[]>([]);
 export function openWorkflowSession(
   store: Pick<Store, 'get' | 'set'>,
@@ -44,6 +64,7 @@ export function openWorkflowSession(
     else entry = createWorkflow(`custom:${crypto.randomUUID()}`, id, definition);
   }
   let session = !fresh ? entry.sessions?.at(-1) : undefined;
+  if (session?.endedAt) session = undefined;
   if (version !== undefined && session?.version !== version) session = undefined;
   if (!session) {
     if (version === undefined) entry = saveVersion(entry);
@@ -77,14 +98,18 @@ export function showSessionInRun(store: Pick<Store, 'get' | 'set'>, ref: Session
 }
 
 const advancing = new Set<string>();
-export const isSessionAdvancing = (id: string) => advancing.has(id);
+const executionKey = (id: string) => `${workspaceContext?.workspace.id ?? ''}:${id}`;
+export const isSessionAdvancing = (id: string) => advancing.has(executionKey(id));
 /** Yield between real block calls, so Pause can take effect before the next block. */
 export async function advanceSession(store: Pick<Store, 'get' | 'set'>, ref: SessionRef) {
-  if (advancing.has(ref.runId)) return;
-  advancing.add(ref.runId);
+  const key = executionKey(ref.runId);
+  if (advancing.has(key)) return;
+  advancing.add(key);
+  const workspaceId = workspaceContext?.workspace.id;
   try {
     while (true) {
       await new Promise<void>((resolve) => setTimeout(resolve, 30));
+      if (workspaceContext?.workspace.id !== workspaceId) return;
       const entry = store.get(workflowLibraryAtom)[ref.workflowId];
       if (!entry) return;
       const session = getSession(entry, ref.runId);
@@ -94,16 +119,35 @@ export async function advanceSession(store: Pick<Store, 'get' | 'set'>, ref: Ses
         (step) => step.ready && ['pending', 'outdated'].includes(step.status),
       );
       if (!next) {
-        applySessionAction(store, ref, session.revision, { kind: 'pause' });
+        const complete =
+          context.steps.length > 0 &&
+          context.steps.every((step) => ['success', 'warning', 'reviewed'].includes(step.status));
+        applySessionAction(store, ref, session.revision, { kind: complete ? 'record' : 'pause' });
         return;
       }
       applySessionAction(store, ref, session.revision, { kind: 'block', blockId: next.id });
     }
   } finally {
-    advancing.delete(ref.runId);
+    advancing.delete(key);
     const entry = store.get(workflowLibraryAtom)[ref.workflowId];
     const session = entry?.sessions?.find((item) => item.id === ref.runId);
-    if (session && !session.paused)
+    if (workspaceContext?.workspace.id === workspaceId && session && !session.paused)
       applySessionAction(store, ref, session.revision, { kind: 'pause' });
   }
+}
+
+/** All surfaces submit inputs through this path; only Apply starts recalculation. */
+export async function submitSessionInput(
+  store: Pick<Store, 'get' | 'set'>,
+  ref: SessionRef,
+  revision: number,
+  action: Extract<SessionAction, { kind: 'inputs' | 'source' }>,
+) {
+  applySessionAction(store, ref, revision, action);
+  const entry = store.get(workflowLibraryAtom)[ref.workflowId];
+  const session = getSession(entry, ref.runId);
+  // Multiple missing sources are collected before the Trigger admits execution.
+  if (sessionContext(entry, session).steps.some((step) => step.inputRequired)) return;
+  applySessionAction(store, ref, session.revision, { kind: 'resume' });
+  await advanceSession(store, ref);
 }

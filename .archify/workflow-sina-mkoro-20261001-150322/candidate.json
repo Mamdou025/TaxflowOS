@@ -1,0 +1,614 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Sina delegates a computer task to Mkoro",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "output": ".archify/workflow-sina-mkoro-20261001-150322/sina-mkoro.html",
+    "repository": {
+      "url": "https://github.com/Mamdou025/TaxflowOS.git",
+      "revision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "link_mode": "local-only"
+    }
+  },
+  "lanes": [
+    {
+      "id": "chat",
+      "label": "Sina chat · select the right owner"
+    },
+    {
+      "id": "server",
+      "label": "TaxflowOS API · admit and queue"
+    },
+    {
+      "id": "computer",
+      "label": "Personal computer · outbound companion + local Goose"
+    },
+    {
+      "id": "control",
+      "label": "Server-owned decisions · current execution permission",
+      "variant": "exception"
+    },
+    {
+      "id": "result",
+      "label": "Observed outcome · report, persist, review"
+    }
+  ],
+  "mainPath": [
+    "sina",
+    "handoff",
+    "saved_chat",
+    "access",
+    "admission",
+    "queue",
+    "poll",
+    "goose",
+    "tool_request",
+    "decision",
+    "resume",
+    "events",
+    "progress"
+  ],
+  "nodes": [
+    {
+      "id": "sina",
+      "lane": "chat",
+      "col": 0,
+      "type": "frontend",
+      "label": "Sina request",
+      "sublabel": "one user conversation",
+      "width": 168,
+      "sources": [
+        {
+          "path": "artifacts/ai-workflow-builder/src/features/assistant/ui/use-mkoro-delegation.tsx",
+          "line": 128,
+          "end_line": 201,
+          "label": "Sina computer tool"
+        }
+      ],
+      "yOffset": -50
+    },
+    {
+      "id": "handoff",
+      "lane": "chat",
+      "col": 0,
+      "type": "backend",
+      "label": "Computer task",
+      "sublabel": "external or local target",
+      "tag": "Native tools cannot do step",
+      "width": 168,
+      "sources": [
+        {
+          "path": "artifacts/ai-workflow-builder/src/features/assistant/ui/use-mkoro-delegation.tsx",
+          "line": 128,
+          "end_line": 184,
+          "label": "Bounded handoff fields"
+        },
+        {
+          "path": "scripts/mkoro/delegation.mjs",
+          "line": 24,
+          "end_line": 72,
+          "label": "Companion validates scope"
+        }
+      ],
+      "yOffset": 50
+    },
+    {
+      "id": "saved_chat",
+      "lane": "chat",
+      "col": 1,
+      "type": "frontend",
+      "label": "Save chat first",
+      "sublabel": "stable request identity",
+      "tag": "One job per user message",
+      "width": 168,
+      "sources": [
+        {
+          "path": "artifacts/ai-workflow-builder/src/features/assistant/runtime/computer-delegation.ts",
+          "line": 10,
+          "end_line": 69,
+          "label": "Save, scope and retry ID"
+        }
+      ],
+      "yOffset": 50
+    },
+    {
+      "id": "native",
+      "lane": "server",
+      "col": 0,
+      "type": "backend",
+      "label": "Sina keeps scope",
+      "sublabel": "workflows + sources",
+      "tag": "Retrieval and web search",
+      "width": 168,
+      "sources": [
+        {
+          "path": "artifacts/ai-workflow-builder/src/features/assistant/ui/use-mkoro-delegation.tsx",
+          "line": 90,
+          "end_line": 108,
+          "label": "Platform responsibilities"
+        },
+        {
+          "path": "scripts/mkoro/delegation.mjs",
+          "line": 66,
+          "end_line": 72,
+          "label": "No platform tool handoff"
+        }
+      ]
+    },
+    {
+      "id": "access",
+      "lane": "server",
+      "col": 1,
+      "type": "security",
+      "label": "Session + role",
+      "sublabel": "membership + execute",
+      "tag": "Deny if not authorized",
+      "width": 168,
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/app.ts",
+          "line": 73,
+          "end_line": 100,
+          "label": "Middleware order"
+        },
+        {
+          "path": "artifacts/api-server/src/security/access.ts",
+          "line": 13,
+          "end_line": 46,
+          "label": "Actor from server session"
+        },
+        {
+          "path": "artifacts/api-server/src/security/access.ts",
+          "line": 72,
+          "end_line": 121,
+          "label": "Current membership and role"
+        }
+      ]
+    },
+    {
+      "id": "admission",
+      "lane": "server",
+      "col": 2,
+      "type": "security",
+      "label": "Personal admission",
+      "sublabel": "chat + actor + workspace",
+      "tag": "Online, capable, idle worker",
+      "width": 168,
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/lib/mkoro/delegations.ts",
+          "line": 27,
+          "end_line": 89,
+          "label": "Target, ownership, retry gates"
+        },
+        {
+          "path": "lib/api-zod/src/mkoro.ts",
+          "line": 257,
+          "end_line": 290,
+          "label": "Reject platform targets"
+        }
+      ]
+    },
+    {
+      "id": "queue",
+      "lane": "server",
+      "col": 3,
+      "type": "database",
+      "label": "Persist + queue",
+      "sublabel": "task and command in SQL",
+      "tag": "Exact retry returns same task",
+      "width": 168,
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/lib/mkoro/delegations.ts",
+          "line": 37,
+          "end_line": 63,
+          "label": "Locked retry deduplication"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/mkoro/delegations.ts",
+          "line": 91,
+          "end_line": 139,
+          "label": "API writes task and command"
+        }
+      ]
+    },
+    {
+      "id": "poll",
+      "lane": "computer",
+      "col": 3,
+      "type": "messagebus",
+      "label": "Outbound poll",
+      "sublabel": "worker bearer token",
+      "tag": "API checks current access",
+      "width": 168,
+      "sources": [
+        {
+          "path": "scripts/mkoro/worker.mjs",
+          "line": 31,
+          "end_line": 66,
+          "label": "Outbound worker-only HTTP"
+        },
+        {
+          "path": "scripts/mkoro/worker.mjs",
+          "line": 223,
+          "end_line": 280,
+          "label": "Poll and handle commands"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/mkoro/workers.ts",
+          "line": 58,
+          "end_line": 69,
+          "label": "Worker token and membership"
+        }
+      ],
+      "yOffset": -70
+    },
+    {
+      "id": "goose",
+      "lane": "computer",
+      "col": 3,
+      "type": "backend",
+      "label": "Goose via ACP",
+      "sublabel": "local computer runtime",
+      "tag": "Approval mode every turn",
+      "width": 168,
+      "sources": [
+        {
+          "path": "scripts/mkoro/acp-client.mjs",
+          "line": 20,
+          "end_line": 58,
+          "label": "Spawn local Goose ACP"
+        },
+        {
+          "path": "scripts/mkoro/worker.mjs",
+          "line": 283,
+          "end_line": 343,
+          "label": "Set mode before prompt"
+        },
+        {
+          "path": "scripts/mkoro/delegation.mjs",
+          "line": 66,
+          "end_line": 72,
+          "label": "External/local work only"
+        }
+      ],
+      "yOffset": 70
+    },
+    {
+      "id": "tool_request",
+      "lane": "computer",
+      "col": 4,
+      "type": "security",
+      "label": "Tool permission",
+      "sublabel": "offered one-action choices",
+      "tag": "Waits for a decision",
+      "width": 168,
+      "sources": [
+        {
+          "path": "scripts/mkoro/worker.mjs",
+          "line": 382,
+          "end_line": 415,
+          "label": "Allow once or reject once"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/mkoro/events.ts",
+          "line": 50,
+          "end_line": 84,
+          "label": "Persist pending permission"
+        }
+      ],
+      "yOffset": 70
+    },
+    {
+      "id": "decision",
+      "lane": "control",
+      "col": 4,
+      "type": "security",
+      "label": "One-action decision",
+      "sublabel": "manual / enabled auto-allow",
+      "tag": "Offered one-action choices only",
+      "width": 168,
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/lib/mkoro/tasks.ts",
+          "line": 151,
+          "end_line": 190,
+          "label": "Offered manual choice only"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/mkoro/automatic-approval.ts",
+          "line": 5,
+          "end_line": 47,
+          "label": "Optional server auto allow"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/mkoro/workers.ts",
+          "line": 112,
+          "end_line": 137,
+          "label": "Decision returned on poll"
+        }
+      ]
+    },
+    {
+      "id": "stop",
+      "lane": "control",
+      "col": 3,
+      "type": "security",
+      "label": "User chooses Stop",
+      "sublabel": "own task + execute role",
+      "tag": "Cancel queued or running task",
+      "width": 168,
+      "sources": [
+        {
+          "path": "artifacts/ai-workflow-builder/src/features/assistant/mkoro/mkoro-chat-tasks.tsx",
+          "line": 101,
+          "end_line": 110,
+          "label": "Stop in the task card"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/mkoro/tasks.ts",
+          "line": 123,
+          "end_line": 149,
+          "label": "Server cancellation record"
+        },
+        {
+          "path": "scripts/mkoro/worker.mjs",
+          "line": 440,
+          "end_line": 447,
+          "label": "Cancel ACP and permissions"
+        }
+      ]
+    },
+    {
+      "id": "resume",
+      "lane": "result",
+      "col": 4,
+      "type": "backend",
+      "label": "Goose continues",
+      "sublabel": "chosen decision over ACP",
+      "tag": "Allow once or reject once",
+      "width": 168,
+      "sources": [
+        {
+          "path": "scripts/mkoro/worker.mjs",
+          "line": 417,
+          "end_line": 429,
+          "label": "Relay the selected option"
+        },
+        {
+          "path": "scripts/mkoro/worker.mjs",
+          "line": 312,
+          "end_line": 343,
+          "label": "Turn result and failure"
+        }
+      ],
+      "yOffset": -100
+    },
+    {
+      "id": "events",
+      "lane": "result",
+      "col": 4,
+      "type": "database",
+      "label": "Save task progress",
+      "sublabel": "API stores worker events",
+      "tag": "Done, failed or cancelled",
+      "width": 168,
+      "sources": [
+        {
+          "path": "scripts/mkoro/worker.mjs",
+          "line": 215,
+          "end_line": 231,
+          "label": "Companion posts event batches"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/mkoro/events.ts",
+          "line": 4,
+          "end_line": 90,
+          "label": "API writes events and status"
+        },
+        {
+          "path": "scripts/mkoro/worker.mjs",
+          "line": 345,
+          "end_line": 379,
+          "label": "Text and tool progress"
+        }
+      ],
+      "yOffset": 0
+    },
+    {
+      "id": "progress",
+      "lane": "result",
+      "col": 4,
+      "type": "frontend",
+      "label": "Read in Sina chat",
+      "sublabel": "progress + reported result",
+      "tag": "Sina reviews the evidence",
+      "width": 168,
+      "sources": [
+        {
+          "path": "artifacts/ai-workflow-builder/src/features/assistant/mkoro/use-mkoro-history.ts",
+          "line": 90,
+          "end_line": 141,
+          "label": "Poll and verify bound records"
+        },
+        {
+          "path": "artifacts/ai-workflow-builder/src/features/assistant/ui/use-mkoro-delegation.tsx",
+          "line": 246,
+          "end_line": 285,
+          "label": "Review returned task in chat"
+        },
+        {
+          "path": "artifacts/ai-workflow-builder/src/features/assistant/runtime/computer-delegation.ts",
+          "line": 72,
+          "end_line": 102,
+          "label": "Reported data is not authority"
+        }
+      ],
+      "yOffset": 100
+    }
+  ],
+  "edges": [
+    {
+      "id": "request_handoff",
+      "from": "sina",
+      "to": "handoff",
+      "label": "external/local",
+      "role": "main"
+    },
+    {
+      "id": "native_scope",
+      "from": "sina",
+      "to": "native",
+      "label": "platform work",
+      "role": "branch",
+      "variant": "dashed"
+    },
+    {
+      "id": "persist_chat",
+      "from": "handoff",
+      "to": "saved_chat",
+      "role": "main"
+    },
+    {
+      "id": "post_delegation",
+      "from": "saved_chat",
+      "to": "access",
+      "label": "POST delegation",
+      "variant": "security",
+      "role": "main"
+    },
+    {
+      "id": "authorize",
+      "from": "access",
+      "to": "admission",
+      "label": "authorized",
+      "variant": "security",
+      "role": "main"
+    },
+    {
+      "id": "accept",
+      "from": "admission",
+      "to": "queue",
+      "label": "admitted",
+      "role": "main"
+    },
+    {
+      "id": "claim",
+      "from": "queue",
+      "to": "poll",
+      "label": "on worker poll",
+      "role": "async",
+      "variant": "dashed"
+    },
+    {
+      "id": "prompt",
+      "from": "poll",
+      "to": "goose",
+      "label": "start turn",
+      "role": "main"
+    },
+    {
+      "id": "offer",
+      "from": "goose",
+      "to": "tool_request",
+      "label": "when offered",
+      "variant": "security",
+      "role": "branch"
+    },
+    {
+      "id": "ask",
+      "from": "tool_request",
+      "to": "decision",
+      "label": "persist request",
+      "variant": "security",
+      "role": "main"
+    },
+    {
+      "id": "relay",
+      "from": "decision",
+      "to": "resume",
+      "label": "choice via poll",
+      "variant": "security",
+      "role": "main"
+    },
+    {
+      "id": "report_after_choice",
+      "from": "resume",
+      "to": "events",
+      "role": "main"
+    },
+    {
+      "id": "live_progress",
+      "from": "goose",
+      "to": "events",
+      "label": "progress + outcome",
+      "variant": "dashed",
+      "role": "async"
+    },
+    {
+      "id": "read_progress",
+      "from": "events",
+      "to": "progress",
+      "label": "scoped read",
+      "role": "main"
+    },
+    {
+      "id": "cancel",
+      "from": "stop",
+      "to": "poll",
+      "label": "claimed: cancel on poll",
+      "variant": "security",
+      "role": "branch"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Who owns the work?",
+      "items": [
+        "Sina owns native workflows, calculations, sources and retrieval.",
+        "Mkoro receives a target, objective, expected output and why a platform tool cannot do the step.",
+        "Local paths still need an explicit source import. The handoff is not an OS or network sandbox."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Admission and permission",
+      "items": [
+        "Admission checks a saved workspace chat and the actor's own online, compatible, idle computer.",
+        "Tool decisions are offered allow-once or reject-once choices. Silence leaves the request pending.",
+        "A saved per-computer setting lets the server choose allow-once during polls. No permanent grant."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Stop and uncertain outcomes",
+      "items": [
+        "Stop removes an undelivered job or queues cancellation for a running turn. It cannot undo prior effects.",
+        "Commands are claimed once; an interrupted response is not permission to replay work.",
+        "Goose end_turn means its turn ended. Sina treats text as reported evidence, not proof of platform success."
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Optional desktop view",
+      "items": [
+        "Opening an authorized active task's viewer renews a 10-second screen lease; Windows capture is view-only.",
+        "Latest bounded JPEG lives in API memory and expires. No frames enter durable events or model context.",
+        "See docs/mkoro-connection.md and artifacts/api-server/src/lib/mkoro/screens.ts for preview limits."
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "Snapshot and limits",
+      "items": [
+        "Inspected implementation at 444d6e0 (1 October 2026); source passports pin the complete commit.",
+        "Worker HTTP uses /api/mkoro-worker; Goose runs locally through ACP. No platform credentials are handed off.",
+        "This map is source-backed documentation. It does not certify a live Goose installation, provider or external result."
+      ]
+    }
+  ]
+}

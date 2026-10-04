@@ -143,11 +143,17 @@ export function useMkoroActions() {
           }),
         );
       }),
-    createPairing: () =>
+    createPairing: (reconnectWorkerId?: string) =>
       act(async () => {
-        setPairing(
-          MkoroPairingSchema.parse(await apiJSON(`${MKORO_PATH}/pairings`, mkoroPost({}))),
+        setPairing(null);
+        const response = MkoroPairingSchema.parse(
+          await apiJSON(`${MKORO_PATH}/pairings`, mkoroPost({ reconnectWorkerId })),
         );
+        if (reconnectWorkerId && response.reconnectWorkerId !== reconnectWorkerId)
+          throw new Error(
+            'Reconnect requires the matching API update and database migration. Restart or update the API before generating another code.',
+          );
+        setPairing(response);
       }),
     revoke: (id: string) =>
       act(async () => {

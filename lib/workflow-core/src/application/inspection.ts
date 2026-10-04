@@ -1,6 +1,6 @@
 import type { PersonalWorkflow } from '@workspace/workflow-contracts/library-types';
 import { getSavedVersion, WorkflowCommandError } from './commands';
-import { sessionContext } from './sessions';
+import { sessionContext, sessionDefinition } from './sessions';
 
 /** A detached evidence view. Never execute, select a fallback run, or mutate the draft. */
 export function inspectWorkflowRun(entry: PersonalWorkflow, runId: string) {
@@ -13,12 +13,13 @@ export function inspectWorkflowRun(entry: PersonalWorkflow, runId: string) {
     );
   const version = session?.version ?? record!.version;
   const saved = getSavedVersion(entry, version);
-  const definition = saved.definition;
+  const snapshot = session ?? record?.sessionSnapshot;
+  const definition = snapshot ? sessionDefinition(entry, snapshot) : saved.definition;
   const results = session
     ? session.results
     : Object.fromEntries(record!.result.result.results.map((item) => [item.blockId, item]));
-  const steps = session
-    ? sessionContext(entry, session).steps
+  const steps = snapshot
+    ? sessionContext(entry, snapshot).steps
     : definition.blocks.map((block) => ({
         id: block.id,
         label: block.label,
@@ -35,12 +36,12 @@ export function inspectWorkflowRun(entry: PersonalWorkflow, runId: string) {
     definition,
     results,
     steps,
-    sources: session?.sources ?? [],
+    sources: snapshot?.sources ?? [],
     documentReviews: session?.documentReviews ?? record?.documentReviews ?? [],
-    attempts: session?.attempts ?? [],
+    attempts: snapshot?.attempts ?? [],
     revision: session?.revision,
     paused: session?.paused,
-    approvedAt: session?.approvedAt,
+    approvedAt: snapshot?.approvedAt,
     kind: session ? ('session' as const) : ('record' as const),
   });
 }

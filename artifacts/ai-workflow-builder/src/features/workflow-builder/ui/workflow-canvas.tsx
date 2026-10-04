@@ -21,6 +21,7 @@ import { AIPrompt } from "@/features/workflow-builder/ui/ai-elements/prompt";
 import { ConfigurationOverlay } from "@/features/workflow-builder/ui/overlays/configuration-overlay";
 import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
 import { WorkflowToolbar } from "@/features/workflow-builder/toolbar/workflow-toolbar";
+import { useRecordedInspection } from './workspace/recorded-inspection-context';
 import { sidebarCollapsedAtom } from "@/components/neumorphic-sidebar";
 import "@xyflow/react/dist/style.css";
 
@@ -100,6 +101,8 @@ function getNeutralNodeForPendingConnection({
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: React Flow canvas requires complex setup
 export function WorkflowCanvas() {
+  const inspection = useRecordedInspection();
+  const isRecordedInspection = Boolean(inspection);
   const sidebarCollapsed = useAtomValue(sidebarCollapsedAtom);
   const [nodes, setNodes] = useAtom(nodesAtom);
   const [edges, setEdges] = useAtom(edgesAtom);
@@ -178,13 +181,15 @@ export function WorkflowCanvas() {
     const t = window.setTimeout(() => {
       setSelectedNode(node.id);
       setSelectedEdge(null);
-      setActiveTab(getDefaultInspectorTabForFamily(node.data.block?.family));
+      setActiveTab(isRecordedInspection ? 'data' : getDefaultInspectorTabForFamily(node.data.block?.family));
       openOverlay(ConfigurationOverlay, {}, { size: "wide" });
       setOpenBlockConfigId(null);
     }, 700);
     return () => window.clearTimeout(t);
   }, [
     openBlockConfigId,
+    // Header/evidence JSX changes on parent renders; it must not restart this timer.
+    isRecordedInspection,
     nodes,
     openOverlay,
     setActiveTab,
@@ -405,13 +410,14 @@ export function WorkflowCanvas() {
       setSelectedNode(node.id);
       setSelectedEdge(null);
       setActiveTab(
-        getDefaultInspectorTabForFamily(workflowNode.data.block?.family)
+        inspection ? 'data' : getDefaultInspectorTabForFamily(workflowNode.data.block?.family)
       );
       setSidebarCollapsed(false);
       openOverlay(ConfigurationOverlay, {}, { size: "wide" });
     },
     [
       openOverlay,
+      inspection,
       setActiveTab,
       setSelectedEdge,
       setSelectedNode,
@@ -678,9 +684,9 @@ export function WorkflowCanvas() {
       }}
     >
       {/* Toolbar */}
-      <div className="pointer-events-auto">
+      {!inspection && <div className="pointer-events-auto">
         <WorkflowToolbar workflowId={currentWorkflowId ?? undefined} />
-      </div>
+      </div>}
 
       {/* Fiscal workflow vocabulary legend */}
       <div className="pointer-events-none absolute top-16 right-4 z-20 max-w-[260px] rounded-lg px-3 py-2 shadow-sm backdrop-blur" style={{ background: 'var(--sx-legend-bg)', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -700,31 +706,32 @@ export function WorkflowCanvas() {
         className=""
         connectionLineComponent={Connection}
         connectionMode={ConnectionMode.Strict}
+        deleteKeyCode={inspection ? null : ["Backspace", "Delete"]}
         edges={edges}
         edgeTypes={edgeTypes}
         elementsSelectable={!isGenerating}
         isValidConnection={isValidConnection}
         nodes={nodes}
-        nodesConnectable={!isGenerating}
-        nodesDraggable={!isGenerating}
+        nodesConnectable={!isGenerating && !inspection}
+        nodesDraggable={!isGenerating && !inspection}
         nodeTypes={nodeTypes}
-        onConnect={isGenerating ? undefined : onConnect}
-        onConnectEnd={isGenerating ? undefined : onConnectEnd}
-        onConnectStart={isGenerating ? undefined : onConnectStart}
+        onConnect={isGenerating || inspection ? undefined : onConnect}
+        onConnectEnd={isGenerating || inspection ? undefined : onConnectEnd}
+        onConnectStart={isGenerating || inspection ? undefined : onConnectStart}
         onEdgeClick={isGenerating ? undefined : onEdgeClick}
-        onEdgeContextMenu={isGenerating ? undefined : onEdgeContextMenu}
-        onEdgesChange={isGenerating ? undefined : onEdgesChange}
+        onEdgeContextMenu={isGenerating || inspection ? undefined : onEdgeContextMenu}
+        onEdgesChange={isGenerating || inspection ? undefined : onEdgesChange}
         onNodeClick={isGenerating ? undefined : onNodeClick}
-        onNodeContextMenu={isGenerating ? undefined : onNodeContextMenu}
-        onNodesChange={isGenerating ? undefined : onNodesChange}
+        onNodeContextMenu={isGenerating || inspection ? undefined : onNodeContextMenu}
+        onNodesChange={isGenerating || inspection ? undefined : onNodesChange}
         onPaneClick={onPaneClick}
-        onPaneContextMenu={isGenerating ? undefined : onPaneContextMenu}
+        onPaneContextMenu={isGenerating || inspection ? undefined : onPaneContextMenu}
         onSelectionChange={isGenerating ? undefined : onSelectionChange}
       >
         <Panel
           className="workflow-controls-panel border-none bg-transparent p-0"
           position="bottom-left"
-          style={{ marginLeft: sidebarCollapsed ? 66 : 264, transition: 'margin-left 220ms cubic-bezier(0.23,1,0.32,1)' }}
+          style={{ marginLeft: inspection ? 16 : sidebarCollapsed ? 66 : 264, transition: 'margin-left 220ms cubic-bezier(0.23,1,0.32,1)' }}
         >
           <Controls />
         </Panel>
@@ -740,7 +747,7 @@ export function WorkflowCanvas() {
       </Canvas>
 
       {/* AI Prompt */}
-      {currentWorkflowId && !isLocalWorkflowId(currentWorkflowId) && (
+      {!inspection && currentWorkflowId && !isLocalWorkflowId(currentWorkflowId) && (
         <AIPrompt workflowId={currentWorkflowId} />
       )}
 

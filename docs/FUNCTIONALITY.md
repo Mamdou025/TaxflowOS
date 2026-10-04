@@ -39,6 +39,26 @@ computation, human approval and server synchronization remain separate states.
 
 ## Supported scope
 
+Chat displays its linked guided workflow directly after its opening tool receipt in the conversation, with the
+shared source inputs and execution controls. Saved conversations retain the exact workflow/run reference, even
+when started through the workflow UI before sending a message. Reopening does
+not execute steps or select a newer run. Missing linked runs are reported, and
+legacy chats without a link do not infer one. The inline card uses one colored
+step accordion: each step expands its real form or recorded details underneath,
+and folding preserves unapplied field edits. Opening a step stays in Chat and does
+not execute it. Applying values recalculates this
+work only, retaining completed calculations in Runs history. Sina proposes edits
+for explicit review. Required document/scalar/rate inputs gate guided execution;
+this is not a general company-information readiness assessment. Chat can interrupt
+an assistant reply to send a follow-up, and End stops further workflow steps.
+The Work menu holds the linked workflow/status and exact-run navigation. Agent and
+computer controls share the composer; computer status reflects the existing
+connection. Sina and MicroSina can handle successive replies in the same saved chat;
+earlier replies and approvals retain their originating agent. Verification reuses the
+normal Build canvas and bloc workspace in read-only recorded-run mode. These
+surfaces share form components and workflow commands, not separate calculation rules.
+See [shared execution](unified-workflow-execution.md).
+
 Guided runs capture PDF page text, DOCX paragraph text and selected Excel/JSON
 records with source revisions and content hashes. Chat and Build expose the same
 recorded evidence, and Sina can inspect exact document locations. Parser blocks
@@ -65,9 +85,12 @@ and do not set calculation inputs or approve tax treatment. See
 
 ## Implementation and checks
 
-Chat has one conversation with **Sina by default**, or **MicroSina through Foundry**
-when selected before sending the first message. Saved chats retain their agent;
-old chats reopen as Sina. MicroSina requires backend Azure authentication and an
+Chat has one conversation with **Sina by default**, or **MicroSina through Foundry**.
+The composer selects the agent for the next reply after the current reply/tool turn
+settles. Switching preserves the chat, workflow, sources, prior message authorship
+and pending actions. Saved chats retain the next selected agent separately from
+each reply's author; legacy chats retain their original provider, defaulting to Sina
+when no provider metadata was saved. MicroSina requires backend Azure authentication and an
 explicit saved Foundry version. Connection failures do not fall back to Sina.
 Both agents use the same tool and review surfaces; agent-specific permissions
 remain separate. Local integration checks do not establish live model parity.
@@ -80,8 +103,11 @@ shows task progress, one-time permissions, Stop and optional refreshed desktop
 screenshots. Computer settings retain the former Mkoro history and controls for
 already active tasks. New direct Mkoro messages are no longer accepted.
 Settings explain which computer runs Goose, distinguish connection from delegation
-readiness, confirm access revocation, and offer fresh pairing for revoked computers.
-Reconnection creates a new entry; old credentials remain revoked and history stays available.
+readiness, confirm access revocation, and reconnect an existing offline or revoked
+connection while preserving its ID and history. Reconnection rotates its credential
+and resets automatic approval; active tasks must finish or confirm cancellation first.
+The composer omits revoked registrations. Settings retain their IDs and timestamps
+for review; existing same-name duplicates are never automatically merged or revoked.
 Each personal computer also has an optional saved automatic-approval setting for
 Mkoro tool requests, including pending ones. Server decisions remain one-action,
 auditable and subject to Stop and current access; permanent Goose grants are not used.

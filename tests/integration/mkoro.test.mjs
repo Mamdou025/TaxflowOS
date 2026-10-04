@@ -225,6 +225,231 @@ test('pairing is single-use and expired codes fail; stored credentials are hashe
   assert.notEqual(rows[0].token_hash, companion.token);
 });
 
+test('targeted reconnect preserves connection history, rotates credentials once and resets approval', async () => {
+  const companion = await pair();
+  const chat = await conversation(companion);
+  const { task } = await message(chat);
+  await json(await workerRequest('/poll', {}, companion.token));
+  const completed = [
+    event(task, 0, 'task_started'),
+    event(task, 1, 'task_completed', { stopReason: 'end_turn' }),
+  ];
+  await json(await workerRequest('/events', { events: completed }, companion.token));
+  await json(
+    await request(`/workers/${companion.workerId}/approval`, { autoApprove: true }, 'PATCH'),
+  );
+  const before = (
+    await stack.db.query('SELECT created_at FROM mkoro_workers WHERE id=$1', [companion.workerId])
+  ).rows[0];
+  await json(await request(`/workers/${companion.workerId}`, undefined, 'DELETE'));
+  const code = await json(
+    await request('/pairings', { reconnectWorkerId: companion.workerId }),
+    201,
+  );
+  const stale = await json(
+    await request('/pairings', { reconnectWorkerId: companion.workerId }),
+    201,
+  );
+  assert.equal(code.reconnectWorkerId, companion.workerId);
+  const input = {
+    pairingToken: code.pairingToken,
+    name: 'Reconnected fixture',
+    capabilities: ['sina-delegation-v1'],
+  };
+  const attempts = await Promise.all([
+    workerRequest('/pair', input),
+    workerRequest('/pair', input),
+  ]);
+  assert.deepEqual(attempts.map((item) => item.status).sort(), [201, 401]);
+  const next = await attempts.find((item) => item.status === 201).json();
+  assert.equal(next.workerId, companion.workerId);
+  assert.notEqual(next.token, companion.token);
+  assert.equal((await workerRequest('/poll', {}, companion.token)).status, 401);
+  assert.equal(
+    (await workerRequest('/pair', { ...input, pairingToken: stale.pairingToken })).status,
+    401,
+  );
+  const saved = (
+    await stack.db.query(
+      'SELECT created_at,auto_approve,revoked_at FROM mkoro_workers WHERE id=$1',
+      [companion.workerId],
+    )
+  ).rows;
+  assert.deepEqual(saved, [{ ...before, auto_approve: false, revoked_at: null }]);
+  const detail = await json(await request(`/conversations/${chat.id}`, undefined, 'GET'));
+  assert.equal(detail.conversation.workerId, companion.workerId);
+  assert.deepEqual(
+    detail.events.map((item) => item.id),
+    completed.map((item) => item.id),
+  );
+  const oldConversationId = chat.id;
+  await message(chat, 'A new explicit task after reconnect');
+  assert.equal(chat.id, oldConversationId);
+  assert.equal((await workerRequest('/poll', {}, companion.token)).status, 401);
+  assert.equal((await json(await workerRequest('/poll', {}, next.token))).commands.length, 1);
+});
+
+test('saved credential proof reuses a connection but names alone never merge registrations', async () => {
+  const first = await pair();
+  const sameName = await pair();
+  assert.notEqual(first.workerId, sameName.workerId);
+  const beforeCount = (await stack.db.query('SELECT count(*)::int AS n FROM mkoro_workers')).rows[0]
+    .n;
+  const code = await json(await request('/pairings', {}), 201);
+  const base = { pairingToken: code.pairingToken, name: 'Synthetic companion' };
+  assert.equal(
+    (
+      await workerRequest('/pair', {
+        ...base,
+        reconnect: { workerId: first.workerId, token: 'x'.repeat(43) },
+      })
+    ).status,
+    401,
+  );
+  const next = await json(
+    await workerRequest('/pair', {
+      ...base,
+      reconnect: { workerId: first.workerId, token: first.token },
+    }),
+    201,
+  );
+  assert.equal(next.workerId, first.workerId);
+  assert.equal(
+    (await stack.db.query('SELECT count(*)::int AS n FROM mkoro_workers')).rows[0].n,
+    beforeCount,
+  );
+  assert.equal((await workerRequest('/poll', {}, first.token)).status, 401);
+  await json(await workerRequest('/poll', {}, sameName.token));
+});
+
+test('reconnect targets and proofs stay personal to the current actor, workspace and execute role', async () => {
+  const companion = await pair();
+  for (const path of ['/pairings', '/PAIRINGS/']) {
+    assert.equal(
+      (await request(path, { reconnectWorkerId: companion.workerId }, 'POST', viewer)).status,
+      403,
+    );
+    assert.equal(
+      (await request(path, { reconnectWorkerId: companion.workerId }, 'POST', editor)).status,
+      404,
+    );
+    assert.equal(
+      (await request(path, { reconnectWorkerId: companion.workerId }, 'POST', owner, other)).status,
+      404,
+    );
+  }
+  for (const [actor, ws] of [
+    [editor, workspace],
+    [owner, other],
+  ]) {
+    const code = await json(await request('/pairings', {}, 'POST', actor, ws), 201);
+    assert.equal(
+      (
+        await workerRequest('/pair', {
+          pairingToken: code.pairingToken,
+          name: 'Cross-scope proof',
+          reconnect: { workerId: companion.workerId, token: companion.token },
+        })
+      ).status,
+      401,
+    );
+  }
+  const second = await pair();
+  const target = await json(
+    await request('/pairings', { reconnectWorkerId: companion.workerId }),
+    201,
+  );
+  assert.equal(
+    (
+      await workerRequest('/pair', {
+        pairingToken: target.pairingToken,
+        name: 'Mismatched connection',
+        reconnect: { workerId: second.workerId, token: second.token },
+      })
+    ).status,
+    401,
+  );
+  const editorCompanion = await pair(editor);
+  const editorCode = await json(
+    await request('/pairings', { reconnectWorkerId: editorCompanion.workerId }, 'POST', editor),
+    201,
+  );
+  await setMember(owner, workspace, editor, 'viewer');
+  try {
+    assert.equal(
+      (
+        await workerRequest('/pair', {
+          pairingToken: editorCode.pairingToken,
+          name: 'No longer an editor',
+        })
+      ).status,
+      401,
+    );
+  } finally {
+    await setMember(owner, workspace, editor, 'editor');
+  }
+  const restored = await json(
+    await workerRequest('/pair', {
+      pairingToken: editorCode.pairingToken,
+      name: 'Editor restored',
+    }),
+    201,
+  );
+  assert.equal(restored.workerId, editorCompanion.workerId);
+});
+
+test('reconnect rejects queued, running and permission-waiting tasks without consuming the code or resetting work', async () => {
+  for (const status of ['queued', 'running', 'waiting_permission']) {
+    const companion = await pair();
+    const code = await json(
+      await request('/pairings', { reconnectWorkerId: companion.workerId }),
+      201,
+    );
+    const chat = await conversation(companion);
+    const { task } = await message(chat);
+    if (status !== 'queued') {
+      await json(await workerRequest('/poll', {}, companion.token));
+      const events = [event(task, 0, 'task_started')];
+      if (status === 'waiting_permission')
+        events.push(
+          event(task, 1, 'permission_required', {
+            requestId: 'synthetic-permission',
+            options: [{ optionId: 'once', name: 'Allow once', kind: 'allow_once' }],
+          }),
+        );
+      await json(await workerRequest('/events', { events }, companion.token));
+    }
+    assert.equal(
+      (await request('/pairings', { reconnectWorkerId: companion.workerId })).status,
+      409,
+    );
+    const input = { pairingToken: code.pairingToken, name: 'Blocked reconnect' };
+    assert.equal((await workerRequest('/pair', input)).status, 409);
+    const saved = (
+      await stack.db.query('SELECT status,worker_id FROM mkoro_tasks WHERE id=$1', [task.id])
+    ).rows[0];
+    assert.deepEqual(saved, { status, worker_id: companion.workerId });
+    await json(await request(`/tasks/${task.id}/cancel`, {}));
+    if (status !== 'queued') {
+      const commands = (await json(await workerRequest('/poll', {}, companion.token))).commands;
+      assert.ok(commands.some((command) => command.type === 'cancel'));
+      await json(
+        await workerRequest(
+          '/events',
+          { events: [event(task, status === 'running' ? 1 : 2, 'task_cancelled')] },
+          companion.token,
+        ),
+      );
+    }
+    const next = await json(await workerRequest('/pair', input), 201);
+    assert.equal(next.workerId, companion.workerId);
+    assert.equal(
+      (await json(await request(`/tasks/${task.id}/events`, undefined, 'GET'))).task.status,
+      'cancelled',
+    );
+  }
+});
+
 test('personal workers and chats are inaccessible to another member or workspace', async () => {
   const companion = await pair();
   const chat = await conversation(companion);

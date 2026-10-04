@@ -1,0 +1,374 @@
+{
+  "schemaVersion": 1,
+  "ok": false,
+  "command": "finalize",
+  "status": "fail",
+  "type": "architecture",
+  "quality": "showcase",
+  "startedAt": "2026-10-01T19:10:46.027Z",
+  "specification": {
+    "path": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\architecture-system-overview-20261001-150322\\candidate.json",
+    "sha256": "6c8f4b9dcdb14e994022931196deeedfe2227a0ab06b6732664f54041ba157de",
+    "bytes": 11893
+  },
+  "artifact": {
+    "path": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\architecture-system-overview-20261001-150322\\system-overview.html",
+    "sha256": "ffe8f195845585a2dc192a23ded080c1d01e1e22c3c76ad317208a7c6a8a9309",
+    "bytes": 771415
+  },
+  "stages": {
+    "validate": {
+      "status": "fail",
+      "exitCode": 1,
+      "durationMs": null,
+      "command": [
+        "C:\\Users\\Mamad\\.cache\\taxflowos-toolchain\\node-v24.21.0-win-x64\\node.exe",
+        "C:\\Users\\Mamad\\.codex\\skills\\archify\\bin\\archify.mjs",
+        "deliver",
+        "architecture",
+        "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\architecture-system-overview-20261001-150322\\candidate.json",
+        "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\architecture-system-overview-20261001-150322\\system-overview.html",
+        "--quality",
+        "showcase",
+        "--repo-root",
+        "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "ok": false,
+        "command": "deliver",
+        "receiptId": "677f8885-9062-4763-a55f-09ee0d732481",
+        "stage": "check",
+        "type": "architecture",
+        "input": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\architecture-system-overview-20261001-150322\\candidate.json",
+        "output": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\architecture-system-overview-20261001-150322\\system-overview.html",
+        "error": "Final artifact check failed; the previous artifact was preserved.",
+        "diagnostics": [
+          {
+            "code": "composition/desktop-readability",
+            "severity": "error",
+            "message": "Final artifact failed composition/desktop-readability.",
+            "subject": {
+              "check": "composition"
+            },
+            "evidence": {
+              "owner": {
+                "kind": "edge",
+                "id": "workspace-api",
+                "from": "workspace",
+                "to": "api"
+              },
+              "viewportWidth": 1440,
+              "viewportHeight": 900,
+              "availableDiagramWidth": 930,
+              "budgetBasis": "legacy-930",
+              "readerContract": "declared-wide-v1",
+              "requestedTargetPx": 7.5,
+              "requestedTargetMet": false,
+              "budgetLimit": "legacy",
+              "viewBoxWidth": 1320,
+              "scale": 0.7045454545454546,
+              "text": "Scoped HTTP requests",
+              "detail": "edge",
+              "sourceFontPx": 8,
+              "projectedFontPx": 5.636363636363637,
+              "minimumProjectedFontPx": 6
+            },
+            "supportedFixes": [
+              "Preserve the semantic text and any supplied coordinates, routes, sides, channels, and labels. Compactly reflow automatic spacing and empty corridors so the complete viewBox width is at most 1240px (current 1320px; 8px source text at 930px desktop budget). If supplied geometry fixes that width, use a renderer-supported semantic text-size setting or renderer-level fix instead. Position-only label controls cannot repair its projection."
+            ]
+          }
+        ],
+        "provenance": "failed",
+        "checker": {
+          "ok": false,
+          "file": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\architecture-system-overview-20261001-150322\\system-overview.html",
+          "artifact": {
+            "sha256": "43be4c28990cb8ebe15568686ac8dee5a7840a41b16bbdef6f604344f3b9d28c",
+            "bytes": 771411
+          },
+          "checks": [
+            {
+              "name": "single_svg",
+              "ok": true,
+              "details": [
+                "found 1 <svg> block(s)"
+              ]
+            },
+            {
+              "name": "finite_svg",
+              "ok": true,
+              "details": []
+            },
+            {
+              "name": "orthogonal_arrows",
+              "ok": true,
+              "details": []
+            },
+            {
+              "name": "label_route_clearance",
+              "ok": true,
+              "details": []
+            },
+            {
+              "name": "relationship_crossings",
+              "ok": true,
+              "details": []
+            },
+            {
+              "name": "relationship_corridors",
+              "ok": true,
+              "details": []
+            },
+            {
+              "name": "container_border_runs",
+              "ok": true,
+              "details": []
+            },
+            {
+              "name": "route_rhythm",
+              "ok": true,
+              "details": []
+            },
+            {
+              "name": "legend_clearance",
+              "ok": true,
+              "details": []
+            }
+          ],
+          "composition": {
+            "schemaVersion": 1,
+            "profile": "showcase",
+            "status": "fail",
+            "summary": {
+              "errors": 1,
+              "warnings": 0
+            },
+            "metrics": {
+              "properCrossings": 0,
+              "resolvedCrossovers": 2,
+              "ambiguousCorridors": 0,
+              "arrowheadCollisions": 0,
+              "containerBorderRuns": 0,
+              "labelRouteClearanceIssues": 0,
+              "labelCanvasOverflowIssues": 0,
+              "minLabelRouteClearance": 4.5,
+              "desktopReadabilityIssues": 1,
+              "viewportHeightIssues": 0,
+              "minProjectedNodeTextPx": 5.636363636363637,
+              "maxBends": 3,
+              "routesOverSuggestedBends": 1,
+              "maxStretch": 1.053,
+              "routesOverSuggestedStretch": 0,
+              "minSegmentPx": 24,
+              "minInteriorSegmentPx": 76,
+              "shortSegmentCount": 0,
+              "shortEndpointSegmentCount": 0,
+              "shortInteriorSegmentCount": 0,
+              "microSegmentCount": 0
+            },
+            "suggestedLimits": {
+              "bendsPerRelationship": 2,
+              "stretch": 1.35,
+              "segmentPx": 16,
+              "microSegmentPx": 8
+            },
+            "routeReview": {
+              "crossings": [
+                {
+                  "left": {
+                    "id": "api-storage",
+                    "from": "api",
+                    "to": "storage",
+                    "label": "Authorize signed URLs",
+                    "collectionIndex": 3,
+                    "artifactIndex": 4
+                  },
+                  "right": {
+                    "id": "ingestion-storage",
+                    "from": "ingestion",
+                    "to": "storage",
+                    "label": "Download source bytes",
+                    "collectionIndex": 5,
+                    "artifactIndex": 6
+                  },
+                  "point": [
+                    474,
+                    164
+                  ],
+                  "sharedNode": "storage"
+                },
+                {
+                  "left": {
+                    "id": "ingestion-storage",
+                    "from": "ingestion",
+                    "to": "storage",
+                    "label": "Download source bytes",
+                    "collectionIndex": 5,
+                    "artifactIndex": 6
+                  },
+                  "right": {
+                    "id": "ingestion-models",
+                    "from": "ingestion",
+                    "to": "models",
+                    "label": "Configured embeddings",
+                    "collectionIndex": 6,
+                    "artifactIndex": 7
+                  },
+                  "point": [
+                    910,
+                    164
+                  ],
+                  "sharedNode": "ingestion"
+                }
+              ],
+              "detours": [
+                {
+                  "relationship": {
+                    "id": "ingestion-storage",
+                    "from": "ingestion",
+                    "to": "storage",
+                    "label": "Download source bytes",
+                    "collectionIndex": 5,
+                    "artifactIndex": 6
+                  },
+                  "bends": 3,
+                  "stretch": 1.053
+                }
+              ]
+            },
+            "leadingSpace": {
+              "measured": true,
+              "emptyTopPx": 50,
+              "emptyTopRatio": 0.042,
+              "occupiedTop": 50,
+              "viewBoxTop": 0,
+              "canvasHeight": 1198,
+              "typicalNodeHeight": 90,
+              "reviewSuggested": false
+            },
+            "desktopReadability": {
+              "budgetBasis": "legacy-930",
+              "readerContract": "declared-wide-v1",
+              "availableDiagramWidth": 930,
+              "actualBudgetPx": 930,
+              "limit": "legacy",
+              "requestedTargetPx": 7.5,
+              "requestedTargetMet": false,
+              "hardFloorPx": 6,
+              "hardFloorMet": false,
+              "minimumOwner": {
+                "kind": "edge",
+                "id": "workspace-api",
+                "from": "workspace",
+                "to": "api"
+              },
+              "minimumSourceTextPx": 8,
+              "minimumProjectedTextPx": 5.636363636363637,
+              "semanticTextCount": 29
+            },
+            "issues": [
+              {
+                "severity": "error",
+                "code": "composition/desktop-readability",
+                "owner": {
+                  "kind": "edge",
+                  "id": "workspace-api",
+                  "from": "workspace",
+                  "to": "api"
+                },
+                "viewportWidth": 1440,
+                "viewportHeight": 900,
+                "availableDiagramWidth": 930,
+                "budgetBasis": "legacy-930",
+                "readerContract": "declared-wide-v1",
+                "requestedTargetPx": 7.5,
+                "requestedTargetMet": false,
+                "budgetLimit": "legacy",
+                "viewBoxWidth": 1320,
+                "scale": 0.7045454545454546,
+                "text": "Scoped HTTP requests",
+                "detail": "edge",
+                "sourceFontPx": 8,
+                "projectedFontPx": 5.636363636363637,
+                "minimumProjectedFontPx": 6
+              }
+            ]
+          }
+        },
+        "update": {
+          "status": "unavailable",
+          "installedVersion": null,
+          "availableVersion": null,
+          "releaseNotes": null,
+          "checkedAt": null,
+          "source": null,
+          "noticeRequired": false,
+          "noticeText": null,
+          "reason": "disabled"
+        }
+      },
+      "execution": "embedded-in-deliver"
+    },
+    "deliver": {
+      "status": "not-run",
+      "execution": "blocked-by-validate"
+    }
+  },
+  "diagnostics": [
+    {
+      "code": "composition/desktop-readability",
+      "severity": "error",
+      "message": "Final artifact failed composition/desktop-readability.",
+      "subject": {
+        "check": "composition"
+      },
+      "evidence": {
+        "owner": {
+          "kind": "edge",
+          "id": "workspace-api",
+          "from": "workspace",
+          "to": "api"
+        },
+        "viewportWidth": 1440,
+        "viewportHeight": 900,
+        "availableDiagramWidth": 930,
+        "budgetBasis": "legacy-930",
+        "readerContract": "declared-wide-v1",
+        "requestedTargetPx": 7.5,
+        "requestedTargetMet": false,
+        "budgetLimit": "legacy",
+        "viewBoxWidth": 1320,
+        "scale": 0.7045454545454546,
+        "text": "Scoped HTTP requests",
+        "detail": "edge",
+        "sourceFontPx": 8,
+        "projectedFontPx": 5.636363636363637,
+        "minimumProjectedFontPx": 6
+      },
+      "supportedFixes": [
+        "Preserve the semantic text and any supplied coordinates, routes, sides, channels, and labels. Compactly reflow automatic spacing and empty corridors so the complete viewBox width is at most 1240px (current 1320px; 8px source text at 930px desktop budget). If supplied geometry fixes that width, use a renderer-supported semantic text-size setting or renderer-level fix instead. Position-only label controls cannot repair its projection."
+      ]
+    }
+  ],
+  "evidence": {
+    "receipt": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\architecture-system-overview-20261001-150322\\review-2\\system-overview.finalize.json",
+    "summaryReceipt": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\architecture-system-overview-20261001-150322\\review-2\\system-overview.finalize-summary.json"
+  },
+  "visualReview": "not-requested",
+  "failedStage": "validate",
+  "finishedAt": "2026-10-01T19:10:54.706Z",
+  "durationMs": 8678,
+  "update": {
+    "status": "unavailable",
+    "installedVersion": null,
+    "availableVersion": null,
+    "releaseNotes": null,
+    "checkedAt": null,
+    "source": null,
+    "noticeRequired": false,
+    "noticeText": null,
+    "reason": "disabled"
+  }
+}

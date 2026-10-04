@@ -5,6 +5,7 @@ import { LC } from '@/lib/librechat-theme';
 import { SINA } from '@/lib/coworkers';
 import { workflowLibraryAtom } from '@/features/workflows-hub/workflow-library';
 import { agentTabAtom } from '@/features/agent-hub/agent-hub-store';
+import { chatAgentAtom, type ChatAgent } from '@/shared/stores/chat-store';
 import { CoworkerAvatar } from './coworker-avatar';
 import {
   selectedChatDocumentAtom,
@@ -101,27 +102,56 @@ export function ComposerAttachmentMenu({
   );
 }
 
-export function ComposerAgentMenu({ onCustomize }: { onCustomize?: () => void }) {
+export function ComposerAgentMenu({
+  onCustomize,
+  onAgentChange,
+  selectionDisabled = true,
+  disabledReason,
+}: {
+  onCustomize?: () => void;
+  onAgentChange?: (agent: ChatAgent) => void;
+  selectionDisabled?: boolean;
+  disabledReason?: string;
+}) {
   const setTab = useSetAtom(agentTabAtom);
+  const chatAgent = useAtomValue(chatAgentAtom);
+  const coworker =
+    chatAgent === 'microsina'
+      ? { ...SINA, id: 'microsina', name: 'MicroSina', initials: 'MS' }
+      : SINA;
+  const canSelect = !selectionDisabled && !!onAgentChange;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          aria-label="Chat agent: Sina"
+          aria-label={`Chat agent: ${coworker.name}`}
           className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-2 text-xs font-semibold hover:bg-black/5"
           style={{ borderColor: LC.borderSubtle, color: LC.body }}
         >
-          <CoworkerAvatar coworker={SINA} size={22} /> Sina <ChevronDown size={12} />
+          <CoworkerAvatar coworker={coworker} size={22} /> {coworker.name} <ChevronDown size={12} />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="top" align="start" className="w-60">
         <DropdownMenuLabel>Chat agent</DropdownMenuLabel>
-        <DropdownMenuRadioGroup value={SINA.id}>
-          <DropdownMenuRadioItem value={SINA.id}>Sina · Tax specialist</DropdownMenuRadioItem>
+        <DropdownMenuRadioGroup
+          value={chatAgent}
+          onValueChange={(value) => {
+            if (canSelect && (value === 'sina' || value === 'microsina')) onAgentChange?.(value);
+          }}
+        >
+          <DropdownMenuRadioItem value="sina" disabled={!canSelect}>
+            Sina · Tax specialist
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="microsina" disabled={!canSelect}>
+            MicroSina · Foundry
+          </DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>
         <p className="px-2 py-1.5 text-xs text-muted-foreground">
-          Sina is the only available chat agent.
+          {canSelect
+            ? 'The selected agent continues this chat with the same conversation and workflow.'
+            : (disabledReason ??
+              'Wait for the current reply or tool to finish before switching agents.')}
         </p>
         <DropdownMenuSeparator />
         <DropdownMenuItem

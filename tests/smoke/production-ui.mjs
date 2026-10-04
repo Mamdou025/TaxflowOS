@@ -88,7 +88,13 @@ try {
   await draft.fill('Preserve this draft across deferred pages');
   await measure(
     'computer-settings-first-open',
-    () => page.getByRole('button', { name: 'Mkoro computer settings' }).click(),
+    async () => {
+      await page
+        .locator('.lc-console')
+        .getByRole('button', { name: /^Computer:/ })
+        .click();
+      await page.getByRole('menuitem', { name: 'Computer settings', exact: true }).click();
+    },
     page.getByRole('dialog'),
   );
   await expect(page.getByRole('button', { name: 'Connect a computer', exact: true })).toBeVisible();

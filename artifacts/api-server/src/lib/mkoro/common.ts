@@ -3,7 +3,7 @@ import { pool } from '@workspace/db';
 const connect = () => pool.connect();
 export type Client = Awaited<ReturnType<typeof connect>>;
 export type Scope = { actorId: string; workspaceId: string };
-export type WorkerScope = Scope & { workerId: string };
+export type WorkerScope = Scope & { workerId: string; credentialHash: string };
 export class MkoroError extends Error {
   constructor(
     readonly status: number,

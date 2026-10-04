@@ -1,5 +1,3 @@
-
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Chat message codec — projects the live chat's messages to the serializable shape
 // we persist, and reconstructs them on restore.
@@ -16,13 +14,21 @@
 // agent (it only runs the gql→AG-UI conversion when the input is gql instances).
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type ChatMsgRole = "user" | "assistant" | "tool" | "system";
+import type { ChatWorkflowBinding } from './workflow-binding';
+import type { ChatAgent } from '@/shared/stores/chat-store';
+
+export type ChatMsgRole = 'user' | 'assistant' | 'tool' | 'system';
 
 export type ProjectedMessage = {
   id: string;
   role: ChatMsgRole;
   seq: number;
   content: {
+    /** Original agent is the attribution fallback for chats saved before per-turn authors. */
+    chatAgent?: ChatAgent;
+    selectedChatAgent?: ChatAgent;
+    authorAgent?: ChatAgent;
+    workflowBinding?: ChatWorkflowBinding | null;
     text?: string;
     toolCall?: {
       name: string;
@@ -48,21 +54,21 @@ export type AguiMessage = {
 
 /** AG-UI content may be a plain string or (multimodal user turns) an array of parts. */
 function extractText(content: unknown): string {
-  if (typeof content === "string") return content;
+  if (typeof content === 'string') return content;
   if (Array.isArray(content)) {
     return content
-      .map((p) => (typeof p === "string" ? p : (p as { text?: string })?.text ?? ""))
-      .join("");
+      .map((p) => (typeof p === 'string' ? p : ((p as { text?: string })?.text ?? '')))
+      .join('');
   }
-  return "";
+  return '';
 }
 
 /** AG-UI role → the persisted role vocabulary (developer folds into system). */
 function normRole(r: string): ChatMsgRole {
-  if (r === "user") return "user";
-  if (r === "tool") return "tool";
-  if (r === "system" || r === "developer") return "system";
-  return "assistant";
+  if (r === 'user') return 'user';
+  if (r === 'tool') return 'tool';
+  if (r === 'system' || r === 'developer') return 'system';
+  return 'assistant';
 }
 
 /** Persisted role → AG-UI role. */
@@ -71,7 +77,7 @@ function aguiRole(r: ChatMsgRole): string {
 }
 
 function safeParseArgs(args: unknown): unknown {
-  if (typeof args !== "string") return args ?? {};
+  if (typeof args !== 'string') return args ?? {};
   try {
     return JSON.parse(args);
   } catch {
@@ -91,7 +97,7 @@ export function projectMessages(messages: AguiMessage[]): ProjectedMessage[] {
   // name from the matching assistant tool call so restore can re-attach its render.
   const nameByCallId = new Map<string, string>();
   for (const m of list) {
-    if (m?.role === "assistant" && Array.isArray(m.toolCalls)) {
+    if (m?.role === 'assistant' && Array.isArray(m.toolCalls)) {
       for (const tc of m.toolCalls) {
         if (tc?.id && tc.function?.name) nameByCallId.set(tc.id, tc.function.name);
       }
@@ -104,31 +110,33 @@ export function projectMessages(messages: AguiMessage[]): ProjectedMessage[] {
     if (!m || !m.role) continue;
     const role = m.role;
 
-    if (role === "user" || role === "assistant" || role === "system" || role === "developer") {
+    if (role === 'user' || role === 'assistant' || role === 'system' || role === 'developer') {
       const text = extractText(m.content);
       if (text.trim()) {
         out.push({ id: m.id ?? `m${seq}`, role: normRole(role), seq: seq++, content: { text } });
       }
-      if (role === "assistant" && Array.isArray(m.toolCalls)) {
+      if (role === 'assistant' && Array.isArray(m.toolCalls)) {
         for (const tc of m.toolCalls) {
           const name = tc?.function?.name;
           if (!name) continue;
           out.push({
             id: tc.id ?? `m${seq}`,
-            role: "assistant",
+            role: 'assistant',
             seq: seq++,
-            content: { toolCall: { name, args: safeParseArgs(tc.function?.arguments), callId: tc.id } },
+            content: {
+              toolCall: { name, args: safeParseArgs(tc.function?.arguments), callId: tc.id },
+            },
           });
         }
       }
-    } else if (role === "tool") {
+    } else if (role === 'tool') {
       out.push({
         id: m.id ?? `m${seq}`,
-        role: "tool",
+        role: 'tool',
         seq: seq++,
         content: {
           toolCall: {
-            name: (m.toolCallId && nameByCallId.get(m.toolCallId)) || "",
+            name: (m.toolCallId && nameByCallId.get(m.toolCallId)) || '',
             result: extractText(m.content),
             callId: m.toolCallId,
           },
@@ -142,10 +150,12 @@ export function projectMessages(messages: AguiMessage[]): ProjectedMessage[] {
 /** Save only completed tool exchanges while a frontend action is still running. */
 export function projectCompleteMessages(messages: AguiMessage[]): ProjectedMessage[] {
   const resultIds = new Set(
-    messages.filter((message) => message.role === "tool").map((message) => message.toolCallId)
+    messages.filter((message) => message.role === 'tool').map((message) => message.toolCallId),
   );
-  const pending = messages.findIndex((message) =>
-    message.role === "assistant" && message.toolCalls?.some((call) => !call.id || !resultIds.has(call.id))
+  const pending = messages.findIndex(
+    (message) =>
+      message.role === 'assistant' &&
+      message.toolCalls?.some((call) => !call.id || !resultIds.has(call.id)),
   );
   return projectMessages(pending < 0 ? messages : messages.slice(0, pending));
 }
@@ -163,22 +173,22 @@ export function reconstructMessages(rows: ProjectedMessage[]): AguiMessage[] {
     if (tc && tc.result !== undefined) {
       out.push({
         id: row.id,
-        role: "tool",
-        content: typeof tc.result === "string" ? tc.result : JSON.stringify(tc.result),
+        role: 'tool',
+        content: typeof tc.result === 'string' ? tc.result : JSON.stringify(tc.result),
         toolCallId: tc.callId ?? row.id,
       });
     } else if (tc) {
       const callId = tc.callId ?? row.id;
       out.push({
         id: callId,
-        role: "assistant",
+        role: 'assistant',
         toolCalls: [
           {
             id: callId,
-            type: "function",
+            type: 'function',
             function: {
               name: tc.name,
-              arguments: typeof tc.args === "string" ? tc.args : JSON.stringify(tc.args ?? {}),
+              arguments: typeof tc.args === 'string' ? tc.args : JSON.stringify(tc.args ?? {}),
             },
           },
         ],
@@ -196,7 +206,7 @@ export function messagesSignature(messages: AguiMessage[]): string {
     .map((m) => {
       const textLen = extractText(m.content).length;
       const tcs = Array.isArray(m.toolCalls) ? m.toolCalls.length : 0;
-      return `${m.role}:${m.id ?? ""}:${textLen}:${tcs}${m.role === "tool" ? ":r" : ""}`;
+      return `${m.role}:${m.id ?? ''}:${textLen}:${tcs}${m.role === 'tool' ? ':r' : ''}`;
     })
-    .join("|");
+    .join('|');
 }

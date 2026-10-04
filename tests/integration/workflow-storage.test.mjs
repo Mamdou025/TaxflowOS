@@ -79,6 +79,8 @@ test('guided run revisions and pause state roundtrip through the real workspace 
   entry.sessions = [
     {
       id: 'guided-storage-test',
+      endedAt: '2026-10-02T12:00:00.000Z',
+      inputOverrides: { source: { value: 250, unit: 'CAD' } },
       version: 1,
       revision: 7,
       createdAt: '2026-09-16T00:00:00.000Z',

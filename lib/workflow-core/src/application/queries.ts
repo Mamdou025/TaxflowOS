@@ -42,7 +42,13 @@ export function listWorkflowRuns(library: WorkflowLibrary): WorkflowRunSummary[]
           runId: session.id,
           version: session.version,
           at: session.createdAt,
-          status: session.approvedAt ? 'approved' : session.paused ? 'paused' : 'in progress',
+          status: session.endedAt
+            ? 'ended'
+            : session.approvedAt
+              ? 'approved'
+              : session.paused
+                ? 'paused'
+                : 'in progress',
         })),
     ])
     .sort(

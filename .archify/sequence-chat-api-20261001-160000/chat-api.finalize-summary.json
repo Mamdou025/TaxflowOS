@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "sequence",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\sequence-chat-api-20261001-160000\\candidate.json",
+    "sha256": "f3990cbadf501a18d9d2b58277a0eb6377c81326a7d548ae80496fa69496849f",
+    "bytes": 6150
+  },
+  "artifact": {
+    "path": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\sequence-chat-api-20261001-160000\\chat-api.html",
+    "sha256": "57a9be3e46db203cca04ed6dc6392675c8a85372a1bc86aad1b369cc8b245460",
+    "bytes": 763393
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\sequence-chat-api-20261001-160000\\chat-api.finalize.json",
+    "summaryReceipt": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\sequence-chat-api-20261001-160000\\chat-api.finalize-summary.json",
+    "browserCheckReceipt": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\sequence-chat-api-20261001-160000\\chat-api.browser-check.json"
+  },
+  "update": {
+    "status": "unavailable",
+    "installedVersion": null,
+    "availableVersion": null,
+    "releaseNotes": null,
+    "checkedAt": null,
+    "source": null,
+    "noticeRequired": false,
+    "noticeText": null,
+    "reason": "disabled"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 16061
+}

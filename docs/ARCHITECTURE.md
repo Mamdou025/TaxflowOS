@@ -9,6 +9,11 @@ This guide describes the current implementation. The
 navigation, ownership boundaries and acceptance criteria; proposed capabilities
 there are not evidence of existing runtime guarantees.
 
+For interactive system perspectives, module navigation and file/import evidence,
+open the [local architecture explorer](../.archify/index.html). Its
+[maintenance guide](architecture-explorer.md) explains snapshot freshness, reviewed
+file descriptions and the limits of static relationships.
+
 The active application is a Vite/React frontend, an Express API, and PostgreSQL.
 Start with `artifacts/ai-workflow-builder/src/main.tsx` and `App.tsx` for browser
 routes, and `artifacts/api-server/src/index.ts`, `app.ts`, and `routes/index.ts`
@@ -38,6 +43,17 @@ never invokes the execution command.
 Interactive Chat and Run views share a saved-version session and component. See
 [shared interactive workflow execution](unified-workflow-execution.md) for block
 commands, source revisions, checkpoint behavior and runtime boundaries.
+The message list locates the exact opening tool receipt and mounts one live card
+there; the Work menu reads its session reference without copying execution state.
+Chat presents the session as one colored step accordion. Opening a step mounts its
+existing input/evidence components underneath; visited forms remain mounted while
+hidden to preserve drafts. Selection is local presentation state, not an execution
+command or navigation to Build. A form compares its draft against that bloc's current
+inputs before allowing an overwrite after a concurrent change.
+Recorded Build inspection reuses the canvas and configuration workspace with
+isolated inspection state, preserving the mutable draft. Source forms and agent
+input proposals use the existing mapping/connector helpers before invoking shared
+session commands; Chat does not own calculation or validation rules.
 
 Document acquisition stays in upload/API adapters; the synchronous workflow
 executors replay saved `DocumentExtraction` snapshots. `workflow-contracts` owns
@@ -57,16 +73,21 @@ Chat also offers MicroSina through the same CopilotKit endpoint and tool adapter
 The server selects the Foundry adapter from an allowlisted provider header after
 the existing session/workspace execute checks. Foundry owns MicroSina's pinned
 agent definition and model; Inscope supplies context, function tools and the
-existing review flow. The first saved message carries non-prompt `chatAgent`
-metadata; legacy chats select Sina. No schema migration is required.
+existing review flow. The first saved message retains non-prompt `chatAgent` metadata
+for the original provider and `selectedChatAgent` for the next reply. Assistant and
+tool rows retain their own `authorAgent`; changing the next provider does not relabel
+earlier work. Legacy rows inherit their saved original provider, or Sina if absent.
+These fields use the existing chat JSON contract, so agent switching needs no schema
+migration.
 An optional server setting allows MicroSina's pinned public toolbox to perform
 `tool_search` and `call_tool` in Foundry, alongside the native functions executed
 by Inscope. It defaults off until the candidate agent version is verified. The
 browser cannot configure remote servers; private source connectors are separate.
 See [MicroSina integration and limits](microsina-foundry/README.md).
 
-Chat is led by Sina. `features/assistant/runtime/computer-delegation` and its UI
-adapter expose one structured computer delegation tool; Sina retains platform
+Chat defaults to Sina and can switch to MicroSina for subsequent replies.
+`features/assistant/runtime/computer-delegation` and its UI
+adapter expose one structured computer delegation tool; the chat agent retains platform
 workflow commands, sources, retrieval and web search. `features/assistant/mkoro`
 renders bound task progress, decisions, connection settings and optional desktop
 previews inside that conversation. There is no second agent composer.
@@ -85,6 +106,16 @@ permission decision provenance. Authenticated polling consumes pending offered
 one-action approvals when that setting is enabled, under task/permission locks.
 Cancellation and ownership remain server-owned; no permanent Goose grant or
 browser-only automatic approval loop is introduced.
+
+Migration `0009_mkoro_reconnect.sql` adds nullable pairing targets and credential
+fingerprints. The pairing service reuses a connection only through an authenticated,
+actor/workspace-scoped target or saved companion credential proof. It atomically
+rotates the token, preserves identity/history and resets automatic approval; active
+tasks block reconnect. Polling and event transactions recheck the credential to
+reject requests authenticated before a rotation. The updated companion preserves
+local session mappings for the same connection. Composer selection omits revoked
+records; Settings keep identifiers for explicit review of legacy duplicates. Names
+are display labels, not identity evidence.
 
 The companion polls outbound and runs Goose through ACP. A separately authorized
 10-second screen-view lease enables Windows capture for an active task. Bounded

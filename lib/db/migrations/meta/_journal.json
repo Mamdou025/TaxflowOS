@@ -64,6 +64,13 @@
       "when": 1790726400000,
       "tag": "0008_mkoro_automatic_approval",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790985600000,
+      "tag": "0009_mkoro_reconnect",
+      "breakpoints": true
     }
   ]
 }

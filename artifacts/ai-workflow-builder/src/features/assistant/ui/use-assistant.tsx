@@ -1,3 +1,4 @@
+import { stopChatBeforeSwitch } from '../runtime/chat/chat-switch';
 import { searchWorkspace, HIT_ICON, type SearchHit } from './workflow-composer-search';
 export type { SearchHit } from './workflow-composer-search';
 import { workflowLibraryAtom } from '@/features/workflows-hub/workflow-library';
@@ -5,6 +6,8 @@ import { WorkflowSessionPanel } from '@/features/workflows-hub/workflow-session-
 import {
   openWorkflowSession,
   chatWorkflowIdsAtom,
+  chatSessionAtom,
+  bindChatSession,
 } from '@/features/workflows-hub/workflow-session-store';
 import { useSessionTools } from './use-session-tools';
 import { apiFetch } from '@/platform/auth/api-fetch';
@@ -21,7 +24,8 @@ import { apiFetch } from '@/platform/auth/api-fetch';
 // exactly once.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
+import type { ChatAgent } from '@/shared/stores/chat-store';
 import { WorkflowCommandResult } from './workflow-command-result';
 import {
   AgentRunReview,
@@ -740,8 +744,10 @@ export function useAssistant() {
   const { appendMessage } = useCopilotChat();
   // Read the live messages from the AG-UI store (CopilotKit 1.63). The legacy
   // useCopilotChat().visibleMessages is undefined here — see use-chat-persistence.
-  const { messages: visibleMessages } = useCopilotChatInternal() as unknown as {
+  const { messages: visibleMessages, stopGeneration, agent } = useCopilotChatInternal() as unknown as {
     messages: unknown[];
+    stopGeneration: () => void;
+    agent?: { detachActiveRun: () => Promise<void> };
   };
   // Server-side persistence: autosaves each turn + restores saved threads. Additive
   // — it observes CopilotKit, doesn't change how the chat runs. See use-chat-persistence.
@@ -754,14 +760,29 @@ export function useAssistant() {
   const [pinnedFields, setPinnedFields] = useState<string[]>([]); // fields brought in via search
   const [pinnedElements, setPinnedElements] = useState<PinnedElement[]>([]); // workflow source/output summoned in
   const [pinnedRuns, setPinnedRuns] = useAtom(chatWorkflowIdsAtom); // workflow ids launched deterministically (no LLM routing)
+  const chatSession = useAtomValue(chatSessionAtom);
   const [pinnedToolResults, setPinnedToolResults] = useState<ToolResult[]>([]); // tools run by hand from the Tools menu
 
-  const say = (content: string) => {
-    appendMessage(new TextMessage({ content, role: Role.User }));
+  const [replyPending, setReplyPending] = useState(false);
+  const replyPendingRef = useRef(false);
+  const replySequence = useRef(0);
+  const say = async (content: string) => {
+    const sequence = ++replySequence.current;
+    replyPendingRef.current = true;
+    setReplyPending(true);
     setSent(true);
+    try {
+      await appendMessage(new TextMessage({ content, role: Role.User }));
+    } finally {
+      if (replySequence.current === sequence) {
+        replyPendingRef.current = false;
+        setReplyPending(false);
+      }
+    }
   };
   const threadEmpty = (visibleMessages?.length ?? 0) === 0;
-  const showHero = threadEmpty && !sent && pinnedRuns.length === 0 && !persistence.activeThreadId;
+  const showHero =
+    threadEmpty && !sent && !chatSession && pinnedRuns.length === 0 && !persistence.activeThreadId;
   // Clear the parts of a conversation that live OUTSIDE the CopilotKit message store:
   // deterministically-pinned run cards + summoned fields/elements. These are per-chat
   // UI state, so switching chats (new or restored) must wipe them or the previous
@@ -774,8 +795,8 @@ export function useAssistant() {
   };
   // New chat: clear the store + pinned cards, and start a fresh (unsaved-until-first-
   // message) thread — genuinely blank, distinct from the one you were in.
-  const newChat = () => {
-    persistence.startNewThread();
+  const newChat = async () => {
+    if (!(await persistence.startNewThread())) return;
     clearPinned();
     setSent(false);
   };
@@ -825,6 +846,7 @@ export function useAssistant() {
   // renders makes every launcher click reliable regardless of model behavior.)
   const launchStartWorkflow = (workflowId: string) => {
     const ref = openWorkflowSession(store, workflowId);
+    bindChatSession(store, ref);
     setSent(true);
     setPinnedRuns((prev) => (prev.includes(ref.workflowId) ? prev : [...prev, ref.workflowId]));
   };
@@ -1055,6 +1077,12 @@ export function useAssistant() {
   return {
     // conversation
     say,
+    replyPending,
+    selectAgent: (next: ChatAgent) => {
+      if (!replyPendingRef.current) persistence.selectAgent(next);
+    },
+    agentSelectionDisabled: replyPending || persistence.agentSelectionDisabled,
+    interruptReply: () => stopChatBeforeSwitch({stopGeneration,agent}),
     newChat,
     showHero,
     threadEmpty,
@@ -1062,6 +1090,7 @@ export function useAssistant() {
     openThread,
     activeThreadId: persistence.activeThreadId,
     saving: persistence.saving,
+    saveError: persistence.saveError,
     restoring: persistence.restoring,
     restoreError: persistence.restoreError,
     reviewMkoroTask: mkoro.reviewMkoroTask,

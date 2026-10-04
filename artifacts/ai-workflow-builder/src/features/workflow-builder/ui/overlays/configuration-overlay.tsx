@@ -1,5 +1,7 @@
+import { WorkspaceRunsTab } from '../workspace/workspace-runs-tab';
 import { BlockIOPanel, ConnectionTransferPanel, resultForBlock } from '../workspace/block-io-panel';
 import { IsolatedBlockTest } from '../workspace/isolated-block-test';
+import { recordedInspectionLibraryAtom, useRecordedInspection } from '../workspace/recorded-inspection-context';
 import { TriggerReadinessPanel } from '../config/trigger-readiness-panel';
 import { activeBuilderWorkflowIdAtom } from '@/lib/builder-bridge';
 import { workflowLibraryAtom } from '@/features/workflows-hub/workflow-library';
@@ -411,51 +413,9 @@ function getPatchedWorkflowBlock({
 
 type ConfigurationOverlayProps = OverlayComponentProps;
 
-function WorkspaceRunsTab({
-  activeTab,
-  isRefreshing,
-  onDeleteAll,
-  onRefresh,
-  refreshRunsRef,
-}: {
-  activeTab: string;
-  isRefreshing: boolean;
-  onDeleteAll: () => void;
-  onRefresh: () => void;
-  refreshRunsRef: React.RefObject<(() => Promise<void>) | null>;
-}) {
-  return (
-    <div className="flex h-full flex-col">
-      <div className="flex shrink-0 items-center gap-2 border-b px-4 py-2">
-        <Button
-          className="text-muted-foreground"
-          disabled={isRefreshing}
-          onClick={onRefresh}
-          size="sm"
-          variant="ghost"
-        >
-          <RefreshCw className={`mr-2 size-4 ${isRefreshing ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
-        <Button
-          className="text-muted-foreground"
-          onClick={onDeleteAll}
-          size="sm"
-          variant="ghost"
-        >
-          <Eraser className="mr-2 size-4" />
-          Clear All
-        </Button>
-      </div>
-      <div className="flex-1 overflow-y-auto p-4">
-        <WorkflowRuns isActive={activeTab === "runs"} onRefreshRef={refreshRunsRef} />
-      </div>
-    </div>
-  );
-}
-
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex UI logic with multiple conditions
 export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
+  const inspection = useRecordedInspection();
   const { push, closeAll } = useOverlay();
   const [selectedNodeId, setSelectedNodeId] = useAtom(selectedNodeAtom);
   const [selectedEdgeId] = useAtom(selectedEdgeAtom);
@@ -470,7 +430,7 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
   const [currentWorkflowName, setCurrentWorkflowName] = useAtom(
     currentWorkflowNameAtom
   );
-  const isOwner = useAtomValue(isWorkflowOwnerAtom);
+  const isOwner = useAtomValue(isWorkflowOwnerAtom) && !inspection;
   const updateNodeData = useSetAtom(updateNodeDataAtom);
   const updateEdgeData = useSetAtom(updateEdgeDataAtom);
   const triggerAutosave = useSetAtom(autosaveAtom);
@@ -564,7 +524,7 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
 
   const handleUpdateConfig = useCallback(
     (key: string, value: string) => {
-      if (!selectedNode) {
+      if (!selectedNode || inspection) {
         return;
       }
       updateNodeData({
@@ -574,12 +534,12 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
         },
       });
     },
-    [selectedNode, updateNodeData]
+    [selectedNode, updateNodeData, inspection]
   );
 
   const handlePatchSelectedBlockConfig = useCallback(
     (patch: Record<string, unknown>) => {
-      if (!selectedNode) {
+      if (!selectedNode || inspection) {
         return;
       }
 
@@ -602,7 +562,7 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
       setHasUnsavedChanges(true);
       triggerAutosave({ immediate: true });
     },
-    [selectedNode, setHasUnsavedChanges, triggerAutosave, updateNodeData]
+    [selectedNode, setHasUnsavedChanges, triggerAutosave, updateNodeData, inspection]
   );
 
   const handleApplyVisualPreset = useCallback(
@@ -1074,8 +1034,8 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
   // The run record kept in executionLogs is per-step UI status, not the tool's
   // actual output, so the result is taken straight off the runner.
   const activeDefinitionId = useAtomValue(activeBuilderWorkflowIdAtom);
-  const personalLibrary = useAtomValue(workflowLibraryAtom);
-  const scopedRuns = [...new Map([...(activeDefinitionId ? personalLibrary[activeDefinitionId]?.runs.map(run => run.result.record) ?? [] : []), ...loadLocalRunRecords()]
+  const personalLibrary = useAtomValue(inspection ? recordedInspectionLibraryAtom : workflowLibraryAtom);
+  const scopedRuns = inspection ? [] : [...new Map([...(activeDefinitionId ? personalLibrary[activeDefinitionId]?.runs.map(run => run.result.record) ?? [] : []), ...loadLocalRunRecords()]
     .filter(run => run.execution.workflowId === (activeDefinitionId ?? currentWorkflowId))
     .map(run => [run.execution.id, run])).values()].sort((a, b) => new Date(b.execution.startedAt).getTime() - new Date(a.execution.startedAt).getTime());
   const runPicker = scopedRuns.length > 0 ? <label className="block px-4 py-2 text-xs">Inspect run <select aria-label="Inspect run" className="ml-2 rounded border bg-background p-1" value={scopedRuns.some(run => run.execution.id === selectedExecutionId) ? selectedExecutionId! : scopedRuns[0].execution.id} onChange={event => {
@@ -1088,7 +1048,7 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
   useEffect(() => { setShowStandaloneTest(false); }, [selectedBlock?.id, activeTab]);
   useEffect(() => { setBlockRunResult(null); }, [selectedBlock?.id, selectedBlock?.config]);
   const handleExecuteSelectedStep = useCallback(() => {
-    if (!(selectedNode && selectedBlock)) {
+    if (!(selectedNode && selectedBlock) || !isOwner) {
       return;
     }
 
@@ -1130,6 +1090,7 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
     }
   }, [
     currentWorkflowName,
+    isOwner,
     activeDefinitionId,
     edges,
     nodes,
@@ -1149,7 +1110,7 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
         {runPicker}
 
         <div className="flex-1 space-y-4 overflow-y-auto px-6 pt-4 pb-6">
-          <ConnectionTransferPanel edge={selectedEdge} source={selectedEdgeSourceNode?.data.block} target={selectedEdgeTargetNode?.data.block} run={getLatestLocalRunForBlock({ blockId: selectedEdge.target, executionLogs, selectedExecutionId, storedRecords: [...(activeDefinitionId ? personalLibrary[activeDefinitionId]?.runs.map(run => run.result.record) ?? [] : []), ...loadLocalRunRecords()], workflowId: activeDefinitionId ?? currentWorkflowId })} />
+          <ConnectionTransferPanel edge={selectedEdge} source={selectedEdgeSourceNode?.data.block} target={selectedEdgeTargetNode?.data.block} run={inspection ? inspection.record : getLatestLocalRunForBlock({ blockId: selectedEdge.target, executionLogs, selectedExecutionId, storedRecords: [...(activeDefinitionId ? personalLibrary[activeDefinitionId]?.runs.map(run => run.result.record) ?? [] : []), ...loadLocalRunRecords()], workflowId: activeDefinitionId ?? currentWorkflowId })} />
           <details><summary className="cursor-pointer text-sm font-medium">Connection settings</summary><div className="mt-3">
           <EdgeInspector
             disabled={isGenerating || !isOwner}
@@ -1321,7 +1282,7 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
   const showDataFlowWorkspace = Boolean(
     selectedBlock && !selectedNode.data.config?.blockCandidate
   );
-  const latestSelectedBlockRun = selectedBlock
+  const latestSelectedBlockRun = inspection ? inspection.record : selectedBlock
     ? getLatestLocalRunForBlock({
         blockId: selectedBlock.id,
         executionLogs,
@@ -1457,8 +1418,8 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
         overlayId={overlayId}
         title={showDataFlowWorkspace ? "Block workspace" : getTabTitle()}
       />
-
-      {selectedBlock && (
+      {inspection?.header}
+      {selectedBlock && !inspection && (
         <div className="shrink-0 border-b px-4 py-2">
           <button
             type="button"
@@ -1485,7 +1446,7 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
           setExecutionLogs(createExecutionLogsMap(localRun.record.logs));
         }} />
       ) : activeTab === "data" && selectedBlock ? (
-        <BlockIOPanel block={selectedBlock} edges={edges} nodes={nodes} run={latestSelectedBlockRun} testResult={blockRunResult} />
+        <div className="min-h-0 flex-1 overflow-auto"><BlockIOPanel block={selectedBlock} edges={edges} nodes={nodes} run={latestSelectedBlockRun} testResult={blockRunResult} />{inspection?.evidence}</div>
       ) : activeTab === "runs" && isOwner ? (
         <WorkspaceRunsTab activeTab={activeTab} isRefreshing={isRefreshing} onDeleteAll={handleDeleteAllRuns} onRefresh={handleRefreshRuns} refreshRunsRef={refreshRunsRef} />
       ) : selectedBlockIsRuleSource &&
@@ -1588,7 +1549,7 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
                 });
                 setHasUnsavedChanges(true);
               }}
-              onExecuteStep={handleExecuteSelectedStep}
+              onExecuteStep={inspection ? undefined : handleExecuteSelectedStep}
               onSelectedTermIdChange={setSelectedCalculationTermId}
               selectedTermId={selectedCalculationTermId}
             />
@@ -1600,7 +1561,7 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
           edges={edges}
           lastRun={latestSelectedBlockRun}
           nodes={nodes}
-          onExecuteStep={handleExecuteSelectedStep}
+          onExecuteStep={inspection ? undefined : handleExecuteSelectedStep}
         />
       ) : selectedBlock &&
         (isAggregatorLogicBlock(selectedBlock) ||
@@ -1623,7 +1584,7 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
               lastRun={latestSelectedBlockRun}
               nodes={nodes}
               onConfigPatch={handlePatchSelectedBlockConfig}
-              onExecuteStep={handleExecuteSelectedStep}
+              onExecuteStep={inspection ? undefined : handleExecuteSelectedStep}
               onSelectedRuleIdChange={setSelectedRulebookItemId}
               selectedRuleId={selectedRulebookItemId}
               sourceVersion={sourceVersion}
@@ -1636,7 +1597,7 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
               lastRun={latestSelectedBlockRun}
               nodes={nodes}
               onConfigPatch={handlePatchSelectedBlockConfig}
-              onExecuteStep={handleExecuteSelectedStep}
+              onExecuteStep={inspection ? undefined : handleExecuteSelectedStep}
             />
           )}
         </div>

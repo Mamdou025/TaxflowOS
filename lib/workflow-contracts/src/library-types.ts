@@ -10,6 +10,9 @@ export type WorkflowSession = {
   createdAt: string;
   paused: boolean;
   approvedAt?: string;
+  endedAt?: string;
+  /** Input values for this work only; never written into a saved definition. */
+  inputOverrides?: Record<string, Record<string, unknown>>;
   results: Record<string, ToolRunResult>;
   stale: string[];
   reviewed: string[];
@@ -32,6 +35,7 @@ export type PersonalWorkflow = {
   versions: { number: number; savedAt: string; definition: WorkflowDefinition }[];
   sessions?: WorkflowSession[];
   runs: {
+    sessionSnapshot?: WorkflowSession;
     documentReviews?: DocumentReview[];
     version: number;
     at: string;

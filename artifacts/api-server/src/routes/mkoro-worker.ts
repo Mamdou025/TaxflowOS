@@ -5,7 +5,8 @@ import {
   MkoroScreenUploadSchema,
   MkoroWorkerPollRequestSchema,
 } from '@workspace/api-zod/mkoro';
-import { authenticateWorker, pairWorker, pollCommands } from '../lib/mkoro/workers';
+import { authenticateWorker, pollCommands } from '../lib/mkoro/workers';
+import { pairWorker } from '../lib/mkoro/pairing';
 import { recordEvents } from '../lib/mkoro/events';
 import { MkoroError, type WorkerScope } from '../lib/mkoro/common';
 import { mkoroError } from './mkoro';

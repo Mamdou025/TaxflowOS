@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "ab8be6b4-327f-4ed4-9fa4-5b0bfbc72f84",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\workflow-sina-mkoro-20261001-150322\\candidate.json",
+  "output": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\workflow-sina-mkoro-20261001-150322\\sina-mkoro.html",
+  "specification": {
+    "sha256": "25d832a3b05f8299e0eb42e51eefc8bc87d83b2d2f9b67bd451a47fd09edd2be",
+    "bytes": 16908
+  },
+  "artifact": {
+    "sha256": "5ac8ac11f82d9cba2c7bb6c11acfad8d5f25f1f815a61a9dac8500c8ac5d72cb",
+    "bytes": 782403
+  }
+}

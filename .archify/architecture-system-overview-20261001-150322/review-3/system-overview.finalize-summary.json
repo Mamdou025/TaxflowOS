@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\architecture-system-overview-20261001-150322\\candidate.json",
+    "sha256": "47efbaf4ef98bcfd1b8f7235bdc6c67bea11f536b4d1035028d587ce444fa22b",
+    "bytes": 11890
+  },
+  "artifact": {
+    "path": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\architecture-system-overview-20261001-150322\\system-overview.html",
+    "sha256": "1bd3f74d3a1bd6db359fe108a44902b1e92b03f765da68deff647932c1f1215a",
+    "bytes": 771783
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\architecture-system-overview-20261001-150322\\review-3\\system-overview.finalize.json",
+    "summaryReceipt": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\architecture-system-overview-20261001-150322\\review-3\\system-overview.finalize-summary.json",
+    "browserCheckReceipt": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\architecture-system-overview-20261001-150322\\review-3\\system-overview.browser-check.json"
+  },
+  "update": {
+    "status": "unavailable",
+    "installedVersion": null,
+    "availableVersion": null,
+    "releaseNotes": null,
+    "checkedAt": null,
+    "source": null,
+    "noticeRequired": false,
+    "noticeText": null,
+    "reason": "disabled"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 10640,
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "resolvedCrossovers": 2,
+      "routesOverSuggestedBends": 2
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [
+        {
+          "left": {
+            "id": "workspace-api",
+            "from": "workspace",
+            "to": "api",
+            "label": "Scoped HTTP requests",
+            "collectionIndex": 0,
+            "artifactIndex": 1
+          },
+          "right": {
+            "id": "api-http-sources",
+            "from": "api",
+            "to": "http-sources",
+            "label": "Validated HTTP fetch",
+            "collectionIndex": 9,
+            "artifactIndex": 10
+          },
+          "point": [
+            504.40000000000015,
+            464.0000000000001
+          ],
+          "sharedNode": "api"
+        },
+        {
+          "left": {
+            "id": "ingestion-storage",
+            "from": "ingestion",
+            "to": "storage",
+            "label": "Download source bytes",
+            "collectionIndex": 5,
+            "artifactIndex": 6
+          },
+          "right": {
+            "id": "ingestion-models",
+            "from": "ingestion",
+            "to": "models",
+            "label": "Configured embeddings",
+            "collectionIndex": 6,
+            "artifactIndex": 7
+          },
+          "point": [
+            842.3999999999999,
+            118
+          ],
+          "sharedNode": "ingestion"
+        }
+      ],
+      "detours": [
+        {
+          "relationship": {
+            "id": "workspace-api",
+            "from": "workspace",
+            "to": "api",
+            "label": "Scoped HTTP requests",
+            "collectionIndex": 0,
+            "artifactIndex": 1
+          },
+          "bends": 3,
+          "stretch": 1.122
+        },
+        {
+          "relationship": {
+            "id": "ingestion-storage",
+            "from": "ingestion",
+            "to": "storage",
+            "label": "Download source bytes",
+            "collectionIndex": 5,
+            "artifactIndex": 6
+          },
+          "bends": 4,
+          "stretch": 1.107,
+          "directCorridorBlockers": [
+            {
+              "id": "models",
+              "label": "Model providers",
+              "box": [
+                530,
+                80,
+                250,
+                90
+              ]
+            }
+          ]
+        }
+      ],
+      "truncated": false
+    },
+    "hints": [
+      "workspace → api and api → http-sources cross next to api: move node workspace or http-sources so the two reach api from different sides (for example one level with it, one directly above or below it).",
+      "ingestion → storage and ingestion → models cross next to ingestion: move node storage or models so the two reach ingestion from different sides (for example one level with it, one directly above or below it).",
+      "workspace → api needs 3 bends: move node workspace or api so they share a row or column with matching centers, or sit diagonally with a clear corner."
+    ],
+    "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
+  }
+}

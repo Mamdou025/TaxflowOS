@@ -1,4 +1,3 @@
-import { WorkflowSessionPanel } from '@/features/workflows-hub/workflow-session-panel';
 // ─────────────────────────────────────────────────────────────────────────────
 // AssistantThread — the presentational chat column (light neumorphic). Shared by
 // the Scope focus mode (ChatWorkspace) and the docked AssistantPanel. Renders the
@@ -9,7 +8,7 @@ import { WorkflowSessionPanel } from '@/features/workflows-hub/workflow-session-
 
 import { type CSSProperties, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { chatAgentAtom } from '@/shared/stores/chat-store';
 import { ArrowRight, Calendar, ChevronDown, Database, Play, X } from 'lucide-react';
 import { CopilotChat } from '@copilotkit/react-ui';
@@ -50,7 +49,8 @@ const INSTRUCTIONS = (foundry = false) => {
   const c = buildAgentCatalog();
   const pages = c.pages.map((p) => `- ${p.key}: ${p.title} — ${p.subtitle}`).join('\n');
   const fields = c.fields.map((f) => `- ${f.fieldId} (${f.pageKey}): ${f.label}`).join('\n');
-  if (foundry) return `Inscope host context for MicroSina. Your base instructions and model are defined in Microsoft Foundry.\nAvailable page catalog:\n${pages}\nAvailable field catalog:\n${fields}`;
+  if (foundry)
+    return `Inscope host context for MicroSina. Your base instructions and model are defined in Microsoft Foundry.\nAvailable page catalog:\n${pages}\nAvailable field catalog:\n${fields}`;
   return `You are Sina, the assistant inside InScope, a fiscalist's workspace. You help by talking AND by acting through tools.
 
 Style: ALWAYS reply with a short, natural sentence FIRST — acknowledge the request and say what you're about to do — then call the tool(s). Never act silently. Keep replies concise and professional.
@@ -524,6 +524,8 @@ function HeroLaunchpad({
   );
 }
 
+const HiddenThreadInput = () => null;
+
 export function AssistantThread({
   assistant,
   variant = 'focus',
@@ -560,7 +562,7 @@ export function AssistantThread({
   // Live-agent config (Build tab writes it): fiscal guardrails + operator additions
   // are layered over the base system prompt for the live chat.
   const agentConfig = useAtomValue(agentConfigAtom);
-  const [chatAgent, setChatAgent] = useAtom(chatAgentAtom);
+  const chatAgent = useAtomValue(chatAgentAtom);
   const agentName = chatAgent === 'microsina' ? 'MicroSina' : 'Sina';
   const [agentError, setAgentError] = useState('');
   useEffect(() => setAgentError(''), [chatAgent, assistant.showHero]);
@@ -584,41 +586,9 @@ export function AssistantThread({
   // Rendered INSIDE the message scroll by ThreadMessages, so it's part of ONE
   // scrollable conversation (composer fixed at the bottom).
   const hasPinned =
-    pinnedRuns.length > 0 ||
-    pinnedElements.length > 0 ||
-    pinnedFields.length > 0 ||
-    pinnedToolResults.length > 0;
+    pinnedElements.length > 0 || pinnedFields.length > 0 || pinnedToolResults.length > 0;
   const platformPinnedNode = hasPinned ? (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
-      {pinnedRuns.map((wid) => {
-        return (
-          <div
-            key={`run:${wid}`}
-            className="flex items-start gap-2"
-            data-work-id={workIdFor('workflow-run', wid)}
-          >
-            <div className="flex-1">
-              <WorkflowSessionPanel workflowId={wid} />
-            </div>
-            <button
-              onClick={() => setPinnedRuns((p) => p.filter((x) => x !== wid))}
-              className="rounded hover:bg-black/5"
-              style={{
-                width: 22,
-                height: 22,
-                color: LC.muted,
-                border: 'none',
-                background: 'none',
-                cursor: 'pointer',
-                marginTop: 4,
-              }}
-              title="Remove"
-            >
-              <X size={13} />
-            </button>
-          </div>
-        );
-      })}
       {pinnedElements.map((el) => {
         const cfg = getWorkflowConfig(el.workflowId);
         if (!cfg) return null;
@@ -744,33 +714,22 @@ export function AssistantThread({
     );
 
   return (
-    <div
-      className="h-full flex flex-col relative"
-      style={{ ...CHAT_THEME, background: LC.bg /* match the sidebar surface (#F4F5F8) */ }}
-    >
+    <div className="h-full flex flex-col relative" style={{ ...CHAT_THEME, background: LC.bg }}>
       <AsideThreadStyles />
       <AssistantThreadStyles />
       <WorkMenuStyles />
       <ToolsMenuStyles />
       <DataFilesPanelStyles />
-      <div className="flex shrink-0 items-center gap-2 border-b px-3 py-2">
-        <label className="flex items-center gap-2 text-sm font-medium">
-          Agent
-          <select
-            aria-label="Chat agent"
-            value={chatAgent}
-            disabled={!assistant.showHero || !assistant.threadEmpty || !!assistant.activeThreadId || assistant.saving}
-            title="Choose an agent in a new chat. Saved chats keep their original agent."
-            onChange={(event) => setChatAgent(event.target.value === 'microsina' ? 'microsina' : 'sina')}
-            className="rounded border bg-transparent px-2 py-1"
-          >
-            <option value="sina">Sina</option>
-            <option value="microsina">MicroSina · Foundry</option>
-          </select>
-        </label>
-        <MkoroComputerSettings />
-      </div>
-      {agentError && <p role="alert" className="px-3 py-2 text-sm">{agentError}</p>}
+      {agentError && (
+        <p role="alert" className="px-3 py-2 text-sm">
+          {agentError}
+        </p>
+      )}
+      {assistant.saveError && (
+        <p role="alert" className="px-3 py-2 text-sm">
+          {assistant.saveError}
+        </p>
+      )}
 
       {/* Header = the SCOPE CLUSTER (big orb + scope tags). Shown once a chat is under
           way; on the FOCUS homepage it's hidden and the orb lives centred in the hero
@@ -808,13 +767,18 @@ export function AssistantThread({
             tools: composerTools,
             commands: composerCommands,
             onAttach,
+            onInterrupt: assistant.interruptReply,
+            onSend: assistant.say,
+            replyPending: assistant.replyPending,
+            onAgentChange: assistant.selectAgent,
+            agentSelectionDisabled: assistant.agentSelectionDisabled,
             onCustomizeAgent: () => launchOpenPage('agent'),
             armedTool,
             setArmedTool,
           }}
         >
           {/* The home and composer must render even when animation frames are suspended. */}
-          {showHero ? (
+          {showHero && (
             <div
               key="hero"
               className="flex-1 min-h-0 flex flex-col"
@@ -892,32 +856,38 @@ export function AssistantThread({
                 </div>
               </div>
             </div>
-          ) : (
-            <div
-              key="thread"
-              className="flex-1 min-h-0 flex flex-col aside-thread"
-              style={{ overflow: 'hidden' }}
-            >
-              <div className="flex-1 min-h-0">
-                {/* One scroll: pinned runs/cards render INSIDE the message stream (via
-                      the custom ThreadMessages), with the composer fixed at the bottom. */}
-                <PinnedThreadContext.Provider value={pinnedNode}>
-                  <CopilotChat
-                    className="h-full"
-                    instructions={applyLiveConfig(INSTRUCTIONS(chatAgent === 'microsina'), agentConfig)}
-                    onError={() => setAgentError(chatAgent === 'microsina'
-                      ? 'MicroSina could not complete its reply. Check the Foundry connection and Azure server identity, then retry. Sina has not been used as a fallback.'
-                      : 'Sina could not complete its reply. Check the connection and retry.')}
-                    labels={{ title: 'Assistant', initial: '', placeholder: 'Message Scope…' }}
-                    AssistantMessage={AsideAssistantMessage}
-                    UserMessage={AsideUserMessage}
-                    Input={AsideInput}
-                    Messages={ThreadMessages}
-                  />
-                </PinnedThreadContext.Provider>
-              </div>
-            </div>
           )}
+          <div
+            key="thread"
+            className={showHero ? 'hidden' : 'flex-1 min-h-0 flex flex-col aside-thread'}
+            style={{ overflow: 'hidden' }}
+          >
+            <div className="flex-1 min-h-0">
+              {/* One scroll: pinned runs/cards render INSIDE the message stream (via
+                      the custom ThreadMessages), with the composer fixed at the bottom. */}
+              <PinnedThreadContext.Provider value={pinnedNode}>
+                <CopilotChat
+                  className="h-full"
+                  instructions={applyLiveConfig(
+                    INSTRUCTIONS(chatAgent === 'microsina'),
+                    agentConfig,
+                  )}
+                  onError={() =>
+                    setAgentError(
+                      chatAgent === 'microsina'
+                        ? 'MicroSina could not complete its reply. Check the Foundry connection and Azure server identity, then retry. Sina has not been used as a fallback.'
+                        : 'Sina could not complete its reply. Check the connection and retry.',
+                    )
+                  }
+                  labels={{ title: 'Assistant', initial: '', placeholder: 'Message Scope…' }}
+                  AssistantMessage={AsideAssistantMessage}
+                  UserMessage={AsideUserMessage}
+                  Input={showHero ? HiddenThreadInput : AsideInput}
+                  Messages={ThreadMessages}
+                />
+              </PinnedThreadContext.Provider>
+            </div>
+          </div>
         </AsideComposerContext.Provider>
       </div>
     </div>

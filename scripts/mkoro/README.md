@@ -41,12 +41,34 @@ System.Drawing. It opens no network listener on the computer.
    visible information is insufficient to assess the action.
 
 Restart with the same command to reuse the pairing and chat mappings. Use `--pair`
-with a fresh token to pair again; revoke the old connection in Inscope if replacing
-it. `--name` sets the computer's display name, and `--state` chooses a different
-local state file. `--help` lists all startup options.
+with a fresh code when credentials need rotation. This companion sends its saved
+connection ID and credential as proof, so a re-pair reuses that connection and its
+Goose session mappings. The server rotates its credential and resets automatic
+tool approval to off. Display names are never used to merge registrations.
+`--name` sets the displayed name; `--state` chooses a different local state file.
+`--help` lists all startup options.
+
+Apply the matching API/frontend update and `0009_mkoro_reconnect.sql` migration
+before using reconnect. In computer settings, **Reconnect [name]** creates a code
+bound to that connection and its current credential. This also supports recovery
+without saved local credentials: stop the old companion and use the targeted code
+with a separate `--state` file. Existing server history remains; missing local
+Goose session mappings cannot be restored from the server. If saved proof belongs
+to another connection or is stale, pairing fails without replacing local state.
+An older companion can use a targeted code but resets its local session mappings;
+update the whole companion to retain those mappings and to reuse an identity with
+a general Connect code. A general code with no saved proof creates a new record.
+
+Reconnect is blocked while a task is queued, running or awaiting permission.
+Finish the task, or Stop it and wait for the cancellation acknowledgement. A crash
+after delivery can leave an uncertain active task permanently blocked; this
+change does not add forced recovery or replay. Existing duplicate records are
+kept with their history. Settings show creation/last-seen times and short IDs;
+explicitly revoke unused registrations after identifying them. Revoked entries
+are hidden from the chat selector, but retained in Settings/history.
 
 When upgrading an existing companion, copy the complete `scripts/mkoro` folder,
-including `capture.mjs`, `capture-windows.ps1` and `delegation.mjs`, and restart it.
+including `capture.mjs`, `capture-windows.ps1`, `delegation.mjs` and `pairing.mjs`, and restart it.
 Its regular poll updates the server's advertised capabilities, so a new pairing
 is not required just to upgrade. The server rejects new delegations to companions
 without `sina-delegation-v1` and desktop viewing without `desktop-screenshots-v1`.

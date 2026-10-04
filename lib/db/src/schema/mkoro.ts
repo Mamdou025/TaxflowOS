@@ -42,6 +42,8 @@ export const mkoroPairings = pgTable('mkoro_pairings', {
     .notNull()
     .references(() => users.id),
   expiresAt: time('expires_at').notNull(),
+  reconnectWorkerId: text('reconnect_worker_id').references(() => mkoroWorkers.id),
+  reconnectTokenHash: text('reconnect_token_hash'),
   usedAt: time('used_at'),
   createdAt: time('created_at').notNull().defaultNow(),
 });

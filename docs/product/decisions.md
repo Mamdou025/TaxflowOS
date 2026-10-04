@@ -6,15 +6,28 @@ rationale. Update this register and affected acceptance criteria together.
 
 ## Confirmed direction from the conversation
 
-| ID   | Decision                                                                                                         | Basis                                                                                      |
-| ---- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| C-01 | Chat is the home page and main starting point                                                                    | User explicitly required chat as the main page                                             |
-| C-02 | Runs are within Workflows; no primary Runs menu                                                                  | User rejected a standalone Runs menu; accepted the revised planning direction              |
-| C-03 | Chat provides a little of each capability without overwhelming the conversation                                  | User explicitly described this experience                                                  |
-| C-04 | Workflows, agent actions, source-aware answers, documents and integrations are core platform capabilities        | User's stated platform vision                                                              |
-| C-05 | Subsystems should be independently maintainable through explicit boundaries                                      | User asked to work on workflows without unintentionally changing the agent, and vice versa |
-| C-06 | Phase 0 produces the product/navigation/ownership/journey blueprint before further implementation                | User authorized Phase 0 after the revised plan                                             |
-| C-07 | One Sina-led chat delegates external computer work to Mkoro, with task progress and opt-in refreshed screenshots | User explicitly approved this integration and screenshot approach on 2026-09-28            |
+| ID   | Decision                                                                                                         | Basis                                                                                                         |
+| ---- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| C-01 | Chat is the home page and main starting point                                                                    | User explicitly required chat as the main page                                                                |
+| C-02 | Runs are within Workflows; no primary Runs menu                                                                  | User rejected a standalone Runs menu; accepted the revised planning direction                                 |
+| C-03 | Chat provides a little of each capability without overwhelming the conversation                                  | User explicitly described this experience                                                                     |
+| C-04 | Workflows, agent actions, source-aware answers, documents and integrations are core platform capabilities        | User's stated platform vision                                                                                 |
+| C-05 | Subsystems should be independently maintainable through explicit boundaries                                      | User asked to work on workflows without unintentionally changing the agent, and vice versa                    |
+| C-06 | Phase 0 produces the product/navigation/ownership/journey blueprint before further implementation                | User authorized Phase 0 after the revised plan                                                                |
+| C-07 | One Sina-led chat delegates external computer work to Mkoro, with task progress and opt-in refreshed screenshots | User explicitly approved this integration and screenshot approach on 2026-09-28                               |
+| C-08 | Sina and MicroSina can take successive turns in the same chat, retaining its workflow, files, values and history | User confirmed continuing the same conversation when switching agents on 2026-10-03                           |
+| C-09 | Chat shows one compact colored workflow step list; each selected step expands its actual bloc UI underneath      | User selected expansion beneath each step on 2026-10-03; opening a step stays in Chat and does not execute it |
+
+For C-08, earlier replies keep their original author, and action approvals remain
+bound to the agent and operation that requested them. Selection applies to the next
+reply after the current reply/tool turn settles. Switching does not restart a workflow
+or reassign a computer task. This supersedes the earlier implementation's restriction
+to choosing a provider only before the first message.
+
+For C-09, folding preserves unsaved input values, and a workflow can run while its
+details are collapsed. The existing bloc forms, validation and execution commands
+remain authoritative. Opening Build is a separate explicit action. One expanded step
+at a time is the compact implementation default, not a change to the execution order.
 
 ## Baseline design recommendations
 

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "fab7015f-9496-4f5e-9fca-869c696d88b5",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\sequence-saved-workflow-20261001-150322\\candidate.json",
+  "output": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\sequence-saved-workflow-20261001-150322\\saved-workflow.html",
+  "specification": {
+    "sha256": "b275f1d87def761c69344fecbd446beb50e2a1e08839c3a5fb01159f6f35d156",
+    "bytes": 11775
+  },
+  "artifact": {
+    "sha256": "d1f6fa05dea17695ec1278e85ad911c2699d4279dd7e6593271fe4d617f1edd8",
+    "bytes": 777216
+  }
+}

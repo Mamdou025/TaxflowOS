@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "workflow",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\sequence-saved-workflow-20261001-150322\\candidate.json",
+    "sha256": "b275f1d87def761c69344fecbd446beb50e2a1e08839c3a5fb01159f6f35d156",
+    "bytes": 11775
+  },
+  "artifact": {
+    "path": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\sequence-saved-workflow-20261001-150322\\saved-workflow.html",
+    "sha256": "d1f6fa05dea17695ec1278e85ad911c2699d4279dd7e6593271fe4d617f1edd8",
+    "bytes": 777216
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\sequence-saved-workflow-20261001-150322\\review-2\\saved-workflow.finalize.json",
+    "summaryReceipt": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\sequence-saved-workflow-20261001-150322\\review-2\\saved-workflow.finalize-summary.json",
+    "browserCheckReceipt": "C:\\Users\\Mamad\\Sinaxe\\TaxflowOS\\.archify\\sequence-saved-workflow-20261001-150322\\review-2\\saved-workflow.browser-check.json"
+  },
+  "update": {
+    "status": "unavailable",
+    "installedVersion": null,
+    "availableVersion": null,
+    "releaseNotes": null,
+    "checkedAt": null,
+    "source": null,
+    "noticeRequired": false,
+    "noticeText": null,
+    "reason": "disabled"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 6218,
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "routesOverSuggestedBends": 2
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [],
+      "detours": [
+        {
+          "relationship": {
+            "id": "denied-role",
+            "from": "access",
+            "to": "denied",
+            "label": "Denied",
+            "collectionIndex": 4,
+            "artifactIndex": 5
+          },
+          "bends": 3,
+          "stretch": 1.186
+        },
+        {
+          "relationship": {
+            "id": "durable-choice",
+            "from": "choose",
+            "to": "access",
+            "label": "Durably",
+            "collectionIndex": 5,
+            "artifactIndex": 6
+          },
+          "bends": 3,
+          "stretch": 1.186
+        }
+      ],
+      "truncated": false
+    },
+    "hints": [
+      "access → denied needs 3 bends: move node access or denied so they share a row or column with matching centers, or sit diagonally with a clear corner.",
+      "choose → access needs 3 bends: move node choose or access so they share a row or column with matching centers, or sit diagonally with a clear corner."
+    ],
+    "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
+  }
+}

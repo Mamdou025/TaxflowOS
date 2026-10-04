@@ -1,6 +1,5 @@
 import { apiFetch } from '@/platform/auth/api-fetch';
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 // useChatPersistence — the client half of "save chats".
 //
@@ -22,21 +21,40 @@ import { apiFetch } from '@/platform/auth/api-fetch';
 // save, and restoring an existing thread blocks chat until it loads or is abandoned.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useCopilotChatInternal } from "@copilotkit/react-core";
-import { useAgent, useCopilotKit } from "@copilotkit/react-core/v2";
-import { useAtom } from "jotai";
-import { activeChatThreadIdAtom, chatAgentAtom } from "@/shared/stores/chat-store";
-import { readChatAgent, tagChatAgent } from './chat-agent';
-import { generateId } from "@/lib/utils/id";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCopilotChatInternal } from '@copilotkit/react-core';
+import { useAgent, useCopilotKit } from '@copilotkit/react-core/v2';
+import { useAtom, useStore } from 'jotai';
+import {
+  activeSessionAtom,
+  chatSessionAtom,
+  chatMessageAnchorAtom,
+  workflowInspectionAtom,
+} from '@/features/workflows-hub/workflow-session-store';
+import {
+  readWorkflowBinding,
+  withWorkflowBinding,
+  workflowAnchorForMessages,
+} from './workflow-binding';
+import { activeChatThreadIdAtom, chatAgentAtom, type ChatAgent } from '@/shared/stores/chat-store';
+import {
+  chatAuthorsAtom,
+  originalChatAgentAtom,
+  readChatAgent,
+  readChatAuthors,
+  readOriginalChatAgent,
+  rememberChatAuthors,
+  tagChatAgent,
+} from './chat-agent';
+import { generateId } from '@/lib/utils/id';
 import {
   type AguiMessage,
   messagesSignature,
   projectMessages,
   projectCompleteMessages,
   reconstructMessages,
-} from "./message-codec";
-import { assertCurrentChatRequest, stopChatBeforeSwitch } from "./chat-switch";
+} from './message-codec';
+import { assertCurrentChatRequest, stopChatBeforeSwitch } from './chat-switch';
 
 const SAVE_DEBOUNCE_MS = 900;
 
@@ -48,11 +66,11 @@ type ChatInternal = {
   reset: () => void;
   setMessages: (messages: AguiMessage[]) => void;
   stopGeneration: () => void;
-  agent?: { detachActiveRun: () => Promise<void> };
+  agent?: { detachActiveRun: () => Promise<void>; messages?: AguiMessage[]; isRunning?: boolean };
 };
 
 function deriveTitle(messages: ReturnType<typeof projectMessages>): string | null {
-  const firstUser = messages.find((m) => m.role === "user" && m.content.text);
+  const firstUser = messages.find((m) => m.role === 'user' && m.content.text);
   const text = firstUser?.content.text?.trim();
   if (!text) return null;
   return text.length > 60 ? `${text.slice(0, 57)}…` : text;
@@ -61,17 +79,22 @@ function deriveTitle(messages: ReturnType<typeof projectMessages>): string | nul
 export type ChatPersistence = {
   activeThreadId: string | null;
   saving: boolean;
+  saveError: string;
   /** Restore a saved thread into the chat. Returns true if it loaded. */
   loadThread: (id: string) => Promise<boolean>;
   /** Clear the chat; the next message starts a fresh saved thread. */
-  startNewThread: () => Promise<void>;
+  startNewThread: () => Promise<boolean>;
   /** Persist the current conversation before binding a background computer task. */
   ensureThread: (expectedUserMessageId: string) => Promise<string>;
   restoring: boolean;
   restoreError: string;
+  selectAgent: (agent: ChatAgent) => boolean;
+  agentSelectionDisabled: boolean;
 };
 
 export function useChatPersistence(): ChatPersistence {
+  const store = useStore();
+  const [workflowBinding, setWorkflowBinding] = useAtom(chatSessionAtom);
   const { messages, isLoading, reset, setMessages, stopGeneration, agent } =
     useCopilotChatInternal() as unknown as ChatInternal;
   const { isReady: agentReady } = useAgent();
@@ -83,10 +106,15 @@ export function useChatPersistence(): ChatPersistence {
   const [chatAgent, setChatAgent] = useAtom(chatAgentAtom);
   const chatAgentRef = useRef(chatAgent);
   chatAgentRef.current = chatAgent;
+  const originalAgentRef = useRef(store.get(originalChatAgentAtom) ?? chatAgent);
+  const loadingRef = useRef(isLoading);
+  loadingRef.current = isLoading;
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const pendingSave = useRef<Promise<unknown>>(Promise.resolve());
   const initialThread = useRef(activeThreadId);
-  const [restoring, setRestoring] = useState(!!activeThreadId && !(messages?.length));
-  const [restoreError, setRestoreError] = useState("");
+  const [restoring, setRestoring] = useState(!!activeThreadId && !messages?.length);
+  const [restoreError, setRestoreError] = useState('');
   const [awaitingAgentThread, setAwaitingAgentThread] = useState<string | null>(null);
 
   // Refs so the debounced effect always sees current values without re-subscribing.
@@ -94,6 +122,17 @@ export function useChatPersistence(): ChatPersistence {
   activeIdRef.current = activeThreadId;
   const messagesRef = useRef<AguiMessage[]>(messages ?? []);
   messagesRef.current = messages ?? [];
+  const agentRef = useRef(agent);
+  agentRef.current = agent;
+  useEffect(() => {
+    const anchor = {
+      read: () => workflowAnchorForMessages(agentRef.current?.messages ?? messagesRef.current),
+    };
+    store.set(chatMessageAnchorAtom, anchor);
+    return () => {
+      if (store.get(chatMessageAnchorAtom) === anchor) store.set(chatMessageAnchorAtom, null);
+    };
+  }, [store]);
   const hydratingRef = useRef(false); // suppress the save that a restore would trigger
   const authFailedRef = useRef(false); // stop hammering the API once it 401s
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -102,10 +141,51 @@ export function useChatPersistence(): ChatPersistence {
 
   const signature = messagesSignature(messages ?? []);
 
+  const captureAuthors = useCallback(() => {
+    const authors = rememberChatAuthors(
+      agentRef.current?.messages ?? messagesRef.current,
+      store.get(chatAuthorsAtom),
+      chatAgentRef.current,
+    );
+    store.set(chatAuthorsAtom, authors);
+    store.set(originalChatAgentAtom, originalAgentRef.current);
+    return authors;
+  }, [store]);
+
+  useEffect(() => {
+    if (!restoring && !restoreError) captureAuthors();
+  }, [signature, restoring, restoreError, captureAuthors]);
+
+  const selectAgent = useCallback(
+    (next: ChatAgent): boolean => {
+      if (next === chatAgentRef.current) return true;
+      if (
+        switchingRef.current ||
+        loadingRef.current ||
+        agentRef.current?.isRunning ||
+        restoring ||
+        restoreError
+      )
+        return false;
+      // Freeze the settled turn before changing the provider header. Neither the
+      // transcript, workflow binding nor outstanding approval requests is replaced.
+      captureAuthors();
+      if (!messagesRef.current.length && !activeIdRef.current) {
+        originalAgentRef.current = next;
+        store.set(originalChatAgentAtom, next);
+      }
+      chatAgentRef.current = next;
+      setChatAgent(next);
+      return true;
+    },
+    [captureAuthors, restoring, restoreError, setChatAgent, store],
+  );
+
   const doSave = useCallback(async () => {
-    if (authFailedRef.current) return;
-    const projected = tagChatAgent(projectCompleteMessages(messagesRef.current ?? []), chatAgentRef.current);
-    if (projected.length === 0) return;
+    if (authFailedRef.current) return false;
+    const complete = projectCompleteMessages(messagesRef.current ?? []);
+    const binding = store.get(chatSessionAtom);
+    if (complete.length === 0 && !binding) return true;
 
     // Mint a thread id on the first save of a fresh conversation.
     let id = activeIdRef.current;
@@ -115,47 +195,95 @@ export function useChatPersistence(): ChatPersistence {
       setActiveThreadId(id);
     }
 
+    const projected = tagChatAgent(
+      withWorkflowBinding(complete, id, binding),
+      chatAgentRef.current,
+      originalAgentRef.current,
+      captureAuthors(),
+    );
+    const previous = pendingSave.current;
+    let release!: () => void;
+    pendingSave.current = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await previous;
     setSaving(true);
     try {
       const res = await apiFetch(`/api/chat/threads/${id}/messages`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: projected, title: deriveTitle(projected) }),
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: projected,
+          title: deriveTitle(projected) ?? (binding ? 'Workflow conversation' : null),
+        }),
+        signal: AbortSignal.timeout(20_000),
       });
       if (res.status === 401) authFailedRef.current = true;
+      if (!res.ok) throw new Error('Chat save failed.');
+      setSaveError('');
+      return true;
     } catch {
-      // fail-soft: keep the conversation working even if the save endpoint is down
+      setSaveError(
+        'This conversation and its workflow link could not be saved. Keep this chat open and retry after the connection recovers.',
+      );
+      return false;
     } finally {
       setSaving(false);
+      release();
     }
-  }, [setActiveThreadId]);
+  }, [setActiveThreadId, store, captureAuthors]);
 
-  const ensureThread = useCallback(async (expectedUserMessageId: string): Promise<string> => {
-    if (switchingRef.current) throw new Error("The chat is changing. No computer task was delegated.");
-    assertCurrentChatRequest(messagesRef.current, expectedUserMessageId);
-    const projected = tagChatAgent(projectCompleteMessages(messagesRef.current ?? []), chatAgentRef.current);
-    if (!projected.some((message) => message.role === "user" && message.id === expectedUserMessageId))
-      throw new Error("The request is not part of a complete conversation yet. No computer task was delegated.");
-    const generation = threadGeneration.current;
-    let id = activeIdRef.current;
-    if (!id) {
-      id = generateId();
-      activeIdRef.current = id;
-      setActiveThreadId(id);
-    }
-    const response = await apiFetch(`/api/chat/threads/${encodeURIComponent(id)}/messages`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: projected, title: deriveTitle(projected) }),
-      signal: AbortSignal.timeout(20_000),
-    });
-    if (!response.ok)
-      throw new Error("The conversation could not be saved. No computer task was delegated.");
-    if (generation !== threadGeneration.current || activeIdRef.current !== id)
-      throw new Error("The chat changed before delegation. Submit the request in the intended chat.");
-    assertCurrentChatRequest(messagesRef.current, expectedUserMessageId);
-    return id;
-  }, [setActiveThreadId]);
+  const ensureThread = useCallback(
+    async (expectedUserMessageId: string): Promise<string> => {
+      if (switchingRef.current)
+        throw new Error('The chat is changing. No computer task was delegated.');
+      assertCurrentChatRequest(messagesRef.current, expectedUserMessageId);
+      const projected = tagChatAgent(
+        projectCompleteMessages(messagesRef.current ?? []),
+        chatAgentRef.current,
+        originalAgentRef.current,
+        captureAuthors(),
+      );
+      if (
+        !projected.some(
+          (message) => message.role === 'user' && message.id === expectedUserMessageId,
+        )
+      )
+        throw new Error(
+          'The request is not part of a complete conversation yet. No computer task was delegated.',
+        );
+      const generation = threadGeneration.current;
+      let id = activeIdRef.current;
+      if (!id) {
+        id = generateId();
+        activeIdRef.current = id;
+        setActiveThreadId(id);
+      }
+      const response = await apiFetch(`/api/chat/threads/${encodeURIComponent(id)}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: tagChatAgent(
+            withWorkflowBinding(projected, id, store.get(chatSessionAtom)),
+            chatAgentRef.current,
+            originalAgentRef.current,
+            store.get(chatAuthorsAtom),
+          ),
+          title: deriveTitle(projected),
+        }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!response.ok)
+        throw new Error('The conversation could not be saved. No computer task was delegated.');
+      if (generation !== threadGeneration.current || activeIdRef.current !== id)
+        throw new Error(
+          'The chat changed before delegation. Submit the request in the intended chat.',
+        );
+      assertCurrentChatRequest(messagesRef.current, expectedUserMessageId);
+      return id;
+    },
+    [setActiveThreadId, store, captureAuthors],
+  );
 
   // Debounced autosave: wait until a turn has settled, then persist.
   // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the message signature + loading
@@ -166,7 +294,7 @@ export function useChatPersistence(): ChatPersistence {
       return;
     }
     if (isLoading) return;
-    if ((messagesRef.current?.length ?? 0) === 0) return;
+    if ((messagesRef.current?.length ?? 0) === 0 && !workflowBinding) return;
 
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
@@ -176,7 +304,7 @@ export function useChatPersistence(): ChatPersistence {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [signature, isLoading, restoring, restoreError]);
+  }, [signature, isLoading, restoring, restoreError, workflowBinding, chatAgent]);
 
   const loadThread = useCallback(
     async (id: string): Promise<boolean> => {
@@ -185,20 +313,22 @@ export function useChatPersistence(): ChatPersistence {
       setAwaitingAgentThread(null);
       if (timerRef.current) clearTimeout(timerRef.current);
       setRestoring(true);
-      setRestoreError("");
+      setRestoreError('');
       try {
+        if (!restoring && !restoreError && !(await doSave())) return false;
         await stopChatBeforeSwitch({ stopGeneration, agent });
         if (generation !== threadGeneration.current) return false;
         const res = await apiFetch(`/api/chat/threads/${encodeURIComponent(id)}`, {
           signal: AbortSignal.timeout(20_000),
         });
-        if (!res.ok) throw new Error("This saved chat could not be opened. Retry or start a new chat.");
+        if (!res.ok)
+          throw new Error('This saved chat could not be opened. Retry or start a new chat.');
         const data = (await res.json()) as {
           messages?: { id: string; role: string; seq: number; content: unknown }[];
         };
         const rows = (data.messages ?? []).map((m) => ({
           id: m.id,
-          role: m.role as "user" | "assistant" | "tool" | "system",
+          role: m.role as 'user' | 'assistant' | 'tool' | 'system',
           seq: m.seq,
           content: (m.content ?? {}) as {
             text?: string;
@@ -210,24 +340,36 @@ export function useChatPersistence(): ChatPersistence {
         // failed. A provisional SDK agent cannot safely own restored messages.
         activeIdRef.current = id;
         const restoredAgent = readChatAgent(rows);
+        const restoredAuthors = readChatAuthors(rows);
+        originalAgentRef.current = readOriginalChatAgent(rows);
+        store.set(originalChatAgentAtom, originalAgentRef.current);
+        const restoredBinding = readWorkflowBinding(rows);
         chatAgentRef.current = restoredAgent;
         setChatAgent(restoredAgent);
+        store.set(chatAuthorsAtom, restoredAuthors);
         setActiveThreadId(id);
+        setWorkflowBinding(restoredBinding);
+        store.set(activeSessionAtom, restoredBinding);
+        store.set(workflowInspectionAtom, null);
         const readyChat = readyChatRef.current;
-        if (!readyChat) {
+        const restored = reconstructMessages(rows);
+        if (!readyChat && restored.length > 0) {
           setAwaitingAgentThread(id);
-          throw new Error("Sina is unavailable. Your saved chat is unchanged and its computer tasks remain available. Retry opening the chat after the connection recovers.");
+          throw new Error(
+            'Sina is unavailable. Your saved chat is unchanged and its computer tasks remain available. Retry opening the chat after the connection recovers.',
+          );
         }
         hydratingRef.current = true;
         authFailedRef.current = false;
-        const restored = reconstructMessages(rows);
-        readyChat.setMessages(restored);
+        (readyChat?.setMessages ?? setMessages)(restored);
         messagesRef.current = restored;
         return true;
       } catch (cause) {
         if (generation === threadGeneration.current) {
           hydratingRef.current = false;
-          setRestoreError(cause instanceof Error ? cause.message : "This saved chat could not be opened.");
+          setRestoreError(
+            cause instanceof Error ? cause.message : 'This saved chat could not be opened.',
+          );
         }
         return false;
       } finally {
@@ -237,7 +379,17 @@ export function useChatPersistence(): ChatPersistence {
         }
       }
     },
-    [setActiveThreadId, setChatAgent, stopGeneration, agent]
+    [
+      setActiveThreadId,
+      setChatAgent,
+      stopGeneration,
+      agent,
+      store,
+      setWorkflowBinding,
+      doSave,
+      restoring,
+      restoreError,
+    ],
   );
 
   const startNewThread = useCallback(async () => {
@@ -246,54 +398,87 @@ export function useChatPersistence(): ChatPersistence {
     setAwaitingAgentThread(null);
     if (timerRef.current) clearTimeout(timerRef.current);
     setRestoring(true);
-    setRestoreError("");
+    setRestoreError('');
     try {
+      if (!restoring && !restoreError && !(await doSave())) return false;
       await stopChatBeforeSwitch({ stopGeneration, agent });
-      if (generation !== threadGeneration.current) return;
+      if (generation !== threadGeneration.current) return false;
       reset();
       messagesRef.current = [];
+      store.set(chatAuthorsAtom, {});
+      originalAgentRef.current = chatAgentRef.current;
+      store.set(originalChatAgentAtom, originalAgentRef.current);
       authFailedRef.current = false;
       activeIdRef.current = null;
       setActiveThreadId(null);
+      setSaveError('');
+      setWorkflowBinding(null);
+      store.set(activeSessionAtom, null);
+      store.set(workflowInspectionAtom, null);
+      return true;
     } catch {
       if (generation === threadGeneration.current)
-        setRestoreError("The previous reply could not be stopped. Retry opening a new chat.");
+        setRestoreError('The previous reply could not be stopped. Retry opening a new chat.');
+      return false;
     } finally {
       if (generation === threadGeneration.current) {
         switchingRef.current = false;
         setRestoring(false);
       }
     }
-  }, [reset, setActiveThreadId, stopGeneration, agent]);
+  }, [
+    reset,
+    setActiveThreadId,
+    stopGeneration,
+    agent,
+    store,
+    setWorkflowBinding,
+    doSave,
+    restoring,
+    restoreError,
+  ]);
 
-  const initialRestorePhase = useRef<"pending" | "unavailable" | "ready">("pending");
+  const initialRestorePhase = useRef<'pending' | 'unavailable' | 'ready'>('pending');
   useEffect(() => {
     if (agentReady && awaitingAgentThread && activeIdRef.current === awaitingAgentThread) {
-      initialRestorePhase.current = "ready";
+      initialRestorePhase.current = 'ready';
       void loadThread(awaitingAgentThread);
       return;
     }
-    if (!initialThread.current || initialRestorePhase.current === "ready") return;
+    if (!initialThread.current || initialRestorePhase.current === 'ready') return;
     if (activeIdRef.current !== initialThread.current) return;
     // Wait for the canonical agent: each SDK hook has its own temporary agent
     // before discovery, and those temporary message stores are discarded.
     if (agentReady) {
-      initialRestorePhase.current = "ready";
+      initialRestorePhase.current = 'ready';
       if (messagesRef.current.length === 0) void loadThread(initialThread.current);
-    } else if (runtimeStatus === "error" && initialRestorePhase.current === "pending") {
-      initialRestorePhase.current = "unavailable";
+    } else if (runtimeStatus === 'error' && initialRestorePhase.current === 'pending') {
+      initialRestorePhase.current = 'unavailable';
       void loadThread(initialThread.current);
     }
   }, [loadThread, agentReady, runtimeStatus, awaitingAgentThread]);
 
   useEffect(() => {
-    if (!initialThread.current || agentReady || runtimeStatus === "error") return;
+    if (!initialThread.current || agentReady || runtimeStatus === 'error') return;
     const timeout = setTimeout(() => {
       if (activeIdRef.current !== initialThread.current) return;
-      setRestoreError("Sina is taking too long to connect. Your saved chat is unchanged. Retry opening it after the connection recovers.");
+      setRestoreError(
+        'Sina is taking too long to connect. Your saved chat is unchanged. Retry opening it after the connection recovers.',
+      );
     }, 20_000);
     return () => clearTimeout(timeout);
   }, [agentReady, runtimeStatus]);
 
-  return { activeThreadId, saving, loadThread, startNewThread, ensureThread, restoring, restoreError };
+  return {
+    activeThreadId,
+    saving,
+    saveError,
+    loadThread,
+    startNewThread,
+    ensureThread,
+    restoring,
+    restoreError,
+    selectAgent,
+    agentSelectionDisabled: isLoading || restoring || !!restoreError,
+  };
 }

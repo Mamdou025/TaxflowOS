@@ -1,0 +1,237 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// ThreadMessages — a custom CopilotChat `Messages` slot that renders pinned work
+// (deterministically-launched runs + summoned fields/elements) INSIDE the same scroll
+// as the conversation. This makes a launched run part of ONE scrollable thread with the
+// composer fixed at the bottom — instead of a separate 70%-tall pane stacked ABOVE the
+// chat (which read as "two chats").
+//
+// The default Messages isn't exported, so this reimplements it faithfully: the same
+// .copilotKitMessages / .copilotKitMessagesContainer structure + auto-scroll-to-bottom
+// and the same per-message RenderMessage call — plus the pinned node (via
+// PinnedThreadContext) rendered at the top of the message container.
+// ─────────────────────────────────────────────────────────────────────────────
+
+import {
+  Fragment,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  type ReactNode,
+} from 'react';
+import { useCopilotChatInternal } from '@copilotkit/react-core';
+import { useChatContext, type MessagesProps } from '@copilotkit/react-ui';
+import {
+  MessageSpecialistContext,
+  buildMessageSpecialistMap,
+  messageSignature,
+} from './message-specialists';
+import {
+  ToolsUsed,
+  buildToolCallInfo,
+  type ToolCallInfo,
+  type ToolUsage,
+} from '../workspace/tool-receipt';
+import { useAtomValue } from 'jotai';
+import { chatSessionAtom } from '@/features/workflows-hub/workflow-session-store';
+import { workflowMessageIndex } from '../runtime/chat/workflow-position';
+import { ChatWorkflowThread } from './chat-workflow-thread';
+
+/** Pinned work (runs / fields / elements) to render atop the message scroll. */
+export const PinnedThreadContext = createContext<ReactNode>(null);
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyMessage = { role?: string; [k: string]: any };
+
+/**
+ * The tools that ran to produce the answer at `index` — i.e. every tool call made
+ * since the previous user message, up to and including this one, threaded to its
+ * result. Feeds the "Tools used" bar under the reply.
+ */
+function toolsUsedForTurn(
+  messages: AnyMessage[],
+  index: number,
+  info: Map<string, ToolCallInfo>,
+): ToolUsage[] {
+  let start = index;
+  while (start >= 0 && messages[start]?.role !== 'user') start--;
+  const seen = new Set<string>();
+  const out: ToolUsage[] = [];
+  for (let j = start + 1; j <= index; j++) {
+    const m = messages[j];
+    if (m?.role === 'assistant' && Array.isArray(m.toolCalls)) {
+      for (const tc of m.toolCalls) {
+        const id = tc?.id as string | undefined;
+        if (!id || seen.has(id)) continue;
+        seen.add(id);
+        const c = info.get(id);
+        if (c) out.push({ id, name: c.name, args: c.args, result: c.result });
+      }
+    }
+  }
+  return out;
+}
+
+// Faithful copy of CopilotKit's internal useScrollToBottom: auto-scroll on new user
+// turns / streamed content, but stop following once the user scrolls up.
+function useScrollToBottom(userMessageCount: number) {
+  const messagesEndRef = useRef<HTMLElement | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const isProgrammaticScrollRef = useRef(false);
+  const isUserScrollUpRef = useRef(false);
+
+  const scrollToBottom = () => {
+    const c = messagesContainerRef.current;
+    if (c && messagesEndRef.current) {
+      isProgrammaticScrollRef.current = true;
+      c.scrollTop = c.scrollHeight;
+    }
+  };
+
+  useEffect(() => {
+    const c = messagesContainerRef.current;
+    if (!c) return;
+    const onScroll = () => {
+      if (isProgrammaticScrollRef.current) {
+        isProgrammaticScrollRef.current = false;
+        return;
+      }
+      const { scrollTop, scrollHeight, clientHeight } = c;
+      isUserScrollUpRef.current = scrollTop + clientHeight < scrollHeight;
+    };
+    c.addEventListener('scroll', onScroll);
+    return () => c.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    const c = messagesContainerRef.current;
+    if (!c) return;
+    const mo = new MutationObserver(() => {
+      if (!isUserScrollUpRef.current) scrollToBottom();
+    });
+    mo.observe(c, { childList: true, subtree: true, characterData: true });
+    return () => mo.disconnect();
+  }, []);
+
+  useEffect(() => {
+    isUserScrollUpRef.current = false;
+    scrollToBottom();
+  }, [userMessageCount]);
+
+  return { messagesEndRef, messagesContainerRef };
+}
+
+export function ThreadMessages(props: MessagesProps) {
+  const {
+    inProgress,
+    children,
+    RenderMessage,
+    AssistantMessage,
+    UserMessage,
+    ErrorMessage,
+    ImageRenderer,
+    onRegenerate,
+    onCopy,
+    onThumbsUp,
+    onThumbsDown,
+    messageFeedback,
+    markdownTagRenderers,
+    chatError,
+  } = props;
+  const { icons } = useChatContext();
+  const internal = useCopilotChatInternal() as unknown as {
+    messages?: AnyMessage[];
+    interrupt?: ReactNode;
+  };
+  const messages = (internal.messages ?? []) as AnyMessage[];
+  const workflow = useAtomValue(chatSessionAtom);
+  const receiptIndex = workflowMessageIndex(
+    messages as import('../runtime/chat/message-codec').AguiMessage[],
+    workflow,
+  );
+  // Launchers and legacy chats may have no opening tool receipt. Keep their card
+  // at the insertion point while subsequent conversation continues below it.
+  const fallback = useRef({ key: '', index: -1 });
+  const workflowKey = workflow ? `${workflow.workflowId}:${workflow.runId}` : '';
+  if (fallback.current.key !== workflowKey)
+    fallback.current = { key: workflowKey, index: messages.length - 1 };
+  const workflowIndex =
+    receiptIndex >= 0
+      ? receiptIndex
+      : workflow?.afterMessageId !== undefined
+        ? -1
+        : Math.min(fallback.current.index, messages.length - 1);
+  const interrupt = internal.interrupt ?? null;
+  const pinned = useContext(PinnedThreadContext);
+  const { messagesContainerRef, messagesEndRef } = useScrollToBottom(
+    messages.filter((m) => m?.role === 'user').length,
+  );
+  const last = messages[messages.length - 1];
+
+  // Per-message specialist avatars: map each assistant turn to the specialist of its
+  // preceding user turn. Recomputes only when the message set changes (not per stream tick).
+  const sig = messageSignature(messages);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the message id/role signature
+  const specialistMap = useMemo(() => buildMessageSpecialistMap(messages), [sig]);
+
+  // callId → { name, args } so a tool RESULT message can recover what was called
+  // and render a verifiable "tools used" receipt beneath the answer it supports.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the message id/role signature
+  const toolCallInfo = useMemo(() => buildToolCallInfo(messages), [sig]);
+
+  return (
+    <MessageSpecialistContext.Provider value={specialistMap}>
+      <div className="copilotKitMessages" ref={messagesContainerRef}>
+        <div className="copilotKitMessagesContainer">
+          {/* Pinned work — runs/cards — scroll WITH the conversation (one thread). */}
+          {pinned}
+          {workflow && workflowIndex === -1 && <ChatWorkflowThread />}
+          {messages.map((message, index) => {
+            // Under each assistant reply, a "Tools used" bar naming every tool that ran
+            // to produce it (since the previous user turn) — each chip expands to that
+            // call's inputs + result, so the answer can be checked against what executed.
+            const hasText =
+              message?.role === 'assistant' &&
+              typeof message.content === 'string' &&
+              message.content.trim().length > 0;
+            const used = hasText ? toolsUsedForTurn(messages, index, toolCallInfo) : [];
+            return (
+              // eslint-disable-next-line react/no-array-index-key
+              <Fragment key={index}>
+                <RenderMessage
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  message={message as any}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  messages={messages as any}
+                  inProgress={inProgress}
+                  index={index}
+                  isCurrentMessage={index === messages.length - 1}
+                  AssistantMessage={AssistantMessage}
+                  UserMessage={UserMessage}
+                  ImageRenderer={ImageRenderer}
+                  onRegenerate={onRegenerate}
+                  onCopy={onCopy}
+                  onThumbsUp={onThumbsUp}
+                  onThumbsDown={onThumbsDown}
+                  messageFeedback={messageFeedback}
+                  markdownTagRenderers={markdownTagRenderers}
+                />
+                {used.length > 0 && <ToolsUsed calls={used} />}
+                {workflow && index === workflowIndex && <ChatWorkflowThread />}
+              </Fragment>
+            );
+          })}
+          {inProgress && (last?.role === 'user' || last?.role === 'tool') && (
+            <span data-testid="copilot-loading-cursor">{icons?.activityIcon}</span>
+          )}
+          {interrupt}
+          {chatError && ErrorMessage ? <ErrorMessage error={chatError} isCurrentMessage /> : null}
+        </div>
+        <footer className="copilotKitMessagesFooter" ref={messagesEndRef}>
+          {children}
+        </footer>
+      </div>
+    </MessageSpecialistContext.Provider>
+  );
+}

@@ -1,0 +1,444 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "TaxflowOS: the system at a glance",
+    "locale": "en",
+    "output": ".archify/architecture-system-overview-20261001-150322/system-overview.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/Mamdou025/TaxflowOS.git",
+      "revision": "444d6e0fc84928e35b9635a65eb8392520b09df2",
+      "link_mode": "local-only"
+    }
+  },
+  "components": [
+    {
+      "id": "workspace",
+      "type": "frontend",
+      "label": "Browser workspace",
+      "sublabel": "Chat / Workflows / Sources",
+      "tag": "React + local previews",
+      "pos": [
+        60,
+        350
+      ],
+      "size": [
+        230,
+        90
+      ],
+      "sources": [
+        {
+          "path": "artifacts/ai-workflow-builder/src/features/assistant/workspace/copilot-workspace-panel.tsx",
+          "line": 112,
+          "end_line": 129,
+          "label": "Chat-first workspace"
+        },
+        {
+          "path": "artifacts/ai-workflow-builder/src/platform/auth/api-fetch.ts",
+          "line": 5,
+          "end_line": 16,
+          "label": "Scoped API requests"
+        },
+        {
+          "path": "artifacts/ai-workflow-builder/src/shared/workflow-engine/workflow/execute.ts",
+          "line": 1,
+          "end_line": 38,
+          "label": "Browser graph execution"
+        }
+      ]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "Application API",
+      "sublabel": "Session / workspace / role checks",
+      "tag": "Express",
+      "pos": [
+        530,
+        350
+      ],
+      "size": [
+        250,
+        90
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/app.ts",
+          "line": 70,
+          "end_line": 103,
+          "label": "HTTP access boundaries"
+        },
+        {
+          "path": "artifacts/api-server/src/security/access.ts",
+          "line": 13,
+          "end_line": 122,
+          "label": "Session and membership authority"
+        },
+        {
+          "path": "artifacts/api-server/src/routes/index.ts",
+          "line": 26,
+          "end_line": 50,
+          "label": "Application route ownership"
+        }
+      ]
+    },
+    {
+      "id": "database",
+      "type": "database",
+      "label": "PostgreSQL",
+      "sublabel": "Libraries / jobs / source records",
+      "tag": "Durable application state",
+      "pos": [
+        1040,
+        350
+      ],
+      "size": [
+        240,
+        90
+      ],
+      "sources": [
+        {
+          "path": "lib/db/src/index.ts",
+          "line": 1,
+          "end_line": 14,
+          "label": "Shared database connection"
+        },
+        {
+          "path": "artifacts/api-server/src/routes/workflow-library.ts",
+          "line": 56,
+          "end_line": 111,
+          "label": "Library reads and writes"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/workflow-runs/queue.ts",
+          "line": 12,
+          "end_line": 100,
+          "label": "Run queue and completion"
+        }
+      ]
+    },
+    {
+      "id": "storage",
+      "type": "cloud",
+      "label": "Private object storage",
+      "sublabel": "Supabase document bytes",
+      "tag": "Requires configuration",
+      "pos": [
+        60,
+        80
+      ],
+      "size": [
+        230,
+        90
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/lib/storage.ts",
+          "line": 40,
+          "end_line": 101,
+          "label": "Sign, read and delete objects"
+        },
+        {
+          "path": "artifacts/ai-workflow-builder/src/features/documents/upload-client.ts",
+          "line": 24,
+          "end_line": 65,
+          "label": "Direct signed upload"
+        },
+        {
+          "path": "artifacts/api-server/src/routes/documents.ts",
+          "line": 76,
+          "end_line": 133,
+          "label": "Sign after API access checks"
+        }
+      ]
+    },
+    {
+      "id": "models",
+      "type": "external",
+      "label": "Model providers",
+      "sublabel": "Sina / MicroSina / embeddings",
+      "tag": "Requires configuration",
+      "pos": [
+        530,
+        80
+      ],
+      "size": [
+        250,
+        90
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/routes/copilotkit.ts",
+          "line": 87,
+          "end_line": 124,
+          "label": "Gateway or Foundry adapter"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/foundry-model.ts",
+          "line": 14,
+          "end_line": 59,
+          "label": "Pinned MicroSina configuration"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/rag/retrieve.ts",
+          "line": 59,
+          "end_line": 79,
+          "label": "Direct query embedding for retrieval"
+        }
+      ]
+    },
+    {
+      "id": "ingestion",
+      "type": "backend",
+      "label": "Source ingestion worker",
+      "sublabel": "Extract / chunk / embed",
+      "tag": "Runs in API process by default",
+      "pos": [
+        1040,
+        80
+      ],
+      "size": [
+        240,
+        90
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/lib/ingest-worker.ts",
+          "line": 47,
+          "end_line": 105,
+          "label": "Poll queue and ingest"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/rag/ingest.ts",
+          "line": 50,
+          "end_line": 107,
+          "label": "Download and extract bytes"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/rag/ingest.ts",
+          "line": 128,
+          "end_line": 164,
+          "label": "Embed and write source chunks"
+        }
+      ]
+    },
+    {
+      "id": "http-sources",
+      "type": "external",
+      "label": "External source APIs",
+      "sublabel": "HTTP JSON / connector data",
+      "tag": "Public URL checks",
+      "pos": [
+        60,
+        620
+      ],
+      "size": [
+        230,
+        90
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/routes/http-source.ts",
+          "line": 160,
+          "end_line": 173,
+          "label": "Connector fetch and pinned results"
+        },
+        {
+          "path": "lib/source-connectors/src/http-json.ts",
+          "line": 378,
+          "end_line": 408,
+          "label": "HTTP request implementation"
+        }
+      ]
+    },
+    {
+      "id": "mkoro",
+      "type": "external",
+      "label": "Personal Mkoro companion",
+      "sublabel": "Local Goose / browser / shell",
+      "tag": "Paired worker token",
+      "pos": [
+        530,
+        620
+      ],
+      "size": [
+        250,
+        90
+      ],
+      "sources": [
+        {
+          "path": "scripts/mkoro/worker.mjs",
+          "line": 32,
+          "end_line": 70,
+          "label": "Outbound worker API requests"
+        },
+        {
+          "path": "scripts/mkoro/acp-client.mjs",
+          "line": 6,
+          "end_line": 58,
+          "label": "Goose ACP child process"
+        },
+        {
+          "path": "artifacts/api-server/src/app.ts",
+          "line": 73,
+          "end_line": 77,
+          "label": "Separate worker-token route"
+        }
+      ]
+    },
+    {
+      "id": "run-worker",
+      "type": "backend",
+      "label": "Workflow run worker",
+      "sublabel": "Saved graph + shared executors",
+      "tag": "Runs in API process by default",
+      "pos": [
+        1040,
+        620
+      ],
+      "size": [
+        240,
+        90
+      ],
+      "sources": [
+        {
+          "path": "artifacts/api-server/src/index.ts",
+          "line": 39,
+          "end_line": 44,
+          "label": "Start both workers"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/workflow-run-worker.ts",
+          "line": 36,
+          "end_line": 76,
+          "label": "Claim, execute and persist"
+        },
+        {
+          "path": "artifacts/api-server/src/lib/workflow-runs/executor.ts",
+          "line": 1,
+          "end_line": 32,
+          "label": "Shared deterministic graph runtime"
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "workspace-api",
+      "from": "workspace",
+      "to": "api",
+      "label": "Scoped HTTP requests",
+      "variant": "emphasis"
+    },
+    {
+      "id": "api-database",
+      "from": "api",
+      "to": "database",
+      "label": "Read / persist / enqueue",
+      "variant": "emphasis"
+    },
+    {
+      "id": "workspace-upload",
+      "from": "workspace",
+      "to": "storage",
+      "label": "Signed upload"
+    },
+    {
+      "id": "api-storage",
+      "from": "api",
+      "to": "storage",
+      "label": "Authorize signed URLs",
+      "variant": "security"
+    },
+    {
+      "id": "api-models",
+      "from": "api",
+      "to": "models",
+      "label": "Configured chat / retrieval"
+    },
+    {
+      "id": "ingestion-storage",
+      "from": "ingestion",
+      "to": "storage",
+      "label": "Download source bytes"
+    },
+    {
+      "id": "ingestion-models",
+      "from": "ingestion",
+      "to": "models",
+      "label": "Configured embeddings"
+    },
+    {
+      "id": "ingestion-db",
+      "from": "ingestion",
+      "to": "database",
+      "label": "Claim jobs / write chunks"
+    },
+    {
+      "id": "worker-db",
+      "from": "run-worker",
+      "to": "database",
+      "label": "Claim jobs / save results"
+    },
+    {
+      "id": "api-http-sources",
+      "from": "api",
+      "to": "http-sources",
+      "label": "Validated HTTP fetch"
+    },
+    {
+      "id": "companion-api",
+      "from": "mkoro",
+      "to": "api",
+      "label": "Token + membership checks",
+      "variant": "security"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Start in Chat",
+      "items": [
+        "Chat, Workflows, Sources and Connections share one browser workspace.",
+        "Browser previews run locally. A completed preview is separate from approval and server saving."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Shared code ownership",
+      "items": [
+        "workflow-core owns commands and graph rules; workflow-contracts owns persisted shapes.",
+        "workflow-executors supplies deterministic tools to browser and server adapters.",
+        "These are imported libraries, not additional deployed services."
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "AI and source adapters",
+      "items": [
+        "Sina uses a configured gateway; MicroSina uses a pinned Foundry agent.",
+        "Ingestion requires an embedding provider; OCR is conditional.",
+        "Source connectors acquire data before a workflow replays its saved inputs."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Authority and computer access",
+      "items": [
+        "The server derives the actor from the session and checks current workspace membership.",
+        "Mkoro uses a separate revocable worker token and polls outbound for tasks and decisions.",
+        "Goose runs with the local computer's permissions; task admission is not an OS sandbox."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "What this map establishes",
+      "items": [
+        "Source snapshot: 444d6e0 (1 October 2026). SRC opens local file references.",
+        "This is a code-backed runtime overview, not a live deployment or provider health check.",
+        "Workers are separate responsibilities started by the API; deployment topology may differ."
+      ]
+    }
+  ]
+}

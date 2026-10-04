@@ -12,7 +12,10 @@ not be open. The companion and its computer must remain running.
 1. Run the matching frontend/API and apply the normal committed migrations using
    [development setup](DEVELOPMENT.md). `0006_mkoro_companion.sql` creates companion
    records; `0007_mkoro_sina_delegation.sql` adds the Sina thread and delegation
-   metadata. Updating source alone does not update a deployed app.
+   metadata; `0009_mkoro_reconnect.sql` binds reconnect codes to existing
+   connections. Updating source alone does not update a deployed app. Reconnect
+   needs the matching API/frontend and migrations. The UI refuses an older API
+   response that does not confirm the requested connection.
 2. Install a Goose CLI supporting ACP v1 and `session/set_mode` with `approve`.
    Configure its model and computer extensions locally. Goose Desktop alone does
    not guarantee that `goose` is on the terminal's PATH. Keep native Inscope tools
@@ -39,7 +42,7 @@ not be open. The companion and its computer must remain running.
 For an existing connection, wait for the current task to finish, stop the old
 companion, copy the complete updated `scripts/mkoro` runtime, and restart with the
 same server, working folder and state options. Include `capture.mjs`,
-`capture-windows.ps1` and `delegation.mjs`. Valid saved pairing credentials can be
+`capture-windows.ps1`, `delegation.mjs` and `pairing.mjs`. Valid saved pairing credentials can be
 reused; do not add `--pair` just for an upgrade. Polling advertises the new
 `sina-delegation-v1` and Windows `desktop-screenshots-v1` capabilities. The API
 rejects incompatible companions instead of sending them unrestricted work.
@@ -49,16 +52,43 @@ addition to pairing, polling and events. Keep application pages, session cookies
 and unrelated APIs out of that relay. The earlier temporary gateway/download
 bundle needs this explicit update; repository changes do not replace it.
 
-## Recover a revoked computer
+## Reconnect an existing computer
 
-In Chat’s computer settings, choose **Reconnect [computer name]** under revoked
-computers to create a fresh pairing code. On the computer running Goose (for
+In Chat’s computer settings, select the matching offline connection and choose
+**Reconnect [computer name]**, or use that action under revoked connections, to
+create a fresh pairing code. Check the short connection ID, creation time and
+last-seen time when names repeat. On the computer running Goose (for
 example, a Surface while Inscope chat is open on an Asus), stop the old companion
 and run its original startup command with `--pair` added. Preserve its server or
 relay address, working folder, Goose path and state options. Paste the code into
-the companion’s private prompt, then refresh settings and select the new entry.
-Creating a code alone does not establish a connection. The old credential stays
-revoked and the old task history remains available.
+the companion’s private prompt, then refresh settings. Reconnect reuses the same
+connection ID, creation time and saved task history; it rotates the credential,
+restores access and turns automatic tool approval off. The old credential stops
+working. Creating a code alone does not establish a connection.
+
+An updated companion also proves its saved connection ID with its saved credential
+when using a general **Connect a computer** code. That re-pair preserves its local
+Goose session mappings. Without saved credentials, use the explicit **Reconnect**
+action for the intended connection. A targeted code works with an older companion,
+but that older companion still resets its own local Goose session mappings; update
+the complete companion for both forms of continuity. A wrong saved identity is
+rejected instead of silently creating or selecting another connection. If local
+state is lost or stale, use a targeted code with a separate `--state` file after
+stopping the old companion; local Goose session mappings cannot be recovered from
+the server. Never copy credentials into chat.
+
+Existing duplicate registrations are not evidence of distinct physical computers,
+and matching display names are not proof they are the same device. Reconnect does
+not merge those records or move their tasks. Use connection details to select the
+record you will reuse, and explicitly revoke unused registrations through the
+existing confirmation. Revoked connections remain in Settings and saved history;
+the composer selector shows only connections that have not been revoked.
+
+Reconnect rejects queued, running and permission-waiting tasks. Finish the task or
+use Stop and wait for cancellation to be confirmed. Codes are single use and
+expire after ten minutes; a successful reconnect also invalidates older targeted
+codes issued for that credential. No task is resumed, reassigned or replayed by
+reconnecting.
 
 Settings distinguish online companions that need an update from those ready for
 Sina delegation. Readiness reflects heartbeat and advertised capability; it does
@@ -99,7 +129,7 @@ Computer settings offer **Automatically approve Mkoro tools on this computer**.
 This saved personal setting lets the server answer each offered one-action
 approval during worker polling, including already pending requests. It covers
 browser, file and shell tools in delegated tasks. New connections start with it
-off. Turning it off restores manual decisions for subsequent requests; Stop
+off, and reconnecting turns it off again. Turning it off restores manual decisions for subsequent requests; Stop
 remains available and cannot undo actions already approved. The server records
 automatic decisions separately from manual ones. This does not start new tasks
 or enable screenshots, and requires the same Owner/Editor access as execution.
@@ -189,9 +219,11 @@ Claimed commands and model prompts are never automatically replayed. Event retri
 use stable IDs; buffered progress can be lost if the companion crashes. A stale
 heartbeat marks the computer offline after 45 seconds. API restarts preserve
 durable task records, but do not resume an uncertain external action. If a crash
-leaves a task permanently active, inspect the actual results, stop the companion,
-disconnect the old entry and pair afresh before a new request. Reconnecting alone
-is not proof that an interrupted task resumed.
+leaves a delivered task permanently active, inspect the actual results and stop
+the companion. Stop can remain pending without a companion cancellation
+acknowledgement; reconnect intentionally remains blocked in that case. Forced
+recovery of uncertain active tasks is not implemented. Reconnecting alone is not
+proof that an interrupted task resumed.
 
 Automated checks use synthetic ACP/capture responses, mocked browser services and
 disposable databases as applicable. They do not prove a real Google account,

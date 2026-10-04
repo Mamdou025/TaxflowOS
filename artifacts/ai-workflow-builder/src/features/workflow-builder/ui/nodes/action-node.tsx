@@ -20,6 +20,7 @@ import {
   NodeTitle,
 } from "@/features/workflow-builder/ui/ai-elements/node";
 import { ConfigurationOverlay } from "@/features/workflow-builder/ui/overlays/configuration-overlay";
+import { useRecordedInspection } from '../workspace/recorded-inspection-context';
 import { useOverlay } from "@/shared/ui/overlays/overlay-provider";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 import {
@@ -273,6 +274,7 @@ const SELECTED_GLOW =
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex UI logic with multiple conditions including disabled state
 export const ActionNode = memo(({ data, selected, id }: ActionNodeProps) => {
+  const inspection = useRecordedInspection();
   const { open: openOverlay } = useOverlay();
   const selectedExecutionId = useAtomValue(selectedExecutionIdAtom);
   const executionLogs = useAtomValue(executionLogsAtom);
@@ -321,7 +323,7 @@ export const ActionNode = memo(({ data, selected, id }: ActionNodeProps) => {
     const openActionPicker = () => {
       setSelectedNode(id);
       setSelectedEdge(null);
-      setActiveTab("properties");
+      setActiveTab(inspection ? "data" : "properties");
       openOverlay(ConfigurationOverlay, {}, { size: "wide" });
     };
 
