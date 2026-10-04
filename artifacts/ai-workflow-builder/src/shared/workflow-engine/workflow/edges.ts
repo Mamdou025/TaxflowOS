@@ -299,7 +299,7 @@ function getDefaultBindingRoles({
       return {
         bindingLabel: 'API values',
         bindingStatus: 'valid',
-        sourceOutputRole: sourceBlock.config.outputMode === 'values' ? 'named_values' : 'raw_rows',
+        sourceOutputRole: 'raw_rows',
         targetInputRole: 'named_values',
       };
     }

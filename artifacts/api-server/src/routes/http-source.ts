@@ -24,7 +24,6 @@ import {
   HttpJsonSourceError,
   mapRecordsToRows,
   parseHttpJsonConfig,
-  mapResponseValues,
 } from '@workspace/source-connectors/http-json';
 import type { SourceOperationReceipt } from '@workspace/source-core';
 
@@ -134,7 +133,7 @@ router.post('/http-source', async (req, res) => {
   const config = parseHttpJsonConfig(body);
   // `mode: "raw"` skips row mapping — used by the callApi tool for arbitrary
   // endpoints that aren't a list of records.
-  const mode = body.mode === 'raw' ? 'raw' : body.outputMode === 'values' ? 'values' : 'rows';
+  const mode = body.mode === 'raw' ? 'raw' : 'rows';
 
   if (!config.url) {
     res.json({ ok: false, operation: operation('failed', 0), reason: 'No URL was provided.' });
@@ -171,13 +170,6 @@ router.post('/http-source', async (req, res) => {
     // the UNRESOLVED url instead. The `{{env:…}}` reference is the reproducible
     // form anyway: it still identifies the endpoint, and still replays.
     const responseMeta = { ...rawMeta, url: config.url };
-
-    if (mode === 'values') {
-      const namedValues = mapResponseValues(payload, body.outputMappings);
-      send({ ok: true, mode, namedValues, fetchedPayload: payload, responseMeta },
-        operation('succeeded', rawMeta.attempts ?? 1));
-      return;
-    }
 
     if (mode === 'raw') {
       const { preview, truncated } = previewOf(payload);

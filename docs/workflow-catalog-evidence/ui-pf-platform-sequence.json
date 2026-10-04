@@ -2,16 +2,16 @@
   "id": "pf-platform-sequence",
   "inputKind": "bundled sample records",
   "inputRows": 1,
-  "openMs": 5485,
-  "runMs": 674,
-  "totalMs": 11921,
+  "openMs": 4619,
+  "runMs": 991,
+  "totalMs": 10906,
   "browserErrors": [],
   "first": {
-    "id": "custom:ca0eeb5c-e7df-4c91-8378-f3d5ba7847e9",
+    "id": "custom:a6fdaedf-c886-4a5d-940f-60e96788ba95",
     "name": "Execution Readiness & Review Checklist — My workflow",
     "version": 1,
     "runCount": 1,
-    "runId": "local-tool-workflow-768ba7a8-4935-42b4-9b43-0d83a7a1973c",
+    "runId": "local-tool-workflow-dc97e641-0a47-473a-aa57-def0c91ac0db",
     "status": "warning",
     "errors": [],
     "warnings": [
@@ -102,11 +102,11 @@
     ]
   },
   "second": {
-    "id": "custom:ca0eeb5c-e7df-4c91-8378-f3d5ba7847e9",
+    "id": "custom:a6fdaedf-c886-4a5d-940f-60e96788ba95",
     "name": "Execution Readiness & Review Checklist — My workflow",
     "version": 1,
     "runCount": 2,
-    "runId": "local-tool-workflow-3c1aefba-d892-43db-a7aa-b2aec42f1279",
+    "runId": "local-tool-workflow-a350bcbc-c1d5-4024-a1ec-b7ff4154ba93",
     "status": "warning",
     "errors": [],
     "warnings": [
