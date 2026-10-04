@@ -12,6 +12,7 @@ export function apiRequestSignature(config: Record<string, unknown>) {
         'maxRows',
         'connectorId',
         'connectorParams',
+        ...(config.outputMode === 'values' ? ['outputMode', 'outputMappings'] : []),
       ].map((key) => [key, config[key] ?? null]),
     ),
   );
