@@ -18,8 +18,10 @@ import type { ToolExecutionContext, ToolRunResult } from '../../../runtime/types
 import { normalizeManualTableRow } from '../manual-table/schema';
 import { SAMPLE_HTTP_JSON_ROWS } from './fixtures';
 import { parseHttpJsonConfig } from './schema';
+import { runHttpValuesSource } from './run-values';
 
 export function runHttpJsonSource(context: ToolExecutionContext): ToolRunResult {
+  if (context.config.outputMode === 'values') return runHttpValuesSource(context);
   const config = parseHttpJsonConfig(context.config);
   const sourceKind = String(context.config.sourceKind || 'http_json');
 

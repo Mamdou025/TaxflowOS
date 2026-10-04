@@ -10,11 +10,16 @@ export const httpJsonDefinition: ToolDefinition = {
     url: '',
   },
   description:
-    'Calls a public JSON API and exposes the response as immutable Source rows. The live call is made server-side; the run replays the pinned payload deterministically.',
+    'Fetches a JSON API and exposes selected, named values or rows. Runs replay the saved response with its provenance.',
   displayName: 'API / HTTP Request Source',
   family: 'Source',
   inputRoles: [],
   outputRoles: [
+    {
+      canRouteToFamilies: ['Logic', 'Review / Validation', 'Output', 'Field'],
+      description: 'Named numbers, text, booleans or JSON selected from the response.',
+      id: 'named_values', label: 'Named values', outputKey: 'namedValues', outputType: 'named_values',
+    },
     {
       canRouteToFamilies: ['Logic'],
       description: 'Immutable rows mapped from the API response.',
