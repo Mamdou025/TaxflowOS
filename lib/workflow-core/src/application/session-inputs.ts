@@ -62,6 +62,9 @@ const http = [
   'connectorId',
   'connectorParams',
   'fetchedRows',
+  'fetchedPayload',
+  'outputMode',
+  'outputMappings',
   'responseMeta',
   'fetchedAt',
   'fetchedRequestSignature',
@@ -80,7 +83,15 @@ export function runInputKeys(block: WorkflowBlock): string[] {
   if (/currency_rate/.test(kind)) return fx;
   if (/fapi_inputs/.test(kind)) return fiscal;
   if (/manual_value|Manual Entry/.test(kind)) return scalar;
-  if (/http_json|API \/ HTTP/.test(kind)) return http;
+  if (/http_json|API \/ HTTP/.test(kind)) {
+    const mappings = Array.isArray(block.config.outputMappings) ? block.config.outputMappings : [];
+    const overrideKeys = mappings.flatMap((item: unknown) => {
+      if (!item || typeof item !== 'object') return [];
+      const key = (item as { overrideKey?: unknown }).overrideKey;
+      return typeof key === 'string' && /^override[A-Z_][A-Za-z0-9_]*$/.test(key) ? [key] : [];
+    });
+    return [...http, ...overrideKeys];
+  }
   if (/excel|workbook|uploaded|manual_table|pdf_document/i.test(kind)) return document;
   return Object.keys(block.config).filter((key) => scalar.includes(key));
 }

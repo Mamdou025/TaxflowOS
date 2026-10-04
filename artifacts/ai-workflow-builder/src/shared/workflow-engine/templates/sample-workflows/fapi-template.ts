@@ -1,3 +1,4 @@
+import { buildApiRequest, apiRequestToBlockConfig } from '@workspace/source-connectors/connectors';
 import { WORKING_SOURCE_DEMO_RULES } from "./working-source-rules-demo";
 
 // ── Calculation rules ─────────────────────────────────────────────────────────
@@ -310,52 +311,25 @@ export const FAPI_TEMPLATE_BLOCK_SPECS = [
     position: { x: -220, y: 360 },
   },
   {
-    catalogId: "source:currency-rate",
+    catalogId: "source:api-http-request",
     config: {
-      documentCurrency: "USD",
-      fapiYear: 2025,
+      ...(() => {
+        const request = buildApiRequest('boc.fx_average', { currency: 'USD', year: 2025 });
+        if (!request.ok) throw new Error(request.errors.join(' '));
+        return apiRequestToBlockConfig('boc.fx_average', request.params, request.spec);
+      })(),
       overrideRate: 1.35,
       overrideReason: "Workbook-provided draft FX rate.",
-      outputs: "exchange_rate, rate_metadata",
-      rateProvider: "bank_of_canada",
-      rateType: "annual_average",
-      reportingCurrency: "CAD",
-      sourceKind: "currency_rate",
-      sourceLocator: "bank-of-canada://annual-average/USD-CAD/2025",
+      outputs: "named_values, response_metadata",
+      sourceKind: "http_json",
       sourceStatus: "draft",
       sourceVersion: 1,
-      toolId: "source.currency_rate",
+      toolId: "source.http_json",
     },
-    description: "Bank of Canada annual average USD→CAD FX rate for the FAPI year. Consumes the live Valet API rate when available, otherwise the workbook override.",
+    description: "API source selecting the average USD→CAD rate as fxRate. The explicit workbook override can be cleared to use a fetched response.",
     id: "fapi-source-fx-rate",
     label: "Bank of Canada FX Rate",
     position: { x: -220, y: 640 },
-  },
-  {
-    catalogId: "source:api-http-request",
-    config: {
-      apiName: "Bank of Canada Valet",
-      documentCurrency: "USD",
-      endpoint: "https://www.bankofcanada.ca/valet/observations/FXUSDCAD/json",
-      fapiYear: 2025,
-      inputs: "HTTP GET request",
-      outputs: "apiReference, exchange_rate",
-      rateProvider: "bank_of_canada",
-      rateType: "annual_average",
-      reportingCurrency: "CAD",
-      seriesName: "FXUSDCAD",
-      sourceKind: "api_reference",
-      sourceLocator:
-        "https://www.bankofcanada.ca/valet/observations/FXUSDCAD/json?start_date=2025-01-01&end_date=2025-12-31",
-      sourceStatus: "draft",
-      sourceVersion: 1,
-      toolId: "source.manual_value",
-    },
-    description:
-      "Live Bank of Canada Valet API — annual-average USD→CAD observations for the FAPI year. This is the real source of the FX rate.",
-    id: "fapi-api-boc-fx",
-    label: "Bank of Canada Valet API",
-    position: { x: -520, y: 640 },
   },
 
   // ── Logic ─────────────────────────────────────────────────────────────────
@@ -527,21 +501,11 @@ export const FAPI_TEMPLATE_EDGE_SPECS = [
     targetInputRole: "named_values",
   },
   {
-    bindingLabel: "Live FX observations feed the rate",
-    reason:
-      "Currency Rate block consumes the Bank of Canada Valet API's annual-average USD→CAD rate, falling back to the workbook override if the API is unavailable.",
-    relationshipType: "provides_data_to",
-    sourceBlockId: "fapi-api-boc-fx",
-    sourceOutputRole: "apiReference",
-    targetBlockId: "fapi-source-fx-rate",
-    targetInputRole: "request",
-  },
-  {
     bindingLabel: "FX rate for CAD conversion",
     reason: "Summary Engine uses the Bank of Canada FX rate to convert Net FAPI to CAD.",
     relationshipType: "provides_data_to",
     sourceBlockId: "fapi-source-fx-rate",
-    sourceOutputRole: "exchange_rate",
+    sourceOutputRole: "named_values",
     targetBlockId: "fapi-logic-summary-engine",
     targetInputRole: "named_values",
   },

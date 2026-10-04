@@ -1,3 +1,5 @@
+import { upgradeFapiApiSourceDraft } from '@workspace/workflow-core/commands';
+import { buildApiRequest, apiRequestToBlockConfig } from '@workspace/source-connectors/connectors';
 import { workspaceStorage } from '@/platform/auth/workspace-context';
 import { useReactFlow } from '@xyflow/react';
 import { useAtom } from 'jotai';
@@ -46,7 +48,7 @@ import { PORTFOLIO_WORKFLOWS } from '@/shared/workflow-engine/templates/portfoli
 import { LOCAL_WORKFLOW_ID } from '@/shared/workflow-engine/workflow/contracts';
 import { loadLocalWorkflowSnapshot } from '@/shared/workflow-engine/workflow/storage';
 import { publishLocalWorkflowSnapshot } from '@/shared/workflow-engine/workflow/publishing';
-import { workflowDefinitionToCanvas } from '@/shared/workflow-engine/workflow/canvas';
+import { createWorkflowDefinitionFromCanvas, workflowDefinitionToCanvas } from '@/shared/workflow-engine/workflow/canvas';
 import { activeRightPanelAtom } from '@/shared/workflow-engine/state/workflow-store';
 import { appendWorkflowChangeEvent } from '@/shared/workflow-engine/audit/change-log';
 import {
@@ -181,21 +183,17 @@ export function LocalStudioTopBar({
         },
         label: 'Aggregation Rulebook',
       },
-      'source:currency-rate': {
+      'source:api-http-request': {
         config: {
-          documentCurrency: 'USD',
-          fapiYear: 2025,
-          outputs: 'exchange_rate, rate_metadata',
-          overrideRate: 1.35,
-          rateProvider: 'bank_of_canada',
-          rateType: 'annual_average',
-          reportingCurrency: 'CAD',
-          sourceKind: 'currency_rate',
+          outputs: 'named_values, response_metadata',
+          outputMode: 'values',
+          outputMappings: [{ name: 'value', path: '', type: 'json' }],
+          sourceKind: 'http_json',
           sourceStatus: 'draft',
           sourceVersion: 1,
-          toolId: 'source.currency_rate',
+          toolId: 'source.http_json',
         },
-        label: 'Bank of Canada FX Rate',
+        label: 'API Source',
       },
       'source:excel-workbook': {
         config: {
@@ -229,6 +227,31 @@ export function LocalStudioTopBar({
     state.setSelectedNodeId(block.id);
     state.setActiveTab('properties');
     openOverlay(ConfigurationOverlay, {}, { size: 'wide' });
+  };
+
+  const legacyFx = state.nodes.find((node) => node.id === 'fapi-source-fx-rate' && node.data.block?.config.sourceKind === 'currency_rate');
+  const upgradeApiSource = () => {
+    try {
+      if (!legacyFx?.data.block) return;
+      const old = legacyFx.data.block;
+      if (old.config.reportingCurrency !== 'CAD' || old.config.documentCurrency === 'CAD') {
+        throw new Error('This currency configuration needs an explicit source mapping.');
+      }
+      const request = buildApiRequest('boc.fx_average', { currency: String(old.config.documentCurrency || 'USD'), year: Number(old.config.fapiYear) });
+      if (!request.ok) throw new Error(request.errors.join(' '));
+      const replacement = createWorkflowBlockFromCatalog('source:api-http-request', { config: {
+        ...apiRequestToBlockConfig('boc.fx_average', request.params, request.spec),
+        sourceKind: 'http_json', toolId: 'source.http_json', outputs: 'named_values, response_metadata',
+      } });
+      const definition = createWorkflowDefinitionFromCanvas({ name: state.workflowName, nodes: state.nodes, edges: state.edges });
+      const canvas = workflowDefinitionToCanvas(upgradeFapiApiSourceDraft(definition, replacement));
+      state.setNodes(canvas.nodes);
+      state.setEdges(canvas.edges);
+      state.setHasUnsavedChanges(true);
+      toast.success('Draft updated to one API source. Saved versions are unchanged. Fetch a response before clearing the manual override.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not upgrade the API source.');
+    }
   };
 
   const handlePublish = () => {
@@ -429,6 +452,9 @@ export function LocalStudioTopBar({
                   ))}
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
+              {legacyFx && <DropdownMenuItem disabled={state.isExecuting || state.isSaving} onClick={upgradeApiSource}>
+                Upgrade FAPI API source
+              </DropdownMenuItem>}
               <DropdownMenuItem onClick={actions.handleClearWorkflow}>
                 New blank workflow
               </DropdownMenuItem>
@@ -538,8 +564,8 @@ export function LocalStudioTopBar({
               <DropdownMenuItem onClick={() => handleAddCatalogSource('source:excel-workbook')}>
                 Workbook Source
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleAddCatalogSource('source:currency-rate')}>
-                FX Rate Source
+              <DropdownMenuItem onClick={() => handleAddCatalogSource('source:api-http-request')}>
+                API Source
               </DropdownMenuItem>
               <DropdownMenuItem
                 disabled={state.isGenerating}

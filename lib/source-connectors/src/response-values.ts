@@ -34,7 +34,7 @@ export function parseResponseValueMappings(value: unknown): ResponseValueMapping
       throw new Error(`Invalid output type or operation for ${mapping.name}.`);
     }
     if (mapping.overrideKey !== undefined &&
-        (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(mapping.overrideKey) || forbidden.has(mapping.overrideKey))) {
+        (!/^override[A-Z_][A-Za-z0-9_]*$/.test(mapping.overrideKey) || forbidden.has(mapping.overrideKey))) {
       throw new Error(`Invalid override field for ${mapping.name}.`);
     }
     return mapping;

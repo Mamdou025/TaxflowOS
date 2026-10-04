@@ -22,7 +22,7 @@
 // and the run flow alike.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { HttpJsonFieldMap } from './http-json';
+import type { HttpJsonFieldMap, ResponseValueMapping } from './http-json';
 
 export type ApiParamKind = 'year' | 'currency' | 'text' | 'number' | 'enum';
 
@@ -79,6 +79,7 @@ export type ApiParam = {
 
 /** The real HTTP request a connector's parameters resolve to. */
 export type ApiRequestSpec = {
+  outputMappings?: ResponseValueMapping[];
   url: string;
   method: 'GET' | 'POST';
   headers?: Record<string, string>;
@@ -182,6 +183,21 @@ const bocFxObservations: ApiConnector = {
       maxRows: 400,
     };
   },
+};
+
+// A preset of the same API Source: selection/reduction is ordinary mapping config.
+const bocFxAverage: ApiConnector = {
+  ...bocFxObservations,
+  id: 'boc.fx_average',
+  name: 'Average exchange rate',
+  description: 'Average of published daily observations over the selected calendar year.',
+  build: (params) => ({
+    ...bocFxObservations.build(params),
+    outputMappings: [{
+      name: 'fxRate', path: `observations.*.FX${text(params, 'currency', 'USD').toUpperCase()}CAD.v`,
+      type: 'number', operation: 'mean', skipMissing: true, positive: true, overrideKey: 'overrideRate',
+    }],
+  }),
 };
 
 // ── USAspending — federal contract awards ────────────────────────────────────
@@ -352,6 +368,7 @@ const nagerPublicHolidays: ApiConnector = {
 
 export const API_CONNECTORS: ApiConnector[] = [
   bocFxObservations,
+  bocFxAverage,
   usaspendingAwards,
   nagerPublicHolidays,
 ];
@@ -459,6 +476,8 @@ export function apiRequestToBlockConfig(
   spec: ApiRequestSpec,
 ): Record<string, unknown> {
   return {
+    outputMode: spec.outputMappings ? 'values' : 'rows',
+    outputMappings: spec.outputMappings ?? [],
     connectorId,
     connectorParams: params,
     url: spec.url,

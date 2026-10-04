@@ -1,4 +1,5 @@
 import { z } from 'zod';
+export { upgradeFapiApiSourceDraft } from './api-source-upgrade';
 import { LocalWorkflowSnapshotSchema as WorkflowDefinitionSchema } from '@workspace/workflow-contracts/generated-schemas';
 import type { PersonalWorkflow } from '@workspace/workflow-contracts/library-types';
 import type { WorkflowDefinition } from '@workspace/workflow-contracts/domain/workflow-types';

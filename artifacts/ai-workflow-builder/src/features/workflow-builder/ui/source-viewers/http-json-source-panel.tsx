@@ -1,3 +1,4 @@
+import { ApiOutputMappingEditor } from './api-output-mapping-editor';
 import { apiFetch } from '@/platform/auth/api-fetch';
 import { apiRequestSignature } from '@/shared/workflow-engine/api-snapshot';
 
@@ -62,6 +63,8 @@ type SendResult = {
   missingSecrets?: string[];
   preview?: string;
   rows?: unknown[];
+  namedValues?: Record<string, unknown>;
+  fetchedPayload?: unknown;
   rowCount?: number;
   skipped?: number;
   samplePayload?: unknown;
@@ -258,6 +261,7 @@ export function HttpJsonSourcePanel({
     ? "POST"
     : "GET";
   const fieldMap = asRecord(config.fieldMap);
+  const valuesMode = config.outputMode === "values";
 
   const [headerRows, setHeaderRows] = useState<HeaderRow[]>(() =>
     headersToRows(config.headers)
@@ -341,6 +345,8 @@ export function HttpJsonSourcePanel({
           body: method === "POST" ? stringValue(config.body) : undefined,
           resultsPath: stringValue(config.resultsPath),
           fieldMap,
+          outputMode: config.outputMode,
+          outputMappings: config.outputMappings,
           defaultAmount: config.defaultAmount,
           currency: stringValue(config.currency),
           maxRows: Number(config.maxRows) || 250,
@@ -351,9 +357,10 @@ export function HttpJsonSourcePanel({
 
       // Pin the response so the run replays it. Only on a clean, mapped result —
       // a failed or unmapped call must not silently replace working evidence.
-      if (response.ok && data.ok && Array.isArray(data.rows) && data.rows.length > 0) {
+      if (response.ok && data.ok && (valuesMode ? data.namedValues !== undefined : Array.isArray(data.rows) && data.rows.length > 0)) {
         onConfigPatch({
           fetchedRows: data.rows,
+          ...(valuesMode ? { fetchedPayload: data.fetchedPayload } : {}),
           responseMeta: data.responseMeta,
           fetchedRequestSignature: apiRequestSignature(config),
           samplePayload: data.samplePayload,
@@ -376,12 +383,11 @@ export function HttpJsonSourcePanel({
     <div className="space-y-4">
       <div>
         <h3 className="font-semibold text-foreground text-sm">
-          API / HTTP Request
+          API Source
         </h3>
         <p className="mt-1 text-muted-foreground text-xs leading-relaxed">
-          The call runs on the server, so there is no CORS limit and no key in the
-          browser. A successful send pins the response into this block — the run
-          then replays that exact payload instead of calling out again.
+          Fetch information from an API, then choose the values the next step needs.
+          Runs use the saved response until you fetch again.
         </p>
       </div>
 
@@ -625,6 +631,14 @@ export function HttpJsonSourcePanel({
         </Field>
       ) : null}
 
+      <Field label="Output format">
+        <Select disabled={readOnly || sending} value={valuesMode ? "values" : "rows"}
+          onValueChange={(outputMode) => onConfigPatch({ outputMode })}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent><SelectItem value="values">Named values</SelectItem><SelectItem value="rows">Table rows</SelectItem></SelectContent>
+        </Select>
+      </Field>
+      {valuesMode ? <ApiOutputMappingEditor config={config} disabled={readOnly || sending} onConfigPatch={onConfigPatch} /> : <>
       {/* ── Mapping ─────────────────────────────────────────────────────────── */}
       {/* A connector owns its mapping (it knows the payload shape it asked for),
           so in connector mode this is shown as derived fact rather than offered
@@ -694,6 +708,7 @@ export function HttpJsonSourcePanel({
         </div>
       </div>
 
+      </>}
       {/* ── Response ────────────────────────────────────────────────────────── */}
       {result ? (
         <div className="space-y-3">
@@ -718,7 +733,7 @@ export function HttpJsonSourcePanel({
                   label="Records in payload"
                   value={result.responseMeta?.recordCount ?? "—"}
                 />
-                <MetaRow label="Rows mapped" value={result.rowCount ?? 0} />
+                {valuesMode ? <pre className="overflow-auto">{JSON.stringify(result.namedValues, null, 2)}</pre> : <MetaRow label="Rows mapped" value={result.rowCount ?? 0} />}
                 {result.skipped ? (
                   <MetaRow
                     label="Skipped (no numeric amount)"
@@ -812,10 +827,10 @@ export function HttpJsonSourcePanel({
 
       {/* ── What the run will actually use ──────────────────────────────────── */}
       <div className="rounded-md bg-muted/40 p-3 text-muted-foreground text-xs">
-        {pinnedRowCount > 0 ? (
+        {(valuesMode ? Object.hasOwn(config, "fetchedPayload") : pinnedRowCount > 0) ? (
           <>
             <div className="font-medium text-foreground">
-              {pinnedRowCount} rows pinned — the run replays this response.
+              {valuesMode ? "API response saved" : `${pinnedRowCount} rows saved`} — the run replays this response.
             </div>
             <div className="mt-1">
               Fetched:{" "}
@@ -827,8 +842,7 @@ export function HttpJsonSourcePanel({
           </>
         ) : (
           <div className="text-amber-700 dark:text-amber-400">
-            Nothing pinned yet — the run falls back to the offline sample rows and
-            warns. Send the request to pin a real response.
+            No response saved yet. Fetch the API before running, or supply an explicit override where configured.
           </div>
         )}
         <div className="mt-1">Source version: v{sourceVersion}</div>
