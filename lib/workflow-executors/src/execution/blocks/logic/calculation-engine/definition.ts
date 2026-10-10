@@ -58,7 +58,7 @@ export const calculationEngineDefinition: ToolDefinition = {
   ],
   outputRoles: [
     {
-      canRouteToFamilies: ['Protected', 'Review / Validation', 'Output'],
+      canRouteToFamilies: ['Protected', 'Review / Validation', 'Output', 'Field'],
       description: 'Calculated formula results keyed by result name.',
       id: 'calculated_results',
       label: 'Calculated results',

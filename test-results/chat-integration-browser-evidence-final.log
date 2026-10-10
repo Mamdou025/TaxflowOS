@@ -1,0 +1,13 @@
+
+> workspace@0.0.0 test:workflow-reliability C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-browser-tests.mjs reliability "--grep" "a started run retains its source|Chat starts a catalog workflow"
+
+Test run 04a727d1-aef55e3c-4f70-4f6e-976f-d394ae8a0610; reports and logs: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-aef55e3c-4f70-4f6e-976f-d394ae8a0610
+Preparing the isolated browser dependency cache…
+
+Running 2 tests using 1 worker
+
+  ok 1 e2e\workflow-run-persistence.spec.ts:5:7 › Guided run-state persistence › a started run retains its source and exact identity after navigating away and reloading (1.1m)
+  ok 2 e2e\workflow-traceability.spec.ts:5:5 › Chat starts a catalog workflow and Build verifies exact imported evidence and source revisions (1.8m)
+
+  2 passed (3.0m)

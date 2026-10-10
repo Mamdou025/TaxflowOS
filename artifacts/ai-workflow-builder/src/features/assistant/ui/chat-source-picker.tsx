@@ -1,35 +1,27 @@
 import { useEffect, useState } from 'react';
-import { useAtom } from 'jotai';
-import { X } from 'lucide-react';
+import { useStore } from 'jotai';
+import { attachSavedChatSource } from '../runtime/chat/chat-context-sources';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/shared/ui/dialog';
 import { apiFetch } from '@/platform/auth/api-fetch';
-import { uploadedRowsAtom } from '@/shared/stores/workspace-store';
 import { useWorkbookImport } from '@/features/documents/workbook-import-dialog';
-import {
-  isWorkflowSource,
-  loadWorkflowSource,
-  type WorkflowSourceDocument,
-} from '@/features/documents/workflow-source-client';
+import { type WorkflowSourceDocument } from '@/features/documents/workflow-source-client';
 
 /** Explicit workflow input selection, independent of semantic document retrieval. */
 export function ChatSourcePicker({
   disabled = false,
   open,
   onOpenChange,
-  onDocumentSelect,
 }: {
   disabled?: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onDocumentSelect: (document: WorkflowSourceDocument) => void;
 }) {
-  const [sources, setSources] = useAtom(uploadedRowsAtom);
+  const store = useStore();
   const { selectWorkbook, importDialog } = useWorkbookImport();
   const [documents, setDocuments] = useState<WorkflowSourceDocument[]>([]);
   const [query, setQuery] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const selected = sources.__unassigned__;
   const refresh = async () => {
     setBusy(true);
     setError('');
@@ -39,9 +31,7 @@ export function ChatSourcePicker({
       const data = (await response.json()) as { documents: WorkflowSourceDocument[] };
       setDocuments(
         data.documents.filter(
-          (document) =>
-            document.lifecycleStatus === 'active' &&
-            (isWorkflowSource(document) || document.status === 'ready'),
+          (document) => document.lifecycleStatus === 'active' && document.status !== 'uploading',
         ),
       );
     } catch (e) {
@@ -58,13 +48,8 @@ export function ChatSourcePicker({
     setError('');
     try {
       const document = documents.find((item) => item.id === id);
-      if (document && !isWorkflowSource(document)) {
-        onDocumentSelect(document);
-        onOpenChange(false);
-        return;
-      }
-      const source = await loadWorkflowSource(id, { selectWorkbook });
-      setSources((previous) => ({ ...previous, __unassigned__: source }));
+      if (!document) throw new Error('Choose an available source.');
+      await attachSavedChatSource(store, document, selectWorkbook);
       onOpenChange(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not read this source.');
@@ -75,28 +60,6 @@ export function ChatSourcePicker({
   return (
     <div className="relative mb-2 space-y-2 text-xs">
       {importDialog}
-      {selected && (
-        <div role="status" className="flex items-center gap-2 rounded border p-2">
-          <span className="min-w-0 flex-1 break-words">
-            Source: {selected.fileName} · {selected.rows.length} records
-            {selected.sourceId ? ' · Saved in Sources' : ' · Local attachment'}
-          </span>
-          <button
-            type="button"
-            aria-label="Remove selected workflow source"
-            disabled={disabled || busy}
-            onClick={() =>
-              setSources((previous) => {
-                const next = { ...previous };
-                delete next.__unassigned__;
-                return next;
-              })
-            }
-          >
-            <X size={14} />
-          </button>
-        </div>
-      )}
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
           <DialogTitle>Choose from Sources</DialogTitle>
@@ -119,6 +82,7 @@ export function ChatSourcePicker({
                     type="button"
                     key={doc.id}
                     className="block w-full rounded p-2 text-left hover:bg-muted"
+                    disabled={disabled}
                     onClick={() => void select(doc.id)}
                   >
                     {doc.fileName}

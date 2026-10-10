@@ -98,6 +98,12 @@ test('account creation, workspace switching, sign-out and sign-in keep local lib
   ).toBeVisible();
   await page.goto('/w/pf-fapi');
   await expect(
+    page.getByRole('navigation', { name: 'Workflow navigation', exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel('Workflow storage status')).toHaveText(
+    /^(Ready to save to server|Saved to server)$/,
+  );
+  await expect(
     page.getByRole('button', { name: 'Synthetic archived draft', exact: true }),
   ).toHaveCount(0);
   await page.getByText('Workspace: Second private workspace (owner)', { exact: true }).click();
@@ -147,6 +153,12 @@ test('account creation, workspace switching, sign-out and sign-in keep local lib
     page.getByText('Workspace: Other account workspace (owner)', { exact: true }),
   ).toBeVisible();
   await page.goto('/w/pf-fapi');
+  await expect(
+    page.getByRole('navigation', { name: 'Workflow navigation', exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel('Workflow storage status')).toHaveText(
+    /^(Ready to save to server|Saved to server)$/,
+  );
   await expect(
     page.getByRole('button', { name: 'Synthetic archived draft', exact: true }),
   ).toHaveCount(0);

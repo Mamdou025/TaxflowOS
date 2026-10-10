@@ -3,7 +3,7 @@ import { useStore } from 'jotai';
 import type { SourceRetrievalResult } from '@workspace/source-core';
 import { apiFetch } from '@/platform/auth/api-fetch';
 import { activeRunAtom, runEditsAtom, uploadedRowsAtom } from '@/shared/stores/workspace-store';
-import { selectedChatDocumentAtom } from '../runtime/chat/source-selection';
+import { chatContextAtom, loadedChatSourcesAtom } from '../runtime/chat/chat-context-store';
 import {
   createTemplateIntel,
   listIntel,
@@ -127,7 +127,7 @@ export function useWorkspaceRetrievalTools() {
   useCopilotAction({
     name: 'searchCompanyDocuments',
     description:
-      "Search the company's stored documents for relevant passages with source citations. Use when an answer depends on uploaded document content.",
+      'Search only the saved sources explicitly selected for this chat, with exact revision citations. Company labels do not select documents.',
     parameters: [
       {
         name: 'query',
@@ -137,7 +137,17 @@ export function useWorkspaceRetrievalTools() {
       },
     ],
     handler: async ({ query }: { query: string }) => {
-      const selectedSource = store.get(selectedChatDocumentAtom);
+      const selectedSources = store
+        .get(chatContextAtom)
+        .sources.filter(
+          (source) =>
+            source.sourceId && store.get(loadedChatSourcesAtom)[source.id]?.status === 'ready',
+        );
+      if (!selectedSources.length)
+        return {
+          passages: [],
+          note: 'No saved sources are selected and available in this chat. Add a source explicitly; local text is already in the chat context.',
+        };
       try {
         const response = await apiFetch('/api/documents/search', {
           method: 'POST',
@@ -145,7 +155,8 @@ export function useWorkspaceRetrievalTools() {
           body: JSON.stringify({
             query,
             k: 6,
-            selectedSourceIds: selectedSource ? [selectedSource.id] : [],
+            selectedSourceIds: selectedSources.map((source) => source.sourceId),
+            policy: 'selected-only',
           }),
         });
         const result = (await response.json()) as SourceRetrievalResult;
@@ -156,7 +167,7 @@ export function useWorkspaceRetrievalTools() {
             note: result.limitations[0]?.message ?? 'Document search is unavailable.',
           };
         }
-        if (!result.passages.length) {
+        if (result.status !== 'ok' || !result.passages.length) {
           return {
             passages: [],
             limitations: result.limitations,
@@ -166,16 +177,24 @@ export function useWorkspaceRetrievalTools() {
           };
         }
         return {
-          passages: result.passages.map((passage) => ({
-            source: passage.evidence.source.label,
-            sourceId: passage.evidence.source.sourceId,
-            revision: passage.evidence.source.revision,
-            citationId: passage.evidence.citationId,
-            selection: passage.evidence.selection,
-            chunkIndex: passage.evidence.locator.chunkIndex,
-            similarity: Number(passage.evidence.similarity.toFixed(3)),
-            excerpt: passage.content,
-          })),
+          passages: result.passages
+            .filter((passage) =>
+              selectedSources.some(
+                (source) =>
+                  source.sourceId === passage.evidence.source.sourceId &&
+                  source.sourceRevision === passage.evidence.source.revision,
+              ),
+            )
+            .map((passage) => ({
+              source: passage.evidence.source.label,
+              sourceId: passage.evidence.source.sourceId,
+              revision: passage.evidence.source.revision,
+              citationId: passage.evidence.citationId,
+              selection: passage.evidence.selection,
+              chunkIndex: passage.evidence.locator.chunkIndex,
+              similarity: Number(passage.evidence.similarity.toFixed(3)),
+              excerpt: passage.content,
+            })),
           limitations: result.limitations,
           instruction:
             'Answer using these passages and cite the supplied citationId and source file for each fact. If they do not answer the question, say so plainly.',

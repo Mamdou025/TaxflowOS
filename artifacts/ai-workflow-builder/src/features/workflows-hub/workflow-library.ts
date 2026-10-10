@@ -45,4 +45,4 @@ workflowLibraryAtom.onMount = set => {
   if (restoreError) pauseWorkflowSync(`${restoreError} Download the raw backup or open a saved workspace to recover.`);
   return initializeWorkflowSync(() => currentLibrary, remoteLibrary => set({ remoteLibrary, fromServer: true }));
 };
-export { definitionFingerprint, saveVersion } from './services/workflow-commands';
+export { definitionFingerprint, saveVersion } from '@workspace/workflow-core/commands';

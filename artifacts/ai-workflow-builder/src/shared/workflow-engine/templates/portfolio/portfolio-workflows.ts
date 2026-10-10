@@ -1,7 +1,7 @@
 import type { WorkflowRelationshipType } from '@workspace/workflow-contracts/domain/edge-types';
 import { DOCUMENT_CALCULATOR } from './document-calculator';
 import { EXECUTABLE_WORKPAPERS } from './executable-workpapers';
-import { FAPI_TEMPLATE_BLOCK_SPECS, FAPI_TEMPLATE_EDGE_SPECS } from '../sample-workflows/fapi-template';
+import { FAPI_TEMPLATE_BLOCK_SPECS, FAPI_TEMPLATE_EDGE_SPECS } from '../fapi/fapi-template';
 import { EXPENSE_TEMPLATE_BLOCK_SPECS, EXPENSE_TEMPLATE_EDGE_SPECS } from '../sample-workflows/expense-reimbursement-template';
 import {
   HOLIDAY_TEMPLATE_BLOCK_SPECS,
@@ -215,65 +215,6 @@ const T1134: PortfolioWorkflowDef = {
     e("lg-validate", "out-variance", "Variances", "Produce the prior-year variance report", TO_PREVIEW),
     e("lg-validate", "out-review", "Exceptions", "Produce the manager exception & sign-off package", TO_PREVIEW),
     e("lg-validate", "out-writeback", "Approved facts", "Write approved affiliate facts back", TO_HANDOFF),
-  ],
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 2.3 FAPI Calculation (Tier 1) — manager-level portfolio blueprint
-// ─────────────────────────────────────────────────────────────────────────────
-const FAPI: PortfolioWorkflowDef = {
-  id: "pf-fapi",
-  name: "FAPI Calculation (portfolio)",
-  group: "tier1",
-  sub: "Tier 1 · deterministic international tax calculation (manager workflow)",
-  description:
-    "Manager-level FAPI blueprint: scope CFAs from the ownership graph, import affiliate trial balances, map accounts to FAPI concepts, classify income types, analyze related-party transactions, capture professional decisions, compute gross/net FAPI and FAT, apply participating percentages, reconcile to T1134/surplus/T2, and feed the T2 Schedule 1 adjustment.",
-  blocks: [
-    b("trigger:manual", "start", "Start · FAPI", "Manual start of the FAPI workflow", 0, 0),
-    b("source:database-query", "src-graph", "CFA scope (ownership graph)", "Controlled foreign affiliates requiring analysis", 0, 1),
-    b("source:excel-workbook", "src-tb", "Affiliate trial balances", "Affiliate trial balances, financial statements & supporting schedules", 0, 2),
-    b("source:pdf-document", "src-docs", "Supporting schedules", "Supporting schedules & agreements", 0, 3),
-    b("source:currency-rate", "src-fx", "FX rates", "FX service — prescribed / annual-average rates", 0, 4),
-    b("source:manual-entry", "src-assump", "FAPI assumptions", "Inclusion rate, participating %, elections & thresholds", 1, 4),
-    b("ai:ai-mapping-suggestion", "ai-map", "Map accounts to FAPI concepts", "AI-assisted mapping of income/expense to FAPI concepts (proposal-only)", 1, 3),
-    b("logic:classification-mapping", "lg-normalize", "Classify income types", "Property income, active business income, other-than-ABI & exclusions", 1, 1),
-    b("logic:classification-mapping", "lg-related", "Analyze related-party transactions", "Inter-affiliate and Canadian related-party transactions", 2, 1),
-    b("source:manual-entry", "chk-classify", "Judgment · uncertain classifications", "Evidence & professional decisions for uncertain classifications", 2, 2),
-    b("logic:category-rollup-aggregator", "lg-rollup", "Aggregate FAPI buckets", "Roll up classified income & expense buckets", 3, 1),
-    b("logic:calculation-engine", "lg-calc", "Compute FAPI", "Gross FAPI, deductions, foreign accrual tax and net FAPI", 4, 1),
-    b("logic:calculation-engine", "lg-inclusion", "Participating % & Canadian inclusion", "Apply participating percentages and compute the Canadian inclusion", 5, 1),
-    b("logic:calculation-engine", "lg-reconcile", "Reconcile to T1134 / surplus / T2", "Reconcile to T1134, surplus and the T2 Schedule 1 adjustment", 6, 1),
-    b("field:field-block", "fld-calc", "FAPI calculation", "Affiliate-level FAPI calculation", 5, 0),
-    b("field:field-block", "fld-inclusion", "Consolidated inclusion", "Consolidated inclusion schedule", 6, 0),
-    b("output:pdf-report", "out-workpaper", "FAPI workpaper", "Full workpaper, calculation explanation & evidence index", 7, 0),
-    b("output:excel-export", "out-inclusion", "Consolidated inclusion schedule", "Consolidated inclusion schedule", 7, 1),
-    b("output:pdf-report", "out-exception", "Classification exception report", "Classification exception report", 7, 2),
-    b("output:excel-export", "out-fat", "Foreign accrual tax schedule", "Foreign accrual tax schedule", 7, 3),
-    b("output:evidence-pack", "out-review", "Manager review package", "Manager review package", 7, 4),
-    b("output:canonical-json", "out-t2feed", "T2 adjustment feed", "T2 Schedule 1 adjustment feed (write-back)", 8, 2),
-  ],
-  edges: [
-    e("start", "src-graph", "Start", "Manual start of the workflow", INITIATES),
-    e("src-graph", "lg-normalize", "CFA scope", "Classify affiliate income types"),
-    e("src-tb", "lg-normalize", "Trial balances", "Classify affiliate income types"),
-    e("src-docs", "ai-map", "Supporting schedules", "Map accounts to FAPI concepts", TO_AI),
-    e("ai-map", "lg-normalize", "Proposed mapping", "AI-proposed mapping feeds classification", AI_MAP),
-    e("lg-normalize", "lg-related", "Classified income", "Analyze related-party transactions"),
-    e("lg-related", "lg-rollup", "Classified transactions", "Aggregate FAPI buckets"),
-    e("chk-classify", "lg-rollup", "Judgment decisions", "Professional classifications feed the rollup"),
-    e("lg-rollup", "lg-calc", "FAPI buckets", "Compute FAPI"),
-    e("src-assump", "lg-calc", "FAPI assumptions", "Feed inclusion rate / thresholds"),
-    e("lg-calc", "lg-inclusion", "Net FAPI", "Apply participating % & inclusion"),
-    e("src-fx", "lg-inclusion", "FX rate", "Convert the Canadian inclusion"),
-    e("lg-inclusion", "lg-reconcile", "Canadian inclusion", "Reconcile to T1134 / surplus / T2"),
-    e("lg-inclusion", "fld-calc", "FAPI result", "Show the FAPI calculation"),
-    e("lg-reconcile", "fld-inclusion", "Reconciled inclusion", "Show the consolidated inclusion"),
-    e("lg-calc", "out-workpaper", "FAPI computation", "Produce the FAPI workpaper", TO_PREVIEW),
-    e("lg-inclusion", "out-inclusion", "Inclusion", "Produce the consolidated inclusion schedule", TO_PREVIEW),
-    e("lg-normalize", "out-exception", "Classifications", "Produce the classification exception report", TO_PREVIEW),
-    e("lg-calc", "out-fat", "Foreign accrual tax", "Produce the foreign accrual tax schedule", TO_PREVIEW),
-    e("lg-reconcile", "out-review", "Reconciliation", "Produce the manager review package", TO_PREVIEW),
-    e("lg-reconcile", "out-t2feed", "T2 adjustment", "Feed the T2 Schedule 1 adjustment", TO_HANDOFF),
   ],
 };
 
@@ -933,7 +874,6 @@ const LEGACY_PORTFOLIO_WORKFLOWS: PortfolioWorkflowDef[] = [
   ATTRIBUTE_LEDGERS,
   PORTFOLIO_OPS,
   T1134,
-  FAPI,
   SURPLUS,
   T106,
   EIFEL,
@@ -952,7 +892,7 @@ const EXPENSE_REIMBURSEMENT: PortfolioWorkflowDef = {
 // The public overview describes the same configured stages that Build and Run use.
 const EXECUTABLE_FAPI: PortfolioWorkflowDef = {
   id: 'pf-fapi',
-  name: FAPI.name,
+  name: 'FAPI Calculation',
   group: 'tier1',
   sub: 'Trial balance → keyword mapping → rollup → FAPI calculations',
   description: 'Calculate FAPI from supplied trial-balance rows, configured classification rules, preparer inputs and an FX rate. Review applicability, classifications, rates and adjustments before relying on the result. Produces calculation displays, canonical JSON and an evidence pack; it does not determine a complete tax position or file a return.',

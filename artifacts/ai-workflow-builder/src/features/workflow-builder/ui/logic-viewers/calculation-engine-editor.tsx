@@ -26,6 +26,8 @@ import { CalculationEngineRunSections } from './calculation-engine-run-sections'
 import { CalculationSettings } from './calculation-settings';
 import { CalculationSourcePicker, calculationSources } from './calculation-source-picker';
 import { CalculationTokenChip } from './calculation-token-chip';
+import { CalculationVariableInsert } from './calculation-variable-insert';
+import { CalculationVariablePanel } from './calculation-variable-panel';
 
 // A template's first edit creates a personal workflow and remounts the editor.
 // Keep its selection through that transition without writing UI state to rules.
@@ -44,6 +46,7 @@ export function CalculationEngineEditor({
   nodes,
   onSelectedTermIdChange,
   onUpdateConfig,
+  onInputConfigChange,
   selectedTermId,
 }: {
   block: WorkflowBlock;
@@ -57,6 +60,7 @@ export function CalculationEngineEditor({
   nodes: WorkflowNode[];
   onSelectedTermIdChange?: (termId: string | null) => void;
   onUpdateConfig: (key: string, value: unknown) => void;
+  onInputConfigChange?: (key: string, value: unknown) => void;
   selectedTermId?: string | null;
 }) {
   const config = block.config as Record<string, unknown>;
@@ -489,6 +493,7 @@ export function CalculationEngineEditor({
 
               {/* Builder tools */}
               <div className="flex-1 space-y-4 overflow-y-auto px-3 py-3">
+                <CalculationVariableInsert disabled={disabled} onInsert={appendRef} />
                 <CalculationSourcePicker
                   sources={calculationSources(inputContextBlock ?? block, edges, nodes)}
                   outputs={lastRunOutput}
@@ -619,7 +624,21 @@ export function CalculationEngineEditor({
         'flex flex-col overflow-hidden rounded-md border',
       )}
     >
-      <CalculationSettings config={config} disabled={disabled} onChange={onUpdateConfig} />
+      <CalculationSettings
+        config={(inputContextBlock ?? block).config}
+        disabled={disabled}
+        onChange={onInputConfigChange ?? onUpdateConfig}
+      />
+      {(inputContextBlock ?? block).family === 'Logic' && (
+        <CalculationVariablePanel
+          block={inputContextBlock ?? block}
+          edges={edges}
+          nodes={nodes}
+          outputs={lastRunOutput}
+          disabled={disabled}
+          onChange={onInputConfigChange ?? onUpdateConfig}
+        />
+      )}
       <div className="min-h-0 flex-1">
         <TwoPanelToolShell
           badge="Logic"

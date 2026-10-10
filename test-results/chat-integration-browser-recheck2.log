@@ -1,0 +1,267 @@
+
+> workspace@0.0.0 test:workflow-reliability C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-browser-tests.mjs reliability "--grep" "assistant-ui Stop stops the exact remote stream, retains the draft and rejects late tokens|assistant-ui retries one failed text turn without repeating a completed tool or user message|assistant-ui switching to a new chat stops the exact active reply and keeps histories separate|assistant-ui switching to a saved chat stops the exact active reply and keeps histories separate|assistant-ui opens the exact saved FAPI version once and keeps its live worksheet through follow-ups|assistant-ui workflow choices resolve full names for both agents and retain identical names|assistant-ui workflow choices pin the listed saved version through follow-up and reload|assistant-ui workflow choices reject deleted records and open draft-only work for review|assistant-ui starts a template independently and resumes the exact saved run|opening a viewer file is explicit context and removing it restores the Use in this chat action|explicit chat context reaches sina on the first turn, restores exact sources and starts clean|explicit chat context reaches microsina on the first turn, restores exact sources and starts clean|Sources adds text documents only on Use in this chat; example text remains an explicit unsaved attachment|registered Sina delegation saves its chat, resolves the tool and reviews the completed computer task once|the registered native workflow tool opens FAPI in Sina without delegating computer work|startup shell remains public until session and current workspace membership both resolve|direct Sources, Connections and workflow-history links use the Chat workspace shell|chat spreadsheet selection preserves drafts on cancel and imports a complete mapped sheet|an unstarted workflow does not inherit another workflow source or approvals|guided run shares exact progress with Chat and preserves source revisions on reload|Chat starts a catalog workflow and Build verifies exact imported evidence and source revisions"
+
+Test run 04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec; reports and logs: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec
+Preparing the isolated browser dependency cache…
+
+Running 21 tests using 1 worker
+
+  ok  1 e2e\assistant-ui-chat.spec.ts:412:5 › assistant-ui Stop stops the exact remote stream, retains the draft and rejects late tokens (27.1s)
+  ok  2 e2e\assistant-ui-chat.spec.ts:517:5 › assistant-ui retries one failed text turn without repeating a completed tool or user message (37.0s)
+  ok  3 e2e\assistant-ui-chat.spec.ts:654:7 › assistant-ui switching to a new chat stops the exact active reply and keeps histories separate (33.0s)
+  ok  4 e2e\assistant-ui-chat.spec.ts:654:7 › assistant-ui switching to a saved chat stops the exact active reply and keeps histories separate (36.1s)
+  x   5 e2e\assistant-ui-chat.spec.ts:755:5 › assistant-ui opens the exact saved FAPI version once and keeps its live worksheet through follow-ups (48.1s)
+  x   6 e2e\assistant-ui-chat.spec.ts:1041:5 › assistant-ui workflow choices resolve full names for both agents and retain identical names (4.9m)
+  ok  7 e2e\assistant-ui-chat.spec.ts:1146:5 › assistant-ui workflow choices pin the listed saved version through follow-up and reload (48.1s)
+  ok  8 e2e\assistant-ui-chat.spec.ts:1280:5 › assistant-ui workflow choices reject deleted records and open draft-only work for review (51.8s)
+  x   9 e2e\assistant-ui-chat.spec.ts:1333:5 › assistant-ui starts a template independently and resumes the exact saved run (5.2m)
+  ok 10 e2e\chat-context.spec.ts:19:5 › opening a viewer file is explicit context and removing it restores the Use in this chat action (22.8s)
+  ok 11 e2e\chat-context.spec.ts:216:7 › explicit chat context reaches sina on the first turn, restores exact sources and starts clean (1.0m)
+  ok 12 e2e\chat-context.spec.ts:216:7 › explicit chat context reaches microsina on the first turn, restores exact sources and starts clean (43.4s)
+  ok 13 e2e\chat-context.spec.ts:305:5 › Sources adds text documents only on Use in this chat; example text remains an explicit unsaved attachment (27.5s)
+  ok 14 e2e\mkoro-delegation.spec.ts:309:5 › registered Sina delegation saves its chat, resolves the tool and reviews the completed computer task once (27.9s)
+  ok 15 e2e\mkoro-delegation.spec.ts:384:5 › the registered native workflow tool opens FAPI in Sina without delegating computer work (31.8s)
+  ok 16 e2e\phase-7-navigation.spec.ts:86:5 › startup shell remains public until session and current workspace membership both resolve (12.0s)
+  ok 17 e2e\phase-7-navigation.spec.ts:666:5 › direct Sources, Connections and workflow-history links use the Chat workspace shell (33.8s)
+  ok 18 e2e\source-library.spec.ts:57:5 › chat spreadsheet selection preserves drafts on cancel and imports a complete mapped sheet (18.5s)
+  x  19 e2e\workflow-run-persistence.spec.ts:22:7 › Guided run-state persistence › an unstarted workflow does not inherit another workflow source or approvals (4.1m)
+  ok 20 e2e\workflow-session.spec.ts:157:5 › guided run shares exact progress with Chat and preserves source revisions on reload (1.8m)
+  x  21 e2e\workflow-traceability.spec.ts:5:5 › Chat starts a catalog workflow and Build verifies exact imported evidence and source revisions (4.3m)
+
+
+  1) e2e\assistant-ui-chat.spec.ts:755:5 › assistant-ui opens the exact saved FAPI version once and keeps its live worksheet through follow-ups 
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator:  locator('[data-assistant-ui-thread][role="log"][aria-label="Conversation"]').getByRole('region', { name: 'Workflow in chat', exact: true }).getByRole('region', { name: 'Workflow execution', exact: true }).getByRole('region', { name: 'FAPI worksheet', exact: true }).getByRole('table', { name: 'FAPI results summary', exact: true }).locator('[data-result-key="NET_FAPI_CAD"]')
+    Expected: "945.00"
+    Received: "Not calculated"
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveText" with timeout 5000ms
+      - waiting for locator('[data-assistant-ui-thread][role="log"][aria-label="Conversation"]').getByRole('region', { name: 'Workflow in chat', exact: true }).getByRole('region', { name: 'Workflow execution', exact: true }).getByRole('region', { name: 'FAPI worksheet', exact: true }).getByRole('table', { name: 'FAPI results summary', exact: true }).locator('[data-result-key="NET_FAPI_CAD"]')
+        3 × locator resolved to <span data-value-status="missing" data-result-key="NET_FAPI_CAD">…</span>
+          - unexpected value "Not calculated"
+
+
+      954 |   await expect(panel).toContainText('synthetic-fapi-trial-balance.json · 3 records');
+      955 |   await panel.getByRole('button', { name: 'Start workflow', exact: true }).click();
+    > 956 |   await expect(summary.locator('[data-result-key="NET_FAPI_CAD"]')).toHaveText('945.00');
+          |                                                                     ^
+      957 |   await expect(summary.getByRole('columnheader')).toHaveText(['Results summary', 'USD', 'CAD']);
+      958 |   await expect(summary.locator('tbody > tr > th')).toContainText([
+      959 |     'Gross',
+        at C:\Users\Mamad\Sinaxe\TaxflowOS\e2e\assistant-ui-chat.spec.ts:956:69
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\assistant-ui-chat-assistan-c88d3-orksheet-through-follow-ups\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\assistant-ui-chat-assistan-c88d3-orksheet-through-follow-ups\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\assistant-ui-chat-assistan-c88d3-orksheet-through-follow-ups\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\assistant-ui-chat-assistan-c88d3-orksheet-through-follow-ups\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\assistant-ui-chat-assistan-c88d3-orksheet-through-follow-ups\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) e2e\assistant-ui-chat.spec.ts:1041:5 › assistant-ui workflow choices resolve full names for both agents and retain identical names 
+
+    Test timeout of 240000ms exceeded.
+
+    Error: locator.click: Test timeout of 240000ms exceeded.
+    Call log:
+      - waiting for locator('[data-assistant-ui-thread][role="log"][aria-label="Conversation"]').getByRole('region', { name: 'Available workflows', exact: true }).getByRole('button', { name: 'Start FAPI in chat', exact: true })
+        - locator resolved to <button disabled type="button" aria-label="Start FAPI in chat" class="flex w-full items-start gap-2 text-left text-sm font-semibold text-primary hover:underline disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">…</button>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+          - waiting 100ms
+        380 × waiting for element to be visible, enabled and stable
+            - element is not enabled
+          - retrying click action
+            - waiting 500ms
+        37 × waiting for element to be visible, enabled and stable
+           - element is not visible
+         - retrying click action
+           - waiting 500ms
+
+
+      1132 |   await expect(conversation(page).locator('[data-message-id="choice-answer-2"]')).toBeVisible();
+      1133 |   const callsBeforeClick = state.runs.length;
+    > 1134 |   await available.getByRole('button', { name: 'Start FAPI in chat', exact: true }).click();
+           |                                                                                    ^
+      1135 |   await expect(
+      1136 |     conversation(page).getByRole('region', { name: 'Workflow in chat', exact: true }),
+      1137 |   ).toHaveCount(1);
+        at C:\Users\Mamad\Sinaxe\TaxflowOS\e2e\assistant-ui-chat.spec.ts:1134:84
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\assistant-ui-chat-assistan-e5b2b--and-retain-identical-names\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\assistant-ui-chat-assistan-e5b2b--and-retain-identical-names\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\assistant-ui-chat-assistan-e5b2b--and-retain-identical-names\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\assistant-ui-chat-assistan-e5b2b--and-retain-identical-names\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\assistant-ui-chat-assistan-e5b2b--and-retain-identical-names\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) e2e\assistant-ui-chat.spec.ts:1333:5 › assistant-ui starts a template independently and resumes the exact saved run 
+
+    Test timeout of 240000ms exceeded.
+
+    Error: locator.click: Test timeout of 240000ms exceeded.
+    Call log:
+      - waiting for locator('[data-assistant-ui-thread][role="log"][aria-label="Conversation"]').getByRole('button', { name: 'Start FAPI in chat', exact: true })
+        - locator resolved to <button disabled type="button" aria-label="Start FAPI in chat" class="flex w-full items-start gap-2 text-left text-sm font-semibold text-primary hover:underline disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2">…</button>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+          - waiting 100ms
+        392 × waiting for element to be visible, enabled and stable
+            - element is not enabled
+          - retrying click action
+            - waiting 500ms
+        69 × waiting for element to be visible, enabled and stable
+           - element is not visible
+         - retrying click action
+           - waiting 500ms
+
+
+      1361 |       );
+      1362 |     }
+    > 1363 |     return finishReply(
+           |                                  ^
+      1364 |       route,
+      1365 |       input,
+      1366 |       request.includes('built-in') ? 'fresh-answer' : 'resume-answer',
+        at C:\Users\Mamad\Sinaxe\TaxflowOS\e2e\assistant-ui-chat.spec.ts:1363:93
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\assistant-ui-chat-assistan-f7f96-resumes-the-exact-saved-run\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\assistant-ui-chat-assistan-f7f96-resumes-the-exact-saved-run\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\assistant-ui-chat-assistan-f7f96-resumes-the-exact-saved-run\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\assistant-ui-chat-assistan-f7f96-resumes-the-exact-saved-run\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\assistant-ui-chat-assistan-f7f96-resumes-the-exact-saved-run\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) e2e\workflow-run-persistence.spec.ts:22:7 › Guided run-state persistence › an unstarted workflow does not inherit another workflow source or approvals 
+
+    Test timeout of 240000ms exceeded.
+
+    Error: locator.waitFor: Test timeout of 240000ms exceeded.
+    Call log:
+      - waiting for getByRole('region', { name: 'Workflows page', exact: true }) to be visible
+
+
+      25 |     await page.goto('/documents');
+      26 |     await page.goto('/run/fapi');
+    > 27 |     await panel.waitFor();
+         |                                                         ^
+      28 |     // A template selection cannot infer the sole saved derivative as a Resume.
+      29 |     await expect(panel.getByRole('button', { name: 'Start guided workflow' })).toBeEnabled();
+      30 |     await expect(panel).not.toContainText('trial.xlsx');
+        at C:\Users\Mamad\Sinaxe\TaxflowOS\e2e\workflow-run-persistence.spec.ts:27:77
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\workflow-run-persistence-G-17645-orkflow-source-or-approvals\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\workflow-run-persistence-G-17645-orkflow-source-or-approvals\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\workflow-run-persistence-G-17645-orkflow-source-or-approvals\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\workflow-run-persistence-G-17645-orkflow-source-or-approvals\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\workflow-run-persistence-G-17645-orkflow-source-or-approvals\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) e2e\workflow-traceability.spec.ts:5:5 › Chat starts a catalog workflow and Build verifies exact imported evidence and source revisions 
+
+    Test timeout of 240000ms exceeded.
+
+    Error: locator.setInputFiles: Test timeout of 240000ms exceeded.
+    Call log:
+      - waiting for getByRole('region', { name: 'Workflow execution' }).last().getByLabel('Upload run source')
+
+
+       at workflow-session-fixtures.ts:21
+
+      19 |     'Records',
+      20 |   );
+    > 21 |   await panel
+         |   ^
+      22 |     .getByLabel('Upload run source')
+      23 |     .setInputFiles({
+      24 |       name,
+        at attachSessionWorkbook (C:\Users\Mamad\Sinaxe\TaxflowOS\e2e\workflow-session-fixtures.ts:21:3)
+        at C:\Users\Mamad\Sinaxe\TaxflowOS\e2e\workflow-traceability.spec.ts:37:3
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\workflow-traceability-Chat-78250-idence-and-source-revisions\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\workflow-traceability-Chat-78250-idence-and-source-revisions\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\workflow-traceability-Chat-78250-idence-and-source-revisions\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\workflow-traceability-Chat-78250-idence-and-source-revisions\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\artifacts\workflow-traceability-Chat-78250-idence-and-source-revisions\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5 failed
+    e2e\assistant-ui-chat.spec.ts:755:5 › assistant-ui opens the exact saved FAPI version once and keeps its live worksheet through follow-ups 
+    e2e\assistant-ui-chat.spec.ts:1041:5 › assistant-ui workflow choices resolve full names for both agents and retain identical names 
+    e2e\assistant-ui-chat.spec.ts:1333:5 › assistant-ui starts a template independently and resumes the exact saved run 
+    e2e\workflow-run-persistence.spec.ts:22:7 › Guided run-state persistence › an unstarted workflow does not inherit another workflow source or approvals 
+    e2e\workflow-traceability.spec.ts:5:5 › Chat starts a catalog workflow and Build verifies exact imported evidence and source revisions 
+  16 passed (33.2m)
+playwright exited 1; see C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-3f8d3735-efc0-4e5f-a805-e73f8d34b6ec\playwright.log
+ ELIFECYCLE  Command failed with exit code 1.

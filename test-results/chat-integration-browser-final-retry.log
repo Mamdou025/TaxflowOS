@@ -1,0 +1,142 @@
+
+> workspace@0.0.0 test:workflow-reliability C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-browser-tests.mjs reliability "--grep" "assistant-ui opens the exact saved FAPI|assistant-ui workflow choices resolve full names|assistant-ui starts a template independently|opening a viewer file|explicit chat context reaches sina|a started run retains its source|an exact run selection replaces|an unstarted workflow does not inherit|guided run shares exact progress|Chat starts a catalog workflow"
+
+Test run 04a727d1-f6924430-1b6b-4ba2-b622-a3ceddc9b403; reports and logs: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-f6924430-1b6b-4ba2-b622-a3ceddc9b403
+Preparing the isolated browser dependency cache…
+
+Running 10 tests using 1 worker
+
+  ok  1 e2e\assistant-ui-chat.spec.ts:755:5 › assistant-ui opens the exact saved FAPI version once and keeps its live worksheet through follow-ups (2.0m)
+  ok  2 e2e\assistant-ui-chat.spec.ts:1055:5 › assistant-ui workflow choices resolve full names for both agents and retain identical names (34.8s)
+  ok  3 e2e\assistant-ui-chat.spec.ts:1351:5 › assistant-ui starts a template independently and resumes the exact saved run (35.4s)
+  ok  4 e2e\chat-context.spec.ts:19:5 › opening a viewer file is explicit context and removing it restores the Use in this chat action (23.3s)
+  ok  5 e2e\chat-context.spec.ts:257:7 › explicit chat context reaches sina on the first turn, restores exact sources and starts clean (52.8s)
+  x   6 e2e\workflow-run-persistence.spec.ts:5:7 › Guided run-state persistence › a started run retains its source and exact identity after navigating away and reloading (20.3s)
+  x   7 e2e\workflow-run-persistence.spec.ts:57:7 › Guided run-state persistence › an exact run selection replaces a local new run in the same mounted panel (13.9s)
+  ok  8 e2e\workflow-run-persistence.spec.ts:136:7 › Guided run-state persistence › an unstarted workflow does not inherit another workflow source or approvals (29.5s)
+  ok  9 e2e\workflow-session.spec.ts:157:5 › guided run shares exact progress with Chat and preserves source revisions on reload (1.7m)
+  x  10 e2e\workflow-traceability.spec.ts:5:5 › Chat starts a catalog workflow and Build verifies exact imported evidence and source revisions (55.1s)
+
+
+  1) e2e\workflow-run-persistence.spec.ts:5:7 › Guided run-state persistence › a started run retains its source and exact identity after navigating away and reloading 
+
+    Error: locator.innerText: Error: strict mode violation: getByRole('region', { name: 'Workflow execution' }).locator('header') resolved to 2 elements:
+        1) <header>…</header> aka getByText('FAPI Calculation TemplateVersion 1 · Run 3a8711b6-a986-493e-bec2-')
+        2) <header class="space-y-2 px-4 py-4">…</header> aka getByText('FAPI worksheet Export worksheet CSVForeign accrual property incomeVersion 1 ·')
+
+    Call log:
+      - waiting for getByRole('region', { name: 'Workflow execution' }).locator('header')
+
+
+      11 |     await attachSessionWorkbook(page, panel, 'trial.xlsx', 120);
+      12 |     await expect(panel).toContainText('trial.xlsx');
+    > 13 |     const identity = await panel.locator('header').innerText();
+         |                                                    ^
+      14 |     const exactRunLink = await panel
+      15 |       .getByRole('link', { name: 'Open this workflow in Run', exact: true })
+      16 |       .getAttribute('href');
+        at C:\Users\Mamad\Sinaxe\TaxflowOS\e2e\workflow-run-persistence.spec.ts:13:52
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-f6924430-1b6b-4ba2-b622-a3ceddc9b403\artifacts\workflow-run-persistence-G-116b7-vigating-away-and-reloading\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-f6924430-1b6b-4ba2-b622-a3ceddc9b403\artifacts\workflow-run-persistence-G-116b7-vigating-away-and-reloading\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\phase2\04a727d1-f6924430-1b6b-4ba2-b622-a3ceddc9b403\artifacts\workflow-run-persistence-G-116b7-vigating-away-and-reloading\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-f6924430-1b6b-4ba2-b622-a3ceddc9b403\artifacts\workflow-run-persistence-G-116b7-vigating-away-and-reloading\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\phase2\04a727d1-f6924430-1b6b-4ba2-b622-a3ceddc9b403\artifacts\workflow-run-persistence-G-116b7-vigating-away-and-reloading\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) e2e\workflow-run-persistence.spec.ts:57:7 › Guided run-state persistence › an exact run selection replaces a local new run in the same mounted panel 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('region', { name: 'Workflow execution', exact: true }).locator('header')
+    Expected substring: "original-panel-run"
+    Error: strict mode violation: getByRole('region', { name: 'Workflow execution', exact: true }).locator('header') resolved to 2 elements:
+        1) <header>…</header> aka getByText('FAPI Calculation TemplateVersion 1 · Run original-panel-runPaused — ready when')
+        2) <header class="space-y-2 px-4 py-4">…</header> aka getByText('FAPI worksheet Export worksheet CSVForeign accrual property incomeVersion 1 ·')
+
+    Call log:
+      - Expect "toContainText" with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Workflow execution', exact: true }).locator('header')
+
+
+      116 |     );
+      117 |     const panel = page.getByRole('region', { name: 'Workflow execution', exact: true });
+    > 118 |     await expect(panel.locator('header')).toContainText('original-panel-run');
+          |                                           ^
+      119 |     const original = await page.evaluate(() => window.readPanelIdentity());
+      120 |     await panel.getByRole('button', { name: 'New run from Build', exact: true }).click();
+      121 |     const fresh = await page.evaluate(() => window.readPanelIdentity());
+        at C:\Users\Mamad\Sinaxe\TaxflowOS\e2e\workflow-run-persistence.spec.ts:118:43
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-f6924430-1b6b-4ba2-b622-a3ceddc9b403\artifacts\workflow-run-persistence-G-bb83e-n-in-the-same-mounted-panel\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-f6924430-1b6b-4ba2-b622-a3ceddc9b403\artifacts\workflow-run-persistence-G-bb83e-n-in-the-same-mounted-panel\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\phase2\04a727d1-f6924430-1b6b-4ba2-b622-a3ceddc9b403\artifacts\workflow-run-persistence-G-bb83e-n-in-the-same-mounted-panel\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-f6924430-1b6b-4ba2-b622-a3ceddc9b403\artifacts\workflow-run-persistence-G-bb83e-n-in-the-same-mounted-panel\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\phase2\04a727d1-f6924430-1b6b-4ba2-b622-a3ceddc9b403\artifacts\workflow-run-persistence-G-bb83e-n-in-the-same-mounted-panel\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) e2e\workflow-traceability.spec.ts:5:5 › Chat starts a catalog workflow and Build verifies exact imported evidence and source revisions 
+
+    Error: expect(received).toHaveLength(expected)
+
+    Expected length: 0
+    Received length: 1
+    Received array:  [{"at": "2026-10-10T04:43:41.685Z", "documentReviews": [Array], "result": [Object], "sessionSnapshot": [Object], "version": 1}]
+
+      48 |   )!;
+      49 |   expect(calculated.output.calculatedResults).toEqual({ RESULT: 400 });
+    > 50 |   expect(original.entry.runs).toHaveLength(0);
+         |                               ^
+      51 |   await composer.fill('Explain this result before I approve it');
+      52 |   await panel.getByRole('button', { name: 'Verify this run in Build', exact: true }).click();
+      53 |   let inspector = page.getByRole('region', { name: 'Run verification in Build' });
+        at C:\Users\Mamad\Sinaxe\TaxflowOS\e2e\workflow-traceability.spec.ts:50:31
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-f6924430-1b6b-4ba2-b622-a3ceddc9b403\artifacts\workflow-traceability-Chat-78250-idence-and-source-revisions\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-f6924430-1b6b-4ba2-b622-a3ceddc9b403\artifacts\workflow-traceability-Chat-78250-idence-and-source-revisions\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\phase2\04a727d1-f6924430-1b6b-4ba2-b622-a3ceddc9b403\artifacts\workflow-traceability-Chat-78250-idence-and-source-revisions\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-f6924430-1b6b-4ba2-b622-a3ceddc9b403\artifacts\workflow-traceability-Chat-78250-idence-and-source-revisions\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\phase2\04a727d1-f6924430-1b6b-4ba2-b622-a3ceddc9b403\artifacts\workflow-traceability-Chat-78250-idence-and-source-revisions\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3 failed
+    e2e\workflow-run-persistence.spec.ts:5:7 › Guided run-state persistence › a started run retains its source and exact identity after navigating away and reloading 
+    e2e\workflow-run-persistence.spec.ts:57:7 › Guided run-state persistence › an exact run selection replaces a local new run in the same mounted panel 
+    e2e\workflow-traceability.spec.ts:5:5 › Chat starts a catalog workflow and Build verifies exact imported evidence and source revisions 
+  7 passed (8.8m)
+playwright exited 1; see C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-f6924430-1b6b-4ba2-b622-a3ceddc9b403\playwright.log
+ ELIFECYCLE  Command failed with exit code 1.

@@ -1,7 +1,6 @@
 import { stopChatBeforeSwitch } from '../runtime/chat/chat-switch';
 import { searchWorkspace, HIT_ICON, type SearchHit } from './workflow-composer-search';
 export type { SearchHit } from './workflow-composer-search';
-import { workflowLibraryAtom } from '@/features/workflows-hub/workflow-library';
 import { WorkflowSessionPanel } from '@/features/workflows-hub/workflow-session-panel';
 import {
   openWorkflowSession,
@@ -10,7 +9,6 @@ import {
   bindChatSession,
 } from '@/features/workflows-hub/workflow-session-store';
 import { useSessionTools } from './use-session-tools';
-import { apiFetch } from '@/platform/auth/api-fetch';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // useAssistant — the shared brain of the assistant surface.
@@ -24,7 +22,7 @@ import { apiFetch } from '@/platform/auth/api-fetch';
 // exactly once.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import type { ChatAgent } from '@/shared/stores/chat-store';
 import { WorkflowCommandResult } from './workflow-command-result';
 import {
@@ -36,11 +34,10 @@ import type { ReactNode } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useAtom, useAtomValue, useSetAtom, useStore } from 'jotai';
 import { useRouter, usePathname } from '@/lib/router';
-import { Globe, FileText, Workflow, Bot, GitBranch, Play, Sparkles } from 'lucide-react';
+import { Globe, FileText, Workflow, Bot, Sparkles } from 'lucide-react';
 import {
   useCopilotAction,
   useCopilotReadable,
-  useCopilotChat,
   useCopilotChatInternal,
 } from '@copilotkit/react-core';
 import { TextMessage, Role } from '@copilotkit/runtime-client-gql';
@@ -52,14 +49,9 @@ import {
   closeAllWorkspaceWindowsAtom,
   pushTrailAtom,
   activeRunAtom,
-  uploadedRowsAtom,
-  attachedDocsAtom,
-  type AttachedDoc,
-  runEditsAtom,
 } from '@/shared/stores/workspace-store';
 import { pageChatSurfacesAtom } from '@/lib/page-chat-store';
 import { SurfaceEmbed } from './surface-embed';
-import { attachWorkflowSource } from '@/features/documents/attach-workflow-source';
 import { useWorkbookImport } from '@/features/documents/workbook-import-dialog';
 import { builderFocusTargetAtom } from '@/shared/workflow-engine/state/workflow-store';
 import {
@@ -69,7 +61,6 @@ import {
   getFieldContext,
   buildAgentCatalog,
   resolveFieldId,
-  fieldValuesAtom,
 } from '@/shared/stores/resource-registry';
 import { InlineFieldCard } from '@/features/assistant/workspace/inline-field-card';
 import {
@@ -81,13 +72,17 @@ import type { ComposerSuggestion } from '@/features/assistant/workspace/aside-th
 import {
   getWorkflowConfig,
   WORKFLOW_CONFIGS,
-  type TemplateConfig,
 } from '@/shared/workflow-engine/runtime/workflow-runs';
 import { PORTFOLIO_WORKFLOWS } from '@/shared/workflow-engine/templates/portfolio/portfolio-workflows';
 import { aimBuilderAtWorkflowAtom } from '@/features/workflows-hub/workflows-store';
 import { WORKFLOWS } from '@/lib/agents';
-import { createTemplateIntel } from '@/features/worksheets/intel';
-import { GenUIRender } from '@/features/genui/genui-render';
+const GenUIRender = lazy(() =>
+  import('@/features/genui/genui-render').then((module) => ({ default: module.GenUIRender })),
+);
+import { useChatContext } from '../runtime/chat/use-chat-context';
+import { chatContextLockedAtom } from '../runtime/chat/chat-context-store';
+import { attachChatFile } from '../runtime/chat/chat-context-sources';
+import { recordWorkflowSelection } from '../runtime/chat/workflow-interaction-store';
 import {
   recordWorkItemAtom,
   workIdFor,
@@ -160,9 +155,6 @@ export function useAssistant() {
   const recordWork = useSetAtom(recordWorkItemAtom);
   const setBuilderFocus = useSetAtom(builderFocusTargetAtom);
   const aimBuilder = useSetAtom(aimBuilderAtWorkflowAtom);
-  const setUploadedRows = useSetAtom(uploadedRowsAtom);
-  const setAttachedDocs = useSetAtom(attachedDocsAtom);
-  const attachedDocs = useAtomValue(attachedDocsAtom);
   const activeRun = useAtomValue(activeRunAtom);
   // Pages open next to the chat that opted into the Page ⇄ Chat contract. Subscribed
   // so the "commandable surfaces" readable stays live; each surface is rebuilt only
@@ -172,23 +164,7 @@ export function useAssistant() {
   // handlers see the latest live intel without re-rendering this heavy hook.
   const store = useStore();
 
-  // Live grounding data — subscribed so the readables below refresh the instant the
-  // user uploads a source, edits a field/input, or re-categorizes a row. These feed
-  // the GENERIC field-values + live-workflow readables (any workflow, no per-sheet code).
-  const fieldValues = useAtomValue(fieldValuesAtom);
-  const allRunEdits = useAtomValue(runEditsAtom);
-  const uploaded = useAtomValue(uploadedRowsAtom);
-  useCopilotReadable({
-    description:
-      'Selected workflow source. Open runWorkflow to show the shared panel; use its source controls or controlWorkflowRun with the exact source block ID to attach these stored records. Never replace them with an empty array or transcribed sample.',
-    value: uploaded.__unassigned__
-      ? {
-          fileName: uploaded.__unassigned__.fileName,
-          rowCount: uploaded.__unassigned__.rows.length,
-          sourceId: uploaded.__unassigned__.sourceId,
-        }
-      : null,
-  });
+  const chatContext = useChatContext();
 
   // Open a workflow (or Sinaxe blueprint) in the NEW builder: the Workflows surface's
   // Build tab (InlineBuilder), docked beside the chat — NOT the legacy standalone
@@ -370,116 +346,8 @@ export function useAssistant() {
       : 'No workflow is currently running.',
   });
 
-  // ── Attached documents (PDF / plain-text) ────────────────────────────────────
-  // The user can attach a document in the composer; its extracted text lands here so
-  // the assistant can ANSWER questions about it ("what is this document about?",
-  // "summarize section 3") from the ACTUAL content — not just the filename. `text`
-  // is the extracted text layer (no OCR); `truncated: true` means the file was longer
-  // than the cap and the tail was cut, so say so rather than claiming completeness.
-  useCopilotReadable({
-    description:
-      'Documents in context — attached in the chat OR opened in the Document Viewer next to it (which auto-adds every open file here) — with their extracted text content. When the user asks about "this document", "the attachment", "the PDF", or "the file", ANSWER from the `text` here — it is the real content, not a guess. Each doc: fileName, kind, pages (for PDFs), and text. `truncated: true` means the document was cut at a length cap — answer from what is present and note the tail was not included. Empty list = no document is currently open or attached.',
-    value: attachedDocs.length
-      ? attachedDocs.map((d) => ({
-          fileName: d.fileName,
-          kind: d.kind,
-          pages: d.pages,
-          truncated: d.truncated,
-          text: d.text,
-        }))
-      : 'No documents have been attached to the chat.',
-  });
-
-  // ── Editable field values (GLOBAL, always live) ──────────────────────────────
-  // Every editable field + its CURRENT value, so the assistant answers value
-  // questions from the real number instead of guessing. Bound fields resolve to the
-  // engine input the worksheet/run/engine share; `isDefault` flags a value the user
-  // hasn't set yet (still the template default) so the model can say so honestly.
-  const fieldValueContext = useMemo(() => {
-    return buildAgentCatalog().fields.map((f) => {
-      const ctx = getFieldContext(f.fieldId);
-      const binding = ctx?.field.binding;
-      let value: string;
-      let isDefault: boolean;
-      if (binding) {
-        const stored = allRunEdits[binding.workflowId]?.inputs?.[binding.inputKey];
-        const engineDefault = getWorkflowConfig(binding.workflowId)?.editableInputs?.find(
-          (i) => i.key === binding.inputKey,
-        )?.default;
-        isDefault = stored === undefined;
-        value = String(stored ?? engineDefault ?? ctx?.field.default ?? '');
-      } else {
-        const stored = fieldValues[f.fieldId];
-        isDefault = stored === undefined;
-        value = stored ?? ctx?.field.default ?? '';
-      }
-      return {
-        fieldId: f.fieldId,
-        label: f.label,
-        worksheet: f.pageKey,
-        value,
-        unit: ctx?.field.ccy,
-        hint: ctx?.field.hint,
-        isDefault,
-        boundToWorkflow: binding?.workflowId,
-      };
-    });
-  }, [fieldValues, allRunEdits]);
-
-  useCopilotReadable({
-    description:
-      'Every editable worksheet field and its CURRENT live value — the real number the user sees and edits (bound fields share the exact engine input the worksheet and the workflow run use). ANSWER value questions from this ("what is the FX rate?", "what inclusion rate are we using?") — do NOT guess or state a value that is not here. `isDefault: true` means the user has not set it yet (still the template default), so say it is unset rather than asserting it as chosen. To change one, call editField with the exact `fieldId` shown here.',
-    value: fieldValueContext,
-  });
-
-  // ── Live workflow data (GENERIC across every registered workflow) ────────────
-  // For any workflow the user is actually working on — uploaded a source, edited an
-  // input/override, or has an active run — publish the SAME computed snapshot the
-  // worksheet renders (lines, summary+CAD, FX, classification). So the assistant knows
-  // the real numbers even with no worksheet page open. Zero per-workflow code: adding
-  // a TemplateConfig to WORKFLOW_CONFIGS makes it grounded here automatically.
-  const liveWorkflowContext = useMemo(() => {
-    const activeId = activeRun?.workflowId;
-    return Object.values(WORKFLOW_CONFIGS).flatMap((cfg) => {
-      const up = uploaded[cfg.id];
-      const edits = allRunEdits[cfg.id];
-      const hasData =
-        Boolean(up?.rows?.length) ||
-        (edits &&
-          (Object.keys(edits.inputs).length > 0 || Object.keys(edits.overrides).length > 0)) ||
-        cfg.id === activeId;
-      if (!hasData) return [];
-      let snapshot: unknown = null;
-      try {
-        snapshot = createTemplateIntel(cfg, {
-          rows: up?.rows,
-          inputs: edits?.inputs,
-          overrides: edits?.overrides,
-        }).describe();
-      } catch {
-        snapshot = null;
-      }
-      return [
-        {
-          workflowId: cfg.id,
-          name: cfg.name,
-          isActiveRun: cfg.id === activeId,
-          source: up
-            ? { fileName: up.fileName, rowCount: up.rows.length }
-            : 'No source records supplied',
-          snapshot,
-        },
-      ];
-    });
-  }, [uploaded, allRunEdits, activeRun?.workflowId]);
-
-  useCopilotReadable({
-    description:
-      'Supplied source records and legacy input edits for available workflows. A snapshot without source records has no calculated values; never substitute examples. These previews are separate from saved-version run results: inspect the exact workflow run for its actual calculations and approvals. For a preview formula or operand breakdown call whyWorksheetValue / explainWorksheetLine with the workflowId.',
-    value: liveWorkflowContext.length
-      ? liveWorkflowContext
-      : 'No workflow has live data yet — nothing has been uploaded, edited, or run.',
-  });
+  // Explicit sources are published by useChatContext. Exact saved-run context
+  // belongs to useSessionTools; workspace-wide legacy previews are not chat inputs.
 
   // Available built-in templates are independent of the user's saved drafts.
   useCopilotReadable({
@@ -730,7 +598,9 @@ export function useAssistant() {
         );
       return (
         <div data-work-id={workIdFor('generated-view', workKeyFromText(args.prompt))}>
-          <GenUIRender prompt={args.prompt} />
+          <Suspense fallback={<div role="status">Loading generated view…</div>}>
+            <GenUIRender prompt={args.prompt} />
+          </Suspense>
         </div>
       );
     },
@@ -741,29 +611,43 @@ export function useAssistant() {
   useLiveDataTools();
 
   // ── Conversation-launch state ────────────────────────────────────────────────
-  const { appendMessage } = useCopilotChat();
-  // Read the live messages from the AG-UI store (CopilotKit 1.63). The legacy
-  // useCopilotChat().visibleMessages is undefined here — see use-chat-persistence.
-  const { messages: visibleMessages, stopGeneration, agent } = useCopilotChatInternal() as unknown as {
-    messages: unknown[];
-    stopGeneration: () => void;
-    agent?: { detachActiveRun: () => Promise<void> };
-  };
+  // This is the sole legacy chat hook: every instance owns an SDK reconnect
+  // effect. Share its commands; passive consumers only subscribe to the agent.
+  const chat = useCopilotChatInternal();
+  const { appendMessage, messages: visibleMessages, stopGeneration, agent } = chat;
   // Server-side persistence: autosaves each turn + restores saved threads. Additive
   // — it observes CopilotKit, doesn't change how the chat runs. See use-chat-persistence.
-  const persistence = useChatPersistence();
+  const persistence = useChatPersistence(chat);
+  const [replyPending, setReplyPending] = useState(false);
+  useEffect(() => {
+    store.set(
+      chatContextLockedAtom,
+      replyPending || chat.isLoading || persistence.restoring || !!persistence.restoreError,
+    );
+    return () => store.set(chatContextLockedAtom, false);
+  }, [replyPending, chat.isLoading, persistence.restoring, persistence.restoreError, store]);
   const mkoro = useMkoroDelegation(
     persistence.ensureThread,
     !persistence.restoring && !persistence.restoreError,
+    appendMessage,
   );
   const [sent, setSent] = useState(false); // flips the hero → conversation the instant you send
+  // Only explicit conversation navigation changes this identity; autosaving a new
+  // thread must not reset an in-progress composer or its workflow forms.
+  const [conversationKey, setConversationKey] = useState(0);
+  const conversationEpoch = useRef(0);
+  useEffect(
+    () => () => {
+      conversationEpoch.current++;
+    },
+    [],
+  );
   const [pinnedFields, setPinnedFields] = useState<string[]>([]); // fields brought in via search
   const [pinnedElements, setPinnedElements] = useState<PinnedElement[]>([]); // workflow source/output summoned in
   const [pinnedRuns, setPinnedRuns] = useAtom(chatWorkflowIdsAtom); // workflow ids launched deterministically (no LLM routing)
   const chatSession = useAtomValue(chatSessionAtom);
   const [pinnedToolResults, setPinnedToolResults] = useState<ToolResult[]>([]); // tools run by hand from the Tools menu
 
-  const [replyPending, setReplyPending] = useState(false);
   const replyPendingRef = useRef(false);
   const replySequence = useRef(0);
   const say = async (content: string) => {
@@ -772,6 +656,7 @@ export function useAssistant() {
     setReplyPending(true);
     setSent(true);
     try {
+      chatContext.publish();
       await appendMessage(new TextMessage({ content, role: Role.User }));
     } finally {
       if (replySequence.current === sequence) {
@@ -796,15 +681,19 @@ export function useAssistant() {
   // New chat: clear the store + pinned cards, and start a fresh (unsaved-until-first-
   // message) thread — genuinely blank, distinct from the one you were in.
   const newChat = async () => {
+    conversationEpoch.current++;
     if (!(await persistence.startNewThread())) return;
+    setConversationKey((key) => key + 1);
     clearPinned();
     setSent(false);
   };
   // Restore a saved conversation from history, then show it (not the hero). Wipe the
   // outgoing chat's pinned cards so only the restored transcript shows.
   const openThread = async (id: string) => {
+    conversationEpoch.current++;
     const ok = await persistence.loadThread(id);
     if (ok) {
+      setConversationKey((key) => key + 1);
       clearPinned();
       setSent(true);
     }
@@ -845,8 +734,16 @@ export function useAssistant() {
   // campaign — leaving the click dead. Pinning the same RunWorkflowRender the action
   // renders makes every launcher click reliable regardless of model behavior.)
   const launchStartWorkflow = (workflowId: string) => {
-    const ref = openWorkflowSession(store, workflowId);
+    if (
+      chat.isLoading ||
+      persistence.restoring ||
+      persistence.restoreError ||
+      store.get(chatContextLockedAtom)
+    )
+      return;
+    const ref = openWorkflowSession(store, workflowId, undefined, true);
     bindChatSession(store, ref);
+    recordWorkflowSelection(store, workflowId, ref);
     setSent(true);
     setPinnedRuns((prev) => (prev.includes(ref.workflowId) ? prev : [...prev, ref.workflowId]));
   };
@@ -873,16 +770,21 @@ export function useAssistant() {
   // prefix routes the LLM straight to it (see INSTRUCTIONS). /genui-lab remains
   // the standalone lab.
   const genui = (prompt: string) => say(`Generate this view: ${prompt}`);
-  const composerCommands: ComposerSuggestion[] = [
-    // Navigation — open a real worksheet / the builder
-    {
-      key: 'cmd:open-fapi',
-      title: 'Open FAPI worksheet',
-      sub: 'Foreign Accrual Property Income',
-      kind: 'open',
-      icon: <Globe size={14} />,
-      run: () => launchOpenPage('fapi'),
+  const composerTools: ComposerSuggestion[] = WORKFLOWS.map((w) => ({
+    key: `wf:${w.id}`,
+    title: w.name,
+    sub: w.sub,
+    kind: 'workflow',
+    dim: !w.ready,
+    icon: <Workflow size={14} />,
+    run: () => {
+      if (w.ready) launchStartWorkflow(w.id);
     },
+  }));
+  const composerCommands: ComposerSuggestion[] = [
+    // Reuse the canonical FAPI entry in the command palette and Workflows menu.
+    ...composerTools.filter((item) => item.key === 'wf:fapi'),
+    // Navigation — open a real worksheet / the builder
     {
       key: 'cmd:open-t1134',
       title: 'Open T1134 worksheet',
@@ -906,32 +808,6 @@ export function useAssistant() {
       kind: 'open',
       icon: <Workflow size={14} />,
       run: () => launchOpenPage('workflows'),
-    },
-    // Bring supplied source records or their preview into the chat.
-    {
-      key: 'cmd:fapi-source',
-      title: 'Show FAPI source document',
-      sub: 'The trial balance feeding the run',
-      kind: 'inline',
-      icon: <GitBranch size={14} />,
-      run: () => launchPinElement('fapi', 'source'),
-    },
-    {
-      key: 'cmd:fapi-output',
-      title: 'Show FAPI output',
-      sub: 'The computed result',
-      kind: 'inline',
-      icon: <GitBranch size={14} />,
-      run: () => launchPinElement('fapi', 'output'),
-    },
-    // Run a workflow live in the chat
-    {
-      key: 'cmd:run-fapi',
-      title: 'Run the FAPI workflow',
-      sub: 'Live, step-by-step run in the chat',
-      kind: 'run',
-      icon: <Play size={14} />,
-      run: () => launchStartWorkflow('fapi'),
     },
     // Generate UI (OpenUI) — opens the GenUI Lab with the prompt preset
     {
@@ -1001,75 +877,14 @@ export function useAssistant() {
       };
     });
 
-  const composerTools: ComposerSuggestion[] = [
-    ...WORKFLOWS.map((w) => ({
-      key: `wf:${w.id}`,
-      title: w.name,
-      sub: w.sub,
-      kind: 'workflow',
-      dim: !w.ready,
-      icon: <Workflow size={14} />,
-      run: () => {
-        if (w.ready) launchStartWorkflow(w.id);
-      },
-    })),
-  ];
-
-  // File attach. Two paths, both make the file's CONTENT available to the assistant
-  // (never just the filename): workbooks parse into the shared upload store as rows
-  // (the exact rows the engine + builder use); other documents (PDF, plain-text) get
-  // their text extracted server-side and stored as readable context so the model can
-  // answer questions about them. The returned string is a SHORT note appended to the
-  // message — the full text rides in the attachedDocs readable, not the chat bubble.
+  // One explicit attachment path serves Chat and Sources; never auto-load open files.
   const onAttach = async (files: File[]): Promise<string> => {
+    const epoch = conversationEpoch.current;
     const notes: string[] = [];
-    for (const f of files) {
-      if (/\.(xlsx|xls|json)$/i.test(f.name)) {
-        try {
-          const { source, notice } = await attachWorkflowSource(f, selectWorkbook);
-          setUploadedRows((prev) => ({ ...prev, __unassigned__: source }));
-          notes.push(
-            `[Attached ${source.fileName} — ${source.rows.length} source records. ${notice}]`,
-          );
-        } catch (error) {
-          throw new Error(
-            `Could not attach ${f.name}: ${error instanceof Error ? error.message : 'Unreadable workbook'}`,
-          );
-        }
-        continue;
-      }
-
-      // PDF / plain-text → extract text via the server route and publish as context.
-      try {
-        const body = new FormData();
-        body.append('file', f);
-        const res = await apiFetch('/api/assistant/extract', { method: 'POST', body });
-        const data = await res.json();
-        if (!res.ok) {
-          notes.push(`[Attached ${f.name} — couldn't read it: ${data?.error ?? res.statusText}]`);
-          continue;
-        }
-        const doc: AttachedDoc = {
-          id: `${f.name}-${f.size}`,
-          fileName: data.fileName ?? f.name,
-          kind: data.kind,
-          text: data.text,
-          chars: data.chars,
-          pages: data.pages,
-          truncated: !!data.truncated,
-          at: Date.now(),
-        };
-        // Replace any prior attachment of the same file; newest last.
-        setAttachedDocs((prev) => [...prev.filter((d) => d.id !== doc.id), doc]);
-        const size = doc.pages ? `${doc.pages} pages` : `${doc.chars.toLocaleString()} chars`;
-        notes.push(
-          `[Attached ${doc.fileName} — ${size} of text extracted${doc.truncated ? ' (truncated)' : ''}; full text available to the assistant]`,
-        );
-      } catch (err) {
-        notes.push(
-          `[Attached ${f.name} — couldn't read it: ${err instanceof Error ? err.message : 'extraction failed'}]`,
-        );
-      }
+    for (const file of files) {
+      if (epoch !== conversationEpoch.current)
+        throw new Error('The conversation changed. Attach the file in the intended chat.');
+      notes.push(`[${await attachChatFile(store, file, selectWorkbook)}]`);
     }
     return notes.join('\n');
   };
@@ -1077,12 +892,14 @@ export function useAssistant() {
   return {
     // conversation
     say,
+    conversationKey: String(conversationKey),
+    getConversationEpoch: () => conversationEpoch.current,
     replyPending,
     selectAgent: (next: ChatAgent) => {
       if (!replyPendingRef.current) persistence.selectAgent(next);
     },
     agentSelectionDisabled: replyPending || persistence.agentSelectionDisabled,
-    interruptReply: () => stopChatBeforeSwitch({stopGeneration,agent}),
+    interruptReply: () => stopChatBeforeSwitch({ stopGeneration, agent }),
     newChat,
     showHero,
     threadEmpty,
@@ -1092,6 +909,7 @@ export function useAssistant() {
     saving: persistence.saving,
     saveError: persistence.saveError,
     restoring: persistence.restoring,
+    restoreThreadId: persistence.restoreThreadId,
     restoreError: persistence.restoreError,
     reviewMkoroTask: mkoro.reviewMkoroTask,
     mkoroNoticeError: mkoro.mkoroNoticeError,

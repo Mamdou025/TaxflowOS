@@ -8,7 +8,7 @@
 // tools ran, with what inputs and what came back, instead of trusting the prose.
 //
 // `buildToolCallInfo` threads results back onto their calls; `ToolCallDetail` is the
-// shared expand body. See ui/thread-messages.tsx for the per-turn wiring.
+// shared expand body. See ui/assistant-ui-transcript.tsx for the per-turn wiring.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, type ReactNode } from 'react';

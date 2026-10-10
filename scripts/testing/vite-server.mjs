@@ -16,7 +16,12 @@ const server = await createServer({
   root: webRoot,
   envFile: false,
   mode: 'test',
-  cacheDir: path.join(process.env.TAXFLOW_TEST_OUTPUT_DIR, 'vite-cache'),
+  // Keep the cache inside this disposable run, but under node_modules so the
+  // React plugin excludes already optimized dependencies from Babel/refresh.
+  cacheDir: path.join(process.env.TAXFLOW_TEST_OUTPUT_DIR, 'node_modules', '.vite'),
+  // Release completed dependency bundles during the cold import crawl. Holding
+  // them until every request settles can strand the isolated browser warmup.
+  optimizeDeps: { holdUntilCrawlEnd: false },
   server: { host: '127.0.0.1', port, strictPort: true, open: false },
   plugins: [
     {

@@ -1,5 +1,5 @@
 import { useAtomValue, useStore } from 'jotai';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { sessionContext } from '@workspace/workflow-core/sessions';
 import { WorkflowSessionPanel } from '@/features/workflows-hub/workflow-session-panel';
 import { workflowLibraryAtom } from '@/features/workflows-hub/workflow-library';
@@ -8,6 +8,7 @@ import {
   chatSessionAtom,
   openWorkflowSession,
 } from '@/features/workflows-hub/workflow-session-store';
+import { recordWorkflowSelection } from '../runtime/chat/workflow-interaction-store';
 
 /** Historical message cards only navigate on explicit action; rendering never selects a run. */
 export function ChatWorkflowCard({
@@ -41,6 +42,7 @@ export function ChatWorkflowCard({
                       ?.version === version)
                 ? active
                 : openWorkflowSession(store, workflowId, version);
+            recordWorkflowSelection(store, workflowId, ref, 'resume');
             bindChatSession(store, ref);
           } catch (cause) {
             setError(cause instanceof Error ? cause.message : 'Workflow unavailable.');
@@ -75,8 +77,12 @@ export function useChatWorkflowSummary() {
   const library = useAtomValue(workflowLibraryAtom);
   const entry = ref ? library[ref.workflowId] : undefined;
   const session = entry?.sessions?.find((item) => item.id === ref?.runId);
-  if (!session || !entry) return null;
-  const steps = sessionContext(entry, session).steps;
+  const context = useMemo(
+    () => (entry && session ? sessionContext(entry, session) : null),
+    [entry, session, session?.revision],
+  );
+  if (!session || !entry || !context) return null;
+  const steps = context.steps;
   const complete =
     steps.length > 0 &&
     steps.every((step) => ['success', 'warning', 'reviewed'].includes(step.status));

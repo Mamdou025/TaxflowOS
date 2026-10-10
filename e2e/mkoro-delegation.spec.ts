@@ -281,6 +281,8 @@ async function installProtocolFixture(page: Page, native = false) {
 }
 async function submit(page: Page, text: string) {
   await page.goto('/');
+  // Window load can finish before the deferred, authenticated chat has mounted.
+  await page.locator('.lc-console').getByRole('textbox').waitFor({ state: 'visible' });
   await expect(page.getByRole('button', { name: /^Computer:/ })).toContainText('Online');
   const composer = page.locator('.lc-console').getByRole('textbox');
   await composer.fill(text);
@@ -364,6 +366,7 @@ test('registered Sina delegation saves its chat, resolves the tool and reviews t
     )
     .toBe(true);
   await page.reload();
+  await page.locator('.lc-console').getByRole('textbox').waitFor({ state: 'visible' });
   await expect(page.getByRole('article', { name: 'Mkoro delegated task' })).toContainText(
     'Turn finished',
   );
@@ -390,7 +393,9 @@ test('the registered native workflow tool opens FAPI in Sina without delegating 
   expect(
     await page.evaluate(() => {
       const card = document.getElementById('chat-workflow');
-      const request = [...document.querySelectorAll('.copilotKitMessagesContainer *')].find(
+      const request = [
+        ...document.querySelectorAll('[role="log"][aria-label="Conversation"] [data-message-id]'),
+      ].find(
         (element) =>
           element.textContent === 'Open the FAPI workflow here so I can supply its source.',
       );
@@ -404,42 +409,50 @@ test('the registered native workflow tool opens FAPI in Sina without delegating 
   await expect(page.getByRole('combobox', { name: 'Chat agent', exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Chat agent: Sina', exact: true })).toHaveCount(1);
   await expect(page.getByRole('button', { name: /^Computer:/ })).toHaveCount(1);
-  await page.getByTestId('work-menu').click();
+  await page.getByRole('button', { name: 'Open Scope', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Current workflow', exact: true })).toContainText(
     'FAPI',
   );
   await page.getByRole('button', { name: 'Return to workflow in chat', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Workflow in chat' })).toBeFocused();
-  await expect(workflow.getByRole('button', { name: 'Resume workflow' })).toBeVisible();
-  await expect(workflow.getByRole('button', { name: 'Upload run source' })).toBeVisible();
+  await expect(workflow.getByRole('button', { name: 'Start workflow' })).toBeVisible();
+  await expect(workflow.getByLabel('Upload run source')).toBeVisible();
   await expect(workflow.getByRole('list', { name: 'Workflow progress' })).toHaveCount(0);
   await expect(workflow.getByRole('list', { name: 'Execution steps' })).toHaveCount(1);
   await expect(workflow.getByRole('combobox', { name: 'Chat input block' })).toHaveCount(0);
-  await expect(workflow.getByRole('list', { name: 'Execution steps' })).toContainText(
-    'Trial Balance · Needs your input',
-  );
+  const timeline = workflow.getByRole('list', { name: 'Execution steps' });
+  await expect(timeline.locator('[data-stage-toggle]')).toHaveCount(4);
+  await expect(timeline.locator('.workflow-timeline-kind')).toHaveText([
+    'Source',
+    'Rule match',
+    'Engine',
+    'Checkpoint',
+  ]);
+  await expect(timeline.locator('[data-stage-toggle="collect"]')).toContainText('Needs your input');
   await expect(workflow).toContainText('Execution history (0)');
-  await expect(workflow.getByRole('button', { name: /FAPI Inputs/ })).toContainText('pending');
-  await expect(workflow.getByRole('button', { name: /Bank of Canada Valet API/ })).toContainText(
+  await expect(workflow.locator('[data-workflow-block="fapi-source-inputs"]')).toContainText(
+    'pending',
+  );
+  await expect(workflow.locator('[data-workflow-block="fapi-source-fx-rate"]')).toContainText(
     'pending',
   );
   await workflow.getByRole('button', { name: 'Collapse all steps', exact: true }).click();
-  await expect(workflow.locator('[data-step-toggle][aria-expanded="true"]')).toHaveCount(0);
+  await expect(workflow.locator('[data-stage-toggle][aria-expanded="true"]')).toHaveCount(0);
   await test.info().attach('compact-workflow-card.png', {
     body: await workflow.screenshot(),
     contentType: 'image/png',
   });
-  await expect(workflow.getByRole('button', { name: 'Resume workflow' })).toBeEnabled();
-  await workflow.getByRole('button', { name: /FAPI Inputs/ }).click();
+  await expect(workflow.getByRole('button', { name: 'Start workflow' })).toBeEnabled();
+  await timeline.locator('[data-stage-toggle="collect"]').click();
   await expect(
-    workflow.getByRole('region', { name: 'Step 2: FAPI Inputs', exact: true }),
+    workflow.getByRole('region', { name: 'Inputs for FAPI Inputs', exact: true }),
   ).toBeVisible();
   await expect(page.getByRole('region', { name: 'Run verification in Build' })).toHaveCount(0);
-  await workflow.getByRole('button', { name: /Trial Balance · Needs your input/ }).click();
-  await expect(
-    workflow.getByRole('region', { name: 'Step 1: Trial Balance', exact: true }),
-  ).toBeVisible();
-  await expect(workflow.locator('[data-step-toggle][aria-expanded="true"]')).toHaveCount(1);
+  await timeline.locator('[data-stage-toggle="compute"]').click();
+  await expect(workflow.getByRole('region', { name: 'Compute FAPI', exact: true })).toBeVisible();
+  await timeline.locator('[data-stage-toggle="collect"]').click();
+  await expect(workflow.getByLabel('Upload run source')).toBeVisible();
+  await expect(workflow.locator('[data-stage-toggle][aria-expanded="true"]')).toHaveCount(1);
   await expect(workflow).toContainText('Execution history (0)');
   expect(state.runs[0].tools.some((tool) => tool.name === 'runWorkflow')).toBe(true);
   expect(state.delegations).toEqual([]);

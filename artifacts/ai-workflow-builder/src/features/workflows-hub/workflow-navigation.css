@@ -1,0 +1,170 @@
+.workflow-page {
+  container: workflow-page / inline-size;
+  height: 100%;
+  min-height: 0;
+}
+
+.workflow-page__layout {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+}
+
+.workflow-page__content {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.workflow-navigation {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 240px;
+  min-width: 0;
+  min-height: 0;
+  color: var(--sx-ink);
+  border-right: 1px solid var(--sx-divider);
+}
+
+.workflow-navigation[data-expanded='false'] {
+  flex-basis: 44px;
+}
+
+.workflow-navigation__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.workflow-navigation__toggle {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--sx-muted);
+  cursor: pointer;
+}
+
+.workflow-navigation__list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 0 8px 16px;
+}
+
+.workflow-navigation__actions {
+  margin-bottom: 12px;
+}
+
+.workflow-navigation__row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 36px;
+  padding: 8px;
+  margin-bottom: 2px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--sx-ink);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.workflow-navigation__row > svg {
+  flex-shrink: 0;
+  color: var(--sx-muted);
+}
+
+.workflow-navigation__row > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workflow-navigation__row:hover,
+.workflow-navigation__toggle:hover {
+  background: var(--sx-hover-tint);
+}
+
+.workflow-navigation__row[aria-current='page'] {
+  background: var(--sx-accent-soft);
+  color: var(--sx-accent);
+  font-weight: 650;
+}
+
+.workflow-navigation__row[aria-current='page'] > svg {
+  color: inherit;
+}
+
+.workflow-navigation button:focus-visible {
+  outline: 2px solid var(--sx-accent);
+  outline-offset: -2px;
+}
+
+.workflow-navigation__group {
+  margin-top: 18px;
+}
+
+.workflow-navigation__group h2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 8px 7px;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--sx-muted);
+}
+
+.workflow-navigation__group h2 > span {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.workflow-navigation__group h3 {
+  margin-top: 10px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--sx-muted);
+}
+
+.workflow-navigation__empty {
+  padding: 0 8px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--sx-muted);
+}
+
+/* The panel can be narrow even on a wide screen when Chat is docked. */
+@container workflow-page (max-width: 640px) {
+  .workflow-page__layout {
+    flex-direction: column;
+  }
+
+  .workflow-navigation {
+    flex: 0 1 260px;
+    max-height: 45%;
+    border-right: 0;
+    border-bottom: 1px solid var(--sx-divider);
+  }
+
+  .workflow-navigation[data-expanded='false'] {
+    flex: 0 0 44px;
+  }
+}

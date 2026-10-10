@@ -1,0 +1,13 @@
+
+> workspace@0.0.0 test:workflow-persistence C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-browser-tests.mjs persistence "--grep" "account creation, workspace switching|a workflow and its result recover"
+
+Test run 04a727d1-d89d066b-41c8-49f9-8daf-6dbd688fe1a6; reports and logs: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-d89d066b-41c8-49f9-8daf-6dbd688fe1a6
+Preparing the isolated browser dependency cache…
+
+Running 2 tests using 1 worker
+
+  ok 1 e2e\workflow-storage-recovery.spec.ts:5:5 › a workflow and its result recover in another browser; backups, offline retry, and conflict protection work (1.2m)
+  ok 2 e2e\workspace-access.spec.ts:58:5 › account creation, workspace switching, sign-out and sign-in keep local libraries isolated (1.5m)
+
+  2 passed (2.8m)

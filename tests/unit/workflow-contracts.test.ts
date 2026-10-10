@@ -2,6 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   SourceMetadataSchema,
+  WorkflowBlockSchema,
+  BlockSubtypeSchema,
   WorkflowRelationshipTypeSchema,
 } from '../../lib/workflow-contracts/src/generated-schemas';
 import { BLOCK_CATALOG } from '../../artifacts/ai-workflow-builder/src/shared/workflow-engine/block-catalog-data';
@@ -44,6 +46,36 @@ function entry(): PersonalWorkflow {
     runs: [],
   });
 }
+
+test('repeated block validation reuses lazy rules without rebuilding the subtype union', () => {
+  for (const schema of [WorkflowBlockSchema, BlockSubtypeSchema]) {
+    assert.ok('schema' in schema, 'generated rules retain lazy forward references');
+    const first = schema.schema;
+    assert.strictEqual(schema.schema, first, 'a repeated lazy lookup must reuse its validator');
+  }
+});
+
+test('reused validators still inspect changed values and reject invalid saved versions', () => {
+  const input = { 'custom:test': entry() };
+  const first = validateWorkflowLibrary(input);
+  input['custom:test'].draft.name = 'Changed after first validation';
+  const second = validateWorkflowLibrary(input);
+  assert.notEqual(first['custom:test'].draft.name, second['custom:test'].draft.name);
+  assert.equal(second['custom:test'].draft.name, 'Changed after first validation');
+  assert.notStrictEqual(first['custom:test'], second['custom:test']);
+
+  const invalid = {
+    'custom:test': {
+      ...input['custom:test'],
+      versions: input['custom:test'].versions.map((version) => ({
+        ...version,
+        definition: { ...version.definition, name: 42 },
+      })),
+    },
+  };
+  assert.throws(() => validateWorkflowLibrary(invalid), /Invalid workflow backup/);
+  assert.deepEqual(validateWorkflowLibrary(input), second);
+});
 
 test('legacy trigger relationships migrate and every catalog source has valid metadata', () => {
   assert.equal(WorkflowRelationshipTypeSchema.parse('triggers'), 'initiates');

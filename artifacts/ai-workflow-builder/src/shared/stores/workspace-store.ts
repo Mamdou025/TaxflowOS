@@ -2,6 +2,7 @@ import { atom } from 'jotai';
 import { atomWithStorage } from '@/platform/auth/workspace-atoms';
 import type { SourceRow } from '@/shared/workflow-engine/runtime/workflow-runs/engine';
 import type { ActorKind, Coworker } from '@/lib/coworkers';
+import type { WorkbookSelection } from '@workspace/source-connectors/workbook-upload';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Chat Workspace store
@@ -68,10 +69,10 @@ export type ActiveRunInfo = {
     currency: string;
     sourceRowCount: number;
     categories: { category: string; amount: number; rowCount: number }[]; // classified buckets
-    lines: { key: string; label: string; value: number }[];               // computed lines
-    summary: { key: string; label: string; value: number }[];             // result summary
+    lines: { key: string; label: string; value: number }[]; // computed lines
+    summary: { key: string; label: string; value: number }[]; // result summary
     unmatchedCount: number;
-    topRows: { label: string; amount: number; category: string }[];       // largest classified rows (capped)
+    topRows: { label: string; amount: number; category: string }[]; // largest classified rows (capped)
   };
 };
 export const activeRunAtom = atom<ActiveRunInfo | null>(null);
@@ -89,19 +90,28 @@ export const setActiveCoworkerAtom = atom(
   (_get, set, payload: { coworker: Coworker; status: string } | null) => {
     set(
       activeCoworkerAtom,
-      payload ? { coworker: payload.coworker, status: payload.status, since: Date.now() } : null
+      payload ? { coworker: payload.coworker, status: payload.status, since: Date.now() } : null,
     );
-  }
+  },
 );
 
 /** Shared, persisted uploaded source rows — keyed by workflow id ('fapi', 'roulement').
  *  ONE source of truth for the trial balance a run works on: the chat upload writes
  *  it, the chat run reads it, and the builder hydrates its source block from it — so
  *  switching between the chat and the workflow builder shows the exact same data. */
-export type UploadedSource = { fileName: string; rows: SourceRow[]; at: number; sourceId?: string; sourceRevision?: number; contentHash?: string };
+export type UploadedSource = {
+  fileName: string;
+  rows: SourceRow[];
+  at: number;
+  sourceId?: string;
+  sourceRevision?: number;
+  contentHash?: string;
+  sourceContentHash?: string | null;
+  workbookSelection?: WorkbookSelection;
+};
 export const uploadedRowsAtom = atomWithStorage<Record<string, UploadedSource>>(
   'taxflow:uploaded-source-rows',
-  {}
+  {},
 );
 
 /** Documents the user attached in the chat (PDF / plain-text) with their extracted
@@ -142,7 +152,7 @@ export const setRunInputAtom = atom(
       const cur = prev[id] ?? EMPTY_RUN_EDITS;
       return { ...prev, [id]: { ...cur, inputs: { ...cur.inputs, [key]: value } } };
     });
-  }
+  },
 );
 
 /** Set one row's category override for a workflow (merges into its overrides map). */
@@ -154,7 +164,7 @@ export const setRunOverrideAtom = atom(
       const cur = prev[id] ?? EMPTY_RUN_EDITS;
       return { ...prev, [id]: { ...cur, overrides: { ...cur.overrides, [rowId]: categoryId } } };
     });
-  }
+  },
 );
 
 /** Replace a workflow's whole edits object (used when the run reducer produces a
@@ -162,9 +172,10 @@ export const setRunOverrideAtom = atom(
 export const setRunEditsAtom = atom(
   null,
   (get, set, { id, edits }: { id: string; edits: RunEdits }) => {
-    if (JSON.stringify(get(runEditsAtom)[id] ?? EMPTY_RUN_EDITS) !== JSON.stringify(edits)) set(invalidateRunApprovalAtom, id);
+    if (JSON.stringify(get(runEditsAtom)[id] ?? EMPTY_RUN_EDITS) !== JSON.stringify(edits))
+      set(invalidateRunApprovalAtom, id);
     set(runEditsAtom, (prev) => ({ ...prev, [id]: edits }));
-  }
+  },
 );
 
 /** Shared, PERSISTED run *gate* state — keyed by workflow id ('fapi', 'roulement').
@@ -175,11 +186,18 @@ export const setRunEditsAtom = atom(
  *  navigation AND a reload — matching how the run's DATA already persists (uploadedRowsAtom
  *  + runEditsAtom). A workflow that was never advanced has NO entry, so a brand-new run
  *  still asks for its source first (cached rows alone don't auto-satisfy the gate). */
-export type RunFlow = { uploaded: boolean; elected: number | null; approved: boolean; rows?: SourceRow[] };
+export type RunFlow = {
+  uploaded: boolean;
+  elected: number | null;
+  approved: boolean;
+  rows?: SourceRow[];
+};
 export const INITIAL_RUN_FLOW: RunFlow = { uploaded: false, elected: null, approved: false };
 export const runFlowAtom = atomWithStorage<Record<string, RunFlow>>('taxflow:run-flow', {});
 const invalidateRunApprovalAtom = atom(null, (_get, set, id: string) => {
-  set(runFlowAtom, previous => previous[id] ? { ...previous, [id]: { ...previous[id], approved: false } } : previous);
+  set(runFlowAtom, (previous) =>
+    previous[id] ? { ...previous, [id]: { ...previous[id], approved: false } } : previous,
+  );
 });
 
 /** Set (or functionally update) one workflow's run-flow gate state. */
@@ -189,10 +207,11 @@ export const setRunFlowAtom = atom(
     set(runFlowAtom, (prev) => {
       const cur = prev[id] ?? INITIAL_RUN_FLOW;
       const next = typeof flow === 'function' ? flow(cur) : flow;
-      const changedEvidence = JSON.stringify(cur.rows) !== JSON.stringify(next.rows) || cur.elected !== next.elected;
+      const changedEvidence =
+        JSON.stringify(cur.rows) !== JSON.stringify(next.rows) || cur.elected !== next.elected;
       return { ...prev, [id]: { ...next, approved: changedEvidence ? false : next.approved } };
     });
-  }
+  },
 );
 
 // Derived: the currently focused window (or the last opened as a fallback).
@@ -211,7 +230,7 @@ function record(
   kind: TrailEventKind,
   text: string,
   tone: TrailTone = 'navigation',
-  actor?: TrailActor
+  actor?: TrailActor,
 ) {
   set(workspaceTrailAtom, (prev: TrailEvent[]) => [
     ...prev,
@@ -224,9 +243,13 @@ function record(
  *  it to a coworker (Human / Agent / Workflow / Tool / System). */
 export const pushTrailAtom = atom(
   null,
-  (_get, set, payload: { text: string; tone: TrailTone; kind?: TrailEventKind; actor?: TrailActor }) => {
+  (
+    _get,
+    set,
+    payload: { text: string; tone: TrailTone; kind?: TrailEventKind; actor?: TrailActor },
+  ) => {
     record(set, payload.kind ?? 'note', payload.text, payload.tone, payload.actor);
-  }
+  },
 );
 
 // ─── Write atoms (the "tools" the chat drives) ────────────────────────────────
@@ -251,7 +274,7 @@ export const openWorkspaceWindowAtom = atom(
     set(activeWindowIdAtom, win.id);
     record(set, 'open', `Opened ${payload.title}`);
     return win.id;
-  }
+  },
 );
 
 /** Close a window by its id. */
@@ -267,26 +290,23 @@ export const closeWorkspaceWindowAtom = atom(null, (get, set, id: string) => {
 });
 
 /** Close a window by page key, or the active/last window when key is null. */
-export const closeWorkspaceWindowByKeyAtom = atom(
-  null,
-  (get, set, pageKey: string | null) => {
-    const windows = get(workspaceWindowsAtom);
-    let target: WorkspaceWindow | undefined;
-    if (pageKey) {
-      target = windows.find((w) => w.pageKey === pageKey);
-    } else {
-      const activeId = get(activeWindowIdAtom);
-      target = windows.find((w) => w.id === activeId) ?? windows[windows.length - 1];
-    }
-    if (!target) return;
-    const remaining = windows.filter((w) => w.id !== target!.id);
-    set(workspaceWindowsAtom, remaining);
-    if (get(activeWindowIdAtom) === target.id) {
-      set(activeWindowIdAtom, remaining.length ? remaining[remaining.length - 1].id : null);
-    }
-    record(set, 'close', `Closed ${target.title}`);
+export const closeWorkspaceWindowByKeyAtom = atom(null, (get, set, pageKey: string | null) => {
+  const windows = get(workspaceWindowsAtom);
+  let target: WorkspaceWindow | undefined;
+  if (pageKey) {
+    target = windows.find((w) => w.pageKey === pageKey);
+  } else {
+    const activeId = get(activeWindowIdAtom);
+    target = windows.find((w) => w.id === activeId) ?? windows[windows.length - 1];
   }
-);
+  if (!target) return;
+  const remaining = windows.filter((w) => w.id !== target!.id);
+  set(workspaceWindowsAtom, remaining);
+  if (get(activeWindowIdAtom) === target.id) {
+    set(activeWindowIdAtom, remaining.length ? remaining[remaining.length - 1].id : null);
+  }
+  record(set, 'close', `Closed ${target.title}`);
+});
 
 /** Close every open window. The trail is preserved. */
 export const closeAllWorkspaceWindowsAtom = atom(null, (get, set) => {

@@ -16,6 +16,7 @@
 
 import type { ChatWorkflowBinding } from './workflow-binding';
 import type { ChatAgent } from '@/shared/stores/chat-store';
+import type { ChatContext } from './chat-context-model';
 
 export type ChatMsgRole = 'user' | 'assistant' | 'tool' | 'system';
 
@@ -29,6 +30,7 @@ export type ProjectedMessage = {
     selectedChatAgent?: ChatAgent;
     authorAgent?: ChatAgent;
     workflowBinding?: ChatWorkflowBinding | null;
+    chatContext?: ChatContext;
     text?: string;
     toolCall?: {
       name: string;

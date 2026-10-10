@@ -13,6 +13,8 @@ export type GraphRequest = {
   mode?: LocalToolRunMode;
   selectedBlockId?: string | null;
   isolatedInputs?: IsolatedBlockInput[];
+  /** Current captured ancestors for read-only inspection; never added as direct inputs or executed. */
+  recordedAncestorResults?: Record<string, ToolRunResult>;
   testInputSource?: 'examples' | 'recorded' | 'none';
   /** Original editable settings when a legacy adapter expands defaults. */
   configSignatures?: Record<string, string>;

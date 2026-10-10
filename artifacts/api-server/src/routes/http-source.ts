@@ -174,8 +174,10 @@ router.post('/http-source', async (req, res) => {
 
     if (mode === 'values') {
       const namedValues = mapResponseValues(payload, body.outputMappings);
-      send({ ok: true, mode, namedValues, fetchedPayload: payload, responseMeta },
-        operation('succeeded', rawMeta.attempts ?? 1));
+      send(
+        { ok: true, mode, namedValues, fetchedPayload: payload, responseMeta },
+        operation('succeeded', rawMeta.attempts ?? 1),
+      );
       return;
     }
 

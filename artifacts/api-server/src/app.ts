@@ -20,6 +20,12 @@ import {
 import workspacesRouter from './routes/workspaces';
 import healthRouter from './routes/health';
 import mkoroWorkerRouter from './routes/mkoro-worker';
+import chatgptPluginRouter from './routes/chatgpt-plugin';
+import { loadOAuthConfig } from './security/chatgpt-oauth/config';
+import { createOAuthProvider } from './security/chatgpt-oauth/provider';
+import { createOAuthPublicRouter } from './security/chatgpt-oauth/public-router';
+import { createOAuthAccountRouter } from './security/chatgpt-oauth/account-router';
+import { createMcpAccess } from './security/chatgpt-oauth/mcp-access';
 
 const app: Express = express();
 
@@ -66,11 +72,23 @@ app.use(
   }),
 );
 app.use(cors({ origin: appOrigin, credentials: true }));
+const oauthConfig = loadOAuthConfig(process.env, appOrigin);
+const oauth = oauthConfig ? createOAuthProvider(oauthConfig) : undefined;
+if (oauthConfig && oauth) app.use(createOAuthPublicRouter(oauthConfig, oauth.provider));
 app.all('/api/auth/*splat', toNodeHandler(auth));
 app.use('/api', healthRouter);
 // The companion dials out using a revocable bearer token. Its router derives
 // actor/workspace from that token and rechecks current membership on every call.
 app.use('/api/mkoro-worker', express.json({ limit: '2mb' }), mkoroWorkerRouter);
+app.use('/api/chatgpt/oauth', createOAuthAccountRouter(oauthConfig, oauth?.store));
+// Only this transport accepts the narrowly scoped OAuth bearer credential.
+// Cookie reads still require the original session, Origin and workspace checks.
+app.use(
+  '/api/chatgpt/mcp',
+  createMcpAccess(oauthConfig, oauth?.provider),
+  express.json(),
+  chatgptPluginRouter,
+);
 app.use('/api', requireSession, checkOrigin);
 app.get('/api/session', (_req, res) =>
   res.set('Cache-Control', 'no-store').json({ user: res.locals.user }),

@@ -1,0 +1,59 @@
+
+> workspace@0.0.0 test:workflow-reliability C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-browser-tests.mjs reliability "e2e/fapi-reference-display.spec.ts" "e2e/workflow-session.spec.ts" "--grep" "FAPI prescribed|inline chat workflow restores"
+
+Test run 04a727d1-2c71064e-d9f1-489b-a544-11a9b720ad33; reports and logs: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-2c71064e-d9f1-489b-a544-11a9b720ad33
+Preparing the isolated browser dependency cache…
+
+Running 2 tests using 1 worker
+
+  ok 1 e2e\fapi-reference-display.spec.ts:166:5 › FAPI prescribed results follow live inputs, retain folded drafts and export the exact recalculated run (1.7m)
+  x  2 e2e\workflow-session.spec.ts:383:5 › inline chat workflow restores its exact run without execution or latest-run substitution (33.7s)
+
+
+  1) e2e\workflow-session.spec.ts:383:5 › inline chat workflow restores its exact run without execution or latest-run substitution 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('region', { name: 'Workflow in chat' }).getByLabel('Upload run source')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Workflow in chat' }).getByLabel('Upload run source')
+
+
+      436 |   const side = page.getByRole('region', { name: 'Workflow in chat' });
+      437 |   await expect(page.locator('.chat-work-side')).toHaveCount(0);
+    > 438 |   await expect(side).toBeVisible();
+          |                                                      ^
+      439 |   // The accordion starts with required calculation inputs; open the source step explicitly.
+      440 |   const documentStep = side.locator(
+      441 |     '[data-step-toggle][data-step-id="pf-document-calculator--document"]',
+        at C:\Users\Mamad\Sinaxe\TaxflowOS\e2e\workflow-session.spec.ts:438:54
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-2c71064e-d9f1-489b-a544-11a9b720ad33\artifacts\workflow-session-inline-ch-d5b34--or-latest-run-substitution\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-2c71064e-d9f1-489b-a544-11a9b720ad33\artifacts\workflow-session-inline-ch-d5b34--or-latest-run-substitution\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\phase2\04a727d1-2c71064e-d9f1-489b-a544-11a9b720ad33\artifacts\workflow-session-inline-ch-d5b34--or-latest-run-substitution\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-2c71064e-d9f1-489b-a544-11a9b720ad33\artifacts\workflow-session-inline-ch-d5b34--or-latest-run-substitution\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\phase2\04a727d1-2c71064e-d9f1-489b-a544-11a9b720ad33\artifacts\workflow-session-inline-ch-d5b34--or-latest-run-substitution\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    e2e\workflow-session.spec.ts:383:5 › inline chat workflow restores its exact run without execution or latest-run substitution 
+  1 passed (2.4m)
+playwright exited 1; see C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-2c71064e-d9f1-489b-a544-11a9b720ad33\playwright.log
+ ELIFECYCLE  Command failed with exit code 1.

@@ -21,6 +21,7 @@ import type {
 import type { GraphRequest, GraphRuntime, LocalToolRunMode } from './ports';
 import { createWorkflowEdgeRecord } from './edges';
 import { presentToolOutput } from './outputs';
+import { validateRecordedAncestorResults } from './recorded-ancestor-results';
 function toExecutionStatus(status: ToolRunStatus): 'error' | 'success' {
   return status === 'error' ? 'error' : 'success';
 }
@@ -325,6 +326,16 @@ export function executeGraph(input: GraphRequest, runtime: GraphRuntime): LocalT
     configSignatures = {},
   } = input;
   const definition = structuredClone(input.definition);
+  if (input.recordedAncestorResults !== undefined && mode !== 'isolated')
+    throw new Error('Recorded ancestor context is available only for isolated execution.');
+  const recordedAncestors =
+    input.recordedAncestorResults === undefined
+      ? {}
+      : validateRecordedAncestorResults(
+          definition,
+          selectedBlockId ?? '',
+          input.recordedAncestorResults,
+        );
   const now = runtime.now ?? (() => new Date());
   const getToolIdForBlock = runtime.resolveToolId;
   const getToolForBlock = (block: WorkflowBlock) => runtime.getTool(getToolIdForBlock(block));
@@ -399,7 +410,7 @@ export function executeGraph(input: GraphRequest, runtime: GraphRuntime): LocalT
     blocks: runnableBlocks,
     edges: schemaEdges,
   });
-  const allResults: Record<string, ToolRunResult> = {};
+  const allResults: Record<string, ToolRunResult> = recordedAncestors;
   if (mode === 'isolated')
     for (const input of isolatedInputs) allResults[input.block.id] = input.result;
   const logs: LocalExecutionLog[] = [];

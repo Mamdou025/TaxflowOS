@@ -133,7 +133,7 @@ function pushFlattenedResultAsInputs(
   }
 }
 
-function toBackendInputsByRole(context: ToolExecutionContext) {
+function toBackendInputsByRole(context: ToolExecutionContext, toolId: string) {
   const inputsByRole: Record<string, unknown[]> = {};
 
   for (const result of context.upstreamResults) {
@@ -141,7 +141,10 @@ function toBackendInputsByRole(context: ToolExecutionContext) {
     pushInputRole(inputsByRole, 'calculation_sources', {
       blockId: result.blockId,
       output: result.output,
+      status: result.status,
     });
+    if (toolId === 'logic.calculation_engine' && !['success', 'warning'].includes(result.status))
+      continue;
     const backendOutputs = asRecord(result.output.backendOutputs);
     if (backendOutputs) {
       pushBackendOutputsAsInputs(inputsByRole, backendOutputs);
@@ -154,12 +157,15 @@ function toBackendInputsByRole(context: ToolExecutionContext) {
   return inputsByRole;
 }
 
-function toBackendExecutionContext(context: ToolExecutionContext): BackendToolExecutionContext {
+function toBackendExecutionContext(
+  context: ToolExecutionContext,
+  toolId: string,
+): BackendToolExecutionContext {
   return {
     block: context.block,
     config: context.config,
     evidenceRefs: context.evidenceRefs,
-    inputsByRole: toBackendInputsByRole(context),
+    inputsByRole: toBackendInputsByRole(context, toolId),
     runId: context.runId,
     sourceTrace: context.sourceTrace,
     startedAt: context.startedAt,
@@ -473,7 +479,7 @@ export function createBackendAdaptedTool(toolId: string): ToolDefinition | null 
       const capture = toolId === 'source.manual_table' ? replayDocumentEvidence(context) : null;
       if (capture?.status === 'error') return capture;
       const result = adaptBackendResult(
-        executeBackendTool(toolId, toBackendExecutionContext(context)),
+        executeBackendTool(toolId, toBackendExecutionContext(context, toolId)),
       );
       if (capture) {
         result.output.extractions = capture.output.extractions;

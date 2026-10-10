@@ -1,0 +1,12 @@
+
+> workspace@0.0.0 test:workflow-reliability C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-browser-tests.mjs reliability "e2e/workflow-session.spec.ts" "--grep" "inline chat workflow restores"
+
+Test run 04a727d1-853dd196-0289-44e6-a3ca-3a57713caf91; reports and logs: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-853dd196-0289-44e6-a3ca-3a57713caf91
+Preparing the isolated browser dependency cache…
+
+Running 1 test using 1 worker
+
+  ok 1 e2e\workflow-session.spec.ts:383:5 › inline chat workflow restores its exact run without execution or latest-run substitution (1.0m)
+
+  1 passed (1.1m)

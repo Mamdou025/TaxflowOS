@@ -1,14 +1,8 @@
 import { workspaceContext } from '@/platform/auth/workspace-context';
 import { builderFocusTargetAtom } from '@/shared/workflow-engine/state/workflow-store';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAtomValue, useStore } from 'jotai';
-import {
-  sessionContext,
-  sessionDefinition,
-  isDocumentSource,
-  type SessionAction,
-} from '@workspace/workflow-core/sessions';
-import { definitionFingerprint } from '@workspace/workflow-core/commands';
+import { isDocumentSource, type SessionAction } from '@workspace/workflow-core/sessions';
 import { workflowLibraryAtom } from './workflow-library';
 import {
   advanceSession,
@@ -24,12 +18,19 @@ import {
 } from './workflow-session-store';
 import { SessionSourceFiles } from './session-source-files';
 import { SessionInputForms } from './session-input-forms';
-import { ChatWorkflowSteps } from './chat-workflow-steps';
-import { DocumentExtractionEvidence } from '@/features/documents/document-extraction-evidence';
+import { SessionInputDraftProvider } from './session-input-drafts';
+import { WorkflowSessionWorksheet } from './workflow-session-worksheet';
+import { createWorkflowSessionReader } from './workflow-session-read-model';
+import { WorkflowRequiredInputs } from './workflow-required-inputs';
+import { ChatWorkflowSteps, WorkflowDefinitionPreview } from './chat-workflow-steps';
+import { FapiWorkflowPreview, FapiWorkflowSteps } from './fapi-workflow-steps';
+import { supportsFapiStages } from './workflow-step-model';
+import { WorkflowBlockDetails } from './workflow-block-details';
+import { FapiSessionWorksheet } from './fapi-session-worksheet';
+import { supportsFapiWorksheet } from './fapi-session-result';
 import { DocumentReviewView } from '@/features/documents/document-review-view';
 import { documentReviewSummaries } from '@workspace/workflow-core/inspection';
 import { ReadableData } from '@/features/workflow-builder/ui/workspace/readable-data';
-import { presentToolOutput } from '@/shared/workflow-engine/present-tool-output';
 import { ExecutionLifetimeNotice } from './execution-lifetime-notice';
 import { useRouter } from '@/lib/router';
 import { templateDefinition } from './workflow-execution';
@@ -38,32 +39,34 @@ import { openWorkspaceWindowAtom } from '@/shared/stores/workspace-store';
 import { workflowSurfaceAtom, workflowTabAtom } from './workflows-store';
 import { LazyDetails } from '@/features/workflow-builder/ui/workspace/lazy-details';
 
-export function WorkflowSessionPanel({
-  workflowId,
-  runId,
-  focusBlockId,
-  version,
-  presentation = 'run',
-}: {
+type WorkflowSessionPanelProps = {
   workflowId: string;
   runId?: string;
   focusBlockId?: string;
   version?: number;
   presentation?: 'chat' | 'run';
-}) {
+};
+
+/** Local openings belong to one requested record; a new request resets them. */
+export function WorkflowSessionPanel(props: WorkflowSessionPanelProps) {
+  const identity = [workspaceContext?.workspace.id, props.workflowId, props.runId, props.version];
+  return <WorkflowSessionPanelBody key={JSON.stringify(identity)} {...props} />;
+}
+
+function WorkflowSessionPanelBody({
+  workflowId,
+  runId,
+  focusBlockId,
+  version,
+  presentation = 'run',
+}: WorkflowSessionPanelProps) {
   const store = useStore();
   const workspaceId = workspaceContext?.workspace.id;
   const router = useRouter();
   const library = useAtomValue(workflowLibraryAtom);
   const active = useAtomValue(activeSessionAtom);
   const [opened, setOpened] = useState<SessionRef | null>(null);
-  const matches = Object.values(library).filter(
-    (item) =>
-      item.templateId.replace(/^pf-/, '') === workflowId.replace(/^pf-/, '') &&
-      item.sessions?.length,
-  );
-  const entry =
-    library[opened?.workflowId ?? workflowId] ?? (matches.length === 1 ? matches[0] : undefined);
+  const entry = library[opened?.workflowId ?? workflowId];
   const candidate = entry?.sessions?.find(
     (item) =>
       item.id ===
@@ -73,6 +76,8 @@ export function WorkflowSessionPanel({
   );
   const session =
     opened || version === undefined || candidate?.version === version ? candidate : undefined;
+  const readSession = useMemo(createWorkflowSessionReader, []);
+  const readModel = entry && session ? readSession(entry, session) : undefined;
   const previewDefinition =
     version === undefined
       ? (entry?.draft ?? templateDefinition(workflowId))
@@ -95,6 +100,7 @@ export function WorkflowSessionPanel({
         fresh,
       );
       setOpened(next);
+      if (presentation === 'run') showSessionInRun(store, next);
       const bound = store.get(chatSessionAtom);
       if (bound && bound.runId === session?.id) bindChatSession(store, next);
     } catch (err) {
@@ -103,7 +109,7 @@ export function WorkflowSessionPanel({
   };
   if (runId && !session)
     return <p role="alert">This exact run is unavailable. No other run was selected.</p>;
-  if (!entry || !session)
+  if (!entry || !session || !readModel)
     return (
       <section
         aria-label="Workflow execution"
@@ -113,13 +119,11 @@ export function WorkflowSessionPanel({
           {previewDefinition?.name ?? 'Requested workflow version unavailable'}
         </h3>
         <p>Start a saved-version run to attach sources and work through these steps.</p>
-        <ol className="my-3 list-inside list-decimal text-sm">
-          {previewDefinition?.blocks.map((block) => (
-            <li key={block.id}>
-              {block.label} · {block.family}
-            </li>
-          ))}
-        </ol>
+        {previewDefinition && supportsFapiStages(previewDefinition) ? (
+          <FapiWorkflowPreview />
+        ) : previewDefinition ? (
+          <WorkflowDefinitionPreview definition={previewDefinition} />
+        ) : null}
         <button
           className="mt-3 rounded bg-primary px-3 py-2 text-primary-foreground"
           disabled={!previewDefinition}
@@ -131,11 +135,15 @@ export function WorkflowSessionPanel({
       </section>
     );
   const ref = { workflowId: entry.id, runId: session.id };
-  const context = sessionContext(entry, session);
-  const definition = sessionDefinition(entry, session);
+  const { context, definition } = readModel;
   const chat = presentation === 'chat';
-  const saved = entry.versions.find((item) => item.number === session.version)!;
+  const fapi = supportsFapiWorksheet(definition);
+  const fapiStages = supportsFapiStages(definition);
   const sources = definition.blocks.filter(isDocumentSource);
+  const inputTriggerId = definition.blocks.find((block) => block.family === 'Trigger')?.id;
+  const requiredCalculation = context.steps.some(
+    (step) => step.inputRequired && step.inputKeys.includes('inputChoices'),
+  );
   const act = async (action: SessionAction) => {
     try {
       setError('');
@@ -169,7 +177,11 @@ export function WorkflowSessionPanel({
           applySessionAction(store, ref, session.revision, action);
         }}
       />
-      <SessionInputForms workflowId={entry.id} runId={session.id} blockId={blockId} />
+      <SessionInputForms
+        readModel={readModel}
+        blockId={blockId}
+        includeCalculations={!inputTriggerId}
+      />
       {session.sources.some(
         (source) => source.extraction && (!blockId || source.blockId === blockId),
       ) && (
@@ -185,37 +197,17 @@ export function WorkflowSessionPanel({
     const result = session.results[step.id];
     return (
       <>
-        <p className="my-2 text-xs">
-          {step.family} ·{' '}
-          {step.dependencies.length
-            ? `Depends on: ${step.dependencies.map((id) => context.steps.find((item) => item.id === id)?.label ?? id).join(', ')}`
-            : 'No preceding steps'}
-        </p>
-        {step.status === 'outdated' && (
-          <p role="status">Previous result — rerun before using it.</p>
+        {step.id === inputTriggerId && (
+          <WorkflowRequiredInputs
+            definition={definition}
+            session={session}
+            groups={readModel.groups}
+            renderInputs={(blockId) => (
+              <SessionInputForms readModel={readModel} blockId={blockId} />
+            )}
+          />
         )}
-        {[...step.errors, ...step.warnings].map((message, i) => (
-          <p key={i} className="text-sm text-amber-700">
-            {message}
-          </p>
-        ))}
-        <button className="text-sm underline" onClick={() => verifyInBuild(step.id)}>
-          Verify this block in Build
-        </button>
-        {result && (
-          <>
-            <h4 className="mt-2 font-medium">Input</h4>
-            <ReadableData value={result.input ?? {}} />
-            <h4 className="mt-2 font-medium">Result</h4>
-            <DocumentExtractionEvidence value={result.output.extractions} />
-            <ReadableData
-              value={presentToolOutput(
-                result,
-                definition.blocks.find((block) => block.id === step.id),
-              )}
-            />
-          </>
-        )}
+        <WorkflowBlockDetails definition={definition} blockId={step.id} session={session} />
         <button
           className="mt-2 rounded border px-3 py-1 disabled:opacity-50"
           disabled={!!session.endedAt || !session.paused || !step.ready}
@@ -231,165 +223,192 @@ export function WorkflowSessionPanel({
             Acknowledge checkpoint
           </button>
         )}
+        <button className="ml-3 text-sm underline" onClick={() => verifyInBuild(step.id)}>
+          Verify this block in Build
+        </button>
       </>
     );
   };
   return (
-    <section
-      aria-label="Workflow execution"
-      data-run-flow
-      className={
-        chat
-          ? 'space-y-4 rounded-2xl border border-violet-200/70 bg-background p-5 text-foreground shadow-sm'
-          : 'space-y-4 rounded-xl border bg-background p-4 text-foreground'
-      }
-    >
-      <header>
-        {chat && (
-          <span className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-violet-600">
-            Workflow · current work
-          </span>
-        )}
-        <h3 className="font-semibold">{definition.name}</h3>
-        <p className="break-all text-xs text-muted-foreground">
-          Version {session.version} · Run {session.id}
-        </p>
-        <p role="status">
-          {session.endedAt
-            ? 'Ended — history retained'
-            : session.approvedAt
-              ? 'Completed — approved'
-              : session.paused
-                ? 'Paused — ready when you are'
-                : 'Running — you can ask questions or pause'}
-        </p>
-      </header>
-      <a
-        className="text-sm underline"
-        href={`/w/${encodeURIComponent(entry.id)}?run=${encodeURIComponent(session.id)}`}
-        onClick={(event) => {
-          if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
-          event.preventDefault();
-          store.set(chatPanelModeAtom, 'split');
-          store.set(workflowSurfaceAtom, 'workflow');
-          showSessionInRun(store, ref);
-          store.set(openWorkspaceWindowAtom, { pageKey: 'workflows', title: 'Workflows' });
-          router.push('/');
-        }}
+    <SessionInputDraftProvider key={`${entry.id}:${session.id}`}>
+      <section
+        aria-label="Workflow execution"
+        data-run-flow
+        className={
+          chat
+            ? 'space-y-5 py-3 text-foreground'
+            : 'space-y-4 rounded-xl border bg-background p-4 text-foreground'
+        }
       >
-        Open this workflow in Run
-      </a>
-      {!chat && (
-        <button
-          className="ml-3 text-sm underline"
-          onClick={() => {
-            bindChatSession(store, ref);
-            store.set(chatWorkflowIdsAtom, (previous) =>
-              previous.includes(entry.id) ? previous : [...previous, entry.id],
-            );
-            store.set(chatPanelModeAtom, 'expanded');
+        <header>
+          {chat && (
+            <span className="mb-1 block text-[10px] font-semibold uppercase tracking-widest text-violet-600">
+              Workflow · current work
+            </span>
+          )}
+          <h3 className="font-semibold">{definition.name}</h3>
+          <p className="break-all text-xs text-muted-foreground">
+            Version {session.version} · Run {session.id}
+          </p>
+          <p role="status">
+            {session.endedAt
+              ? 'Ended — history retained'
+              : session.approvedAt
+                ? 'Completed — approved'
+                : session.paused
+                  ? 'Paused — ready when you are'
+                  : 'Running — you can ask questions or pause'}
+          </p>
+        </header>
+        <a
+          className="text-sm underline"
+          href={`/w/${encodeURIComponent(entry.id)}?run=${encodeURIComponent(session.id)}`}
+          onClick={(event) => {
+            if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+            event.preventDefault();
+            store.set(chatPanelModeAtom, 'split');
+            store.set(workflowSurfaceAtom, 'workflow');
+            showSessionInRun(store, ref);
+            store.set(openWorkspaceWindowAtom, { pageKey: 'workflows', title: 'Workflows' });
             router.push('/');
           }}
         >
-          Continue in Chat
-        </button>
-      )}
-      <button className="ml-3 text-sm underline" onClick={() => verifyInBuild()}>
-        Verify this run in Build
-      </button>
-      <p className="text-xs text-muted-foreground">
-        Interactive execution stays in this browser. Progress and evidence are included in the
-        workspace save; resume after reopening. Server background runs remain available in Run.
-      </p>
-      {definitionFingerprint(entry.draft) !== definitionFingerprint(saved.definition) && (
-        <p className="text-sm text-amber-700">
-          Build has changed. This run retains version {session.version}. Start a new run to use the
-          updated definition.
-        </p>
-      )}
-      <div className="flex flex-wrap gap-2">
-        <button
-          className="rounded border px-3 py-1"
-          disabled={!!session.endedAt}
-          onClick={() => void act({ kind: session.paused ? 'resume' : 'pause' })}
-        >
-          {session.paused ? 'Resume workflow' : 'Pause workflow'}
-        </button>
-        <button className="rounded border px-3 py-1" onClick={() => start(true)}>
-          New run from Build
-        </button>
-        <button
-          className="rounded border px-3 py-1 disabled:opacity-50"
-          disabled={
-            !!session.endedAt ||
-            !!session.approvedAt ||
-            context.steps.some((step) => !['success', 'warning', 'reviewed'].includes(step.status))
-          }
-          onClick={() => void act({ kind: 'approve' })}
-        >
-          Approve completed results
-        </button>
-      </div>
-      {chat ? (
-        <ChatWorkflowSteps
-          key={`${entry.id}:${session.id}`}
-          steps={context.steps}
-          blocks={definition.blocks}
-          initialBlockId={focusBlockId}
-          renderStep={(step) => (
-            <>
-              {inputForms(step.id)}
-              {stepDetails(step)}
-            </>
-          )}
-        />
-      ) : (
-        <>
-          <div className="space-y-4">{inputForms()}</div>
-          <ol className="space-y-2" aria-label="Execution steps">
-            {context.steps.map((step, index) => (
-              <li key={step.id} className="rounded border p-3">
-                <LazyDetails
-                  key={`${step.id}:${step.status}:${step.id === focusBlockId}`}
-                  defaultOpen={
-                    step.id === focusBlockId ||
-                    ['error', 'needs_review', 'outdated'].includes(step.status)
-                  }
-                  summary={`${index + 1}. ${step.label} · ${step.status.replaceAll('_', ' ')}`}
-                >
-                  {stepDetails(step)}
-                </LazyDetails>
-              </li>
-            ))}
-          </ol>
-        </>
-      )}
-      <LazyDetails summary={`Execution history (${session.attempts.length})`}>
-        {session.attempts.map((attempt, i) => (
-          <LazyDetails
-            key={i}
-            summary={`${definition.blocks.find((block) => block.id === attempt.blockId)?.label} · ${attempt.at} · revision ${attempt.revision}`}
+          Open this workflow in Run
+        </a>
+        {!chat && (
+          <button
+            className="ml-3 text-sm underline"
+            onClick={() => {
+              bindChatSession(store, ref);
+              store.set(chatWorkflowIdsAtom, (previous) =>
+                previous.includes(entry.id) ? previous : [...previous, entry.id],
+              );
+              store.set(chatPanelModeAtom, 'expanded');
+              router.push('/');
+            }}
           >
-            <ReadableData value={attempt.result.result.results} />
-          </LazyDetails>
-        ))}
-      </LazyDetails>
-      <button
-        className="rounded border px-3 py-1 text-sm disabled:opacity-50"
-        disabled={!!session.endedAt}
-        onClick={() => void act({ kind: 'end' })}
-      >
-        End workflow
-      </button>
-      <p className="text-xs text-muted-foreground">
-        Ending stops further execution. Completed external actions cannot be undone here.
-      </p>
-      <ExecutionLifetimeNotice />
-      {error && (
-        <p role="alert" className="text-red-700">
-          {error}
+            Continue in Chat
+          </button>
+        )}
+        <button className="ml-3 text-sm underline" onClick={() => verifyInBuild()}>
+          Verify this run in Build
+        </button>
+        <p className="text-xs text-muted-foreground">
+          Interactive execution stays in this browser. Progress and evidence are included in the
+          workspace save; resume after reopening. Server background runs remain available in Run.
         </p>
-      )}
-    </section>
+        {readModel.draftChanged && (
+          <p className="text-sm text-amber-700">
+            Build has changed. This run retains version {session.version}. Start a new run to use
+            the updated definition.
+          </p>
+        )}
+        <div className="workflow-reference-controls flex flex-wrap gap-2">
+          <button
+            className="rounded border px-3 py-1"
+            disabled={!!session.endedAt}
+            onClick={() => void act({ kind: session.paused ? 'resume' : 'pause' })}
+          >
+            {session.paused
+              ? fapi && !session.attempts.length
+                ? 'Start workflow'
+                : 'Resume workflow'
+              : 'Pause workflow'}
+          </button>
+          <button className="rounded border px-3 py-1" onClick={() => start(true)}>
+            New run from Build
+          </button>
+          <button
+            className="rounded border px-3 py-1 disabled:opacity-50"
+            disabled={
+              !!session.endedAt ||
+              !!session.approvedAt ||
+              context.steps.some(
+                (step) => !['success', 'warning', 'reviewed'].includes(step.status),
+              )
+            }
+            onClick={() => void act({ kind: 'approve' })}
+          >
+            Approve completed results
+          </button>
+        </div>
+        {!fapi && <WorkflowSessionWorksheet readModel={readModel} />}
+        {fapiStages ? (
+          <FapiWorkflowSteps
+            key={`${entry.id}:${session.id}`}
+            readModel={readModel}
+            focusBlockId={focusBlockId}
+            renderStep={(step) => (
+              <>
+                {inputForms(step.id)}
+                {stepDetails(step)}
+              </>
+            )}
+          />
+        ) : (
+          <>
+            {!chat && <div className="space-y-4">{inputForms()}</div>}
+            <ChatWorkflowSteps
+              key={`${entry.id}:${session.id}`}
+              steps={context.steps}
+              blocks={definition.blocks}
+              initialBlockId={focusBlockId ?? (!chat ? inputTriggerId : undefined)}
+              requiredInputBlockId={requiredCalculation ? inputTriggerId : undefined}
+              running={!session.paused && !session.endedAt}
+              renderStep={(step) => (
+                <>
+                  {chat && inputForms(step.id)}
+                  {stepDetails(step)}
+                </>
+              )}
+            />
+          </>
+        )}
+        {fapi && (
+          <div className="space-y-3">
+            <FapiSessionWorksheet definition={definition} session={session} />
+            <button
+              className="text-sm underline"
+              onClick={() => {
+                showSessionInRun(store, ref);
+                store.set(workflowTabAtom, 'results');
+                store.set(workflowSurfaceAtom, 'workflow');
+                store.set(chatPanelModeAtom, 'split');
+                store.set(openWorkspaceWindowAtom, { pageKey: 'workflows', title: 'Workflows' });
+                router.push('/');
+              }}
+            >
+              Open worksheet in Results
+            </button>
+          </div>
+        )}
+        <LazyDetails summary={`Execution history (${session.attempts.length})`}>
+          {session.attempts.map((attempt, i) => (
+            <LazyDetails
+              key={i}
+              summary={`${definition.blocks.find((block) => block.id === attempt.blockId)?.label} · ${attempt.at} · revision ${attempt.revision}`}
+            >
+              <ReadableData value={attempt.result.result.results} />
+            </LazyDetails>
+          ))}
+        </LazyDetails>
+        <button
+          className="rounded border px-3 py-1 text-sm disabled:opacity-50"
+          disabled={!!session.endedAt}
+          onClick={() => void act({ kind: 'end' })}
+        >
+          End workflow
+        </button>
+        <p className="text-xs text-muted-foreground">
+          Ending stops further execution. Completed external actions cannot be undone here.
+        </p>
+        <ExecutionLifetimeNotice />
+        {error && (
+          <p role="alert" className="text-red-700">
+            {error}
+          </p>
+        )}
+      </section>
+    </SessionInputDraftProvider>
   );
 }

@@ -27,10 +27,13 @@ export function searchWorkspace(q: string): SearchHit[] {
       hits.push({ kind: 'workflow', id: w.id, label: w.name, sub: w.sub, ready: w.ready });
   // Available portfolio templates are openable in the builder and shared Run surface.
   for (const w of PORTFOLIO_WORKFLOWS)
-    if (`${w.name} ${w.sub} ${w.group}`.toLowerCase().includes(t))
+    if (w.id !== 'pf-fapi' && `${w.name} ${w.sub} ${w.group}`.toLowerCase().includes(t))
       hits.push({ kind: 'blueprint', id: w.id, label: w.name, sub: w.sub });
   // Workflow elements — summon a source/output into the chat without the builder.
   for (const c of Object.values(WORKFLOW_CONFIGS)) {
+    // FAPI has one entry point. Its active run owns source and result controls;
+    // advertising standalone previews here made them look like other workflows.
+    if (c.id === 'fapi') continue;
     if (`${c.name} source document ${c.documentLabel}`.toLowerCase().includes(t))
       hits.push({
         kind: 'element',

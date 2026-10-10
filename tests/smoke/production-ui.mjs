@@ -4,10 +4,12 @@ import { pathToFileURL } from 'node:url';
 import { chromium, expect } from '@playwright/test';
 import { createTestRun, webRoot, reserveLoopbackPort } from '../../scripts/testing/runtime.mjs';
 import { syntheticContext, syntheticSession } from '../../scripts/testing/browser-fixtures.mjs';
+import { measureProductionLoading } from './production-loading.mjs';
 
 // Exercise actual Rollup chunks: dev-server tests cannot detect production-only
 // circular initialization or missing lazy assets. No provider calls or real data.
 const run = createTestRun('production-ui');
+console.log(`Production UI artifacts: ${run.output}`);
 const { preview } = await import(
   pathToFileURL(path.join(webRoot, 'node_modules/vite/dist/node/index.js')).href
 );
@@ -20,11 +22,11 @@ const server = await preview({
   preview: { host: '127.0.0.1', port, strictPort: true, open: false },
 });
 let browser;
+const timings = [];
 try {
   browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ serviceWorkers: 'block' });
   const failures = [];
-  const timings = [];
   const scriptRequests = [];
   page.on('request', (request) => {
     if (request.resourceType() === 'script') scriptRequests.push(request.url());
@@ -150,7 +152,7 @@ try {
     page.getByText('Models — pick one per column', { exact: true }),
   );
   await page.getByRole('button', { name: 'Workflows', exact: true }).first().click();
-  await page.getByRole('button', { name: 'FAPI Calculation (portfolio)', exact: true }).click();
+  await page.getByRole('button', { name: 'FAPI Calculation', exact: true }).click();
   await page.getByRole('button', { name: 'Results', exact: true }).click();
   await expect(page.getByText('No results yet.', { exact: false })).toBeVisible();
   await expect(draft).toHaveValue('Preserve this draft across deferred pages');
@@ -164,8 +166,12 @@ try {
     })),
   );
   expect(failures).toEqual([]);
+  await page.close();
+  await measureProductionLoading({ browser, baseURL, output: run.output });
   console.log(`Production navigation, deferred editors and chat-draft smoke passed: ${run.output}`);
 } finally {
+  // Retain completed measurements even if a later navigation assertion fails.
+  fs.writeFileSync(path.join(run.output, 'page-loading.json'), JSON.stringify(timings, null, 2));
   await browser?.close();
   await new Promise((resolve, reject) =>
     server.httpServer.close((error) => (error ? reject(error) : resolve())),

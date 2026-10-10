@@ -18,7 +18,10 @@ export const httpJsonDefinition: ToolDefinition = {
     {
       canRouteToFamilies: ['Logic', 'Review / Validation', 'Output', 'Field'],
       description: 'Named numbers, text, booleans or JSON selected from the response.',
-      id: 'named_values', label: 'Named values', outputKey: 'namedValues', outputType: 'named_values',
+      id: 'named_values',
+      label: 'Named values',
+      outputKey: 'namedValues',
+      outputType: 'named_values',
     },
     {
       canRouteToFamilies: ['Logic'],

@@ -1,0 +1,23 @@
+
+> workspace@0.0.0 test:workflow-reliability C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-browser-tests.mjs reliability "e2e/assistant-ui-chat.spec.ts" "e2e/chat-context.spec.ts" "e2e/source-library.spec.ts" "--grep" "saved chat restoration|saved chat restore times out|assistant-ui Stop|assistant-ui retries one failed|opening a viewer file|explicit chat context reaches|Sources adds text|chat can select a saved document|chat chooses a saved source|a failed saved-source download"
+
+Test run 04a727d1-74b06db6-fb2c-4cf3-b6e3-721277714cba; reports and logs: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-74b06db6-fb2c-4cf3-b6e3-721277714cba
+Preparing the isolated browser dependency cache…
+
+Running 12 tests using 1 worker
+
+  ok  1 e2e\assistant-ui-chat.spec.ts:420:5 › saved chat restoration keeps the normal shell and unlocks exactly the restored history (31.3s)
+  ok  2 e2e\assistant-ui-chat.spec.ts:516:5 › failed saved chat restoration retries the requested chat and New chat rejects a late restore (23.6s)
+  ok  3 e2e\assistant-ui-chat.spec.ts:594:5 › a saved chat restore times out at its existing bound and New chat recovers without replacing history (19.3s)
+  ok  4 e2e\assistant-ui-chat.spec.ts:653:5 › assistant-ui Stop stops the exact remote stream, retains the draft and rejects late tokens (26.7s)
+  ok  5 e2e\assistant-ui-chat.spec.ts:758:5 › assistant-ui retries one failed text turn without repeating a completed tool or user message (33.5s)
+  ok  6 e2e\chat-context.spec.ts:19:5 › opening a viewer file is explicit context and removing it restores the Use in this chat action (27.8s)
+  ok  7 e2e\chat-context.spec.ts:288:7 › explicit chat context reaches sina on the first turn, restores exact sources and starts clean (1.2m)
+  ok  8 e2e\chat-context.spec.ts:288:7 › explicit chat context reaches microsina on the first turn, restores exact sources and starts clean (1.4m)
+  ok  9 e2e\chat-context.spec.ts:414:5 › Sources adds text documents only on Use in this chat; example text remains an explicit unsaved attachment (40.6s)
+  ok 10 e2e\source-library.spec.ts:186:5 › chat can select a saved document for retrieval without changing its library membership (15.4s)
+  ok 11 e2e\source-library.spec.ts:295:5 › chat chooses a saved source without uploading and freezes its records for workflow approval (35.4s)
+  ok 12 e2e\source-library.spec.ts:387:5 › a failed saved-source download is visible and preserves the current selection (24.2s)
+
+  12 passed (7.4m)

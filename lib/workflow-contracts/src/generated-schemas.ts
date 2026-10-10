@@ -4,13 +4,20 @@ import { z } from 'zod';
 
 import { migrateWorkflowRelationship } from './migrations';
 
+// Keep forward references lazy, but build each validator only once. Parsed inputs are never cached.
+
+function lazySchema<T extends z.ZodTypeAny>(factory: () => T): z.ZodLazy<T> {
+  let schema: T | undefined;
+  return z.lazy(() => schema ??= factory());
+}
+
 // Storage serializes Date values as ISO strings; restore valid dates on read.
 
 const storedDate = z.union([z.date(), z.string().datetime({ offset: true }).transform(value => new Date(value))]);
 
-export const WorkflowLibrarySchema: z.ZodType<import("./library-types").WorkflowLibrary, z.ZodTypeDef, unknown> = z.lazy(() => z.record(PersonalWorkflowSchema));
+export const WorkflowLibrarySchema: z.ZodType<import("./library-types").WorkflowLibrary, z.ZodTypeDef, unknown> = lazySchema(() => z.record(PersonalWorkflowSchema));
 
-export const PersonalWorkflowSchema: z.ZodType<import("./library-types").PersonalWorkflow, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const PersonalWorkflowSchema: z.ZodType<import("./library-types").PersonalWorkflow, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "id": z.string(),
   "templateId": z.string(),
   "draft": LocalWorkflowSnapshotSchema,
@@ -35,7 +42,7 @@ export const PersonalWorkflowSchema: z.ZodType<import("./library-types").Persona
 }).passthrough()),
 }).passthrough());
 
-export const LocalWorkflowSnapshotSchema: z.ZodType<import("./domain/workflow-types").LocalWorkflowSnapshot, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const LocalWorkflowSnapshotSchema: z.ZodType<import("./domain/workflow-types").LocalWorkflowSnapshot, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "schemaVersion": z.literal("workflow-studio.local.v1"),
   "id": z.string(),
   "name": z.string(),
@@ -72,7 +79,7 @@ export const LocalWorkflowSnapshotSchema: z.ZodType<import("./domain/workflow-ty
   "events": z.array(WorkflowEventSchema),
 }).passthrough());
 
-export const WorkflowSessionSchema: z.ZodType<import("./library-types").WorkflowSession, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const WorkflowSessionSchema: z.ZodType<import("./library-types").WorkflowSession, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "id": z.string(),
   "version": z.number().finite(),
   "revision": z.number().finite(),
@@ -102,7 +109,7 @@ export const WorkflowSessionSchema: z.ZodType<import("./library-types").Workflow
 }).passthrough()),
 }).passthrough());
 
-export const DocumentReviewSchema: z.ZodType<import("./domain/document-review").DocumentReview, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const DocumentReviewSchema: z.ZodType<import("./domain/document-review").DocumentReview, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "id": z.string(),
   "at": z.string(),
   "sessionRevision": z.number().finite(),
@@ -114,16 +121,16 @@ export const DocumentReviewSchema: z.ZodType<import("./domain/document-review").
   "draft": DocumentReviewDraftSchema,
 }).passthrough());
 
-export const LocalToolRunnerResultSchema: z.ZodType<import("./execution-result").LocalToolRunnerResult, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const LocalToolRunnerResultSchema: z.ZodType<import("./execution-result").LocalToolRunnerResult, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "blockStatuses": z.record(z.union([z.literal("error"), z.literal("success")])),
   "edgeStatuses": z.record(LocalEdgeRunStatusSchema),
   "record": LocalRunRecordSchema,
   "result": WorkflowRunResultSchema,
 }).passthrough());
 
-export const WorkflowDefinitionStatusSchema: z.ZodType<import("./domain/block-types").WorkflowDefinitionStatus, z.ZodTypeDef, unknown> = z.lazy(() => z.union([z.literal("draft"), z.literal("published")]));
+export const WorkflowDefinitionStatusSchema: z.ZodType<import("./domain/block-types").WorkflowDefinitionStatus, z.ZodTypeDef, unknown> = lazySchema(() => z.union([z.literal("draft"), z.literal("published")]));
 
-export const WorkflowBlockSchema: z.ZodType<import("./domain/workflow-types").WorkflowBlock, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const WorkflowBlockSchema: z.ZodType<import("./domain/workflow-types").WorkflowBlock, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "id": z.string(),
   "family": BlockFamilySchema,
   "subtype": BlockSubtypeSchema,
@@ -145,7 +152,7 @@ export const WorkflowBlockSchema: z.ZodType<import("./domain/workflow-types").Wo
   "updatedAt": z.string(),
 }).passthrough());
 
-export const WorkflowEdgeSchema: z.ZodType<import("./domain/workflow-types").WorkflowEdge, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const WorkflowEdgeSchema: z.ZodType<import("./domain/workflow-types").WorkflowEdge, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "id": z.string(),
   "sourceBlockId": z.string(),
   "targetBlockId": z.string(),
@@ -163,7 +170,7 @@ export const WorkflowEdgeSchema: z.ZodType<import("./domain/workflow-types").Wor
   "history": z.array(WorkflowEdgeHistoryEntrySchema),
 }).passthrough());
 
-export const WorkflowStructureSchema: z.ZodType<import("./domain/workflow-types").WorkflowStructure, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const WorkflowStructureSchema: z.ZodType<import("./domain/workflow-types").WorkflowStructure, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "layout": z.literal("canvas-columns"),
   "entryBlockId": z.string().optional(),
   "blockOrder": z.array(z.string()),
@@ -175,7 +182,7 @@ export const WorkflowStructureSchema: z.ZodType<import("./domain/workflow-types"
 }).passthrough()),
 }).passthrough());
 
-export const RuntimeUiConfigSchema: z.ZodType<import("./domain/workflow-types").RuntimeUiConfig, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const RuntimeUiConfigSchema: z.ZodType<import("./domain/workflow-types").RuntimeUiConfig, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "runtimeConfigId": z.string(),
   "sourceWorkflowId": z.string(),
   "sourceSnapshotId": z.string().optional(),
@@ -188,7 +195,7 @@ export const RuntimeUiConfigSchema: z.ZodType<import("./domain/workflow-types").
   "allowedActions": z.array(z.string()),
 }).passthrough());
 
-export const OutputMappingPreviewSchema: z.ZodType<import("./domain/workflow-types").OutputMappingPreview, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const OutputMappingPreviewSchema: z.ZodType<import("./domain/workflow-types").OutputMappingPreview, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "id": z.string(),
   "sourceWorkflowId": z.string(),
   "sourceSnapshotId": z.string().optional(),
@@ -196,7 +203,7 @@ export const OutputMappingPreviewSchema: z.ZodType<import("./domain/workflow-typ
   "outputs": z.array(OutputMappingPreviewItemSchema),
 }).passthrough());
 
-export const BlockRunSchema: z.ZodType<import("./domain/workflow-types").BlockRun, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const BlockRunSchema: z.ZodType<import("./domain/workflow-types").BlockRun, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "id": z.string(),
   "blockId": z.string(),
   "blockLabel": z.string(),
@@ -211,7 +218,7 @@ export const BlockRunSchema: z.ZodType<import("./domain/workflow-types").BlockRu
 }).passthrough().optional(),
 }).passthrough());
 
-export const WorkflowVersionSnapshotSchema: z.ZodType<import("./domain/workflow-types").WorkflowVersionSnapshot, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const WorkflowVersionSnapshotSchema: z.ZodType<import("./domain/workflow-types").WorkflowVersionSnapshot, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "id": z.string(),
   "schemaVersion": z.literal("workflow-studio.local.v1"),
   "workflowId": z.string(),
@@ -237,7 +244,7 @@ export const WorkflowVersionSnapshotSchema: z.ZodType<import("./domain/workflow-
   "validationWarnings": z.array(z.string()),
 }).passthrough());
 
-export const AiProposalSchema: z.ZodType<import("./domain/workflow-types").AiProposal, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const AiProposalSchema: z.ZodType<import("./domain/workflow-types").AiProposal, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "id": z.string(),
   "title": z.string().optional(),
   "originalPrompt": z.string(),
@@ -270,7 +277,7 @@ export const AiProposalSchema: z.ZodType<import("./domain/workflow-types").AiPro
   "history": z.array(AiProposalHistoryEntrySchema).optional(),
 }).passthrough());
 
-export const WorkflowEventSchema: z.ZodType<import("./domain/workflow-types").WorkflowEvent, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const WorkflowEventSchema: z.ZodType<import("./domain/workflow-types").WorkflowEvent, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "id": z.string(),
   "type": WorkflowEventTypeSchema,
   "message": z.string(),
@@ -279,7 +286,7 @@ export const WorkflowEventSchema: z.ZodType<import("./domain/workflow-types").Wo
   "details": z.record(z.unknown()).optional(),
 }).passthrough());
 
-export const ToolRunResultSchema: z.ZodType<import("./tool-types").ToolRunResult, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const ToolRunResultSchema: z.ZodType<import("./tool-types").ToolRunResult, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "blockTest": z.object({
   "mode": z.literal("isolated"),
   "inputs": z.union([z.literal("none"), z.literal("examples"), z.literal("recorded")]),
@@ -310,7 +317,7 @@ export const ToolRunResultSchema: z.ZodType<import("./tool-types").ToolRunResult
   "completedAt": z.string(),
 }).passthrough());
 
-export const DocumentExtractionSchema: z.ZodType<import("./domain/document-extraction").DocumentExtraction, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const DocumentExtractionSchema: z.ZodType<import("./domain/document-extraction").DocumentExtraction, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "id": z.string(),
   "revision": z.number().finite(),
   "fileName": z.string(),
@@ -331,7 +338,7 @@ export const DocumentExtractionSchema: z.ZodType<import("./domain/document-extra
 }).passthrough()),
 }).passthrough());
 
-export const DocumentReviewDraftSchema: z.ZodType<import("./domain/document-review").DocumentReviewDraft, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const DocumentReviewDraftSchema: z.ZodType<import("./domain/document-review").DocumentReviewDraft, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "observations": z.array(z.object({
   "field": DocumentReviewFieldSchema,
   "value": z.string(),
@@ -345,14 +352,14 @@ export const DocumentReviewDraftSchema: z.ZodType<import("./domain/document-revi
 }).passthrough()),
 }).passthrough());
 
-export const LocalEdgeRunStatusSchema: z.ZodType<import("./execution-result").LocalEdgeRunStatus, z.ZodTypeDef, unknown> = z.lazy(() => z.union([z.literal("error"), z.literal("success"), z.literal("warning")]));
+export const LocalEdgeRunStatusSchema: z.ZodType<import("./execution-result").LocalEdgeRunStatus, z.ZodTypeDef, unknown> = lazySchema(() => z.union([z.literal("error"), z.literal("success"), z.literal("warning")]));
 
-export const LocalRunRecordSchema: z.ZodType<import("./domain/workflow-types").LocalRunRecord, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const LocalRunRecordSchema: z.ZodType<import("./domain/workflow-types").LocalRunRecord, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "execution": LocalWorkflowExecutionSchema,
   "logs": z.array(LocalExecutionLogSchema),
 }).passthrough());
 
-export const WorkflowRunResultSchema: z.ZodType<import("./tool-types").WorkflowRunResult, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const WorkflowRunResultSchema: z.ZodType<import("./tool-types").WorkflowRunResult, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "runId": z.string(),
   "workflowId": z.string(),
   "workflowName": z.string(),
@@ -365,30 +372,30 @@ export const WorkflowRunResultSchema: z.ZodType<import("./tool-types").WorkflowR
   "errors": z.array(z.string()),
 }).passthrough());
 
-export const BlockFamilySchema: z.ZodType<import("./domain/block-types").BlockFamily, z.ZodTypeDef, unknown> = z.lazy(() => z.union([z.literal("Trigger"), z.literal("Source"), z.literal("Logic"), z.literal("Review / Validation"), z.literal("Field"), z.literal("Output"), z.literal("AI / Agent"), z.literal("Protected")]));
+export const BlockFamilySchema: z.ZodType<import("./domain/block-types").BlockFamily, z.ZodTypeDef, unknown> = lazySchema(() => z.union([z.literal("Trigger"), z.literal("Source"), z.literal("Logic"), z.literal("Review / Validation"), z.literal("Field"), z.literal("Output"), z.literal("AI / Agent"), z.literal("Protected")]));
 
-export const BlockSubtypeSchema: z.ZodType<import("./domain/block-types").BlockSubtype, z.ZodTypeDef, unknown> = z.lazy(() => z.union([z.literal("Manual / On Demand"), z.literal("Schedule / Cron"), z.literal("Webhook / API Event"), z.literal("Manual Entry"), z.literal("Excel / Workbook"), z.literal("PDF / Document"), z.literal("API / HTTP Request"), z.literal("Database Query"), z.literal("Web / URL"), z.literal("AI Search Result"), z.literal("Currency Rate"), z.literal("Keyword Rules"), z.literal("Aggregation Rules"), z.literal("Rollup Rules"), z.literal("Calculation Rules"), z.literal("Category Rollup Aggregator"), z.literal("Calculation Engine"), z.literal("Hierarchy Aggregator"), z.literal("Classification / Mapping"), z.literal("Field Block"), z.literal("CSV Export"), z.literal("Excel Export"), z.literal("PDF Report"), z.literal("Evidence Pack"), z.literal("Canonical JSON"), z.literal("Taxprep Handoff"), z.literal("ONESOURCE Handoff"), z.literal("AI Search"), z.literal("AI Mapping Suggestion"), z.literal("AI Formula Proposal"), z.literal("AI Workflow Proposal"), z.literal("Excel Table Reader"), z.literal("PDF Text Parser"), z.literal("PDF Table Parser"), z.literal("OCR Extractor"), z.literal("API Response Parser"), z.literal("Formula"), z.literal("Script"), z.literal("Condition"), z.literal("Aggregation"), z.literal("Transformation"), z.literal("Approval Gate"), z.literal("Required Input Check"), z.literal("Missing Source Check"), z.literal("Unmatched Rows Check"), z.literal("Low Confidence Warning"), z.literal("Formula Consistency Check"), z.literal("Manual Override Review"), z.literal("Output Readiness Check"), z.literal("Protected Input"), z.literal("Protected Result"), z.literal("Official Line"), z.literal("Locked Rate"), z.literal("Final Reviewed Amount")]));
+export const BlockSubtypeSchema: z.ZodType<import("./domain/block-types").BlockSubtype, z.ZodTypeDef, unknown> = lazySchema(() => z.union([z.literal("Manual / On Demand"), z.literal("Schedule / Cron"), z.literal("Webhook / API Event"), z.literal("Manual Entry"), z.literal("Excel / Workbook"), z.literal("PDF / Document"), z.literal("API / HTTP Request"), z.literal("Database Query"), z.literal("Web / URL"), z.literal("AI Search Result"), z.literal("Currency Rate"), z.literal("Keyword Rules"), z.literal("Aggregation Rules"), z.literal("Rollup Rules"), z.literal("Calculation Rules"), z.literal("Category Rollup Aggregator"), z.literal("Calculation Engine"), z.literal("Hierarchy Aggregator"), z.literal("Classification / Mapping"), z.literal("Field Block"), z.literal("CSV Export"), z.literal("Excel Export"), z.literal("PDF Report"), z.literal("Evidence Pack"), z.literal("Canonical JSON"), z.literal("Taxprep Handoff"), z.literal("ONESOURCE Handoff"), z.literal("AI Search"), z.literal("AI Mapping Suggestion"), z.literal("AI Formula Proposal"), z.literal("AI Workflow Proposal"), z.literal("Excel Table Reader"), z.literal("PDF Text Parser"), z.literal("PDF Table Parser"), z.literal("OCR Extractor"), z.literal("API Response Parser"), z.literal("Formula"), z.literal("Script"), z.literal("Condition"), z.literal("Aggregation"), z.literal("Transformation"), z.literal("Approval Gate"), z.literal("Required Input Check"), z.literal("Missing Source Check"), z.literal("Unmatched Rows Check"), z.literal("Low Confidence Warning"), z.literal("Formula Consistency Check"), z.literal("Manual Override Review"), z.literal("Output Readiness Check"), z.literal("Protected Input"), z.literal("Protected Result"), z.literal("Official Line"), z.literal("Locked Rate"), z.literal("Final Reviewed Amount")]));
 
-export const BlockStatusSchema: z.ZodType<import("./domain/block-types").BlockStatus, z.ZodTypeDef, unknown> = z.lazy(() => z.union([z.literal("error"), z.literal("running"), z.literal("configured"), z.literal("success"), z.literal("draft"), z.literal("needs-review"), z.literal("approved"), z.literal("locked")]));
+export const BlockStatusSchema: z.ZodType<import("./domain/block-types").BlockStatus, z.ZodTypeDef, unknown> = lazySchema(() => z.union([z.literal("error"), z.literal("running"), z.literal("configured"), z.literal("success"), z.literal("draft"), z.literal("needs-review"), z.literal("approved"), z.literal("locked")]));
 
-export const WorkflowPositionSchema: z.ZodType<import("./domain/workflow-types").WorkflowPosition, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const WorkflowPositionSchema: z.ZodType<import("./domain/workflow-types").WorkflowPosition, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "x": z.number().finite(),
   "y": z.number().finite(),
 }).passthrough());
 
-export const WorkflowCodeFieldSchema: z.ZodType<import("./domain/workflow-types").WorkflowCodeField, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const WorkflowCodeFieldSchema: z.ZodType<import("./domain/workflow-types").WorkflowCodeField, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "language": z.union([z.literal("text"), z.literal("json"), z.literal("typescript"), z.literal("javascript"), z.literal("sql")]),
   "body": z.string(),
   "entrypoint": z.string().optional(),
 }).passthrough());
 
-export const WorkflowFormulaFieldSchema: z.ZodType<import("./domain/workflow-types").WorkflowFormulaField, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const WorkflowFormulaFieldSchema: z.ZodType<import("./domain/workflow-types").WorkflowFormulaField, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "expression": z.string(),
   "outputKey": z.string(),
   "inputs": z.array(z.string()),
 }).passthrough());
 
-export const SourceMetadataSchema: z.ZodType<import("./domain/workflow-types").SourceMetadata, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const SourceMetadataSchema: z.ZodType<import("./domain/workflow-types").SourceMetadata, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "sourceType": z.union([z.literal("Manual Entry"), z.literal("Excel / Workbook"), z.literal("PDF / Document"), z.literal("API / HTTP Request"), z.literal("Database Query"), z.literal("Web / URL"), z.literal("AI Search Result"), z.literal("Currency Rate"), z.literal("Keyword Rules"), z.literal("Aggregation Rules"), z.literal("Rollup Rules"), z.literal("Calculation Rules")]),
   "locator": z.string(),
   "valuePreview": z.string().optional(),
@@ -399,7 +406,7 @@ export const SourceMetadataSchema: z.ZodType<import("./domain/workflow-types").S
   "valuesLocked": z.boolean(),
 }).passthrough());
 
-export const GovernanceMetadataSchema: z.ZodType<import("./domain/workflow-types").GovernanceMetadata, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const GovernanceMetadataSchema: z.ZodType<import("./domain/workflow-types").GovernanceMetadata, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "protected": z.boolean(),
   "protectedKind": z.union([z.literal("input"), z.literal("result"), z.literal("official-line"), z.literal("locked-rate"), z.literal("final-reviewed-amount"), z.literal("summary-result")]).optional(),
   "steward": z.string(),
@@ -409,7 +416,7 @@ export const GovernanceMetadataSchema: z.ZodType<import("./domain/workflow-types
   "approvalState": z.union([z.literal("draft"), z.literal("approved"), z.literal("review-required")]),
 }).passthrough());
 
-export const RuntimeVisibilitySchema: z.ZodType<import("./domain/workflow-types").RuntimeVisibility, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const RuntimeVisibilitySchema: z.ZodType<import("./domain/workflow-types").RuntimeVisibility, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "visible": z.boolean(),
   "editableInRuntime": z.boolean(),
   "generatedUiLocked": z.boolean(),
@@ -418,13 +425,13 @@ export const RuntimeVisibilitySchema: z.ZodType<import("./domain/workflow-types"
   "outputKey": z.string().optional(),
 }).passthrough());
 
-export const WorkflowRelationshipTypeSchema: z.ZodType<import("./domain/edge-types").WorkflowRelationshipType, z.ZodTypeDef, unknown> = z.lazy(() => z.preprocess(migrateWorkflowRelationship, z.union([z.literal("provides_data_to"), z.literal("extracted_into"), z.literal("referenced_by"), z.literal("transforms_into"), z.literal("aggregates_into"), z.literal("branches_to"), z.literal("depends_on"), z.literal("checked_by"), z.literal("requires_review_by"), z.literal("triggers_validation"), z.literal("approves_for"), z.literal("blocks_until_resolved"), z.literal("certifies"), z.literal("feeds_protected_input"), z.literal("feeds_protected_result"), z.literal("feeds_output_input"), z.literal("included_in_output_preview"), z.literal("maps_to_output_candidate"), z.literal("feeds_ai_context"), z.literal("provides_context_to_ai"), z.literal("requests_ai_review"), z.literal("supplies_candidate_data"), z.literal("maps_to_output"), z.literal("included_in_handoff"), z.literal("proposes"), z.literal("suggests_mapping"), z.literal("suggests_formula"), z.literal("suggests_workflow_change"), z.literal("initiates")])));
+export const WorkflowRelationshipTypeSchema: z.ZodType<import("./domain/edge-types").WorkflowRelationshipType, z.ZodTypeDef, unknown> = lazySchema(() => z.preprocess(migrateWorkflowRelationship, z.union([z.literal("provides_data_to"), z.literal("extracted_into"), z.literal("referenced_by"), z.literal("transforms_into"), z.literal("aggregates_into"), z.literal("branches_to"), z.literal("depends_on"), z.literal("checked_by"), z.literal("requires_review_by"), z.literal("triggers_validation"), z.literal("approves_for"), z.literal("blocks_until_resolved"), z.literal("certifies"), z.literal("feeds_protected_input"), z.literal("feeds_protected_result"), z.literal("feeds_output_input"), z.literal("included_in_output_preview"), z.literal("maps_to_output_candidate"), z.literal("feeds_ai_context"), z.literal("provides_context_to_ai"), z.literal("requests_ai_review"), z.literal("supplies_candidate_data"), z.literal("maps_to_output"), z.literal("included_in_handoff"), z.literal("proposes"), z.literal("suggests_mapping"), z.literal("suggests_formula"), z.literal("suggests_workflow_change"), z.literal("initiates")])));
 
-export const EdgeBindingStatusSchema: z.ZodType<import("./domain/edge-types").EdgeBindingStatus, z.ZodTypeDef, unknown> = z.lazy(() => z.union([z.literal("invalid"), z.literal("warning"), z.literal("missing"), z.literal("valid")]));
+export const EdgeBindingStatusSchema: z.ZodType<import("./domain/edge-types").EdgeBindingStatus, z.ZodTypeDef, unknown> = lazySchema(() => z.union([z.literal("invalid"), z.literal("warning"), z.literal("missing"), z.literal("valid")]));
 
-export const EdgeStatusSchema: z.ZodType<import("./domain/edge-types").EdgeStatus, z.ZodTypeDef, unknown> = z.lazy(() => z.union([z.literal("active"), z.literal("disabled"), z.literal("rejected"), z.literal("proposed")]));
+export const EdgeStatusSchema: z.ZodType<import("./domain/edge-types").EdgeStatus, z.ZodTypeDef, unknown> = lazySchema(() => z.union([z.literal("active"), z.literal("disabled"), z.literal("rejected"), z.literal("proposed")]));
 
-export const WorkflowEdgeHistoryEntrySchema: z.ZodType<import("./domain/edge-types").WorkflowEdgeHistoryEntry, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const WorkflowEdgeHistoryEntrySchema: z.ZodType<import("./domain/edge-types").WorkflowEdgeHistoryEntry, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "id": z.string(),
   "action": z.union([z.literal("split"), z.literal("disabled"), z.literal("rejected"), z.literal("approved"), z.literal("created"), z.literal("updated"), z.literal("migrated")]),
   "by": z.string(),
@@ -432,14 +439,14 @@ export const WorkflowEdgeHistoryEntrySchema: z.ZodType<import("./domain/edge-typ
   "notes": z.string().optional(),
 }).passthrough());
 
-export const RuntimeUiSectionSchema: z.ZodType<import("./domain/workflow-types").RuntimeUiSection, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const RuntimeUiSectionSchema: z.ZodType<import("./domain/workflow-types").RuntimeUiSection, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "id": z.string(),
   "label": z.string(),
   "family": BlockFamilySchema,
   "rows": z.array(RuntimeUiRowSchema),
 }).passthrough());
 
-export const OutputMappingPreviewItemSchema: z.ZodType<import("./domain/workflow-types").OutputMappingPreviewItem, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const OutputMappingPreviewItemSchema: z.ZodType<import("./domain/workflow-types").OutputMappingPreviewItem, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "outputBlockId": z.string(),
   "outputLabel": z.string(),
   "outputSubtype": BlockSubtypeSchema,
@@ -463,11 +470,11 @@ export const OutputMappingPreviewItemSchema: z.ZodType<import("./domain/workflow
   "mockPayloadPreview": z.record(z.unknown()),
 }).passthrough());
 
-export const BlockRunStatusSchema: z.ZodType<import("./domain/block-types").BlockRunStatus, z.ZodTypeDef, unknown> = z.lazy(() => z.union([z.literal("skipped"), z.literal("error"), z.literal("running"), z.literal("pending"), z.literal("success"), z.literal("warning")]));
+export const BlockRunStatusSchema: z.ZodType<import("./domain/block-types").BlockRunStatus, z.ZodTypeDef, unknown> = lazySchema(() => z.union([z.literal("skipped"), z.literal("error"), z.literal("running"), z.literal("pending"), z.literal("success"), z.literal("warning")]));
 
-export const AiProposalStatusSchema: z.ZodType<import("./domain/workflow-types").AiProposalStatus, z.ZodTypeDef, unknown> = z.lazy(() => z.union([z.literal("rejected"), z.literal("approved"), z.literal("proposed")]));
+export const AiProposalStatusSchema: z.ZodType<import("./domain/workflow-types").AiProposalStatus, z.ZodTypeDef, unknown> = lazySchema(() => z.union([z.literal("rejected"), z.literal("approved"), z.literal("proposed")]));
 
-export const AiProposalHistoryEntrySchema: z.ZodType<import("./domain/workflow-types").AiProposalHistoryEntry, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const AiProposalHistoryEntrySchema: z.ZodType<import("./domain/workflow-types").AiProposalHistoryEntry, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "id": z.string(),
   "action": z.union([z.literal("rejected"), z.literal("approved"), z.literal("created"), z.literal("revised")]),
   "by": z.string(),
@@ -475,11 +482,11 @@ export const AiProposalHistoryEntrySchema: z.ZodType<import("./domain/workflow-t
   "notes": z.string().optional(),
 }).passthrough());
 
-export const WorkflowEventTypeSchema: z.ZodType<import("./domain/workflow-types").WorkflowEventType, z.ZodTypeDef, unknown> = z.lazy(() => z.union([z.literal("ai_proposal_approved"), z.literal("ai_proposal_created"), z.literal("ai_proposal_rejected"), z.literal("export_workflow"), z.literal("import_workflow"), z.literal("migration"), z.literal("publish_snapshot"), z.literal("reset_sample"), z.literal("save_draft"), z.literal("validation_warning"), z.literal("workflow_command")]));
+export const WorkflowEventTypeSchema: z.ZodType<import("./domain/workflow-types").WorkflowEventType, z.ZodTypeDef, unknown> = lazySchema(() => z.union([z.literal("ai_proposal_approved"), z.literal("ai_proposal_created"), z.literal("ai_proposal_rejected"), z.literal("export_workflow"), z.literal("import_workflow"), z.literal("migration"), z.literal("publish_snapshot"), z.literal("reset_sample"), z.literal("save_draft"), z.literal("validation_warning"), z.literal("workflow_command")]));
 
-export const ToolRunStatusSchema: z.ZodType<import("./tool-types").ToolRunStatus, z.ZodTypeDef, unknown> = z.lazy(() => z.union([z.literal("skipped"), z.literal("error"), z.literal("success"), z.literal("warning"), z.literal("needs_review")]));
+export const ToolRunStatusSchema: z.ZodType<import("./tool-types").ToolRunStatus, z.ZodTypeDef, unknown> = lazySchema(() => z.union([z.literal("skipped"), z.literal("error"), z.literal("success"), z.literal("warning"), z.literal("needs_review")]));
 
-export const ToolRunLogSchema: z.ZodType<import("./tool-types").ToolRunLog, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const ToolRunLogSchema: z.ZodType<import("./tool-types").ToolRunLog, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "id": z.string(),
   "at": z.string(),
   "level": z.union([z.literal("error"), z.literal("warning"), z.literal("info")]),
@@ -487,7 +494,7 @@ export const ToolRunLogSchema: z.ZodType<import("./tool-types").ToolRunLog, z.Zo
   "details": z.record(z.unknown()).optional(),
 }).passthrough());
 
-export const EvidenceRefSchema: z.ZodType<import("./tool-types").EvidenceRef, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const EvidenceRefSchema: z.ZodType<import("./tool-types").EvidenceRef, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "evidenceId": z.string(),
   "sourceBlockId": z.string(),
   "sourceLabel": z.string(),
@@ -498,7 +505,7 @@ export const EvidenceRefSchema: z.ZodType<import("./tool-types").EvidenceRef, z.
   "valuePreview": z.string().optional(),
 }).passthrough());
 
-export const SourceTraceRefSchema: z.ZodType<import("./tool-types").SourceTraceRef, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const SourceTraceRefSchema: z.ZodType<import("./tool-types").SourceTraceRef, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "sourceBlockId": z.string(),
   "sourceLabel": z.string(),
   "evidenceRefId": z.string().optional(),
@@ -507,14 +514,14 @@ export const SourceTraceRefSchema: z.ZodType<import("./tool-types").SourceTraceR
   "valuePreview": z.string().optional(),
 }).passthrough());
 
-export const DocumentReviewFieldSchema: z.ZodType<import("./domain/document-review").DocumentReviewField, z.ZodTypeDef, unknown> = z.lazy(() => z.union([z.literal("currency"), z.literal("document_type"), z.literal("company"), z.literal("reporting_period"), z.literal("fact"), z.literal("workflow_relevance")]));
+export const DocumentReviewFieldSchema: z.ZodType<import("./domain/document-review").DocumentReviewField, z.ZodTypeDef, unknown> = lazySchema(() => z.union([z.literal("currency"), z.literal("document_type"), z.literal("company"), z.literal("reporting_period"), z.literal("fact"), z.literal("workflow_relevance")]));
 
-export const DocumentReviewCitationSchema: z.ZodType<import("./domain/document-review").DocumentReviewCitation, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const DocumentReviewCitationSchema: z.ZodType<import("./domain/document-review").DocumentReviewCitation, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "segmentId": z.string(),
   "quote": z.string(),
 }).passthrough());
 
-export const LocalWorkflowExecutionSchema: z.ZodType<import("./domain/workflow-types").LocalWorkflowExecution, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const LocalWorkflowExecutionSchema: z.ZodType<import("./domain/workflow-types").LocalWorkflowExecution, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "id": z.string(),
   "workflowId": z.string(),
   "status": z.union([z.literal("error"), z.literal("running"), z.literal("pending"), z.literal("success"), z.literal("cancelled")]),
@@ -524,7 +531,7 @@ export const LocalWorkflowExecutionSchema: z.ZodType<import("./domain/workflow-t
   "error": z.union([z.null(), z.string()]),
 }).passthrough());
 
-export const LocalExecutionLogSchema: z.ZodType<import("./domain/workflow-types").LocalExecutionLog, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const LocalExecutionLogSchema: z.ZodType<import("./domain/workflow-types").LocalExecutionLog, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "id": z.string(),
   "executionId": z.string(),
   "nodeId": z.string(),
@@ -539,7 +546,7 @@ export const LocalExecutionLogSchema: z.ZodType<import("./domain/workflow-types"
   "error": z.union([z.null(), z.string()]),
 }).passthrough());
 
-export const RuntimeUiRowSchema: z.ZodType<import("./domain/workflow-types").RuntimeUiRow, z.ZodTypeDef, unknown> = z.lazy(() => z.object({
+export const RuntimeUiRowSchema: z.ZodType<import("./domain/workflow-types").RuntimeUiRow, z.ZodTypeDef, unknown> = lazySchema(() => z.object({
   "id": z.string(),
   "blockId": z.string(),
   "label": z.string(),

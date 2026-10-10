@@ -1,5 +1,5 @@
 import { test, expect } from './workflow-audit-isolation';
-import type { Page } from '@playwright/test';
+import type { Browser, Page } from '@playwright/test';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { syntheticContext, syntheticSession } from '../scripts/testing/browser-fixtures.mjs';
@@ -8,6 +8,207 @@ async function mockWorkspaceReads(page: Page) {
   await page.route('**/api/documents**', (route) => route.fulfill({ json: { documents: [] } }));
   await page.route('**/api/integrations**', (route) => route.fulfill({ json: [] }));
   await page.route('**/api/chat/threads**', (route) => route.fulfill({ json: { threads: [] } }));
+}
+
+function accessResponseGate() {
+  let release!: (response: { status: number; json: unknown }) => void;
+  const response = new Promise<{ status: number; json: unknown }>((resolve) => {
+    release = resolve;
+  });
+  return { response, release };
+}
+
+async function startupAccessFixture(browser: Browser, cachedWorkspace = true) {
+  const context = await browser.newContext();
+  if (cachedWorkspace) {
+    await context.addInitScript(
+      (value) => sessionStorage.setItem('taxflow:authenticated-workspace', JSON.stringify(value)),
+      syntheticContext,
+    );
+  }
+  const page = await context.newPage();
+  const session = accessResponseGate();
+  const memberships = accessResponseGate();
+  const requests: string[] = [];
+  await page.route('**/api/**', async (route) => {
+    const pathname = new URL(route.request().url()).pathname;
+    requests.push(pathname);
+    if (pathname === '/api/session') return route.fulfill(await session.response);
+    if (pathname === '/api/workspaces') return route.fulfill(await memberships.response);
+    if (pathname === '/api/workflow-library') {
+      return route.fulfill({
+        json:
+          route.request().method() === 'GET'
+            ? { revision: 0, payload: null }
+            : { revision: (route.request().postDataJSON()?.revision ?? 0) + 1 },
+      });
+    }
+    if (pathname === '/api/chat/threads') return route.fulfill({ json: { threads: [] } });
+    if (pathname.startsWith('/api/copilotkit')) {
+      return route.fulfill({
+        json: {
+          version: '1.63.2',
+          mode: 'sse',
+          agents: {
+            default: {
+              name: 'default',
+              description: 'Synthetic startup',
+              className: 'FixtureAgent',
+            },
+          },
+          audioFileTranscriptionEnabled: false,
+          suggestions: false,
+          telemetryDisabled: true,
+          threadEndpoints: {
+            list: false,
+            inspect: false,
+            mutations: false,
+            realtimeMetadata: false,
+          },
+        },
+      });
+    }
+    if (pathname === '/api/documents') return route.fulfill({ json: { documents: [] } });
+    if (pathname === '/api/integrations') return route.fulfill({ json: [] });
+    return route.fulfill({ status: 503, json: { error: 'Synthetic startup test: unavailable' } });
+  });
+  return {
+    context,
+    page,
+    session,
+    memberships,
+    requests,
+    protectedRequests: () =>
+      requests.filter((pathname) => !['/api/session', '/api/workspaces'].includes(pathname)),
+  };
+}
+
+test('startup shell remains public until session and current workspace membership both resolve', async ({
+  browser,
+}) => {
+  const fixture = await startupAccessFixture(browser);
+  const { context, page, session, memberships, requests, protectedRequests } = fixture;
+  try {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    const shell = page.getByRole('region', { name: 'Workspace startup', exact: true });
+    await expect(
+      shell.getByRole('heading', { name: 'What would you like to work on?', exact: true }),
+    ).toBeVisible();
+    await expect(shell.getByRole('textbox', { name: 'Message', exact: true })).toBeDisabled();
+    await expect(shell.getByRole('status')).toHaveText('Connecting to your workspace…');
+    const nav = shell.getByRole('navigation', { name: 'Workspace', exact: true });
+    for (const name of ['Chat', 'Workflows', 'Sources', 'Connections']) {
+      await expect(nav.getByRole('button', { name, exact: true })).toBeDisabled();
+    }
+    await expect(page.locator('.lc-console')).toHaveCount(0);
+    await expect(page.getByText('Synthetic workspace', { exact: false })).toHaveCount(0);
+    await expect.poll(() => requests.includes('/api/session')).toBe(true);
+    expect(requests).not.toContain('/api/workspaces');
+    expect(protectedRequests()).toEqual([]);
+
+    session.release({ status: 200, json: syntheticSession });
+    await expect.poll(() => requests.includes('/api/workspaces')).toBe(true);
+    await expect(shell).toBeVisible();
+    await expect(shell.getByRole('textbox', { name: 'Message', exact: true })).toBeDisabled();
+    await expect(page.locator('.lc-console')).toHaveCount(0);
+    expect(protectedRequests()).toEqual([]);
+    const originalViewport = page.viewportSize();
+    await page.screenshot({ path: test.info().outputPath('workspace-startup-desktop.png') });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(
+      shell.getByRole('heading', { name: 'What would you like to work on?', exact: true }),
+    ).toBeVisible();
+    await page.screenshot({ path: test.info().outputPath('workspace-startup-mobile.png') });
+    if (originalViewport) await page.setViewportSize(originalViewport);
+    expect(protectedRequests()).toEqual([]);
+
+    memberships.release({ status: 200, json: { workspaces: [syntheticContext.workspace] } });
+    // The public shell also covers the deferred workspace module after access succeeds.
+    await expect(page.locator('.lc-console').getByRole('textbox')).toBeEditable({ timeout: 60000 });
+    await expect(shell).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Chat', exact: true })).toBeEnabled();
+    await expect.poll(() => protectedRequests().includes('/api/workflow-library')).toBe(true);
+    expect(requests).not.toContain('/api/auth/sign-in/anonymous');
+    expect(requests).not.toContain('/api/workspaces/demo');
+  } finally {
+    session.release({ status: 401, json: {} });
+    memberships.release({ status: 403, json: {} });
+    await context.close();
+  }
+});
+
+test('signed-out startup reaches Try demo without provisioning a guest automatically', async ({
+  browser,
+}) => {
+  const { context, page, session, memberships, requests, protectedRequests } =
+    await startupAccessFixture(browser, false);
+  try {
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    const shell = page.getByRole('region', { name: 'Workspace startup', exact: true });
+    await expect(shell).toBeVisible();
+    expect(protectedRequests()).toEqual([]);
+    session.release({ status: 401, json: {} });
+    await expect(
+      page.getByRole('heading', { name: 'Sign in to TaxflowOS', exact: true }),
+    ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Try demo', exact: true })).toBeEnabled();
+    await expect(shell).toHaveCount(0);
+    await expect(page.locator('.lc-console')).toHaveCount(0);
+    expect(requests).not.toContain('/api/workspaces');
+    expect(protectedRequests()).toEqual([]);
+    expect(
+      await page.evaluate(() => sessionStorage.getItem('taxflow:authenticated-workspace')),
+    ).toBeNull();
+  } finally {
+    session.release({ status: 401, json: {} });
+    memberships.release({ status: 403, json: {} });
+    await context.close();
+  }
+});
+
+for (const scenario of ['session unavailable', 'workspace denied', 'membership removed'] as const) {
+  test(`${scenario} during startup never mounts the cached protected workspace`, async ({
+    browser,
+  }) => {
+    const { context, page, session, memberships, protectedRequests } =
+      await startupAccessFixture(browser);
+    try {
+      await page.goto('/', { waitUntil: 'domcontentloaded' });
+      const shell = page.getByRole('region', { name: 'Workspace startup', exact: true });
+      await expect(shell).toBeVisible();
+      expect(protectedRequests()).toEqual([]);
+      session.release({
+        status: scenario === 'session unavailable' ? 503 : 200,
+        json: syntheticSession,
+      });
+      memberships.release({
+        status: scenario === 'workspace denied' ? 403 : 200,
+        json: { workspaces: [] },
+      });
+      if (scenario === 'membership removed') {
+        await expect(page.getByText('Choose a workspace', { exact: true })).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Try demo', exact: true })).toHaveCount(0);
+      } else {
+        await expect(page.getByRole('alert')).toContainText(
+          scenario === 'session unavailable'
+            ? 'temporarily unavailable'
+            : 'Workspace access could not be verified',
+        );
+        await expect(
+          page.getByRole('button', { name: 'Retry access check', exact: true }),
+        ).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Try demo', exact: true })).toBeEnabled();
+      }
+      await expect(shell).toHaveCount(0);
+      await expect(page.locator('.lc-console')).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'New chat', exact: true })).toHaveCount(0);
+      expect(protectedRequests()).toEqual([]);
+    } finally {
+      session.release({ status: 401, json: {} });
+      memberships.release({ status: 403, json: {} });
+      await context.close();
+    }
+  });
 }
 
 test('background access failures preserve Lab drafts and still enforce revoked access', async ({
@@ -247,12 +448,16 @@ test('composer groups attachments and exposes the current agent beside the draft
 
 test('Chat-first navigation exposes the four product areas and nests run history', async ({
   page,
-}) => {
+}, testInfo) => {
   await mockWorkspaceReads(page);
+  await page.setViewportSize({ width: 1600, height: 1000 });
   await page.goto('/');
 
+  const sidebar = page.locator('#workspace-sidebar');
+  const draft = page.locator('.lc-console').getByRole('textbox');
+  await draft.fill('Keep this conversation while I browse workflows');
   for (const label of ['Chat', 'Workflows', 'Sources', 'Connections']) {
-    await expect(page.getByRole('button', { name: label, exact: true }).first()).toBeVisible();
+    await expect(sidebar.getByRole('button', { name: label, exact: true })).toBeVisible();
   }
   await expect(page.getByRole('button', { name: 'Chat', exact: true })).toHaveAttribute(
     'aria-current',
@@ -267,8 +472,40 @@ test('Chat-first navigation exposes the four product areas and nests run history
   await expect(page.getByRole('button', { name: 'Run a workflow', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Chat agent: Sina' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Workflows', exact: true }).first().click();
-  await page.getByRole('button', { name: 'Run history', exact: true }).click();
+  await sidebar.getByRole('button', { name: 'Workflows', exact: true }).click();
+  const workflows = page.getByRole('region', { name: 'Workflows page', exact: true });
+  const navigation = workflows.getByRole('navigation', {
+    name: 'Workflow navigation',
+    exact: true,
+  });
+  await expect(navigation).toBeVisible();
+  for (const label of ['Library', 'Run history', 'New workflow', 'FAPI Calculation']) {
+    await expect(navigation.getByRole('button', { name: label, exact: true })).toHaveCount(1);
+    await expect(sidebar.getByRole('button', { name: label, exact: true })).toHaveCount(0);
+  }
+  await expect(navigation.getByRole('region', { name: 'Templates', exact: true })).toBeVisible();
+  await expect(
+    navigation.getByRole('region', { name: 'Saved workflows', exact: true }),
+  ).toBeVisible();
+  await expect(navigation.getByLabel('Workflow storage status')).toBeVisible();
+  await expect(sidebar.getByLabel('Workflow storage status')).toHaveCount(0);
+  await expect(sidebar.getByLabel('Import workflow backup')).toHaveCount(0);
+  await expect(
+    sidebar.getByRole('button', { name: 'Export workflow backup', exact: true }),
+  ).toHaveCount(0);
+  await page.screenshot({ path: testInfo.outputPath('workflows-page-desktop.png') });
+  const readLibrary = () =>
+    page.evaluate(async () => {
+      const { readWorkflowLibrary } =
+        await import('/src/features/workflows-hub/workflow-library.ts');
+      return readWorkflowLibrary();
+    });
+  const before = await readLibrary();
+  await navigation.getByRole('button', { name: 'FAPI Calculation', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Overview', exact: true })).toBeVisible();
+  await navigation.getByRole('button', { name: 'Library', exact: true }).click();
+  await expect(workflows.getByText('Workflow library', { exact: true })).toBeVisible();
+  await navigation.getByRole('button', { name: 'Run history', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Workflow run history' })).toBeVisible({
     timeout: 30_000,
   });
@@ -276,12 +513,15 @@ test('Chat-first navigation exposes the four product areas and nests run history
     'continue on the server if this tab closes.',
   );
   await expect(page.getByText('No workflow runs yet.', { exact: false })).toBeVisible();
+  expect(await readLibrary()).toEqual(before);
+  await expect(draft).toHaveValue('Keep this conversation while I browse workflows');
 
   await page.getByRole('button', { name: 'Sources', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Sources', exact: true })).toBeVisible({
     timeout: 30_000,
   });
-  await expect(page.getByRole('button', { name: /^Context:/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Open Scope', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Context:/ })).toHaveCount(0);
 
   await page.getByRole('button', { name: 'Connections', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Connections', exact: true })).toBeVisible({
@@ -296,6 +536,94 @@ test('Chat-first navigation exposes the four product areas and nests run history
     page.getByText('The T2 bridge reconciles taxable income;', { exact: false }),
   ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Settings', exact: true })).toBeVisible();
+  await sidebar.getByRole('button', { name: 'Chat', exact: true }).click();
+  await expect(draft).toHaveValue('Keep this conversation while I browse workflows');
+  expect(await readLibrary()).toEqual(before);
+});
+
+test('Workflows page navigation stays usable on narrow screens and preserves the mounted editor', async ({
+  page,
+}, testInfo) => {
+  await mockWorkspaceReads(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  const draft = page.locator('.lc-console').getByRole('textbox');
+  await draft.fill('Keep my draft while I arrange the workflow view');
+  const sidebar = page.locator('#workspace-sidebar');
+  await sidebar.getByRole('button', { name: 'Workflows', exact: true }).click();
+  const workflows = page.getByRole('region', { name: 'Workflows page', exact: true });
+  const navigation = workflows.getByRole('navigation', {
+    name: 'Workflow navigation',
+    exact: true,
+  });
+  const template = navigation.getByRole('button', { name: 'FAPI Calculation', exact: true });
+  await template.click();
+  await page.getByRole('button', { name: 'Build', exact: true }).click();
+  const canvas = workflows.locator('.react-flow');
+  await expect(canvas).toBeVisible({ timeout: 30_000 });
+  const mountedCanvas = await canvas.elementHandle();
+  if (!mountedCanvas) throw new Error('The selected workflow editor did not mount.');
+  const readLibrary = () =>
+    page.evaluate(async () => {
+      const { readWorkflowLibrary } =
+        await import('/src/features/workflows-hub/workflow-library.ts');
+      return readWorkflowLibrary();
+    });
+  const before = await readLibrary();
+  const entries = Object.values(before);
+  expect(entries).toHaveLength(1);
+  const savedName = entries[0].draft.name;
+  await expect(
+    navigation.getByRole('region', { name: 'Saved workflows', exact: true }),
+  ).toBeVisible();
+  await expect(navigation.getByRole('button', { name: savedName, exact: true })).toHaveCount(1);
+  await expect(sidebar.getByRole('button', { name: savedName, exact: true })).toHaveCount(0);
+
+  const hideList = navigation.getByRole('button', { name: 'Hide workflow list', exact: true });
+  await expect(hideList).toHaveAttribute('aria-expanded', 'true');
+  await hideList.click();
+  const showList = navigation.getByRole('button', { name: 'Show workflow list', exact: true });
+  await expect(showList).toHaveAttribute('aria-expanded', 'false');
+  await expect(template).toBeHidden();
+  await expect(canvas).toBeVisible();
+  expect(await mountedCanvas.evaluate((node) => node.isConnected)).toBe(true);
+  const toggleBounds = await showList.boundingBox();
+  if (!toggleBounds) throw new Error('The workflow list restore control is not visible.');
+  expect(toggleBounds.x).toBeGreaterThanOrEqual(0);
+  expect(toggleBounds.x + toggleBounds.width).toBeLessThanOrEqual(390);
+  expect(toggleBounds.y).toBeGreaterThanOrEqual(0);
+  expect(toggleBounds.y + toggleBounds.height).toBeLessThanOrEqual(844);
+  await page.screenshot({ path: testInfo.outputPath('workflows-page-mobile-list-hidden.png') });
+
+  await showList.click();
+  await expect(hideList).toHaveAttribute('aria-expanded', 'true');
+  await expect(template).toBeVisible();
+  expect(await mountedCanvas.evaluate((node) => node.isConnected)).toBe(true);
+  const listBounds = await navigation.boundingBox();
+  const canvasBounds = await canvas.boundingBox();
+  if (!listBounds || !canvasBounds)
+    throw new Error('The workflow list and editor must both be visible.');
+  expect(listBounds.y + listBounds.height).toBeLessThanOrEqual(canvasBounds.y + 1);
+  expect(canvasBounds.height).toBeGreaterThan(100);
+  expect(await workflows.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+  expect(await readLibrary()).toEqual(before);
+  await page.screenshot({ path: testInfo.outputPath('workflows-page-mobile.png') });
+
+  await page.getByTitle('Open chat', { exact: true }).click();
+  await expect(draft).toHaveValue('Keep my draft while I arrange the workflow view');
+  await expect(canvas).toBeHidden();
+  expect(await mountedCanvas.evaluate((node) => node.isConnected)).toBe(true);
+  await page.getByRole('button', { name: 'Return to page', exact: true }).click();
+  await expect(canvas).toBeVisible();
+  expect(await mountedCanvas.evaluate((node) => node.isConnected)).toBe(true);
+  expect(await readLibrary()).toEqual(before);
+
+  await template.click();
+  await expect(template).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('button', { name: 'Overview', exact: true })).toBeVisible();
+  expect(await readLibrary()).toEqual(before);
+  await sidebar.getByRole('button', { name: 'Chat', exact: true }).click();
+  await expect(draft).toHaveValue('Keep my draft while I arrange the workflow view');
 });
 
 test('attaching workflow scope preserves the draft and does not execute it', async ({ page }) => {
@@ -329,11 +657,21 @@ test('attaching workflow scope preserves the draft and does not execute it', asy
   await composer.getByRole('button', { name: 'Attach files' }).click();
   await page.getByRole('menuitem', { name: 'Attach workflow scope' }).hover();
   await page.getByRole('menuitem', { name: 'My calculation', exact: true }).click();
-  await expect(composer.getByText('Workflow: My calculation · Draft')).toBeVisible();
-  await expect(composer.getByRole('textbox')).toHaveValue('Explain this workflow');
+  await page.getByRole('button', { name: 'Open Scope', exact: true }).click();
+  const scope = page.getByRole('dialog', { name: 'Scope for this chat', exact: true });
+  await expect(scope).toContainText('My calculation');
+  await expect(scope).toContainText('Draft');
+  await expect(composer.getByRole('textbox', { includeHidden: true })).toHaveValue(
+    'Explain this workflow',
+  );
   expect(executions).toEqual([]);
-  await composer.getByRole('button', { name: 'Remove workflow scope' }).click();
-  await expect(composer.getByText('Workflow: My calculation · Draft')).toHaveCount(0);
+  await scope.getByRole('button', { name: 'Remove workflow scope' }).click();
+  await expect(scope.getByRole('button', { name: 'Remove workflow scope' })).toHaveCount(0);
+  await expect(
+    scope.getByRole('region', { name: 'Workflow scope', exact: true }),
+  ).not.toContainText('My calculation');
+  await page.keyboard.press('Escape');
+  await expect(composer.getByRole('textbox')).toHaveValue('Explain this workflow');
 });
 
 test('direct Sources, Connections and workflow-history links use the Chat workspace shell', async ({
@@ -342,29 +680,100 @@ test('direct Sources, Connections and workflow-history links use the Chat worksp
   await mockWorkspaceReads(page);
 
   await page.goto('/sources');
-  await expect(page).toHaveURL(/\/$/);
+  // These redirects are owned by the deferred workspace, not the public shell.
   await expect(page.getByRole('heading', { name: 'Sources', exact: true })).toBeVisible({
     timeout: 30_000,
   });
+  await expect(page).toHaveURL(/\/$/);
   await expect(page.getByText('Sinaxe', { exact: true })).toHaveCount(0);
 
   await page.goto('/connections');
-  await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole('heading', { name: 'Connections', exact: true })).toBeVisible({
     timeout: 30_000,
   });
+  await expect(page).toHaveURL(/\/$/);
 
   await page.goto('/workflows/runs');
-  await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole('heading', { name: 'Workflow run history' })).toBeVisible({
     timeout: 30_000,
   });
+  await expect(page).toHaveURL(/\/$/);
+});
+
+test('FAPI discovery has one workflow choice and retains historical page links', async ({
+  page,
+}) => {
+  await mockWorkspaceReads(page);
+  await page.goto('/');
+  const catalogue = await page.evaluate(async () => {
+    const { searchWorkspace } =
+      await import('/src/features/assistant/ui/workflow-composer-search.ts');
+    const { buildAgentCatalog, getPage } = await import('/src/shared/stores/resource-registry.tsx');
+    const { WORKSHEETS } = await import('/src/components/worksheet-shell.tsx');
+    return {
+      hits: searchWorkspace('fapi').map(({ kind, id }) => ({ kind, id })),
+      pageKeys: buildAgentCatalog().pages.map(({ key }) => key),
+      legacyPage: getPage('fapi')?.key,
+      worksheetLinks: WORKSHEETS.map(({ href }) => href),
+    };
+  });
+  expect(catalogue.hits).toEqual([{ kind: 'workflow', id: 'fapi' }]);
+  expect(catalogue.pageKeys).not.toContain('fapi');
+  expect(catalogue.legacyPage).toBe('fapi');
+  expect(catalogue.worksheetLinks).toEqual(['/t1134', '/surplus']);
+
+  await page.getByRole('button', { name: 'Add — search, workflows, worksheets' }).click();
+  await page.getByRole('button', { name: 'Workflows Start a workflow run', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Calculate FAPI', exact: true })).toHaveCount(1);
+  await page.getByRole('button', { name: 'Worksheets Open a worksheet', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Open FAPI worksheet', exact: true })).toHaveCount(
+    0,
+  );
+  await expect(
+    page.getByRole('button', { name: 'Open T1134 worksheet', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Open Surplus worksheet', exact: true }),
+  ).toBeVisible();
+  // A real outside click dismisses the menu before the composer can receive input.
+  const composer = page.locator('.lc-console').getByRole('textbox');
+  const inputBounds = await composer.boundingBox();
+  if (!inputBounds) throw new Error('The composer is not visible.');
+  await page.mouse.click(inputBounds.x + 8, inputBounds.y + 8);
+  await expect(
+    page.getByRole('button', { name: 'Worksheets Open a worksheet', exact: true }),
+  ).toHaveCount(0);
+  await composer.fill('@FAPI');
+  await expect(
+    page.getByRole('button', { name: /Calculate FAPI Foreign accrual property income workflow/ }),
+  ).toHaveCount(1);
+  await expect(
+    page.getByRole('button', { name: /Show FAPI|Run the FAPI workflow|Open FAPI worksheet/ }),
+  ).toHaveCount(0);
 });
 
 test('worksheet compatibility links open canonical workflow controls without running examples', async ({
   page,
 }) => {
   await mockWorkspaceReads(page);
+  // Old chat Work items must still resolve the retired FAPI page entry point.
+  await page.addInitScript((context) => {
+    const key = `taxflow:scope:${encodeURIComponent(context.userId)}:${context.workspace.id}:taxflow:work-items`;
+    localStorage.setItem(
+      key,
+      JSON.stringify({
+        'worksheet:fapi': {
+          id: 'worksheet:fapi',
+          type: 'worksheet',
+          title: 'Historical FAPI worksheet',
+          status: 'open',
+          createdAt: 1,
+          updatedAt: 1,
+          open: { kind: 'page', pageKey: 'fapi' },
+        },
+      }),
+    );
+  }, syntheticContext);
   const executions: string[] = [];
   const modelCalls: string[] = [];
   const loadedModules: string[] = [];
@@ -399,13 +808,21 @@ test('worksheet compatibility links open canonical workflow controls without run
   await draft.fill('Keep this draft while opening workpapers');
 
   for (const [command, template] of [
-    ['Open FAPI worksheet', 'FAPI Calculation (portfolio)'],
+    ['Historical FAPI worksheet', 'FAPI Calculation'],
     ['Open T1134 worksheet', 'T1134 Affiliate Reporting Workpaper'],
     ['Open Surplus worksheet', 'Foreign Affiliate Surplus Continuity Workpaper'],
   ]) {
-    await page.getByRole('button', { name: 'Add — search, workflows, worksheets' }).click();
-    await page.getByRole('button', { name: 'Worksheets Open a worksheet', exact: true }).click();
-    await page.getByRole('button', { name: command, exact: true }).click();
+    if (command === 'Historical FAPI worksheet') {
+      // With no sent messages, home exposes saved work through its Continue card.
+      await page.getByRole('button', { name: /Continue Historical FAPI worksheet/ }).click();
+    } else {
+      await page.getByRole('button', { name: 'Add — search, workflows, worksheets' }).click();
+      await page.getByRole('button', { name: 'Worksheets Open a worksheet', exact: true }).click();
+      await expect(
+        page.getByRole('button', { name: 'Open FAPI worksheet', exact: true }),
+      ).toHaveCount(0);
+      await page.getByRole('button', { name: command, exact: true }).click();
+    }
 
     await expect(page.locator('.lc-tab[data-active="true"]')).toContainText('Workflows');
     await expect(

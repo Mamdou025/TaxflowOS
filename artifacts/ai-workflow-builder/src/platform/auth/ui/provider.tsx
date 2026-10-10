@@ -1,9 +1,10 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { SessionSchema, WorkspaceListSchema, type Workspace } from '@workspace/api-zod/access';
 import { apiFetch } from '../api-fetch';
 import { workspaceContext, activateWorkspace, forgetSession } from '../workspace-context';
 import { SignIn } from './sign-in';
 import { WorkspaceMenu } from './workspace-menu';
+import { WorkspaceStartup } from './workspace-startup';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<{
@@ -13,22 +14,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } | null>();
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
+  const verifiedWorkspace = useRef(false);
   useEffect(() => {
     let cancelled = false;
     let checking = false;
     let pending: AbortController | undefined;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    let promptRetryUsed = false;
     async function refresh() {
       if (checking) return;
+      clearTimeout(retryTimer);
       checking = true;
       const controller = new AbortController();
       pending = controller;
       // Session and workspace verification are two sequential requests. Leave
       // room for both when the local frontend proxy is busy, but remain bounded.
       const timeout = setTimeout(() => controller.abort(), 30000);
+      let transientFailure = false;
       try {
         const session = await apiFetch('/api/session', { signal: controller.signal });
         if (session.status === 401) {
           if (!cancelled) {
+            verifiedWorkspace.current = false;
             setError('');
             setState(null);
             if (workspaceContext) forgetSession();
@@ -36,7 +43,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
         if (!session.ok) {
-          if (!cancelled && session.status === 403) setState(undefined);
+          transientFailure = session.status >= 500;
+          if (!cancelled && session.status === 403) {
+            verifiedWorkspace.current = false;
+            setState(undefined);
+          }
           throw new Error('The app service is temporarily unavailable. Please retry.');
         }
         const { user } = SessionSchema.parse(await session.json());
@@ -48,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         if (response.status === 401) {
           if (!cancelled) {
+            verifiedWorkspace.current = false;
             setError('');
             setState(null);
             if (workspaceContext) forgetSession();
@@ -55,7 +67,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
         if (!response.ok) {
-          if (!cancelled && response.status === 403) setState(undefined);
+          transientFailure = response.status >= 500;
+          if (!cancelled && response.status === 403) {
+            verifiedWorkspace.current = false;
+            setState(undefined);
+          }
           throw new Error('Workspace access could not be verified.');
         }
         const { workspaces } = WorkspaceListSchema.parse(await response.json());
@@ -77,6 +93,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           activateWorkspace(user.id, active, user.isDemo);
           return;
         }
+        verifiedWorkspace.current = !!active;
+        promptRetryUsed = false;
         setState({ userId: user.id, workspaces, isDemo: user.isDemo });
         setError('');
       } catch (e) {
@@ -92,6 +110,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 ? e.message
                 : 'Access could not be verified.',
           );
+          // A busy connection can recover just after the bounded check fails.
+          // Retry once promptly instead of waiting for the next minute poll;
+          // the workspace stays hidden/inert until both checks succeed.
+          if (
+            verifiedWorkspace.current &&
+            !promptRetryUsed &&
+            (transientFailure || controller.signal.aborted || e instanceof TypeError)
+          ) {
+            promptRetryUsed = true;
+            retryTimer = setTimeout(() => void refresh(), 1000);
+          }
         }
       } finally {
         clearTimeout(timeout);
@@ -112,6 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
       pending?.abort();
+      clearTimeout(retryTimer);
       clearInterval(timer);
       window.removeEventListener('focus', focus);
       window.removeEventListener('storage', changed);
@@ -127,8 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }}
       />
     );
-  if (state === undefined)
-    return <main className="grid h-dvh place-content-center">Checking access…</main>;
+  if (state === undefined) return <WorkspaceStartup />;
   if (state === null) return <SignIn />;
   const active = state.workspaces.find((w) => w.id === workspaceContext?.workspace.id);
   if (!active)

@@ -48,7 +48,10 @@ import { PORTFOLIO_WORKFLOWS } from '@/shared/workflow-engine/templates/portfoli
 import { LOCAL_WORKFLOW_ID } from '@/shared/workflow-engine/workflow/contracts';
 import { loadLocalWorkflowSnapshot } from '@/shared/workflow-engine/workflow/storage';
 import { publishLocalWorkflowSnapshot } from '@/shared/workflow-engine/workflow/publishing';
-import { createWorkflowDefinitionFromCanvas, workflowDefinitionToCanvas } from '@/shared/workflow-engine/workflow/canvas';
+import {
+  createWorkflowDefinitionFromCanvas,
+  workflowDefinitionToCanvas,
+} from '@/shared/workflow-engine/workflow/canvas';
 import { activeRightPanelAtom } from '@/shared/workflow-engine/state/workflow-store';
 import { appendWorkflowChangeEvent } from '@/shared/workflow-engine/audit/change-log';
 import {
@@ -229,7 +232,10 @@ export function LocalStudioTopBar({
     openOverlay(ConfigurationOverlay, {}, { size: 'wide' });
   };
 
-  const legacyFx = state.nodes.find((node) => node.id === 'fapi-source-fx-rate' && node.data.block?.config.sourceKind === 'currency_rate');
+  const legacyFx = state.nodes.find(
+    (node) =>
+      node.id === 'fapi-source-fx-rate' && node.data.block?.config.sourceKind === 'currency_rate',
+  );
   const upgradeApiSource = () => {
     try {
       if (!legacyFx?.data.block) return;
@@ -237,18 +243,31 @@ export function LocalStudioTopBar({
       if (old.config.reportingCurrency !== 'CAD' || old.config.documentCurrency === 'CAD') {
         throw new Error('This currency configuration needs an explicit source mapping.');
       }
-      const request = buildApiRequest('boc.fx_average', { currency: String(old.config.documentCurrency || 'USD'), year: Number(old.config.fapiYear) });
+      const request = buildApiRequest('boc.fx_average', {
+        currency: String(old.config.documentCurrency || 'USD'),
+        year: Number(old.config.fapiYear),
+      });
       if (!request.ok) throw new Error(request.errors.join(' '));
-      const replacement = createWorkflowBlockFromCatalog('source:api-http-request', { config: {
-        ...apiRequestToBlockConfig('boc.fx_average', request.params, request.spec),
-        sourceKind: 'http_json', toolId: 'source.http_json', outputs: 'named_values, response_metadata',
-      } });
-      const definition = createWorkflowDefinitionFromCanvas({ name: state.workflowName, nodes: state.nodes, edges: state.edges });
+      const replacement = createWorkflowBlockFromCatalog('source:api-http-request', {
+        config: {
+          ...apiRequestToBlockConfig('boc.fx_average', request.params, request.spec),
+          sourceKind: 'http_json',
+          toolId: 'source.http_json',
+          outputs: 'named_values, response_metadata',
+        },
+      });
+      const definition = createWorkflowDefinitionFromCanvas({
+        name: state.workflowName,
+        nodes: state.nodes,
+        edges: state.edges,
+      });
       const canvas = workflowDefinitionToCanvas(upgradeFapiApiSourceDraft(definition, replacement));
       state.setNodes(canvas.nodes);
       state.setEdges(canvas.edges);
       state.setHasUnsavedChanges(true);
-      toast.success('Draft updated to one API source. Saved versions are unchanged. Fetch a response before clearing the manual override.');
+      toast.success(
+        'Draft updated to one API source. Saved versions are unchanged. Fetch a response before clearing the manual override.',
+      );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not upgrade the API source.');
     }
@@ -452,9 +471,14 @@ export function LocalStudioTopBar({
                   ))}
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
-              {legacyFx && <DropdownMenuItem disabled={state.isExecuting || state.isSaving} onClick={upgradeApiSource}>
-                Upgrade FAPI API source
-              </DropdownMenuItem>}
+              {legacyFx && (
+                <DropdownMenuItem
+                  disabled={state.isExecuting || state.isSaving}
+                  onClick={upgradeApiSource}
+                >
+                  Upgrade FAPI API source
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={actions.handleClearWorkflow}>
                 New blank workflow
               </DropdownMenuItem>

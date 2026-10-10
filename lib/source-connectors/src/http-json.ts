@@ -15,7 +15,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { SourceRow as ManualTableRow } from './rows';
-export { mapResponseValues, parseResponseValueMappings, resolveResponseValues } from './response-values';
+export {
+  mapResponseValues,
+  parseResponseValueMappings,
+  resolveResponseValues,
+} from './response-values';
 export type { ResponseValueMapping } from './response-values';
 
 export type HttpJsonFieldMap = {

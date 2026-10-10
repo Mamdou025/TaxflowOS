@@ -1,5 +1,9 @@
 import { apiFetch } from '@/platform/auth/api-fetch';
-import { parseUploadToRows, type UploadOptions } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
+import {
+  parseUploadToRows,
+  type UploadOptions,
+  type WorkbookSelection,
+} from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
 import type { UploadedSource } from '@/shared/stores/workspace-store';
 
 export type WorkflowSourceDocument = {
@@ -21,7 +25,10 @@ export function isWorkflowSource(document: WorkflowSourceDocument) {
   );
 }
 
-export async function loadWorkflowSource(id: string, options: UploadOptions = {}): Promise<UploadedSource> {
+export async function loadWorkflowSource(
+  id: string,
+  options: UploadOptions = {},
+): Promise<UploadedSource> {
   const response = await apiFetch(`/api/documents/${encodeURIComponent(id)}`, {
     signal: AbortSignal.timeout(30000),
   });
@@ -46,13 +53,24 @@ export async function loadWorkflowSource(id: string, options: UploadOptions = {}
   const file = new File([bytes], document.fileName, {
     type: document.mimeType ?? 'application/octet-stream',
   });
-  const parsed = await parseUploadToRows(file, options);
+  let workbookSelection: WorkbookSelection | undefined = options.selection;
+  const parsed = await parseUploadToRows(file, {
+    ...options,
+    selectWorkbook: options.selectWorkbook
+      ? async (workbook) => {
+          workbookSelection = await options.selectWorkbook!(workbook);
+          return workbookSelection;
+        }
+      : undefined,
+  });
   return {
     ...parsed,
     at: Date.now(),
     sourceId: document.id,
     sourceRevision: document.sourceRevision,
     contentHash: `sha256:${digest}`,
+    sourceContentHash: document.contentHash,
+    ...(workbookSelection ? { workbookSelection } : {}),
     rows: parsed.rows.map((row) => ({
       ...row,
       sourceDocumentId: document.id,

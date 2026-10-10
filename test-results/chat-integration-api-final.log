@@ -1,0 +1,11 @@
+Workspace access evidence: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-44d484d8-60e4-40b4-aeac-40ac8b031ff3
+✔ Viewers read shared libraries but cannot save, delete, claim or execute tools (145816.8505ms)
+✔ invalid, cyclic and oversized compressed backups fail without replacing saved data (1076.5466ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 152227.1349

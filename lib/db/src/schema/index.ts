@@ -23,6 +23,8 @@ export * from './auth';
 export * from './workspaces';
 export * from './agent-actions';
 export * from './mkoro';
+export * from './chatgpt-oauth';
+export * from './chatgpt-session-operations';
 
 // Durable personal workflow library. The recovery code is hashed, never stored.
 export const personalWorkflowLibraries = pgTable('personal_workflow_libraries', {
@@ -482,3 +484,5 @@ export type IngestJob = typeof ingestJobs.$inferSelect;
 export type NewIngestJob = typeof ingestJobs.$inferInsert;
 export type WorkflowRunJob = typeof workflowRunJobs.$inferSelect;
 export type NewWorkflowRunJob = typeof workflowRunJobs.$inferInsert;
+
+export * from './chatgpt-source-captures';

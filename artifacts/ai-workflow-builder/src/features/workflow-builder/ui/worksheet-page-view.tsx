@@ -7,12 +7,14 @@ import { loadLocalRunRecords } from "@/shared/workflow-engine/workflow/run-stora
 import { type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
 import {
   currentWorkflowNameAtom,
+  currentWorkflowIdAtom,
   edgesAtom,
   nodesAtom,
   type WorkflowEdge,
   type WorkflowNode,
 } from "@/shared/workflow-engine/state/workflow-store";
 import {
+  FieldBlockWorkspace,
   extractFieldEntries,
   FieldRow,
   getBackendOutputs,
@@ -70,6 +72,7 @@ function SectionContent({
     })
     .filter((g) => g.entries.length > 0);
 
+  if (block.config.worksheetLines !== undefined) return <FieldBlockWorkspace block={block} nodes={nodes} edges={edges} lastRun={lastRun} compact />;
   if (sourceGroups.length === 0) return null;
 
   return (
@@ -158,9 +161,10 @@ function SectionContent({
 
 export function WorksheetPageView({ onClose }: { onClose: () => void }) {
   const workflowName = useAtomValue(currentWorkflowNameAtom);
+  const workflowId = useAtomValue(currentWorkflowIdAtom);
   const nodes = useAtomValue(nodesAtom);
   const edges = useAtomValue(edgesAtom);
-  const lastRun = loadLocalRunRecords()[0];
+  const lastRun = workflowId ? loadLocalRunRecords().find((record) => record.execution.workflowId === workflowId) : undefined;
   const [activePanel, setActivePanel] = useState<PagePanelState | null>(null);
 
   const visibleFieldNodes = nodes.filter(
@@ -195,7 +199,7 @@ export function WorksheetPageView({ onClose }: { onClose: () => void }) {
       <div className="flex min-h-0 flex-1 overflow-hidden">
         {/* left: scrollable content */}
         <div className="min-h-0 flex-1 overflow-y-auto bg-background">
-          <div className="mx-auto w-1/2">
+          <div className="mx-auto w-full max-w-5xl px-4">
           {visibleFieldNodes.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-4 py-32 text-center">
               <FileText className="size-10 text-muted-foreground/30" />

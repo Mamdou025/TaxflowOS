@@ -29,6 +29,12 @@ export function availableCalculationValues(
       const source = nodes.find((node) => node.id === edge.source)?.data.block;
       if (!source) continue;
       const config = source.config;
+      if (config.outputMode === 'values' && Array.isArray(config.outputMappings)) {
+        for (const mapping of config.outputMappings) {
+          if (mapping && typeof mapping === 'object' && mapping.type === 'number')
+            add(mapping.name);
+        }
+      }
       // Explicitly configured input values remain available before execution too.
       if (config.sourceKind === 'fapi_inputs') {
         for (const [key, value] of Object.entries(config)) {

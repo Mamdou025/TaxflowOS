@@ -1,8 +1,9 @@
 import { atom } from 'jotai';
-import type { WorkflowSourceDocument } from '@/features/documents/workflow-source-client';
-
-/** Explicit source context for this mounted chat workspace; never changes library membership. */
-export const selectedChatDocumentAtom = atom<WorkflowSourceDocument | null>(null);
-
+import { chatContextAtom } from './chat-context-store';
 export type ComposerWorkflowScope = { id: string; name: string };
-export const selectedChatWorkflowAtom = atom<ComposerWorkflowScope | null>(null);
+/** Draft identity is explicit per-chat context, not execution authorization. */
+export const selectedChatWorkflowAtom = atom(
+  (get) => get(chatContextAtom).workflowScope,
+  (get, set, workflowScope: ComposerWorkflowScope | null) =>
+    set(chatContextAtom, { ...get(chatContextAtom), workflowScope }),
+);

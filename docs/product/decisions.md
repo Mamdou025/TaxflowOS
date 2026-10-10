@@ -6,17 +6,18 @@ rationale. Update this register and affected acceptance criteria together.
 
 ## Confirmed direction from the conversation
 
-| ID   | Decision                                                                                                         | Basis                                                                                                         |
-| ---- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| C-01 | Chat is the home page and main starting point                                                                    | User explicitly required chat as the main page                                                                |
-| C-02 | Runs are within Workflows; no primary Runs menu                                                                  | User rejected a standalone Runs menu; accepted the revised planning direction                                 |
-| C-03 | Chat provides a little of each capability without overwhelming the conversation                                  | User explicitly described this experience                                                                     |
-| C-04 | Workflows, agent actions, source-aware answers, documents and integrations are core platform capabilities        | User's stated platform vision                                                                                 |
-| C-05 | Subsystems should be independently maintainable through explicit boundaries                                      | User asked to work on workflows without unintentionally changing the agent, and vice versa                    |
-| C-06 | Phase 0 produces the product/navigation/ownership/journey blueprint before further implementation                | User authorized Phase 0 after the revised plan                                                                |
-| C-07 | One Sina-led chat delegates external computer work to Mkoro, with task progress and opt-in refreshed screenshots | User explicitly approved this integration and screenshot approach on 2026-09-28                               |
-| C-08 | Sina and MicroSina can take successive turns in the same chat, retaining its workflow, files, values and history | User confirmed continuing the same conversation when switching agents on 2026-10-03                           |
-| C-09 | Chat shows one compact colored workflow step list; each selected step expands its actual bloc UI underneath      | User selected expansion beneath each step on 2026-10-03; opening a step stays in Chat and does not execute it |
+| ID   | Decision                                                                                                                                                     | Basis                                                                                                         |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| C-01 | Chat is the home page and main starting point                                                                                                                | User explicitly required chat as the main page                                                                |
+| C-02 | Runs are within Workflows; no primary Runs menu                                                                                                              | User rejected a standalone Runs menu; accepted the revised planning direction                                 |
+| C-03 | Chat provides a little of each capability without overwhelming the conversation                                                                              | User explicitly described this experience                                                                     |
+| C-04 | Workflows, agent actions, source-aware answers, documents and integrations are core platform capabilities                                                    | User's stated platform vision                                                                                 |
+| C-05 | Subsystems should be independently maintainable through explicit boundaries                                                                                  | User asked to work on workflows without unintentionally changing the agent, and vice versa                    |
+| C-06 | Phase 0 produces the product/navigation/ownership/journey blueprint before further implementation                                                            | User authorized Phase 0 after the revised plan                                                                |
+| C-07 | One Sina-led chat delegates external computer work to Mkoro, with task progress and opt-in refreshed screenshots                                             | User explicitly approved this integration and screenshot approach on 2026-09-28                               |
+| C-08 | Sina and MicroSina can take successive turns in the same chat, retaining its workflow, files, values and history                                             | User confirmed continuing the same conversation when switching agents on 2026-10-03                           |
+| C-09 | Chat shows one compact colored workflow step list; each selected step expands its actual bloc UI underneath                                                  | User selected expansion beneath each step on 2026-10-03; opening a step stays in Chat and does not execute it |
+| C-10 | ChatGPT workflow input and source corrections are reviewed and applied before a separate explicit recalculation, retaining the conversation and current work | User selected “Review changes, then recalculate” on 2026-10-08                                                |
 
 For C-08, earlier replies keep their original author, and action approvals remain
 bound to the agent and operation that requested them. Selection applies to the next
@@ -28,6 +29,14 @@ For C-09, folding preserves unsaved input values, and a workflow can run while i
 details are collapsed. The existing bloc forms, validation and execution commands
 remain authoritative. Opening Build is a separate explicit action. One expanded step
 at a time is the compact implementation default, not a change to the execution order.
+
+For C-10, acceptance means replacing a wrong trial balance or changing an FX rate
+keeps the same active run, saved workflow version and chat. The user sees the
+before/after values and affected steps before applying. Applying preserves previous
+source/attempt evidence, invalidates dependent results and their reviews, and does
+not execute. Unrelated completed work remains current. Stale revisions fail without
+overwriting newer work. Calculation completion remains distinct from approval.
+An ended run remains historical; new work can be started in the same conversation.
 
 ## Baseline design recommendations
 
@@ -195,6 +204,116 @@ credentials and current workspace execution permissions still apply. Disabling
 the setting affects subsequent decisions; it cannot undo an already approved
 action. This covers browser, file and shell tool requests within delegated tasks.
 It does not authorize new tasks, expand Sina's scope, or enable desktop capture.
+
+## D-08 — Calculation variables and Trigger checklist
+
+**Incremental direction requested by the user on 2026-10-04.**
+
+The user requested reusable workflow blocks with formula-driven variables supplied
+by forms or sources, and proposed the Trigger as the required-fields checklist.
+The first implementation derives numeric requirements from formulas, supports
+explicit manual/source bindings, and projects their live readiness in the Trigger
+within shared Chat/Run sessions. Source collection can proceed while calculation
+inputs are incomplete. Formula dependencies are not duplicated in Trigger config.
+
+The next increment, also requested on 2026-10-04, generates the missing-input form
+from those requirements. Each calculation retains its own values and can use its
+saved provider, an explicit entered number, or an exact directly connected source
+for the current run. This does not authorize skipping graph-required sources or
+review checkpoints. Conditional source-step execution remains a separate decision.
+
+This does not mean all workflow requirements must be numeric. Custom constraints,
+non-calculation required fields, unit/period validation and reviewed AI mapping
+remain future work; existing advisory Trigger conditions are not silently converted
+into mandatory policies. See [calculation variables](../calculation-variables.md)
+for the actual implementation boundary.
+
+## D-09 — Generic Field worksheets
+
+**Implementation direction requested by the user in the worksheet increment.**
+
+Field presents declared main lines from connected calculation blocks. It must work
+for different workflows, expose each line's formula and supporting information,
+and show missing inputs before computation rather than waiting for the final Field
+step. Formula ownership remains with the calculation engine or its rules source;
+the Field does not become a tax engine or a second input-definition store.
+
+The implemented declaration is a label, optional descriptive unit, calculator ID
+and result key. Optional primary/summary/detail roles, groups, descriptions and
+display precision make final outcomes clear without workflow-specific UI formulas.
+Primary result availability remains distinct from approval or completion. Runtime
+input editing reuses the existing generated forms and
+manual/source alternatives. Trigger and worksheet share staged edits for the same
+calculator within one session panel. Existing graph prerequisites, review,
+approval, source provenance and immutable run versions remain authoritative.
+
+Replacing the selected personal workflow uses a new version while retaining its
+identity, unsaved work as a version when needed, prior versions and runs. It does
+not authorize deleting history or silently migrating an existing run to new rules.
+See [Field worksheets](../field-worksheet.md) for implemented limits and verification.
+
+## FAPI presentation baseline — 2026-10-09
+
+The user selected the DevReplit FAPI display/output as the current restoration
+reference before evaluating assistant-ui. FAPI has one advertised workflow entry;
+duplicate FAPI Build/source/output/page menu choices are removed. Other workflow
+types remain available. This does not authorize deleting unidentified personal
+FAPI copies or their history. The reference branch is `DevReplit` at `c667c8b`.
+
+Prescribed result presentation is application-owned and reads recorded calculation
+fields. Agent prose cannot replace it. Chat forms remain bound to the active run;
+folding preserves drafts, and applying changes uses the existing recalculation
+process. Final approval remains distinct from available calculated values. The
+four FAPI stages group the saved graph for display without changing execution order
+or bypassing review gates. Reduced motion disables decorative animation.
+
+This restoration preceded the chat-library choice recorded below. It does not
+change the separate ChatGPT plugin apply/recalculate policy in C-10. See
+[restoration scope and evidence](../fapi-reference-restoration.md).
+
+## assistant-ui foundation — 2026-10-09
+
+The user authorized assistant-ui as the initial chat presentation foundation,
+preserving the current modes, Scope controls, layout, branding and pages. Its
+external-store adapter retains the existing agent engine, readable context,
+workflow commands, approvals and application-owned conversation history. This
+choice does not replace workflow calculation or storage rules.
+
+The OpenUI-backed `generateUI` capability remains until a replacement has feature
+parity. Later contextual Scope behavior, broader navigation/page changes and the
+full generative-UI system remain future work. See
+[migration scope and verification](../assistant-ui-migration.md).
+
+## Chat context and workflow consistency — 2026-10-09
+
+The user approved explicit chat context limited for now to company/year labels,
+chosen documents or text, and selected/active workflows. No company dataset system
+is implied. Chat and Sources must offer deliberate attachment, visible context and
+per-conversation restoration. Synthetic sample data is authorized for verification,
+not as a fallback for unavailable user data.
+
+Workflow selection must acknowledge exact identity and preserve distinct template
+starts, saved versions, drafts and resumable runs. Shared workflow presentation must
+show saved formulas and recorded values within expanded blocks. Editable forms and
+prescribed results retain workflow-owned validation, recalculation and approval.
+The existing OpenUI capability remains available on demand; assistant-ui does not
+replace business rules or automatically provide their rendering contracts. See
+[implemented scope and checks](../chat-workflow-integration.md).
+
+## Unified Scope and saved-chat recovery — 2026-10-10
+
+**Approved by the user.** Keep the InScope orb branding and center its Scope
+control over the chat column. Company/year, selected documents/text and current
+workflow belong to one menu. Remove duplicate permanent Context summaries and
+the separate Context drawer after preserving their unique actions. Previous work
+and evidence remain history, visually separate from selected context. Tools,
+agent selection and Computer mode retain their own controls. Scope remains
+reusable; no company-data expansion is authorized here.
+
+The normal Chat interface must remain visible during saved-conversation recovery.
+Opening must settle successfully or offer actionable failure recovery, without
+silently discarding saved messages, switching workflow versions or allowing an
+unsettled prior response to write into a new conversation.
 
 ## Deferred implementation decisions
 

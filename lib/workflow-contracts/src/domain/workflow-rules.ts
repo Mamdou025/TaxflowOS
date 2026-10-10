@@ -76,8 +76,12 @@ export const AI_CONTEXT_RELATIONSHIP_TYPES = [
 ] as const satisfies readonly WorkflowRelationshipType[];
 
 export const RELATIONSHIP_TYPES_BY_FAMILY_PAIR: RelationshipTypesByFamilyPair = {
+  Field: {
+    Output: CANDIDATE_OUTPUT_RELATIONSHIP_TYPES,
+  },
   Logic: {
     'AI / Agent': AI_CONTEXT_RELATIONSHIP_TYPES,
+    Field: ['provides_data_to'],
     Logic: ['transforms_into', 'aggregates_into', 'branches_to', 'depends_on'],
     Output: CANDIDATE_OUTPUT_RELATIONSHIP_TYPES,
     Protected: ['feeds_protected_input', 'feeds_protected_result'],

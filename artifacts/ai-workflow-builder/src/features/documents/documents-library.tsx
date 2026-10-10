@@ -11,9 +11,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Archive, FileText, RotateCcw, Trash2, UploadCloud, Check, Plus } from 'lucide-react';
 import { uploadDocument } from './upload-client';
 import { workspaceContext } from '@/platform/auth/workspace-context';
-import { useSetAtom } from 'jotai';
-import { uploadedRowsAtom } from '@/shared/stores/workspace-store';
-import { loadWorkflowSource } from './workflow-source-client';
+import { useAtomValue, useStore } from 'jotai';
+import { attachSavedChatSource } from '@/features/assistant/runtime/chat/chat-context-sources';
+import { chatContextLockedAtom } from '@/features/assistant/runtime/chat/chat-context-store';
+import { useWorkbookImport } from './workbook-import-dialog';
+import { SourceTextForm } from './source-text-form';
 
 type DocRow = {
   id: string;
@@ -26,6 +28,8 @@ type DocRow = {
   inLibrary: boolean;
   lifecycleStatus: 'active' | 'archived' | 'deleted' | 'purged';
   createdAt: string;
+  sourceRevision: number;
+  contentHash?: string | null;
 };
 
 const STATUS_STYLE: Record<DocRow['status'], { label: string; color: string; bg: string }> = {
@@ -56,7 +60,10 @@ function formatSize(bytes: number | null): string {
 }
 
 export function DocumentsLibrary() {
-  const setSources = useSetAtom(uploadedRowsAtom);
+  const store = useStore();
+  const contextLocked = useAtomValue(chatContextLockedAtom);
+  const { selectWorkbook, importDialog } = useWorkbookImport();
+  const [addingText, setAddingText] = useState(false);
   const isOwner = workspaceContext?.workspace.role === 'owner';
   const [docs, setDocs] = useState<DocRow[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -66,11 +73,17 @@ export function DocumentsLibrary() {
   const useInChat = async (id: string) => {
     setBusy('Loading source for chat…');
     try {
-      const source = await loadWorkflowSource(id);
-      setSources(previous => ({ ...previous, __unassigned__: source }));
-      setNotice(`${source.fileName} selected for chat (${source.rows.length} records). Ask chat to run your workflow using this source.`);
-    } catch (e) { setNotice(e instanceof Error ? e.message : 'Could not select this source.'); }
-    finally { setBusy(null); }
+      const source = docs.find((document) => document.id === id);
+      if (!source) throw new Error('This source is no longer listed. Refresh Sources.');
+      await attachSavedChatSource(store, source, selectWorkbook);
+      setNotice(
+        `${source.fileName} added to this chat. Its contents are available in the chat context.`,
+      );
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : 'Could not select this source.');
+    } finally {
+      setBusy(null);
+    }
   };
 
   const refresh = useCallback(async () => {
@@ -187,11 +200,29 @@ export function DocumentsLibrary() {
         Sources
       </h1>
       <p style={{ fontSize: 13, color: 'var(--sx-muted, #6b7280)', margin: '0 0 18px' }}>
-        Documents and other source files available to this workspace. Use{' '}
-        <b style={{ color: 'var(--sx-text, #1a1a1a)', fontWeight: 600 }}>In&nbsp;Library</b> to
-        choose which ones Sina can actually search — the rest stay stored but out of context.
+        Documents and text stored in this workspace. Choose “Use in this chat” to add an exact
+        source revision to the current conversation. Library membership remains a workspace search
+        preference; it does not automatically add chat context.
       </p>
 
+      {importDialog}
+      <button
+        type="button"
+        className="mb-3 rounded border px-3 py-2 text-sm"
+        aria-expanded={addingText}
+        onClick={() => setAddingText((value) => !value)}
+      >
+        Add text
+      </button>
+      {addingText && (
+        <SourceTextForm
+          onSave={async (file) => {
+            const result = await uploadDocument(file);
+            if (!result.documentId) throw new Error(result.error);
+            await refresh();
+          }}
+        />
+      )}
       {/* Dropzone */}
       <button
         type="button"
@@ -307,8 +338,16 @@ export function DocumentsLibrary() {
                   </div>
                 </button>
                 {/* In-Library toggle — is this doc in Sina's searchable context? */}
-                {d.lifecycleStatus === 'active' && d.status !== 'uploading' && /\.(xlsx|xls|json)$/i.test(d.fileName) && (
-                  <button type="button" disabled={Boolean(busy)} className="rounded border px-2 py-1 text-xs" aria-label={`Use ${d.fileName} in chat`} onClick={() => void useInChat(d.id)}>Use in chat</button>
+                {d.lifecycleStatus === 'active' && d.status !== 'uploading' && (
+                  <button
+                    type="button"
+                    disabled={Boolean(busy) || contextLocked}
+                    className="rounded border px-2 py-1 text-xs"
+                    aria-label={`Use ${d.fileName} in chat`}
+                    onClick={() => void useInChat(d.id)}
+                  >
+                    Use in this chat
+                  </button>
                 )}
                 {d.lifecycleStatus === 'active' &&
                   (() => {

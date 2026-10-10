@@ -1,17 +1,11 @@
 import { runWorkflowAtom, templateDefinition } from './workflow-execution';
 import { createWorkflow } from '@workspace/workflow-core/commands';
-import { WorkflowStoragePanel } from './workflow-storage-panel';
+import { WorkflowNavigation } from './workflow-navigation';
 
-// WorkflowPage — the Workflows surface, built for maximum canvas room:
-//   • the workflow LIST is published into the Scope sidebar (usePageSidebar), a
-//     contextual section below "Clients & Chats" — no second sidebar in the body.
-//   • the workflow NAME + mode tabs (Overview·Build·Run·Results) + the Build
-//     controls (Undo/Redo/Fit/Save/Run) are published into the panel header
-//     (usePageMenu) — no title block / tab strip / toolbar in the body.
-//   • the body is JUST the mode content: Overview / the builder canvas (full-bleed)
-//     / the run loop / the worksheet.
-// Selection + active tab live in shared atoms so the sidebar list, the header, and
-// the body stay in sync. The engine — not the page — gates Run/Results.
+// WorkflowPage owns its collapsible library navigation and the selected detail.
+// The workflow name, mode tabs and Build controls still use the panel header.
+// Shared selection atoms keep page navigation, the header and Chat in sync;
+// workflow commands and the engine continue to own execution and validation.
 
 import dynamic from '@/lib/next-dynamic-shim';
 import { workflowLibraryAtom, saveVersion, definitionFingerprint } from './workflow-library';
@@ -22,31 +16,23 @@ import { useTheme } from 'next-themes';
 import {
   ArrowRight,
   Bot,
-  Boxes,
-  Database,
-  FileText,
-  History,
   Library,
   Maximize2,
   Play,
-  Plus,
   Redo2,
   Save,
   Undo2,
   Workflow as WorkflowIcon,
 } from 'lucide-react';
 import {
-  PORTFOLIO_WORKFLOWS,
   getPortfolioWorkflowDef,
   type PortfolioWorkflowDef,
-  type PortfolioWorkflowGroup,
 } from '@/shared/workflow-engine/templates/portfolio/portfolio-workflows';
 import { getWorkflowConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
 import { triggerFitViewAtom } from '@/shared/workflow-engine/state/workflow-store';
 import { builderBridgeAtom } from '@/lib/builder-bridge';
 import { getPage } from '@/shared/stores/resource-registry';
 import { usePageMenu, type PageMenuItem } from '@/shared/stores/page-menu-store';
-import { usePageSidebar } from '@/shared/stores/page-sidebar-store';
 import { WorkflowRunFlow } from '@/features/assistant/workspace/workflow-run-flow';
 import { NEU } from '@/components/neumorphic-sidebar';
 import { WorkflowOverview } from '@/features/workflows-hub/workflow-overview';
@@ -94,12 +80,6 @@ const TAB_LABELS: { id: WorkflowTab; label: string }[] = [
   { id: 'build', label: 'Build' },
   { id: 'run', label: 'Run' },
   { id: 'results', label: 'Results' },
-];
-
-const GROUPS: { id: PortfolioWorkflowGroup; label: string; Icon: typeof Boxes }[] = [
-  { id: 'platform', label: 'Platform services', Icon: Boxes },
-  { id: 'foundation', label: 'Foundation', Icon: Database },
-  { id: 'tier1', label: 'Tier 1', Icon: FileText },
 ];
 
 const short = (name: string) => name.replace(/^Platform Services · /, '');
@@ -155,199 +135,6 @@ function StubCard({
   );
 }
 
-// ── Sidebar section (published into the Scope sidebar via usePageSidebar) ────────
-export function WorkflowSidebarList() {
-  const [selectedId, setSelected] = useAtom(selectedWorkflowIdAtom);
-  const setTab = useSetAtom(workflowTabAtom);
-  const [surface, setSurface] = useAtom(workflowSurfaceAtom);
-  const setSelectedRun = useSetAtom(selectedWorkflowRunIdAtom);
-  const library = useAtomValue(workflowLibraryAtom);
-  const isNew = surface === 'workflow' && selectedId === NEW_WORKFLOW_ID;
-  const select = (id: string) => {
-    setSelected(id);
-    setSelectedRun(null);
-    setSurface('workflow');
-    setTab('overview');
-  };
-  return (
-    <div>
-      <WorkflowStoragePanel />
-      <button
-        onClick={() => {
-          setSurface('library');
-          setSelectedRun(null);
-        }}
-        className="neu-row"
-        style={{
-          width: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 7,
-          border: 'none',
-          cursor: 'pointer',
-          background: surface === 'library' ? 'var(--sx-accent-soft)' : 'transparent',
-          color: surface === 'library' ? NEU.accent : NEU.muted,
-          fontSize: 11.5,
-          fontWeight: 600,
-          borderRadius: 9,
-          padding: '6px 8px',
-          marginBottom: 2,
-        }}
-      >
-        <Library size={13} /> Library
-      </button>
-      <button
-        onClick={() => {
-          setSurface('history');
-          setSelectedRun(null);
-        }}
-        className="neu-row"
-        style={{
-          width: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 7,
-          border: 'none',
-          cursor: 'pointer',
-          background: surface === 'history' ? 'var(--sx-accent-soft)' : 'transparent',
-          color: surface === 'history' ? NEU.accent : NEU.muted,
-          fontSize: 11.5,
-          fontWeight: 600,
-          borderRadius: 9,
-          padding: '6px 8px',
-          marginBottom: 2,
-        }}
-      >
-        <History size={13} /> Run history
-      </button>
-      <button
-        onClick={() => {
-          setSelected(NEW_WORKFLOW_ID);
-          setSelectedRun(null);
-          setSurface('workflow');
-          setTab('build');
-        }}
-        className="neu-row"
-        style={{
-          width: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 7,
-          border: 'none',
-          cursor: 'pointer',
-          background: isNew ? 'var(--sx-accent-soft)' : 'transparent',
-          color: isNew ? NEU.accent : NEU.muted,
-          fontSize: 11.5,
-          fontWeight: 600,
-          borderRadius: 9,
-          padding: '6px 8px',
-          marginBottom: 2,
-        }}
-      >
-        <Plus size={13} /> New workflow
-      </button>
-      {Object.values(library).length > 0 && (
-        <div>
-          <div style={{ padding: '9px 8px 4px', fontSize: 10, color: NEU.muted }}>MY WORKFLOWS</div>
-          {Object.values(library).map((entry) => (
-            <button
-              key={entry.id}
-              onClick={() => select(entry.id)}
-              className="neu-row"
-              style={{
-                width: '100%',
-                textAlign: 'left',
-                padding: '7px 8px',
-                border: 'none',
-                borderRadius: 9,
-                background:
-                  surface === 'workflow' && selectedId === entry.id
-                    ? 'var(--sx-accent-soft)'
-                    : 'transparent',
-                color: NEU.text,
-                fontSize: 12,
-              }}
-            >
-              {entry.draft.name}
-            </button>
-          ))}
-        </div>
-      )}
-      {GROUPS.map(({ id, label, Icon }) => {
-        const items = PORTFOLIO_WORKFLOWS.filter((w) => w.group === id);
-        if (items.length === 0) return null;
-        return (
-          <div key={id}>
-            <div
-              style={{
-                fontSize: 9.5,
-                fontWeight: 700,
-                letterSpacing: '0.05em',
-                textTransform: 'uppercase',
-                color: NEU.faint,
-                padding: '9px 8px 4px',
-              }}
-            >
-              {label}
-            </div>
-            {items.map((w) => {
-              const sel = surface === 'workflow' && w.id === selectedId;
-              return (
-                <button
-                  key={w.id}
-                  onClick={() => select(w.id)}
-                  className="neu-row"
-                  style={{
-                    width: '100%',
-                    textAlign: 'left',
-                    display: 'flex',
-                    gap: 8,
-                    alignItems: 'center',
-                    border: 'none',
-                    cursor: 'pointer',
-                    borderRadius: 9,
-                    padding: '7px 8px',
-                    marginBottom: 1,
-                    background: sel ? 'var(--sx-accent-soft)' : 'transparent',
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 20,
-                      height: 20,
-                      borderRadius: 6,
-                      background: sel ? 'transparent' : NEU.surface,
-                      boxShadow: sel ? 'none' : NEU.shadowSm,
-                      display: 'grid',
-                      placeItems: 'center',
-                      color: sel ? NEU.accent : NEU.muted,
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Icon size={12} />
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 12,
-                      fontWeight: sel ? 650 : 550,
-                      color: sel ? NEU.accent : NEU.text,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {short(w.name)}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 // ── Body: the selected workflow's active mode ───────────────────────────────────
 function WorkflowDetail({ def }: { def: PortfolioWorkflowDef }) {
   const router = useRouter();
@@ -361,7 +148,7 @@ function WorkflowDetail({ def }: { def: PortfolioWorkflowDef }) {
   const surface: 'dark' | 'light' = resolvedTheme === 'dark' ? 'dark' : 'light';
 
   if (tab === 'build') {
-    // Full-bleed canvas — the whole body. Controls live in the header.
+    // The canvas fills the detail area. Controls live in the panel header.
     return (
       <div style={{ position: 'absolute', inset: 0, background: 'var(--sx-canvas-ground)' }}>
         {selectedRun ? (
@@ -455,9 +242,6 @@ export function WorkflowPage({ workflowId }: { workflowId?: string }) {
       setTab('overview');
     }
   }, [workflowId, setSelected, setSelectedRun, setSurface, setTab]);
-
-  // Publish the workflow list into the Scope sidebar.
-  usePageSidebar('workflows', WorkflowSidebarList);
 
   const isNew = selectedId === NEW_WORKFLOW_ID;
   const [library, setLibrary] = useAtom(workflowLibraryAtom);
@@ -620,91 +404,96 @@ export function WorkflowPage({ workflowId }: { workflowId?: string }) {
   ]);
 
   return (
-    <div
+    <section
+      aria-label="Workflows page"
+      className="workflow-page"
       style={{
-        position: 'relative',
-        height: '100%',
         background: NEU.bg,
         fontFamily: "'Inter', ui-sans-serif, system-ui, sans-serif",
       }}
     >
-      {surface === 'history' ? (
-        <WorkflowRunHistory />
-      ) : surface === 'library' ? (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'grid',
-            placeItems: 'center',
-            padding: 32,
-            textAlign: 'center',
-          }}
-        >
-          <div>
-            <span
+      <div className="workflow-page__layout">
+        <WorkflowNavigation />
+        <div className="workflow-page__content">
+          {surface === 'history' ? (
+            <WorkflowRunHistory />
+          ) : surface === 'library' ? (
+            <div
               style={{
-                display: 'inline-grid',
+                position: 'absolute',
+                inset: 0,
+                display: 'grid',
                 placeItems: 'center',
-                width: 52,
-                height: 52,
-                borderRadius: 15,
-                background: NEU.surface,
-                boxShadow: NEU.shadowSm,
-                color: NEU.accent,
+                padding: 32,
+                textAlign: 'center',
               }}
             >
-              <Library size={24} />
-            </span>
-            <div style={{ fontSize: 16, fontWeight: 700, color: NEU.text, marginTop: 14 }}>
-              Workflow library
+              <div>
+                <span
+                  style={{
+                    display: 'inline-grid',
+                    placeItems: 'center',
+                    width: 52,
+                    height: 52,
+                    borderRadius: 15,
+                    background: NEU.surface,
+                    boxShadow: NEU.shadowSm,
+                    color: NEU.accent,
+                  }}
+                >
+                  <Library size={24} />
+                </span>
+                <div style={{ fontSize: 16, fontWeight: 700, color: NEU.text, marginTop: 14 }}>
+                  Workflow library
+                </div>
+                <div style={{ fontSize: 13, color: NEU.muted, marginTop: 5, maxWidth: 380 }}>
+                  Choose a saved workflow or template from the workflow list on this page. Its
+                  draft, versions, runs and results stay together here.
+                </div>
+              </div>
             </div>
-            <div style={{ fontSize: 13, color: NEU.muted, marginTop: 5, maxWidth: 380 }}>
-              Choose a saved workflow or template in the sidebar. Its draft, versions, runs and
-              results stay together here.
-            </div>
-          </div>
-        </div>
-      ) : isNew ? (
-        <NewWorkflowDetail />
-      ) : def ? (
-        <WorkflowDetail def={def} />
-      ) : (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'grid',
-            placeItems: 'center',
-            padding: 32,
-            textAlign: 'center',
-          }}
-        >
-          <div>
-            <span
+          ) : isNew ? (
+            <NewWorkflowDetail />
+          ) : def ? (
+            <WorkflowDetail def={def} />
+          ) : (
+            <div
               style={{
-                display: 'inline-grid',
+                position: 'absolute',
+                inset: 0,
+                display: 'grid',
                 placeItems: 'center',
-                width: 52,
-                height: 52,
-                borderRadius: 15,
-                background: NEU.surface,
-                boxShadow: NEU.shadowSm,
-                color: NEU.faint,
+                padding: 32,
+                textAlign: 'center',
               }}
             >
-              <WorkflowIcon size={24} />
-            </span>
-            <div style={{ fontSize: 15, fontWeight: 700, color: NEU.text, marginTop: 14 }}>
-              Select a workflow
+              <div>
+                <span
+                  style={{
+                    display: 'inline-grid',
+                    placeItems: 'center',
+                    width: 52,
+                    height: 52,
+                    borderRadius: 15,
+                    background: NEU.surface,
+                    boxShadow: NEU.shadowSm,
+                    color: NEU.faint,
+                  }}
+                >
+                  <WorkflowIcon size={24} />
+                </span>
+                <div style={{ fontSize: 15, fontWeight: 700, color: NEU.text, marginTop: 14 }}>
+                  Select a workflow
+                </div>
+                <div style={{ fontSize: 13, color: NEU.muted, marginTop: 5, maxWidth: 340 }}>
+                  Choose from the workflow list to view its process, build it, run it, and review
+                  the result — all here.
+                </div>
+              </div>
             </div>
-            <div style={{ fontSize: 13, color: NEU.muted, marginTop: 5, maxWidth: 340 }}>
-              Pick one in the sidebar to view its process, build it, run it, and review the result —
-              all here.
-            </div>
-          </div>
+          )}
         </div>
-      )}
-    </div>
+      </div>
+    </section>
   );
 }

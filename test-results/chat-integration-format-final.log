@@ -1,0 +1,5 @@
+artifacts/ai-workflow-builder/src/features/assistant/runtime/chat/use-assistant-ui-runtime.ts 809ms
+tests/integration/workspace-access.test.mjs 656ms
+scripts/maintained-paths.mjs 16ms (unchanged)
+playwright.reliability.config.mjs 7ms (unchanged)
+docs/chat-workflow-integration.md 468ms

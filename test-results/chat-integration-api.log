@@ -1,0 +1,163 @@
+Workspace access evidence: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-8b8ed6ad-1ec3-4efa-aeb6-c38fa807d194
+✖ invalid, cyclic and oversized compressed backups fail without replacing saved data (153054.7466ms)
+✔ valid compressed backups preserve their portable bytes (269.9248ms)
+✔ chat batch message IDs cannot overwrite another thread or workspace (397.2501ms)
+✔ chat workflow binding roundtrips without granting cross-workspace or viewer writes (188.371ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 3
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 162363.4726
+
+✖ failing tests:
+
+test at tests\integration\workspace-access.test.mjs:379:1
+✖ invalid, cyclic and oversized compressed backups fail without replacing saved data (153054.7466ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + null
+  - '{\n' +
+  -   '  "custom:synthetic-recovery": {\n' +
+  -   '    "id": "custom:synthetic-recovery",\n' +
+  -   '    "templateId": "blank",\n' +
+  -   '    "draft": {\n' +
+  -   '      "schemaVersion": "workflow-studio.local.v1",\n' +
+  -   '      "id": "custom:synthetic-recovery",\n' +
+  -   '      "name": "Synthetic archived draft",\n' +
+  -   '      "description": "Hand-authored, incomplete graph for backup compatibility tests.",\n' +
+  -   '      "status": "draft",\n' +
+  -   '      "metadata": {\n' +
+  -   '        "kind": "generic-fiscal-workflow",\n' +
+  -   '        "tags": ["synthetic"],\n' +
+  -   '        "createdBy": "fixture",\n' +
+  -   '        "createdAt": "2024-01-02T03:04:05.000Z",\n' +
+  -   '        "updatedBy": "fixture",\n' +
+  -   '        "updatedAt": "2024-01-02T03:04:05.000Z"\n' +
+  -   '      },\n' +
+  -   '      "blocks": [],\n' +
+  -   '      "edges": [\n' +
+  -   '        {\n' +
+  -   '          "id": "historical-trigger-edge",\n' +
+  -   '          "sourceBlockId": "missing-source",\n' +
+  -   '          "targetBlockId": "missing-target",\n' +
+  -   '          "relationshipType": "triggers",\n' +
+  -   '          "reason": "Drafts may be incomplete",\n' +
+  -   '          "bindingStatus": "missing",\n' +
+  -   '          "status": "active",\n' +
+  -   '          "createdBy": "fixture",\n' +
+  -   '          "createdAt": "2024-01-02T03:04:05.000Z",\n' +
+  -   '          "confidence": 1,\n' +
+  -   '          "notes": "Synthetic legacy relationship",\n' +
+  -   '          "history": []\n' +
+  -   '        }\n' +
+  -   '      ],\n' +
+  -   '      "structure": {\n' +
+  -   '        "layout": "canvas-columns",\n' +
+  -   '        "blockOrder": [],\n' +
+  -   '        "columns": []\n' +
+  -   '      },\n' +
+  -   '      "runtimeUiConfig": {\n' +
+  -   '        "runtimeConfigId": "synthetic-runtime",\n' +
+  -   '        "sourceWorkflowId": "custom:synthetic-recovery",\n' +
+  -   '        "generatedAt": "2024-01-02T03:04:05.000Z",\n' +
+  -   '        "sections": [],\n' +
+  -   '        "visibleRows": [],\n' +
+  -   '        "hiddenRows": [],\n' +
+  -   '        "reviewerOnlyRows": [],\n' +
+  -   '        "advancedRows": [],\n' +
+  -   '        "allowedActions": []\n' +
+  -   '      },\n' +
+  -   '      "outputMappingPreview": {\n' +
+  -   '        "id": "synthetic-output",\n' +
+  -   '        "sourceWorkflowId": "custom:synthetic-recovery",\n' +
+  -   '        "generatedAt": "2024-01-02T03:04:05.000Z",\n' +
+  -   '        "outputs": []\n' +
+  -   '      },\n' +
+  -   '      "mockRuns": [],\n' +
+  -   '      "versionSnapshots": [],\n' +
+  -   '      "aiProposals": [],\n' +
+  -   '      "events": []\n' +
+  -   '    },\n' +
+  -   '    "versions": [\n' +
+  -   '      {\n' +
+  -   '        "number": 1,\n' +
+  -   '        "savedAt": "2024-01-02T03:04:05.000Z",\n' +
+  -   '        "definition": {\n' +
+  -   '          "schemaVersion": "workflow-studio.local.v1",\n' +
+  -   '          "id": "custom:synthetic-recovery",\n' +
+  -   '          "name": "Synthetic archived version",\n' +
+  -   '          "description": "Hand-authored, incomplete graph for backup compatibility tests.",\n' +
+  -   '          "status": "draft",\n' +
+  -   '          "metadata": {\n' +
+  -   '            "kind": "generic-fiscal-workflow",\n' +
+  -   '            "tags": ["synthetic"],\n' +
+  -   '            "createdBy": "fixture",\n' +
+  -   '            "createdAt": "2024-01-02T03:04:05.000Z",\n' +
+  -   '            "updatedBy": "fixture",\n' +
+  -   '            "updatedAt": "2024-01-02T03:04:05.000Z"\n' +
+  -   '          },\n' +
+  -   '          "blocks": [],\n' +
+  -   '          "edges": [\n' +
+  -   '            {\n' +
+  -   '              "id": "historical-trigger-edge",\n' +
+  -   '              "sourceBlockId": "missing-source",\n' +
+  -   '              "targetBlockId": "missing-target",\n' +
+  -   '              "relationshipType": "triggers",\n' +
+  -   '              "reason": "Drafts may be incomplete",\n' +
+  -   '              "bindingStatus": "missing",\n' +
+  -   '              "status": "active",\n' +
+  -   '              "createdBy": "fixture",\n' +
+  -   '              "createdAt": "2024-01-02T03:04:05.000Z",\n' +
+  -   '              "confidence": 1,\n' +
+  -   '              "notes": "Synthetic legacy relationship",\n' +
+  -   '              "history": []\n' +
+  -   '            }\n' +
+  -   '          ],\n' +
+  -   '          "structure": {\n' +
+  -   '            "layout": "canvas-columns",\n' +
+  -   '            "blockOrder": [],\n' +
+  -   '            "columns": []\n' +
+  -   '          },\n' +
+  -   '          "runtimeUiConfig": {\n' +
+  -   '            "runtimeConfigId": "synthetic-runtime",\n' +
+  -   '            "sourceWorkflowId": "custom:synthetic-recovery",\n' +
+  -   '            "generatedAt": "2024-01-02T03:04:05.000Z",\n' +
+  -   '            "sections": [],\n' +
+  -   '            "visibleRows": [],\n' +
+  -   '            "hiddenRows": [],\n' +
+  -   '            "reviewerOnlyRows": [],\n' +
+  -   '            "advancedRows": [],\n' +
+  -   '            "allowedActions": []\n' +
+  -   '          },\n' +
+  -   '          "outputMappingPreview": {\n' +
+  -   '            "id": "synthetic-output",\n' +
+  -   '            "sourceWorkflowId": "custom:synthetic-recovery",\n' +
+  -   '            "generatedAt": "2024-01-02T03:04:05.000Z",\n' +
+  -   '            "outputs": []\n' +
+  -   '          },\n' +
+  -   '          "mockRuns": [],\n' +
+  -   '          "versionSnapshots": [],\n' +
+  -   '          "aiProposals": [],\n' +
+  -   '          "events": []\n' +
+  -   '        }\n' +
+  -   '      }\n' +
+  -   '    ],\n' +
+  -   '    "runs": []\n' +
+  -   '  }\n' +
+  -   '}\n'
+  
+      at TestContext.<anonymous> (file:///C:/Users/Mamad/Sinaxe/TaxflowOS/tests/integration/workspace-access.test.mjs:399:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: '{\n  "custom:synthetic-recovery": {\n    "id": "custom:synthetic-recovery",\n    "templateId": "blank",\n    "draft": {\n      "schemaVersion": "workflow-studio.local.v1",\n      "id": "custom:synthetic-recovery",\n      "name": "Synthetic archived draft",\n      "description": "Hand-authored, incomplete graph for backup compatibility tests.",\n      "status": "draft",\n      "metadata": {\n        "kind": "generic-fiscal-workflow",\n        "tags": ["synthetic"],\n        "createdBy": "fixture",\n        "createdAt": "2024-01-02T03:04:05.000Z",\n        "updatedBy": "fixture",\n        "updatedAt": "2024-01-02T03:04:05.000Z"\n      },\n      "blocks": [],\n      "edges": [\n        {\n          "id": "historical-trigger-edge",\n          "sourceBlockId": "missing-source",\n          "targetBlockId": "missing-target",\n          "relationshipType": "triggers",\n          "reason": "Drafts may be incomplete",\n          "bindingStatus": "missing",\n          "status": "active",\n          "createdBy": "fixture",\n          "createdAt": "2024-01-02T03:04:05.000Z",\n          "confidence": 1,\n          "notes": "Synthetic legacy relationship",\n          "history": []\n        }\n      ],\n      "structure": {\n        "layout": "canvas-columns",\n        "blockOrder": [],\n        "columns": []\n      },\n      "runtimeUiConfig": {\n        "runtimeConfigId": "synthetic-runtime",\n        "sourceWorkflowId": "custom:synthetic-recovery",\n        "generatedAt": "2024-01-02T03:04:05.000Z",\n        "sections": [],\n        "visibleRows": [],\n        "hiddenRows": [],\n        "reviewerOnlyRows": [],\n        "advancedRows": [],\n        "allowedActions": []\n      },\n      "outputMappingPreview": {\n        "id": "synthetic-output",\n        "sourceWorkflowId": "custom:synthetic-recovery",\n        "generatedAt": "2024-01-02T03:04:05.000Z",\n        "outputs": []\n      },\n      "mockRuns": [],\n      "versionSnapshots": [],\n      "aiProposals": [],\n      "events": []\n    },\n    "versions": [\n      {\n        "number": 1,\n        "savedAt": "2024-01-02T03:04:05.000Z",\n        "definition": {\n          "schemaVersion": "workflow-studio.local.v1",\n          "id": "custom:synthetic-recovery",\n          "name": "Synthetic archived version",\n          "description": "Hand-authored, incomplete graph for backup compatibility tests.",\n          "status": "draft",\n          "metadata": {\n            "kind": "generic-fiscal-workflow",\n            "tags": ["synthetic"],\n            "createdBy": "fixture",\n            "createdAt": "2024-01-02T03:04:05.000Z",\n            "updatedBy": "fixture",\n            "updatedAt": "2024-01-02T03:04:05.000Z"\n          },\n          "blocks": [],\n          "edges": [\n            {\n              "id": "historical-trigger-edge",\n              "sourceBlockId": "missing-source",\n              "targetBlockId": "missing-target",\n              "relationshipType": "triggers",\n              "reason": "Drafts may be incomplete",\n              "bindingStatus": "missing",\n              "status": "active",\n              "createdBy": "fixture",\n              "createdAt": "2024-01-02T03:04:05.000Z",\n              "confidence": 1,\n              "notes": "Synthetic legacy relationship",\n              "history": []\n            }\n          ],\n          "structure": {\n            "layout": "canvas-columns",\n            "blockOrder": [],\n            "columns": []\n          },\n          "runtimeUiConfig": {\n            "runtimeConfigId": "synthetic-runtime",\n            "sourceWorkflowId": "custom:synthetic-recovery",\n            "generatedAt": "2024-01-02T03:04:05.000Z",\n            "sections": [],\n            "visibleRows": [],\n            "hiddenRows": [],\n            "reviewerOnlyRows": [],\n            "advancedRows": [],\n            "allowedActions": []\n          },\n          "outputMappingPreview": {\n            "id": "synthetic-output",\n            "sourceWorkflowId": "custom:synthetic-recovery",\n            "generatedAt": "2024-01-02T03:04:05.000Z",\n            "outputs": []\n          },\n          "mockRuns": [],\n          "versionSnapshots": [],\n          "aiProposals": [],\n          "events": []\n        }\n      }\n    ],\n    "runs": []\n  }\n}\n',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

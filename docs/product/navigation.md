@@ -42,7 +42,7 @@ behind source-aware answers. Neither creates another primary menu in this baseli
 ```text
 +----------------------+-----------------------------------------------------+
 | Workspace            | Chat                         [Agent v] [Manage]     |
-|                      | Context: [Sources 2] [Workflow: Expense / v7] [v]   |
+|                      |        [Orb · Scope · Company · Year · v]         |
 | Chat                 |                                                     |
 | Workflows            | What would you like to work on?                     |
 | Sources              |                                                     |
@@ -60,9 +60,14 @@ continuation items; these are adjustable design defaults, not user-confirmed
 numeric limits. Hide empty continuation/attention areas. In an active conversation,
 messages and action cards take priority over welcome content.
 
-The context strip distinguishes explicitly selected sources from other retrieved
-sources actually used. Its retrieval behavior depends on D-03. Merely viewing a
-source does not silently attach it or authorize an action.
+The approved Scope design uses one centered orb-led entry point. Its summary
+shows the current company/year labels, selected workflow and unique selected
+sources; a fresh chat says **General chat**. One panel contains their controls,
+source readiness, active run versus draft identity, and collapsed historical
+evidence. Tools and agent/Computer controls have separate roles. No repeated
+Context strip or Context drawer is needed. Merely viewing a source does not
+silently attach it or authorize an action. Scope labels do not imply loading a
+company dataset; retrieval policy remains governed by D-03.
 
 ## Conversation with a result — R-06, R-07, R-08
 
@@ -104,8 +109,8 @@ detail panel is not deleting its underlying data or silently saving a draft.
 
 Back/forward and existing deep links need a migration plan. Keep old routes
 reachable through adapters/redirects until their consumers are migrated; Phase 0
-does not assign replacement URL paths. Keyboard navigation must reach the context
-strip, action controls and detail panel, with focus restored on close. Status must
+does not assign replacement URL paths. Keyboard navigation must reach Scope,
+action controls and the detail panel, with focus restored on close. Status must
 be conveyed by text, not color alone.
 
 ## Run history is within Workflows — R-02, R-14

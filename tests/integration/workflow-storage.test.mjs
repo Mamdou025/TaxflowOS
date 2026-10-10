@@ -33,6 +33,58 @@ async function save(code, payload, revision) {
   return response.json();
 }
 
+// Portable identity-sharing fixture; no user data or live source providers are involved.
+function sharedPayload(value) {
+  const nodes = [];
+  const ids = new WeakMap();
+  function encode(item) {
+    if (item === null || typeof item !== 'object') return item;
+    if (ids.has(item)) return [ids.get(item)];
+    const id = nodes.length;
+    ids.set(item, id);
+    nodes.push(null);
+    nodes[id] = Array.isArray(item)
+      ? ['array', item.map(encode)]
+      : ['object', Object.entries(item).map(([key, child]) => [key, encode(child)])];
+    return [id];
+  }
+  return JSON.stringify({ format: 'taxflow-shared-json-v1', root: encode(value), nodes });
+}
+
+test('shared evidence roundtrips while logical and typed amplification preserve the saved revision', async () => {
+  const code = await key();
+  const sourceFixture = fs.readFileSync(
+    'tests/fixtures/backups/document-calculation-v1.json',
+    'utf8',
+  );
+  const library = JSON.parse(sourceFixture).library;
+  const entry = Object.values(library)[0];
+  const rows = Array.from({ length: 1500 }, (_, row) => ({ row, amount: row - 750 }));
+  entry.draft.blocks[0].config.repeatedEvidence = Array(300).fill(rows);
+  const valid = sharedPayload(library);
+  assert.equal((await save(code, valid, 0)).revision, 1);
+  assert.equal((await (await request('GET', code)).json()).payload, valid);
+
+  const logical = JSON.parse(sourceFixture).library;
+  let amplified = 0;
+  for (let depth = 0; depth < 100; depth++) amplified = [amplified, amplified];
+  Object.values(logical)[0].draft.blocks[0].config.amplified = amplified;
+  const typed = JSON.parse(sourceFixture).library;
+  const target = Object.values(typed)[0];
+  target.versions = Array(2000).fill({
+    number: 1,
+    savedAt: '2026-10-05T00:00:00.000Z',
+    definition: target.draft,
+  });
+  for (const invalid of [logical, typed]) {
+    const response = await request('PUT', code, { payload: sharedPayload(invalid), revision: 1 });
+    assert.equal(response.status, 400);
+    const retained = await (await request('GET', code)).json();
+    assert.equal(retained.revision, 1);
+    assert.equal(retained.payload, valid);
+  }
+});
+
 test('missing and malformed workspace IDs are refused for read, write and delete', async () => {
   for (const method of ['GET', 'PUT', 'DELETE']) {
     for (const code of [undefined, 'not-a-recovery-code', 'G'.repeat(64)]) {
@@ -80,7 +132,16 @@ test('guided run revisions and pause state roundtrip through the real workspace 
     {
       id: 'guided-storage-test',
       endedAt: '2026-10-02T12:00:00.000Z',
-      inputOverrides: { source: { value: 250, unit: 'CAD' } },
+      inputOverrides: {
+        source: { value: 250, unit: 'CAD' },
+        calculation: {
+          inputChoices: {
+            amount: { kind: 'manual', value: 0 },
+            rate: { kind: 'source', blockId: 'source', path: ['namedValues', 'rate'] },
+            adjustment: { kind: 'manual' },
+          },
+        },
+      },
       version: 1,
       revision: 7,
       createdAt: '2026-09-16T00:00:00.000Z',
@@ -95,6 +156,8 @@ test('guided run revisions and pause state roundtrip through the real workspace 
   await save(code, JSON.stringify(library), 0);
   const restored = JSON.parse((await (await request('GET', code)).json()).payload);
   assert.deepEqual(restored[entry.id].sessions, entry.sessions);
+  assert.deepEqual(restored[entry.id].versions, entry.versions);
+  assert.deepEqual(restored[entry.id].draft, entry.draft);
   const stale = await request('PUT', code, { payload: JSON.stringify(library), revision: 0 });
   assert.equal(stale.status, 409);
   assert.deepEqual(

@@ -54,14 +54,9 @@ export function openWorkflowSession(
   if (!entry) {
     const definition = templateDefinition(id);
     if (!definition) throw new Error('This workflow is unavailable.');
-    const existing = Object.values(library).filter(
-      (item) =>
-        item.templateId.replace(/^pf-/, '') === id.replace(/^pf-/, '') && item.sessions?.length,
-    );
-    if (!fresh && existing.length > 1)
-      throw new Error('Several saved workflows match. Choose the exact workflow in Run.');
-    if (!fresh && existing.length === 1) entry = existing[0];
-    else entry = createWorkflow(`custom:${crypto.randomUUID()}`, id, definition);
+    // A catalog selection starts that template. Saved derivatives have their own
+    // identities and are opened/resumed explicitly, never inferred by templateId.
+    entry = createWorkflow(`custom:${crypto.randomUUID()}`, id, definition);
   }
   let session = !fresh ? entry.sessions?.at(-1) : undefined;
   if (session?.endedAt) session = undefined;
@@ -116,7 +111,8 @@ export async function advanceSession(store: Pick<Store, 'get' | 'set'>, ref: Ses
       if (session.paused) return;
       const context = sessionContext(entry, session);
       const next = context.steps.find(
-        (step) => step.ready && ['pending', 'outdated'].includes(step.status),
+        (step) =>
+          step.ready && !step.inputRequired && ['pending', 'outdated'].includes(step.status),
       );
       if (!next) {
         const complete =
@@ -147,7 +143,12 @@ export async function submitSessionInput(
   const entry = store.get(workflowLibraryAtom)[ref.workflowId];
   const session = getSession(entry, ref.runId);
   // Multiple missing sources are collected before the Trigger admits execution.
-  if (sessionContext(entry, session).steps.some((step) => step.inputRequired)) return;
+  if (
+    sessionContext(entry, session).steps.some(
+      (step) => step.inputRequired && !step.inputKeys.includes('inputChoices'),
+    )
+  )
+    return;
   applySessionAction(store, ref, session.revision, { kind: 'resume' });
   await advanceSession(store, ref);
 }

@@ -139,16 +139,17 @@ export const APPROVAL_STATUS_INPUT_ROLE: ToolInputRole = {
 };
 
 export const PROTECTED_VALUES_INPUT_ROLE: ToolInputRole = {
-  acceptedFamilies: ['Logic', 'Protected'],
+  acceptedFamilies: ['Logic', 'Field', 'Protected'],
   acceptedOutputTypes: [
     'calculated_results',
+    'computed_values',
     'final_totals',
     'governed_value',
     'mapped_rows',
     'protected_result',
   ],
   allowMultiple: true,
-  description: 'Governed values and candidate Logic outputs for preview.',
+  description: 'Governed values and candidate Logic or Field outputs for preview.',
   id: 'protected_values',
   label: 'Protected values',
   required: false,

@@ -1,8 +1,11 @@
 import { WorkflowSessionPanel } from './workflow-session-panel';
+import { FapiSessionWorksheet } from './fapi-session-worksheet';
+import { supportsFapiWorksheet } from './fapi-session-result';
+import { sessionDefinition } from '@workspace/workflow-core/sessions';
 import { WorkflowResultSummary } from './workflow-result-summary';
 import { createWorkflow, replaceDraft } from '@workspace/workflow-core/commands';
 import { ApiDataStatus } from './workflow-api-status';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useEffect } from 'react';
 import { LazyDetails } from '@/features/workflow-builder/ui/workspace/lazy-details';
 import { TriggerReadinessPanel } from '@/features/workflow-builder/ui/config/trigger-readiness-panel';
@@ -10,7 +13,11 @@ import { presentToolOutput } from '@/shared/workflow-engine/present-tool-output'
 import { useAtom, useSetAtom } from 'jotai';
 import { type WorkflowDefinition } from '@/shared/workflow-engine/workflow/contracts';
 import { workflowLibraryAtom, definitionFingerprint } from './workflow-library';
-import { selectedWorkflowIdAtom, selectedWorkflowRunIdAtom } from './workflows-store';
+import {
+  selectedWorkflowIdAtom,
+  selectedWorkflowRunIdAtom,
+  workflowTabAtom,
+} from './workflows-store';
 import { WorkflowTestData } from './workflow-test-data';
 import { ReadableData } from '@/features/workflow-builder/ui/workspace/readable-data';
 import { ExecutionLifetimeNotice } from './execution-lifetime-notice';
@@ -25,6 +32,33 @@ import {
 import { templateDefinition, runWorkflowAtom } from './workflow-execution';
 export { templateDefinition } from './workflow-execution';
 
+/** Visiting Results keeps the existing form drafts without mounting or selecting another run. */
+function RetainedWorkflowPanel({
+  workflowId,
+  runId,
+  visible,
+}: {
+  workflowId: string;
+  runId?: string;
+  visible: boolean;
+}) {
+  const [visited, setVisited] = useState(visible);
+  const retained = useRef({ workflowId, runId });
+  useEffect(() => {
+    if (visible) {
+      retained.current = { workflowId, runId };
+      setVisited(true);
+    }
+  }, [visible, workflowId, runId]);
+  if (!visible && !visited) return null;
+  const ref = visible ? { workflowId, runId } : retained.current;
+  return (
+    <div hidden={!visible}>
+      <WorkflowSessionPanel {...ref} />
+    </div>
+  );
+}
+
 export function SavedWorkflowRun({
   id,
   resultsOnly = false,
@@ -36,6 +70,7 @@ export function SavedWorkflowRun({
   const [library, setLibrary] = useAtom(workflowLibraryAtom);
   const [, setSelected] = useAtom(selectedWorkflowIdAtom);
   const [selectedRunId, setSelectedRunId] = useAtom(selectedWorkflowRunIdAtom);
+  const setTab = useSetAtom(workflowTabAtom);
   const entry = library[id];
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
   const [durableRun, setDurableRun] = useState<WorkflowRun | null>(null);
@@ -104,6 +139,17 @@ export function SavedWorkflowRun({
       setStartingDurable(false);
     }
   };
+  const worksheetSession =
+    entry?.sessions?.find((session) => session.id === selectedRunId) ??
+    displayedRun?.sessionSnapshot;
+  const worksheetDefinition =
+    entry && worksheetSession ? sessionDefinition(entry, worksheetSession) : undefined;
+  const showFapiResult = !!(
+    resultsOnly &&
+    worksheetDefinition &&
+    worksheetSession &&
+    supportsFapiWorksheet(worksheetDefinition)
+  );
   return (
     <div className="space-y-5 text-foreground">
       <div>
@@ -130,14 +176,28 @@ export function SavedWorkflowRun({
             : 'Template · running or editing creates your own workflow'}
         </p>
       </div>
-      {((!resultsOnly && !selectedRunId) ||
-        entry?.sessions?.some((item) => item.id === selectedRunId)) && (
-        <WorkflowSessionPanel
-          workflowId={id}
-          runId={
-            entry?.sessions?.some((item) => item.id === selectedRunId) ? selectedRunId! : undefined
-          }
-        />
+      <RetainedWorkflowPanel
+        workflowId={id}
+        visible={
+          !showFapiResult &&
+          ((!resultsOnly && !selectedRunId) ||
+            !!entry?.sessions?.some((item) => item.id === selectedRunId))
+        }
+        runId={
+          entry?.sessions?.some((item) => item.id === selectedRunId) ? selectedRunId! : undefined
+        }
+      />
+      {showFapiResult && worksheetDefinition && worksheetSession && (
+        <div className="space-y-4">
+          <FapiSessionWorksheet
+            definition={worksheetDefinition}
+            session={worksheetSession}
+            presentation="worksheet"
+          />
+          <button className="text-sm underline" onClick={() => setTab('run')}>
+            Return to workflow
+          </button>
+        </div>
       )}
       {!resultsOnly && (
         <>
@@ -274,103 +334,107 @@ export function SavedWorkflowRun({
           {displayedRun?.version}; run again to test your changes.
         </p>
       )}
-      {selectedRunId &&
-      !displayedRun &&
-      !entry?.sessions?.some((item) => item.id === selectedRunId) ? (
-        <p role="alert" className="rounded border border-amber-500 p-3 text-sm">
-          Run {selectedRunId} is not available in this workflow. No different run was selected.
-        </p>
-      ) : !displayedRun ? (
-        <p className="text-sm text-muted-foreground">
-          No results yet. Run the workflow to see what each block receives and produces.
-        </p>
-      ) : (
-        <div className="space-y-3">
-          <h3 className="font-semibold">
-            Version {displayedRun.version} · {new Date(displayedRun.at).toLocaleString()} ·{' '}
-            {displayedRun.result.result.status}
-          </h3>
-          <p className="text-xs text-muted-foreground">
-            Run ID {displayedRun.result.record.execution.id}
-            {displayedRun.initiatedBy ? ` · Started from ${displayedRun.initiatedBy.surface}` : ''}
+      {!showFapiResult &&
+        (selectedRunId &&
+        !displayedRun &&
+        !entry?.sessions?.some((item) => item.id === selectedRunId) ? (
+          <p role="alert" className="rounded border border-amber-500 p-3 text-sm">
+            Run {selectedRunId} is not available in this workflow. No different run was selected.
           </p>
-          <WorkflowResultSummary
-            definition={displayedVersion?.definition}
-            results={displayedRun.result.result.results}
-          />
-          <ApiDataStatus blocks={displayedVersion?.definition.blocks ?? []} recorded />
-          {displayedRun.result.result.results.map((result) => (
-            <LazyDetails
-              className="rounded-lg border bg-background p-3"
-              key={result.blockId}
-              defaultOpen={result.status === 'error'}
-              summary={
-                <>
-                  {displayedVersion?.definition.blocks.find((block) => block.id === result.blockId)
-                    ?.label ?? result.blockId}{' '}
-                  · {result.status.replaceAll('_', ' ')}
-                </>
-              }
-            >
-              <div className="mt-3 space-y-3">
-                {[...result.errors, ...result.warnings].map((message, index) => (
-                  <p className="text-sm text-amber-700" key={index}>
-                    {message}
-                  </p>
-                ))}
-                <h4 className="font-medium">Input</h4>
-                <ReadableData value={result.input ?? {}} />
-                <h4 className="font-medium">Output</h4>
-                <ReadableData
-                  value={presentToolOutput(
-                    result,
-                    displayedVersion?.definition.blocks.find(
+        ) : !displayedRun ? (
+          <p className="text-sm text-muted-foreground">
+            No results yet. Run the workflow to see what each block receives and produces.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            <h3 className="font-semibold">
+              Version {displayedRun.version} · {new Date(displayedRun.at).toLocaleString()} ·{' '}
+              {displayedRun.result.result.status}
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Run ID {displayedRun.result.record.execution.id}
+              {displayedRun.initiatedBy
+                ? ` · Started from ${displayedRun.initiatedBy.surface}`
+                : ''}
+            </p>
+            <WorkflowResultSummary
+              definition={displayedVersion?.definition}
+              results={displayedRun.result.result.results}
+            />
+            <ApiDataStatus blocks={displayedVersion?.definition.blocks ?? []} recorded />
+            {displayedRun.result.result.results.map((result) => (
+              <LazyDetails
+                className="rounded-lg border bg-background p-3"
+                key={result.blockId}
+                defaultOpen={result.status === 'error'}
+                summary={
+                  <>
+                    {displayedVersion?.definition.blocks.find(
                       (block) => block.id === result.blockId,
-                    ),
-                  )}
-                />
-              </div>
-            </LazyDetails>
-          ))}
-          {entry && entry.runs.some((run) => run !== displayedRun) && (
-            <LazyDetails summary={<>Other runs ({entry.runs.length - 1})</>}>
-              {entry.runs
-                .filter(
-                  (record) =>
-                    record.result.record.execution.id !== displayedRun.result.record.execution.id,
-                )
-                .reverse()
-                .map((record) => (
-                  <LazyDetails
-                    className="mt-2 rounded border p-3"
-                    key={record.result.record.execution.id}
-                    summary={
-                      <>
-                        Version {record.version} · {new Date(record.at).toLocaleString()} ·{' '}
-                        {record.result.result.status}
-                      </>
-                    }
-                  >
-                    <button
-                      type="button"
-                      className="mb-3 rounded border px-2 py-1 text-xs"
-                      onClick={() => setSelectedRunId(record.result.record.execution.id)}
+                    )?.label ?? result.blockId}{' '}
+                    · {result.status.replaceAll('_', ' ')}
+                  </>
+                }
+              >
+                <div className="mt-3 space-y-3">
+                  {[...result.errors, ...result.warnings].map((message, index) => (
+                    <p className="text-sm text-amber-700" key={index}>
+                      {message}
+                    </p>
+                  ))}
+                  <h4 className="font-medium">Input</h4>
+                  <ReadableData value={result.input ?? {}} />
+                  <h4 className="font-medium">Output</h4>
+                  <ReadableData
+                    value={presentToolOutput(
+                      result,
+                      displayedVersion?.definition.blocks.find(
+                        (block) => block.id === result.blockId,
+                      ),
+                    )}
+                  />
+                </div>
+              </LazyDetails>
+            ))}
+            {entry && entry.runs.some((run) => run !== displayedRun) && (
+              <LazyDetails summary={<>Other runs ({entry.runs.length - 1})</>}>
+                {entry.runs
+                  .filter(
+                    (record) =>
+                      record.result.record.execution.id !== displayedRun.result.record.execution.id,
+                  )
+                  .reverse()
+                  .map((record) => (
+                    <LazyDetails
+                      className="mt-2 rounded border p-3"
+                      key={record.result.record.execution.id}
+                      summary={
+                        <>
+                          Version {record.version} · {new Date(record.at).toLocaleString()} ·{' '}
+                          {record.result.result.status}
+                        </>
+                      }
                     >
-                      Open run {record.result.record.execution.id}
-                    </button>
-                    <ReadableData
-                      value={record.result.result.results.map((result) => ({
-                        block: result.blockId,
-                        status: result.status,
-                        output: result.output,
-                      }))}
-                    />
-                  </LazyDetails>
-                ))}
-            </LazyDetails>
-          )}
-        </div>
-      )}
+                      <button
+                        type="button"
+                        className="mb-3 rounded border px-2 py-1 text-xs"
+                        onClick={() => setSelectedRunId(record.result.record.execution.id)}
+                      >
+                        Open run {record.result.record.execution.id}
+                      </button>
+                      <ReadableData
+                        value={record.result.result.results.map((result) => ({
+                          block: result.blockId,
+                          status: result.status,
+                          output: result.output,
+                        }))}
+                      />
+                    </LazyDetails>
+                  ))}
+              </LazyDetails>
+            )}
+          </div>
+        ))}
     </div>
   );
 }

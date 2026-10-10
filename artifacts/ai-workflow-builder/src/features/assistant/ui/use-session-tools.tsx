@@ -3,7 +3,7 @@ import { workspaceContext } from '@/platform/auth/workspace-context';
 import { inspectWorkflowRun, inspectDocumentEvidence } from '@workspace/workflow-core/inspection';
 import { ReadableData } from '@/features/workflow-builder/ui/workspace/readable-data';
 import { getWorkflowConfig } from '@/shared/workflow-engine/runtime/workflow-runs';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { atom, useAtomValue, useStore } from 'jotai';
 import { useCopilotAction, useCopilotReadable } from '@copilotkit/react-core';
 import type { AgentActionRequest } from '@workspace/agent-runtime/capabilities';
@@ -152,6 +152,10 @@ export function useSessionTools() {
   const active = chatSession ?? selected;
   const entry = active ? library[active.workflowId] : undefined;
   const session = entry?.sessions?.find((item) => item.id === active?.runId);
+  const activeContext = useMemo(
+    () => (entry && session ? sessionContext(entry, session) : null),
+    [entry, session, session?.revision],
+  );
   const openChatWorkflow = (workflowId: string, version?: number) => {
     const request = workflowSessionRequest(
       store.get(workflowLibraryAtom),
@@ -161,7 +165,7 @@ export function useSessionTools() {
     );
     if ('error' in request) return request;
     try {
-      const ref = openWorkflowSession(store, request.workflowId, request.version);
+      const ref = openWorkflowSession(store, request.workflowId, request.version, true);
       bindChatSession(store, ref);
       return { ...ref, version: request.version };
     } catch (error) {
@@ -213,7 +217,7 @@ export function useSessionTools() {
   useCopilotReadable({
     description:
       'Exact active workflow run. Build, Run and Chat share this version and these block IDs. Pending and outdated steps have no current result. For document understanding, inspectRunDocuments reads attachments before execution and proposeDocumentReview prepares cited interpretation notes for the user to save. Use inspectWorkflowBlock for results and controlWorkflowRun for actions. Never infer completed steps from conversation text or approve results on the user’s behalf.',
-    value: entry && session ? sessionContext(entry, session) : null,
+    value: activeContext,
   });
   useCopilotAction({
     name: 'inspectWorkflowBlock',

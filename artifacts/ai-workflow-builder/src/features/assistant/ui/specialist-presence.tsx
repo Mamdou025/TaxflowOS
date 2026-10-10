@@ -1,5 +1,3 @@
-
-
 // ─────────────────────────────────────────────────────────────────────────────
 // SinaPresence — shows that Sina is answering (the "face" of the chat). Headless;
 // mounted once in app-shell.
@@ -12,13 +10,18 @@
 
 import { useEffect } from 'react';
 import { useAtomValue, useSetAtom } from 'jotai';
-import { useCopilotChat } from '@copilotkit/react-core';
-import { activeCoworkerAtom, activeRunAtom, setActiveCoworkerAtom } from '@/shared/stores/workspace-store';
+import { useAgent } from '@copilotkit/react-core/v2';
+import {
+  activeCoworkerAtom,
+  activeRunAtom,
+  setActiveCoworkerAtom,
+} from '@/shared/stores/workspace-store';
 import { SINA } from '@/lib/coworkers';
 import { chatAgentAtom } from '@/shared/stores/chat-store';
 
 export function SpecialistPresence() {
-  const { isLoading } = useCopilotChat();
+  const { agent } = useAgent();
+  const isLoading = agent.isRunning;
   const chatAgent = useAtomValue(chatAgentAtom);
   const run = useAtomValue(activeRunAtom);
   const active = useAtomValue(activeCoworkerAtom);
@@ -33,9 +36,10 @@ export function SpecialistPresence() {
 
     if (isLoading) {
       if (!mine) {
-        const coworker = chatAgent === 'microsina'
-          ? { ...SINA, id: 'microsina', name: 'MicroSina', initials: 'MS' }
-          : SINA;
+        const coworker =
+          chatAgent === 'microsina'
+            ? { ...SINA, id: 'microsina', name: 'MicroSina', initials: 'MS' }
+            : SINA;
         setCoworker({ coworker, status: 'Reviewing your question…' });
       }
     } else if (mine) {

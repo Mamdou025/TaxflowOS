@@ -1558,6 +1558,8 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
       ) : selectedBlock && selectedBlock.family === "Field" ? (
         <FieldBlockWorkspace
           block={selectedBlock}
+          disabled={isGenerating || !isOwner || !!inspection}
+          onConfigPatch={handlePatchSelectedBlockConfig}
           edges={edges}
           lastRun={latestSelectedBlockRun}
           nodes={nodes}

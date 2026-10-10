@@ -1,7 +1,7 @@
 import {
   FAPI_TEMPLATE_BLOCK_SPECS,
   FAPI_TEMPLATE_EDGE_SPECS,
-} from '@/shared/workflow-engine/templates/sample-workflows/fapi-template';
+} from '@/shared/workflow-engine/templates/fapi/fapi-template';
 import {
   type LocalWorkflowSnapshot,
   SAMPLE_CREATED_AT,

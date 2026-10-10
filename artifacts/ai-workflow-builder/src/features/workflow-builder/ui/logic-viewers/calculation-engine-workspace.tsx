@@ -31,6 +31,8 @@ function getConnectedSources(
     .filter(
       (e) =>
         e.target === block.id &&
+        e.data?.workflowEdge?.status !== 'disabled' &&
+        e.data?.status !== 'disabled' &&
         (e.data?.workflowEdge?.targetInputRole === 'calculation_rules' ||
           e.data?.targetInputRole === 'calculation_rules'),
     )
@@ -102,7 +104,7 @@ export function CalculationEngineWorkspace({
   selectedTermId?: string | null;
 }) {
   const connectedSources = getConnectedSources(block, edges, nodes);
-  const hasConnectedRulebook = connectedSources.length > 0;
+  const hasConnectedRulebook = block.config.mode !== 'inline' && connectedSources.length > 0;
 
   let workspaceContent: React.ReactNode;
 
@@ -127,6 +129,7 @@ export function CalculationEngineWorkspace({
             lastRunOutput={lastRunOutput}
             nodes={nodes}
             onUpdateConfig={(key, value) => onRuleConfigPatch?.(primary.block.id, { [key]: value })}
+            onInputConfigChange={(key, value) => onConfigPatch({ [key]: value })}
           />
         </div>
       </>

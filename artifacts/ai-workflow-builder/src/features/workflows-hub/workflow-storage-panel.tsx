@@ -7,6 +7,7 @@ import { openWorkflowWorkspace, subscribeWorkflowSync, syncWorkflowLibrary, vali
 import { workspaceContext } from '@/platform/auth/workspace-context';
 import { apiJSON } from '@/platform/auth/api-fetch';
 import { parseSharedJSON } from '@/shared/workflow-engine/shared-json';
+import { WorkflowDraftReplacement } from './workflow-draft-replacement';
 
 export function WorkflowStoragePanel() {
   const [library, setLibrary] = useAtom(workflowLibraryAtom);
@@ -54,6 +55,7 @@ export function WorkflowStoragePanel() {
           toast.success('Backup imported as new workflows.');
         } catch (error) { toast.error(error instanceof Error ? error.message : 'Import failed.'); }
       }} /></label>
+      <WorkflowDraftReplacement />
       {!workspaceContext?.isDemo && <><label className="block">Claim an old anonymous library<input aria-label="Legacy workspace recovery code" value={recovery} onChange={event => setRecovery(event.target.value)} className="w-full rounded border p-1" /></label>
       <p>A legacy recovery code can be claimed once into a new empty workspace. Existing local work must be exported first.</p>
       <button disabled={!editable || busy || !recovery.trim() || Object.keys(library).length>0} onClick={async () => {

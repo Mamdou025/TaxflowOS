@@ -7,6 +7,7 @@ import { AddConnectionOverlay } from '@/platform/settings/add-connection-overlay
 import { IntegrationsManager } from '@/platform/settings/integrations-manager';
 import { usePageMenu } from '@/shared/stores/page-menu-store';
 import { useOverlay } from '@/shared/ui/overlays/overlay-provider';
+import { ChatGPTGrantsPanel } from '@/features/chatgpt-account-linking/grants-panel';
 
 export default function ConnectionsPage() {
   const { push } = useOverlay();
@@ -56,7 +57,8 @@ export default function ConnectionsPage() {
         </div>
         {!editable && (
           <p className="mb-4 rounded-lg border p-3 text-sm" role="status">
-            Viewer access can inspect connections but cannot configure, test or remove them.
+            Viewer access can inspect provider connections but cannot configure, test or remove
+            them. You can revoke ChatGPT access granted by your own account below.
           </p>
         )}
         <section
@@ -85,6 +87,7 @@ export default function ConnectionsPage() {
           </div>
           <IntegrationsManager editable={editable} onIntegrationChange={changed} />
         </section>
+        <ChatGPTGrantsPanel />
       </div>
     </div>
   );

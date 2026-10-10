@@ -23,14 +23,31 @@ const targets = [
   'scripts/format-maintained.mjs',
   'scripts/maintained-paths.mjs',
 ];
-const result = spawnSync(
-  process.execPath,
-  [
-    path.join(root, 'node_modules/prettier/bin/prettier.cjs'),
-    process.argv.includes('--write') ? '--write' : '--check',
-    ...targets,
-  ],
-  { cwd: root, stdio: 'inherit' },
-);
-if (result.error) throw result.error;
-process.exitCode = result.status ?? 1;
+// Windows caps the complete command line. Keep every target, but bound each invocation.
+const batches = [];
+let batch = [];
+let length = 0;
+for (const target of targets) {
+  if (batch.length && length + target.length + 3 > 12000) {
+    batches.push(batch);
+    batch = [];
+    length = 0;
+  }
+  batch.push(target);
+  length += target.length + 3;
+}
+if (batch.length) batches.push(batch);
+process.exitCode = 0;
+for (const files of batches) {
+  const result = spawnSync(
+    process.execPath,
+    [
+      path.join(root, 'node_modules/prettier/bin/prettier.cjs'),
+      process.argv.includes('--write') ? '--write' : '--check',
+      ...files,
+    ],
+    { cwd: root, stdio: 'inherit' },
+  );
+  if (result.error) throw result.error;
+  if (result.status !== 0) process.exitCode = result.status ?? 1;
+}

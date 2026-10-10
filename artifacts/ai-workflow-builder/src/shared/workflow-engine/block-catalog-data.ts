@@ -89,7 +89,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
     family: "Source",
     subtype: "API / HTTP Request",
     label: "API / HTTP Request",
-    description: "Live rows fetched from a public JSON API",
+    description: "Named values or rows selected from a JSON API response",
     defaultConfig: {
       owner: "Data Operations",
       fieldMap: {},
@@ -111,7 +111,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
     family: "Source",
     subtype: "Currency Rate",
     label: "Bank of Canada FX Rate",
-    description: "External FX rate reference for local calculation",
+    description: "Compatibility FX source for existing workflows; use API Source for new sources",
     defaultConfig: {
       documentCurrency: "USD",
       fapiYear: 2025,

@@ -1,6 +1,5 @@
-// Shared state for the Workflows surface — so the workflow LIST (published into
-// the Scope sidebar) and the DETAIL (in the page body) + the header tabs all read
-// one source of truth.
+// Shared state for the Workflows surface: its page-local list, detail view,
+// header tabs and Chat consumers all read one source of truth.
 
 import { atom } from 'jotai';
 import { atomWithStorage } from '@/platform/auth/workspace-atoms';

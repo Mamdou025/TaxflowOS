@@ -17,10 +17,8 @@ export type NavAction = {
   href: string;
 };
 
-export const selectedClientAtom = atom('Northstar Inc.');
+// Conversation labels only; these do not identify a company dataset or grant access.
+export const selectedClientAtom = atom('');
 export const showClientSwitcherAtom = atom(false);
-// Fiscal/tax year in scope — shown as a tag next to the Scope orb. A placeholder scope
-// parameter for now (static); it will be driven by the per-workflow scope definition
-// later (some workflows care about a year, others don't).
-export const scopeYearAtom = atom(2025);
+export const scopeYearAtom = atom<number | null>(null);
 export const navActionsAtom = atom<NavAction[]>([]);

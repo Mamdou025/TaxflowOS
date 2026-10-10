@@ -85,8 +85,8 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      // Eager development modules avoid route-loading waterfalls. Production
-      // uses lazy bundles, verified separately by test:production-ui.
+      // Both adapters defer the workspace so the public startup shell can paint.
+      // Production bundles are verified separately by test:production-ui.
       '@/app-workspace': path.resolve(
         import.meta.dirname,
         process.env.NODE_ENV === 'production'
@@ -104,6 +104,8 @@ export default defineConfig({
     dedupe: ['react', 'react-dom'],
   },
   root: path.resolve(import.meta.dirname),
+  // Scan the application entry, not generated standalone MCP viewer HTML.
+  optimizeDeps: { entries: ['index.html'], holdUntilCrawlEnd: false },
   build: {
     outDir: path.resolve(import.meta.dirname, 'dist/public'),
     emptyOutDir: true,
@@ -213,6 +215,10 @@ export default defineConfig({
     // (localhost:PORT/api/...). The proxy must still point at the correct port so
     // those callers don't hit ECONNREFUSED.
     proxy: {
+      '/.well-known': {
+        target: process.env.API_BASE ?? `http://localhost:${process.env.API_SERVER_PORT ?? 8080}`,
+        changeOrigin: true,
+      },
       '/api': {
         target: process.env.API_BASE ?? `http://localhost:${process.env.API_SERVER_PORT ?? 8080}`,
         changeOrigin: true,

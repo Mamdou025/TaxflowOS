@@ -34,6 +34,7 @@ export const requireSession: RequestHandler = async (req, res, next) => {
       return;
     }
     req.userId = session.user.id;
+    req.authSessionId = session.session.id;
     req.isDemo = session.user.isAnonymous === true;
     res.locals.user = {
       id: session.user.id,

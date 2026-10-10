@@ -83,6 +83,8 @@ export type Resource = {
   /** Broad lowercase phrases for natural-language open/target intent. */
   keywords?: string[];
   note?: string;
+  /** Resolve old saved links without advertising a second entry point. */
+  compatibilityOnly?: boolean;
   open?: ResourceOpen;
   page?: ResourcePage;
   anchors?: ResourceAnchor[];
@@ -231,7 +233,7 @@ export const RESOURCES: Resource[] = [
     open: { as: 'page', pageKey: 'worksheets' },
     page: {
       title: 'Worksheets',
-      subtitle: 'FAPI · T1134 · Surplus workpapers',
+      subtitle: 'T1134 · Surplus workpapers',
       icon: LayoutGrid,
       Component: lazyPage(() => import('@/features/assistant/workspace/worksheets-hub')),
     },
@@ -300,6 +302,7 @@ export const RESOURCES: Resource[] = [
   // sessions own source selection, inputs, execution and historical results.
   {
     id: 'fapi',
+    compatibilityOnly: true,
     kind: 'workflow',
     token: 'FAPI-WORKFLOW',
     mentions: ['fapi-workflow', 'fapi workflow'],
@@ -390,7 +393,9 @@ export function getPage(key: string): PageView | null {
 }
 
 export function listPages(): PageView[] {
-  return RESOURCES.map(toPageView).filter((p): p is PageView => p !== null);
+  return RESOURCES.filter((resource) => !resource.compatibilityOnly)
+    .map(toPageView)
+    .filter((p): p is PageView => p !== null);
 }
 
 // ─── Chip rendering (was chat-entities.splitEntities) ────────────────────────
@@ -569,6 +574,7 @@ export function buildAgentCatalog(): AgentCatalog {
   const fields: AgentCatalog['fields'] = [];
   const routes: AgentCatalog['routes'] = [];
   for (const r of RESOURCES) {
+    if (r.compatibilityOnly) continue;
     if (r.page) pages.push({ key: r.id, title: r.page.title, subtitle: r.page.subtitle });
     if (r.open?.as === 'route')
       routes.push({ id: r.id, label: r.token ?? r.id, href: r.open.href });

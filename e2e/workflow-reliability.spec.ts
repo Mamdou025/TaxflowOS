@@ -309,7 +309,7 @@ test('workflow menus exclude retired demos and a blank builder loads the executa
   await expect(page.locator('.react-flow__edge')).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Reset.*Sample/ })).toHaveCount(0);
   // The embedded builder uses the workspace catalogue, not the standalone File menu.
-  await page.getByRole('button', { name: 'FAPI Calculation (portfolio)', exact: true }).click();
+  await page.getByRole('button', { name: 'FAPI Calculation', exact: true }).click();
   await page.getByRole('button', { name: 'Build', exact: true }).click();
   await expect(
     page.locator('.react-flow__node[data-id="fapi-source-trial-balance"]'),
@@ -436,4 +436,69 @@ test('workpaper upload, run, business results and saved rerun agree in the app',
     path: info.outputPath('ownership-workpaper.png'),
     fullPage: true,
   });
+});
+
+test('generic API source saves text output and preserves evidence after a failed fetch', async ({
+  page,
+}) => {
+  let fail = false;
+  await page.route('**/api/http-source', (route) =>
+    route.fulfill({
+      json: fail
+        ? { ok: false, reason: 'Upstream unavailable' }
+        : {
+            ok: true,
+            namedValues: { companyName: 'Example Company' },
+            fetchedPayload: { company: { name: 'Example Company' } },
+            responseMeta: {
+              status: 200,
+              fetchedAt: '2026-10-04T12:00:00Z',
+              url: 'https://example.com/company',
+            },
+          },
+    }),
+  );
+  await page.evaluate(async () => {
+    const refresh = (await import('/@react-refresh')).default;
+    refresh.injectIntoGlobalHook(window);
+    window.$RefreshReg$ = () => {};
+    window.$RefreshSig$ = () => (type) => type;
+    window.__vite_plugin_react_preamble_installed__ = true;
+    const React = (await import('/@id/react')).default;
+    const { createRoot } = (await import('/@id/react-dom/client')).default;
+    const { HttpJsonSourcePanel } =
+      await import('/src/features/workflow-builder/ui/source-viewers/http-json-source-panel.tsx');
+    function Harness() {
+      const [config, setConfig] = React.useState({
+        url: 'https://example.com/company',
+        outputMode: 'values',
+        outputMappings: [{ name: 'companyName', path: 'company.name', type: 'text' }],
+      });
+      window.apiSourceTestConfig = config;
+      return React.createElement(HttpJsonSourcePanel, {
+        block: { id: 'api-test' },
+        config,
+        sourceLocked: false,
+        sourceVersion: 1,
+        onConfigPatch: (patch) => setConfig((current) => ({ ...current, ...patch })),
+      });
+    }
+    createRoot(document.body).render(React.createElement(Harness));
+  });
+  await expect(page.getByLabel('Output name')).toHaveValue('companyName');
+  await page.getByRole('button', { name: /Send/ }).click();
+  await expect(page.getByText('API response saved', { exact: false })).toBeVisible();
+  const saved = await page.evaluate(() => window.apiSourceTestConfig);
+  expect(saved.fetchedPayload).toEqual({ company: { name: 'Example Company' } });
+  expect(saved.fetchedRequestSignature).toBeTruthy();
+  fail = true;
+  await page.getByRole('button', { name: /Send/ }).click();
+  await expect(page.getByText('Upstream unavailable')).toBeVisible();
+  expect((await page.evaluate(() => window.apiSourceTestConfig)).fetchedPayload).toEqual(
+    saved.fetchedPayload,
+  );
+  await page.getByLabel('Response path', { exact: true }).fill('company.missing');
+  await expect(
+    page.getByText('companyName: response value is missing.', { exact: true }),
+  ).toBeVisible();
 });

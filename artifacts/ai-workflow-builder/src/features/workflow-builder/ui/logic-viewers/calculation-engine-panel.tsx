@@ -21,6 +21,8 @@ import {
   tokensToExpression,
 } from './calculation-editor-model';
 import { CalculationTokenChip } from './calculation-token-chip';
+import { CalculationVariableInsert } from './calculation-variable-insert';
+import { CalculationVariablePanel } from './calculation-variable-panel';
 // ─── CalculationEngineModeSection ─────────────────────────────────────────────
 
 export function CalculationEngineModeSection({
@@ -259,6 +261,14 @@ export function CalculationEngineModeSection({
 
   return (
     <div className="space-y-2">
+      <CalculationVariablePanel
+        block={block}
+        edges={edges}
+        nodes={nodes}
+        outputs={lastRunOutput}
+        disabled={disabled}
+        onChange={onUpdateConfig}
+      />
       {/* Compact mode selector */}
       <div className="flex items-center gap-2">
         <span className="shrink-0 font-semibold text-[9px] text-muted-foreground uppercase tracking-widest">
@@ -407,6 +417,7 @@ export function CalculationEngineModeSection({
 
               {/* Builder tools */}
               <div className="flex-1 space-y-4 overflow-y-auto px-3 py-3">
+                <CalculationVariableInsert disabled={disabled} onInsert={appendRef} />
                 {/* Special functions */}
                 <div className="space-y-1.5">
                   <div className="font-bold text-[9px] text-violet-600/80 uppercase tracking-widest">

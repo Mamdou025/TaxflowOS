@@ -100,7 +100,7 @@ test("Build uploads create a personal workflow that survives Run and reload", as
   await page
     .getByRole("button", { name: "Use this test data", exact: true })
     .click();
-  await expect(page.getByText("MY WORKFLOWS", { exact: true })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Saved workflows", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Run", exact: true }).first().click();
   await page
     .getByRole("button", { name: "Save changes and preview", exact: true })

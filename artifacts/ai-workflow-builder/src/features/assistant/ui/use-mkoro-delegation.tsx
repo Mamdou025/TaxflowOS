@@ -1,12 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
-import {
-  useCopilotAction,
-  useCopilotChat,
-  useCopilotChatInternal,
-  useCopilotReadable,
-  useFrontendTool,
-} from '@copilotkit/react-core';
+import { useCopilotAction, useCopilotReadable, useFrontendTool } from '@copilotkit/react-core';
+import type { useCopilotChatInternal } from '@copilotkit/react-core';
+import { useAgent } from '@copilotkit/react-core/v2';
 import { TextMessage, Role } from '@copilotkit/runtime-client-gql';
 import { permits } from '@workspace/api-zod/access';
 import { MKORO_PATH, MkoroEventsSchema } from '@workspace/api-zod/mkoro';
@@ -21,33 +17,22 @@ import {
   useMkoroConnection,
 } from '../mkoro/use-mkoro';
 import { computerTaskContext, delegateComputerTask } from '../runtime/computer-delegation';
-import type { AguiMessage } from '../runtime/chat/message-codec';
 
 /** Computer work is one narrow tool owned by Sina; it receives no platform tools or session tokens. */
 export function useMkoroDelegation(
   ensureThread: (userMessageId: string) => Promise<string>,
   chatReady: boolean,
+  appendMessage: ReturnType<typeof useCopilotChatInternal>['appendMessage'],
 ) {
   const store = useStore();
   const threadId = useAtomValue(activeChatThreadIdAtom);
   const progress = useAtomValue(mkoroThreadProgressAtom);
   const connection = useMkoroConnection();
   const openSettings = useSetAtom(mkoroSettingsOpenAtom);
-  const { appendMessage } = useCopilotChat();
-  // CopilotKit's live AG-UI store, matching the existing chat persistence adapter.
-  const {
-    messages = [],
-    isLoading,
-    agent,
-  } = useCopilotChatInternal() as unknown as {
-    messages: AguiMessage[];
-    isLoading: boolean;
-    agent?: {
-      subscribe: (subscriber: { onRunFailed: () => void; onRunErrorEvent: () => void }) => {
-        unsubscribe: () => void;
-      };
-    };
-  };
+  // Observe the same agent without opening another transport connection. Review
+  // turns use the assistant owner's append command, preserving one run lifecycle.
+  const { agent } = useAgent();
+  const { messages, isRunning: isLoading } = agent;
   const [reviewRequest, setReviewRequest] = useState<{ threadId: string; taskId: string } | null>(
     null,
   );

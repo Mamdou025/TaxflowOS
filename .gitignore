@@ -2,6 +2,7 @@
 
 # compiled output
 dist
+/artifacts/ai-workflow-builder/dist-chatgpt/
 tmp
 out-tsc
 *.tsbuildinfo

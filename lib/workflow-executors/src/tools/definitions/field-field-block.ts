@@ -2,12 +2,44 @@ import { type ToolDefinition } from '../types';
 import { asRecord, completeResult, makeLog } from '../primitives';
 import { collectEvidence, collectSourceTrace } from '../rows';
 import { getToolInputSchema, getToolOutputSchema } from '../ports';
+import { projectFieldWorksheet } from '@workspace/workflow-core/field-worksheet';
 
 export const fieldFieldBlockTool: ToolDefinition = {
   defaultConfig: {},
   description: 'Displays computed values sourced from upstream logic blocks.',
   displayName: 'Field Block',
   execute: (context) => {
+    const worksheet = projectFieldWorksheet({
+      definition: context.workflow,
+      block: { ...context.block, config: context.config },
+      results: context.allResults,
+    });
+    if (worksheet.declared) {
+      const invalid = worksheet.lines.filter((line) => line.status === 'invalid');
+      const pending = worksheet.lines.filter((line) => line.status !== 'current');
+      const errors = [
+        ...worksheet.errors,
+        ...invalid.map((line) => `${line.label}: ${line.message}`),
+      ];
+      return completeResult({
+        context,
+        output: {
+          computedValues: Object.fromEntries(
+            worksheet.lines
+              .filter((line) => line.status === 'current')
+              .map((line) => [line.id, line.value]),
+          ),
+          worksheet,
+        },
+        status: errors.length ? 'error' : pending.length ? 'needs_review' : 'success',
+        errors,
+        warnings: pending
+          .filter((line) => line.status !== 'invalid')
+          .map((line) => `${line.label}: ${line.message}`),
+        evidenceRefs: collectEvidence(context),
+        sourceTrace: collectSourceTrace(context),
+      });
+    }
     const computedValues: Record<string, unknown> = {};
     for (const result of context.upstreamResults) {
       const output = asRecord(result.output) ?? {};
@@ -61,7 +93,10 @@ export const fieldFieldBlockTool: ToolDefinition = {
       outputType: 'computed_values',
     },
   ],
-  outputSchema: getToolOutputSchema([{ key: 'computedValues', type: 'object' }]),
+  outputSchema: getToolOutputSchema([
+    { key: 'computedValues', type: 'object' },
+    { key: 'worksheet', type: 'object' },
+  ]),
   runMode: 'local_mock',
   subtype: 'Field Block',
   toolGroup: 'field',

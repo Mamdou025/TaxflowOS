@@ -1,5 +1,14 @@
-import type { WorkflowBlock } from '@workspace/workflow-contracts/domain/workflow-types';
+import type {
+  WorkflowBlock,
+  WorkflowDefinition,
+} from '@workspace/workflow-contracts/domain/workflow-types';
 import { WorkflowCommandError } from './commands';
+import type { CalculationInputSource } from '../core/calculation-inputs';
+import {
+  isCalculationInputBlock,
+  validateCalculationInputChoices,
+  validateCalculationInputValues,
+} from './calculation-session-inputs';
 
 const scalar = [
   'value',
@@ -74,6 +83,7 @@ const http = [
 
 /** Runtime data only. Rules, tool identities, edges and governance require a draft proposal. */
 export function runInputKeys(block: WorkflowBlock): string[] {
+  if (isCalculationInputBlock(block)) return ['inputValues', 'inputChoices'];
   if (
     block.family !== 'Source' ||
     /rules|rulebook|rule_knowledge/i.test(`${block.subtype} ${block.config.sourceKind}`)
@@ -108,13 +118,32 @@ export function hasRunExchangeRate(config: Record<string, unknown>) {
   return typeof rate === 'number' && Number.isFinite(rate) && rate > 0;
 }
 
-export function validateRunInputPatch(block: WorkflowBlock, patch: Record<string, unknown>) {
+export function validateRunInputPatch(
+  block: WorkflowBlock,
+  patch: Record<string, unknown>,
+  definition?: WorkflowDefinition,
+  sources?: readonly CalculationInputSource[],
+  acceptedHistoricalNames?: readonly string[],
+) {
   const keys = runInputKeys(block);
   if (!Object.keys(patch).length || Object.keys(patch).some((key) => !keys.includes(key)))
     throw new WorkflowCommandError(
       'INVALID_REQUEST',
-      'Only this source block’s input fields can change. Use a reviewed workflow proposal for rules or steps.',
+      'Only this block’s input fields can change. Use a reviewed workflow proposal for rules or steps.',
     );
+  if (isCalculationInputBlock(block)) {
+    if (Object.hasOwn(patch, 'inputValues'))
+      validateCalculationInputValues(block, patch.inputValues);
+    if (Object.hasOwn(patch, 'inputChoices'))
+      validateCalculationInputChoices(
+        block,
+        patch.inputChoices,
+        definition,
+        sources,
+        acceptedHistoricalNames,
+      );
+    return structuredClone(patch);
+  }
   const next = { ...block.config, ...patch };
   const numeric = [
     'value',

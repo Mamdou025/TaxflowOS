@@ -1,35 +1,12 @@
 import { Suspense, lazy, type ReactNode, Component, type ErrorInfo } from 'react';
 import { captureRenderError } from '@/lib/error-monitoring';
+import { isAccountLinkingPage } from '@/features/chatgpt-account-linking/api';
+import AccountLinkingPage from '@/features/chatgpt-account-linking/account-linking-page';
+import { WorkspaceStartup } from '@/platform/auth/ui/workspace-startup';
 
-/** Full-page spinner shown while the app shell is hydrating */
+/** Retain the public branded shell while the verified workspace modules load. */
 function AppSpinner() {
-  return (
-    <div
-      role="status"
-      aria-label="Loading workspace"
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100dvh',
-        width: '100vw',
-        background: '#f5f5f5',
-      }}
-    >
-      <div
-        style={{
-          width: 36,
-          height: 36,
-          border: '3px solid #d1d5db',
-          borderTopColor: '#6366f1',
-          borderRadius: '50%',
-          animation: 'spin 0.8s linear infinite',
-        }}
-      />
-      <span style={{ marginLeft: 12 }}>Loading workspace...</span>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
-  );
+  return <WorkspaceStartup />;
 }
 
 const CHUNK_RELOAD_KEY = 'inscope_chunk_reload_attempted';
@@ -453,6 +430,12 @@ function Router() {
 }
 
 export default function App() {
+  if (isAccountLinkingPage(window.location.pathname))
+    return (
+      <AppErrorBoundary>
+        <AccountLinkingPage />
+      </AppErrorBoundary>
+    );
   return (
     <AppErrorBoundary>
       <QueryClientProvider client={queryClient}>

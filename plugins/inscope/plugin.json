@@ -1,0 +1,25 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "inscope",
+  "version": "0.1.0",
+  "description": "Review exact saved InScope workflow versions and recorded runs using connected read-only InScope tools.",
+  "author": { "name": "InScope" },
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "InScope",
+        "shortDescription": "Inspect saved workflows",
+        "longDescription": "Development package for reviewing saved workflow graphs and recorded results. Requires a separately connected authenticated InScope MCP server. This first milestone does not edit, execute, approve, or control computers.",
+        "developerName": "InScope",
+        "category": "Business & Operations",
+        "capabilities": ["Read"],
+        "defaultPrompt": [
+          "Show my saved InScope workflows.",
+          "Open an exact workflow version and explain its calculation blocks."
+        ],
+        "logo": "./assets/icon.svg",
+        "composerIcon": "./assets/icon.svg"
+      }
+    }
+  }
+}

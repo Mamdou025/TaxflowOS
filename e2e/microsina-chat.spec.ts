@@ -152,6 +152,17 @@ test('agents continue the same chat, retain turn authors and save a selection wi
   });
   await page.goto('/');
   const selector = page.locator('.lc-console').getByRole('button', { name: /^Chat agent:/ });
+  const reloadSavedChat = async (id: string) => {
+    const [response] = await Promise.all([
+      page.waitForResponse(
+        (response) =>
+          response.request().method() === 'GET' &&
+          new URL(response.url()).pathname === `/api/chat/threads/${encodeURIComponent(id)}`,
+      ),
+      page.reload(),
+    ]);
+    expect(response.status()).toBe(200);
+  };
   const expectAvailableAgent = async (name: 'Sina' | 'MicroSina') => {
     await expect(selector).toHaveAccessibleName(`Chat agent: ${name}`);
     await selector.click();
@@ -211,7 +222,7 @@ test('agents continue the same chat, retain turn authors and save a selection wi
     savedChats.get(sameChatId)?.messages.find((message) => message.id === 'reply-1')?.content
       .authorAgent,
   ).toBe('microsina');
-  await page.reload();
+  await reloadSavedChat(sameChatId);
   await expectAvailableAgent('Sina');
   await expect(microReply).toContainText('Synthetic MicroSina reply.');
   expect(runs).toHaveLength(1);
@@ -241,7 +252,7 @@ test('agents continue the same chat, retain turn authors and save a selection wi
     .poll(() => savedChats.get(sameChatId)?.messages[0].content.selectedChatAgent)
     .toBe('microsina');
   expect(new Set(saves.map((save) => save.id))).toEqual(new Set([sameChatId]));
-  await page.reload();
+  await reloadSavedChat(sameChatId);
   await expectAvailableAgent('MicroSina');
   await expect(microReply).toContainText('Synthetic MicroSina reply.');
   await expect(page.locator('[data-message-id="reply-2"][data-agent="sina"]')).toContainText(
@@ -255,7 +266,7 @@ test('agents continue the same chat, retain turn authors and save a selection wi
   );
   await page.getByTitle('Saved MicroSina chat', { exact: true }).click();
   await expect(selector).toHaveAccessibleName('Chat agent: MicroSina');
-  await page.reload();
+  await reloadSavedChat('saved-micro');
   await expectAvailableAgent('MicroSina');
   await expect(page.locator('[data-message-id="saved-answer"]')).toHaveAttribute(
     'data-agent',

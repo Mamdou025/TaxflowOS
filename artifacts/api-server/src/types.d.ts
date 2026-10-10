@@ -5,6 +5,7 @@ declare namespace Express {
   interface Request {
     isDemo: boolean;
     userId: string;
+    authSessionId: string;
     workspaceId: string;
     workspaceRole: import('@workspace/api-zod/access').WorkspaceRole;
   }

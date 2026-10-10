@@ -1,10 +1,8 @@
 import { useState } from 'react';
-import {
-  calculationValueKey,
-  numericOutputFields,
-} from '@/shared/workflow-engine/calculation-values';
+import { calculationValueKey } from '@/shared/workflow-engine/calculation-values';
 import { type WorkflowBlock } from '@/shared/workflow-engine/workflow/contracts';
 import type { WorkflowEdge, WorkflowNode } from '@/shared/workflow-engine/state/workflow-store';
+import { calculationSourceFields } from './calculation-variable-model';
 
 export function calculationSources(
   block: WorkflowBlock,
@@ -13,7 +11,12 @@ export function calculationSources(
 ) {
   const ids = new Set(
     edges
-      .filter((edge) => edge.target === block.id && edge.data?.workflowEdge?.status !== 'disabled')
+      .filter(
+        (edge) =>
+          edge.target === block.id &&
+          edge.data?.workflowEdge?.status !== 'disabled' &&
+          edge.data?.status !== 'disabled',
+      )
       .map((edge) => edge.source),
   );
   return nodes
@@ -39,7 +42,7 @@ export function CalculationSourcePicker({
   const [sourceId, setSourceId] = useState('');
   const [path, setPath] = useState('');
   const source = sources.find((source) => source.id === sourceId);
-  const fields = source ? numericOutputFields(outputs[source.id]) : [];
+  const fields = source ? calculationSourceFields(source, outputs[source.id]) : [];
   return (
     <div className="space-y-2 rounded border p-2">
       <div className="text-xs font-medium">Value from another block</div>
@@ -66,15 +69,15 @@ export function CalculationSourcePicker({
       {source && (
         <>
           <div className="flex flex-wrap gap-1">
-            {fields.map((field) => (
+            {fields.map((fieldPath) => (
               <button
                 type="button"
-                key={JSON.stringify(field.path)}
+                key={JSON.stringify(fieldPath)}
                 disabled={disabled}
                 className="rounded border px-2 py-1 text-xs hover:bg-muted"
-                onClick={() => onInsert(calculationValueKey(source.id, field.path))}
+                onClick={() => onInsert(calculationValueKey(source.id, fieldPath))}
               >
-                {field.path.join(' › ') || 'Value'}
+                {fieldPath.join(' › ') || 'Value'}
               </button>
             ))}
           </div>

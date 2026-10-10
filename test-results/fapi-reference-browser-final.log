@@ -1,0 +1,13 @@
+
+> workspace@0.0.0 test:workflow-reliability C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-browser-tests.mjs reliability "e2e/fapi-reference-display.spec.ts" "e2e/phase-7-navigation.spec.ts" "e2e/workflow-session.spec.ts" "e2e/workflow-reliability.spec.ts" "--grep" "FAPI|worksheet compatibility|inline chat workflow|inline Chat reuses|Chat-first navigation"
+
+Test run 04a727d1-0aea0be7-2619-4560-a590-81e4801e7c93; reports and logs: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-0aea0be7-2619-4560-a590-81e4801e7c93
+Preparing the isolated browser dependency cache…
+
+Running 8 tests using 1 worker
+
+  ok 1 e2e\fapi-reference-display.spec.ts:122:5 › FAPI reference opens four typed stages and an uncalculated worksheet with reduced motion (28.1s)
+  x  2 e2e\fapi-reference-display.spec.ts:165:5 › FAPI prescribed results follow live inputs, retain folded drafts and export the exact recalculated run (1.0m)
+  ok 3 e2e\phase-7-navigation.spec.ts:248:5 › Chat-first navigation exposes the four product areas and nests run history (23.8s)
+  x  4 e2e\phase-7-navigation.spec.ts:364:5 › FAPI discovery has one workflow choice and retains historical page links (5.0m)

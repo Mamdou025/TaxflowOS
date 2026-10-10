@@ -32,6 +32,7 @@ export function RecordedWorkflowBuilder({
   onSelect,
   header,
   evidence,
+  openInspectorOnMount = true,
 }: {
   definition: WorkflowDefinition;
   record?: LocalRunRecord;
@@ -40,6 +41,7 @@ export function RecordedWorkflowBuilder({
   onSelect: (id: string) => void;
   header: ReactNode;
   evidence: ReactNode;
+  openInspectorOnMount?: boolean;
 }) {
   const [store] = useState(() => {
     const isolated = createStore();
@@ -48,7 +50,7 @@ export function RecordedWorkflowBuilder({
     isolated.set(currentWorkflowNameAtom, definition.name);
     isolated.set(selectedNodeAtom, selectedBlockId);
     isolated.set(focusNodeIdAtom, selectedBlockId);
-    isolated.set(openBlockConfigIdAtom, selectedBlockId);
+    isolated.set(openBlockConfigIdAtom, openInspectorOnMount ? selectedBlockId : null);
     return isolated;
   });
   useEffect(() => {

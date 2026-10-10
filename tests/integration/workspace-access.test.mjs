@@ -724,15 +724,52 @@ test('chat workflow binding roundtrips without granting cross-workspace or viewe
   const messages = [
     { id: `${id}:workflow-binding`, role: 'system', seq: 0, content },
     {
+      id: `${id}:chat-context`,
+      role: 'system',
+      seq: 1,
+      content: {
+        chatContext: {
+          version: 1,
+          companyName: 'Synthetic Example Company',
+          year: 2026,
+          sources: [
+            {
+              id: 'selected-source',
+              sourceId: 'selected-source',
+              sourceRevision: 2,
+              fileName: 'Synthetic reference.txt',
+              kind: 'document',
+              contentHash: 'sha256:synthetic',
+            },
+          ],
+          workflowSourceId: null,
+          workflowScope: null,
+          workflowInteraction: {
+            id: 'synthetic-click',
+            kind: 'saved-version',
+            status: 'opened',
+            name: 'Synthetic workflow',
+            requestedWorkflowId: 'synthetic-workflow',
+            workflowId: 'synthetic-workflow',
+            version: 1,
+            runId: 'exact-old-run',
+            message: 'Opened the selected saved workflow.',
+            afterMessageId: 'opening-message',
+            occurredAt: '2026-10-09T12:00:00.000Z',
+          },
+        },
+      },
+    },
+    {
       id: `${id}:sina-reply`,
       role: 'assistant',
-      seq: 1,
+      seq: 2,
       content: { text: 'First reply', authorAgent: 'sina' },
     },
     {
       id: `${id}:micro-reply`,
       role: 'assistant',
-      seq: 2,
+      seq: 3,
       content: { text: 'Next reply', authorAgent: 'microsina' },
     },
   ];

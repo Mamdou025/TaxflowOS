@@ -1,0 +1,8 @@
+
+> workspace@0.0.0 test:workflow-reliability C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-browser-tests.mjs reliability "--grep" "assistant-ui opens the exact saved FAPI|assistant-ui workflow choices resolve full names|assistant-ui starts a template independently|opening a viewer file|explicit chat context reaches sina|a started run retains its source|an exact run selection replaces|an unstarted workflow does not inherit|guided run shares exact progress|Chat starts a catalog workflow"
+
+Test run 04a727d1-b34599fc-4737-4463-aea8-6d721ad5dbe9; reports and logs: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-b34599fc-4737-4463-aea8-6d721ad5dbe9
+Preparing the isolated browser dependency cache…
+browser-warmup exited 1; see C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-b34599fc-4737-4463-aea8-6d721ad5dbe9\browser-warmup.log
+ ELIFECYCLE  Command failed with exit code 1.

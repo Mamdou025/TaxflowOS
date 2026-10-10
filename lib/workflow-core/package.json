@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./field-worksheet": "./src/application/field-worksheet.ts",
+    "./calculation-inputs": "./src/core/calculation-inputs.ts",
+    "./formula-references": "./src/core/formula-references.ts",
     "./graph": "./src/core/graph.ts",
     "./sessions": "./src/application/sessions.ts",
     "./ports": "./src/core/ports.ts",

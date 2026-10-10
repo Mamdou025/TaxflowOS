@@ -41,6 +41,8 @@ import type {
 } from "@/shared/workflow-engine/state/workflow-store";
 import { hasExcelSourceEvidence } from "@/shared/workflow-engine/domain/workflow/source-rules";
 import { CalculationEngineModeSection } from "../logic-viewers/calculation-engine-panel";
+import { FieldWorksheetEditor } from '../logic-viewers/field-worksheet-editor';
+import { fieldWorksheetCanvasContext } from '../logic-viewers/field-worksheet-canvas';
 import { CalculationEngineRunSections } from "../logic-viewers/calculation-engine-run-sections";
 import { HierarchyAggregatorRunSections } from "../logic-viewers/hierarchy-aggregator-run-sections";
 import { SUPPORTED_AGGREGATION_OPERATIONS } from "../source-viewers/aggregation-rule-modes";
@@ -1512,28 +1514,13 @@ function ConfigureSection({
   }
 
   if (block.family === "Field") {
-    const fields = Array.isArray(config.fields) ? (config.fields as { key: string; label: string }[]) : [];
     return (
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-sm text-violet-400">
-          <LayoutList className="size-4" />
-          <span className="font-medium">Displayed fields</span>
-        </div>
-        {fields.length === 0 ? (
-          <p className="text-muted-foreground text-xs">
-            Connect an upstream block (Calculation Engine, Category Rollup, etc.) to display its computed values here.
-          </p>
-        ) : (
-          <div className="space-y-1">
-            {fields.map((f) => (
-              <div key={f.key} className="flex items-center justify-between rounded border px-2 py-1.5 text-sm">
-                <span className="font-medium">{f.label || f.key}</span>
-                <span className="text-muted-foreground text-xs">{f.key}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <FieldWorksheetEditor
+        block={{ ...block, config }}
+        definition={fieldWorksheetCanvasContext({ ...block, config }, nodes, edges).definition}
+        disabled={disabled}
+        onConfigPatch={setConfigValues}
+      />
     );
   }
 

@@ -245,6 +245,83 @@ test('partial runs require an existing selection and validate only relevant depe
   assert.equal(selected.result.results[0].output.value, 200);
 });
 
+test('isolated ancestor evidence supplies inspection context without adding direct inputs or executions', () => {
+  const d = definition(),
+    r = runtime();
+  const total = d.blocks.find((block) => block.id === 'total')!;
+  const totalResult = r.execute(d).result.results.find((result) => result.blockId === 'total')!;
+  d.blocks.push(
+    { ...total, id: 'origin' },
+    { ...total, id: 'unrelated' },
+    { ...total, id: 'future' },
+  );
+  d.edges.push(
+    createWorkflowEdgeRecord({
+      sourceBlockId: 'origin',
+      targetBlockId: 'total',
+      reason: 'Captured ancestor',
+    }),
+    createWorkflowEdgeRecord({
+      sourceBlockId: 'double',
+      targetBlockId: 'future',
+      reason: 'Later work',
+    }),
+  );
+  const recorded = { origin: { ...totalResult, blockId: 'origin' } };
+  const originalEdges = structuredClone(d.edges);
+  const execute = r.tools.double.execute;
+  r.tools.double.execute = (context) => {
+    assert.deepEqual(Object.keys(context.allResults).sort(), ['origin', 'total']);
+    assert.deepEqual(
+      context.upstreamBlocks.map((block) => block.id),
+      ['total'],
+    );
+    assert.deepEqual(
+      context.upstreamResults.map((result) => result.blockId),
+      ['total'],
+    );
+    assert.deepEqual(Object.keys(context.upstreamOutputs), ['total']);
+    assert.deepEqual(context.workflow.edges, originalEdges);
+    return execute(context);
+  };
+  const input = {
+    definition: d,
+    mode: 'isolated' as const,
+    selectedBlockId: 'double',
+    isolatedInputs: [{ block: total, result: totalResult }],
+    recordedAncestorResults: recorded,
+  };
+  const calls = r.calls();
+  const isolated = executeGraph(input, r.ports);
+  assert.equal(r.calls(), calls + 1);
+  assert.deepEqual(
+    isolated.result.results.map((result) => result.blockId),
+    ['double'],
+  );
+  assert.equal(isolated.result.results[0].output.value, 400);
+  assert.deepEqual(
+    isolated.result.results[0].inputTransfers?.map((transfer) => transfer.sourceBlockId),
+    ['total'],
+  );
+  assert.deepEqual(d.edges, originalEdges);
+  for (const id of ['double', 'unrelated', 'future'])
+    assert.throws(
+      () =>
+        executeGraph(
+          { ...input, recordedAncestorResults: { [id]: { ...totalResult, blockId: id } } },
+          r.ports,
+        ),
+      /matching results from active ancestors/,
+    );
+  assert.throws(
+    () => executeGraph({ ...input, recordedAncestorResults: { origin: totalResult } }, r.ports),
+    /matching results from active ancestors/,
+  );
+  assert.throws(() => executeGraph({ ...input, mode: 'workflow' }, r.ports), /only for isolated/);
+  d.edges.find((edge) => edge.sourceBlockId === 'origin')!.status = 'disabled';
+  assert.throws(() => executeGraph(input, r.ports), /matching results from active ancestors/);
+});
+
 test('missing tools never report an ordinary successful calculation', () => {
   const d = definition(),
     r = runtime();

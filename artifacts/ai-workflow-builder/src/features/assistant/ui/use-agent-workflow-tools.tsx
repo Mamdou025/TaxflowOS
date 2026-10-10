@@ -18,6 +18,8 @@ import { workflowLibraryAtom } from '@/features/workflows-hub/workflow-library';
 import { WORKFLOW_CONFIGS } from '@/shared/workflow-engine/runtime/workflow-runs';
 import { chatAgentAtom } from '@/shared/stores/chat-store';
 import { chatAgentName } from '../runtime/chat/chat-agent';
+import { WorkflowChoiceList } from './workflow-choice-list';
+import { filterWorkflowChoices } from './workflow-choice-model';
 import {
   authorizeAgentAction,
   createAgentGrant,
@@ -291,31 +293,66 @@ export function useAgentWorkflowTools() {
   useCopilotAction({
     name: 'listAvailableWorkflows',
     description:
-      'List executable built-in workflow templates, including their exact runWorkflow IDs and required source columns. These are available even when the workspace has no saved workflow drafts. Listing does not start a run or supply sample data. Saved drafts and versions are separate; use listSavedWorkflows for those.',
-    parameters: [],
-    handler: async () =>
-      Object.values(WORKFLOW_CONFIGS).map((config) => ({
-        workflowId: config.id,
-        name: config.name,
-        kind: 'built-in-template',
-        source: config.documentLabel,
-        requiredColumns: config.requiredColumns,
-      })),
+      'Show clickable built-in workflow names, exact internal runWorkflow IDs and source requirements. Optional query filters names; exact full-name matches take precedence and duplicate names remain separate. Names are user-facing; IDs are internal. Resolve a unique exact name to its returned ID, never demand that the user type an ID. Near names do not make an exact match ambiguous. Use the clickable choices for duplicate names. Templates exist even with no saved drafts. Listing never starts a run or supplies sample data; use listSavedWorkflows for saved drafts and versions.',
+    parameters: [
+      {
+        name: 'query',
+        type: 'string',
+        required: false,
+        description: 'Optional workflow name or words to find, such as FAPI.',
+      },
+    ],
+    handler: async ({ query }: { query?: string }) =>
+      filterWorkflowChoices(
+        Object.values(WORKFLOW_CONFIGS).map((config) => ({
+          workflowId: config.id,
+          name: config.name,
+          kind: 'built-in-template',
+          source: config.documentLabel,
+          requiredColumns: config.requiredColumns,
+        })),
+        query,
+      ),
+    render: ({ result, status }) =>
+      status === 'complete' ? (
+        <WorkflowChoiceList result={result} kind="available" />
+      ) : (
+        <p role="status">Finding available workflows…</p>
+      ),
   });
   useCopilotAction({
     name: 'listSavedWorkflows',
     description:
-      'List only workspace-saved workflow drafts before reading or proposing a change. An empty list does NOT mean no workflows are available: built-in templates such as FAPI are separate. Use listAvailableWorkflows for the executable template catalog. Never guess a saved ID from a name.',
-    parameters: [],
-    handler: async () =>
-      Object.values(store.get(workflowLibraryAtom)).map((entry) => ({
-        id: entry.id,
-        name: entry.draft.name,
-        description: entry.draft.description,
-        draftRevision: workflowDefinitionRevision(entry.draft),
-        latestVersion: entry.versions.at(-1)?.number ?? null,
-        blocks: entry.draft.blocks.length,
-      })),
+      'Show clickable workspace-saved workflows with their exact internal IDs, latest saved version and dates. Optional query filters names; exact full-name matches take precedence and duplicate names remain separate. Resolve a unique exact name to its returned ID; do not ask the user to type IDs or treat near names as duplicates. When names are duplicated, let the user select a card. A draft-only record has no runnable saved version; its card opens Build without saving or executing. An empty result does not remove built-in templates: use listAvailableWorkflows for those. Read the exact saved workflow before proposing edits or requesting an older version.',
+    parameters: [
+      {
+        name: 'query',
+        type: 'string',
+        required: false,
+        description: 'Optional workflow name or words to find, such as FAPI.',
+      },
+    ],
+    handler: async ({ query }: { query?: string }) =>
+      filterWorkflowChoices(
+        Object.values(store.get(workflowLibraryAtom)).map((entry) => ({
+          id: entry.id,
+          name: entry.draft.name,
+          description: entry.draft.description,
+          draftRevision: workflowDefinitionRevision(entry.draft),
+          latestVersion: entry.versions.at(-1)?.number ?? null,
+          latestVersionName: entry.versions.at(-1)?.definition.name,
+          latestVersionSavedAt: entry.versions.at(-1)?.savedAt,
+          updatedAt: entry.draft.metadata.updatedAt,
+          blocks: entry.draft.blocks.length,
+        })),
+        query,
+      ),
+    render: ({ result, status }) =>
+      status === 'complete' ? (
+        <WorkflowChoiceList result={result} kind="saved" />
+      ) : (
+        <p role="status">Finding saved workflows…</p>
+      ),
   });
   useCopilotAction({
     name: 'readSavedWorkflow',

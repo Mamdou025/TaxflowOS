@@ -193,10 +193,17 @@ const bocFxAverage: ApiConnector = {
   description: 'Average of published daily observations over the selected calendar year.',
   build: (params) => ({
     ...bocFxObservations.build(params),
-    outputMappings: [{
-      name: 'fxRate', path: `observations.*.FX${text(params, 'currency', 'USD').toUpperCase()}CAD.v`,
-      type: 'number', operation: 'mean', skipMissing: true, positive: true, overrideKey: 'overrideRate',
-    }],
+    outputMappings: [
+      {
+        name: 'fxRate',
+        path: `observations.*.FX${text(params, 'currency', 'USD').toUpperCase()}CAD.v`,
+        type: 'number',
+        operation: 'mean',
+        skipMissing: true,
+        positive: true,
+        overrideKey: 'overrideRate',
+      },
+    ],
   }),
 };
 

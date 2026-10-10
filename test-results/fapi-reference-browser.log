@@ -1,0 +1,8 @@
+
+> workspace@0.0.0 test:workflow-reliability C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-browser-tests.mjs reliability "e2e/fapi-reference-display.spec.ts"
+
+Test run 04a727d1-d1c3020f-6c22-4d5c-9a2b-1abb3b30e31c; reports and logs: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-d1c3020f-6c22-4d5c-9a2b-1abb3b30e31c
+Preparing the isolated browser dependency cache…
+browser-warmup exited 1; see C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-d1c3020f-6c22-4d5c-9a2b-1abb3b30e31c\browser-warmup.log
+ ELIFECYCLE  Command failed with exit code 1.

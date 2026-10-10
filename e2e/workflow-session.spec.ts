@@ -171,17 +171,40 @@ test('guided run shares exact progress with Chat and preserves source revisions 
       return { id: entry.id, version: entry.versions[0], run: entry.sessions!.at(-1)! };
     });
   const original = await read();
+  // Poll the count in the browser. Transporting a complete saved graph/run can
+  // outlast the assertion clock even after the source has been persisted.
+  const sourceCount = () =>
+    page.evaluate(async (workflowId) => {
+      const { readWorkflowLibrary } =
+        await import('/src/features/workflows-hub/workflow-library.ts');
+      return readWorkflowLibrary()[workflowId].sessions!.at(-1)!.sources.length;
+    }, original.id);
+  const calculationId = 'pf-document-calculator--calculate';
+  await panel.locator(`[data-step-id="${calculationId}"]`).click();
+  const pendingCalculation = panel.locator(`[data-block-details="${calculationId}"]`);
+  await expect(
+    pendingCalculation.getByRole('region', { name: 'Saved formulas', exact: true }),
+  ).toContainText('item_total * 2');
+  await expect(pendingCalculation.locator('[data-result-state="missing"]')).toContainText(
+    'No recorded result yet',
+  );
+  expect((await read()).run).toEqual(original.run);
+  await pendingCalculation.getByRole('region', { name: 'Saved formulas', exact: true }).screenshot({
+    path: test.info().outputPath('generic-workflow-saved-formula.png'),
+  });
   await attachSessionWorkbook(page, panel, 'records.xlsx', 200);
-  await expect.poll(async () => (await read()).run.sources.length).toBe(1);
+  await expect.poll(sourceCount).toBe(1);
   await panel.getByRole('button', { name: 'Resume workflow', exact: true }).click();
   await expect(panel.getByRole('button', { name: 'Approve completed results' })).toBeEnabled();
   expect(
     Object.values((await read()).run.results).find((result) => result.output.calculatedResults)
       ?.output.calculatedResults,
   ).toEqual({ RESULT: 400 });
-  const runSteps = await panel
-    .locator('ol[aria-label="Execution steps"] > li > details > summary')
-    .allTextContents();
+  await expect(pendingCalculation.locator('[data-result-state="recorded"]')).toContainText('400');
+  await expect(
+    pendingCalculation.getByRole('heading', { name: 'Recorded calculation trace', exact: true }),
+  ).toBeVisible();
+  const runSteps = await panel.locator('[data-step-toggle]').allTextContents();
   await panel.getByRole('button', { name: 'Continue in Chat' }).click();
   await expect(page.getByRole('button', { name: 'Chat', exact: true })).toBeVisible();
   // The workspace retains its Run view behind the expanded Chat surface.
@@ -198,9 +221,15 @@ test('guided run shares exact progress with Chat and preserves source revisions 
   await panel.locator('[data-step-id="pf-document-calculator--document"]').click();
   await panel.getByRole('combobox', { name: 'Source action' }).selectOption('add');
   await attachSessionWorkbook(page, panel, 'additional.xlsx', 50);
-  await expect.poll(async () => (await read()).run.sources.length).toBe(2);
+  await expect.poll(sourceCount).toBe(2);
   await expect(panel.getByRole('button', { name: 'Approve completed results' })).toBeDisabled();
-  await expect(panel.getByRole('list', { name: 'Execution steps' })).toContainText('outdated');
+  await expect(panel.getByRole('list', { name: 'Execution steps' })).toContainText('Outdated');
+  await panel.locator(`[data-step-id="${calculationId}"]`).click();
+  const previousCalculation = panel.locator(
+    `[data-block-details="${calculationId}"] [data-result-state="previous"]`,
+  );
+  await expect(previousCalculation).toContainText('Previous result — rerun before using it');
+  await expect(previousCalculation).toContainText('400');
   await panel.getByRole('button', { name: 'Collapse all steps' }).click();
   await expect(panel.locator('[data-step-toggle][aria-expanded="true"]')).toHaveCount(0);
   await expect(panel.getByRole('button', { name: 'Resume workflow', exact: true })).toBeEnabled();
@@ -220,6 +249,8 @@ test('guided run shares exact progress with Chat and preserves source revisions 
   await panel.getByRole('link', { name: 'Open this workflow in Run' }).click();
   await page.getByRole('button', { name: 'Run', exact: true }).first().click();
   await page.reload();
+  // The public shell finishes before the deferred workspace on a full reload.
+  await page.getByRole('textbox', { name: 'Ask Scope, or describe a task…' }).waitFor();
   await expect(
     page.getByRole('textbox', { name: 'Ask Scope, or describe a task…' }),
   ).toBeEditable();
@@ -326,7 +357,8 @@ test('document evidence follows the exact run from upload to Chat and Build', as
   await expect(panel).toContainText('other-records.xlsx · 1 records');
   await panel.getByRole('button', { name: 'Resume workflow', exact: true }).click();
   await expect(panel.getByRole('button', { name: 'Approve completed results' })).toBeEnabled();
-  await panel.locator('summary').filter({ hasText: 'Document evidence source' }).first().click();
+  const evidenceStep = panel.locator('[data-step-id="document"]');
+  if ((await evidenceStep.getAttribute('aria-expanded')) !== 'true') await evidenceStep.click();
   await expect(panel.getByRole('region', { name: 'Document evidence', exact: true })).toContainText(
     'source revision 1',
   );
@@ -435,6 +467,12 @@ test('inline chat workflow restores its exact run without execution or latest-ru
   await page.getByRole('button', { name: 'Continue in Chat', exact: true }).click();
   const side = page.getByRole('region', { name: 'Workflow in chat' });
   await expect(page.locator('.chat-work-side')).toHaveCount(0);
+  await expect(side).toBeVisible();
+  // The accordion starts with required calculation inputs; open the source step explicitly.
+  const documentStep = side.locator(
+    '[data-step-toggle][data-step-id="pf-document-calculator--document"]',
+  );
+  if ((await documentStep.getAttribute('aria-expanded')) !== 'true') await documentStep.click();
   await expect(side.getByLabel('Upload run source')).toBeVisible();
   await expect(side).toContainText(original);
   await expect.poll(() => saved.size).toBe(1);

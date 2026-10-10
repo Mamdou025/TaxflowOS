@@ -1,0 +1,431 @@
+
+> workspace@0.0.0 verify C:\Users\Mamad\Sinaxe\TaxflowOS
+> pnpm run doctor && pnpm run contracts:check && pnpm run check:architecture && pnpm run format:check && pnpm run typecheck && pnpm run typecheck:tests && pnpm run test:unit && pnpm run test:mkoro-worker && pnpm run typecheck:workflow-core-tests && pnpm run test:workflow-core
+
+
+> workspace@0.0.0 doctor C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/check-toolchain.mjs
+
+Toolchain runtime and configuration verified: Node 24.21.0, pnpm@10.26.1.
+This checks versions/configuration, not live database or model-provider availability.
+
+> workspace@0.0.0 contracts:check C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/generate-workflow-schemas.mjs --check
+
+Workflow runtime schemas match the domain contracts.
+
+> workspace@0.0.0 check:architecture C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/check-architecture.mjs
+
+Architecture checks passed across 1144 source files.
+
+> workspace@0.0.0 format:check C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/format-maintained.mjs
+
+Checking formatting...
+All matched files use Prettier code style!
+Checking formatting...
+All matched files use Prettier code style!
+Checking formatting...
+All matched files use Prettier code style!
+Checking formatting...
+All matched files use Prettier code style!
+
+> workspace@0.0.0 typecheck C:\Users\Mamad\Sinaxe\TaxflowOS
+> pnpm run typecheck:libs && pnpm -r --filter "./artifacts/**" --filter "./scripts" --if-present run typecheck
+
+
+> workspace@0.0.0 typecheck:libs C:\Users\Mamad\Sinaxe\TaxflowOS
+> tsc --build
+
+Scope: 5 of 16 workspace projects
+artifacts/ai-workflow-builder typecheck$ tsc -p tsconfig.json --noEmit
+artifacts/api-server typecheck$ tsc -p tsconfig.json --noEmit
+artifacts/inscope-pitch typecheck$ tsc -p tsconfig.json --noEmit
+artifacts/mockup-sandbox typecheck$ tsc -p tsconfig.json --noEmit
+artifacts/inscope-pitch typecheck: Done
+scripts typecheck$ tsc -p tsconfig.json --noEmit
+artifacts/mockup-sandbox typecheck: Done
+scripts typecheck: Done
+artifacts/api-server typecheck: Done
+artifacts/ai-workflow-builder typecheck: Done
+
+> workspace@0.0.0 typecheck:tests C:\Users\Mamad\Sinaxe\TaxflowOS
+> tsc -p tests/tsconfig.json --noEmit
+
+
+> workspace@0.0.0 test:unit C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-unit-tests.mjs
+
+✔ read, proposal and authorized retrieval capabilities are implicit (30.8957ms)
+✔ one-time approval is bound to agent, resource, revision, operation and request (12.0098ms)
+✔ reusable grants avoid repeated approval only inside their exact scope (8.2025ms)
+✔ expired, revoked and already-used approvals fail visibly (43.2396ms)
+✔ external writes reject reusable or unbound approvals (7.0272ms)
+✔ agent request allowance accepts detailed instructions and checks the exact byte boundary (8.0792ms)
+✔ agent request size includes UTF-8, JSON escaping and retrieval documents (119.5703ms)
+✔ workspace tools validate model arguments and pass trusted context through ports (16.8469ms)
+✔ invalid or unknown tool requests never reach a workspace port (33.5239ms)
+✔ mutating tool definitions expose distinct capabilities for policy evaluation (0.7757ms)
+✔ request correlation accepts bounded IDs and replaces unsafe input (4.3296ms)
+✔ API selections preserve text, zero, false and JSON without monetary rows (61.8953ms)
+✔ invalid or missing response values fail instead of becoming zero or sample data (13.5836ms)
+✔ changing a request or mapping rejects saved API evidence (13.1473ms)
+✔ BoC is a preset using the generic mean operation, with explicit override precedence (10.1416ms)
+✔ FAPI has one generic API source and consumes its selected number downstream (334.2119ms)
+✔ explicit FAPI draft upgrade preserves overrides and historical versions (61.408ms)
+✔ visible messages retain their IDs, streaming text and exact raw positions (34.6359ms)
+✔ tool receipts join by call ID and distinguish results, errors and pending calls (2.3737ms)
+✔ plain tool text and explicit error flags survive without invented completion (2.8225ms)
+✔ known user image shapes retain supplied data and unsupported content is omitted (4.1504ms)
+✔ conversion is read-only and never touches renderer functions (2.207ms)
+✔ missing IDs have stable display fallbacks and source readers reject unrelated metadata (1.2236ms)
+✔ server accepts legacy plain, wrapped, shared and compressed backups with the same validation (1558.9164ms)
+✔ shared opaque evidence is decoded once and remains shared instead of exhausting traversal (486.0862ms)
+✔ shared graph rejects cycles, malformed references and more than 200000 encoded nodes (859.31ms)
+✔ cached subtree height cannot bypass the 128-level limit through a deeper reference (7.5504ms)
+✔ opaque shared graphs cannot amplify later JSON serialization beyond 256 MiB (2069.9739ms)
+✔ physical traversal and expanded-text limits are unchanged (1910.9763ms)
+✔ repeated typed definitions, workflow entries and run arrays cannot amplify Zod work (1593.7439ms)
+✔ passthrough properties are charged each time their containing typed object is cloned (262.1492ms)
+✔ calculation editor tokens preserve references, functions, operators and numeric literals (8.4776ms)
+✔ legacy formula operations receive the same editable expression representation (1.2059ms)
+✔ calculation config filtering and token keys reject malformed ambiguity (2.1304ms)
+✔ formula-first manual inputs calculate without source blocks and preserve zero (112.9431ms)
+✔ requirements exclude intermediate results and match the engine formula parser (17.5373ms)
+✔ a generic API named number supplies a bound conversion variable (20.2539ms)
+✔ explicit source bindings cannot fall back to same-name values or defaults (11.6568ms)
+✔ source bindings reject non-numeric fields and retain an explicit source zero (7.915ms)
+✔ manual inputs reject missing and non-numeric values without implicit fallback (3.7204ms)
+✔ legacy connected inputs and explicit defaults keep their precedence (8.8573ms)
+✔ invalid definitions fail explicitly and never shadow calculated results (7.175ms)
+✔ the durable graph and readiness projection agree on API bindings and source evidence (134.9387ms)
+✔ inferred formula inputs accept run choices without input definitions and preserve zero (8.3718ms)
+✔ an explicit blank choice cannot fall back and removing choices restores the saved setting (6.3763ms)
+✔ selected sources require current successful numeric output and cannot use legacy alternatives (12.8975ms)
+✔ malformed choices and attempts to supply formula results fail explicitly (11.7135ms)
+✔ a needs-review source cannot feed calculation values while its findings still reach evidence output (45.0413ms)
+✔ next-agent selection saves without relabeling settled messages, tools or the exact workflow (15.5025ms)
+✔ later MicroSina text and tools keep distinct authors across save and reload (10.2635ms)
+✔ first MicroSina turn and legacy MicroSina history preserve their original provider (2.0573ms)
+✔ unsupported next-agent, legacy-agent and per-message authors fail instead of being relabeled (7.6159ms)
+✔ context metadata preserves exact references and selection receipt without becoming model transcript text (19.9952ms)
+✔ legacy chats and new chats start with empty labels and no implicit documents (1.7447ms)
+✔ invalid source identity and malformed kinds fail explicitly instead of coercing or replacing data (6.0334ms)
+✔ saved source restoration requires its exact active identity, revision and extracted-content hash (4.1259ms)
+✔ local text snapshots are bounded and cannot masquerade as stored source content (7.5673ms)
+✔ shared provider projection separates selected metadata from loaded text and enforces total context budget (5.3184ms)
+✔ saving while delegation is executing retains only completed exchanges (18.7419ms)
+✔ partially answered parallel calls are not saved as a completed tool exchange (1.3986ms)
+✔ a stale delegation callback cannot bind itself to a newer user request (3.498ms)
+✔ chat replacement waits for the aborted stream to settle and propagates a detach failure (14.3032ms)
+✔ SAP column headings are recognized without manual column mapping (2854.9785ms)
+✔ SAP-style workbook requires selection and imports all selected rows with explicit headings (1513.7401ms)
+✔ missing selected sheets and cancellation never fall back to another sheet (897.489ms)
+✔ oversized sheets are rejected rather than truncated (10952.8411ms)
+✔ selected exports use the confirmed currency and do not assume USD (1718.3835ms)
+✔ explicit mapping never extracts other adjacent numbers (33.2946ms)
+✔ chat workbook import skips financial headings and totals while preserving physical Excel rows and currency (44.4683ms)
+✔ structured workbooks without an amount column retain their records (21.4421ms)
+✔ invalid financial amounts cannot turn into zero during chat import (30.8935ms)
+✔ exact run identity survives chat serialization without entering model context (19.5482ms)
+✔ a workflow-only conversation can persist without inventing a message (1.9954ms)
+✔ legacy chats never infer a binding and malformed links fail explicitly (5.7409ms)
+✔ launcher position survives later conversation and reload without a synthetic message (67.3591ms)
+✔ a beginning anchor remains explicit while legacy links stay unanchored (9.8278ms)
+✔ anchors use serialized IDs and do not point inside pending tool exchanges (2.0928ms)
+✔ invalid persisted anchors fail without changing the exact run identity (4.7798ms)
+✔ workflow card stays at its exact opening receipt through follow-ups and restored chats (7.4348ms)
+✔ untrusted mentions, unfinished tools and failed openings do not place a workflow (98.5264ms)
+✔ launcher position stays beside its saved message when later conversation is restored (6.2855ms)
+✔ explicit uploaded source uses the original rows even when the model emits an empty array (285.9313ms)
+✔ approval input is a frozen snapshot even if the selected source changes (1.3044ms)
+✔ missing uploads cannot fall back to inline or sample data (3.6055ms)
+✔ explicit invalid inline records remain invalid despite an available uploaded source (2.1711ms)
+✔ sample execution remains explicit and overrides neither the uploaded source nor its contents (5.1266ms)
+✔ OAuth scopes require read and preserve independent write/execute choices without implicit permissions (8.4084ms)
+✔ OAuth stays disabled without configuration and partial settings cannot broaden access (3.0178ms)
+✔ OAuth configuration fixes issuer/resource and requires exact safe callbacks and account IDs (3.5947ms)
+✔ plugin validates exact arguments before reading and exposes no write or generic operation (29.2433ms)
+✔ opening an exact viewer reuses data-read snapshots and selects the requested block without writes (241.5332ms)
+✔ exact saved version and run reads preserve the entire library and hide graph inputs from model summaries (264.3842ms)
+✔ missing explicit versions, workflows and runs fail instead of selecting another record (94.1357ms)
+✔ explicit block selection exposes its formula and recorded evidence, omits credential fields and preserves stored values (235.8801ms)
+✔ UI assets are server-configured, bounded, optional and successful loads are cached until restart (602.6939ms)
+✔ credential projection preserves semantic field and worksheet dependency keys (14.9305ms)
+✔ worksheet column titles survive projection while HTTP authentication headers remain private (2.2199ms)
+✔ large sources use labelled previews and exact source pages without dropping stored rows (134.6791ms)
+✔ recorded runs remain readable when session-only change history is unavailable (70.5599ms)
+✔ 5000-row core source captures remain bounded when opened or selected and source pages retain exact rows (1669.3886ms)
+✔ lists report actual saved versions and paused sessions without executing them (27.7843ms)
+✔ oversize snapshots and failed reads return explicit errors without partial graph data (58.479ms)
+✔ start uses exact saved version, persists a paused session and idempotent receipt (263.8764ms)
+✔ FX review and apply pause without execution; explicit recalculation updates only affected results and preserves history (204.5627ms)
+✔ captured source replacement preserves prior source evidence and rejects model-supplied rows or other-session captures (138.3807ms)
+✔ review is actor-bound, expires, rejects revision races and rechecks current role (337.3895ms)
+✔ manual edits reject rule/provider mutation, invalid FX numbers and unsupported arguments before persistence (112.5974ms)
+✔ recalculation stops at review and unavailable tool authority without running later blocks (31.4106ms)
+✔ archive budget accepts real XLSX, stored/deflated entries and data descriptors, and leaves nonarchives to their parser (3876.6479ms)
+✔ archive budget rejects actual expansion larger than declared and misleading local allocation sizes (34.4694ms)
+✔ archive budget rejects expanded totals and entry counts before Office parsing (3395.3801ms)
+✔ archive budget rejects encryption, ZIP64, unsupported compression, truncated and duplicate entries (64.7745ms)
+✔ a failed queue and failed status update preserve confirmed original provenance (11.7408ms)
+✔ successful indexing queues leave confirmed provenance unchanged and do not mark failure (4.3195ms)
+✔ workbook capture uses the selected visible sheet, explicit header and independent expected values (350.3647ms)
+✔ capture never selects a different worksheet or missing mapped column (157.5972ms)
+✔ explicit mapping rejects unreadable amounts and ambiguous duplicate headers (71.0623ms)
+✔ columns left unmapped in the embedded form are not inferred from familiar headers (93.5824ms)
+✔ JSON preserves record provenance and does not replace unknown amounts with zero (5.5441ms)
+✔ a PDF containing no readable text requires OCR instead of accepting an empty extraction (4025.4128ms)
+✔ capture rejects source record sets beyond the documented limit without truncating (916.8756ms)
+✔ computer delegation cannot dispatch native targets or unsupported task types (37.5273ms)
+✔ role, verified connection, selected computer and companion version gate dispatch (6.6057ms)
+✔ a model cannot start computer work without an originating user message (3.1786ms)
+✔ a failed chat save or a changed chat before dispatch cannot enqueue a task (761.6857ms)
+✔ one user request has one retry identity, and a new chat or user request has a different identity (36.3133ms)
+✔ accepted delegation binds the exact saved chat and selected computer and retries retain its request ID (23.0629ms)
+✔ rephrasing the objective or changing computers cannot create a fresh retry key for the same user request (16.0536ms)
+✔ responses from a different chat, computer, conversation or request fail without replay (37.9112ms)
+✔ a response arriving after a chat switch identifies the accepted original task without dispatching again (8.9314ms)
+✔ model context keeps recent task observations bounded and omits screenshots and permission arguments (20.1934ms)
+✔ model context preserves failures, cancellation and disconnected state without promoting worker claims (1.4662ms)
+✔ all five parser tools fail without evidence instead of inventing sample rows (60.1659ms)
+✔ text parser preserves exact captured text and lineage while table/OCR readers reject it (191.1387ms)
+✔ legacy structured source records remain readable and unrelated source records are rejected (13.441ms)
+✔ document inspection pages long text and refuses another document or segment (11.077ms)
+✔ a malformed or empty connected source cannot disappear behind valid evidence (53.1737ms)
+✔ session source replacement retains extraction history, invalidates results and roundtrips (198.0999ms)
+Warning: Indexing all PDF objects
+✔ real native PDF and Word extraction retain text locations and never invent numeric rows (26569.6303ms)
+✔ document review requires real quotations and explicitly addresses missing profile fields (172.8072ms)
+✔ saving notes preserves calculations, rejects stale writes and keeps replaced-source history (565.2916ms)
+✔ approved run snapshots retain their interpretation notes when later notes are saved (89.8964ms)
+✔ approved snapshots include only the latest notes for sources used in that run (60.883ms)
+✔ FAPI presentation waits for recorded results and preserves zero as a real value (84.9191ms)
+✔ FAPI sheet uses recorded CAD values and formulas without calculating a currency conversion (20.1997ms)
+✔ stale, failed, malformed and missing FAPI values stay distinct from current numbers (48.5028ms)
+✔ FAPI presentation recognizes saved output fields, respects source currency and declines incompatible graphs (41.7391ms)
+✔ FAPI CSV identifies exact revision and exports full precision with blank unavailable amounts (12.2881ms)
+✔ real generic calculators feed declared worksheet results including zero and upstream bindings (160.6007ms)
+✔ an unbound named earlier result expands only when its provider is unambiguous (58.004ms)
+✔ declared missing results cannot return an empty successful Field output (28.4657ms)
+✔ legacy undeclared Field output preserves its existing collection behavior (21.2273ms)
+✔ a captured operand that differs from an internal result cannot produce a misleading worksheet trace (17.4701ms)
+✔ guided Field execution retains current API ancestors and invalidates them after source changes (303.4937ms)
+✔ the frozen legacy backup migrates aliases in drafts and history without mutating its input (83.9702ms)
+✔ legacy import survives compressed v1 export and repeated restore (228.7185ms)
+✔ a synthetic calculation retains explicit zero and credit adjustments (347.1299ms)
+✔ Foundry owns definitions; history and only available function names cross the adapter (16.8385ms)
+✔ Foundry messages explicitly identify developer context while preserving tool history (2.3226ms)
+✔ public toolbox opt-in permits only its two MCP operations alongside native tools (2.9416ms)
+✔ CopilotKit internal state helpers do not enter the saved agent tool allowlist (2.0245ms)
+✔ missing configuration fails before any network call, without a Sina fallback (4.4412ms)
+✔ server OAuth token is reused and provider errors do not expose secrets or request content (132.0762ms)
+✔ CopilotKit SDK consumes Foundry streamed text and function calls (377.9261ms)
+✔ CopilotKit consumes hosted MCP results without dispatching them as browser functions (32.4472ms)
+✔ saved chat agent metadata restores across devices, stays outside the prompt and preserves legacy Sina (6.1435ms)
+✔ Mkoro transcript orders streamed fragments and keeps tool progress separate from the reply (12.4683ms)
+✔ Mkoro retains partial and failed actions rather than presenting success without evidence (2.7297ms)
+✔ Mkoro treats model/tool HTML as display text and does not turn arbitrary output into navigation (2.6424ms)
+✔ recorded Build projects the selected historical settings and inputs after a real source replacement (890.3766ms)
+✔ legacy attempt settings are explicitly unavailable and use the pinned saved version instead of current source inputs (1090.1607ms)
+✔ an unavailable recorded attempt is rejected without substituting the current or latest execution (452.1559ms)
+✔ agent workbook field proposals derive real rows and reject invented sources or missing sheets (3042.4765ms)
+✔ trusted HTTP response patches retain their request signature and reject stale replay (48.1155ms)
+✔ agent API parameters use the same request builder and restrictions as the source form (51.1594ms)
+✔ agent FX edits allow the override field but cannot fabricate fetched rate evidence (81.3598ms)
+✔ row mapping preserves explicit zero and applies defaultAmount only without a numeric value (15.0701ms)
+✔ HTTP JSON retrieval retries transient responses and records its attempts (211.8668ms)
+✔ HTTP JSON retrieval does not retry an invalid successful response (7.226ms)
+✔ invalid URLs and unknown connector IDs fail predictably (8.5721ms)
+✔ selected sources rank first and selected-only excludes unselected library sources (79.1053ms)
+✔ retrieval excludes cross-workspace, cross-client, archived and deleted candidates (10.6684ms)
+✔ Editors can archive and soft-delete; only Owners can restore or purge (34.7447ms)
+✔ Chat and builder adapters obey the same version, calculation and recorded-run contract (953.2058ms)
+✔ the shared Chat command validates input before requesting an execution or saved identity (5.1023ms)
+✔ saved formulas and rule rows are readable before execution without defaults or numerical results (89.2325ms)
+✔ recorded zero, inputs, traces and source evidence are retained exactly without recalculation (24.2524ms)
+✔ stale dependencies and failed attempts never appear as current recorded results (15.9809ms)
+✔ saved inline definitions are kept distinct from connected rule sources and recorded execution (22.1787ms)
+✔ FAPI stage presentation is independent of worksheet compatibility and not selected by workflow name (18.2493ms)
+✔ saved scalar rule settings preserve zero and false without exposing unrelated connection configuration (25.1966ms)
+✔ shared timeline status distinguishes warnings, review, stale and completion (22.4939ms)
+✔ public catalogue, runtime, assistant suggestions and live routing advertise the same 15 workflows (270.1698ms)
+✔ retired public IDs reject new execution and preview without substituting another workflow (58.4571ms)
+✔ saved versions from retired templates retain their definitions and independently expected results (1332.2827ms)
+✔ worksheet intelligence never presents sample values when no source records were supplied (352.9063ms)
+✔ resume choices retain the exact run and reject an ended or mismatched session (149.6039ms)
+✔ workflow name search prefers exact matches without collapsing duplicate saved records (2.8441ms)
+✔ template choices preserve catalog identity without inventing a saved version (6.6128ms)
+✔ saved choices retain the listed immutable version even when a newer version exists (13.9923ms)
+✔ renamed drafts remain searchable by both visible names without changing the selected version (1.6825ms)
+✔ draft-only choices open the exact draft and never become a session or template fallback (12.2963ms)
+✔ duplicate titles keep separate exact identities and invalid results cannot become draft choices (2.2486ms)
+✔ a list selection anchor remains at its receipt across follow-up messages and JSON restore (2.1134ms)
+✔ repeated block validation reuses lazy rules without rebuilding the subtype union (19.4749ms)
+✔ reused validators still inspect changed values and reject invalid saved versions (152.5809ms)
+✔ legacy trigger relationships migrate and every catalog source has valid metadata (19.6031ms)
+✔ legacy bare libraries and v1 backup envelopes preserve saved definitions (219.2895ms)
+✔ restore rejects malformed nested workflow data and duplicate version numbers (45.9343ms)
+✔ version saving is immutable and reuses an unchanged version (103.5614ms)
+✔ explicit missing versions fail before invoking the executor (31.1266ms)
+✔ storage client rejects invalid server revisions (197.5598ms)
+✔ all executable templates roundtrip their actual graph results through validated storage (2867.7556ms)
+✔ unreadable local data remains byte-for-byte available for recovery (2.8245ms)
+✔ tool composition rejects silent overrides and invalid aliases (2.1076ms)
+✔ modular executor ownership cannot overlap with legacy local tools (1.5512ms)
+✔ durable workflow requests share strict identifiers, filters, errors and paths (8.5548ms)
+✔ every registered browser tool is admitted by the server executor (1084.5487ms)
+✔ current and retired template snapshots retain outputs, errors and provenance on the server (1108.6312ms)
+✔ selection metadata preserves exact identity and position across JSON storage (21.2317ms)
+✔ failed selections and draft focus cannot invent run/version identities (5.4178ms)
+✔ malformed selection receipts fail explicitly instead of acquiring a current run (2.286ms)
+✔ Trigger checklist derives numeric fields with manual zero and the exact source binding (38.2236ms)
+✔ Trigger checklist never uses stale, failed, review-pending or disconnected source results (12.2087ms)
+✔ Trigger checklist distinguishes a missing manual value from an invalid source number (4.2626ms)
+✔ field names remain scoped to their calculation, including form-only workflows (3.2373ms)
+✔ external rule sources determine the checklist before acquisition runs (3.7084ms)
+✔ inferred fields accept run choices without copying definitions or losing saved providers (12.5599ms)
+✔ source alternatives include declared numeric fields but never invent a captured value (4.5122ms)
+✔ source identity protects drafts against same-value refreshes and config edits, not unrelated steps (3.2578ms)
+✔ legacy connected values retain incoming-edge precedence when block order differs (3.8211ms)
+✔ changed rulebook fields retire only obsolete choices in the deliberate form projection (7.4279ms)
+✔ one session reader reuses the same snapshot and keeps identically named calculator inputs separate (277.6859ms)
+✔ input choices, same-value source refreshes and invalidation rebuild the session read snapshot (82.3206ms)
+✔ Chat opens a built-in step preview without needing a saved version or starting a run (12.5357ms)
+✔ a guessed built-in version is rejected with actionable guidance, never silently substituted (2.0741ms)
+✔ Chat preserves an exact saved version and rejects unavailable IDs and versions (73.7828ms)
+✔ edits made during an in-flight save stay dirty and use the returned revision (115.3986ms)
+✔ revision conflicts stop subsequent writes until an explicit workspace open (19.1874ms)
+✔ offline failures retain dirty state and can be retried (2.6637ms)
+✔ an intentional empty local library is saved instead of resurrecting deleted workflows (76.7144ms)
+✔ a stale request failure cannot change the status of the newly opened workspace (18.0869ms)
+✔ invalid remote backups are never applied or replaced by local data (5.2168ms)
+✔ all workpapers reject each missing required field (78.0618ms)
+✔ independent expected arithmetic for ledger and tax workpaper samples (15.7716ms)
+✔ ownership composes economic interests and rejects cycles (5.9857ms)
+✔ T106 keeps currencies and payment directions in separate groups (3.274ms)
+✔ document calculation uses supplied rows; empty records never select sample data (245.6346ms)
+ℹ tests 248
+ℹ suites 0
+ℹ pass 248
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 220110.1688
+
+> workspace@0.0.0 test:mkoro-worker C:\Users\Mamad\Sinaxe\TaxflowOS
+> node --test scripts/mkoro/*.test.mjs
+
+✔ ACP starts executable directly with approve mode and no pairing secret (26.0782ms)
+✔ ACP handles split UTF-8 and correlates concurrent responses by ID (4.4274ms)
+✔ permission is not auto-approved; unsupported client methods are rejected (3.363ms)
+✔ process failure rejects pending requests without exposing stderr (6.8424ms)
+✔ malformed protocol terminates connection and raw provider error data stays private (6.4731ms)
+✔ Windows capture is a hidden fixed script process; frames are bounded and never written by Node (24.8135ms)
+✔ desktop frames require a matching live task lease and use only the dedicated transient endpoint (32.3894ms)
+✔ expiry and closing the viewer abort capture and prevent late frames from being published (3.9595ms)
+✔ capture failure is explicit, strips arbitrary error text, and does not masquerade as a frame (2.5622ms)
+✔ failed screen upload drops the frame and stops until a new poll supplies a lease (3.4978ms)
+✔ a late failure from a closed viewer cannot remove a newly opened viewing lease (15.3234ms)
+✔ local startup options require explicit origin/folder and reject command-line tokens (48.3917ms)
+✔ private Goose profile preserves settings but cannot inherit saved permanent approvals (142.303ms)
+✔ state writes replace atomically and lock prevents two companions sharing credentials (113.6962ms)
+✔ the bridge advertises versioned delegation and only supported desktop capture (5.1661ms)
+✔ delegated external tasks receive the Sina-owned boundaries and exact task data (5.4423ms)
+✔ untyped tasks, mismatching objectives and either platform origin are rejected (5.0474ms)
+✔ re-pair sends saved identity proof privately and preserves conversation sessions (11.0792ms)
+✔ first pairing has no fabricated identity proof and starts with no Goose sessions (1.595ms)
+✔ a different returned identity or failed reconnect leaves saved state untouched (4.1741ms)
+✔ forces manual approval before prompt and ignores any remote cwd or executable (52.7259ms)
+✔ unstructured legacy chat and native platform targets fail before a Goose session starts (6.0773ms)
+✔ cancellation, terminal events and failed polls stop desktop viewing independently of progress (10.0134ms)
+✔ a slow desktop capture does not hold up permission and cancellation polling (19.6296ms)
+✔ failure to set approve mode prevents prompt execution (3.0637ms)
+✔ single-action permission waits for a matching user decision and blocks permanent grants (5.8684ms)
+✔ approval requests without one-time choices are cancelled (3.0517ms)
+✔ parallel permission requests retain independent decisions (3.7813ms)
+✔ approval preview shows commands while masking credential fields and typed text (5.9817ms)
+✔ polling continues while prompt waits, cancellation rejects outstanding permissions (11.244ms)
+✔ duplicate commands do not replay prompts and simultaneous messages fail visibly (4.3388ms)
+✔ event transport retries retain event IDs and ordering (3.3553ms)
+✔ a long streamed turn reserves its final API event for an explicit failure (72.5171ms)
+✔ restored conversations load exact Goose session without replaying history into current turn (6.2107ms)
+✔ mode changes away from manual approval terminate the connection (3.2753ms)
+✔ non-completion stop reasons are not reported as success; private thoughts and images stay local (3.7193ms)
+✔ worker API only uses a trusted origin, bearer auth, and refuses redirects (7.0863ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1292.6434
+
+> workspace@0.0.0 typecheck:workflow-core-tests C:\Users\Mamad\Sinaxe\TaxflowOS
+> tsc -p tests/core/tsconfig.json --noEmit
+
+
+> workspace@0.0.0 test:workflow-core C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-workflow-core-tests.mjs
+
+✔ agent proposals identify changes, preserve history and invalidate affected approval state (157.4902ms)
+✔ mismatched authorization and stale proposals cannot mutate a workflow (36.5435ms)
+✔ saving and executing are separately authorized and execution targets an immutable version (33.7218ms)
+✔ run input boundary permits only finite values for declared manual calculation variables (89.7586ms)
+✔ form-only sessions wait for required variables, accept zero, and retain saved history after input edits (142.3539ms)
+✔ readiness follows external formula dependencies and ignores unused manual declarations (44.362ms)
+✔ sources can collect data while the calculation still waits for a manual field (20.28ms)
+✔ undeclared external inputs generate run fields and explicit choices preserve saved history (58.3514ms)
+✔ source alternatives require fresh numeric fields and retain every graph prerequisite (95.8942ms)
+✔ run choice boundary rejects unknown variables, unsafe paths and disconnected providers (17.2417ms)
+✔ effective external rule outputs drive both readiness and input-choice validation (43.2485ms)
+✔ configuration errors are not disguised as missing data when no external fields exist (32.6368ms)
+✔ accepted external-rule choices remain readable through stale and failed rulebook reruns (59.183ms)
+✔ durable runtime executes explicit saved values without sample substitution (59.4469ms)
+✔ durable runtime rejects unsupported tools before enqueue (11.5184ms)
+✔ durable runtime reports missing explicit values as an execution error (12.1363ms)
+✔ formula rejects each unresolved operand instead of calculating a partial result (35.7785ms)
+✔ formula preserves zero, negative numbers and qualified references (6.2432ms)
+✔ a historical API reference never becomes a fabricated numeric value (6.6378ms)
+✔ formula retains named aggregate references and rejects ambiguous short names (5.861ms)
+✔ declared worksheet lines exist before execution with formula and nested requirements (75.5842ms)
+✔ result presentation metadata survives projection without rounding or changing value states (24.2293ms)
+✔ worksheet display settings reject malformed values while legacy lines stay unchanged (4.452ms)
+✔ current finite results preserve zero, source binding and provenance without recomputing (9.7954ms)
+✔ stale dependencies and failed captures never present prior numeric values as current (9.0513ms)
+✔ line validation rejects malformed declarations, unknown keys and disconnected calculators (5.476ms)
+✔ the worksheet keeps missing lines beside available results and source choices remain authoritative (7.2415ms)
+✔ Field relationships carry candidate results without granting protected finality (1.1471ms)
+✔ worksheet metadata follows captured external rules while stale numeric results stay unavailable (5.2972ms)
+✔ circular dependencies are bounded and identified before calculation (2.3062ms)
+✔ cross-workflow run history keeps exact run identity and newest-first ordering (199.9424ms)
+✔ portable graph orders dependencies and produces 400 without a browser or model (6.4815ms)
+✔ cycles and missing dependencies fail before executing tools (7.8121ms)
+✔ partial runs require an existing selection and validate only relevant dependencies (12.6102ms)
+✔ isolated ancestor evidence supplies inspection context without adding direct inputs or executions (16.2869ms)
+✔ missing tools never report an ordinary successful calculation (5.9042ms)
+✔ code, formula, source and governance edits create immutable saved versions (42.1973ms)
+✔ stale draft writes and explicit missing or ambiguous versions do not execute (7.5902ms)
+✔ saved runs preserve identity and initiator, deduplicate retries and reject conflicting reuse (38.286ms)
+✔ executors and queries cannot mutate saved history or attach foreign run results (15.1454ms)
+✔ replacement preserves identity, old versions, unsaved work and guided-run history (150.534ms)
+✔ replacement rejects ambiguous backups and a changed target before any mutation (13.9353ms)
+✔ guided execution freezes Build version and records real block results with dependency invalidation (305.4549ms)
+✔ source replacement and addition preserve evidence and reject ambiguous or oversized operations (409.4323ms)
+✔ missing tools and checkpoints do not fabricate success or advance dependents (27.5953ms)
+✔ Build inspection selects the exact paused session and immutable version without executing or mutating (91.1723ms)
+✔ current-work inputs recalculate, retain historical inputs and never edit the saved definition (80.9513ms)
+✔ specialized manual-catalog sources require their own data rather than a scalar (17.7362ms)
+✔ trigger readiness and source input allowlist prevent guessed values and rule edits (27.2884ms)
+✔ same-currency input is ready without a conversion rate and invalid overrides cannot use a live fallback (10.6435ms)
+ℹ tests 50
+ℹ suites 0
+ℹ pass 50
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4407.3713

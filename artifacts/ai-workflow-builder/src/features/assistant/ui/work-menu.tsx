@@ -92,16 +92,32 @@ function relTime(ts: number): string {
 // = app load), so re-mounting the menu mid-run can't wipe a live run's status.
 let didReconcileStaleWork = false;
 
+/** Keep startup reconciliation at the mounted chat boundary when history is in a dialog. */
+export function useReconcileWorkHistory() {
+  const reconcile = useSetAtom(reconcileStaleWorkAtom);
+  useEffect(() => {
+    if (didReconcileStaleWork) return;
+    didReconcileStaleWork = true;
+    reconcile();
+  }, [reconcile]);
+}
+
 export function WorkMenu({
   onOpen,
   compact = false,
   bare = false,
   align = 'right',
+  historyOnly = false,
+  historyLocked = false,
+  onNavigate,
 }: {
   onOpen: (item: WorkItem) => void;
   compact?: boolean;
   bare?: boolean;
   align?: 'left' | 'right';
+  historyOnly?: boolean;
+  historyLocked?: boolean;
+  onNavigate?: () => void;
 }) {
   const store = useStore();
   const router = useRouter();
@@ -110,14 +126,56 @@ export function WorkMenu({
   const active = useAtomValue(activeCoworkerAtom);
   const run = useAtomValue(activeRunAtom);
   const clear = useSetAtom(clearWorkItemsAtom);
-  const reconcile = useSetAtom(reconcileStaleWorkAtom);
   const [open, setOpen] = useState(false);
+  useReconcileWorkHistory();
 
-  useEffect(() => {
-    if (didReconcileStaleWork) return;
-    didReconcileStaleWork = true;
-    reconcile();
-  }, [reconcile]);
+  // History is deliberately separate from this chat's selected run. Never label
+  // the global registry's newest item as the current conversation's scope.
+  if (historyOnly)
+    return (
+      <details className="chat-scope-disclosure" aria-label="Work history">
+        <summary>
+          Work history <span className="chat-scope-count">{items.length}</span>
+        </summary>
+        <p className="chat-scope-note">
+          Previous workspace work. Open an item to return to it; it is not automatically selected
+          for this chat.
+        </p>
+        {historyLocked && (
+          <p className="chat-scope-note">History actions are available when the chat is ready.</p>
+        )}
+        {items.length > 0 ? (
+          <>
+            <button
+              type="button"
+              disabled={historyLocked}
+              className="chat-scope-history-clear"
+              onClick={() => clear()}
+            >
+              Clear work history
+            </button>
+            {items.map((item) => (
+              <WorkRow
+                key={item.id}
+                item={item}
+                isCurrent={false}
+                disabled={historyLocked}
+                onOpen={() => {
+                  onNavigate?.();
+                  onOpen(item);
+                }}
+                onJump={() => {
+                  onNavigate?.();
+                  if (!jumpToWork(item.id)) onOpen(item);
+                }}
+              />
+            ))}
+          </>
+        ) : (
+          <p className="chat-scope-empty">No work history yet.</p>
+        )}
+      </details>
+    );
 
   // The work you're on now: the live run's item if there is one, else the most recent.
   const currentId = run ? workIdFor('workflow-run', run.workflowId) : null;
@@ -502,11 +560,13 @@ function WorkRow({
   isCurrent,
   onOpen,
   onJump,
+  disabled = false,
 }: {
   item: WorkItem;
   isCurrent: boolean;
   onOpen: () => void;
   onJump: () => void;
+  disabled?: boolean;
 }) {
   const Icon = TYPE_ICON[item.type];
   const status = STATUS[item.status];
@@ -566,6 +626,7 @@ function WorkRow({
 
       {/* content = click to SWITCH to this work (spans only, so it's valid inside <button>) */}
       <button
+        disabled={disabled}
         onClick={onOpen}
         title={isCurrent ? 'This is your current work' : 'Switch to this work'}
         style={{
@@ -654,6 +715,7 @@ function WorkRow({
 
       <div className="lc-workrow-actions" style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
         <button
+          disabled={disabled}
           onClick={onJump}
           className="hover:bg-black/5"
           title="Jump to where it appeared"

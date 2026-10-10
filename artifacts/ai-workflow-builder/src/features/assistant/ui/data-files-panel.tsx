@@ -1,663 +1,181 @@
+import { useMemo, useState } from 'react';
+import { useAgent } from '@copilotkit/react-core/v2';
+import { ExternalLink, FileText, Globe } from 'lucide-react';
 import { apiFetch } from '@/platform/auth/api-fetch';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// DataFilesPanel — "what is Sina looking into?" A right slide-over with two tabs:
-//
-//  • This chat — every document + web source Sina actually pulled in THIS
-//    conversation, derived from the live tool trace (the same recorded tool
-//    results the receipts read). So the grounding behind the answers is visible in
-//    one place, and you can open each source and check it yourself.
-//  • Library — all your uploaded documents (GET /api/documents), with processing
-//    status, and a "Used here" badge on the ones this chat drew from.
-//
-// This is the transparency counterpart to the ToolsMenu (what it CAN do) and the
-// receipts (what it DID): this is WHAT it looked at. Light-neumorphic (LC.*).
-// ─────────────────────────────────────────────────────────────────────────────
-
-import { useEffect, useMemo, useState } from 'react';
-import { useAtomValue } from 'jotai';
-import { useCopilotChatInternal } from '@copilotkit/react-core';
-import {
-  FileText,
-  Globe,
-  Database,
-  X,
-  ExternalLink,
-  Layers,
-  Paperclip,
-  Check,
-  Plus,
-} from 'lucide-react';
-import { LC } from '@/lib/librechat-theme';
-import { attachedDocsAtom } from '@/shared/stores/workspace-store';
 import { buildToolCallInfo } from '../workspace/tool-receipt';
-
-type DocRow = {
-  id: string;
-  fileName: string;
-  mimeType: string | null;
-  sizeBytes: number | null;
-  status: 'uploading' | 'processing' | 'ready' | 'failed';
-  extractedChars: number | null;
-  error: string | null;
-  inLibrary: boolean;
-  createdAt: string;
-};
-
-const STATUS_STYLE: Record<DocRow['status'], { label: string; color: string; bg: string }> = {
-  uploading: { label: 'Uploading', color: '#7c6f00', bg: 'rgba(234,179,8,0.15)' },
-  processing: { label: 'Processing', color: '#6d28d9', bg: 'rgba(139,92,246,0.15)' },
-  ready: { label: 'Ready', color: '#047857', bg: 'rgba(16,185,129,0.15)' },
-  failed: { label: 'Failed', color: '#b91c1c', bg: 'rgba(239,68,68,0.15)' },
-};
 
 type ChatDoc = {
   key: string;
   fileName: string;
   documentId?: string;
+  revision?: number;
   passages: number;
   bestSim: number;
 };
 type ChatWeb = { url: string; title: string; scope: string };
-type ChatTrace = { docs: ChatDoc[]; web: ChatWeb[] };
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function parseResult(result: unknown): any | null {
-  if (result == null) return null;
-  if (typeof result === 'object') return result;
-  if (typeof result === 'string') {
-    const t = result.trim();
-    if (!t) return null;
-    try {
-      return JSON.parse(t);
-    } catch {
-      return null;
-    }
-  }
-  return null;
+function record(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
 }
-
-function domainOf(url: string): string {
+function parseResult(value: unknown): Record<string, unknown> | null {
+  if (typeof value !== 'string') return record(value);
   try {
-    return new URL(url).hostname.replace(/^www\./, '');
+    return record(JSON.parse(value));
   } catch {
-    return url;
+    return null;
   }
 }
-
-function formatSize(bytes: number | null): string {
-  if (!bytes) return '';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+function safeWebUrl(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  try {
+    const url = new URL(value);
+    return ['https:', 'http:'].includes(url.protocol) ? value : null;
+  } catch {
+    return null;
+  }
+}
+function domainOf(url: string): string {
+  return new URL(url).hostname.replace(/^www\./, '');
 }
 
-/** Derive the documents + web sources this conversation actually pulled, from the
- *  recorded tool results (same trace the per-answer receipts read). */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function deriveChatTrace(
-  messages: any[],
-  toolCallInfo: Map<string, { name: string; args: unknown }>,
-): ChatTrace {
-  const docMap = new Map<string, ChatDoc>();
-  const webMap = new Map<string, ChatWeb>();
-  for (const m of messages ?? []) {
-    if (m?.role !== 'tool' || !m.toolCallId) continue;
-    const call = toolCallInfo.get(m.toolCallId);
-    if (!call) continue;
-    const obj = parseResult(m.content);
-    if (!obj) continue;
-
-    if (call.name === 'searchCompanyDocuments' && Array.isArray(obj.passages)) {
-      for (const p of obj.passages) {
-        const fileName = String(p?.source ?? p?.fileName ?? 'document');
-        const documentId = typeof p?.documentId === 'string' ? p.documentId : undefined;
-        const key = documentId ?? fileName;
-        const sim = typeof p?.similarity === 'number' ? p.similarity : 0;
-        const existing = docMap.get(key);
+/** Historical evidence comes from receipts, never from the current selected-source count. */
+function deriveChatTrace(messages: ReturnType<typeof useAgent>['agent']['messages']) {
+  const toolCallInfo = buildToolCallInfo(messages);
+  const docs = new Map<string, ChatDoc>();
+  const web = new Map<string, ChatWeb>();
+  for (const message of messages) {
+    if (message.role !== 'tool') continue;
+    const call = toolCallInfo.get(message.toolCallId);
+    const result = parseResult(message.content);
+    if (!call || !result) continue;
+    if (call.name === 'searchCompanyDocuments' && Array.isArray(result.passages)) {
+      for (const value of result.passages) {
+        const passage = record(value);
+        if (!passage) continue;
+        const fileName =
+          typeof passage.source === 'string'
+            ? passage.source
+            : typeof passage.fileName === 'string'
+              ? passage.fileName
+              : 'Document';
+        const documentId =
+          typeof passage.sourceId === 'string'
+            ? passage.sourceId
+            : typeof passage.documentId === 'string'
+              ? passage.documentId
+              : undefined;
+        const revision = typeof passage.revision === 'number' ? passage.revision : undefined;
+        const key = JSON.stringify([documentId ?? fileName, revision ?? null]);
+        const similarity = typeof passage.similarity === 'number' ? passage.similarity : 0;
+        const existing = docs.get(key);
         if (existing) {
           existing.passages += 1;
-          existing.bestSim = Math.max(existing.bestSim, sim);
-        } else {
-          docMap.set(key, { key, fileName, documentId, passages: 1, bestSim: sim });
-        }
+          existing.bestSim = Math.max(existing.bestSim, similarity);
+        } else
+          docs.set(key, { key, fileName, documentId, revision, passages: 1, bestSim: similarity });
       }
     } else if (
       (call.name === 'searchWeb' || call.name === 'searchCanadianTax') &&
-      Array.isArray(obj.results)
+      Array.isArray(result.results)
     ) {
-      for (const r of obj.results) {
-        if (!r || typeof r.url !== 'string' || webMap.has(r.url)) continue;
-        webMap.set(r.url, {
-          url: r.url,
-          title: String(r.title ?? r.url),
+      for (const value of result.results) {
+        const found = record(value);
+        const url = safeWebUrl(found?.url);
+        if (!found || !url || web.has(url)) continue;
+        web.set(url, {
+          url,
+          title: typeof found.title === 'string' ? found.title : url,
           scope: call.name === 'searchCanadianTax' ? 'CA tax' : 'Web',
         });
       }
     } else if (call.name === 'fetchWebPage') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const argUrl =
-        call.args && typeof (call.args as any).url === 'string' ? (call.args as any).url : null;
-      const url = typeof obj.url === 'string' ? obj.url : argUrl;
-      if (url && !webMap.has(url)) webMap.set(url, { url, title: url, scope: 'Read' });
+      const url = safeWebUrl(result.url) ?? safeWebUrl(record(call.args)?.url);
+      if (url && !web.has(url)) web.set(url, { url, title: url, scope: 'Read' });
     }
   }
-  return { docs: [...docMap.values()], web: [...webMap.values()] };
+  return { docs: [...docs.values()], web: [...web.values()] };
 }
 
-async function openDocument(id?: string) {
-  if (!id) return;
-  try {
-    const res = await apiFetch(`/api/documents/${id}`);
-    if (!res.ok) return;
-    const data = (await res.json()) as { downloadUrl?: string | null };
-    if (data.downloadUrl) window.open(data.downloadUrl, '_blank', 'noopener');
-  } catch {
-    // ignore
-  }
-}
-
-export function DataFilesPanel({ compact = false }: { compact?: boolean }) {
-  const internal = useCopilotChatInternal() as unknown as { messages?: unknown[] };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const messages = (internal.messages ?? []) as any[];
-  const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<'chat' | 'library'>('chat');
-
-  // Files the user attached IN the chat — the same atom the model reads from, so
-  // if a file is listed here it is provably in this conversation's context.
-  const attached = useAtomValue(attachedDocsAtom);
-
-  const trace = useMemo(() => deriveChatTrace(messages, buildToolCallInfo(messages)), [messages]);
-  const traceCount = trace.docs.length + trace.web.length + attached.length;
-
-  const [libDocs, setLibDocs] = useState<DocRow[]>([]);
-  const [libLoaded, setLibLoaded] = useState(false);
-  const [libraryError, setLibraryError] = useState('');
-
-  useEffect(() => {
-    if (libLoaded) return;
-    (async () => {
-      try {
-        const res = await apiFetch('/api/documents');
-        if (res.ok) {
-          const data = (await res.json()) as { documents?: DocRow[] };
-          setLibDocs(data.documents ?? []);
-          setLibraryError('');
-        } else {
-          setLibraryError('The source library is unavailable.');
-        }
-      } catch {
-        setLibraryError('The source library is unavailable.');
-      }
-      setLibLoaded(true);
-    })();
-  }, [libLoaded]);
-
-  const usedIds = useMemo(
-    () => new Set(trace.docs.map((d) => d.documentId).filter(Boolean) as string[]),
-    [trace],
-  );
-  const usedNames = useMemo(() => new Set(trace.docs.map((d) => d.fileName)), [trace]);
-
-  // The Library = the documents in Sina's active context. The full repository (upload
-  // / delete) lives on the Documents page; here you CURATE — add docs into context or
-  // drop them out (they stay stored either way, just searchable or not).
-  const libraryDocs = useMemo(() => libDocs.filter((d) => d.inLibrary !== false), [libDocs]);
-  const availableDocs = useMemo(() => libDocs.filter((d) => d.inLibrary === false), [libDocs]);
-  const selectedCount = attached.length + libraryDocs.length;
-  const usedCount = trace.docs.length + trace.web.length;
-  const setInLibrary = async (id: string, next: boolean) => {
-    setLibDocs((prev) => prev.map((d) => (d.id === id ? { ...d, inLibrary: next } : d)));
+/** Evidence only: workspace Library management remains on Sources. */
+export function ChatEvidence() {
+  const { agent } = useAgent();
+  const messages = agent.messages;
+  const trace = useMemo(() => deriveChatTrace(messages), [messages, messages.length]);
+  const [error, setError] = useState('');
+  const openDocument = async (source: ChatDoc) => {
+    if (!source.documentId) return;
+    setError('');
     try {
-      await apiFetch(`/api/documents/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inLibrary: next }),
-      });
-    } catch {
-      // optimistic — the next open re-syncs from the server
+      const response = await apiFetch(`/api/documents/${encodeURIComponent(source.documentId)}`);
+      if (!response.ok) throw new Error('This source is unavailable or you no longer have access.');
+      const data = (await response.json()) as {
+        document?: { sourceRevision?: number };
+        downloadUrl?: string | null;
+      };
+      if (source.revision !== undefined && data.document?.sourceRevision !== source.revision)
+        throw new Error(
+          `This evidence refers to revision ${source.revision}. The saved source has changed; its current file is not that revision.`,
+        );
+      const url = safeWebUrl(data.downloadUrl);
+      if (!url) throw new Error('This source has no available download.');
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not open this source.');
     }
   };
-
-  // One document row for the Library tab — the in/out toggle reflects and flips its
-  // context membership. Used by both the "In Library" and "Not in Library" sections.
-  const renderLibRow = (d: DocRow) => {
-    const inLib = d.inLibrary !== false;
-    const s = STATUS_STYLE[d.status];
-    const used = usedIds.has(d.id) || usedNames.has(d.fileName);
-    return (
-      <SourceRow
-        key={d.id}
-        icon={<FileText size={14} style={{ color: LC.faint, flexShrink: 0 }} />}
-        title={d.fileName}
-        subtitle={`${formatSize(d.sizeBytes)}${d.extractedChars ? ` · ${(d.extractedChars / 1000).toFixed(0)}k chars` : ''}`}
-        onOpen={() => void openDocument(d.id)}
-        badge={
-          <span style={{ display: 'inline-flex', gap: 5, alignItems: 'center', flexShrink: 0 }}>
-            {used && (
-              <span
-                style={{
-                  fontSize: 9.5,
-                  fontWeight: 700,
-                  letterSpacing: '0.03em',
-                  textTransform: 'uppercase',
-                  color: LC.accent,
-                  background: 'rgba(167,139,250,0.12)',
-                  borderRadius: 5,
-                  padding: '1px 5px',
-                }}
-              >
-                Used here
-              </span>
-            )}
-            {d.status !== 'ready' && (
-              <span
-                style={{
-                  fontSize: 10.5,
-                  fontWeight: 600,
-                  padding: '2px 8px',
-                  borderRadius: 999,
-                  color: s.color,
-                  background: s.bg,
-                }}
-                title={d.error ?? undefined}
-              >
-                {s.label}
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                void setInLibrary(d.id, !inLib);
-              }}
-              title={
-                inLib
-                  ? "In Sina's Library — click to remove from its searchable context"
-                  : "Add to Sina's Library so it can search this document"
-              }
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                fontSize: 10.5,
-                fontWeight: 650,
-                padding: '2px 8px',
-                borderRadius: 999,
-                cursor: 'pointer',
-                color: inLib ? '#6d28d9' : LC.muted,
-                background: inLib ? 'rgba(139,92,246,0.14)' : 'transparent',
-                border: `1px solid ${inLib ? 'transparent' : LC.borderSubtle}`,
-              }}
-            >
-              {inLib ? (
-                <>
-                  <Check size={11} /> In Library
-                </>
-              ) : (
-                <>
-                  <Plus size={11} /> Add
-                </>
-              )}
-            </button>
-          </span>
-        }
-      />
-    );
-  };
-  const height = compact ? 32 : 38;
-
   return (
-    <div style={{ flexShrink: 0 }}>
-      <button
-        data-testid="data-panel-button"
-        onClick={() => setOpen(true)}
-        aria-label={`Context: ${selectedCount} selected, ${usedCount} used`}
-        className="hover:bg-black/5"
-        title="Context — selected sources and evidence used in this chat"
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: compact ? 4 : 7,
-          height,
-          padding: compact ? '0 8px' : '0 12px',
-          borderRadius: 999,
-          border: `1px solid ${LC.borderSubtle}`,
-          background: 'transparent',
-          color: LC.body,
-          cursor: 'pointer',
-          fontSize: 12.5,
-          fontWeight: 550,
-        }}
-      >
-        <Database size={14} style={{ color: LC.muted }} />
-        {!compact && 'Context'}
-        {!compact && selectedCount > 0 && (
-          <span style={{ fontSize: 10.5, fontWeight: 700, color: LC.faint }}>
-            {selectedCount} selected
-          </span>
-        )}
-        {!compact && usedCount > 0 && (
-          <span style={{ fontSize: 10.5, fontWeight: 700, color: LC.accent }}>
-            {usedCount} used
-          </span>
-        )}
-      </button>
-
-      {open && (
-        <>
-          <div
-            onClick={() => setOpen(false)}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(24,24,27,0.18)', zIndex: 49 }}
-          />
-          <div
-            data-testid="data-panel"
-            style={{
-              position: 'fixed',
-              top: 0,
-              right: 0,
-              bottom: 0,
-              width: 'min(400px, 94vw)',
-              zIndex: 50,
-              background: LC.surface,
-              borderLeft: `1px solid ${LC.border}`,
-              boxShadow: LC.shadowOut,
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            {/* Header */}
-            <div
-              style={{ padding: '14px 16px 10px', borderBottom: `1px solid ${LC.borderSubtle}` }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Layers size={16} style={{ color: LC.accent }} />
-                <span style={{ fontSize: 14, fontWeight: 700, color: LC.text }}>Context</span>
-                <button
-                  onClick={() => setOpen(false)}
-                  title="Close"
-                  style={{
-                    marginLeft: 'auto',
-                    display: 'grid',
-                    placeItems: 'center',
-                    width: 28,
-                    height: 28,
-                    borderRadius: 8,
-                    border: 'none',
-                    background: 'transparent',
-                    color: LC.muted,
-                    cursor: 'pointer',
-                  }}
-                >
-                  <X size={16} />
-                </button>
-              </div>
-              <div style={{ fontSize: 11.5, color: LC.muted, lineHeight: 1.45, marginTop: 3 }}>
-                What Sina is looking into — open any source and verify it yourself.
-              </div>
-
-              {/* Tabs */}
-              <div style={{ display: 'flex', gap: 4, marginTop: 10 }}>
-                <TabButton
-                  active={tab === 'chat'}
-                  onClick={() => setTab('chat')}
-                  label="This chat"
-                  count={traceCount}
-                />
-                <TabButton
-                  active={tab === 'library'}
-                  onClick={() => setTab('library')}
-                  label="Library"
-                  count={libLoaded ? libraryDocs.length : undefined}
-                />
-              </div>
-            </div>
-
-            {/* Body */}
-            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '10px 12px 16px' }}>
-              {tab === 'chat' ? (
-                traceCount === 0 ? (
-                  <EmptyNote text="Nothing yet in this conversation. Attach a file in the composer, or ask Sina to search your documents or the web, and everything it looks at will show here." />
-                ) : (
-                  <>
-                    {attached.length > 0 && (
-                      <Section title="Attached to this chat">
-                        {attached.map((d) => (
-                          <SourceRow
-                            key={d.id}
-                            icon={
-                              <Paperclip size={14} style={{ color: LC.faint, flexShrink: 0 }} />
-                            }
-                            title={d.fileName}
-                            subtitle={`${d.kind.toUpperCase()} · ${d.pages ? `${d.pages} page${d.pages > 1 ? 's' : ''}` : `${d.chars.toLocaleString()} chars`}${d.truncated ? ' · truncated' : ''}`}
-                            badge={
-                              <span
-                                style={{
-                                  fontSize: 9.5,
-                                  fontWeight: 700,
-                                  letterSpacing: '0.03em',
-                                  textTransform: 'uppercase',
-                                  color: '#047857',
-                                  background: 'rgba(16,185,129,0.14)',
-                                  borderRadius: 5,
-                                  padding: '1px 6px',
-                                  flexShrink: 0,
-                                }}
-                                title="Its extracted text is in the chat's context — Sina can read it"
-                              >
-                                In context
-                              </span>
-                            }
-                          />
-                        ))}
-                      </Section>
-                    )}
-                    {trace.docs.length > 0 && (
-                      <Section title="Documents">
-                        {trace.docs.map((d) => (
-                          <SourceRow
-                            key={d.key}
-                            icon={<FileText size={14} style={{ color: LC.faint, flexShrink: 0 }} />}
-                            title={d.fileName}
-                            subtitle={`${d.passages} passage${d.passages > 1 ? 's' : ''}${d.bestSim ? ` · ${Math.round(Math.max(0, Math.min(1, d.bestSim)) * 100)}% match` : ''}`}
-                            onOpen={
-                              d.documentId ? () => void openDocument(d.documentId) : undefined
-                            }
-                          />
-                        ))}
-                      </Section>
-                    )}
-                    {trace.web.length > 0 && (
-                      <Section title="Web sources">
-                        {trace.web.map((w) => (
-                          <SourceRow
-                            key={w.url}
-                            icon={<Globe size={14} style={{ color: LC.faint, flexShrink: 0 }} />}
-                            title={w.title}
-                            subtitle={`${domainOf(w.url)} · ${w.scope}`}
-                            external
-                            onOpen={() => window.open(w.url, '_blank', 'noopener')}
-                          />
-                        ))}
-                      </Section>
-                    )}
-                  </>
-                )
-              ) : !libLoaded ? (
-                <EmptyNote text="Loading your documents…" />
-              ) : libraryError ? (
-                <div role="alert" style={{ padding: '8px 6px', fontSize: 12, color: '#b91c1c' }}>
-                  {libraryError}
-                </div>
-              ) : libDocs.length === 0 ? (
-                <EmptyNote text="No sources uploaded yet. Open Sources to add documents, then choose which ones Sina can search." />
-              ) : (
-                <>
-                  <div
-                    style={{
-                      fontSize: 11,
-                      color: LC.muted,
-                      lineHeight: 1.45,
-                      padding: '2px 6px 8px',
-                    }}
-                  >
-                    Choose which documents Sina can search. Everything you upload lives on the
-                    Sources; the Library is the subset it uses as context.
-                  </div>
-                  <Section title={`In Sina's Library · ${libraryDocs.length}`}>
-                    {libraryDocs.length === 0 ? (
-                      <div style={{ fontSize: 12, color: LC.muted, padding: '4px 8px 8px' }}>
-                        Nothing in context yet — add a document from below.
-                      </div>
-                    ) : (
-                      libraryDocs.map((d) => renderLibRow(d))
-                    )}
-                  </Section>
-                  {availableDocs.length > 0 && (
-                    <Section title={`Not in Library · ${availableDocs.length}`}>
-                      {availableDocs.map((d) => renderLibRow(d))}
-                    </Section>
-                  )}
-                </>
-              )}
-            </div>
+    <details className="chat-scope-disclosure" aria-label="Evidence used in this conversation">
+      <summary>
+        Evidence used in this conversation{' '}
+        <span className="chat-scope-count">{trace.docs.length + trace.web.length}</span>
+      </summary>
+      <p className="chat-scope-note">
+        Documents and web pages retrieved in earlier replies. This history does not add them to your
+        current selections.
+      </p>
+      {!trace.docs.length && !trace.web.length && (
+        <p className="chat-scope-empty">No retrieved evidence yet.</p>
+      )}
+      {trace.docs.map((source) => (
+        <div className="chat-scope-evidence-row" key={source.key}>
+          <FileText size={15} />
+          <div>
+            {source.documentId ? (
+              <button type="button" onClick={() => void openDocument(source)}>
+                {source.fileName} <ExternalLink size={12} />
+              </button>
+            ) : (
+              <strong>{source.fileName}</strong>
+            )}
+            <p className="chat-scope-note">
+              {source.revision !== undefined ? `Revision ${source.revision} · ` : ''}
+              {source.passages} passage{source.passages === 1 ? '' : 's'}
+              {source.bestSim
+                ? ` · ${Math.round(Math.max(0, Math.min(1, source.bestSim)) * 100)}% match`
+                : ''}
+            </p>
           </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-function TabButton({
-  active,
-  onClick,
-  label,
-  count,
-}: {
-  active: boolean;
-  onClick: () => void;
-  label: string;
-  count?: number;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 5,
-        padding: '5px 11px',
-        borderRadius: 8,
-        border: 'none',
-        cursor: 'pointer',
-        fontSize: 12.5,
-        fontWeight: 600,
-        background: active ? LC.surfaceHover : 'transparent',
-        color: active ? LC.text : LC.muted,
-      }}
-    >
-      {label}
-      {typeof count === 'number' && count > 0 && (
-        <span style={{ fontSize: 10.5, fontWeight: 700, color: LC.faint }}>{count}</span>
-      )}
-    </button>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div style={{ marginBottom: 10 }}>
-      <div
-        style={{
-          fontSize: 10.5,
-          fontWeight: 700,
-          letterSpacing: '0.04em',
-          textTransform: 'uppercase',
-          color: LC.faint,
-          padding: '2px 6px 6px',
-        }}
-      >
-        {title}
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>{children}</div>
-    </div>
-  );
-}
-
-function SourceRow({
-  icon,
-  title,
-  subtitle,
-  onOpen,
-  external = false,
-  badge,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  subtitle: string;
-  onOpen?: () => void;
-  external?: boolean;
-  badge?: React.ReactNode;
-}) {
-  const clickable = !!onOpen;
-  return (
-    <div
-      className={clickable ? 'lc-sourcerow' : undefined}
-      onClick={onOpen}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 9,
-        padding: '9px 10px',
-        borderRadius: 10,
-        cursor: clickable ? 'pointer' : 'default',
-      }}
-    >
-      {icon}
-      <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span
-            style={{
-              fontSize: 13,
-              fontWeight: 550,
-              color: LC.text,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {title}
-          </span>
-          {external && clickable && (
-            <ExternalLink size={11} style={{ color: LC.faint, flexShrink: 0 }} />
-          )}
         </div>
-        <div
-          style={{
-            fontSize: 11,
-            color: LC.muted,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {subtitle}
+      ))}
+      {trace.web.map((source) => (
+        <div className="chat-scope-evidence-row" key={source.url}>
+          <Globe size={15} />
+          <div>
+            <a href={source.url} target="_blank" rel="noopener noreferrer">
+              {source.title} <ExternalLink size={12} />
+            </a>
+            <p className="chat-scope-note">
+              {domainOf(source.url)} · {source.scope}
+            </p>
+          </div>
         </div>
-      </div>
-      {badge}
-    </div>
+      ))}
+      {error && (
+        <p role="alert" className="chat-scope-error">
+          {error}
+        </p>
+      )}
+    </details>
   );
-}
-
-function EmptyNote({ text }: { text: string }) {
-  return (
-    <div style={{ padding: '18px 10px', fontSize: 12.5, color: LC.muted, lineHeight: 1.55 }}>
-      {text}
-    </div>
-  );
-}
-
-export function DataFilesPanelStyles() {
-  return <style>{`.lc-sourcerow:hover { background: ${LC.surfaceHover}; }`}</style>;
 }

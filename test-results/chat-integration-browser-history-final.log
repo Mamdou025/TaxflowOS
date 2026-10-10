@@ -1,0 +1,97 @@
+
+> workspace@0.0.0 test:workflow-reliability C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-browser-tests.mjs reliability "--grep" "a started run retains its source|an exact run selection replaces|Chat starts a catalog workflow"
+
+Test run 04a727d1-771a4dc0-57e0-4103-9ec2-af3168d1ac0d; reports and logs: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-771a4dc0-57e0-4103-9ec2-af3168d1ac0d
+Preparing the isolated browser dependency cache…
+
+Running 3 tests using 1 worker
+
+  x  1 e2e\workflow-run-persistence.spec.ts:5:7 › Guided run-state persistence › a started run retains its source and exact identity after navigating away and reloading (4.2m)
+  ok 2 e2e\workflow-run-persistence.spec.ts:57:7 › Guided run-state persistence › an exact run selection replaces a local new run in the same mounted panel (16.0s)
+  x  3 e2e\workflow-traceability.spec.ts:5:5 › Chat starts a catalog workflow and Build verifies exact imported evidence and source revisions (1.0m)
+
+
+  1) e2e\workflow-run-persistence.spec.ts:5:7 › Guided run-state persistence › a started run retains its source and exact identity after navigating away and reloading 
+
+    Test timeout of 240000ms exceeded.
+
+    Error: locator.waitFor: Test timeout of 240000ms exceeded.
+    Call log:
+      - waiting for getByRole('region', { name: 'Workflow execution' }) to be visible
+
+
+      47 |     expect(await panel.locator(':scope > header').innerText()).toBe(identity);
+      48 |     await page.reload();
+    > 49 |     await panel.waitFor();
+         |                 ^
+      50 |     await expect(panel).toContainText('trial.xlsx');
+      51 |     expect(await panel.locator(':scope > header').innerText()).toBe(identity);
+      52 |     const restored = (await readLibrary())[original.id];
+        at C:\Users\Mamad\Sinaxe\TaxflowOS\e2e\workflow-run-persistence.spec.ts:49:17
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-771a4dc0-57e0-4103-9ec2-af3168d1ac0d\artifacts\workflow-run-persistence-G-116b7-vigating-away-and-reloading\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-771a4dc0-57e0-4103-9ec2-af3168d1ac0d\artifacts\workflow-run-persistence-G-116b7-vigating-away-and-reloading\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\phase2\04a727d1-771a4dc0-57e0-4103-9ec2-af3168d1ac0d\artifacts\workflow-run-persistence-G-116b7-vigating-away-and-reloading\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-771a4dc0-57e0-4103-9ec2-af3168d1ac0d\artifacts\workflow-run-persistence-G-116b7-vigating-away-and-reloading\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\phase2\04a727d1-771a4dc0-57e0-4103-9ec2-af3168d1ac0d\artifacts\workflow-run-persistence-G-116b7-vigating-away-and-reloading\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) e2e\workflow-traceability.spec.ts:5:5 › Chat starts a catalog workflow and Build verifies exact imported evidence and source revisions 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('region', { name: 'Run verification in Build' })
+    Expected substring: "354c3f7c-9b2b-45f8-81b4-c56eb98d8790"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toContainText" with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Run verification in Build' })
+
+
+      65 |   await panel.getByRole('button', { name: 'Verify this run in Build', exact: true }).click();
+      66 |   let inspector = page.getByRole('region', { name: 'Run verification in Build' });
+    > 67 |   await expect(inspector).toContainText(original.session.id);
+         |                           ^
+      68 |   await inspector.getByLabel('Verify block').selectOption(calculated.blockId);
+      69 |   await expect(inspector.getByRole('article', { name: 'Block verification' })).toContainText('400');
+      70 |   expect(await read()).toEqual(original);
+        at C:\Users\Mamad\Sinaxe\TaxflowOS\e2e\workflow-traceability.spec.ts:67:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-771a4dc0-57e0-4103-9ec2-af3168d1ac0d\artifacts\workflow-traceability-Chat-78250-idence-and-source-revisions\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-771a4dc0-57e0-4103-9ec2-af3168d1ac0d\artifacts\workflow-traceability-Chat-78250-idence-and-source-revisions\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\phase2\04a727d1-771a4dc0-57e0-4103-9ec2-af3168d1ac0d\artifacts\workflow-traceability-Chat-78250-idence-and-source-revisions\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-771a4dc0-57e0-4103-9ec2-af3168d1ac0d\artifacts\workflow-traceability-Chat-78250-idence-and-source-revisions\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\phase2\04a727d1-771a4dc0-57e0-4103-9ec2-af3168d1ac0d\artifacts\workflow-traceability-Chat-78250-idence-and-source-revisions\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    e2e\workflow-run-persistence.spec.ts:5:7 › Guided run-state persistence › a started run retains its source and exact identity after navigating away and reloading 
+    e2e\workflow-traceability.spec.ts:5:5 › Chat starts a catalog workflow and Build verifies exact imported evidence and source revisions 
+  1 passed (6.2m)
+playwright exited 1; see C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-771a4dc0-57e0-4103-9ec2-af3168d1ac0d\playwright.log
+ ELIFECYCLE  Command failed with exit code 1.

@@ -6,9 +6,11 @@ import { activateWorkspace, forgetSession } from '../workspace-context';
 export function SignIn({
   accessError,
   onRetryAccess,
+  allowDemo = true,
 }: {
   accessError?: string;
   onRetryAccess?: () => void;
+  allowDemo?: boolean;
 }) {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
@@ -99,22 +101,26 @@ export function SignIn({
           {creating ? 'Create your account' : 'Sign in to TaxflowOS'}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Try the app without credentials, or sign in to your workspace.
+          {allowDemo
+            ? 'Try the app without credentials, or sign in to your workspace.'
+            : 'Sign in with your registered InScope account to manage ChatGPT access. Demo accounts cannot link to ChatGPT.'}
         </p>
-        <div className="space-y-2 border-b pb-4">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void enterDemo()}
-            className="w-full rounded bg-primary p-2 font-medium text-primary-foreground disabled:opacity-50"
-          >
-            Try demo
-          </button>
-          <p className="text-xs text-muted-foreground">
-            No email or password needed. Explore in your own demo workspace. Export workflows before
-            exiting; access depends on this browser session.
-          </p>
-        </div>
+        {allowDemo && (
+          <div className="space-y-2 border-b pb-4">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void enterDemo()}
+              className="w-full rounded bg-primary p-2 font-medium text-primary-foreground disabled:opacity-50"
+            >
+              Try demo
+            </button>
+            <p className="text-xs text-muted-foreground">
+              No email or password needed. Explore in your own demo workspace. Export workflows
+              before exiting; access depends on this browser session.
+            </p>
+          </div>
+        )}
         {(error || accessError) && (
           <p role="alert" className="text-sm text-red-700">
             {error || accessError}

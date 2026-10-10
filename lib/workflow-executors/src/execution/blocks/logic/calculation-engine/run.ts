@@ -1,32 +1,20 @@
+import {
+  collectFormulaReferences,
+  isSupportedFormulaFunction,
+  tokenizeFormulaExpression,
+  type FormulaToken,
+} from '@workspace/workflow-core/formula-references';
+export { collectFormulaReferences } from '@workspace/workflow-core/formula-references';
 import { error, info, warning } from '../../../runtime/events';
-import { calculationValueKey, numericOutputFields } from '../../../../calculation-values';
+import {
+  calculationInputOptionsFromRoles,
+  resolveCalculationInputs,
+  type CalculationInputRequirement,
+} from '../../../../calculation-inputs';
 import { dedupeEvidenceRefs, dedupeSourceTrace } from '../../../runtime/lineage';
 import type { ToolExecutionContext, ToolRunResult } from '../../../runtime/types';
 import type { CalculationOperand, CalculationRule } from '../../source/calculation-rules/schema';
-import {
-  collectCalculationRulesFromBackendInput,
-  collectNamedValuesFromBackendInput,
-  type ResolvedOperand,
-} from './schema';
-
-const REFERENCE_PART_REGEX = /[A-Za-z0-9_:.@-]/;
-const REFERENCE_START_REGEX = /[A-Za-z_]/;
-const WHITESPACE_REGEX = /\s/;
-const SUPPORTED_FORMULA_FUNCTIONS = new Set([
-  'abs',
-  'max',
-  'max_subtract_zero',
-  'min',
-  'min_multiply_cap',
-  'round',
-]);
-
-type FormulaToken =
-  | { text: string; type: 'comma'; value: ',' }
-  | { text: string; type: 'identifier'; value: string }
-  | { text: string; type: 'number'; value: number }
-  | { text: string; type: 'operator'; value: '+' | '-' | '*' | '/' }
-  | { text: string; type: 'paren'; value: '(' | ')' };
+import { collectCalculationRulesFromBackendInput, type ResolvedOperand } from './schema';
 
 type FormulaValue = {
   display: string;
@@ -82,30 +70,14 @@ function getRules(context: ToolExecutionContext): {
   return { rules: inlineRules, mode: 'auto:inline' };
 }
 
-function getNamedValues(context: ToolExecutionContext) {
-  const values: Record<string, number> = {};
-  for (const input of getRoleInputs(context, 'calculation_sources')) {
-    const source = input as { blockId: string; output: unknown };
-    for (const field of numericOutputFields(source.output)) {
-      values[calculationValueKey(source.blockId, field.path)] = field.value;
-    }
-  }
-  for (const role of ['named_values', 'protected_inputs', 'fapi_inputs']) {
-    for (const input of getRoleInputs(context, role)) {
-      for (const [key, value] of collectNamedValuesFromBackendInput(input)) {
-        values[key] = value;
-      }
-    }
-  }
-  return values;
-}
-
 function createErrorResult({
   context,
   errors,
+  inputRequirements = [],
 }: {
   context: ToolExecutionContext;
   errors: string[];
+  inputRequirements?: CalculationInputRequirement[];
 }): ToolRunResult {
   return {
     blockId: context.block.id,
@@ -120,6 +92,7 @@ function createErrorResult({
         inputCount: 0,
         ruleCount: 0,
         warningCount: 0,
+        inputRequirements,
       },
       formula_trace: { formulaTrace: {} },
       named_values: { namedValues: {} },
@@ -207,100 +180,6 @@ function roundTo(value: number, digits: number) {
   if (!Number.isFinite(shifted)) return value;
   const [rounded, roundedExponent = '0'] = Math.round(shifted).toString().split('e');
   return Math.sign(value) * Number(`${rounded}e${Number(roundedExponent) - digits}`);
-}
-
-function isDigit(character: string) {
-  return character >= '0' && character <= '9';
-}
-
-function isReferenceStart(character: string) {
-  return REFERENCE_START_REGEX.test(character);
-}
-
-function isReferencePart(character: string) {
-  return REFERENCE_PART_REGEX.test(character);
-}
-
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Tokenization is deliberately local and supports calculator-style numbers, refs, operators, parentheses, and function commas.
-function tokenizeFormulaExpression(expression: string) {
-  const tokens: FormulaToken[] = [];
-  const warnings: string[] = [];
-  let index = 0;
-
-  while (index < expression.length) {
-    const character = expression[index];
-    if (WHITESPACE_REGEX.test(character)) {
-      index += 1;
-      continue;
-    }
-
-    if (character === '(' || character === ')') {
-      tokens.push({ text: character, type: 'paren', value: character });
-      index += 1;
-      continue;
-    }
-
-    if (character === ',') {
-      tokens.push({ text: character, type: 'comma', value: character });
-      index += 1;
-      continue;
-    }
-
-    if (character === '+' || character === '-' || character === '*' || character === '/') {
-      tokens.push({ text: character, type: 'operator', value: character });
-      index += 1;
-      continue;
-    }
-
-    if (isDigit(character) || character === '.') {
-      const text =
-        expression.slice(index).match(/^(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/)?.[0] ?? character;
-      const end = index + text.length;
-      const value = Number(text);
-      if (Number.isFinite(value)) {
-        tokens.push({ text, type: 'number', value });
-      } else {
-        warnings.push(`Invalid number "${text}" in formula expression.`);
-      }
-      index = end;
-      continue;
-    }
-
-    if (isReferenceStart(character)) {
-      let end = index + 1;
-      while (end < expression.length && isReferencePart(expression[end])) {
-        end += 1;
-      }
-      const text = expression.slice(index, end);
-      tokens.push({ text, type: 'identifier', value: text });
-      index = end;
-      continue;
-    }
-
-    warnings.push(`Unsupported formula character "${character}" was ignored.`);
-    index += 1;
-  }
-
-  return { tokens, warnings };
-}
-
-function isSupportedFormulaFunction(name: string) {
-  return SUPPORTED_FORMULA_FUNCTIONS.has(name.toLowerCase());
-}
-
-export function collectFormulaReferences(expression: string) {
-  const { tokens } = tokenizeFormulaExpression(expression);
-  const refs = tokens.flatMap((token, index) => {
-    if (token.type !== 'identifier') {
-      return [];
-    }
-    const next = tokens[index + 1];
-    if (next?.type === 'paren' && next.value === '(' && isSupportedFormulaFunction(token.value)) {
-      return [];
-    }
-    return [token.value];
-  });
-  return [...new Set(refs)];
 }
 
 function resolveOperand({
@@ -733,25 +612,24 @@ function getRuleExpression(rule: CalculationRule) {
 export function runCalculationEngine(context: ToolExecutionContext): ToolRunResult {
   const { rules, mode: resolvedMode } = getRules(context);
   const configMode = getCalculationMode(context);
-  const namedValues = getNamedValues(context);
-  const defaultWarnings: string[] = [];
-  const defaults = context.block.config.inputDefaults;
-  if (defaults && typeof defaults === 'object') {
-    for (const [key, value] of Object.entries(defaults)) {
-      if (!Object.hasOwn(namedValues, key) && typeof value === 'number' && Number.isFinite(value)) {
-        namedValues[key] = value;
-        defaultWarnings.push(`Used your explicit default for ${key}: ${value}.`);
-      }
-    }
-  }
-  const missingErrors = getMissingInputErrors({
-    configMode,
-    namedValues,
+  const resolvedInputs = resolveCalculationInputs(
     rules,
-  });
+    context.block.config,
+    calculationInputOptionsFromRoles(context.inputsByRole),
+  );
+  const namedValues = resolvedInputs.values;
+  const inputRequirements = resolvedInputs.requirements;
+  const missingErrors = [
+    ...resolvedInputs.errors,
+    ...getMissingInputErrors({
+      configMode,
+      namedValues,
+      rules,
+    }),
+  ];
 
   if (missingErrors.length > 0) {
-    return createErrorResult({ context, errors: missingErrors });
+    return createErrorResult({ context, errors: [...new Set(missingErrors)], inputRequirements });
   }
 
   for (const rule of rules) {
@@ -764,13 +642,14 @@ export function runCalculationEngine(context: ToolExecutionContext): ToolRunResu
       return createErrorResult({
         context,
         errors: [`Invalid rounding precision for ${rule.resultKey}.`],
+        inputRequirements,
       });
   }
   const pendingRules = [...rules];
   const calculatedResults: Record<string, number> = {};
   const resultDetails: Record<string, Record<string, unknown>> = {};
   const formulaTrace: Record<string, Record<string, unknown>> = {};
-  const warnings: string[] = [...defaultWarnings];
+  const warnings: string[] = [...resolvedInputs.warnings];
   let progressed = true;
 
   while (pendingRules.length > 0 && progressed) {
@@ -784,7 +663,8 @@ export function runCalculationEngine(context: ToolExecutionContext): ToolRunResu
 
       const evaluation = evaluateRule({ namedValues, rule });
       const invalid = evaluation.warnings;
-      if (invalid.length > 0) return createErrorResult({ context, errors: invalid });
+      if (invalid.length > 0)
+        return createErrorResult({ context, errors: invalid, inputRequirements });
       if (rule.roundingDigits !== undefined)
         evaluation.result = roundTo(evaluation.result, rule.roundingDigits);
       namedValues[rule.resultKey] = evaluation.result;
@@ -820,6 +700,7 @@ export function runCalculationEngine(context: ToolExecutionContext): ToolRunResu
   if (pendingRules.length) {
     return createErrorResult({
       context,
+      inputRequirements,
       errors: pendingRules.map((rule) => {
         const refs = rule.formulaExpression
           ? collectFormulaReferences(rule.formulaExpression)
@@ -837,6 +718,7 @@ export function runCalculationEngine(context: ToolExecutionContext): ToolRunResu
     inputCount: Object.keys(namedValues).length,
     ruleCount: rules.length,
     warningCount: warnings.length,
+    inputRequirements,
   };
 
   return {

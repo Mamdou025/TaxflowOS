@@ -7,7 +7,10 @@
     "./http-json": "./src/http-json.ts",
     "./connectors": "./src/connectors.ts",
     "./currency-rate": "./src/currency-rate.ts",
-    "./rows": "./src/rows.ts"
+    "./rows": "./src/rows.ts",
+    "./workbook": "./src/workbook.ts",
+    "./workbook-values": "./src/workbook-values.ts",
+    "./workbook-upload": "./src/workbook-upload.ts"
   },
   "dependencies": {},
   "devDependencies": {

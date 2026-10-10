@@ -1,0 +1,102 @@
+[
+  {
+    "file": "artifacts/ai-workflow-builder/src/features/assistant/runtime/chat/chat-switch.ts",
+    "change": "modified"
+  },
+  {
+    "file": "artifacts/ai-workflow-builder/src/features/assistant/runtime/chat/chat-transition.ts",
+    "change": "added"
+  },
+  {
+    "file": "artifacts/ai-workflow-builder/src/features/assistant/runtime/chat/use-assistant-ui-runtime.ts",
+    "change": "modified"
+  },
+  {
+    "file": "artifacts/ai-workflow-builder/src/features/assistant/runtime/chat/use-chat-persistence.ts",
+    "change": "modified"
+  },
+  {
+    "file": "artifacts/ai-workflow-builder/src/features/assistant/ui/assistant-thread.tsx",
+    "change": "modified"
+  },
+  {
+    "file": "artifacts/ai-workflow-builder/src/features/assistant/ui/assistant-ui-composer.tsx",
+    "change": "modified"
+  },
+  {
+    "file": "artifacts/ai-workflow-builder/src/features/assistant/ui/chat-context-strip.tsx",
+    "change": "modified"
+  },
+  {
+    "file": "artifacts/ai-workflow-builder/src/features/assistant/ui/chat-scope-menu.css",
+    "change": "added"
+  },
+  {
+    "file": "artifacts/ai-workflow-builder/src/features/assistant/ui/chat-scope-menu.tsx",
+    "change": "added"
+  },
+  {
+    "file": "artifacts/ai-workflow-builder/src/features/assistant/ui/data-files-panel.tsx",
+    "change": "modified"
+  },
+  {
+    "file": "artifacts/ai-workflow-builder/src/features/assistant/ui/saved-chat-recovery.tsx",
+    "change": "added"
+  },
+  {
+    "file": "artifacts/ai-workflow-builder/src/features/assistant/ui/use-assistant.tsx",
+    "change": "modified"
+  },
+  {
+    "file": "artifacts/ai-workflow-builder/src/features/assistant/ui/work-menu.tsx",
+    "change": "modified"
+  },
+  {
+    "file": "docs/ARCHITECTURE.md",
+    "change": "modified"
+  },
+  {
+    "file": "docs/chat-scope-recovery.md",
+    "change": "added"
+  },
+  {
+    "file": "docs/FUNCTIONALITY.md",
+    "change": "modified"
+  },
+  {
+    "file": "docs/product/decisions.md",
+    "change": "modified"
+  },
+  {
+    "file": "docs/product/navigation.md",
+    "change": "modified"
+  },
+  {
+    "file": "e2e/assistant-ui-chat.spec.ts",
+    "change": "modified"
+  },
+  {
+    "file": "e2e/chat-context.spec.ts",
+    "change": "modified"
+  },
+  {
+    "file": "e2e/mkoro-delegation.spec.ts",
+    "change": "modified"
+  },
+  {
+    "file": "e2e/phase-7-navigation.spec.ts",
+    "change": "modified"
+  },
+  {
+    "file": "e2e/source-library.spec.ts",
+    "change": "modified"
+  },
+  {
+    "file": "scripts/maintained-paths.mjs",
+    "change": "modified"
+  },
+  {
+    "file": "tests/unit/chat-transition.test.ts",
+    "change": "added"
+  }
+]

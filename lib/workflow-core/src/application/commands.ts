@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { validateWorkflowLibrary } from '@workspace/workflow-contracts/library';
 export { upgradeFapiApiSourceDraft } from './api-source-upgrade';
 import { LocalWorkflowSnapshotSchema as WorkflowDefinitionSchema } from '@workspace/workflow-contracts/generated-schemas';
 import type { PersonalWorkflow } from '@workspace/workflow-contracts/library-types';
@@ -77,6 +78,26 @@ export function replaceDraft(
       'An edit cannot change the workflow identity.',
     );
   return { ...entry, draft: structuredClone(WorkflowDefinitionSchema.parse(draft)) };
+}
+
+/** Replace one definition while keeping the target's identity and complete history. */
+export function replaceWorkflowFromBackup(
+  entry: PersonalWorkflow,
+  backup: unknown,
+  expectedFingerprint: string,
+  now = new Date().toISOString(),
+): PersonalWorkflow {
+  const imported = Object.values(validateWorkflowLibrary(backup));
+  if (imported.length !== 1)
+    throw new WorkflowCommandError(
+      'INVALID_REQUEST',
+      'Choose a backup containing exactly one workflow.',
+    );
+  const replacement = { ...imported[0].draft, id: entry.id };
+  // Check the caller's revision before preserving an unsaved draft as a version.
+  replaceDraft(entry, replacement, expectedFingerprint);
+  const preserved = saveVersion(entry, now);
+  return saveVersion(replaceDraft(preserved, replacement), now);
 }
 
 export function saveVersion(

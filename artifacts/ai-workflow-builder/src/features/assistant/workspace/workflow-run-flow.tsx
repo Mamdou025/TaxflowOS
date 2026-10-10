@@ -372,7 +372,7 @@ function EditableInputs({ config, inputs, onCommit, onOpenBuilder, snapshot, liv
       <div style={{ fontSize: 10.5, fontWeight: 650, textTransform: 'uppercase', letterSpacing: '0.04em', color: FAINT, marginBottom: 9, display: 'flex', alignItems: 'center', gap: 5 }}><SlidersHorizontal size={12} /> Inputs — edit any and the workflow recomputes</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
         {config.editableInputs.map((inp) => (
-          <InputRow key={inp.key} label={inp.label} hint={inp.hint} value={inputs[inp.key] ?? inp.default} onCommit={(v) => onCommit(inp.key, v)} blockId={inp.block?.blockId} onOpenBuilder={onOpenBuilder} snapshot={snapshot} liveConfigByBlock={liveConfigByBlock} live={inp.key === 'fxRate' ? { from: config.currency ?? 'USD', to: 'CAD', year: scopeYear } : undefined} />
+          <InputRow key={inp.key} label={inp.label} hint={inp.hint} value={inputs[inp.key] ?? inp.default} onCommit={(v) => onCommit(inp.key, v)} blockId={inp.block?.blockId} onOpenBuilder={onOpenBuilder} snapshot={snapshot} liveConfigByBlock={liveConfigByBlock} live={inp.key === 'fxRate' && scopeYear !== null ? { from: config.currency ?? 'USD', to: 'CAD', year: scopeYear } : undefined} />
         ))}
       </div>
     </div>

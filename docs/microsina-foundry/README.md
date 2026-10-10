@@ -444,3 +444,29 @@ limited to current work. The locally registered Sina tools expose this schema.
 Existing saved Foundry agent versions need a separate authorized catalog import
 before MicroSina can select these new arguments. This implementation does not
 update or publish the remote agent.
+
+## Pending tool-schema update: workflow name choices — October 9, 2026
+
+The local [tool snapshot](tools.json) now matches the optional `query` string on
+`listAvailableWorkflows` and `listSavedWorkflows`. Both previously accepted an
+empty argument object only. Calls with `{}` still list the full catalog, so the
+optional parameter is backward compatible with existing callers. A supplied
+name filters the list; exact full-name matches take precedence over near names,
+and separate workflows with the same name remain separate choices.
+
+Inscope renders the returned records as clickable titles with saved-version/date
+details. IDs remain internal tool arguments, with optional details for identifying
+duplicates. Selecting a saved choice opens that exact listed version through the
+shared workflow adapter. A draft-only choice opens Build without saving a version
+or starting calculations. Merely listing workflows does not open or execute one.
+
+This change updates the two local registration definitions and their descriptions
+only; all other tool definitions are preserved. The saved Azure agent version was
+not updated or published, and no local version pin changed. Because the adapter
+sends allowed function names rather than request-time schemas, an existing remote
+version can continue calling these tools without `query` and receive clickable
+choices, but it does not acquire the optional filter or revised tool descriptions
+from this local file. Enabling those remotely requires a separately authorized
+catalog update, saved-version verification and deliberate activation. The earlier
+version-2 import instructions are a historical setup path, not authorization to
+replace the current agent or its public toolbox attachment.

@@ -8,8 +8,8 @@ import { apiRequestSignature } from '../../../../api-snapshot';
 // pinned payload, so re-running a workflow reproduces the same figures and the
 // evidence pack can state exactly which response the numbers came from.
 //
-// With nothing pinned it falls back to the offline sample and says so in a
-// warning — the workflow still runs end-to-end without a network.
+// Example rows require explicit useSampleData. Missing or stale responses fail;
+// named-value mode is handled by run-values.ts without row normalization.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { info, warning } from '../../../runtime/events';
@@ -31,7 +31,7 @@ export function runHttpJsonSource(context: ToolExecutionContext): ToolRunResult 
   //                      upload). runTemplateCore writes every Source block's
   //                      rows under this key, so honouring it is what lets this
   //                      block stand in for a manual/table Source.
-  //   3. the offline fixture, so the block still runs with no network at all.
+  //   3. the offline fixture, only when useSampleData is explicitly enabled.
   const normalize = (input: unknown[]) =>
     input
       .map(normalizeManualTableRow)

@@ -14,6 +14,7 @@
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
     "test:workflow-builder": "node scripts/run-browser-tests.mjs workflow",
     "test:workflow-reliability": "node scripts/run-browser-tests.mjs reliability",
+    "test:chatgpt-viewer": "playwright test --config=playwright.chatgpt.config.mjs --tsconfig=e2e/tsconfig.json",
     "test:workflow-persistence": "node scripts/run-browser-tests.mjs persistence",
     "test:integration": "node --test tests/integration/*.test.mjs",
     "test:phase2": "pnpm run verify && pnpm run test:integration && pnpm run test:workflow-reliability && pnpm run test:workflow-persistence",

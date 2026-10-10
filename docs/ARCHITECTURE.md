@@ -22,6 +22,25 @@ they are not part of the running application.
 
 ## Workspace composition
 
+The optional [ChatGPT plugin foundation](chatgpt-plugin.md) adds an MCP adapter
+in the existing API and a separate embedded workflow workspace.
+Its browser route retains session/origin/membership checks. Optional private-pilot
+[OAuth account linking](chatgpt-account-linking.md) lives in API security adapters
+and separate credential tables. The same MCP transport accepts workspace-bound
+read credentials, with separately consented write and execute scopes; other application routes do not. Standalone consent/account
+pages reuse sign-in without mounting the chat shell. Workflow rules remain in the
+portable packages, and normal application navigation stays unchanged.
+
+The [editable ChatGPT workspace](chatgpt-workspace-editing.md) uses core session
+commands against the existing workspace library, with its revision checked under
+a transaction. A separate operation ledger binds reviewed changes to the actor,
+workspace and exact revisions and makes successful retries idempotent. Applying
+an input/source change leaves the working run paused; explicit bounded server
+recalculation uses captured inputs and an allowlisted local executor registry.
+Sources are staged from uploaded bytes and parsed server-side. Portable workbook
+normalization lives in `lib/source-connectors`; browser and API adapters supply
+their workbook reader. No workflow rules live in the widget or its prompts.
+
 The active workspace uses Chat as its home and keeps the conversation mounted while
 opening detail surfaces. Its primary navigation is Chat, Workflows, Sources and
 Connections, with Settings and Help below recent conversations. Agents are managed
@@ -35,6 +54,103 @@ navigation state. Detail implementations are registered in
 routes for Sources, Connections and workflow history open the same registered
 surfaces. `/documents` remains a compatibility adapter for older saved links.
 
+`features/workflows-hub/workflow-page.tsx` owns the workflow list inside its page,
+alongside the selected detail. `workflow-navigation.tsx` reuses shared selection
+atoms and existing storage controls for Library, Run history, creation, saved
+workflows and grouped templates. It no longer registers a workflow section beneath
+recent chats in the global sidebar. Its collapsible list responds to the page
+panel's width; hiding the list keeps the current editor mounted. Header tabs,
+lazy editor loading and workflow commands retain their existing owners. See the
+[navigation change record](workflow-page-navigation.md) for scope and verification.
+
+On mobile, the workspace shell focuses the active detail page instead of applying
+the desktop chat minimum width. Chat remains mounted and can be restored through
+the Chat action. Workflow header buttons scroll horizontally beneath the fixed
+workspace controls; other pages retain their dropdown behavior. Returning to a
+wide viewport restores the existing split preference.
+
+The visible conversation now uses assistant-ui's external-store runtime and
+message, Markdown, viewport, composer and attachment primitives. The application
+retains its InScope branding, Scope controls, focus/docked layouts, agent selection
+and navigation. `features/assistant/runtime/chat/use-assistant-ui-runtime.ts`
+adapts the existing CopilotKit agent store; CopilotKit still owns agent runs,
+registered frontend tools, readable context and provider transport. Host
+instructions are registered through v2 `useAgentContext`, which reaches the run
+request; the installed SDK's legacy `setChatInstructions` only retains local
+context state. assistant-ui tool invocation is
+disabled; its tool views reuse the existing registered renderers and receipts.
+
+`use-assistant.tsx` is the single legacy SDK connection owner for the mounted chat.
+Persistence and Computer delegation reuse its operations; presence and Files read
+the shared v2 agent state without connecting again. Mounting the Files panel when
+the first reply starts therefore does not detach and reconnect the active stream.
+
+The workflow-list tool renderers show captured catalog records as clickable choices.
+`workflow-choice-model.ts` reads those receipts and checks selected identities;
+`workflow-choice-list.tsx` calls the existing workflow session or editor adapters
+only after a click. Saved cards retain their listed immutable version even when a
+newer version exists. Name filtering prefers exact matches without merging duplicate
+records. Shared host interaction instructions reach both Sina and MicroSina;
+Foundry still owns MicroSina's model and base agent definition.
+
+Catalog choices start a new run from that template; they never infer a saved
+derivative. Saved cards retain their listed version and offer separate explicit
+Resume actions for existing sessions. A deterministic selection receipt records
+the exact workflow/version/run (or a failed selection). Chat persists it as context
+metadata and renders an application acknowledgment without inventing a model turn.
+
+`runtime/chat/chat-context-*` owns explicit per-conversation context. Company and
+year are labels; selected source references retain their revisions and provenance.
+Chat uploads and Sources' **Use in this chat** share the same attachment boundary.
+Source restoration rejects changed or missing revisions instead of substituting
+another document. Local unsaved text has a bounded snapshot; local workbook rows
+still require the scoped browser cache. The centered orb-led `chat-scope-menu.tsx`
+composes one editing dialog for labels, source readiness/removal, exact active
+workflow or draft reference, previous work and historical retrieved evidence.
+The latter does not contribute to the unique selected-source count. The old
+permanent strip and separate Context drawer are removed; Sources owns library
+management. Explicit context is published through the v2 agent context owner and
+refreshed immediately before sending. Ambient company documents and saved memories
+are not silently added. Metadata is excluded from the message transcript supplied
+to the model. See [integration changes and verification](chat-workflow-integration.md).
+
+`assistant-ui-messages.ts` projects source message IDs, text and tool results into
+display parts without executing tools or mutating the agent history. A stable,
+display-only workflow row anchors the live shared session at its opening receipt;
+it is excluded from model requests and persisted messages. Browser conversation
+selection, server history under `/api/chat/threads`, authorship and exact workflow
+bindings remain application-owned. This integration uses no assistant-ui Cloud
+history service and changes no chat storage schema.
+
+Saved-chat recovery renders inside the normal shell. Chat transitions bound the
+whole navigation (including SDK detach before fetching history), cancel superseded
+reads and ignore stale completions. A pending detach is shared per agent so Retry
+cannot skip an unsettled previous response. The requested restore identity is
+retained for Retry. Existing messages at initial connection readiness settle the
+loading flag without unnecessarily reopening them. Failed/pending restore blocks
+sending, reply replay and context edits; it does not clear saved history. See the
+[Scope and recovery change record](chat-scope-recovery.md) for the file inventory
+and verification limits.
+
+The composer owns its draft and pending file list through assistant-ui. Sending
+files invokes the existing document/workbook parsing and source-context adapters;
+assistant-ui does not reinterpret financial records. Conversation epochs prevent
+an attachment operation from submitting into a different chat after navigation.
+Connection progress or provider unavailability is shown without blocking the
+workspace. File preparation can run while the agent is unavailable; model
+submission still requires the current ready agent, and an unsuccessful submission
+retains the draft and attachments with an explicit notice.
+Stop delegates to the existing abort/detach path and remains available alongside
+an unsent draft. Retry is restricted to a failed text turn with no tool calls or
+tool results after its latest user message. Earlier completed exchanges remain in
+history; a turn that has invoked a tool is not automatically replayed by Retry.
+
+The current OpenUI-backed `generateUI` tool remains available through its existing
+renderer. Replacing that generator is separate work. Projection of known image
+message parts does not establish image ingestion, provider delivery or persistence
+through the existing text/tool chat codec. Implementation scope, changed files and
+verification evidence are recorded in [assistant-ui migration](assistant-ui-migration.md).
+
 The cross-workflow execution list is a read projection owned by
 `lib/workflow-core/src/application/queries.ts`. Chat cards, global run history and
 workflow results keep the exact run ID. Opening a record changes selection only and
@@ -44,16 +160,57 @@ Interactive Chat and Run views share a saved-version session and component. See
 [shared interactive workflow execution](unified-workflow-execution.md) for block
 commands, source revisions, checkpoint behavior and runtime boundaries.
 The message list locates the exact opening tool receipt and mounts one live card
-there; the Work menu reads its session reference without copying execution state.
-Chat presents the session as one colored step accordion. Opening a step mounts its
+there; Scope reads its session reference without copying execution state.
+Chat and Run reuse the same colored, animated step timeline. Compatible FAPI sessions
+use the DevReplit four-stage animated presentation and prescribed recorded-value
+worksheet, owned by `features/workflows-hub`; see
+[FAPI reference restoration](fapi-reference-restoration.md). Its active definition
+lives under `shared/workflow-engine/templates/fapi`; the former sample path is a
+compatibility export. Neither the presentation nor CSV export computes tax values.
+Opening a step mounts its
 existing input/evidence components underneath; visited forms remain mounted while
 hidden to preserve drafts. Selection is local presentation state, not an execution
 command or navigation to Build. A form compares its draft against that bloc's current
 inputs before allowing an overwrite after a concurrent change.
+Expanded details project allowlisted saved formulas and rules, required inputs,
+recorded outputs and provenance directly in the block. Previous/stale values remain
+distinct from current results. FAPI stage recognition is independent of specialized
+worksheet compatibility, so a unit change does not silently remove its stage layout.
 Recorded Build inspection reuses the canvas and configuration workspace with
 isolated inspection state, preserving the mutable draft. Source forms and agent
 input proposals use the existing mapping/connector helpers before invoking shared
 session commands; Chat does not own calculation or validation rules.
+
+Numeric calculation requirements are derived from formulas using the portable
+parser and value resolver in `workflow-core`. Optional typed input definitions
+provide labels, units and saved manual/source bindings. Executor adapters supply
+connected output records and record the same requirement statuses with results.
+The Trigger in shared Chat/Run sessions generates a form from those requirements;
+there is no second field schema to maintain. Session commands validate explicit
+run-only manual/source choices against formula inputs and direct active connections.
+Sources can execute while a calculation waits for values. Provider choices retain
+all graph prerequisites and review steps, and saved bindings remain unchanged.
+See [calculation variables and readiness](calculation-variables.md) for ownership,
+compatibility and current limits.
+
+Declared Field worksheets are display projections of calculator results. The
+optional `worksheetLines` contract identifies a connected calculator and result
+key for each labelled line; Field owns no arithmetic. The portable
+declaration can also carry primary/summary/detail roles, groups, descriptions and
+display precision. Core validates this metadata; the shared UI presents it without
+recomputing or rounding the captured values. The portable
+`workflow-core/field-worksheet` projector resolves formulas, supporting variables,
+earlier calculations, freshness and recorded evidence. The Field executor uses the
+same projector for declared output, while undeclared Fields keep legacy behavior.
+Chat and Run show worksheet lines before Field execution and reuse session input
+forms for changes. A session-local draft provider keeps Trigger and worksheet
+edits to the same calculator coherent without adding persisted input state.
+Each session panel reuses one read projection for its immutable entry/session
+revision, including calculator-specific provider options. Unrelated Chat updates
+do not rebuild this projection; source revisions and session changes do. Command
+cloning and authorization remain separate from this presentation cache.
+Builder adapters own canvas conversion and last-run configuration checks. See
+[Field worksheets](field-worksheet.md) for the contract, limits and file inventory.
 
 Document acquisition stays in upload/API adapters; the synchronous workflow
 executors replay saved `DocumentExtraction` snapshots. `workflow-contracts` owns
@@ -141,6 +298,8 @@ tools to the graph runner. Neither React nor the model provider is a dependency 
 | Portable workflow types, backup validation, storage wire contract     | `lib/workflow-contracts`                                                                              |
 | HTTP source mapping, connector definitions, exchange-rate fetching    | `lib/source-connectors`                                                                               |
 | Agent loop, model policy/catalog, capability contracts and tool ports | `lib/agent-runtime`                                                                                   |
+| Chat presentation, composer, attachments and scrolling                | `src/features/assistant/ui/assistant-ui-*`, backed by assistant-ui primitives                         |
+| Existing agent/history to visible conversation adapter                | `src/features/assistant/runtime/chat/use-assistant-ui-runtime.ts` and `assistant-ui-messages.ts`      |
 | Scoped agent grants and durable operation receipts                    | `artifacts/api-server/src/routes/agent-actions.ts`, `lib/db/src/schema/agent-actions.ts`              |
 | Modular deterministic block executors                                 | `lib/workflow-executors/src/execution/blocks`                                                         |
 | Tool composition and result-shape adapters                            | `lib/workflow-executors/src/tools`                                                                    |
@@ -229,6 +388,19 @@ resource APIs, while the server reserves workspace sharing and legacy claims for
 email/password accounts. `platform/auth/ui/demo-menu.tsx` provides exit and retention
 guidance. No browser flag bypasses session or membership checks.
 
+`platform/auth/ui/workspace-startup.tsx` paints a public branded chat shell while
+the initial session and membership requests are pending. It uses presentation
+components only: no workspace caches, chat runtime, resource requests or tools
+mount before verification. Its navigation, composer, mode and Scope controls stay
+disabled until the verified application replaces it. Sign-in, workspace selection
+and access-error handling still belong to the auth provider.
+
+After a previously verified workspace experiences a transient background access
+failure, `provider.tsx` schedules one recovery check after one second. The existing
+30-second verification bound and minute poll remain. Recovery must verify both
+session and membership before restoring the hidden, inert workspace. Confirmed
+denials retain their existing logout/unmount behavior.
+
 Sync state belongs to one service instance. Dependencies for storage, transport,
 serialization, IDs, and scheduling are injected. A failed save stays dirty; a
 revision conflict blocks writes until explicit recovery. Requests from an older
@@ -279,11 +451,14 @@ primitives and extracted executors. `shared/ui` is the sole primitive location;
 duplicate `components/ui` implementations and import exceptions are removed.
 Older feature editors have not received a bulk formatting rewrite.
 
-The `@/app-workspace` entry adapter exports the same shell and Chat components in
-both environments. Vite selects eager module loading in development to avoid
-unbundled navigation waterfalls, and `app-workspace.production.tsx` selects lazy
-production bundles. The reliability suite covers the development adapter;
+The `@/app-workspace` entry adapter exports the same lazy shell and Chat components
+in both environments, allowing the public startup surface to paint before loading
+the workspace. Optional OpenUI rendering loads when a generated view is requested.
+The reliability suite covers the development adapter;
 `test:production-ui` covers the built adapter and its navigation without live APIs.
+Generated workflow validators memoize schema construction, including recursive lazy
+references. Every library and changed input is still validated; parsed user data is
+not cached. This avoids rebuilding identical schemas for every stored definition.
 
 ## Remaining architectural debt
 
@@ -301,3 +476,14 @@ production bundles. The reliability suite covers the development adapter;
 - Workspace roles are enforced at the Express boundary. Email verification/recovery
   delivery and live-provider checks remain separate work. See
   [the access design](phase-3-access.md) and [agent boundary](phase-6-agents.md).
+
+## API source named outputs
+
+Provider-independent selection and validation live in
+`lib/source-connectors/src/response-values.ts`. The existing authenticated HTTP
+source route fetches and returns the selected values and response. The pure HTTP
+executor replays that response under `named_values`, with request-signature checks
+and provenance. Bank of Canada averaging is connector mapping configuration, not
+a separate executor. Legacy currency executors remain for saved-version replay.
+The explicit FAPI draft upgrade belongs to workflow-core; its canvas action uses
+the normal editor/save flow. See [API source details](api-sources.md).

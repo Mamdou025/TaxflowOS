@@ -557,10 +557,15 @@
   {
     "type": "function",
     "name": "listAvailableWorkflows",
-    "description": "List executable built-in workflow templates, including their exact runWorkflow IDs and required source columns. These are available even when the workspace has no saved workflow drafts. Listing does not start a run or supply sample data. Saved drafts and versions are separate; use listSavedWorkflows for those.",
+    "description": "Show clickable built-in workflow names, exact internal runWorkflow IDs and source requirements. Optional query filters names; exact full-name matches take precedence and duplicate names remain separate. Names are user-facing; IDs are internal. Resolve a unique exact name to its returned ID, never demand that the user type an ID. Near names do not make an exact match ambiguous. Use the clickable choices for duplicate names. Templates exist even with no saved drafts. Listing never starts a run or supplies sample data; use listSavedWorkflows for saved drafts and versions.",
     "parameters": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Optional workflow name or words to find, such as FAPI."
+        }
+      },
       "required": []
     },
     "strict": false
@@ -568,10 +573,15 @@
   {
     "type": "function",
     "name": "listSavedWorkflows",
-    "description": "List only workspace-saved workflow drafts before reading or proposing a change. An empty list does NOT mean no workflows are available: built-in templates such as FAPI are separate. Use listAvailableWorkflows for the executable template catalog. Never guess a saved ID from a name.",
+    "description": "Show clickable workspace-saved workflows with their exact internal IDs, latest saved version and dates. Optional query filters names; exact full-name matches take precedence and duplicate names remain separate. Resolve a unique exact name to its returned ID; do not ask the user to type IDs or treat near names as duplicates. When names are duplicated, let the user select a card. A draft-only record has no runnable saved version; its card opens Build without saving or executing. An empty result does not remove built-in templates: use listAvailableWorkflows for those. Read the exact saved workflow before proposing edits or requesting an older version.",
     "parameters": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Optional workflow name or words to find, such as FAPI."
+        }
+      },
       "required": []
     },
     "strict": false

@@ -61,6 +61,7 @@ import { InlinePageProvider } from '@/shared/stores/inline-page-context';
 import { workflowSurfaceAtom } from '@/features/workflows-hub/workflows-store';
 import { SettingsOverlay } from '@/platform/settings/settings-overlay';
 import { useOverlay } from '@/shared/ui/overlays/overlay-provider';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // The builder is a heavy ReactFlow canvas — load it on demand so @xyflow/react
 // stays out of the Scope page's first-load JS. It's only rendered when a
@@ -351,11 +352,40 @@ export function ChatWorkspace() {
   );
   const pageBodyRef = useRef<HTMLDivElement>(null);
   const a = useAssistant();
-  const newChat = a.newChat;
+  const newChat = () => {
+    setMobileSidebarOpen(false);
+    return a.newChat();
+  };
   const pageMenus = useAtomValue(pageMenusAtom);
   const pageSidebars = useAtomValue(pageSidebarsAtom);
   const [mode, setMode] = useAtom(chatPanelModeAtom);
-  const [collapsed, setCollapsed] = useAtom(scopeSidebarCollapsedAtom);
+  const [desktopCollapsed, setDesktopCollapsed] = useAtom(scopeSidebarCollapsedAtom);
+  const isMobile = useIsMobile();
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const sidebarExpandRef = useRef<HTMLButtonElement>(null);
+  // A narrow viewport uses a rail and temporary overlay without changing the
+  // user's saved desktop sidebar preference or remounting the conversation.
+  const collapsed = isMobile ? !mobileSidebarOpen : desktopCollapsed;
+  const setCollapsed = (value: boolean) => {
+    if (isMobile) {
+      setMobileSidebarOpen(!value);
+      if (value) requestAnimationFrame(() => sidebarExpandRef.current?.focus());
+    } else setDesktopCollapsed(value);
+  };
+  useEffect(() => {
+    if (!isMobile) {
+      setMobileSidebarOpen(false);
+      return;
+    }
+    if (!mobileSidebarOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
+      setMobileSidebarOpen(false);
+      requestAnimationFrame(() => sidebarExpandRef.current?.focus());
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isMobile, mobileSidebarOpen]);
   const [splitRatio, setSplitRatio] = useAtom(scopeSplitRatioAtom);
   const setWorkflowSurface = useSetAtom(workflowSurfaceAtom);
   const { open: openOverlay } = useOverlay();
@@ -383,7 +413,10 @@ export function ChatWorkspace() {
   }, [hasPages, mode, setMode]);
 
   const showPage = hasPages && mode !== 'expanded' && !closingLast;
-  const showChat = !hasPages || mode !== 'collapsed';
+  // A phone cannot fit the desktop split's minimum widths. Keep both surfaces
+  // mounted, but focus the active page until Chat is selected again.
+  const chatFolded = mode === 'collapsed' || (isMobile && showPage);
+  const showChat = !hasPages || !chatFolded;
   // The chat takes the whole surface: no page open, chat expanded, or the last
   // page is mid-slide-out.
   const chatFull = !hasPages || mode === 'expanded' || closingLast;
@@ -421,11 +454,13 @@ export function ChatWorkspace() {
   }, [windows, activeId, hasPages, setActiveId]);
 
   const open = (key: string) => {
+    setMobileSidebarOpen(false);
     setMode('split');
     openWindow({ pageKey: key, title: titleFor(key) });
   };
   const openPrimary = (key: string) => {
     if (key === 'chat') {
+      setMobileSidebarOpen(false);
       setMode('expanded');
       return;
     }
@@ -486,7 +521,15 @@ export function ChatWorkspace() {
   return (
     // Exterior ground — a cooler/darker tone than the chat + sidebar panels (both
     // #F4F5F8 / NEU.bg), so those read as one continuous lighter surface on it.
-    <div className="h-full flex" style={{ background: 'var(--sx-ground-outer)' }}>
+    <div
+      className="relative h-full flex"
+      style={{
+        background: 'var(--sx-ground-outer)',
+        paddingLeft: isMobile ? 86 : undefined,
+        // Leave room for the fixed workspace/demo controls above a phone's page header.
+        paddingTop: isMobile ? 48 : undefined,
+      }}
+    >
       <style>{`
         @keyframes cwp-anchor-flash { 0% { background: var(--sx-accent-soft);} 100% { background: transparent;} }
         .cwp-anchor-flash { animation: cwp-anchor-flash 1.7s ease-out; border-radius: 8px; }
@@ -509,9 +552,27 @@ export function ChatWorkspace() {
         .cwp-logo-btn:hover .cwp-logo-expand { opacity: 1; }
       `}</style>
 
+      {isMobile && mobileSidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close sidebar"
+          onClick={() => setCollapsed(true)}
+          className="absolute inset-0 border-0 bg-black/20 p-0"
+          style={{ zIndex: 35 }}
+        />
+      )}
       {/* ── Left nav sidebar (foldable → icon rail) ── */}
       <div
+        id="workspace-sidebar"
+        data-workspace-sidebar
+        data-sidebar-collapsed={collapsed}
+        data-sidebar-mobile={isMobile}
         style={{
+          position: isMobile ? 'absolute' : undefined,
+          top: isMobile ? 0 : undefined,
+          bottom: isMobile ? 0 : undefined,
+          left: isMobile ? 0 : undefined,
+          zIndex: isMobile ? 40 : undefined,
           width: collapsed ? 66 : 258,
           flexShrink: 0,
           margin: 10,
@@ -539,9 +600,12 @@ export function ChatWorkspace() {
           >
             {/* Icon only when folded; on hover it becomes the expand affordance, click expands. */}
             <button
+              ref={sidebarExpandRef}
               onClick={() => setCollapsed(false)}
               title="Expand sidebar"
               aria-label="Expand sidebar"
+              aria-controls="workspace-sidebar"
+              aria-expanded={false}
               className="cwp-logo-btn"
               style={{
                 position: 'relative',
@@ -576,7 +640,10 @@ export function ChatWorkspace() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 6px 12px' }}>
             {/* Wordmark only (no icon) when expanded; the fold toggle sits right beside it. */}
             <button
-              onClick={() => setMode('split')}
+              onClick={() => {
+                setMobileSidebarOpen(false);
+                setMode('split');
+              }}
               title="Open chat"
               aria-label="Open chat"
               style={{
@@ -600,6 +667,8 @@ export function ChatWorkspace() {
               onClick={() => setCollapsed(true)}
               title="Collapse sidebar"
               aria-label="Collapse sidebar"
+              aria-controls="workspace-sidebar"
+              aria-expanded={true}
               style={foldBtn}
             >
               <PanelLeftClose size={15} />
@@ -685,14 +754,14 @@ export function ChatWorkspace() {
               <ChatHistory
                 activeThreadId={a.activeThreadId}
                 onOpen={(id) => {
+                  setMobileSidebarOpen(false);
                   void a.openThread(id);
                 }}
               />
             </SideSection>
 
-            {/* Contextual section — the active page's own sidebar (usePageSidebar).
-                e.g. the Workflows surface publishes its workflow list here so the
-                canvas keeps the full body width. */}
+            {/* Optional contextual section for pages using usePageSidebar.
+                Workflows owns its list inside the page instead. */}
             {(() => {
               const SideComp = active ? pageSidebars[active.pageKey] : undefined;
               return SideComp ? (
@@ -719,7 +788,10 @@ export function ChatWorkspace() {
                 collapsed
                 icon={<SettingsIcon size={16} />}
                 label="Settings"
-                onClick={() => openOverlay(SettingsOverlay)}
+                onClick={() => {
+                  setMobileSidebarOpen(false);
+                  openOverlay(SettingsOverlay);
+                }}
               />
               <SideRow
                 collapsed
@@ -734,7 +806,10 @@ export function ChatWorkspace() {
               <SideRow
                 icon={<SettingsIcon size={15} />}
                 label="Settings"
-                onClick={() => openOverlay(SettingsOverlay)}
+                onClick={() => {
+                  setMobileSidebarOpen(false);
+                  openOverlay(SettingsOverlay);
+                }}
               />
               <SideRow
                 icon={<CircleHelp size={15} />}
@@ -763,6 +838,7 @@ export function ChatWorkspace() {
         {hasPages && (
           <div
             className="min-w-0 flex flex-col cwp-card cwp-page-in flat-surface"
+            inert={isMobile && !showPage}
             style={{
               flex: showPage ? '1 1 0px' : '0 0 0px',
               overflow: 'hidden',
@@ -779,6 +855,10 @@ export function ChatWorkspace() {
                 height: 40,
                 background: 'var(--sx-portal-strip)',
                 borderBottom: `1px solid ${PORTAL_BORDER}`,
+                // Workflow controls are buttons. Other pages may have dropdowns
+                // that must remain outside scroll containment.
+                overflowX: isMobile && active?.pageKey === 'workflows' ? 'auto' : undefined,
+                scrollbarWidth: isMobile && active?.pageKey === 'workflows' ? 'thin' : undefined,
               }}
             >
               <div
@@ -881,17 +961,17 @@ export function ChatWorkspace() {
             Fold ('collapsed') or take over ('expanded') via the header controls. */}
         <div
           className="relative min-w-0 flex flex-col cwp-card"
+          inert={isMobile && !showChat}
           style={{
-            flex: chatFull ? '1 1 0px' : mode === 'collapsed' ? '0 0 0px' : `0 0 ${chatBasis}`,
+            flex: chatFull ? '1 1 0px' : chatFolded ? '0 0 0px' : `0 0 ${chatBasis}`,
             overflow: 'hidden',
-            margin: mode === 'collapsed' ? 0 : 10,
+            margin: chatFolded ? 0 : 10,
             marginLeft: hasPages && showPage ? 0 : 10,
-            borderRadius: mode === 'collapsed' ? 0 : hasPages && showPage ? '0 3px 3px 0' : 12,
+            borderRadius: chatFolded ? 0 : hasPages && showPage ? '0 3px 3px 0' : 12,
             background: NEU.bg,
             // No dark shadow cast onto the page panel on its left — only the chat's
             // own soft neumorphic elevation (and none while docked flush to a page).
-            boxShadow:
-              mode === 'collapsed' ? 'none' : hasPages && showPage ? 'none' : NEU.shadowOut,
+            boxShadow: chatFolded ? 'none' : hasPages && showPage ? 'none' : NEU.shadowOut,
             transition: dragging ? 'none' : undefined,
             zIndex: 1,
           }}
@@ -933,9 +1013,19 @@ export function ChatWorkspace() {
               <button
                 onClick={() => setMode(mode === 'expanded' ? 'split' : 'expanded')}
                 title={
-                  mode === 'expanded' ? 'Back to split view' : 'Focus the chat — hide the page'
+                  mode === 'expanded'
+                    ? isMobile
+                      ? 'Return to page'
+                      : 'Back to split view'
+                    : 'Focus the chat — hide the page'
                 }
-                aria-label={mode === 'expanded' ? 'Return to split view' : 'Expand chat panel'}
+                aria-label={
+                  mode === 'expanded'
+                    ? isMobile
+                      ? 'Return to page'
+                      : 'Return to split view'
+                    : 'Expand chat panel'
+                }
                 className="hover:bg-black/5"
                 style={{
                   display: 'grid',
@@ -959,9 +1049,9 @@ export function ChatWorkspace() {
         </div>
 
         {/* Reopen the folded chat */}
-        {hasPages && mode === 'collapsed' && (
+        {hasPages && chatFolded && (
           <button
-            onClick={() => setMode('split')}
+            onClick={() => setMode(isMobile ? 'expanded' : 'split')}
             title="Open chat"
             style={{
               position: 'absolute',

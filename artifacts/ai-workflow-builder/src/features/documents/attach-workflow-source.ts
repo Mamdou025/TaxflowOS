@@ -1,4 +1,8 @@
-import { parseUploadToRows, type SelectWorkbook, type WorkbookSelection } from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
+import {
+  parseUploadToRows,
+  type SelectWorkbook,
+  type WorkbookSelection,
+} from '@/shared/workflow-engine/runtime/workflow-runs/parse-upload';
 import type { UploadedSource } from '@/shared/stores/workspace-store';
 import { uploadDocument } from './upload-client';
 import { loadWorkflowSource } from './workflow-source-client';
@@ -8,11 +12,19 @@ export async function attachWorkflowSource(
   selectWorkbook?: SelectWorkbook,
 ): Promise<{ source: UploadedSource; notice: string }> {
   let selection: WorkbookSelection | undefined;
-  const parsed = await parseUploadToRows(file, { selectWorkbook: selectWorkbook ? async workbook => {
-    selection = await selectWorkbook(workbook);
-    return selection;
-  } : undefined });
-  const local = { ...parsed, at: Date.now() };
+  const parsed = await parseUploadToRows(file, {
+    selectWorkbook: selectWorkbook
+      ? async (workbook) => {
+          selection = await selectWorkbook(workbook);
+          return selection;
+        }
+      : undefined,
+  });
+  const local = {
+    ...parsed,
+    at: Date.now(),
+    ...(selection ? { workbookSelection: selection } : {}),
+  };
   const uploaded = await uploadDocument(file);
   if (!uploaded.documentId)
     return {

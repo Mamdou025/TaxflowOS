@@ -3,22 +3,9 @@ import { apiFetch } from '@/platform/auth/api-fetch';
 import { apiRequestSignature } from '@/shared/workflow-engine/api-snapshot';
 
 
-// Setup panel for the API / HTTP Request source — a real request builder.
-//
-// The engine half of this block was already real (server-side fetch, SSRF guard,
-// headers, timeout and size limits, payload→rows mapping) but nothing in the
-// builder drove it: the block hit SourceSetupPanel's "no panel registered" fallback,
-// so an API source could only ever replay its offline fixture. This is the missing
-// half — compose the request, send it for real, read the actual response.
-//
-// Two things keep it honest rather than decorative:
-//   • Send calls POST /api/http-source, which performs the network call from the
-//     api-server. What you see under "Response" is that endpoint's real body, its
-//     real HTTP status and its real timing — not a shaped preview.
-//   • A successful send PINS the mapped rows + response metadata into block config.
-//     The run then replays exactly that payload (run.ts is pure), so the workflow
-//     reproduces its figures and the evidence pack can name the response they came
-//     from. Un-pinned, the block runs on the fixture and says so.
+// API Source request and output editor. The server fetches the response; a
+// successful selection saves it for deterministic replay. Failed requests retain
+// prior evidence, and changed request/mapping settings require another fetch.
 
 import { useEffect, useState } from "react";
 import { Loader2, Play, Plus, Trash2 } from "lucide-react";
@@ -342,7 +329,7 @@ export function HttpJsonSourcePanel({
           url: stringValue(config.url),
           method,
           headers: rowsToHeaders(headerRows),
-          body: method === "POST" ? stringValue(config.body) : undefined,
+          body: method === "POST" ? config.body : undefined,
           resultsPath: stringValue(config.resultsPath),
           fieldMap,
           outputMode: config.outputMode,
@@ -626,7 +613,7 @@ export function HttpJsonSourcePanel({
             disabled={readOnly}
             onChange={(event) => onConfigPatch({ body: event.target.value })}
             placeholder='{ "filters": { "fiscal_year": 2025 } }'
-            value={stringValue(config.body)}
+            value={typeof config.body === "string" ? config.body : config.body === undefined ? "" : JSON.stringify(config.body, null, 2)}
           />
         </Field>
       ) : null}

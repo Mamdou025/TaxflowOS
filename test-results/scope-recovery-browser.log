@@ -1,0 +1,381 @@
+
+> workspace@0.0.0 test:workflow-reliability C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-browser-tests.mjs reliability "e2e/assistant-ui-chat.spec.ts" "e2e/chat-context.spec.ts" "e2e/source-library.spec.ts" "e2e/phase-7-navigation.spec.ts" "e2e/mkoro-delegation.spec.ts" "--grep" "assistant-ui|saved chat restoration|saved chat restore times out|opening a viewer file|explicit chat context reaches|Sources adds text|chat home remains visible|chat spreadsheet selection|chat can select a saved document|chat chooses a saved source|a failed saved-source download|Chat-first navigation exposes|attaching workflow scope|registered native workflow tool"
+
+Test run 04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76; reports and logs: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76
+Preparing the isolated browser dependency cache…
+
+Running 24 tests using 1 worker
+
+  ok  1 e2e\assistant-ui-chat.spec.ts:420:5 › saved chat restoration keeps the normal shell and unlocks exactly the restored history (30.9s)
+  x   2 e2e\assistant-ui-chat.spec.ts:516:5 › failed saved chat restoration retries the requested chat and New chat rejects a late restore (21.8s)
+  ok  3 e2e\assistant-ui-chat.spec.ts:594:5 › a saved chat restore times out at its existing bound and New chat recovers without replacing history (18.5s)
+  ok  4 e2e\assistant-ui-chat.spec.ts:653:5 › assistant-ui Stop stops the exact remote stream, retains the draft and rejects late tokens (23.5s)
+  ok  5 e2e\assistant-ui-chat.spec.ts:758:5 › assistant-ui retries one failed text turn without repeating a completed tool or user message (54.3s)
+  ok  6 e2e\assistant-ui-chat.spec.ts:896:7 › assistant-ui switching to a new chat stops the exact active reply and keeps histories separate (35.4s)
+  ok  7 e2e\assistant-ui-chat.spec.ts:896:7 › assistant-ui switching to a saved chat stops the exact active reply and keeps histories separate (56.4s)
+  ok  8 e2e\assistant-ui-chat.spec.ts:997:5 › assistant-ui opens the exact saved FAPI version once and keeps its live worksheet through follow-ups (2.2m)
+  ok  9 e2e\assistant-ui-chat.spec.ts:1297:5 › assistant-ui workflow choices resolve full names for both agents and retain identical names (46.4s)
+  ok 10 e2e\assistant-ui-chat.spec.ts:1406:5 › assistant-ui workflow choices pin the listed saved version through follow-up and reload (51.8s)
+  ok 11 e2e\assistant-ui-chat.spec.ts:1540:5 › assistant-ui workflow choices reject deleted records and open draft-only work for review (50.6s)
+  ok 12 e2e\assistant-ui-chat.spec.ts:1593:5 › assistant-ui starts a template independently and resumes the exact saved run (33.0s)
+  x  13 e2e\chat-context.spec.ts:19:5 › opening a viewer file is explicit context and removing it restores the Use in this chat action (27.8s)
+  x  14 e2e\chat-context.spec.ts:288:7 › explicit chat context reaches sina on the first turn, restores exact sources and starts clean (20.3s)
+  x  15 e2e\chat-context.spec.ts:288:7 › explicit chat context reaches microsina on the first turn, restores exact sources and starts clean (16.9s)
+  x  16 e2e\chat-context.spec.ts:414:5 › Sources adds text documents only on Use in this chat; example text remains an explicit unsaved attachment (13.3s)
+  ok 17 e2e\mkoro-delegation.spec.ts:384:5 › the registered native workflow tool opens FAPI in Sina without delegating computer work (30.2s)
+  ok 18 e2e\phase-7-navigation.spec.ts:449:5 › Chat-first navigation exposes the four product areas and nests run history (20.1s)
+  ok 19 e2e\phase-7-navigation.spec.ts:629:5 › attaching workflow scope preserves the draft and does not execute it (19.3s)
+  ok 20 e2e\source-library.spec.ts:36:5 › chat home remains visible when animation frames are suspended (19.8s)
+  ok 21 e2e\source-library.spec.ts:61:5 › chat spreadsheet selection preserves drafts on cancel and imports a complete mapped sheet (19.0s)
+  x  22 e2e\source-library.spec.ts:186:5 › chat can select a saved document for retrieval without changing its library membership (17.7s)
+  x  23 e2e\source-library.spec.ts:295:5 › chat chooses a saved source without uploading and freezes its records for workflow approval (22.5s)
+  x  24 e2e\source-library.spec.ts:387:5 › a failed saved-source download is visible and preserves the current selection (28.8s)
+
+
+  1) e2e\assistant-ui-chat.spec.ts:516:5 › failed saved chat restoration retries the requested chat and New chat rejects a late restore 
+
+    Error: expect(locator).toBeDisabled() failed
+
+    Locator:  locator('.lc-console').getByRole('button', { name: 'Send', exact: true })
+    Expected: disabled
+    Received: enabled
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toBeDisabled" with timeout 5000ms
+      - waiting for locator('.lc-console').getByRole('button', { name: 'Send', exact: true })
+        12 × locator resolved to <button title="Send" type="button" aria-label="Send" class="disabled:opacity-40">…</button>
+           - unexpected value "enabled"
+
+
+      548 |   await expect(
+      549 |     page.locator('.lc-console').getByRole('button', { name: 'Send', exact: true }),
+    > 550 |   ).toBeDisabled();
+          |     ^
+      551 |   expect(state.reads).toEqual([savedThreadId]);
+      552 |   expect(state.writes).toEqual([]);
+      553 |   await page.screenshot({ path: test.info().outputPath('saved-chat-failed-shell.png') });
+        at C:\Users\Mamad\Sinaxe\TaxflowOS\e2e\assistant-ui-chat.spec.ts:550:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\assistant-ui-chat-failed-s-809b1-chat-rejects-a-late-restore\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\assistant-ui-chat-failed-s-809b1-chat-rejects-a-late-restore\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\assistant-ui-chat-failed-s-809b1-chat-rejects-a-late-restore\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\assistant-ui-chat-failed-s-809b1-chat-rejects-a-late-restore\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\assistant-ui-chat-failed-s-809b1-chat-rejects-a-late-restore\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) e2e\chat-context.spec.ts:19:5 › opening a viewer file is explicit context and removing it restores the Use in this chat action 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  locator('[data-chat-context]').locator('[data-context-source]')
+    Expected: 0
+    Received: 5
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveCount" with timeout 5000ms
+      - waiting for locator('[data-chat-context]').locator('[data-context-source]')
+        12 × locator resolved to 5 elements
+           - unexpected value "5"
+
+
+      41 |   await strip(page).getByRole('button', { name: 'Remove Viewer notes.txt from this chat' }).click();
+      42 |   await expect(page.getByText('Added to this chat', { exact: true })).toHaveCount(0);
+    > 43 |   await expect(strip(page).locator('[data-context-source]')).toHaveCount(0);
+         |                                                              ^
+      44 |   await closeContext(page);
+      45 |   await expect(page.getByRole('button', { name: 'Use in this chat', exact: true })).toBeVisible();
+      46 |   await page.getByRole('button', { name: 'Use in this chat', exact: true }).click();
+        at C:\Users\Mamad\Sinaxe\TaxflowOS\e2e\chat-context.spec.ts:43:62
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\chat-context-opening-a-vie-82525-the-Use-in-this-chat-action\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\chat-context-opening-a-vie-82525-the-Use-in-this-chat-action\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\chat-context-opening-a-vie-82525-the-Use-in-this-chat-action\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\chat-context-opening-a-vie-82525-the-Use-in-this-chat-action\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\chat-context-opening-a-vie-82525-the-Use-in-this-chat-action\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) e2e\chat-context.spec.ts:288:7 › explicit chat context reaches sina on the first turn, restores exact sources and starts clean 
+
+    Error: locator.fill: Error: strict mode violation: getByRole('spinbutton', { name: 'Reporting year' }) resolved to 2 elements:
+        1) <input step="1" value="" min="1900" max="3000" type="number" placeholder="Optional" aria-label="Reporting year"/> aka getByRole('spinbutton', { name: 'Reporting year' }).first()
+        2) <input step="1" value="" min="1900" max="3000" type="number" placeholder="Optional" aria-label="Reporting year"/> aka getByRole('spinbutton', { name: 'Reporting year' }).nth(1)
+
+    Call log:
+      - waiting for getByRole('spinbutton', { name: 'Reporting year' })
+
+
+      296 |     await expandContext(page);
+      297 |     await page.getByRole('textbox', { name: 'Company name' }).fill('Synthetic Maple');
+    > 298 |     await page.getByRole('spinbutton', { name: 'Reporting year' }).fill('2025');
+          |                                                                    ^
+      299 |     await page.getByRole('button', { name: 'Apply to this chat' }).click();
+      300 |     await closeContext(page);
+      301 |     if (provider === 'microsina') {
+        at C:\Users\Mamad\Sinaxe\TaxflowOS\e2e\chat-context.spec.ts:298:68
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\chat-context-explicit-chat-f53cf-ct-sources-and-starts-clean\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\chat-context-explicit-chat-f53cf-ct-sources-and-starts-clean\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\chat-context-explicit-chat-f53cf-ct-sources-and-starts-clean\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\chat-context-explicit-chat-f53cf-ct-sources-and-starts-clean\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\chat-context-explicit-chat-f53cf-ct-sources-and-starts-clean\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) e2e\chat-context.spec.ts:288:7 › explicit chat context reaches microsina on the first turn, restores exact sources and starts clean 
+
+    Error: locator.fill: Error: strict mode violation: getByRole('spinbutton', { name: 'Reporting year' }) resolved to 2 elements:
+        1) <input step="1" value="" min="1900" max="3000" type="number" placeholder="Optional" aria-label="Reporting year"/> aka getByRole('spinbutton', { name: 'Reporting year' }).first()
+        2) <input step="1" value="" min="1900" max="3000" type="number" placeholder="Optional" aria-label="Reporting year"/> aka getByRole('spinbutton', { name: 'Reporting year' }).nth(1)
+
+    Call log:
+      - waiting for getByRole('spinbutton', { name: 'Reporting year' })
+
+
+      296 |     await expandContext(page);
+      297 |     await page.getByRole('textbox', { name: 'Company name' }).fill('Synthetic Maple');
+    > 298 |     await page.getByRole('spinbutton', { name: 'Reporting year' }).fill('2025');
+          |                                                                    ^
+      299 |     await page.getByRole('button', { name: 'Apply to this chat' }).click();
+      300 |     await closeContext(page);
+      301 |     if (provider === 'microsina') {
+        at C:\Users\Mamad\Sinaxe\TaxflowOS\e2e\chat-context.spec.ts:298:68
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\chat-context-explicit-chat-f84b7-ct-sources-and-starts-clean\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\chat-context-explicit-chat-f84b7-ct-sources-and-starts-clean\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\chat-context-explicit-chat-f84b7-ct-sources-and-starts-clean\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\chat-context-explicit-chat-f84b7-ct-sources-and-starts-clean\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\chat-context-explicit-chat-f84b7-ct-sources-and-starts-clean\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) e2e\chat-context.spec.ts:414:5 › Sources adds text documents only on Use in this chat; example text remains an explicit unsaved attachment 
+
+    Error: locator.click: Error: strict mode violation: locator('[data-chat-context]').getByRole('button', { name: 'Browse Sources', exact: true }) resolved to 2 elements:
+        1) <button type="button">…</button> aka getByRole('button', { name: 'Browse Sources' }).first()
+        2) <button type="button">…</button> aka getByRole('button', { name: 'Browse Sources' }).nth(1)
+
+    Call log:
+      - waiting for locator('[data-chat-context]').getByRole('button', { name: 'Browse Sources', exact: true })
+
+
+      420 |   await expandContext(page);
+      421 |   await expect(strip(page).locator('[data-context-source]')).toHaveCount(0);
+    > 422 |   await strip(page).getByRole('button', { name: 'Browse Sources', exact: true }).click();
+          |                                                                                  ^
+      423 |   await expect(strip(page)).toBeHidden();
+      424 |   await expect(page.getByRole('heading', { name: 'Sources', exact: true })).toBeVisible();
+      425 |   await page.getByRole('button', { name: `Use ${sourceName} in chat`, exact: true }).click();
+        at C:\Users\Mamad\Sinaxe\TaxflowOS\e2e\chat-context.spec.ts:422:82
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\chat-context-Sources-adds--1b6e0-explicit-unsaved-attachment\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\chat-context-Sources-adds--1b6e0-explicit-unsaved-attachment\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\chat-context-Sources-adds--1b6e0-explicit-unsaved-attachment\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\chat-context-Sources-adds--1b6e0-explicit-unsaved-attachment\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\chat-context-Sources-adds--1b6e0-explicit-unsaved-attachment\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) e2e\source-library.spec.ts:186:5 › chat can select a saved document for retrieval without changing its library membership 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('[data-chat-context]').locator('[data-context-source="00000000-0000-4000-8000-000000000101"]')
+    Expected substring: "active-policy.pdf"
+    Error: strict mode violation: locator('[data-chat-context]').locator('[data-context-source="00000000-0000-4000-8000-000000000101"]') resolved to 5 elements:
+        1) <div role="status" class="chat-scope-source" data-context-source="00000000-0000-4000-8000-000000000101">…</div> aka getByRole('status').first()
+        2) <div role="status" class="chat-scope-source" data-context-source="00000000-0000-4000-8000-000000000101">…</div> aka getByRole('status').nth(1)
+        3) <div role="status" class="chat-scope-source" data-context-source="00000000-0000-4000-8000-000000000101">…</div> aka getByRole('status').nth(2)
+        4) <div role="status" class="chat-scope-source" data-context-source="00000000-0000-4000-8000-000000000101">…</div> aka getByRole('status').nth(3)
+        5) <div role="status" class="chat-scope-source" data-context-source="00000000-0000-4000-8000-000000000101">…</div> aka getByRole('status').nth(4)
+
+    Call log:
+      - Expect "toContainText" with timeout 5000ms
+      - waiting for locator('[data-chat-context]').locator('[data-context-source="00000000-0000-4000-8000-000000000101"]')
+
+
+      225 |   const context = await expandChatContext(page);
+      226 |   const selectedCard = context.locator(`[data-context-source="${active.id}"]`);
+    > 227 |   await expect(selectedCard).toContainText(active.fileName);
+          |                              ^
+      228 |   await expect(selectedCard).toContainText('Saved source · revision 2');
+      229 |   await expect(selectedCard).toContainText('Ready');
+      230 |   await context.getByRole('button', { name: `Remove ${active.fileName} from this chat` }).click();
+        at C:\Users\Mamad\Sinaxe\TaxflowOS\e2e\source-library.spec.ts:227:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\source-library-chat-can-se-8931a-ging-its-library-membership\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\source-library-chat-can-se-8931a-ging-its-library-membership\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\source-library-chat-can-se-8931a-ging-its-library-membership\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\source-library-chat-can-se-8931a-ging-its-library-membership\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\source-library-chat-can-se-8931a-ging-its-library-membership\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7) e2e\source-library.spec.ts:295:5 › chat chooses a saved source without uploading and freezes its records for workflow approval 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('[data-chat-context]').locator('[data-context-source="saved-records"]')
+    Expected substring: "Ready"
+    Error: strict mode violation: locator('[data-chat-context]').locator('[data-context-source="saved-records"]') resolved to 6 elements:
+        1) <div role="status" class="chat-scope-source" data-context-source="saved-records">…</div> aka getByRole('status').first()
+        2) <div role="status" class="chat-scope-source" data-context-source="saved-records">…</div> aka getByRole('status').nth(1)
+        3) <div role="status" class="chat-scope-source" data-context-source="saved-records">…</div> aka getByRole('status').nth(2)
+        4) <div role="status" class="chat-scope-source" data-context-source="saved-records">…</div> aka getByRole('status').nth(3)
+        5) <div role="status" class="chat-scope-source" data-context-source="saved-records">…</div> aka getByRole('status').nth(4)
+        6) <div role="status" class="chat-scope-source" data-context-source="saved-records">…</div> aka getByRole('status').nth(5)
+
+    Call log:
+      - Expect "toContainText" with timeout 5000ms
+      - waiting for locator('[data-chat-context]').locator('[data-context-source="saved-records"]')
+
+
+      341 |   await picker.getByRole('button', { name: source.fileName, exact: true }).click();
+      342 |   let context = await expandChatContext(page);
+    > 343 |   await expect(context.locator('[data-context-source="saved-records"]')).toContainText('Ready');
+          |                                                                          ^
+      344 |   await expect(context).toContainText('2 records');
+      345 |   await expect
+      346 |     .poll(() =>
+        at C:\Users\Mamad\Sinaxe\TaxflowOS\e2e\source-library.spec.ts:343:74
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\source-library-chat-choose-eca83-cords-for-workflow-approval\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\source-library-chat-choose-eca83-cords-for-workflow-approval\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\source-library-chat-choose-eca83-cords-for-workflow-approval\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\source-library-chat-choose-eca83-cords-for-workflow-approval\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\source-library-chat-choose-eca83-cords-for-workflow-approval\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  8) e2e\source-library.spec.ts:387:5 › a failed saved-source download is visible and preserves the current selection 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('[data-chat-context]').locator('[data-context-source="kept-source"]')
+    Expected substring: "kept-records.json"
+    Error: strict mode violation: locator('[data-chat-context]').locator('[data-context-source="kept-source"]') resolved to 6 elements:
+        1) <div role="status" class="chat-scope-source" data-context-source="kept-source">…</div> aka getByRole('status').first()
+        2) <div role="status" class="chat-scope-source" data-context-source="kept-source">…</div> aka getByRole('status').nth(1)
+        3) <div role="status" class="chat-scope-source" data-context-source="kept-source">…</div> aka getByRole('status').nth(2)
+        4) <div role="status" class="chat-scope-source" data-context-source="kept-source">…</div> aka getByRole('status').nth(3)
+        5) <div role="status" class="chat-scope-source" data-context-source="kept-source">…</div> aka getByRole('status').nth(4)
+        6) <div role="status" class="chat-scope-source" data-context-source="kept-source">…</div> aka getByRole('status').nth(5)
+
+    Call log:
+      - Expect "toContainText" with timeout 5000ms
+      - waiting for locator('[data-chat-context]').locator('[data-context-source="kept-source"]')
+
+
+      416 |   await page.getByRole('button', { name: kept.fileName, exact: true }).click();
+      417 |   const context = await expandChatContext(page);
+    > 418 |   await expect(context.locator('[data-context-source="kept-source"]')).toContainText(
+          |                                                                        ^
+      419 |     'kept-records.json',
+      420 |   );
+      421 |   await page.keyboard.press('Escape');
+        at C:\Users\Mamad\Sinaxe\TaxflowOS\e2e\source-library.spec.ts:418:72
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\source-library-a-failed-sa-23c64-erves-the-current-selection\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\source-library-a-failed-sa-23c64-erves-the-current-selection\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\source-library-a-failed-sa-23c64-erves-the-current-selection\error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\source-library-a-failed-sa-23c64-erves-the-current-selection\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\artifacts\source-library-a-failed-sa-23c64-erves-the-current-selection\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  8 failed
+    e2e\assistant-ui-chat.spec.ts:516:5 › failed saved chat restoration retries the requested chat and New chat rejects a late restore 
+    e2e\chat-context.spec.ts:19:5 › opening a viewer file is explicit context and removing it restores the Use in this chat action 
+    e2e\chat-context.spec.ts:288:7 › explicit chat context reaches sina on the first turn, restores exact sources and starts clean 
+    e2e\chat-context.spec.ts:288:7 › explicit chat context reaches microsina on the first turn, restores exact sources and starts clean 
+    e2e\chat-context.spec.ts:414:5 › Sources adds text documents only on Use in this chat; example text remains an explicit unsaved attachment 
+    e2e\source-library.spec.ts:186:5 › chat can select a saved document for retrieval without changing its library membership 
+    e2e\source-library.spec.ts:295:5 › chat chooses a saved source without uploading and freezes its records for workflow approval 
+    e2e\source-library.spec.ts:387:5 › a failed saved-source download is visible and preserves the current selection 
+  16 passed (15.0m)
+playwright exited 1; see C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-04ece11a-14a7-4dc9-91c6-4f9acf455e76\playwright.log
+ ELIFECYCLE  Command failed with exit code 1.

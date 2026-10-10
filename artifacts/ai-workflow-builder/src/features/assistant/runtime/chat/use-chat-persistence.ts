@@ -12,19 +12,25 @@ import { apiFetch } from '@/platform/auth/api-fetch';
 //   • restore   — loadThread(id) → setMessages(reconstructed AG-UI messages)
 //   • new chat  — startNewThread() → reset() clears the store; next msg opens a fresh thread
 //
-// CopilotKit 1.63 note: the live messages + writers live on `useCopilotChatInternal`
-// (the same hook react-ui renders from). The legacy `useCopilotChat().visibleMessages`
-// is undefined here (renamed to `.messages`), and `useCopilotMessagesContext()` is an
-// empty vestigial store — using either meant the autosave never saw any messages.
+// The assistant's single connection owner supplies its live AG-UI messages and
+// writers. This observer must not mount another useCopilotChatInternal: every
+// instance opens/reconnects the same agent stream, even when used only for reads.
 //
 // Ordinary autosave is best-effort. Background delegation requires a confirmed
 // save, and restoring an existing thread blocks chat until it loads or is abandoned.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useCopilotChatInternal } from '@copilotkit/react-core';
+import type { useCopilotChatInternal } from '@copilotkit/react-core';
 import { useAgent, useCopilotKit } from '@copilotkit/react-core/v2';
-import { useAtom, useStore } from 'jotai';
+import { useAtom, useAtomValue, useStore } from 'jotai';
+import {
+  emptyChatContext,
+  hasChatContext,
+  readChatContext,
+  withChatContext,
+} from './chat-context-model';
+import { chatContextAtom, beginChatContextSwitch, restoreChatContext } from './chat-context-store';
 import {
   activeSessionAtom,
   chatSessionAtom,
@@ -55,6 +61,7 @@ import {
   reconstructMessages,
 } from './message-codec';
 import { assertCurrentChatRequest, stopChatBeforeSwitch } from './chat-switch';
+import { createChatTransition } from './chat-transition';
 
 const SAVE_DEBOUNCE_MS = 900;
 
@@ -88,15 +95,20 @@ export type ChatPersistence = {
   ensureThread: (expectedUserMessageId: string) => Promise<string>;
   restoring: boolean;
   restoreError: string;
+  restoreThreadId: string | null;
   selectAgent: (agent: ChatAgent) => boolean;
   agentSelectionDisabled: boolean;
 };
 
-export function useChatPersistence(): ChatPersistence {
+export function useChatPersistence(
+  chat: ReturnType<typeof useCopilotChatInternal>,
+): ChatPersistence {
   const store = useStore();
   const [workflowBinding, setWorkflowBinding] = useAtom(chatSessionAtom);
+  const context = useAtomValue(chatContextAtom);
+  const contextSignature = JSON.stringify(context);
   const { messages, isLoading, reset, setMessages, stopGeneration, agent } =
-    useCopilotChatInternal() as unknown as ChatInternal;
+    chat as unknown as ChatInternal;
   const { isReady: agentReady } = useAgent();
   const { copilotkit } = useCopilotKit();
   const runtimeStatus = copilotkit.runtimeConnectionStatus;
@@ -114,7 +126,11 @@ export function useChatPersistence(): ChatPersistence {
   const pendingSave = useRef<Promise<unknown>>(Promise.resolve());
   const initialThread = useRef(activeThreadId);
   const [restoring, setRestoring] = useState(!!activeThreadId && !messages?.length);
+  // Errors do not make outgoing history disposable. Only save when the message
+  // store belongs to this active ID, never while its saved history is unhydrated.
+  const canSaveConversation = useRef(!restoring);
   const [restoreError, setRestoreError] = useState('');
+  const [restoreThreadId, setRestoreThreadId] = useState(activeThreadId);
   const [awaitingAgentThread, setAwaitingAgentThread] = useState<string | null>(null);
 
   // Refs so the debounced effect always sees current values without re-subscribing.
@@ -138,6 +154,17 @@ export function useChatPersistence(): ChatPersistence {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const threadGeneration = useRef(0);
   const switchingRef = useRef(false);
+  const transitionRef = useRef<ReturnType<typeof createChatTransition> | null>(null);
+  const initialRestorePhase = useRef<'pending' | 'unavailable' | 'ready'>('pending');
+  useEffect(
+    () => () => {
+      threadGeneration.current++;
+      transitionRef.current?.cancel();
+      if (timerRef.current) clearTimeout(timerRef.current);
+      initialRestorePhase.current = 'pending';
+    },
+    [],
+  );
 
   const signature = messagesSignature(messages ?? []);
 
@@ -182,10 +209,11 @@ export function useChatPersistence(): ChatPersistence {
   );
 
   const doSave = useCallback(async () => {
-    if (authFailedRef.current) return false;
+    if (authFailedRef.current || !canSaveConversation.current) return false;
     const complete = projectCompleteMessages(messagesRef.current ?? []);
     const binding = store.get(chatSessionAtom);
-    if (complete.length === 0 && !binding) return true;
+    const context = store.get(chatContextAtom);
+    if (complete.length === 0 && !binding && !hasChatContext(context)) return true;
 
     // Mint a thread id on the first save of a fresh conversation.
     let id = activeIdRef.current;
@@ -196,7 +224,7 @@ export function useChatPersistence(): ChatPersistence {
     }
 
     const projected = tagChatAgent(
-      withWorkflowBinding(complete, id, binding),
+      withChatContext(withWorkflowBinding(complete, id, binding), id, context),
       chatAgentRef.current,
       originalAgentRef.current,
       captureAuthors(),
@@ -264,7 +292,11 @@ export function useChatPersistence(): ChatPersistence {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: tagChatAgent(
-            withWorkflowBinding(projected, id, store.get(chatSessionAtom)),
+            withChatContext(
+              withWorkflowBinding(projected, id, store.get(chatSessionAtom)),
+              id,
+              store.get(chatContextAtom),
+            ),
             chatAgentRef.current,
             originalAgentRef.current,
             store.get(chatAuthorsAtom),
@@ -294,7 +326,8 @@ export function useChatPersistence(): ChatPersistence {
       return;
     }
     if (isLoading) return;
-    if ((messagesRef.current?.length ?? 0) === 0 && !workflowBinding) return;
+    if ((messagesRef.current?.length ?? 0) === 0 && !workflowBinding && !hasChatContext(context))
+      return;
 
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
@@ -304,26 +337,34 @@ export function useChatPersistence(): ChatPersistence {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [signature, isLoading, restoring, restoreError, workflowBinding, chatAgent]);
+  }, [signature, contextSignature, isLoading, restoring, restoreError, workflowBinding, chatAgent]);
 
   const loadThread = useCallback(
     async (id: string): Promise<boolean> => {
+      initialRestorePhase.current = 'ready';
+      transitionRef.current?.cancel();
+      const transition = createChatTransition(
+        'Opening your saved chat took too long. Your conversation is unchanged. Retry or start a new chat.',
+      );
+      transitionRef.current = transition;
       const generation = ++threadGeneration.current;
       switchingRef.current = true;
+      beginChatContextSwitch(store);
       setAwaitingAgentThread(null);
       if (timerRef.current) clearTimeout(timerRef.current);
       setRestoring(true);
       setRestoreError('');
+      setRestoreThreadId(id);
       try {
-        if (!restoring && !restoreError && !(await doSave())) return false;
-        await stopChatBeforeSwitch({ stopGeneration, agent });
+        if (canSaveConversation.current && !(await transition.wait(doSave))) return false;
+        await transition.wait(() => stopChatBeforeSwitch({ stopGeneration, agent }));
         if (generation !== threadGeneration.current) return false;
-        const res = await apiFetch(`/api/chat/threads/${encodeURIComponent(id)}`, {
-          signal: AbortSignal.timeout(20_000),
-        });
+        const res = await transition.wait(() =>
+          apiFetch(`/api/chat/threads/${encodeURIComponent(id)}`, { signal: transition.signal }),
+        );
         if (!res.ok)
           throw new Error('This saved chat could not be opened. Retry or start a new chat.');
-        const data = (await res.json()) as {
+        const data = (await transition.wait(() => res.json())) as {
           messages?: { id: string; role: string; seq: number; content: unknown }[];
         };
         const rows = (data.messages ?? []).map((m) => ({
@@ -336,8 +377,10 @@ export function useChatPersistence(): ChatPersistence {
           },
         }));
         if (generation !== threadGeneration.current) return false;
+        const restoredContext = readChatContext(rows);
         // Keep this chat's computer tasks accessible even if model discovery
         // failed. A provisional SDK agent cannot safely own restored messages.
+        canSaveConversation.current = false;
         activeIdRef.current = id;
         const restoredAgent = readChatAgent(rows);
         const restoredAuthors = readChatAuthors(rows);
@@ -351,6 +394,7 @@ export function useChatPersistence(): ChatPersistence {
         setWorkflowBinding(restoredBinding);
         store.set(activeSessionAtom, restoredBinding);
         store.set(workflowInspectionAtom, null);
+        restoreChatContext(store, restoredContext);
         const readyChat = readyChatRef.current;
         const restored = reconstructMessages(rows);
         if (!readyChat && restored.length > 0) {
@@ -363,6 +407,8 @@ export function useChatPersistence(): ChatPersistence {
         authFailedRef.current = false;
         (readyChat?.setMessages ?? setMessages)(restored);
         messagesRef.current = restored;
+        canSaveConversation.current = true;
+        setRestoreThreadId(null);
         return true;
       } catch (cause) {
         if (generation === threadGeneration.current) {
@@ -373,38 +419,38 @@ export function useChatPersistence(): ChatPersistence {
         }
         return false;
       } finally {
+        transition.finish();
         if (generation === threadGeneration.current) {
           switchingRef.current = false;
           setRestoring(false);
         }
       }
     },
-    [
-      setActiveThreadId,
-      setChatAgent,
-      stopGeneration,
-      agent,
-      store,
-      setWorkflowBinding,
-      doSave,
-      restoring,
-      restoreError,
-    ],
+    [setActiveThreadId, setChatAgent, stopGeneration, agent, store, setWorkflowBinding, doSave],
   );
 
   const startNewThread = useCallback(async () => {
+    initialRestorePhase.current = 'ready';
+    transitionRef.current?.cancel();
+    const transition = createChatTransition(
+      'The previous reply could not be stopped in time. Your conversation is unchanged. Retry starting a new chat.',
+    );
+    transitionRef.current = transition;
     const generation = ++threadGeneration.current;
     switchingRef.current = true;
+    beginChatContextSwitch(store);
     setAwaitingAgentThread(null);
     if (timerRef.current) clearTimeout(timerRef.current);
     setRestoring(true);
     setRestoreError('');
+    setRestoreThreadId(null);
     try {
-      if (!restoring && !restoreError && !(await doSave())) return false;
-      await stopChatBeforeSwitch({ stopGeneration, agent });
+      if (canSaveConversation.current && !(await transition.wait(doSave))) return false;
+      await transition.wait(() => stopChatBeforeSwitch({ stopGeneration, agent }));
       if (generation !== threadGeneration.current) return false;
       reset();
       messagesRef.current = [];
+      canSaveConversation.current = true;
       store.set(chatAuthorsAtom, {});
       originalAgentRef.current = chatAgentRef.current;
       store.set(originalChatAgentAtom, originalAgentRef.current);
@@ -415,30 +461,25 @@ export function useChatPersistence(): ChatPersistence {
       setWorkflowBinding(null);
       store.set(activeSessionAtom, null);
       store.set(workflowInspectionAtom, null);
+      restoreChatContext(store, emptyChatContext());
       return true;
-    } catch {
+    } catch (cause) {
       if (generation === threadGeneration.current)
-        setRestoreError('The previous reply could not be stopped. Retry opening a new chat.');
+        setRestoreError(
+          cause instanceof Error
+            ? cause.message
+            : 'The previous reply could not be stopped. Retry opening a new chat.',
+        );
       return false;
     } finally {
+      transition.finish();
       if (generation === threadGeneration.current) {
         switchingRef.current = false;
         setRestoring(false);
       }
     }
-  }, [
-    reset,
-    setActiveThreadId,
-    stopGeneration,
-    agent,
-    store,
-    setWorkflowBinding,
-    doSave,
-    restoring,
-    restoreError,
-  ]);
+  }, [reset, setActiveThreadId, stopGeneration, agent, store, setWorkflowBinding, doSave]);
 
-  const initialRestorePhase = useRef<'pending' | 'unavailable' | 'ready'>('pending');
   useEffect(() => {
     if (agentReady && awaitingAgentThread && activeIdRef.current === awaitingAgentThread) {
       initialRestorePhase.current = 'ready';
@@ -452,6 +493,12 @@ export function useChatPersistence(): ChatPersistence {
     if (agentReady) {
       initialRestorePhase.current = 'ready';
       if (messagesRef.current.length === 0) void loadThread(initialThread.current);
+      else {
+        canSaveConversation.current = true;
+        setRestoring(false);
+        setRestoreError('');
+        setRestoreThreadId(null);
+      }
     } else if (runtimeStatus === 'error' && initialRestorePhase.current === 'pending') {
       initialRestorePhase.current = 'unavailable';
       void loadThread(initialThread.current);
@@ -461,7 +508,12 @@ export function useChatPersistence(): ChatPersistence {
   useEffect(() => {
     if (!initialThread.current || agentReady || runtimeStatus === 'error') return;
     const timeout = setTimeout(() => {
-      if (activeIdRef.current !== initialThread.current) return;
+      if (
+        activeIdRef.current !== initialThread.current ||
+        initialRestorePhase.current !== 'pending'
+      )
+        return;
+      setRestoring(false);
       setRestoreError(
         'Sina is taking too long to connect. Your saved chat is unchanged. Retry opening it after the connection recovers.',
       );
@@ -478,6 +530,7 @@ export function useChatPersistence(): ChatPersistence {
     ensureThread,
     restoring,
     restoreError,
+    restoreThreadId,
     selectAgent,
     agentSelectionDisabled: isLoading || restoring || !!restoreError,
   };

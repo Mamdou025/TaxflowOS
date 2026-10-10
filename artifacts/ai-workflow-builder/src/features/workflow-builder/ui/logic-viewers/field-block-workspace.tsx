@@ -5,6 +5,10 @@ import { useCallback, useState } from "react";
 import { type LocalRunRecord, type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
 import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
 import { BlockDataFlowColumn } from "../workspace/block-data-flow-pane";
+import { projectFieldWorksheet } from '@workspace/workflow-core/field-worksheet';
+import { FieldWorksheetView } from './field-worksheet-view';
+import { FieldWorksheetEditor } from './field-worksheet-editor';
+import { fieldWorksheetCanvasContext } from './field-worksheet-canvas';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -14,11 +18,14 @@ function asRecord(value: unknown): Record<string, unknown> {
     : {};
 }
 
-function asNumber(value: unknown): number {
-  return typeof value === "number" ? value : Number(value) || 0;
+function asNumber(value: unknown): number | undefined {
+  if (typeof value !== 'number' && (typeof value !== 'string' || !value.trim())) return undefined;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : undefined;
 }
 
-export function formatNumber(value: number): string {
+export function formatNumber(value: number | undefined): string {
+  if (value === undefined || !Number.isFinite(value)) return '—';
   return value.toLocaleString("en-CA", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -40,7 +47,7 @@ export function getBackendOutputs(
 export type Subcategory = {
   id: string;
   label: string;
-  value: number;
+  value: number | undefined;
   rowCount?: number;
 };
 
@@ -48,7 +55,7 @@ export type FieldEntry = {
   key: string;
   label: string;
   description?: string;
-  value: number;
+  value: number | undefined;
   subcategories: Subcategory[];
 };
 
@@ -274,8 +281,8 @@ type MappedRowSummary = {
   account?: string;
   label?: string;
   matchedKeyword?: string;
-  amount: number;
-  confidence: number;
+  amount: number | undefined;
+  confidence: number | undefined;
 };
 
 function getCategoryRows(
@@ -695,7 +702,7 @@ function SourceHeader({ label, subtype }: { label: string; subtype?: string }) {
 }
 
 
-export function FieldBlockWorkspace({
+function LegacyFieldBlockWorkspace({
   block,
   edges,
   lastRun,
@@ -821,4 +828,24 @@ export function FieldBlockWorkspace({
       )}
     </div>
   );
+}
+
+export function FieldBlockWorkspace(props: {
+  block: WorkflowBlock;
+  edges: WorkflowEdge[];
+  lastRun?: LocalRunRecord;
+  nodes: WorkflowNode[];
+  onExecuteStep?: () => void;
+  compact?: boolean;
+  disabled?: boolean;
+  onConfigPatch?: (patch: Record<string, unknown>) => void;
+}) {
+  const context = fieldWorksheetCanvasContext(props.block, props.nodes, props.edges, props.lastRun);
+  const declared = props.block.config.worksheetLines !== undefined;
+  return <div className="min-h-0 flex-1 overflow-auto">
+    {props.onConfigPatch && <div className="p-3"><FieldWorksheetEditor block={props.block} definition={context.definition} disabled={props.disabled} onConfigPatch={props.onConfigPatch} /></div>}
+    {declared
+      ? <div className="p-3"><FieldWorksheetView label={props.block.label} projection={projectFieldWorksheet(context)} lastRun /></div>
+      : <LegacyFieldBlockWorkspace {...props} />}
+  </div>;
 }

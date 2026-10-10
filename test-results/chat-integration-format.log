@@ -1,0 +1,15 @@
+artifacts/ai-workflow-builder/src/features/assistant/runtime/chat/workflow-interaction.ts 531ms
+artifacts/ai-workflow-builder/src/features/assistant/runtime/chat/workflow-interaction-store.ts 99ms
+artifacts/ai-workflow-builder/src/features/assistant/runtime/chat/use-assistant-ui-runtime.ts 420ms
+artifacts/ai-workflow-builder/src/features/assistant/runtime/workflow-chat-instructions.ts 39ms (unchanged)
+artifacts/ai-workflow-builder/src/features/assistant/ui/workflow-choice-model.ts 116ms
+artifacts/ai-workflow-builder/src/features/assistant/ui/workflow-choice-list.tsx 223ms
+artifacts/ai-workflow-builder/src/features/assistant/ui/assistant-ui-transcript.tsx 132ms
+artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-navigation.tsx 214ms
+tests/unit/workflow-interaction.test.ts 47ms
+tests/unit/workflow-choice-model.test.ts 154ms
+e2e/assistant-ui-chat.spec.ts 1198ms
+scripts/maintained-paths.mjs 142ms (unchanged)
+docs/ARCHITECTURE.md 5104ms (unchanged)
+docs/FUNCTIONALITY.md 529ms (unchanged)
+docs/product/decisions.md 267ms (unchanged)

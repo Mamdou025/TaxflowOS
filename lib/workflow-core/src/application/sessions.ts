@@ -5,13 +5,23 @@ import type {
 import type { WorkflowDefinition } from '@workspace/workflow-contracts/domain/workflow-types';
 import type { GraphRuntime } from '../core/ports';
 import { executeGraph } from '../core/graph';
+import { ancestorBlockIds } from '../core/recorded-ancestor-results';
 import { getSavedVersion, recordWorkflowExecution, WorkflowCommandError } from './commands';
 import type { DocumentExtraction } from '@workspace/workflow-contracts/domain/document-extraction';
 import { DocumentExtractionSchema } from '@workspace/workflow-contracts/generated-schemas';
 import { makeDocumentReview, documentReviewSummaries } from './document-review';
 import type { DocumentReviewDraft } from '@workspace/workflow-contracts/domain/document-review';
 import { runInputKeys, validateRunInputPatch, hasRunExchangeRate } from './session-inputs';
+import {
+  hasMissingCalculationInputs,
+  isCalculationInputBlock,
+  calculationInputState,
+  calculationSourcesForBlock,
+  calculationInputHistory,
+  recordedCalculationInputNames,
+} from './calculation-session-inputs';
 export { runInputKeys, validateRunInputPatch } from './session-inputs';
+export { calculationSourcesForBlock, calculationInputHistory } from './calculation-session-inputs';
 
 export function isDocumentSource(block: WorkflowDefinition['blocks'][number]) {
   return (
@@ -21,8 +31,22 @@ export function isDocumentSource(block: WorkflowDefinition['blocks'][number]) {
   );
 }
 
-function inputRequired(block: WorkflowDefinition['blocks'][number]) {
+function inputRequired(
+  block: WorkflowDefinition['blocks'][number],
+  definition: WorkflowDefinition,
+  session?: WorkflowSession,
+) {
   const config = block.config;
+  if (
+    hasMissingCalculationInputs(
+      block,
+      definition,
+      session?.results,
+      session?.stale,
+      calculationInputHistory(session),
+    )
+  )
+    return true;
   if (isDocumentSource(block))
     return !(
       ['rows', 'manualRows', 'tableRows'].some(
@@ -121,7 +145,19 @@ export function sessionDefinition(
     block.config = {
       ...block.config,
       ...(session.inputOverrides?.[block.id]
-        ? validateRunInputPatch(block, session.inputOverrides[block.id])
+        ? validateRunInputPatch(
+            block,
+            session.inputOverrides[block.id],
+            definition,
+            calculationSourcesForBlock(
+              block,
+              definition,
+              session.results,
+              session.stale,
+              calculationInputHistory(session),
+            ),
+            recordedCalculationInputNames(block, definition, calculationInputHistory(session)),
+          )
         : {}),
     };
     if (isDocumentSource(block) && Array.isArray(session.inputOverrides?.[block.id]?.rows)) {
@@ -238,7 +274,18 @@ export function sessionContext(entry: PersonalWorkflow, session: WorkflowSession
       status,
       ready,
       inputKeys: runInputKeys(block),
-      inputRequired: inputRequired(block),
+      inputRequired: inputRequired(block, definition, session),
+      ...(isCalculationInputBlock(block)
+        ? {
+            inputRequirements: calculationInputState(
+              block,
+              definition,
+              session.results,
+              session.stale,
+              calculationInputHistory(session),
+            ).requirements,
+          }
+        : {}),
       warnings: result?.warnings ?? [],
       errors: result?.errors ?? [],
     };
@@ -299,7 +346,18 @@ export function changeSession(
     if (!session.paused) fail('Pause execution before applying input changes.');
     const block = definition.blocks.find((item) => item.id === action.blockId);
     if (!block) fail('Choose an existing input block.');
-    const patch = validateRunInputPatch(block, action.patch);
+    const patch = validateRunInputPatch(
+      block,
+      action.patch,
+      definition,
+      calculationSourcesForBlock(
+        block,
+        definition,
+        session.results,
+        session.stale,
+        calculationInputHistory(session),
+      ),
+    );
     session.inputOverrides = {
       ...session.inputOverrides,
       [block.id]: { ...session.inputOverrides?.[block.id], ...patch },
@@ -313,7 +371,10 @@ export function changeSession(
   }
   if (action.kind === 'pause') session.paused = true;
   if (action.kind === 'resume') {
-    const missing = definition.blocks.filter(inputRequired);
+    // Sources may collect values before calculation requirements are satisfied.
+    const missing = definition.blocks.filter(
+      (block) => !isCalculationInputBlock(block) && inputRequired(block, definition),
+    );
     if (missing.length)
       fail(
         `Trigger readiness: provide inputs for ${missing.map((block) => block.label).join(', ')} before execution.`,
@@ -417,6 +478,16 @@ export function changeSession(
         mode: 'isolated',
         selectedBlockId: block.id,
         isolatedInputs: structuredClone(inputs),
+        recordedAncestorResults: Object.fromEntries(
+          [...ancestorBlockIds(definition, block.id)]
+            .filter(
+              (id) =>
+                !step.dependencies.includes(id) &&
+                !session.stale.includes(id) &&
+                session.results[id],
+            )
+            .map((id) => [id, session.results[id]]),
+        ),
         testInputSource: 'recorded',
       },
       runtime,

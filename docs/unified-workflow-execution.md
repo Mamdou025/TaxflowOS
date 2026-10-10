@@ -1,5 +1,11 @@
 # Shared interactive workflow execution
 
+The [FAPI reference restoration](fapi-reference-restoration.md) specializes the
+presentation of compatible FAPI sessions: four animated stages and the prescribed
+recorded-value worksheet. Generic sessions retain their individual-block accordion.
+Both use the session commands and input forms described below; the presentation
+does not execute calculations or introduce a second input store.
+
 Chat, the Workflows Run tab and `/run/:workflowId` render the same
 `WorkflowSessionPanel`. The panel reads the actual saved Build graph, rather than
 the older template-specific calculation loop. The application commands in
@@ -23,6 +29,42 @@ Workflow progress remains owned by the workflow library and its save status.
 Chat save failures are displayed separately. Current-work inputs, reviewed agent
 changes and reply interruption are described under Conversational execution inputs
 below. Hypothetical comparison branches remain outside this increment.
+
+Calculation requirements generate the numeric collection form at the Trigger in
+both Chat and Run. Workflows without a Trigger expose it at the calculation step.
+Each field can retain its saved setting or explicitly use a number or a direct
+connected source for this run. Sources and calculations use the same readiness
+projection; source collection can proceed while a calculation has missing fields.
+Provider changes retain required source/review steps and invalidate dependent
+results and approval through the existing session commands. See
+[calculation variables](calculation-variables.md) for compatibility and constraints.
+
+Declared Field worksheets are visible above the execution steps in this same
+panel, so a result line and its missing supporting inputs can be inspected even
+when the Field is the last step. Each line links to the calculation's formula and
+recorded evidence through a shared portable projection. A usable result, a missing
+value, invalid data and an outdated result are distinct states; reading a line
+does not execute its calculator or substitute zero.
+Workflow-configured primary results and summary rows remain visible above grouped
+supporting details. This same projection drives Chat, Run and Build inspection;
+the display does not derive a separate result from mutable uploads or samples.
+Configured decimal places format the display only. Calculation availability is
+not a final approval or a completed-workflow signal.
+
+Worksheet input sections reuse the existing calculation forms. Trigger and
+worksheet share one transient draft per calculator within the mounted session
+panel, including source-change review, Apply progress and command errors. Applied
+values remain session overrides and invalidate downstream results through the
+same commands. The worksheet does not hold another persisted input map or change
+source/review prerequisites. Details and evidence render on expansion to avoid
+mounting every large trace at once. See [Field worksheets](field-worksheet.md) for
+the current implementation and scoped change inventory.
+
+Replacing a selected workflow definition from a single-workflow backup creates a
+new saved version while preserving its identity and earlier work. It does not
+rewrite an existing session's frozen definition or resume that session against the
+replacement. Start a new run to use the replacement version; inspect storage status
+separately to establish whether the new version reached the server.
 
 ## User journey
 
@@ -222,7 +264,7 @@ package scripts, and the architecture guide edits are unchanged by this incremen
 | `artifacts/ai-workflow-builder/src/features/workflows-hub/session-input-proposal.ts`                          | New agent input adapter: workbook selection edits derive rows with the existing mapper. Model-provided document records and captured HTTP response fields are refused. Record-only captures require the original workbook in the form before changing sheet selection. |
 | `artifacts/ai-workflow-builder/src/features/workflows-hub/workflow-session-panel.tsx`                         | Execution UI: full Run presentation remains; Chat gains an inline progress rail and focused source form. End is available in both.                                                                                                                                     |
 | `artifacts/ai-workflow-builder/src/features/assistant/ui/chat-workflow-thread.tsx`                            | Linked Chat workflow: selects the compact presentation and exposes a persistent workflow indicator above conversation scrolling. Exact run binding remains unchanged.                                                                                                  |
-| `artifacts/ai-workflow-builder/src/features/assistant/ui/assistant-thread.tsx`                                | Chat shell: mounts that indicator and supplies the stable reply-interruption callback. Keeps CopilotChat mounted behind the welcome screen so sending the first message does not reconnect the agent, while rendering only one composer.                               |
+| `artifacts/ai-workflow-builder/src/features/assistant/ui/assistant-thread.tsx`                                | Chat shell: mounts that indicator and supplies the stable reply-interruption callback. Keeps the existing agent and assistant-ui runtime active across the welcome transition, with one composer; see the assistant-ui migration record for the replacement rendering path.                               |
 | `artifacts/ai-workflow-builder/src/features/assistant/ui/use-assistant.tsx`                                   | Conversation adapter: shares message dispatch and pending-reply state across the welcome screen and conversation; exposes stop-and-settle on the existing agent subscription. Transport failures still depend on the SDK reporting them.                               |
 | `artifacts/ai-workflow-builder/src/features/assistant/workspace/aside-thread.tsx`                             | Composer: a pending reply no longer disables a typed follow-up. Stop-and-settle precedes sending; failures remain visible and newer drafts are preserved.                                                                                                              |
 | `artifacts/ai-workflow-builder/src/features/assistant/ui/use-session-tools.tsx`                               | Agent commands: adds reviewed input edits and End, shows before/after, rejects stale revisions/workspace changes and prevents reusable grants from silently applying these proposals.                                                                                  |
@@ -314,7 +356,8 @@ preserved. Frontend paths below are relative to `artifacts/ai-workflow-builder/s
 | File                                                                     | Purpose and before/after behavior in this correction                                                                                                                                                                                     |
 | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `features/assistant/ui/assistant-thread.tsx`                             | Chat shell: duplicated top agent/computer controls and workflow strip → existing Work menu plus composer controls; the workflow leaves the pinned-card area. Existing mounted-stream behavior is preserved.                              |
-| `features/assistant/ui/thread-messages.tsx`                              | Conversation layout: workflow above all messages → one card beside its opening receipt or saved launcher anchor, with later conversation below.                                                                                          |
+| `features/assistant/runtime/chat/use-assistant-ui-runtime.ts`             | Current conversation adapter: preserves the earlier correction's exact receipt/launcher position as one stable, display-only workflow row. The row is excluded from the model and persisted transcript.                                  |
+| `features/assistant/ui/assistant-ui-transcript.tsx`                        | Current conversation renderer: mounts the shared live workflow at that row through assistant-ui. It replaces the retired `thread-messages.tsx` implementation while retaining later conversation below the workflow.                       |
 | `features/assistant/ui/chat-workflow-thread.tsx`                         | Workflow presentation: active tool result required a View button → active form appears directly; historical receipts can explicitly restore their exact run. Supplies Work status from real session steps.                               |
 | `features/assistant/runtime/chat/workflow-position.ts`                   | New position resolver: matches exact opening tool/run identity or persisted message anchor, without interpreting conversation mentions as actions.                                                                                       |
 | `features/assistant/runtime/chat/workflow-binding.ts`                    | Saved binding: exact run only → optional message anchor as non-prompt metadata; legacy bindings remain valid and malformed anchors fail visibly.                                                                                         |

@@ -1,0 +1,10 @@
+artifacts/ai-workflow-builder/src/features/assistant/runtime/chat/use-assistant-ui-runtime.ts(155,21): error TS2339: Property 'toolCalls' does not exist on type '{ role: "developer"; content: string; id: string; name?: string | undefined; encryptedValue?: string | undefined; } | { role: "system"; content: string; id: string; name?: string | undefined; encryptedValue?: string | undefined; } | ... 4 more ... | { ...; }'.
+  Property 'toolCalls' does not exist on type '{ role: "developer"; content: string; id: string; name?: string | undefined; encryptedValue?: string | undefined; }'.
+artifacts/ai-workflow-builder/src/features/assistant/runtime/chat/use-assistant-ui-runtime.ts(155,38): error TS7006: Parameter 'call' implicitly has an 'any' type.
+artifacts/ai-workflow-builder/src/features/assistant/ui/use-workspace-retrieval-tools.ts(171,114): error TS2339: Property 'evidence' does not exist on type 'never'.
+artifacts/ai-workflow-builder/src/features/assistant/ui/use-workspace-retrieval-tools.ts(171,176): error TS2339: Property 'evidence' does not exist on type 'never'.
+artifacts/ai-workflow-builder/src/features/assistant/workspace/workflow-run-flow.tsx(375,264): error TS2322: Type '{ from: string; to: string; year: number | null; } | undefined' is not assignable to type '{ from: string; to: string; year: number; } | undefined'.
+  Type '{ from: string; to: string; year: number | null; }' is not assignable to type '{ from: string; to: string; year: number; }'.
+    Types of property 'year' are incompatible.
+      Type 'number | null' is not assignable to type 'number'.
+        Type 'null' is not assignable to type 'number'.

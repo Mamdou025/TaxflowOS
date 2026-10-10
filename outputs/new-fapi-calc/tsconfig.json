@@ -1,0 +1,10 @@
+{
+  "extends": "../../artifacts/ai-workflow-builder/tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "typeRoots": ["../../artifacts/ai-workflow-builder/node_modules/@types"],
+    "tsBuildInfoFile": "../../node_modules/.cache/new-fapi-calc.tsbuildinfo"
+  },
+  "include": ["build.ts", "../../artifacts/ai-workflow-builder/src/types/**/*.d.ts"],
+  "exclude": []
+}

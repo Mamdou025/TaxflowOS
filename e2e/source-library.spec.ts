@@ -1,6 +1,37 @@
 import { test, expect } from './workflow-audit-isolation';
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import type { Page } from '@playwright/test';
+
+async function waitForChatUI(page: Page) {
+  // Route load precedes the lazy authenticated workspace; wait for its usable shell.
+  await page
+    .getByRole('textbox', { name: 'Ask Scope, or describe a task…' })
+    .waitFor({ state: 'visible' });
+}
+
+async function expandChatContext(page: Page) {
+  const strip = page.locator('[data-chat-context]');
+  if (!(await strip.isVisible()))
+    await page.getByRole('button', { name: 'Open Scope', exact: true }).click();
+  await expect(
+    page.getByRole('dialog', { name: 'Scope for this chat', exact: true }),
+  ).toBeVisible();
+  return strip;
+}
+async function mockChatPersistence(page: Page) {
+  const saved = new Map<string, { messages: { content: Record<string, unknown> }[] }>();
+  await page.route('**/api/chat/threads**', (route) => {
+    const pathname = new URL(route.request().url()).pathname;
+    const id = decodeURIComponent(pathname.split('/')[4] ?? '');
+    if (route.request().method() === 'POST') {
+      saved.set(id, route.request().postDataJSON());
+      return route.fulfill({ json: { ok: true } });
+    }
+    return route.fulfill({ json: id ? (saved.get(id) ?? { messages: [] }) : { threads: [] } });
+  });
+  return saved;
+}
 
 test('chat home remains visible when animation frames are suspended', async ({ page }) => {
   await page.addInitScript(() => {
@@ -8,6 +39,7 @@ test('chat home remains visible when animation frames are suspended', async ({ p
   });
   await page.route('**/api/chat/threads**', (route) => route.fulfill({ json: { threads: [] } }));
   await page.goto('/');
+  await waitForChatUI(page);
   const composer = page.getByRole('textbox', { name: 'Ask Scope, or describe a task…' });
   await expect(composer).toBeVisible();
   await expect(page.getByText('What would you like to work on?', { exact: true })).toBeVisible();
@@ -20,6 +52,7 @@ test('chat home remains visible when animation frames are suspended', async ({ p
     }),
   ).toBe(true);
   await page.reload();
+  await waitForChatUI(page);
   await expect(composer).toBeVisible();
   await composer.fill('Ready to chat');
   await expect(composer).toHaveValue('Ready to chat');
@@ -59,6 +92,7 @@ test('chat spreadsheet selection preserves drafts on cancel and imports a comple
   );
   await page.route('**/api/chat/threads**', (route) => route.fulfill({ json: { threads: [] } }));
   await page.goto('/');
+  await waitForChatUI(page);
   const composer = page.locator('.lc-console');
   const draft = composer.getByRole('textbox');
   await draft.fill('Use this workbook');
@@ -104,6 +138,7 @@ test('chat spreadsheet selection preserves drafts on cancel and imports a comple
     .selectOption('Amount in CC Crcy');
   await dialog.getByLabel('Source currency').fill('EUR');
   await dialog.getByRole('button', { name: 'Use selected data' }).click();
+  await expandChatContext(page);
   await expect(page.getByRole('status').filter({ hasText: 'synthetic-sap.xlsx' })).toContainText(
     '1100 records',
   );
@@ -152,23 +187,48 @@ test('chat can select a saved document for retrieval without changing its librar
   page,
 }) => {
   const writes: string[] = [];
+  const selected = { ...active, sourceRevision: 2 };
+  await mockChatPersistence(page);
   await page.route('**/api/documents**', (route) => {
     if (route.request().method() !== 'GET') writes.push(route.request().method());
     return route.fulfill({
-      json: { documents: [{ ...active, sourceRevision: 2 }, archived, deleted] },
+      json: new URL(route.request().url()).pathname.endsWith(`/${active.id}`)
+        ? { document: selected, downloadUrl: '/api/synthetic-policy-file' }
+        : { documents: [selected, archived, deleted] },
     });
   });
+  // Original bytes travel through the download+extraction boundary; extraction is
+  // synthetic here so the test never calls a document service or live provider.
+  await page.route('**/api/synthetic-policy-file', (route) =>
+    route.fulfill({
+      contentType: 'application/pdf',
+      body: '%PDF-1.4\nSynthetic selected policy fixture\n%%EOF',
+    }),
+  );
+  await page.route('**/api/assistant/extract', (route) =>
+    route.fulfill({
+      json: {
+        kind: 'pdf',
+        text: 'Synthetic policy evidence for this selected source.',
+        pages: 1,
+        truncated: false,
+      },
+    }),
+  );
   await page.goto('/');
+  await waitForChatUI(page);
   await page.getByRole('button', { name: 'Attach files', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Choose from Sources' }).click();
   const picker = page.getByRole('dialog', { name: 'Choose from Sources' });
   await expect(picker.getByRole('button', { name: archived.fileName })).toHaveCount(0);
   await picker.getByRole('button', { name: active.fileName, exact: true }).click();
-  await expect(page.locator('.lc-console')).toContainText(
-    'Source: active-policy.pdf · Saved in Sources',
-  );
-  await page.getByRole('button', { name: 'Remove document source' }).click();
-  await expect(page.locator('.lc-console')).not.toContainText('active-policy.pdf');
+  const context = await expandChatContext(page);
+  const selectedCard = context.locator(`[data-context-source="${active.id}"]`);
+  await expect(selectedCard).toContainText(active.fileName);
+  await expect(selectedCard).toContainText('Saved source · revision 2');
+  await expect(selectedCard).toContainText('Ready');
+  await context.getByRole('button', { name: `Remove ${active.fileName} from this chat` }).click();
+  await expect(context).not.toContainText(active.fileName);
   expect(writes).toEqual([]);
 });
 
@@ -198,6 +258,8 @@ test('Owners can recover soft-deleted sources and see permanent purge as a disti
   });
 
   await page.goto('/documents');
+
+  await waitForChatUI(page);
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByText('New chat', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Library', exact: true })).toHaveCount(0);
@@ -223,6 +285,7 @@ test('source repository failures are visible instead of looking like an empty li
     route.fulfill({ status: 503, json: { error: 'Repository unavailable.' } }),
   );
   await page.goto('/documents');
+  await waitForChatUI(page);
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByText('The document repository is unavailable.')).toBeVisible({
     timeout: 30_000,
@@ -232,6 +295,7 @@ test('source repository failures are visible instead of looking like an empty li
 test('chat chooses a saved source without uploading and freezes its records for workflow approval', async ({
   page,
 }) => {
+  const savedChats = await mockChatPersistence(page);
   const source = {
     ...active,
     id: 'saved-records',
@@ -269,14 +333,29 @@ test('chat chooses a saved source without uploading and freezes its records for 
     route.fulfill({ json: { allowed: false, message: 'Review this run.' } }),
   );
   await page.goto('/');
+  await waitForChatUI(page);
   await page.getByRole('button', { name: 'Attach files', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Choose from Sources', exact: true }).click();
   const picker = page.getByRole('dialog', { name: 'Choose from Sources' });
   await expect(picker.getByText('archived.json', { exact: true })).toHaveCount(0);
   await picker.getByRole('button', { name: source.fileName, exact: true }).click();
-  await expect(page.getByText(/Source: reusable-records.json · 2 records/)).toBeVisible();
+  let context = await expandChatContext(page);
+  await expect(context.locator('[data-context-source="saved-records"]')).toContainText('Ready');
+  await expect(context).toContainText('2 records');
+  await expect
+    .poll(() =>
+      [...savedChats.values()].some((chat) =>
+        chat.messages.some((message) =>
+          (JSON.stringify(message.content.chatContext) ?? '').includes('saved-records'),
+        ),
+      ),
+    )
+    .toBe(true);
   await page.reload();
-  await expect(page.getByText(/Source: reusable-records.json · 2 records/)).toBeVisible();
+  await waitForChatUI(page);
+  context = await expandChatContext(page);
+  await expect(context.locator('[data-context-source="saved-records"]')).toContainText('Ready');
+  await expect(context).toContainText('2 records');
   const review = await page.evaluate(async () => {
     const { createStore } = await import('/@id/jotai');
     const { workspaceStorage } = await import('/src/platform/auth/workspace-context.ts');
@@ -308,6 +387,7 @@ test('chat chooses a saved source without uploading and freezes its records for 
 test('a failed saved-source download is visible and preserves the current selection', async ({
   page,
 }) => {
+  await mockChatPersistence(page);
   const source = {
     ...active,
     id: 'failed-download',
@@ -330,16 +410,26 @@ test('a failed saved-source download is visible and preserves the current select
     route.fulfill({ json: [{ label: 'Item', amount: 12 }] }),
   );
   await page.goto('/');
+  await waitForChatUI(page);
   await page.getByRole('button', { name: 'Attach files', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Choose from Sources', exact: true }).click();
   await page.getByRole('button', { name: kept.fileName, exact: true }).click();
-  await expect(page.getByText(/Source: kept-records.json/)).toBeVisible();
+  const context = await expandChatContext(page);
+  await expect(context.locator('[data-context-source="kept-source"]')).toContainText(
+    'kept-records.json',
+  );
+  await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Attach files', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Choose from Sources', exact: true }).click();
   await page.getByRole('button', { name: source.fileName, exact: true }).click();
   await expect(
     page.getByRole('alert').filter({ hasText: 'Could not download the selected source' }),
   ).toBeVisible();
-  await expect(page.getByText(/Source: unavailable.json/)).toHaveCount(0);
-  await expect(page.getByText(/Source: kept-records.json/)).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expandChatContext(page);
+  await expect(context.locator('[data-context-source="failed-download"]')).toHaveCount(0);
+  await expect(context.locator('[data-context-source="kept-source"]')).toContainText(
+    'kept-records.json',
+  );
+  await expect(context.locator('[data-context-source="kept-source"]')).toContainText('Ready');
 });
