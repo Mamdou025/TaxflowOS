@@ -1,4 +1,7 @@
-import { WORKPAPER_SPECS } from '@/shared/workflow-engine/portfolio-workpapers';
+import {
+  AVAILABLE_WORKPAPER_SPECS,
+  RETIRED_WORKPAPER_SPECS,
+} from '@/shared/workflow-engine/templates/workpaper-catalog';
 // ─────────────────────────────────────────────────────────────────────────────
 // Workflow TARGET resolution — "which workflow is this text about?"
 //
@@ -17,13 +20,29 @@ export type WorkflowTarget = {
   aliases: string[];
 };
 
+function workpaperTarget(spec: { id: string; name: string }): WorkflowTarget {
+  return {
+    id: spec.id,
+    name: spec.name,
+    aliases: [
+      spec.id,
+      spec.id.replaceAll('-', ' '),
+      spec.name.toLowerCase(),
+      ...(spec.id === 'platform-sequence' ? ['universal execution sequence'] : []),
+      ...(spec.id === 't2-suite' ? ['t2'] : []),
+      ...(spec.id === 'part-xiii' ? ['part xiii'] : []),
+    ],
+  };
+}
+
 export const WORKFLOW_TARGETS: WorkflowTarget[] = [
   { id: 'fapi', name: 'FAPI', aliases: ['fapi', 'foreign accrual property income', 'reaimp', 'reatb'] },
-  ...WORKPAPER_SPECS.map(spec => ({ id: spec.id, name: spec.name, aliases: [spec.id, spec.id.replaceAll('-', ' '), spec.name.toLowerCase(), ...(spec.id === 'platform-sequence' ? ['universal execution sequence'] : []), ...(spec.id === 't2-suite' ? ['t2'] : []), ...(spec.id === 'part-xiii' ? ['part xiii'] : [])] })),
+  ...AVAILABLE_WORKPAPER_SPECS.map(workpaperTarget),
 ];
 
 // Recognize retired names so mixed requests remain ambiguous and cannot launch the wrong workflow.
 const RETIRED_TARGETS: WorkflowTarget[] = [
+  ...RETIRED_WORKPAPER_SPECS.map(workpaperTarget),
   { id: 'expense', name: 'Removed expense reimbursement demo', aliases: ['expense', 'expense reimbursement', 'reimbursement', 'remboursement'] },
   { id: 'document-calculator', name: 'Removed document calculator demo', aliases: ['document calculator'] },
   { id: 'roulement', name: 'Removed rollover workflow', aliases: ['roulement', 'rollover', 'art. 85', 'section 85', 't2057'] },

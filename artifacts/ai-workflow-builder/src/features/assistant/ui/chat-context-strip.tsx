@@ -12,7 +12,7 @@ import {
   removeChatContextSource,
 } from '../runtime/chat/chat-context-store';
 
-/** Current selections only. The enclosing Scope dialog owns presentation/navigation. */
+/** Current selections only. The enclosing Scope bar owns presentation/navigation. */
 export function ChatScopeContent({ onBrowseSources }: { onBrowseSources: () => void }) {
   const store = useStore();
   const context = useAtomValue(chatContextAtom);

@@ -658,19 +658,19 @@ test('attaching workflow scope preserves the draft and does not execute it', asy
   await page.getByRole('menuitem', { name: 'Attach workflow scope' }).hover();
   await page.getByRole('menuitem', { name: 'My calculation', exact: true }).click();
   await page.getByRole('button', { name: 'Open Scope', exact: true }).click();
-  const scope = page.getByRole('dialog', { name: 'Scope for this chat', exact: true });
+  const scope = page.getByRole('region', { name: 'Scope for this chat', exact: true });
   await expect(scope).toContainText('My calculation');
   await expect(scope).toContainText('Draft');
-  await expect(composer.getByRole('textbox', { includeHidden: true })).toHaveValue(
-    'Explain this workflow',
-  );
+  await expect(composer.getByRole('textbox')).toHaveValue('Explain this workflow');
   expect(executions).toEqual([]);
   await scope.getByRole('button', { name: 'Remove workflow scope' }).click();
   await expect(scope.getByRole('button', { name: 'Remove workflow scope' })).toHaveCount(0);
   await expect(
     scope.getByRole('region', { name: 'Workflow scope', exact: true }),
   ).not.toContainText('My calculation');
+  await scope.getByRole('textbox', { name: 'Company name' }).focus();
   await page.keyboard.press('Escape');
+  await expect(scope).toBeHidden();
   await expect(composer.getByRole('textbox')).toHaveValue('Explain this workflow');
 });
 

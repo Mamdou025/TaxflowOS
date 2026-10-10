@@ -24,28 +24,32 @@ import {
   executeSavedWorkflow,
 } from '../../lib/workflow-core/src/application/commands';
 import { validateWorkflowLibrary } from '../../lib/workflow-contracts/src/library';
-import { executeLegacyTemplateCommand } from '../fixtures/legacy-template-runtime';
+import {
+  executeLegacyTemplateCommand,
+  resolveLegacyTemplate,
+  RETIRED_WORKPAPER_IDS,
+} from '../fixtures/legacy-template-runtime';
 
 const retained = [
-  'attribute-ledgers',
-  'data-readiness',
   'eifel',
   'fapi',
-  'ownership-graph',
   'part-xiii',
-  'platform-sequence',
-  'portfolio-ops',
-  'scope-service',
   'surplus',
   't106',
   't1134',
   't2-suite',
-  'tax-position-summary',
   'tax-provision',
 ].sort();
-const retired = ['document-calculator', 'expense', 'campaign', 'roulement', 'holiday-payroll'];
+const retired = [
+  'document-calculator',
+  'expense',
+  'campaign',
+  'roulement',
+  'holiday-payroll',
+  ...RETIRED_WORKPAPER_IDS,
+];
 
-test('public catalogue, runtime, assistant suggestions and live routing advertise the same 15 workflows', () => {
+test('public catalogue, runtime, assistant suggestions and live routing advertise exactly the eight Tier 1 workflows', () => {
   assert.deepEqual(Object.keys(WORKFLOW_CONFIGS).sort(), retained);
   assert.deepEqual(
     PORTFOLIO_WORKFLOWS.map((entry) => entry.id.replace(/^pf-/, '')).sort(),
@@ -115,6 +119,7 @@ test('retired public IDs reject new execution and preview without substituting a
     'rollover',
     'campaign',
     'holiday payroll',
+    ...RETIRED_WORKPAPER_IDS.map((id) => id.replaceAll('-', ' ')),
   ]) {
     const mixed = resolveWorkflowTarget(`Run FAPI and ${name}`);
     assert.equal(mixed.ambiguous, true, name);
@@ -130,6 +135,13 @@ test('saved versions from retired templates retain their definitions and indepen
   for (const [id, headline, expected] of [
     ['document-calculator', 'RESULT', 400],
     ['expense', 'NET_PAYABLE', 2325],
+    ['scope-service', 'ENTITIES_IN_SCOPE', 1],
+    ['tax-position-summary', 'CONFIRMED', 0],
+    ['data-readiness', 'READINESS_PERCENT', 100],
+    ['platform-sequence', 'READY_FOR_HANDOFF', 0],
+    ['ownership-graph', 'ECONOMIC_INTERESTS', 3],
+    ['attribute-ledgers', 'RECONCILED_ATTRIBUTES', 1],
+    ['portfolio-ops', 'OVERDUE_TASKS', 1],
   ] as const) {
     const fixture = executeLegacyTemplateCommand({ workflowId: id, useSample: true });
     assert.ok(fixture.core);
@@ -176,7 +188,12 @@ test('saved versions from retired templates retain their definitions and indepen
 });
 
 test('worksheet intelligence never presents sample values when no source records were supplied', () => {
-  for (const config of Object.values(WORKFLOW_CONFIGS)) {
+  const historicalConfigs = RETIRED_WORKPAPER_IDS.map((id) => {
+    const config = resolveLegacyTemplate(id);
+    assert.ok(config, `Historical fixture ${id} must remain available.`);
+    return config;
+  });
+  for (const config of [...Object.values(WORKFLOW_CONFIGS), ...historicalConfigs]) {
     for (const state of [{}, { rows: [] }]) {
       const intel = createTemplateIntel(config, state);
       assert.equal(intel.describe().status, 'error', config.id);

@@ -589,7 +589,7 @@
   {
     "type": "function",
     "name": "loadWorkflow",
-    "description": "Open an available workflow onto the builder canvas, replacing whatever is currently open. Use an exact runnable ID from the workflow catalog or its pf-prefixed template ID (e.g. \"fapi\", \"pf-t1134\", \"pf-scope-service\"). Retired demos are unavailable. Loading does not execute the workflow.",
+    "description": "Open an available Tier 1 workflow onto the builder canvas, replacing whatever is currently open. Use an exact runnable ID from the workflow catalog or its pf-prefixed template ID (e.g. \"fapi\", \"pf-t1134\", \"pf-t106\"). Retired built-ins are unavailable. Loading does not execute the workflow.",
     "parameters": {
       "type": "object",
       "properties": {
@@ -657,7 +657,7 @@
   {
     "type": "function",
     "name": "openWorkflowBuilder",
-    "description": "Navigate to the visual workflow builder canvas. Optionally pass a workflowId to open a specific workflow OR a Sinaxe portfolio blueprint onto the canvas (e.g. \"pf-t1134\", \"pf-scope-service\", \"pf-eifel\", or a runnable id like \"fapi\"). Use this when the user wants to see/open/edit a blueprint.",
+    "description": "Navigate to the visual workflow builder canvas. Optionally pass a workflowId from the available Tier 1 catalog (e.g. \"pf-t1134\", \"pf-t106\", \"pf-eifel\", or a runnable id like \"fapi\"). Use this when the user wants to see/open/edit an available template. Retired built-ins are unavailable.",
     "parameters": {
       "type": "object",
       "properties": {

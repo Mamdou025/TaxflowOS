@@ -60,9 +60,12 @@ continuation items; these are adjustable design defaults, not user-confirmed
 numeric limits. Hide empty continuation/attention areas. In an active conversation,
 messages and action cards take priority over welcome content.
 
-The approved Scope design uses one centered orb-led entry point. Its summary
-shows the current company/year labels, selected workflow and unique selected
-sources; a fresh chat says **General chat**. One panel contains their controls,
+The approved Scope design uses one centered horizontal bar with the home-page
+orb at its left, scaled down for an active chat. Its visible items show the
+current company/year labels, selected workflow and unique selected sources;
+a fresh chat says **General chat**. The home-page hero keeps the larger orb.
+One panel expands beneath the bar in the page, without a modal or backdrop,
+and contains their controls,
 source readiness, active run versus draft identity, and collapsed historical
 evidence. Tools and agent/Computer controls have separate roles. No repeated
 Context strip or Context drawer is needed. Merely viewing a source does not

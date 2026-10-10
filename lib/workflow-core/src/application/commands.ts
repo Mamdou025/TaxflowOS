@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { validateWorkflowLibrary } from '@workspace/workflow-contracts/library';
 export { upgradeFapiApiSourceDraft } from './api-source-upgrade';
 import { LocalWorkflowSnapshotSchema as WorkflowDefinitionSchema } from '@workspace/workflow-contracts/generated-schemas';
-import type { PersonalWorkflow } from '@workspace/workflow-contracts/library-types';
+import type { PersonalWorkflow, WorkflowLibrary } from '@workspace/workflow-contracts/library-types';
 import type { WorkflowDefinition } from '@workspace/workflow-contracts/domain/workflow-types';
 import type { LocalToolRunnerResult } from '@workspace/workflow-contracts/execution-result';
 import type { DefinitionExecutor } from '../core/ports';
@@ -57,6 +57,25 @@ export function createWorkflow(
     versions: [],
     runs: [],
   };
+}
+
+/** Remove explicitly selected, unused drafts; historical records are never deletable here. */
+export function deleteUnusedWorkflowDrafts(
+  library: WorkflowLibrary,
+  ids: readonly string[],
+): WorkflowLibrary {
+  if (!ids.length || new Set(ids).size !== ids.length || ids.some((id) => !id.trim()))
+    throw new WorkflowCommandError('INVALID_REQUEST', 'Select distinct, exact workflow IDs to remove.');
+  for (const id of ids) {
+    const entry = library[id];
+    if (!entry || entry.id !== id)
+      throw new WorkflowCommandError('NOT_FOUND', `Workflow '${id}' is unavailable. Nothing was removed.`);
+    if (entry.versions.length || entry.sessions?.length || entry.runs.length)
+      throw new WorkflowCommandError('CONFLICT', `Workflow '${id}' has saved history and cannot be removed as an unused draft.`);
+  }
+  const next = { ...library };
+  for (const id of ids) delete next[id];
+  return next;
 }
 
 export function replaceDraft(

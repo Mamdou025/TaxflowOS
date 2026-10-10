@@ -1,5 +1,6 @@
 import type { WorkflowLibrary } from '@workspace/workflow-contracts/library-types';
 import { validateWorkflowLibrary } from '@workspace/workflow-contracts/library';
+import { deleteUnusedWorkflowDrafts } from '@workspace/workflow-core/commands';
 import {
   RecoveryCodeSchema,
   RevisionSchema,
@@ -22,6 +23,19 @@ type Dependencies = {
   cancel?: (timer: Timer) => void;
 };
 
+// Compare decoded JSON without constructing another potentially large backup string.
+function sameData(left: unknown, right: unknown): boolean {
+  if (Object.is(left, right)) return true;
+  if (!left || !right || typeof left !== 'object' || typeof right !== 'object') return false;
+  if (left instanceof Date || right instanceof Date)
+    return left instanceof Date && right instanceof Date && left.getTime() === right.getTime();
+  if (Array.isArray(left) !== Array.isArray(right)) return false;
+  const a = left as Record<string, unknown>;
+  const b = right as Record<string, unknown>;
+  const keys = Object.keys(a);
+  return keys.length === Object.keys(b).length && keys.every((key) => Object.hasOwn(b, key) && sameData(a[key], b[key]));
+}
+
 /** One instance owns one workspace session; React and browser globals are adapters. */
 export function createWorkflowSyncService(deps: Dependencies) {
   const parseCode = deps.parseCode ?? ((value: string) => RecoveryCodeSchema.parse(value));
@@ -39,6 +53,8 @@ export function createWorkflowSyncService(deps: Dependencies) {
   let conflict = false;
   let openSequence = 0;
   let currentMeta: Meta | undefined;
+  let deleting = false;
+  let deletionSequence = 0;
 
   function meta(): Meta {
     if (currentMeta) return currentMeta;
@@ -85,14 +101,14 @@ export function createWorkflowSyncService(deps: Dependencies) {
   function queueSave() {
     generation++;
     saveMeta({ ...meta(), dirty: true });
-    if (conflict) return;
+    if (conflict || deleting) return;
     status('Saving changes…');
     cancelTimer();
     timer = schedule(() => void sync(), 700);
   }
   function sync(): Promise<void> {
     if (active) return active;
-    if (!read || !apply || conflict) return Promise.resolve();
+    if (!read || !apply || conflict || deleting) return Promise.resolve();
     const currentEpoch = epoch;
     const task = (async () => {
       try {
@@ -148,6 +164,7 @@ export function createWorkflowSyncService(deps: Dependencies) {
     return active;
   }
   async function open(code: string) {
+    if (deleting) throw new Error('Wait for the selected draft removal before opening another workspace.');
     let valid: { data: string };
     try {
       valid = { data: parseCode(code.trim()) };
@@ -181,12 +198,76 @@ export function createWorkflowSyncService(deps: Dependencies) {
     apply?.(value);
     status('Saved to server');
   }
+
+  async function deleteUnusedDrafts(ids: readonly string[]) {
+    if (!read || !apply) throw new Error('Open the workspace before removing drafts.');
+    if (deleting) throw new Error('A draft removal is already in progress.');
+    const selected = [...ids];
+    deleteUnusedWorkflowDrafts(read(), selected);
+    const originals = new Map(selected.map((id) => [id, structuredClone(read!()[id])]));
+    const sequence = ++deletionSequence;
+    const currentEpoch = epoch;
+    const code = recoveryCode();
+    const check = () => {
+      if (sequence !== deletionSequence || epoch !== currentEpoch || recoveryCode() !== code)
+        throw new Error('The workspace changed. No local drafts were removed.');
+      for (const id of selected)
+        if (!sameData(read!()[id], originals.get(id)))
+          throw new Error('A selected draft changed. No local drafts were removed.');
+      deleteUnusedWorkflowDrafts(read!(), selected);
+    };
+    deleting = true;
+    ++openSequence;
+    cancelTimer();
+    let committed = false;
+    try {
+      // A previous full-library save must settle before taking the server revision.
+      await active;
+      check();
+      status('Removing selected unused drafts…');
+      const remote = await deps.client.read(code);
+      check();
+      const remoteLibrary = remote.payload === null ? {} : validateWorkflowLibrary(deps.decode(remote.payload));
+      const present = selected.filter((id) => Object.hasOwn(remoteLibrary, id));
+      const remainingRemote = present.length ? deleteUnusedWorkflowDrafts(remoteLibrary, present) : remoteLibrary;
+      const saved = await deps.client.save(code, {
+        payload: deps.encode(remainingRemote),
+        revision: remote.revision,
+      });
+      committed = true;
+      check();
+      const remainingLocal = deleteUnusedWorkflowDrafts(read(), selected);
+      const dirty = !sameData(remainingLocal, remainingRemote);
+      apply(remainingLocal);
+      generation++;
+      loaded = true;
+      conflict = false;
+      saveMeta({ revision: saved.revision, dirty });
+      status(dirty ? 'Selected drafts removed. Other local changes still need saving.' : 'Saved to server');
+      return { removedIds: selected, dirty };
+    } catch (error) {
+      if (sequence === deletionSequence && epoch === currentEpoch) {
+        if (committed || (error instanceof WorkflowStorageError && error.status === 409)) {
+          conflict = true;
+          saveMeta({ ...meta(), dirty: true });
+        }
+        status(committed
+          ? 'Server draft removal completed, but local work changed. Local data was kept. Export it before reloading the server copy.'
+          : error instanceof Error ? error.message : 'Draft removal failed. Local data was kept.');
+      }
+      throw error;
+    } finally {
+      deleting = false;
+      cancelTimer();
+    }
+  }
   return {
     initialize(get: () => WorkflowLibrary, set: (value: WorkflowLibrary) => void) {
       read = get;
       apply = set;
       void sync();
       return () => {
+        deletionSequence++;
         cancelTimer();
       };
     },
@@ -206,5 +287,6 @@ export function createWorkflowSyncService(deps: Dependencies) {
     queueSave,
     sync,
     open,
+    deleteUnusedDrafts,
   };
 }

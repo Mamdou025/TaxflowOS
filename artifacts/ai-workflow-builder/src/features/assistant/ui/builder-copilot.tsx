@@ -251,7 +251,7 @@ export function BuilderCopilot() {
 
   // GROUNDING — the Sinaxe portfolio blueprints, also loadable via loadWorkflow.
   useCopilotReadable({
-    description: 'The Sinaxe portfolio blueprints (Canadian Corporate Tax Workflow Portfolio + Platform Services) that can ALSO be opened onto the canvas with loadWorkflow, by workflowId (e.g. "pf-t1134", "pf-scope-service"). These are executable workpapers with explicit input contracts. Loading one replaces whatever is open.',
+    description: 'The available Tier 1 portfolio blueprints that can ALSO be opened onto the canvas with loadWorkflow, by workflowId (e.g. "pf-t1134", "pf-t106"). These are executable workpapers with explicit input contracts. Loading one replaces whatever is open.',
     value: PORTFOLIO_BLUEPRINTS,
   });
 
@@ -439,7 +439,7 @@ export function BuilderCopilot() {
   // Load a pre-built workflow onto the canvas (replaces what's open).
   useCopilotAction({
     name: 'loadWorkflow',
-    description: 'Open an available workflow onto the builder canvas, replacing whatever is currently open. Use an exact runnable ID from the workflow catalog or its pf-prefixed template ID (e.g. "fapi", "pf-t1134", "pf-scope-service"). Retired demos are unavailable. Loading does not execute the workflow.',
+    description: 'Open an available Tier 1 workflow onto the builder canvas, replacing whatever is currently open. Use an exact runnable ID from the workflow catalog or its pf-prefixed template ID (e.g. "fapi", "pf-t1134", "pf-t106"). Retired built-ins are unavailable. Loading does not execute the workflow.',
     followUp: false,
     parameters: [{ name: 'workflowId', type: 'string', description: 'id of the workflow or blueprint to open', required: true }],
     handler: async ({ workflowId }: { workflowId: string }) => {

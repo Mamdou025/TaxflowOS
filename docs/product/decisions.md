@@ -315,6 +315,38 @@ Opening must settle successfully or offer actionable failure recovery, without
 silently discarding saved messages, switching workflow versions or allowing an
 unsettled prior response to write into a new conversation.
 
+### Scope bar correction — 2026-10-10
+
+The user clarified that the orb must not open a modal. The active chat uses a
+horizontal Scope bar with the same home-page orb, smaller and positioned on the
+left, followed by the current company/year, sources and workflow. The bar remains
+centered over the chat column. Editors expand in the page; the home-page hero
+retains its larger branded mark. This changes presentation, not the context
+selection, calculation, permissions or persistence rules above.
+
+The user also requested a read-only review of workflow-block design against n8n
+and Vercel's workflow builder, aimed at tax professionals and general automation.
+Recommendations from that review do not approve removing block executors,
+changing calculation rules or replacing the workflow engine.
+
+## Tier 1 workflow catalog and saved-draft cleanup — 2026-10-10
+
+**Approved by the user.** Advertise only FAPI Calculation, T1134 Affiliate
+Reporting Workpaper, Foreign Affiliate Surplus Continuity Workpaper, T106
+Transaction Workpaper, EIFEL Fixed-Ratio Scenario Workpaper, T2 Taxable Income
+Bridge Workpaper, Corporate Tax Provision Workpaper and Part XIII Withholding
+Workpaper. Remove the other built-in templates from menus, runnable discovery
+and agent suggestions. Historical graphs retain their calculation executors.
+
+The user also explicitly authorized removing saved custom workflows outside
+those eight families. Inspection of the current local backup identified four
+such drafts, all without saved versions, sessions or runs: Scope Service,
+Data Readiness Service, Tax Attribute Continuity, and an empty New workflow.
+Keep the eleven saved Tier 1 copies, including imported and renamed FAPI
+variants. This is a cleanup of existing entries, not a permanent restriction on
+custom authoring or permission to delete historical versions and runs.
+See [implementation and verification](../tier1-workflow-cleanup.md).
+
 ## Deferred implementation decisions
 
 | Decision                                        | When to settle                  | Required evidence                                                         |

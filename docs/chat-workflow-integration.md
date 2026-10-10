@@ -287,3 +287,50 @@ user-provided reference workbook are not verified by isolated fixtures. The samp
 FAPI checks exercise the actual workflow engine with independently specified expected
 values and mocked external responses. Existing browser execution lifetime and local
 attachment limitations remain; this increment does not add durable background execution.
+
+## Scope bar correction — 2026-10-10
+
+The user requested a horizontal Scope bar with the home-page orb at the left,
+scaled down for an active chat, and explicitly rejected an overarching modal.
+The existing assistant UI owns this presentation change. The home-page hero
+keeps its larger mark; active and docked chats use the same component at a
+smaller size. Labels, source selection, workflow identity, review/calculation
+commands, permissions and storage formats retain their existing owners.
+
+The expanded controls now occupy normal page space beneath the centered bar.
+There is no backdrop or focus trap. Closing the panel preserves its unfinished
+form text; a conversation change resets the editors to that conversation.
+Sources and workflow navigation keep their prior meaning. Existing narrow-panel
+behavior is checked for regressions; this is a desktop Scope correction.
+
+At the start of this increment, Git already contained the Tier 1 catalog changes
+and unfinished saved-draft removal work. Those changes were preserved and are
+not part of the Scope correction. No saved workflow was deleted in this increment.
+
+### Files changed in this increment
+
+All paths below are repository-relative; each row describes only this increment,
+including where the file already had unrelated changes.
+
+| File                                                                             | Purpose and before/after behavior                                                                                                                                                                         |
+| -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `artifacts/ai-workflow-builder/src/features/assistant/ui/chat-scope-menu.tsx`    | Owns Scope composition. Replaces the modal with inline expansion, uses the existing orb at the left of the active-chat bar, preserves local editor text on collapse, and keeps exact workflow navigation. |
+| `artifacts/ai-workflow-builder/src/features/assistant/ui/chat-scope-menu.css`    | Owns Scope styling. Changes the stacked active-chat trigger to a horizontal bar and replaces overlay dimensions with a bounded inline panel. The hero retains its branding.                               |
+| `artifacts/ai-workflow-builder/src/features/assistant/ui/chat-context-strip.tsx` | Owns existing Scope forms. Updates its ownership comment from dialog to inline panel; no behavior change intended.                                                                                        |
+| `e2e/chat-context.spec.ts`                                                       | Verifies explicit context and restoration. Replaces modal expectations with inline-region checks, left-orb placement, shared orb identity, continued composer access and preserved editor drafts.         |
+| `e2e/assistant-ui-chat.spec.ts`                                                  | Verifies conversation interactions. Uses the inline Scope controls instead of the previous modal selectors; existing conversation expectations remain.                                                    |
+| `e2e/phase-7-navigation.spec.ts`                                                 | Verifies navigation/history. Selects the inline Scope region instead of the former dialog; prior navigation and history assertions remain.                                                                |
+| `e2e/source-library.spec.ts`                                                     | Verifies source attachment. Uses the inline Scope region while retaining source identity and attachment expectations.                                                                                     |
+| `docs/ARCHITECTURE.md`                                                           | Updates the implemented Scope owner and mounted-editor lifecycle. No application behavior change from this documentation.                                                                                 |
+| `docs/FUNCTIONALITY.md`                                                          | Describes the visible bar, inline controls and preservation of unfinished form text. No application behavior change from this documentation.                                                              |
+| `docs/product/navigation.md`                                                     | Updates the approved interaction sketch to a bar with inline expansion. No additional product behavior is authorized.                                                                                     |
+| `docs/product/decisions.md`                                                      | Records the user's no-modal correction and separates the requested block-design recommendations from implementation approval. No application behavior change from this documentation.                     |
+| `docs/chat-workflow-integration.md`                                              | Records this increment's scope, file meanings and verification limits. No application behavior change intended.                                                                                           |
+
+### Verification for this increment
+
+Verification is in progress. Results below will be updated from the actual runs.
+The earlier Tier 1 verification failed at a generated core-export type check;
+its earlier browser run timed out during cold startup before any test executed.
+Neither is evidence for the Scope change. The block-design review is read-only;
+no block removal, executor replacement or provider verification is claimed.

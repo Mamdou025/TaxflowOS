@@ -104,9 +104,13 @@ year are labels; selected source references retain their revisions and provenanc
 Chat uploads and Sources' **Use in this chat** share the same attachment boundary.
 Source restoration rejects changed or missing revisions instead of substituting
 another document. Local unsaved text has a bounded snapshot; local workbook rows
-still require the scoped browser cache. The centered orb-led `chat-scope-menu.tsx`
-composes one editing dialog for labels, source readiness/removal, exact active
+still require the scoped browser cache. The centered `chat-scope-menu.tsx` bar
+reuses the home-page orb at a smaller size on its left and expands controls in
+normal document flow, without a modal portal, backdrop or focus trap. It
+composes one inline editing panel for labels, source readiness/removal, exact active
 workflow or draft reference, previous work and historical retrieved evidence.
+Collapsing preserves mounted editor drafts; a conversation-epoch change resets
+the panel and its editors. The home-page hero retains the larger branded mark.
 The latter does not contribute to the unique selected-source count. The old
 permanent strip and separate Context drawer are removed; Sources owns library
 management. Explicit context is published through the v2 agent context owner and
@@ -332,9 +336,14 @@ independent of looking up an executor.
 ## Extending workflows
 
 The available built-in templates are registered in
-`src/shared/workflow-engine/runtime/workflow-runs/index.ts`. Its runnable snapshot
+`src/shared/workflow-engine/runtime/workflow-runs/index.ts`. The explicit active
+workpaper list in `templates/workpaper-catalog.ts` selects the seven Tier 1
+workpapers; FAPI is the eighth entry. This list supplies template definitions,
+runnable configurations, agent suggestions and workflow routing. The complete
+executor workpaper specifications remain available for historical graphs.
+The runnable snapshot
 resolver supplies the same executable graph to template consumers; portfolio
-metadata is not a substitute execution graph. Retired demo definitions remain
+metadata is not a substitute execution graph. Retired definitions remain
 internal fixtures and are excluded from new-work discovery. Saved personal
 definitions and immutable versions execute independently of catalog membership.
 

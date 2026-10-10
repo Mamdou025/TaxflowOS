@@ -1,4 +1,4 @@
-import { WORKPAPER_SPECS } from '@/shared/workflow-engine/portfolio-workpapers';
+import { AVAILABLE_WORKPAPER_SPECS } from '@/shared/workflow-engine/templates/workpaper-catalog';
 // ─────────────────────────────────────────────────────────────────────────────
 // Workflow catalog + per-workflow domain roles.
 //
@@ -23,7 +23,7 @@ export type Agent = {
 
 /** The workspace's workflow domains (Sina applies the matching one per turn). */
 export const AGENTS: Agent[] = [
-  ...WORKPAPER_SPECS.map(s => ({ id: s.id, name: s.name, role: s.purpose, workflow: s.id, live: true })),
+  ...AVAILABLE_WORKPAPER_SPECS.map(s => ({ id: s.id, name: s.name, role: s.purpose, workflow: s.id, live: true })),
   { id: 'fapi', name: 'FAPI', role: 'Foreign accrual property income', workflow: 'fapi', live: true },
 ];
 
@@ -36,6 +36,6 @@ export type WorkflowSuggestion = {
 
 /** Runnable procedures surfaced as suggestions in the composer + sidebar. */
 export const WORKFLOWS: WorkflowSuggestion[] = [
-  ...WORKPAPER_SPECS.map(s => ({ id: s.id, name: s.name, sub: s.purpose, ready: true })),
+  ...AVAILABLE_WORKPAPER_SPECS.map(s => ({ id: s.id, name: s.name, sub: s.purpose, ready: true })),
   { id: 'fapi', name: 'Calculate FAPI', sub: 'Foreign accrual property income', ready: true },
 ];

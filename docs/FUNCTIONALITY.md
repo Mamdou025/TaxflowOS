@@ -31,12 +31,17 @@ reports failure with Retry and New chat actions instead of waiting indefinitely.
 Retry targets the requested conversation, including when a different chat was
 previously active. An unsettled old agent run is not bypassed to start fresh.
 
-One centered, orb-led **Scope** menu shows this chat's company/year labels,
-selected workflow and unique selected-source count. An empty selection is
-**General chat**. The same panel edits labels, adds/removes sources and shows
+One centered **Scope** bar shows this chat's company/year labels,
+selected workflow and unique selected-source count, with a small version of the
+home-page orb at its left. The home-page hero retains the larger branded orb.
+The bar expands its controls directly beneath it without a modal or backdrop.
+An empty selection is **General chat**. The same inline panel edits labels,
+adds/removes sources and shows
 loading, unavailable and local-only states. It distinguishes an active saved run
 from a draft reference; earlier work and evidence are expandable history, not new
 selections. The separate Context button and repeated context strip are removed.
+Collapsing the panel preserves unfinished form text within the current chat;
+switching conversations resets the editors to that conversation's Scope.
 Chat and Sources both support adding text; a saved document can be added with
 **Use in this chat**.
 Selections restore with the conversation and are cleared for a new chat. Selecting
@@ -172,10 +177,11 @@ versions, saves an unsaved draft as a version if needed, then creates the replac
 version. The action rejects a changed target draft; opening the file alone does not
 replace it. Server saving and existing-run execution remain separate states.
 
-The new-work catalog contains 15 templates: FAPI and 14 workpapers for scope,
-tax-position summaries, data readiness, execution sequencing, ownership,
-attribute ledgers, portfolio operations, T1134, surplus, T106, EIFEL, T2,
-tax provisions and Part XIII. These require supplied records; their supported
+The new-work catalog contains eight Tier 1 templates: FAPI Calculation, T1134
+Affiliate Reporting, Foreign Affiliate Surplus Continuity, T106 Transaction,
+EIFEL Fixed-Ratio Scenario, T2 Taxable Income Bridge, Corporate Tax Provision
+and Part XIII Withholding. The seven latter entries are workpapers.
+These require supplied records; their supported
 scope is described below. Being executable does not imply a complete tax return
 or an independently determined tax position.
 
@@ -195,8 +201,14 @@ built-in catalog and Sina's suggestions. The builder no longer offers the Z,
 Expanded Mapping or FAPI sample demos, or the retired Roulement starter. A fresh
 builder opens blank; FAPI template choices open the executable calculation graph.
 Existing personal workflows, saved versions, runs and backups remain available,
-including copies originally made from retired templates. Internal calculation
+including copies originally made from retired templates unless deliberately
+removed. Scope, tax-position summary, data readiness, execution sequencing,
+ownership, attribute-ledger and portfolio-operations templates are also retired
+from new-work discovery. Their calculation tools remain available to saved graphs.
+Internal calculation
 fixtures remain for regression testing. Password-free guest access is unchanged.
+See [Tier 1 cleanup](tier1-workflow-cleanup.md) for the requested saved-draft
+cleanup and its preservation boundaries.
 
 Legacy FAPI, T1134 and Surplus chat links open their current workflow surfaces.
 Their old sample worksheets and inline field shortcuts are no longer advertised;

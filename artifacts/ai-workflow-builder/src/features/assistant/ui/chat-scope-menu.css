@@ -1,15 +1,25 @@
+.chat-scope {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  max-width: 640px;
+}
 .chat-scope-trigger {
   display: flex;
+  position: relative;
+  width: 100%;
   min-width: 0;
   max-width: 100%;
-  flex-direction: column;
   align-items: center;
-  gap: 5px;
-  padding: 4px 8px;
-  border: 0;
-  border-radius: 18px;
-  background: transparent;
+  gap: 12px;
+  padding: 10px 14px 10px 10px;
+  border: 1px solid var(--sx-hairline);
+  border-radius: 20px;
+  background: var(--sx-surface);
   color: var(--sx-ink);
+  text-align: left;
   cursor: pointer;
 }
 .chat-scope-trigger:hover .chat-scope-summary {
@@ -32,55 +42,105 @@
 }
 .chat-scope-summary {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
   min-width: 0;
   max-width: 100%;
   font-size: 11px;
   line-height: 1.5;
   color: var(--sx-muted);
 }
-.chat-scope-summary > span {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+.chat-scope-label {
+  color: var(--sx-ink);
+  font-size: 11px;
+  font-weight: 650;
 }
-.chat-scope-summary > svg {
+.chat-scope-values {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 7px;
+  min-width: 0;
+}
+.chat-scope-values > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.chat-scope-values > span + span::before {
+  content: '·';
+  margin-right: 7px;
+  color: var(--sx-muted);
+}
+.chat-scope-values > [data-scope-field='workflow'] {
+  color: var(--sx-body);
+}
+.chat-scope-chevron {
   flex-shrink: 0;
+  color: var(--sx-muted);
+  transition: transform 160ms;
+}
+.chat-scope-trigger[aria-expanded='true'] .chat-scope-chevron {
+  transform: rotate(180deg);
 }
 .chat-scope-trigger[data-hero] {
+  width: auto;
+  align-self: center;
+  flex-direction: column;
   gap: 8px;
   padding: 10px 8px;
+  border-color: transparent;
+  background: transparent;
+  text-align: center;
 }
 .chat-scope-trigger[data-hero] .chat-scope-summary {
+  align-items: center;
+  padding-right: 16px;
   font-size: 12px;
+}
+.chat-scope-trigger[data-hero] .chat-scope-values {
+  justify-content: center;
+}
+.chat-scope-trigger[data-hero] .chat-scope-chevron {
+  position: absolute;
+  right: 6px;
+  bottom: 12px;
 }
 .chat-scope-panel {
   display: flex;
   flex-direction: column;
-  width: min(560px, calc(100vw - 24px));
-  max-width: min(560px, calc(100vw - 24px));
-  max-height: min(820px, calc(100dvh - 32px));
+  width: 100%;
+  max-height: min(440px, 40dvh);
+  margin-top: 8px;
   gap: 0;
   padding: 0;
   overflow: hidden;
   border: 1px solid var(--sx-hairline);
-  border-radius: 22px;
+  border-radius: 18px;
   background: var(--sx-surface);
   color: var(--sx-body);
-  box-shadow: var(--sx-chat-shadow-out);
+}
+.chat-scope-panel[hidden] {
+  display: none;
+}
+.chat-scope[data-hero] .chat-scope-panel {
+  max-height: min(340px, 32dvh);
+}
+.cwp-chat-header:has(.chat-scope[data-expanded]) .cwp-header-actions {
+  align-self: start;
 }
 .chat-scope-panel-heading {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 22px 45px 20px 22px;
+  justify-content: space-between;
+  padding: 16px 18px;
   border-bottom: 1px solid var(--sx-hairline-subtle);
   flex-shrink: 0;
 }
 .chat-scope-panel-heading h2 {
-  font-size: 17px;
+  font-size: 14px;
   color: var(--sx-ink);
 }
 .chat-scope-panel-heading p {
@@ -92,7 +152,7 @@
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 4px 22px 20px;
+  padding: 0 18px 16px;
 }
 .chat-scope-section {
   padding: 18px 0;
@@ -373,16 +433,12 @@
   cursor: pointer;
 }
 @media (max-width: 480px) {
-  .chat-scope-panel {
-    max-height: calc(100dvh - 24px);
-    border-radius: 18px;
-  }
   .chat-scope-panel-heading {
-    padding: 19px 40px 17px 17px;
+    padding: 14px 12px;
     gap: 8px;
   }
   .chat-scope-panel-body {
-    padding: 3px 16px 16px;
+    padding: 0 12px 12px;
   }
   .chat-scope-label-form {
     grid-template-columns: minmax(0, 1fr) 108px;
@@ -394,5 +450,10 @@
   .chat-scope-trigger[data-hero] .chat-scope-orb > svg {
     width: 82px;
     height: 82px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chat-scope-chevron {
+    transition: none;
   }
 }

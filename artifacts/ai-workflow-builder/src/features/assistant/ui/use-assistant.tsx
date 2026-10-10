@@ -485,7 +485,7 @@ export function useAssistant() {
   useCopilotAction({
     name: 'openWorkflowBuilder',
     description:
-      'Navigate to the visual workflow builder canvas. Optionally pass a workflowId to open a specific workflow OR a Sinaxe portfolio blueprint onto the canvas (e.g. "pf-t1134", "pf-scope-service", "pf-eifel", or a runnable id like "fapi"). Use this when the user wants to see/open/edit a blueprint.',
+      'Navigate to the visual workflow builder canvas. Optionally pass a workflowId from the available Tier 1 catalog (e.g. "pf-t1134", "pf-t106", "pf-eifel", or a runnable id like "fapi"). Use this when the user wants to see/open/edit an available template. Retired built-ins are unavailable.',
     followUp: false,
     parameters: [
       {

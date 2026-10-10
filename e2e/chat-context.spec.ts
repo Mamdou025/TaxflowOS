@@ -242,30 +242,57 @@ async function expandContext(page: Page) {
   if (!(await strip(page).isVisible()))
     await page.getByRole('button', { name: 'Open Scope', exact: true }).click();
   await expect(
-    page.getByRole('dialog', { name: 'Scope for this chat', exact: true }),
+    page.getByRole('region', { name: 'Scope for this chat', exact: true }),
   ).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Scope for this chat', exact: true })).toHaveCount(
+    0,
+  );
+  await expect(page.locator('[data-slot="dialog-overlay"]')).toHaveCount(0);
 }
 async function closeContext(page: Page) {
-  if (await strip(page).isVisible()) await page.keyboard.press('Escape');
+  if (await strip(page).isVisible())
+    await strip(page).getByRole('button', { name: 'Close Scope', exact: true }).click();
   await expect(strip(page)).toBeHidden();
 }
-async function expectCenteredScope(page: Page) {
+async function expectScopeBar(page: Page) {
+  const bar = page.locator('[data-chat-scope-bar]');
   const trigger = page.locator('[data-chat-scope-trigger]');
+  const orb = bar.locator('[data-chat-scope-orb]');
   const panel = page.locator('[data-chat-panel]:visible');
+  await expect(bar).toHaveCount(1);
+  await expect(orb).toHaveCount(1);
   await expect(trigger).toHaveCount(1);
   await expect(trigger).toBeVisible();
   await expect(page.getByRole('button', { name: /^Context:/ })).toHaveCount(0);
   await expect(page.locator('details[data-chat-context]')).toHaveCount(0);
   await expect(page.locator('.cwp-chat-header [data-testid="work-menu"]')).toHaveCount(0);
-  await expect
-    .poll(async () => {
-      const control = await trigger.boundingBox();
-      const boundary = await panel.boundingBox();
-      expect(control).not.toBeNull();
-      expect(boundary).not.toBeNull();
-      return Math.abs(control!.x + control!.width / 2 - (boundary!.x + boundary!.width / 2));
-    })
-    .toBeLessThanOrEqual(3);
+  if ((await bar.getAttribute('data-hero')) !== null) {
+    await expect
+      .poll(async () => {
+        const control = await orb.boundingBox();
+        const boundary = await panel.boundingBox();
+        expect(control).not.toBeNull();
+        expect(boundary).not.toBeNull();
+        return Math.abs(control!.x + control!.width / 2 - (boundary!.x + boundary!.width / 2));
+      })
+      .toBeLessThanOrEqual(3);
+  } else {
+    await expect
+      .poll(async () => {
+        const marker = await orb.boundingBox();
+        const controls = await bar.locator('[data-chat-scope-summary]').boundingBox();
+        const boundary = await bar.boundingBox();
+        const chat = await panel.boundingBox();
+        if (!marker || !controls || !boundary || !chat) return false;
+        return (
+          Math.abs(boundary.x + boundary.width / 2 - (chat.x + chat.width / 2)) <= 3 &&
+          marker.x >= boundary.x &&
+          marker.x + marker.width <= controls.x &&
+          controls.x + controls.width <= boundary.x + boundary.width + 1
+        );
+      })
+      .toBe(true);
+  }
 }
 function explicitContext(input: Input) {
   const context = input.context?.filter(
@@ -292,11 +319,32 @@ for (const provider of ['sina', 'microsina'] as const) {
     await page.goto('/');
     await waitForChatUI(page);
     await expect(composer(page)).toBeEditable();
-    await expectCenteredScope(page);
+    await expectScopeBar(page);
+    const originalOrb = await page.locator('[data-chat-scope-orb]').elementHandle();
     await expandContext(page);
     await page.getByRole('textbox', { name: 'Company name' }).fill('Synthetic Maple');
     await page.getByRole('spinbutton', { name: 'Reporting year' }).fill('2025');
+    await closeContext(page);
+    await expandContext(page);
+    await expect(strip(page).getByRole('textbox', { name: 'Company name' })).toHaveValue(
+      'Synthetic Maple',
+    );
+    await expect(strip(page).getByRole('spinbutton', { name: 'Reporting year' })).toHaveValue(
+      '2025',
+    );
+    await strip(page).getByRole('textbox', { name: 'Company name' }).press('Escape');
+    await expect(strip(page)).toBeHidden();
+    await expandContext(page);
+    await expect(strip(page).getByRole('textbox', { name: 'Company name' })).toHaveValue(
+      'Synthetic Maple',
+    );
+    await expect(strip(page).getByRole('spinbutton', { name: 'Reporting year' })).toHaveValue(
+      '2025',
+    );
     await page.getByRole('button', { name: 'Apply to this chat' }).click();
+    await composer(page).focus();
+    await expect(composer(page)).toBeFocused();
+    await expect(strip(page)).toBeVisible();
     await closeContext(page);
     if (provider === 'microsina') {
       await page.getByRole('button', { name: /^Chat agent:/ }).click();
@@ -314,7 +362,7 @@ for (const provider of ['sina', 'microsina'] as const) {
     if (provider === 'sina') {
       const viewport = page.viewportSize();
       await page.setViewportSize({ width: 390, height: 844 });
-      await expectCenteredScope(page);
+      await expectScopeBar(page);
       await page.screenshot({ path: test.info().outputPath('scope-mobile-closed.png') });
       await expandContext(page);
       const bounds = await strip(page).boundingBox();
@@ -322,7 +370,14 @@ for (const provider of ['sina', 'microsina'] as const) {
       expect(bounds!.x).toBeGreaterThanOrEqual(0);
       expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(391);
       expect(bounds!.y).toBeGreaterThanOrEqual(0);
-      expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(844);
+      const trigger = await page.locator('[data-chat-scope-trigger]').boundingBox();
+      expect(bounds!.y).toBeGreaterThanOrEqual(trigger!.y + trigger!.height - 1);
+      expect(await strip(page).evaluate((element) => getComputedStyle(element).position)).not.toBe(
+        'fixed',
+      );
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+      ).toBe(true);
       await expect(strip(page).getByRole('textbox', { name: 'Company name' })).toHaveValue(
         'Synthetic Maple',
       );
@@ -333,18 +388,32 @@ for (const provider of ['sina', 'microsina'] as const) {
         'Ready',
       );
       await page.screenshot({ path: test.info().outputPath('chat-context-mobile.png') });
+      await composer(page).scrollIntoViewIfNeeded();
+      await composer(page).focus();
+      await expect(composer(page)).toBeFocused();
+      await expect(strip(page)).toBeVisible();
       await closeContext(page);
       if (viewport) await page.setViewportSize(viewport);
     }
     await composer(page).fill('Read my explicit context.');
     await composer(page).press('Enter');
     await expect(page.getByText('Context reply 1.', { exact: true })).toBeVisible();
-    await expectCenteredScope(page);
+    await expectScopeBar(page);
+    expect(
+      await originalOrb!.evaluate(
+        (element) => element === document.querySelector('[data-chat-scope-orb]'),
+      ),
+    ).toBe(true);
+    await originalOrb!.dispose();
     if (provider === 'sina') {
       await page.screenshot({ path: test.info().outputPath('scope-desktop-active.png') });
+      await expandContext(page);
+      await expectScopeBar(page);
+      await page.screenshot({ path: test.info().outputPath('scope-desktop-active-expanded.png') });
+      await closeContext(page);
       const viewport = page.viewportSize();
       await page.setViewportSize({ width: 390, height: 844 });
-      await expectCenteredScope(page);
+      await expectScopeBar(page);
       await page.screenshot({ path: test.info().outputPath('scope-mobile-active.png') });
       if (viewport) await page.setViewportSize(viewport);
     }

@@ -1,4 +1,5 @@
 export const maintainedPaths = [
+  'artifacts/ai-workflow-builder/src/shared/workflow-engine/templates/workpaper-catalog.ts',
   'artifacts/ai-workflow-builder/src/features/assistant/runtime/chat/chat-transition.ts',
   'artifacts/ai-workflow-builder/src/features/assistant/ui/chat-scope-menu.tsx',
   'artifacts/ai-workflow-builder/src/features/assistant/ui/chat-scope-menu.css',

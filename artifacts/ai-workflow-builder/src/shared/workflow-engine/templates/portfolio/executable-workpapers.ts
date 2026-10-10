@@ -1,8 +1,6 @@
 import type { PortfolioWorkflowDef } from "./portfolio-workflows";
-import {
-  WORKPAPER_SPECS,
-  type WorkpaperSpec,
-} from "../../portfolio-workpapers";
+import type { WorkpaperSpec } from "../../portfolio-workpapers";
+import { AVAILABLE_WORKPAPER_SPECS } from "../workpaper-catalog";
 
 export function workpaperDefinition(spec: WorkpaperSpec): PortfolioWorkflowDef {
   return {
@@ -78,4 +76,4 @@ export function workpaperDefinition(spec: WorkpaperSpec): PortfolioWorkflowDef {
     ],
   };
 }
-export const EXECUTABLE_WORKPAPERS = WORKPAPER_SPECS.map(workpaperDefinition);
+export const EXECUTABLE_WORKPAPERS = AVAILABLE_WORKPAPER_SPECS.map(workpaperDefinition);

@@ -15,7 +15,7 @@ async function expandChatContext(page: Page) {
   if (!(await strip.isVisible()))
     await page.getByRole('button', { name: 'Open Scope', exact: true }).click();
   await expect(
-    page.getByRole('dialog', { name: 'Scope for this chat', exact: true }),
+    page.getByRole('region', { name: 'Scope for this chat', exact: true }),
   ).toBeVisible();
   return strip;
 }
@@ -418,7 +418,7 @@ test('a failed saved-source download is visible and preserves the current select
   await expect(context.locator('[data-context-source="kept-source"]')).toContainText(
     'kept-records.json',
   );
-  await page.keyboard.press('Escape');
+  await context.getByRole('button', { name: 'Close Scope', exact: true }).click();
   await page.getByRole('button', { name: 'Attach files', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Choose from Sources', exact: true }).click();
   await page.getByRole('button', { name: source.fileName, exact: true }).click();

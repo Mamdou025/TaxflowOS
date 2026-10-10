@@ -11,6 +11,7 @@ import { LOCAL_TOOL_REGISTRY } from '../../lib/workflow-executors/src/tools/regi
 import {
   executeLegacyTemplateCommand,
   resolveLegacyTemplate,
+  RETIRED_WORKPAPER_IDS,
 } from '../fixtures/legacy-template-runtime';
 
 test('every registered browser tool is admitted by the server executor', () => {
@@ -26,11 +27,13 @@ test('every registered browser tool is admitted by the server executor', () => {
 
 test('current and retired template snapshots retain outputs, errors and provenance on the server', (t) => {
   t.mock.timers.enable({ apis: ['Date'], now: new Date('2026-09-15T12:00:00Z') });
-  const historicalConfigs = ['document-calculator', 'expense'].map((id) => {
-    const config = resolveLegacyTemplate(id);
-    assert.ok(config, `Historical fixture ${id} must remain available.`);
-    return config;
-  });
+  const historicalConfigs = ['document-calculator', 'expense', ...RETIRED_WORKPAPER_IDS].map(
+    (id) => {
+      const config = resolveLegacyTemplate(id);
+      assert.ok(config, `Historical fixture ${id} must remain available.`);
+      return config;
+    },
+  );
   for (const config of [...Object.values(WORKFLOW_CONFIGS), ...historicalConfigs]) {
     const execute = historicalConfigs.includes(config)
       ? executeLegacyTemplateCommand

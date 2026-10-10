@@ -36,6 +36,11 @@ import {
   stringifySharedJSON,
   parseSharedJSON,
 } from '../../artifacts/ai-workflow-builder/src/shared/workflow-engine/shared-json';
+import {
+  executeLegacyTemplateCommand,
+  resolveLegacyTemplate,
+  RETIRED_WORKPAPER_IDS,
+} from '../fixtures/legacy-template-runtime';
 
 function entry(): PersonalWorkflow {
   return saveVersion({
@@ -157,10 +162,27 @@ test('storage client rejects invalid server revisions', async () => {
   await assert.rejects(client.read('a'.repeat(64)));
 });
 
-test('all executable templates roundtrip their actual graph results through validated storage', () => {
-  assert.equal(Object.keys(WORKFLOW_CONFIGS).length, 15);
-  for (const config of Object.values(WORKFLOW_CONFIGS)) {
-    const command = executeWorkflowCommand({ workflowId: config.id, useSample: true });
+test('Tier 1 templates and all seven retired workpapers roundtrip their actual graph results through validated storage', () => {
+  assert.deepEqual(Object.keys(WORKFLOW_CONFIGS).sort(), [
+    'eifel',
+    'fapi',
+    'part-xiii',
+    'surplus',
+    't106',
+    't1134',
+    't2-suite',
+    'tax-provision',
+  ]);
+  const historicalConfigs = RETIRED_WORKPAPER_IDS.map((id) => {
+    const config = resolveLegacyTemplate(id);
+    assert.ok(config, `Historical fixture ${id} must remain available.`);
+    return config;
+  });
+  for (const config of [...Object.values(WORKFLOW_CONFIGS), ...historicalConfigs]) {
+    const execute = historicalConfigs.includes(config)
+      ? executeLegacyTemplateCommand
+      : executeWorkflowCommand;
+    const command = execute({ workflowId: config.id, useSample: true });
     assert.ok(command.core, config.id);
     assert.notEqual(
       command.core.status,

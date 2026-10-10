@@ -26,3 +26,4 @@ export const queueWorkflowSave = service.queueSave;
 export const syncWorkflowLibrary = service.sync;
 export const openWorkflowWorkspace = service.open;
 export const pauseWorkflowSync = service.pause;
+export const deleteUnusedWorkflowDraftsFromWorkspace = service.deleteUnusedDrafts;

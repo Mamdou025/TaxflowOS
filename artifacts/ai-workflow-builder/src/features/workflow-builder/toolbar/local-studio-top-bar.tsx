@@ -445,30 +445,32 @@ export function LocalStudioTopBar({
                       ['foundation', 'Sinaxe portfolio · Foundation'],
                       ['tier1', 'Sinaxe portfolio · Tier 1'],
                     ] as const
-                  ).map(([group, heading]) => (
-                    <Fragment key={group}>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuLabel className="text-xs text-muted-foreground">
-                        {heading}
-                      </DropdownMenuLabel>
-                      {PORTFOLIO_WORKFLOWS.filter((w) => w.group === group).map((w) => (
-                        <DropdownMenuItem
-                          key={w.id}
-                          className="flex flex-col items-start gap-0.5 py-2"
-                          onClick={() => {
-                            actions.handleLoadPortfolioWorkflow(w);
-                            updatePublishStatus('draft');
-                            setLatestPublishedVersion(null);
-                          }}
-                        >
-                          <span className="text-sm font-medium">
-                            {w.name.replace(/^Platform Services · /, '')}
-                          </span>
-                          <span className="text-xs text-muted-foreground">{w.sub}</span>
-                        </DropdownMenuItem>
-                      ))}
-                    </Fragment>
-                  ))}
+                  )
+                    .filter(([group]) => PORTFOLIO_WORKFLOWS.some((w) => w.group === group))
+                    .map(([group, heading]) => (
+                      <Fragment key={group}>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel className="text-xs text-muted-foreground">
+                          {heading}
+                        </DropdownMenuLabel>
+                        {PORTFOLIO_WORKFLOWS.filter((w) => w.group === group).map((w) => (
+                          <DropdownMenuItem
+                            key={w.id}
+                            className="flex flex-col items-start gap-0.5 py-2"
+                            onClick={() => {
+                              actions.handleLoadPortfolioWorkflow(w);
+                              updatePublishStatus('draft');
+                              setLatestPublishedVersion(null);
+                            }}
+                          >
+                            <span className="text-sm font-medium">
+                              {w.name.replace(/^Platform Services · /, '')}
+                            </span>
+                            <span className="text-xs text-muted-foreground">{w.sub}</span>
+                          </DropdownMenuItem>
+                        ))}
+                      </Fragment>
+                    ))}
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
               {legacyFx && (

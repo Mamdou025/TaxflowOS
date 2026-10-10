@@ -458,12 +458,16 @@ test('saved chat restoration keeps the normal shell and unlocks exactly the rest
     recovery.getByRole('button', { name: 'Start a new chat', exact: true }),
   ).toBeEnabled();
   await page.getByRole('button', { name: 'Open Scope', exact: true }).click();
-  const scope = page.getByRole('dialog', { name: 'Scope for this chat', exact: true });
+  const scope = page.getByRole('region', { name: 'Scope for this chat', exact: true });
   await expect(scope.getByRole('textbox', { name: 'Company name' })).toBeDisabled();
   await expect(scope.getByRole('spinbutton', { name: 'Reporting year' })).toBeDisabled();
   for (const name of ['Apply to this chat', 'Upload file', 'Add text'])
     await expect(scope.getByRole('button', { name, exact: true })).toBeDisabled();
-  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog', { name: 'Scope for this chat', exact: true })).toHaveCount(
+    0,
+  );
+  await expect(page.locator('[data-slot="dialog-overlay"]')).toHaveCount(0);
+  await scope.getByRole('button', { name: 'Close Scope', exact: true }).click();
   await expect(scope).toBeHidden();
   expect(state.reads).toEqual([savedThreadId, savedThreadId]);
   expect(state.runs).toHaveLength(0);
@@ -832,7 +836,7 @@ test('assistant-ui retries one failed text turn without repeating a completed to
   await expect(context.locator('[data-context-source="retry-selected-source"]')).toContainText(
     'Ready',
   );
-  await page.keyboard.press('Escape');
+  await context.getByRole('button', { name: 'Close Scope', exact: true }).click();
   await composer(page).fill(firstQuestion);
   await waitForSend(page);
   await composer(page).press('Enter');

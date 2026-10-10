@@ -19,9 +19,10 @@ development test cannot.
 The release gate runs it after the build and performance check. All external
 requests are blocked; its success does not verify live providers.
 
-The unit suite includes full output/warning/error/provenance parity for the 15
-available executable templates and admission coverage for every shared tool entry.
-Retired demonstration templates remain explicit test fixtures for independent
+The unit suite includes full output/warning/error/provenance parity for the eight
+available Tier 1 templates, the seven retired workpapers and two retired demos,
+plus admission coverage for every shared tool entry.
+Retired templates remain explicit test fixtures for independent
 arithmetic and saved-version compatibility; they are not public catalog entries.
 Database coverage also executes saved table rows through the durable worker.
 

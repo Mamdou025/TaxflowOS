@@ -1,0 +1,8 @@
+
+> workspace@0.0.0 test:workflow-reliability C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-browser-tests.mjs reliability "e2e/workflow-reliability.spec.ts" "e2e/workflow-run-persistence.spec.ts" "--grep" "all advertised workflows|invalid graphs and input|workpaper arithmetic|workflow menus show|imported retired-template|workpaper upload|an unstarted workflow|retired workflow routes"
+
+Test run 04a727d1-e71d667e-95cd-48e8-b06f-8f250d0ba294; reports and logs: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-e71d667e-95cd-48e8-b06f-8f250d0ba294
+Preparing the isolated browser dependency cache…
+browser-warmup exited 1; see C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-e71d667e-95cd-48e8-b06f-8f250d0ba294\browser-warmup.log
+ ELIFECYCLE  Command failed with exit code 1.

@@ -1,6 +1,26 @@
 import { test, expect } from './workflow-audit-isolation';
 import { openDocumentCalculationFixture } from './retired-workflow-fixtures';
 
+const tier1Ids = [
+  'eifel',
+  'fapi',
+  'part-xiii',
+  'surplus',
+  't106',
+  't1134',
+  't2-suite',
+  'tax-provision',
+];
+const retiredWorkpaperIds = [
+  'scope-service',
+  'tax-position-summary',
+  'data-readiness',
+  'platform-sequence',
+  'ownership-graph',
+  'attribute-ledgers',
+  'portfolio-ops',
+];
+
 test.beforeEach(async ({ page, baseURL }) => {
   await page.route(`${baseURL}/`, (route) =>
     route.fulfill({
@@ -49,7 +69,8 @@ test('all advertised workflows execute from chat data and export actual results'
     };
   });
   console.log(JSON.stringify(findings.runs.map(({ rows, exportData, ...r }) => r)));
-  expect(findings.runs).toHaveLength(15);
+  expect(findings.runs.map((run) => run.id).sort()).toEqual(tier1Ids);
+  expect(findings.catalog.sort()).toEqual(tier1Ids.map((id) => `pf-${id}`).sort());
   for (const run of findings.runs) {
     expect(run.errors, run.id).toEqual([]);
     expect(run.status, run.id).not.toBe('error');
@@ -66,7 +87,7 @@ test('all advertised workflows execute from chat data and export actual results'
 test('invalid graphs and input records cannot claim completion or substitute samples', async ({
   page,
 }) => {
-  const checks = await page.evaluate(async () => {
+  const checks = await page.evaluate(async (retiredIds) => {
     const { WORKFLOW_CONFIGS, runTemplateLoop, runToCompletion, initialRunState } =
       await import('/src/shared/workflow-engine/runtime/workflow-runs/index.ts');
     const { executeWorkflowCommand } =
@@ -107,6 +128,7 @@ test('invalid graphs and input records cannot claim completion or substitute sam
       { workflowId: 'holiday-payroll', useSample: true },
       { workflowId: 'document-calculator', useSample: true },
       { workflowId: 'expense', useSample: true },
+      ...retiredIds.map((workflowId) => ({ workflowId, useSample: true })),
     ]) {
       try {
         executeWorkflowCommand(args);
@@ -129,7 +151,7 @@ test('invalid graphs and input records cannot claim completion or substitute sam
       mappedAmounts: mapped.rows.map((r) => r.amount),
       blankDefault: parseHttpJsonConfig({ defaultAmount: null }).defaultAmount,
     };
-  });
+  }, retiredWorkpaperIds);
   for (const run of [checks.failure, checks.auto, checks.empty]) {
     expect(run.done).toBe(false);
     expect(run.blocker?.kind).toBe('error');
@@ -143,6 +165,7 @@ test('invalid graphs and input records cannot claim completion or substitute sam
     'holiday-payroll',
     'document-calculator',
     'expense',
+    ...retiredWorkpaperIds,
   ]);
   expect(checks.mappedAmounts).toEqual([1, 1]);
   expect(checks.blankDefault).toBeUndefined();
@@ -287,7 +310,7 @@ test('editing calculation inputs invalidates prior approval and sample previews 
   expect(state.ambiguous).toBe(true);
 });
 
-test('workflow menus exclude retired demos and a blank builder loads the executable FAPI template', async ({
+test('workflow menus show exactly eight Tier 1 templates and a blank builder loads executable FAPI', async ({
   page,
   baseURL,
 }) => {
@@ -301,6 +324,23 @@ test('workflow menus exclude retired demos and a blank builder loads the executa
     }),
   ).toHaveCount(0);
   await expect(page.getByText('Runnable demos', { exact: true })).toHaveCount(0);
+  const templates = page.getByRole('region', { name: 'Templates', exact: true });
+  expect((await templates.getByRole('button').allTextContents()).sort()).toEqual(
+    [
+      'FAPI Calculation',
+      'T1134 Affiliate Reporting Workpaper',
+      'Foreign Affiliate Surplus Continuity Workpaper',
+      'T106 Transaction Workpaper',
+      'EIFEL Fixed-Ratio Scenario Workpaper',
+      'T2 Taxable Income Bridge Workpaper',
+      'Corporate Tax Provision Workpaper',
+      'Part XIII Withholding Workpaper',
+    ].sort(),
+  );
+  await expect(templates.getByRole('region', { name: 'Foundation', exact: true })).toHaveCount(0);
+  await expect(
+    templates.getByRole('region', { name: 'Platform services', exact: true }),
+  ).toHaveCount(0);
   await page.getByRole('button', { name: 'New workflow', exact: true }).click();
   await expect(page.locator('.react-flow')).toBeVisible({ timeout: 30000 });
   // Blank workflows contain a Start trigger and no source, calculation or output blocks.
@@ -392,7 +432,42 @@ test('workpaper upload, run, business results and saved rerun agree in the app',
   baseURL,
 }, info) => {
   await page.unroute(`${baseURL}/`);
-  await page.goto('/w/pf-ownership-graph');
+  await page.goto('/w/pf-fapi');
+  const backup = await page.evaluate(async () => {
+    const { WORKPAPER_SPECS } = await import('/src/shared/workflow-engine/portfolio-workpapers.ts');
+    const { workpaperDefinition } =
+      await import('/src/shared/workflow-engine/templates/portfolio/executable-workpapers.ts');
+    const { createPortfolioWorkflow } =
+      await import('/src/shared/workflow-engine/workflow/templates/portfolio.ts');
+    const spec = WORKPAPER_SPECS.find((candidate) => candidate.id === 'ownership-graph')!;
+    const id = 'custom:historical-ownership-fixture';
+    return JSON.stringify({
+      [id]: {
+        id,
+        templateId: 'pf-ownership-graph',
+        draft: {
+          ...createPortfolioWorkflow(workpaperDefinition(spec)),
+          id,
+          name: 'Historical ownership fixture',
+        },
+        versions: [],
+        runs: [],
+      },
+    });
+  });
+  await page.getByLabel('Workflow storage status').click();
+  await page.getByLabel('Import workflow backup').setInputFiles({
+    name: 'historical-ownership.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(backup),
+  });
+  const imported = page.getByRole('button', {
+    name: 'Historical ownership fixture — Imported',
+    exact: true,
+  });
+  await expect(imported).toBeVisible();
+  await page.getByLabel('Workflow storage status').click();
+  await imported.click();
   await page.getByRole('button', { name: 'Run', exact: true }).first().click();
   await page.getByText('Test data — upload document or enter examples', { exact: true }).click();
   await page.getByLabel('Upload test document').setInputFiles({

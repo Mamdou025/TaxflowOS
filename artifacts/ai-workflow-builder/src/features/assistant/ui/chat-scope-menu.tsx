@@ -1,15 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ChevronDown, Workflow, X } from 'lucide-react';
 import { InScopeNeuMark } from '@/components/inscope-neu-mark';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-  DialogTrigger,
-} from '@/shared/ui/dialog';
 import { useRouter } from '@/lib/router';
 import type { WorkItem } from '@/lib/work-store';
 import { openWorkspaceWindowAtom } from '@/shared/stores/workspace-store';
@@ -46,31 +39,35 @@ export function ChatScopeMenu({
   const clearDraft = useSetAtom(selectedChatWorkflowAtom);
   const workflow = useChatWorkflowSummary();
   const [open, setOpen] = useState(false);
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const skipReturnFocus = useRef(false);
-  const returnToWorkflow = useRef(false);
+  const panelId = useId();
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const reducedMotion = useReducedMotion();
   useReconcileWorkHistory();
   useEffect(() => {
     setOpen(false);
   }, [epoch]);
   const sourceCount = new Set(context.sources.map((source) => source.id)).size;
-  const summary =
-    [
-      context.companyName,
-      context.year?.toString(),
-      sourceCount ? `${sourceCount} ${sourceCount === 1 ? 'source' : 'sources'}` : '',
-      workflow
+  const summaryItems = [
+    { id: 'company', label: context.companyName },
+    { id: 'year', label: context.year?.toString() },
+    {
+      id: 'sources',
+      label: sourceCount ? `${sourceCount} ${sourceCount === 1 ? 'source' : 'sources'}` : '',
+    },
+    {
+      id: 'workflow',
+      label: workflow
         ? `${workflow.name} · v${workflow.version} · ${workflow.status}`
         : context.workflowScope
           ? `${context.workflowScope.name} · Draft reference`
           : '',
-    ]
-      .filter(Boolean)
-      .join(' · ') || 'General chat';
-  const closeForNavigation = () => {
-    skipReturnFocus.current = true;
+    },
+  ].filter((item) => item.label);
+  const summary = summaryItems.map((item) => item.label).join(' · ') || 'General chat';
+  const closeForNavigation = () => setOpen(false);
+  const closeScope = () => {
     setOpen(false);
+    triggerRef.current?.focus();
   };
   const browseSources = () => {
     closeForNavigation();
@@ -79,73 +76,85 @@ export function ChatScopeMenu({
     router.push('/');
   };
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        if (next) skipReturnFocus.current = false;
-        setOpen(next);
+    <div
+      className="chat-scope"
+      data-chat-scope-bar
+      data-hero={hero || undefined}
+      data-expanded={open || undefined}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape' && open && !event.defaultPrevented) {
+          event.preventDefault();
+          event.stopPropagation();
+          closeScope();
+        }
       }}
     >
       <WorkMenuStyles />
-      <DialogTrigger asChild>
-        <button
-          type="button"
-          aria-label="Open Scope"
-          title={`Scope: ${summary}`}
-          className="chat-scope-trigger"
-          data-chat-scope-trigger
-          data-hero={hero || undefined}
-          data-compact={compact || undefined}
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-label={open ? 'Close Scope' : 'Open Scope'}
+        aria-expanded={open}
+        aria-controls={panelId}
+        title={`Scope: ${summary}`}
+        className="chat-scope-trigger"
+        data-chat-scope-trigger
+        data-hero={hero || undefined}
+        data-compact={compact || undefined}
+        onClick={() => setOpen((previous) => !previous)}
+      >
+        <motion.span
+          layoutId="scope-orb"
+          layout
+          transition={{ duration: reducedMotion ? 0 : 0.3 }}
+          className="chat-scope-orb"
+          data-chat-scope-orb
         >
-          <motion.span
-            layoutId="scope-orb"
-            layout
-            transition={{ duration: reducedMotion ? 0 : 0.3 }}
-            className="chat-scope-orb"
-            data-chat-scope-orb
-          >
-            <InScopeNeuMark
-              size={hero ? 100 : compact ? 44 : 50}
-              animate={!reducedMotion}
-              label="Scope"
-            />
-          </motion.span>
-          {hero && <span className="chat-scope-wordmark">InScope</span>}
-          <span className="chat-scope-summary" data-chat-scope-summary>
-            <span>{summary}</span>
-            <ChevronDown size={12} />
+          <InScopeNeuMark
+            size={hero ? 100 : compact ? 40 : 46}
+            animate={!reducedMotion}
+            label="Scope"
+          />
+        </motion.span>
+        {hero && <span className="chat-scope-wordmark">InScope</span>}
+        <span className="chat-scope-summary" data-chat-scope-summary>
+          {!hero && <span className="chat-scope-label">Scope</span>}
+          <span className="chat-scope-values">
+            {summaryItems.length ? (
+              summaryItems.map((item) => (
+                <span key={item.id} data-scope-field={item.id} title={item.label}>
+                  {item.label}
+                </span>
+              ))
+            ) : (
+              <span>General chat</span>
+            )}
           </span>
-        </button>
-      </DialogTrigger>
-      <DialogContent
+        </span>
+        <ChevronDown size={14} className="chat-scope-chevron" aria-hidden="true" />
+      </button>
+      <section
+        id={panelId}
+        role="region"
+        aria-label="Scope for this chat"
+        hidden={!open}
         className="chat-scope-panel"
         data-chat-scope-panel
         data-chat-context
-        onOpenAutoFocus={(event) => {
-          event.preventDefault();
-          titleRef.current?.focus();
-        }}
-        onCloseAutoFocus={(event) => {
-          if (!skipReturnFocus.current) return;
-          event.preventDefault();
-          if (returnToWorkflow.current) {
-            returnToWorkflow.current = false;
-            requestAnimationFrame(() => {
-              const card = document.getElementById('chat-workflow');
-              card?.scrollIntoView({ block: 'start', behavior: reducedMotion ? 'auto' : 'smooth' });
-              card?.focus({ preventScroll: true });
-            });
-          }
-        }}
       >
         <div className="chat-scope-panel-heading">
-          <InScopeNeuMark size={40} />
           <div>
-            <DialogTitle ref={titleRef} tabIndex={-1}>
-              Scope for this chat
-            </DialogTitle>
-            <DialogDescription>Choose what this conversation works with.</DialogDescription>
+            <h2>Scope for this chat</h2>
+            <p>Choose what this conversation works with.</p>
           </div>
+          <button
+            type="button"
+            className="chat-scope-icon-button"
+            aria-label="Close Scope"
+            onClick={closeScope}
+          >
+            <X size={16} />
+          </button>
         </div>
         <div className="chat-scope-panel-body">
           {locked && (
@@ -168,8 +177,15 @@ export function ChatScopeMenu({
                   <button
                     type="button"
                     onClick={() => {
-                      returnToWorkflow.current = true;
                       closeForNavigation();
+                      requestAnimationFrame(() => {
+                        const card = document.getElementById('chat-workflow');
+                        card?.scrollIntoView({
+                          block: 'start',
+                          behavior: reducedMotion ? 'auto' : 'smooth',
+                        });
+                        card?.focus({ preventScroll: true });
+                      });
                     }}
                   >
                     Return to workflow in chat
@@ -226,7 +242,7 @@ export function ChatScopeMenu({
             onNavigate={closeForNavigation}
           />
         </div>
-      </DialogContent>
-    </Dialog>
+      </section>
+    </div>
   );
 }

@@ -1,11 +1,11 @@
 import { createPortfolioWorkflow } from "@/shared/workflow-engine/workflow/templates/portfolio";
-import { WORKPAPER_SPECS } from "../../portfolio-workpapers";
+import { AVAILABLE_WORKPAPER_SPECS } from "../../templates/workpaper-catalog";
 import { workpaperDefinition } from "../../templates/portfolio/executable-workpapers";
 import type { TemplateConfig } from "./engine";
 
 export const BLUEPRINT_RUN_CONFIGS: Record<string, TemplateConfig> =
   Object.fromEntries(
-    WORKPAPER_SPECS.map((spec) => {
+    AVAILABLE_WORKPAPER_SPECS.map((spec) => {
       const prefix = `pf-${spec.id}--`;
       const config: TemplateConfig = {
         id: spec.id,
