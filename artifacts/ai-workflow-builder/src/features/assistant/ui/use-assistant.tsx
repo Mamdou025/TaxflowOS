@@ -63,11 +63,7 @@ import {
   resolveFieldId,
 } from '@/shared/stores/resource-registry';
 import { InlineFieldCard } from '@/features/assistant/workspace/inline-field-card';
-import {
-  WorkflowRunFlow,
-  WorkflowElementCard,
-  RunProposalCard,
-} from '@/features/assistant/workspace/workflow-run-flow';
+import { WorkflowElementCard } from '@/features/assistant/workspace/workflow-run-flow';
 import type { ComposerSuggestion } from '@/features/assistant/workspace/aside-thread';
 import {
   getWorkflowConfig,

@@ -3,6 +3,7 @@ const REFERENCE_START_REGEX = /[A-Za-z_]/;
 const WHITESPACE_REGEX = /\s/;
 const SUPPORTED_FORMULA_FUNCTIONS = new Set([
   'abs',
+  'if',
   'max',
   'max_subtract_zero',
   'min',
@@ -12,6 +13,7 @@ const SUPPORTED_FORMULA_FUNCTIONS = new Set([
 
 export type FormulaToken =
   | { text: string; type: 'comma'; value: ',' }
+  | { text: string; type: 'comparator'; value: '>' | '<' | '>=' | '<=' | '==' | '!=' }
   | { text: string; type: 'identifier'; value: string }
   | { text: string; type: 'number'; value: number }
   | { text: string; type: 'operator'; value: '+' | '-' | '*' | '/' }
@@ -58,6 +60,22 @@ export function tokenizeFormulaExpression(expression: string) {
       tokens.push({ text: character, type: 'operator', value: character });
       index += 1;
       continue;
+    }
+
+    if (character === '>' || character === '<' || character === '=' || character === '!') {
+      const twoChar = expression.slice(index, index + 2);
+      if (twoChar === '>=' || twoChar === '<=' || twoChar === '==' || twoChar === '!=') {
+        tokens.push({ text: twoChar, type: 'comparator', value: twoChar });
+        index += 2;
+        continue;
+      }
+      if (character === '>' || character === '<') {
+        tokens.push({ text: character, type: 'comparator', value: character });
+        index += 1;
+        continue;
+      }
+      // A bare '=' or '!' (not followed by '=') has no meaning in this grammar —
+      // fall through to the unsupported-character warning below rather than guess.
     }
 
     if (isDigit(character) || character === '.') {

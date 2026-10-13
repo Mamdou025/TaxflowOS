@@ -7,6 +7,11 @@ export type BlockCatalogItem = {
   label: string;
   description: string;
   defaultConfig: Record<string, unknown>;
+  /** Excluded from new-work discovery (the add-block picker) while its
+   *  runtime behavior doesn't yet match its label — e.g. Schedule/Webhook
+   *  triggers that don't actually schedule or receive events today. The
+   *  entry and its executor stay available for any saved graph using it. */
+  hidden?: boolean;
 };
 
 export const BLOCK_FAMILY_STAGE: Record<BlockFamily, FiscalStage> = {

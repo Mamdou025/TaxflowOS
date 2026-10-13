@@ -33,8 +33,8 @@ import { triggerFitViewAtom } from '@/shared/workflow-engine/state/workflow-stor
 import { builderBridgeAtom } from '@/lib/builder-bridge';
 import { getPage } from '@/shared/stores/resource-registry';
 import { usePageMenu, type PageMenuItem } from '@/shared/stores/page-menu-store';
-import { WorkflowRunFlow } from '@/features/assistant/workspace/workflow-run-flow';
 import { NEU } from '@/components/neumorphic-sidebar';
+import { Skeleton } from '@/shared/ui/skeleton';
 import { WorkflowOverview } from '@/features/workflows-hub/workflow-overview';
 import { GenericWorksheet } from '@/features/workflows-hub/generic-worksheet';
 import {
@@ -48,13 +48,18 @@ import {
 
 // Keep the library/overview independent of the canvas and execution screens.
 // Each boundary leaves the page menu and Chat mounted while its view loads.
+// Ghosts the canvas-plus-side-panel shape every tab eventually renders, so the
+// same wait reads as "assembling the view" instead of a blank, possibly-stuck page.
 const loadingWorkflowView = () => (
-  <div
-    role="status"
-    aria-label="Loading workflow view"
-    className="p-6 text-sm text-muted-foreground"
-  >
-    Loading workflow view…
+  <div role="status" aria-label="Loading workflow view" className="flex h-full flex-col gap-3 p-6">
+    <div className="flex items-center gap-3">
+      <Skeleton className="size-8 rounded-lg" />
+      <Skeleton className="h-5 w-48" />
+    </div>
+    <div className="grid min-h-0 flex-1 gap-3 sm:grid-cols-[minmax(0,1fr)_260px]">
+      <Skeleton className="h-full min-h-40 rounded-xl" />
+      <Skeleton className="h-full min-h-40 rounded-xl" />
+    </div>
   </div>
 );
 const InlineBuilder = dynamic(

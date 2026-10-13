@@ -4,6 +4,10 @@ import { sessionContext } from '@workspace/workflow-core/sessions';
 import { WorkflowSessionPanel } from '@/features/workflows-hub/workflow-session-panel';
 import { workflowLibraryAtom } from '@/features/workflows-hub/workflow-library';
 import {
+  projectFapiSessionWorksheet,
+  supportsFapiWorksheet,
+} from '@/features/workflows-hub/fapi-session-result';
+import {
   bindChatSession,
   chatSessionAtom,
   openWorkflowSession,
@@ -86,11 +90,26 @@ export function useChatWorkflowSummary() {
   const complete =
     steps.length > 0 &&
     steps.every((step) => ['success', 'warning', 'reviewed'].includes(step.status));
+  const definition = entry.versions.find(
+    (version) => version.number === session.version,
+  )?.definition;
+  // Read-only: the recorded GROSS line of a saved FAPI worksheet, when one is current.
+  // Never computed here — see fapi-session-result.ts's "read recorded results only" contract.
+  const sheet =
+    definition && supportsFapiWorksheet(definition)
+      ? projectFapiSessionWorksheet(definition, session)
+      : null;
+  const gross = sheet?.summary.find((row) => row.key === 'GROSS');
+  const headline =
+    sheet && gross?.cad.status === 'current' && typeof gross.cad.value === 'number'
+      ? {
+          label: gross.label,
+          value: `${gross.cad.value.toLocaleString('en-CA', { maximumFractionDigits: 0 })} ${sheet.reporting}`,
+        }
+      : undefined;
   return {
     ref: { workflowId: entry.id, runId: session.id },
-    name:
-      entry.versions.find((version) => version.number === session.version)?.definition.name ??
-      entry.draft.name,
+    name: definition?.name ?? entry.draft.name,
     version: session.version,
     status: session.endedAt
       ? 'Ended'
@@ -101,5 +120,6 @@ export function useChatWorkflowSummary() {
           : session.paused
             ? 'Paused'
             : 'Running',
+    headline,
   };
 }

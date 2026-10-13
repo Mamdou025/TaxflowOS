@@ -1,5 +1,6 @@
 import { createContext, type ReactNode } from 'react';
 import type { ChatAgent } from '@/shared/stores/chat-store';
+import type { ToolRunResult } from '../ui/tools-menu';
 
 export type ComposerSuggestion = {
   key: string;
@@ -34,4 +35,5 @@ export const AsideComposerContext = createContext<{
   agentSelectionDisabled?: boolean;
   armedTool?: ArmedComposerTool | null;
   setArmedTool?: (tool: ArmedComposerTool | null) => void;
+  onRunResult?: (result: ToolRunResult) => void;
 } | null>(null);

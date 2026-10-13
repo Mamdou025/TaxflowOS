@@ -28,7 +28,7 @@ import { agentConfigAtom, applyLiveConfig } from '@/features/assistant/runtime/a
 import { buildAgentCatalog } from '@/shared/stores/resource-registry';
 import { LC } from '@/lib/librechat-theme';
 
-import { ToolsMenu, ToolsMenuStyles, type ArmedTool } from './tools-menu';
+import { ToolsMenuStyles, type ArmedTool } from './tools-menu';
 import { ToolResultCard } from './tool-result-card';
 import { workItemsChronoAtom, type WorkItem } from '@/lib/work-store';
 import { type Assistant } from './use-assistant';
@@ -108,14 +108,10 @@ export function AssistantThreadStyles() {
       .cwp-run-halo { animation: cwp-run-halo 1.8s ease-out infinite; }
       .cwp-launch { transition: transform 160ms cubic-bezier(0.23,1,0.32,1); }
       .cwp-launch:hover { transform: translateY(-2px); }
-      .cwp-chat-header { display: grid; grid-template-columns: minmax(100px, 1fr) minmax(0, 640px) minmax(100px, 1fr); align-items: center; gap: 8px; padding: 12px; }
-      .cwp-chat-scope { grid-column: 2; min-width: 0; width: 100%; display: flex; justify-content: center; }
-      .cwp-header-actions { grid-column: 3; justify-self: end; }
+      .cwp-chat-header { display: flex; justify-content: center; align-items: center; padding: 12px; }
+      .cwp-chat-scope { min-width: 0; width: 100%; max-width: 640px; display: flex; justify-content: center; }
       @container chat-panel (max-width: 620px) {
-        .cwp-chat-header { grid-template-columns: minmax(0, 1fr); padding: 10px 12px; }
-        .cwp-chat-scope { grid-column: 1; }
-        .cwp-header-actions { grid-column: 1; }
-        .cwp-chat-header [data-testid="tools-menu-panel"] { position: fixed !important; top: 50% !important; left: 12px !important; right: 12px !important; width: auto !important; transform: translateY(-50%); max-height: min(70dvh, 440px) !important; }
+        .cwp-chat-header { padding: 10px 12px; }
       }
     `}</style>
   );
@@ -552,18 +548,6 @@ function AssistantThreadContent({
           <div className="cwp-chat-scope">
             <ChatScopeMenu compact={docked} hero={showHero && !docked} onOpenWork={onOpenWork} />
           </div>
-          <div
-            className="cwp-header-actions"
-            inert={recovering}
-            style={{ opacity: recovering ? 0.5 : 1 }}
-          >
-            <ToolsMenu
-              compact={docked}
-              onRunResult={launchPinToolResult}
-              onAsk={say}
-              onArm={setArmedTool}
-            />
-          </div>
         </div>
         <SavedChatRecovery assistant={assistant} />
         <div className="flex-1 min-h-0 flex flex-col">
@@ -587,6 +571,7 @@ function AssistantThreadContent({
               onCustomizeAgent: () => launchOpenPage('agent'),
               armedTool,
               setArmedTool,
+              onRunResult: launchPinToolResult,
             }}
           >
             <ThreadPrimitive.Root

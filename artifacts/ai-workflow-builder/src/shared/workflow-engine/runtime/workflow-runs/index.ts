@@ -1,10 +1,12 @@
 import type { TemplateConfig } from './engine';
 import { FAPI_CONFIG } from './fapi';
+import { FOREIGN_TAX_CALCULATOR_CONFIG } from './foreign-tax-calculator';
 import { BLUEPRINT_RUN_CONFIGS } from './blueprint-runs';
 
 // Registry of runnable workflows. Add a workflow = add a TemplateConfig here.
 export const WORKFLOW_CONFIGS: Record<string, TemplateConfig> = {
   fapi: FAPI_CONFIG,
+  'foreign-tax-calculator': FOREIGN_TAX_CALCULATOR_CONFIG,
   // Workpapers validate and calculate from the preparer's supplied records.
   ...BLUEPRINT_RUN_CONFIGS,
 };

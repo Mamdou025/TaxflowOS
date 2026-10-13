@@ -329,6 +329,37 @@ and Vercel's workflow builder, aimed at tax professionals and general automation
 Recommendations from that review do not approve removing block executors,
 changing calculation rules or replacing the workflow engine.
 
+**Proposed next steps; not approved defaults.** The read-only inventory found
+41 palette entries, with generic Calculation Engine defaults containing FAPI
+formulas and Manual Override Review using the FX-specific executor. Several
+source entries lack dedicated setup editors. Four AI entries replay pinned
+proposals through one executor. The workpaper executor reads one upstream
+source's configured rows; it does not yet accept arbitrary upstream output.
+These findings concern the current implementation, not the intended contract.
+
+Recommended order:
+
+1. Simplify new-work discovery into Start, Input form, Source, Prepare data,
+   Calculate, Validate, Approval, Workpaper and Export. Expose export formats
+   and validation rules as options; keep independently versioned rulebooks,
+   advanced controls and historical executor IDs. Move FAPI defaults into an
+   explicit preset. Only advertise scheduling, webhooks and integrations when
+   their actual runtime behavior matches the label.
+2. Standardize each block's inputs, logic, results and review view across Build,
+   Chat and Run. Broaden typed fields beyond numeric calculation inputs and
+   descriptive units. Keep formulas in executors and prescribed result layouts
+   in workflow definitions; Field worksheets should project recorded results.
+3. Add branching and versioned callable subworkflows with explicit input/output
+   contracts. Validate the shared design against both a tax workflow and a
+   general document-review workflow before expanding the palette again.
+
+The reference patterns are n8n's
+[field mapping](https://docs.n8n.io/data/data-mapping/data-mapping-ui/),
+[reusable subworkflows](https://docs.n8n.io/flow-logic/subworkflows/) and
+[development-only pinned data](https://docs.n8n.io/data/data-pinning/), plus
+[Vercel's visual editing and validation](https://vercel.com/blog/workflow-builder-build-your-own-workflow-automation-platform).
+These are design references, not a decision to replace the current runtime.
+
 ## Tier 1 workflow catalog and saved-draft cleanup — 2026-10-10
 
 **Approved by the user.** Advertise only FAPI Calculation, T1134 Affiliate
@@ -346,6 +377,28 @@ Keep the eleven saved Tier 1 copies, including imported and renamed FAPI
 variants. This is a cleanup of existing entries, not a permanent restriction on
 custom authoring or permission to delete historical versions and runs.
 See [implementation and verification](../tier1-workflow-cleanup.md).
+
+## Block palette redesign — compatibility override — 2026-10-10
+
+**Confirmed by the user, scoped.** Extending the read-only block-design
+review above ("Scope bar correction" section), the user authorized discarding
+backward compatibility for existing saved workflow **definitions and
+graphs** specifically to allow a cleaner block palette: "I have no problem
+with deleting all the current workflows as they are if it means building
+better blocks that I can use to rebuild them." This is a scoped override of
+the general `AGENTS.md` rule to preserve historical versions and
+saved-backup compatibility — it applies to this initiative only, and does
+not extend to already-uploaded company data, documents, or sources, which
+are unaffected. Confirm this scope reading once more before any deletion
+actually happens; nothing has been deleted as of this entry.
+
+The full consolidation design — current-to-target mapping for every
+executor, the Calculate block's formula-language gap (no conditional/
+comparison support today), the shared `<WorkflowBlockCard>` visual shell,
+and the Build-edit vs. Chat/Run-view behavior per tab — is recorded in
+[the block palette redesign document](../block-palette-redesign.md). That
+document is a design, not an implementation; it proceeds in the four phases
+listed there, each independently verified, not as one change.
 
 ## Deferred implementation decisions
 

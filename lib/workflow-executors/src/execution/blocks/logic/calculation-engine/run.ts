@@ -265,6 +265,9 @@ function applyFormulaFunction({
   const warnings: string[] = [];
   const evaluators: Record<string, () => number> = {
     abs: () => Math.abs(values[0] ?? 0),
+    // The condition is itself a formula value — nonzero is true, matching how
+    // a comparison (> < >= <= == !=) already reports its result as 1 or 0.
+    if: () => (values[0] !== 0 ? (values[1] ?? 0) : (values[2] ?? 0)),
     max: () => (values.length > 0 ? Math.max(...values) : 0),
     max_subtract_zero: () => Math.max((values[0] ?? 0) - (values[1] ?? 0), 0),
     min: () => (values.length > 0 ? Math.min(...values) : 0),
@@ -274,6 +277,7 @@ function applyFormulaFunction({
   };
   const arity: Record<string, [number, number]> = {
     abs: [1, 1],
+    if: [3, 3],
     max: [1, Infinity],
     min: [1, Infinity],
     max_subtract_zero: [2, 2],
@@ -324,7 +328,40 @@ function createFormulaParser({
     return token;
   };
 
-  const parseExpression = (): FormulaValue => parseAdditive();
+  const parseExpression = (): FormulaValue => parseComparison();
+
+  const COMPARATORS: Record<string, (a: number, b: number) => boolean> = {
+    '>': (a, b) => a > b,
+    '<': (a, b) => a < b,
+    '>=': (a, b) => a >= b,
+    '<=': (a, b) => a <= b,
+    '==': (a, b) => a === b,
+    '!=': (a, b) => a !== b,
+  };
+
+  // A comparison produces 1 or 0, same as any other formula value — so it
+  // slots into `if`'s first argument (or anywhere else) with no new type.
+  // Deliberately not chained (`a > b > c`) — that reads as ambiguous in most
+  // languages that don't special-case it, so at most one comparison per
+  // expression keeps the grammar unambiguous.
+  const parseComparison = (): FormulaValue => {
+    const left = parseAdditive();
+    const token = peek();
+    if (token?.type === 'comparator') {
+      const operator = consume();
+      if (operator?.type !== 'comparator') {
+        return left;
+      }
+      const right = parseAdditive();
+      const result = COMPARATORS[operator.value](left.value, right.value);
+      return mergeFormulaValues({
+        display: `(${left.display} ${operator.value} ${right.display})`,
+        value: result ? 1 : 0,
+        values: [left, right],
+      });
+    }
+    return left;
+  };
 
   const parseAdditive = (): FormulaValue => {
     let left = parseMultiplicative();

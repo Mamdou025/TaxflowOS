@@ -1,5 +1,3 @@
-
-
 // ─────────────────────────────────────────────────────────────────────────────
 // BuilderCopilot — headless per-page instrumentation for the Workflow Builder.
 //
@@ -25,13 +23,23 @@ import { useCopilotAction, useCopilotReadable } from '@copilotkit/react-core';
 import { nanoid } from 'nanoid';
 import { toast } from 'sonner';
 import { builderBridgeAtom } from '@/lib/builder-bridge';
-import { BLOCK_CATALOG } from "@/shared/workflow-engine/block-catalog-data";
-import { createWorkflowBlockFromCatalog, createWorkflowNodeFromBlock } from "@/shared/workflow-engine/workflow/block-factory";
-import { getBlockCatalogItem } from "@/shared/workflow-engine/workflow/visuals";
-import { PORTFOLIO_WORKFLOWS } from "@/shared/workflow-engine/templates/portfolio/portfolio-workflows";
-import { saveWorkflowDefinitionSnapshot } from "@/shared/workflow-engine/workflow/storage";
-import { workflowDefinitionToCanvas } from "@/shared/workflow-engine/workflow/canvas";
-import { buildRunnableWorkflowSnapshot, WORKFLOW_CONFIGS } from '@/shared/workflow-engine/runtime/workflow-runs';
+import { BLOCK_CATALOG } from '@/shared/workflow-engine/block-catalog-data';
+import {
+  createWorkflowBlockFromCatalog,
+  createWorkflowNodeFromBlock,
+} from '@/shared/workflow-engine/workflow/block-factory';
+import { getBlockCatalogItem } from '@/shared/workflow-engine/workflow/visuals';
+import { PORTFOLIO_WORKFLOWS } from '@/shared/workflow-engine/templates/portfolio/portfolio-workflows';
+import { saveWorkflowDefinitionSnapshot } from '@/shared/workflow-engine/workflow/storage';
+import {
+  createWorkflowDefinitionFromCanvas,
+  workflowDefinitionToCanvas,
+} from '@/shared/workflow-engine/workflow/canvas';
+import { describeWorkflowBlock } from '@workspace/workflow-core/block-summary';
+import {
+  buildRunnableWorkflowSnapshot,
+  WORKFLOW_CONFIGS,
+} from '@/shared/workflow-engine/runtime/workflow-runs';
 import { usePageChat } from '@/lib/page-chat-store';
 import {
   addNodeAtom,
@@ -66,12 +74,16 @@ function summarizeConfig(config: Record<string, unknown> | undefined): Record<st
 
 // Parse an LLM-supplied config value: JSON when it parses, otherwise the raw string.
 function parseValue(raw: string): unknown {
-  try { return JSON.parse(raw); } catch { return raw; }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return raw;
+  }
 }
 
 // The block types the chat may add, distilled from BLOCK_CATALOG once. `catalogId`
 // is what addBlock takes. Static — the catalog doesn't change at runtime.
-const CATALOG_SUMMARY = BLOCK_CATALOG.map((item) => ({
+const CATALOG_SUMMARY = BLOCK_CATALOG.filter((item) => !item.hidden).map((item) => ({
   catalogId: item.id,
   family: item.family,
   subtype: item.subtype,
@@ -127,9 +139,12 @@ function computeWorkflowHealth(nodes: WorkflowNode[], edges: WorkflowEdge[]) {
   const issues: string[] = [];
   if (!hasSource) issues.push('No Source block — the workflow has no evidence input.');
   if (!hasOutput) issues.push('No Output block — the workflow produces no final result.');
-  for (const b of notWiredIn) issues.push(`"${b.label}" has no incoming connection (not wired into the flow).`);
-  for (const b of noDownstream) issues.push(`"${b.label}" has no outgoing connection (its result feeds nothing downstream).`);
-  for (const id of danglingEdges) issues.push(`Edge ${id} references a block that no longer exists.`);
+  for (const b of notWiredIn)
+    issues.push(`"${b.label}" has no incoming connection (not wired into the flow).`);
+  for (const b of noDownstream)
+    issues.push(`"${b.label}" has no outgoing connection (its result feeds nothing downstream).`);
+  for (const id of danglingEdges)
+    issues.push(`Edge ${id} references a block that no longer exists.`);
 
   return { familyCounts, hasSource, hasOutput, notWiredIn, noDownstream, issues };
 }
@@ -147,11 +162,21 @@ function WorkflowGlance() {
     <div style={{ padding: '14px 16px', color: '#27272a' }}>
       <div style={{ fontSize: 13.5, fontWeight: 650 }}>{name || 'Untitled workflow'}</div>
       <div style={{ fontSize: 12, color: '#71717a', marginTop: 2 }}>
-        {nodes.length} block{nodes.length === 1 ? '' : 's'} · {edges.length} connection{edges.length === 1 ? '' : 's'}
+        {nodes.length} block{nodes.length === 1 ? '' : 's'} · {edges.length} connection
+        {edges.length === 1 ? '' : 's'}
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
         {families.map(([fam, n]) => (
-          <span key={fam} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 999, background: 'rgba(0,0,0,0.05)', color: '#3f3f46' }}>
+          <span
+            key={fam}
+            style={{
+              fontSize: 11,
+              padding: '2px 8px',
+              borderRadius: 999,
+              background: 'rgba(0,0,0,0.05)',
+              color: '#3f3f46',
+            }}
+          >
             {fam} · {n}
           </span>
         ))}
@@ -164,7 +189,17 @@ function WorkflowGlance() {
             <div style={{ fontSize: 11, fontWeight: 600, color: '#b45309', marginBottom: 4 }}>
               {health.issues.length} issue{health.issues.length === 1 ? '' : 's'}
             </div>
-            <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, color: '#71717a', display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <ul
+              style={{
+                margin: 0,
+                paddingLeft: 16,
+                fontSize: 12,
+                color: '#71717a',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2,
+              }}
+            >
               {health.issues.slice(0, 6).map((issue) => (
                 <li key={issue}>{issue}</li>
               ))}
@@ -197,19 +232,30 @@ export function BuilderCopilot() {
   const connectBlocks = useSetAtom(connectBlocksAtom);
   const deleteNode = useSetAtom(deleteNodeAtom);
 
+  // Structural, non-canvas view of the same nodes/edges — what describeWorkflowBlock
+  // needs to cross-reference a Workpaper's declared lines to their calculator blocks.
+  const definition = createWorkflowDefinitionFromCanvas({
+    name: workflowName || 'Workflow',
+    nodes,
+    edges,
+  });
   const blocks = nodes.map((n) => ({
     id: n.id,
     label: n.data?.label ?? n.id,
     family: n.data?.block?.family,
     subtype: n.data?.block?.subtype,
     status: n.data?.status ?? 'idle',
+    // Derived from the block's real formula/worksheet config, not hand-typed —
+    // can't drift from what the block actually does. See block-summary.ts.
+    summary: n.data?.block ? describeWorkflowBlock(n.data.block, definition) : undefined,
   }));
   const selectedNode = nodes.find((n) => n.id === selectedId) ?? null;
   const health = computeWorkflowHealth(nodes, edges);
 
   // The whole workflow on the canvas — name, block roster, wiring, selection.
   useCopilotReadable({
-    description: 'The workflow currently open in the Workflow Builder canvas: its name, whether it has unsaved changes, every block (id, label, family, subtype, status), the connections between blocks, and which block is selected. This is what the user is building right now.',
+    description:
+      'The workflow currently open in the Workflow Builder canvas: its name, whether it has unsaved changes, every block (id, label, family, subtype, status, and a plain-language summary of what it actually computes/displays), the connections between blocks, and which block is selected. This is what the user is building right now.',
     value: {
       workflowName,
       unsavedChanges: unsaved,
@@ -222,7 +268,8 @@ export function BuilderCopilot() {
 
   // The selected block ("the thing they clicked on") in full detail.
   useCopilotReadable({
-    description: 'The block the user has selected/clicked in the builder, with its editable config. Null when nothing is selected. Use this to answer "what is this block / what does it do" and to edit the right block.',
+    description:
+      'The block the user has selected/clicked in the builder, with its editable config. Null when nothing is selected. Use this to answer "what is this block / what does it do" and to edit the right block.',
     value: selectedNode
       ? {
           id: selectedNode.id,
@@ -230,6 +277,9 @@ export function BuilderCopilot() {
           family: selectedNode.data?.block?.family,
           subtype: selectedNode.data?.block?.subtype,
           description: selectedNode.data?.block?.description,
+          summary: selectedNode.data?.block
+            ? describeWorkflowBlock(selectedNode.data.block, definition)
+            : undefined,
           status: selectedNode.data?.status,
           config: summarizeConfig(selectedNode.data?.config as Record<string, unknown> | undefined),
         }
@@ -239,25 +289,29 @@ export function BuilderCopilot() {
   // GROUNDING — the valid block types the chat may add via addBlock. The model
   // must pass one of these catalogId values; families group them.
   useCopilotReadable({
-    description: 'The catalog of block types that can be added to the builder with the addBlock action. Each entry has a catalogId (pass this to addBlock), family, subtype, label and description. Only these catalogIds are valid.',
+    description:
+      'The catalog of block types that can be added to the builder with the addBlock action. Each entry has a catalogId (pass this to addBlock), family, subtype, label and description. Only these catalogIds are valid.',
     value: CATALOG_SUMMARY,
   });
 
   // GROUNDING — the pre-built (runnable) workflows the chat can open with loadWorkflow.
   useCopilotReadable({
-    description: 'The available runnable workflows that can be opened onto the canvas with the loadWorkflow action, by workflowId (FAPI and the portfolio workpapers). Use the exact IDs listed here. Loading one replaces whatever is currently open and does not execute it.',
+    description:
+      'The available runnable workflows that can be opened onto the canvas with the loadWorkflow action, by workflowId (FAPI and the portfolio workpapers). Use the exact IDs listed here. Loading one replaces whatever is currently open and does not execute it.',
     value: BUILT_WORKFLOWS,
   });
 
   // GROUNDING — the Sinaxe portfolio blueprints, also loadable via loadWorkflow.
   useCopilotReadable({
-    description: 'The available Tier 1 portfolio blueprints that can ALSO be opened onto the canvas with loadWorkflow, by workflowId (e.g. "pf-t1134", "pf-t106"). These are executable workpapers with explicit input contracts. Loading one replaces whatever is open.',
+    description:
+      'The available Tier 1 portfolio blueprints that can ALSO be opened onto the canvas with loadWorkflow, by workflowId (e.g. "pf-t1134", "pf-t106"). These are executable workpapers with explicit input contracts. Loading one replaces whatever is open.',
     value: PORTFOLIO_BLUEPRINTS,
   });
 
   // GROUNDING — live health/validation so the chat can flag + fix gaps proactively.
   useCopilotReadable({
-    description: "A live validation check of the open workflow: family counts, whether it has a Source and an Output, which blocks are not wired in / feed nothing downstream, and a human-readable list of issues. Use this to proactively tell the user what's incomplete and offer to fix it.",
+    description:
+      "A live validation check of the open workflow: family counts, whether it has a Source and an Output, which blocks are not wired in / feed nothing downstream, and a human-readable list of issues. Use this to proactively tell the user what's incomplete and offer to fix it.",
     value: health,
   });
 
@@ -269,7 +323,8 @@ export function BuilderCopilot() {
   // the workflow's structure/name changes (sig), so the chat hook stays quiet.
   const sig =
     nodes.map((n) => `${n.id}:${n.data?.label}:${n.data?.block?.family}`).join('|') +
-    '#' + edges.map((e) => `${e.source}>${e.target}`).join('|');
+    '#' +
+    edges.map((e) => `${e.source}>${e.target}`).join('|');
   usePageChat(
     {
       pageKey: 'workflow-builder',
@@ -285,7 +340,8 @@ export function BuilderCopilot() {
         {
           id: 'checkHealth',
           label: 'Check workflow health',
-          description: 'Return the structural issues in the open workflow (missing Source/Output, blocks not wired in or feeding nothing).',
+          description:
+            'Return the structural issues in the open workflow (missing Source/Output, blocks not wired in or feeding nothing).',
           run: () =>
             health.issues.length
               ? `Found ${health.issues.length} issue(s):\n- ${health.issues.join('\n- ')}`
@@ -303,7 +359,7 @@ export function BuilderCopilot() {
       ],
       Embed: WorkflowGlance,
     },
-    [workflowName, sig, blocks.length, edges.length, health.issues.length]
+    [workflowName, sig, blocks.length, edges.length, health.issues.length],
   );
 
   // ── Actions ──────────────────────────────────────────────────────────────────
@@ -311,9 +367,12 @@ export function BuilderCopilot() {
   // Select + scroll to + highlight a block by id.
   useCopilotAction({
     name: 'focusBlock',
-    description: 'Select a block on the builder canvas and scroll to + center + highlight it. Use when the user wants to go to / look at / work on a specific block. blockId must be one of the block ids from the builder-workflow context.',
+    description:
+      'Select a block on the builder canvas and scroll to + center + highlight it. Use when the user wants to go to / look at / work on a specific block. blockId must be one of the block ids from the builder-workflow context.',
     followUp: false,
-    parameters: [{ name: 'blockId', type: 'string', description: 'the block id to focus', required: true }],
+    parameters: [
+      { name: 'blockId', type: 'string', description: 'the block id to focus', required: true },
+    ],
     handler: async ({ blockId }: { blockId: string }) => {
       const node = nodes.find((n) => n.id === blockId);
       if (!node) return `No block "${blockId}" on the canvas.`;
@@ -327,12 +386,23 @@ export function BuilderCopilot() {
   // the inspector → autosaves + re-flows the engine).
   useCopilotAction({
     name: 'editBlockConfig',
-    description: 'Change one configuration value on a builder block. Use for "set the FX rate on the currency block to 1.5", "rename this block", etc. value is parsed as JSON when possible (numbers/booleans/objects), else kept as text. blockId + key must exist in the builder context.',
+    description:
+      'Change one configuration value on a builder block. Use for "set the FX rate on the currency block to 1.5", "rename this block", etc. value is parsed as JSON when possible (numbers/booleans/objects), else kept as text. blockId + key must exist in the builder context.',
     followUp: false,
     parameters: [
       { name: 'blockId', type: 'string', description: 'the block id to edit', required: true },
-      { name: 'key', type: 'string', description: 'the config key to set (e.g. "overrideRate", "label")', required: true },
-      { name: 'value', type: 'string', description: 'the new value (JSON-encoded where applicable)', required: true },
+      {
+        name: 'key',
+        type: 'string',
+        description: 'the config key to set (e.g. "overrideRate", "label")',
+        required: true,
+      },
+      {
+        name: 'value',
+        type: 'string',
+        description: 'the new value (JSON-encoded where applicable)',
+        required: true,
+      },
     ],
     handler: async ({ blockId, key, value }: { blockId: string; key: string; value: string }) => {
       const node = nodes.find((n) => n.id === blockId);
@@ -342,7 +412,10 @@ export function BuilderCopilot() {
       if (key === 'label') {
         updateNodeData({ id: blockId, data: { label: String(parsed) } });
       } else {
-        updateNodeData({ id: blockId, data: { config: { ...(node.data?.config ?? {}), [key]: parsed } } });
+        updateNodeData({
+          id: blockId,
+          data: { config: { ...(node.data?.config ?? {}), [key]: parsed } },
+        });
       }
       setSelectedNode(blockId);
       setFocusNode(blockId);
@@ -353,11 +426,22 @@ export function BuilderCopilot() {
   // Add a new block from the catalog onto the canvas.
   useCopilotAction({
     name: 'addBlock',
-    description: 'Add a new block to the builder canvas from the catalog. catalogId MUST be one of the catalogId values in the block-catalog context (e.g. "source:currency-rate", "logic:transformation", "output:canonical-json"). Optionally give it a label. Returns the new block id — use it with connectBlocks to wire it in.',
+    description:
+      'Add a new block to the builder canvas from the catalog. catalogId MUST be one of the catalogId values in the block-catalog context (e.g. "source:currency-rate", "logic:transformation", "output:canonical-json"). Optionally give it a label. Returns the new block id — use it with connectBlocks to wire it in.',
     followUp: false,
     parameters: [
-      { name: 'catalogId', type: 'string', description: 'catalog id of the block type to add (from the block-catalog context)', required: true },
-      { name: 'label', type: 'string', description: 'optional custom label for the block', required: false },
+      {
+        name: 'catalogId',
+        type: 'string',
+        description: 'catalog id of the block type to add (from the block-catalog context)',
+        required: true,
+      },
+      {
+        name: 'label',
+        type: 'string',
+        description: 'optional custom label for the block',
+        required: false,
+      },
     ],
     handler: async ({ catalogId, label }: { catalogId: string; label?: string }) => {
       if (!getBlockCatalogItem(catalogId)) {
@@ -382,13 +466,30 @@ export function BuilderCopilot() {
   // Connect two blocks (creates an edge source → target).
   useCopilotAction({
     name: 'connectBlocks',
-    description: 'Wire one block into another by creating a connection from sourceBlockId to targetBlockId (data flows source → target). Both ids must exist on the canvas (see the builder-workflow context).',
+    description:
+      'Wire one block into another by creating a connection from sourceBlockId to targetBlockId (data flows source → target). Both ids must exist on the canvas (see the builder-workflow context).',
     followUp: false,
     parameters: [
-      { name: 'sourceBlockId', type: 'string', description: 'the upstream block the connection comes FROM', required: true },
-      { name: 'targetBlockId', type: 'string', description: 'the downstream block the connection goes TO', required: true },
+      {
+        name: 'sourceBlockId',
+        type: 'string',
+        description: 'the upstream block the connection comes FROM',
+        required: true,
+      },
+      {
+        name: 'targetBlockId',
+        type: 'string',
+        description: 'the downstream block the connection goes TO',
+        required: true,
+      },
     ],
-    handler: async ({ sourceBlockId, targetBlockId }: { sourceBlockId: string; targetBlockId: string }) => {
+    handler: async ({
+      sourceBlockId,
+      targetBlockId,
+    }: {
+      sourceBlockId: string;
+      targetBlockId: string;
+    }) => {
       if (sourceBlockId === targetBlockId) return 'A block cannot be connected to itself.';
       const source = nodes.find((n) => n.id === sourceBlockId);
       const target = nodes.find((n) => n.id === targetBlockId);
@@ -406,9 +507,12 @@ export function BuilderCopilot() {
   // Delete a block (Source evidence is protected, mirroring the studio's rule).
   useCopilotAction({
     name: 'deleteBlock',
-    description: 'Delete a block from the canvas by id (also removes its connections). Source blocks are read-only evidence and cannot be deleted — add downstream Logic to correct them instead.',
+    description:
+      'Delete a block from the canvas by id (also removes its connections). Source blocks are read-only evidence and cannot be deleted — add downstream Logic to correct them instead.',
     followUp: false,
-    parameters: [{ name: 'blockId', type: 'string', description: 'the block id to delete', required: true }],
+    parameters: [
+      { name: 'blockId', type: 'string', description: 'the block id to delete', required: true },
+    ],
     handler: async ({ blockId }: { blockId: string }) => {
       const node = nodes.find((n) => n.id === blockId);
       if (!node) return `No block "${blockId}" on the canvas.`;
@@ -426,7 +530,9 @@ export function BuilderCopilot() {
     name: 'renameWorkflow',
     description: 'Rename the workflow currently open in the builder.',
     followUp: false,
-    parameters: [{ name: 'name', type: 'string', description: 'the new workflow name', required: true }],
+    parameters: [
+      { name: 'name', type: 'string', description: 'the new workflow name', required: true },
+    ],
     handler: async ({ name }: { name: string }) => {
       const trimmed = name.trim();
       if (!trimmed) return 'Workflow name cannot be empty.';
@@ -439,9 +545,17 @@ export function BuilderCopilot() {
   // Load a pre-built workflow onto the canvas (replaces what's open).
   useCopilotAction({
     name: 'loadWorkflow',
-    description: 'Open an available Tier 1 workflow onto the builder canvas, replacing whatever is currently open. Use an exact runnable ID from the workflow catalog or its pf-prefixed template ID (e.g. "fapi", "pf-t1134", "pf-t106"). Retired built-ins are unavailable. Loading does not execute the workflow.',
+    description:
+      'Open an available Tier 1 workflow onto the builder canvas, replacing whatever is currently open. Use an exact runnable ID from the workflow catalog or its pf-prefixed template ID (e.g. "fapi", "pf-t1134", "pf-t106"). Retired built-ins are unavailable. Loading does not execute the workflow.',
     followUp: false,
-    parameters: [{ name: 'workflowId', type: 'string', description: 'id of the workflow or blueprint to open', required: true }],
+    parameters: [
+      {
+        name: 'workflowId',
+        type: 'string',
+        description: 'id of the workflow or blueprint to open',
+        required: true,
+      },
+    ],
     handler: async ({ workflowId }: { workflowId: string }) => {
       const snapshot = buildRunnableWorkflowSnapshot(workflowId);
       if (!snapshot) {
@@ -454,7 +568,7 @@ export function BuilderCopilot() {
           ...node,
           selected: selected ? node.id === selected.id : false,
           data: { ...node.data, status: 'idle' as const },
-        }))
+        })),
       );
       setEdges(canvas.edges);
       setCurrentWorkflowName(snapshot.name);
@@ -486,7 +600,8 @@ export function BuilderCopilot() {
   // CopilotKit actions sharing a name collide, one silently shadowing the other.
   useCopilotAction({
     name: 'runBuilderWorkflow',
-    description: 'Run/execute the workflow currently open in the visual builder canvas (no arguments — it runs whatever is on the canvas). For running a NAMED workflow from the chat, use runWorkflow instead.',
+    description:
+      'Run/execute the workflow currently open in the visual builder canvas (no arguments — it runs whatever is on the canvas). For running a NAMED workflow from the chat, use runWorkflow instead.',
     followUp: false,
     parameters: [],
     handler: async () => {

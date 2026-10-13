@@ -32,7 +32,6 @@ function keywordRuleFromConfigRecord(
   return {
     categoryId,
     categoryLabel: String(record.categoryLabel || record.label || categoryId.replaceAll('_', ' ')),
-    comment: getStringField(record, 'comment'),
     containsKeywords,
     confidence: parseNumber(record.confidence) ?? 0.85,
     description: getStringField(record, 'description'),
@@ -43,15 +42,12 @@ function keywordRuleFromConfigRecord(
     matchMode: getKeywordRuleMatchMode(record.matchMode),
     ruleId: String(record.ruleId || record.id || `keyword-rule-${String(categoryId || index + 1)}`),
     sectionId: getStringField(record, 'sectionId'),
-    scope: getStringField(record, 'scope'),
     suggestedLine: getStringField(record, 'suggestedLine') || getStringField(record, 'lineId'),
     suggestedSection:
       getStringField(record, 'suggestedSection') || getStringField(record, 'sectionId'),
     suggestedSubsection:
       getStringField(record, 'suggestedSubsection') || getStringField(record, 'subsectionId'),
-    suggestedUse: getStringField(record, 'suggestedUse'),
     subsectionId: getStringField(record, 'subsectionId'),
-    tags: asStringArray(record.tags),
     target: getStringField(record, 'target'),
   };
 }

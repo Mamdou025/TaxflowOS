@@ -184,7 +184,11 @@ function BoundTasks({
     threadId,
   ]);
   useEffect(() => () => setProgress(emptyProgress), [setProgress]);
-  if (!conversations.length && !error) return null;
+  // Nothing to show for chats that have never used Mkoro: a background poll
+  // hiccup (e.g. a throttled timer in a backgrounded tab tripping its 15s
+  // timeout) must not surface a raw "signal timed out" card when there is no
+  // real task behind it. Only show the card once a conversation is confirmed.
+  if (!conversations.length) return null;
   return (
     <section className="mkoro-chat-tasks" aria-label="Mkoro tasks in this chat">
       <header>

@@ -1,10 +1,36 @@
 import path from 'path';
+import http from 'node:http';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 
 import { developmentRuntimeErrorOverlay } from './build/runtime-error-overlay';
+
+// Node's http.Server defaults to a 5s keepAliveTimeout, far shorter than the
+// frontend's own 60s session/workspace poll (see AuthProvider). On an idle
+// tab the browser's pooled keep-alive connection to this dev server outlives
+// that window, races the next poll's request, and the browser surfaces a bare
+// "TypeError: Failed to fetch" with no server-side error to point at. Keep
+// this comfortably above the longest known client idle gap.
+// Without an explicit agent, Vite's dev proxy opens a brand-new TCP
+// connection to the api-server for every single proxied request (Node's
+// default http.globalAgent has keepAlive: false) and forwards the resulting
+// "Connection: close" straight through to the browser. That means every
+// /api/* poll pays for a fresh handshake end-to-end instead of reusing one,
+// which is the main thing actually exposed to a flaky local network path.
+const apiKeepAliveAgent = new http.Agent({ keepAlive: true, maxSockets: 32 });
+
+function devServerKeepAlive(): Plugin {
+  return {
+    name: 'dev-server-keep-alive',
+    configureServer(server) {
+      if (!server.httpServer) return;
+      server.httpServer.keepAliveTimeout = 75_000;
+      server.httpServer.headersTimeout = 80_000;
+    },
+  };
+}
 
 const rawPort = process.env.PORT;
 
@@ -52,6 +78,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     developmentRuntimeErrorOverlay(),
+    devServerKeepAlive(),
     ...(process.env.NODE_ENV !== 'production' &&
     process.env.REPL_ID !== undefined
       ? [
@@ -218,10 +245,12 @@ export default defineConfig({
       '/.well-known': {
         target: process.env.API_BASE ?? `http://localhost:${process.env.API_SERVER_PORT ?? 8080}`,
         changeOrigin: true,
+        agent: apiKeepAliveAgent,
       },
       '/api': {
         target: process.env.API_BASE ?? `http://localhost:${process.env.API_SERVER_PORT ?? 8080}`,
         changeOrigin: true,
+        agent: apiKeepAliveAgent,
       },
     },
   },

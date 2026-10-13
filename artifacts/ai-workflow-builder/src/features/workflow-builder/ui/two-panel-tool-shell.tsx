@@ -1,23 +1,22 @@
-
-
-import { cn } from "@/lib/utils";
-import { useCallback, useRef, useState } from "react";
+import { cn } from '@/lib/utils';
+import { useCallback, useRef, useState } from 'react';
 
 const BADGE_STYLES = {
   source:
-    "bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800",
+    'bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800',
   logic:
-    "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950 dark:text-violet-300 dark:border-violet-800",
+    'bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950 dark:text-violet-300 dark:border-violet-800',
   review:
-    "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800",
-  default: "bg-muted/60 text-muted-foreground border-border",
+    'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800',
+  default: 'bg-muted/60 text-muted-foreground border-border',
 } as const;
 
 type BadgeVariant = keyof typeof BADGE_STYLES;
 
 export type TwoPanelToolShellProps = {
-  // Tool identity shown in the sub-header
-  title: string;
+  // Tool identity shown in the sub-header. Omit when an outer shell (e.g.
+  // WorkflowBlockCard) already shows identity, to avoid a duplicate header.
+  title?: string;
   subtitle?: string;
   badge?: string;
   badgeVariant?: BadgeVariant;
@@ -53,14 +52,14 @@ function usePanelResize(defaultPercent: number, minLeftPx: number) {
       };
 
       const onUp = () => {
-        window.removeEventListener("pointermove", onMove);
-        window.removeEventListener("pointerup", onUp);
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
       };
 
-      window.addEventListener("pointermove", onMove);
-      window.addEventListener("pointerup", onUp);
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
     },
-    [minLeftPx]
+    [minLeftPx],
   );
 
   return { leftPercent, containerRef, onHandlePointerDown };
@@ -70,7 +69,7 @@ export function TwoPanelToolShell({
   title,
   subtitle,
   badge,
-  badgeVariant = "default",
+  badgeVariant = 'default',
   leftPanel,
   rightPanel,
   defaultLeftPercent = 32,
@@ -79,36 +78,35 @@ export function TwoPanelToolShell({
 }: TwoPanelToolShellProps) {
   const { leftPercent, containerRef, onHandlePointerDown } = usePanelResize(
     defaultLeftPercent,
-    minLeftPx
+    minLeftPx,
   );
 
   return (
     <div className="flex h-full flex-col">
       {/* Sub-header: tool identity */}
-      <div className="flex shrink-0 items-center gap-2 border-b bg-muted/20 px-3 py-2">
-        <span className="truncate font-semibold text-sm">{title}</span>
-        {badge && (
-          <span
-            className={cn(
-              "shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide",
-              BADGE_STYLES[badgeVariant]
-            )}
-          >
-            {badge}
-          </span>
-        )}
-        {subtitle && (
-          <span className="ml-auto hidden shrink-0 text-[11px] text-muted-foreground sm:block">
-            {subtitle}
-          </span>
-        )}
-      </div>
+      {title && (
+        <div className="flex shrink-0 items-center gap-2 border-b bg-muted/20 px-3 py-2">
+          <span className="truncate font-semibold text-sm">{title}</span>
+          {badge && (
+            <span
+              className={cn(
+                'shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide',
+                BADGE_STYLES[badgeVariant],
+              )}
+            >
+              {badge}
+            </span>
+          )}
+          {subtitle && (
+            <span className="ml-auto hidden shrink-0 text-[11px] text-muted-foreground sm:block">
+              {subtitle}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Two-panel body */}
-      <div
-        className="flex min-h-0 flex-1 overflow-hidden"
-        ref={containerRef}
-      >
+      <div className="flex min-h-0 flex-1 overflow-hidden" ref={containerRef}>
         {/* Left panel — index / navigation */}
         <div
           className="flex shrink-0 flex-col overflow-y-auto border-r"
@@ -126,9 +124,7 @@ export function TwoPanelToolShell({
         />
 
         {/* Right panel — workspace */}
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          {rightPanel}
-        </div>
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">{rightPanel}</div>
       </div>
 
       {/* Optional footer */}

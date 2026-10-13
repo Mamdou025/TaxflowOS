@@ -1,7 +1,6 @@
 import { workspaceStorage } from '@/platform/auth/workspace-context';
 
-
-import { useAtomValue } from "jotai";
+import { useAtomValue } from 'jotai';
 import {
   Calculator,
   ChevronRight,
@@ -19,30 +18,25 @@ import {
   ShieldCheck,
   Upload,
   Zap,
-} from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Button } from "@/shared/ui/button";
+} from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Button } from '@/shared/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/shared/ui/dropdown-menu";
-import { Input } from "@/shared/ui/input";
-import { IntegrationIcon } from "@/platform/integrations/ui/integration-icon";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/shared/ui/tooltip";
-import { useIsTouch } from "@/hooks/use-touch";
-import { BLOCK_CATALOG } from "@/shared/workflow-engine/block-catalog-data";
-import { isLocalWorkflowId } from "@/shared/workflow-engine/workflow/visuals";
-import { cn } from "@/lib/utils";
-import { currentWorkflowIdAtom } from "@/shared/workflow-engine/state/workflow-store";
-import { getAllActions } from "@/plugins";
-import { PUBLIC_BLOCK_FAMILIES } from "@/shared/workflow-engine/domain/workflow/block-types";
+} from '@/shared/ui/dropdown-menu';
+import { Input } from '@/shared/ui/input';
+import { IntegrationIcon } from '@/platform/integrations/ui/integration-icon';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip';
+import { useIsTouch } from '@/hooks/use-touch';
+import { BLOCK_CATALOG } from '@/shared/workflow-engine/block-catalog-data';
+import { isLocalWorkflowId } from '@/shared/workflow-engine/workflow/visuals';
+import { cn } from '@/lib/utils';
+import { currentWorkflowIdAtom } from '@/shared/workflow-engine/state/workflow-store';
+import { getAllActions } from '@/plugins';
+import { PUBLIC_BLOCK_FAMILIES } from '@/shared/workflow-engine/domain/workflow/block-types';
 
 type ActionType = {
   id: string;
@@ -55,26 +49,22 @@ type ActionType = {
   subtype?: string;
 };
 
-function getConfigString(
-  config: Record<string, unknown>,
-  key: string
-): string | undefined {
+function getConfigString(config: Record<string, unknown>, key: string): string | undefined {
   const value = config[key];
-  return typeof value === "string" ? value : undefined;
+  return typeof value === 'string' ? value : undefined;
 }
 
 function getLocalActionSearchText(item: (typeof BLOCK_CATALOG)[number]) {
-  const sourceKind = getConfigString(item.defaultConfig, "sourceKind");
-  const toolId = getConfigString(item.defaultConfig, "toolId");
-  const outputs = getConfigString(item.defaultConfig, "outputs");
-  let rulebookAliases = "";
-  if (item.id === "source:keyword-rules") {
-    rulebookAliases =
-      "keyword rules keyword rulebook rule knowledge source category mapping";
+  const sourceKind = getConfigString(item.defaultConfig, 'sourceKind');
+  const toolId = getConfigString(item.defaultConfig, 'toolId');
+  const outputs = getConfigString(item.defaultConfig, 'outputs');
+  let rulebookAliases = '';
+  if (item.id === 'source:keyword-rules') {
+    rulebookAliases = 'keyword rules keyword rulebook rule knowledge source category mapping';
   }
-  if (item.id === "source:aggregation-rules") {
+  if (item.id === 'source:aggregation-rules') {
     rulebookAliases =
-      "aggregation rules calculation rules aggregation rulebook rollup rulebook formula rulebook rule knowledge source";
+      'aggregation rules calculation rules aggregation rulebook rollup rulebook formula rulebook rule knowledge source';
   }
 
   return [
@@ -90,59 +80,56 @@ function getLocalActionSearchText(item: (typeof BLOCK_CATALOG)[number]) {
     rulebookAliases,
   ]
     .filter(Boolean)
-    .join(" ");
+    .join(' ');
 }
 
 function getLocalActionCategory(item: (typeof BLOCK_CATALOG)[number]) {
-  if (
-    item.id === "source:keyword-rules" ||
-    item.id === "source:aggregation-rules"
-  ) {
-    return "Review / Validation";
+  if (item.id === 'source:keyword-rules' || item.id === 'source:aggregation-rules') {
+    return 'Review / Validation';
   }
   return item.family;
 }
 
-const LOCAL_BLOCK_ACTIONS: ActionType[] = BLOCK_CATALOG.map((item) => ({
-  id: item.id,
-  label: item.label,
-  description: item.description,
-  category: getLocalActionCategory(item),
-  searchText: getLocalActionSearchText(item),
-  sourceKind: getConfigString(item.defaultConfig, "sourceKind"),
-  subtype: item.subtype,
-}));
+const LOCAL_BLOCK_ACTIONS: ActionType[] = BLOCK_CATALOG.filter((item) => !item.hidden).map(
+  (item) => ({
+    id: item.id,
+    label: item.label,
+    description: item.description,
+    category: getLocalActionCategory(item),
+    searchText: getLocalActionSearchText(item),
+    sourceKind: getConfigString(item.defaultConfig, 'sourceKind'),
+    subtype: item.subtype,
+  }),
+);
 
 // System actions that don't have plugins
 const SYSTEM_ACTIONS: ActionType[] = [
   {
-    id: "HTTP Request",
-    label: "HTTP Request",
-    description: "Make an HTTP request to any API",
-    category: "System",
+    id: 'HTTP Request',
+    label: 'HTTP Request',
+    description: 'Make an HTTP request to any API',
+    category: 'System',
   },
   {
-    id: "Database Query",
-    label: "Database Query",
-    description: "Query your database",
-    category: "System",
+    id: 'Database Query',
+    label: 'Database Query',
+    description: 'Query your database',
+    category: 'System',
   },
   {
-    id: "Condition",
-    label: "Condition",
-    description: "Branch based on a condition",
-    category: "System",
+    id: 'Condition',
+    label: 'Condition',
+    description: 'Branch based on a condition',
+    category: 'System',
   },
 ];
 
 function getActionCategoryRank(category: string): number {
-  const blockIndex = (PUBLIC_BLOCK_FAMILIES as readonly string[]).indexOf(
-    category
-  );
+  const blockIndex = (PUBLIC_BLOCK_FAMILIES as readonly string[]).indexOf(category);
   if (blockIndex !== -1) {
     return blockIndex;
   }
-  if (category === "System") {
+  if (category === 'System') {
     return PUBLIC_BLOCK_FAMILIES.length;
   }
   return PUBLIC_BLOCK_FAMILIES.length + 1;
@@ -184,99 +171,82 @@ type ActionGridProps = {
   isNewlyCreated?: boolean;
 };
 
-function GroupIcon({
-  group,
-}: {
-  group: { category: string; actions: ActionType[] };
-}) {
+function GroupIcon({ group }: { group: { category: string; actions: ActionType[] } }) {
   // For plugin categories, use the integration icon from the first action
   const firstAction = group.actions[0];
   if (firstAction?.integration) {
-    return (
-      <IntegrationIcon
-        className="size-4"
-        integration={firstAction.integration}
-      />
-    );
+    return <IntegrationIcon className="size-4" integration={firstAction.integration} />;
   }
   // For System category
-  if (group.category === "System") {
+  if (group.category === 'System') {
     return <Settings className="size-4" />;
   }
-  if (group.category === "Trigger") {
+  if (group.category === 'Trigger') {
     return <Play className="size-4" />;
   }
-  if (group.category === "Source") {
+  if (group.category === 'Source') {
     return <FileText className="size-4" />;
   }
-  if (group.category === "Logic") {
+  if (group.category === 'Logic') {
     return <Calculator className="size-4" />;
   }
-  if (group.category === "Review / Validation") {
+  if (group.category === 'Review / Validation') {
     return <ShieldCheck className="size-4" />;
   }
-  if (group.category === "Field") {
+  if (group.category === 'Field') {
     return <LayoutList className="size-4" />;
   }
-  if (group.category === "Output") {
+  if (group.category === 'Output') {
     return <Upload className="size-4" />;
   }
-  if (group.category === "AI / Agent") {
+  if (group.category === 'AI / Agent') {
     return <PackageCheck className="size-4" />;
   }
   return <Zap className="size-4" />;
 }
 
-function ActionIcon({
-  action,
-  className,
-}: {
-  action: ActionType;
-  className?: string;
-}) {
-  if (action.category === "Review / Validation") {
-    return <ShieldCheck className={cn(className, "text-amber-500")} />;
+function ActionIcon({ action, className }: { action: ActionType; className?: string }) {
+  if (action.category === 'Review / Validation') {
+    return <ShieldCheck className={cn(className, 'text-amber-500')} />;
   }
-  if (action.id.startsWith("trigger:")) {
-    return <Play className={cn(className, "text-orange-500")} />;
+  if (action.id.startsWith('trigger:')) {
+    return <Play className={cn(className, 'text-orange-500')} />;
   }
-  if (action.id.startsWith("source:")) {
-    return <FileText className={cn(className, "text-sky-500")} />;
+  if (action.id.startsWith('source:')) {
+    return <FileText className={cn(className, 'text-sky-500')} />;
   }
-  if (action.id.startsWith("logic:")) {
-    return <Calculator className={cn(className, "text-emerald-500")} />;
+  if (action.id.startsWith('logic:')) {
+    return <Calculator className={cn(className, 'text-emerald-500')} />;
   }
-  if (action.id.startsWith("review:")) {
-    return <ShieldCheck className={cn(className, "text-amber-500")} />;
+  if (action.id.startsWith('review:')) {
+    return <ShieldCheck className={cn(className, 'text-amber-500')} />;
   }
-  if (action.id.startsWith("field:")) {
-    return <LayoutList className={cn(className, "text-violet-500")} />;
+  if (action.id.startsWith('field:')) {
+    return <LayoutList className={cn(className, 'text-violet-500')} />;
   }
-  if (action.id.startsWith("output:")) {
-    return <Upload className={cn(className, "text-indigo-500")} />;
+  if (action.id.startsWith('output:')) {
+    return <Upload className={cn(className, 'text-indigo-500')} />;
   }
-  if (action.id.startsWith("ai:")) {
-    return <Zap className={cn(className, "text-fuchsia-500")} />;
+  if (action.id.startsWith('ai:')) {
+    return <Zap className={cn(className, 'text-fuchsia-500')} />;
   }
   if (action.integration) {
-    return (
-      <IntegrationIcon className={className} integration={action.integration} />
-    );
+    return <IntegrationIcon className={className} integration={action.integration} />;
   }
-  if (action.category === "System") {
-    return <Settings className={cn(className, "text-muted-foreground")} />;
+  if (action.category === 'System') {
+    return <Settings className={cn(className, 'text-muted-foreground')} />;
   }
-  return <Zap className={cn(className, "text-muted-foreground")} />;
+  return <Zap className={cn(className, 'text-muted-foreground')} />;
 }
 
 // Local storage keys
-const HIDDEN_GROUPS_KEY = "workflow-action-grid-hidden-groups";
-const VIEW_MODE_KEY = "workflow-action-grid-view-mode";
+const HIDDEN_GROUPS_KEY = 'workflow-action-grid-hidden-groups';
+const VIEW_MODE_KEY = 'workflow-action-grid-view-mode';
 
-type ViewMode = "list" | "grid";
+type ViewMode = 'list' | 'grid';
 
 function getInitialHiddenGroups(): Set<string> {
-  if (typeof window === "undefined") {
+  if (typeof window === 'undefined') {
     return new Set();
   }
   try {
@@ -288,29 +258,21 @@ function getInitialHiddenGroups(): Set<string> {
 }
 
 function getInitialViewMode(): ViewMode {
-  if (typeof window === "undefined") {
-    return "list";
+  if (typeof window === 'undefined') {
+    return 'list';
   }
   try {
     const stored = workspaceStorage.getItem(VIEW_MODE_KEY);
-    return stored === "grid" ? "grid" : "list";
+    return stored === 'grid' ? 'grid' : 'list';
   } catch {
-    return "list";
+    return 'list';
   }
 }
 
-export function ActionGrid({
-  onSelectAction,
-  disabled,
-  isNewlyCreated,
-}: ActionGridProps) {
-  const [filter, setFilter] = useState("");
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
-    new Set()
-  );
-  const [hiddenGroups, setHiddenGroups] = useState<Set<string>>(
-    getInitialHiddenGroups
-  );
+export function ActionGrid({ onSelectAction, disabled, isNewlyCreated }: ActionGridProps) {
+  const [filter, setFilter] = useState('');
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [hiddenGroups, setHiddenGroups] = useState<Set<string>>(getInitialHiddenGroups);
   const [showHidden, setShowHidden] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>(getInitialViewMode);
   const currentWorkflowId = useAtomValue(currentWorkflowIdAtom);
@@ -319,7 +281,7 @@ export function ActionGrid({
   const isTouch = useIsTouch();
 
   const toggleViewMode = () => {
-    const newMode = viewMode === "list" ? "grid" : "list";
+    const newMode = viewMode === 'list' ? 'grid' : 'list';
     setViewMode(newMode);
     workspaceStorage.setItem(VIEW_MODE_KEY, newMode);
   };
@@ -423,22 +385,11 @@ export function ActionGrid({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                className="shrink-0"
-                onClick={toggleViewMode}
-                size="icon"
-                variant="ghost"
-              >
-                {viewMode === "list" ? (
-                  <Grid3X3 className="size-4" />
-                ) : (
-                  <List className="size-4" />
-                )}
+              <Button className="shrink-0" onClick={toggleViewMode} size="icon" variant="ghost">
+                {viewMode === 'list' ? <Grid3X3 className="size-4" /> : <List className="size-4" />}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>
-              {viewMode === "list" ? "Grid view" : "List view"}
-            </TooltipContent>
+            <TooltipContent>{viewMode === 'list' ? 'Grid view' : 'List view'}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
         {hiddenCount > 0 && (
@@ -446,65 +397,52 @@ export function ActionGrid({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  className={cn("shrink-0", showHidden && "bg-muted")}
+                  className={cn('shrink-0', showHidden && 'bg-muted')}
                   onClick={() => setShowHidden(!showHidden)}
                   size="icon"
                   variant="ghost"
                 >
-                  {showHidden ? (
-                    <Eye className="size-4" />
-                  ) : (
-                    <EyeOff className="size-4" />
-                  )}
+                  {showHidden ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
                 {showHidden
-                  ? "Hide hidden groups"
-                  : `Show ${hiddenCount} hidden group${hiddenCount > 1 ? "s" : ""}`}
+                  ? 'Hide hidden groups'
+                  : `Show ${hiddenCount} hidden group${hiddenCount > 1 ? 's' : ''}`}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         )}
       </div>
 
-      <div
-        className="min-h-0 flex-1 overflow-y-auto pb-4"
-        data-testid="action-grid"
-      >
+      <div className="min-h-0 flex-1 overflow-y-auto pb-4" data-testid="action-grid">
         {filteredActions.length === 0 && (
-          <p className="py-4 text-center text-muted-foreground text-sm">
-            No actions found
-          </p>
+          <p className="py-4 text-center text-muted-foreground text-sm">No actions found</p>
         )}
         {filteredActions.length > 0 && visibleGroups.length === 0 && (
-          <p className="py-4 text-center text-muted-foreground text-sm">
-            All groups are hidden
-          </p>
+          <p className="py-4 text-center text-muted-foreground text-sm">All groups are hidden</p>
         )}
 
         {/* Grid View */}
-        {viewMode === "grid" && visibleGroups.length > 0 && (
+        {viewMode === 'grid' && visibleGroups.length > 0 && (
           <div
             className="grid gap-2 p-1"
             style={{
-              gridTemplateColumns: "repeat(auto-fill, minmax(72px, 1fr))",
+              gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))',
             }}
           >
             {filteredActions
               .filter(
                 (action) =>
-                  filter.trim().length > 0 ||
-                  showHidden ||
-                  !hiddenGroups.has(action.category)
+                  filter.trim().length > 0 || showHidden || !hiddenGroups.has(action.category),
               )
               .map((action) => (
                 <button
                   className={cn(
-                    "flex aspect-square flex-col items-center justify-center gap-1.5 rounded-lg border border-transparent p-2 text-center transition-colors hover:border-border hover:bg-muted",
-                    disabled && "pointer-events-none opacity-50"
+                    'flex aspect-square flex-col items-center justify-center gap-1.5 rounded-lg border border-transparent p-2 text-center transition-colors hover:border-border hover:bg-muted',
+                    disabled && 'pointer-events-none opacity-50',
                   )}
-                  data-testid={`action-option-${action.id.toLowerCase().replace(/\s+/g, "-")}`}
+                  data-testid={`action-option-${action.id.toLowerCase().replace(/\s+/g, '-')}`}
                   disabled={disabled}
                   key={action.id}
                   onClick={() => onSelectAction(action.id)}
@@ -520,7 +458,7 @@ export function ActionGrid({
         )}
 
         {/* List View */}
-        {viewMode === "list" &&
+        {viewMode === 'list' &&
           visibleGroups.length > 0 &&
           visibleGroups.map((group, groupIndex) => {
             const isCollapsed = collapsedGroups.has(group.category);
@@ -530,8 +468,8 @@ export function ActionGrid({
                 {groupIndex > 0 && <div className="my-2 h-px bg-border" />}
                 <div
                   className={cn(
-                    "sticky top-0 z-10 mb-1 flex items-center gap-2 bg-background px-3 py-2 font-medium text-muted-foreground text-xs uppercase tracking-wider",
-                    isHidden && "opacity-50"
+                    'sticky top-0 z-10 mb-1 flex items-center gap-2 bg-background px-3 py-2 font-medium text-muted-foreground text-xs uppercase tracking-wider',
+                    isHidden && 'opacity-50',
                   )}
                 >
                   <button
@@ -540,10 +478,7 @@ export function ActionGrid({
                     type="button"
                   >
                     <ChevronRight
-                      className={cn(
-                        "size-3.5 transition-transform",
-                        !isCollapsed && "rotate-90"
-                      )}
+                      className={cn('size-3.5 transition-transform', !isCollapsed && 'rotate-90')}
                     />
                     <GroupIcon group={group} />
                     {group.category}
@@ -558,9 +493,7 @@ export function ActionGrid({
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => toggleHideGroup(group.category)}
-                      >
+                      <DropdownMenuItem onClick={() => toggleHideGroup(group.category)}>
                         {isHidden ? (
                           <>
                             <Eye className="mr-2 size-4" />
@@ -580,10 +513,10 @@ export function ActionGrid({
                   group.actions.map((action) => (
                     <button
                       className={cn(
-                        "flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-muted",
-                        disabled && "pointer-events-none opacity-50"
+                        'flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-muted',
+                        disabled && 'pointer-events-none opacity-50',
                       )}
-                      data-testid={`action-option-${action.id.toLowerCase().replace(/\s+/g, "-")}`}
+                      data-testid={`action-option-${action.id.toLowerCase().replace(/\s+/g, '-')}`}
                       disabled={disabled}
                       key={action.id}
                       onClick={() => onSelectAction(action.id)}
@@ -592,15 +525,14 @@ export function ActionGrid({
                       <ActionIcon action={action} className="size-4 shrink-0" />
                       <span className="min-w-0 flex-1 truncate">
                         <span className="font-medium">{action.label}</span>
-                        {action.subtype &&
-                          action.category !== action.subtype && (
-                            <span className="ml-2 rounded border px-1.5 py-0.5 text-[10px] text-muted-foreground uppercase">
-                              {action.subtype}
-                            </span>
-                          )}
+                        {action.subtype && action.category !== action.subtype && (
+                          <span className="ml-2 rounded border px-1.5 py-0.5 text-[10px] text-muted-foreground uppercase">
+                            {action.subtype}
+                          </span>
+                        )}
                         {action.description && (
                           <span className="text-muted-foreground text-xs">
-                            {" "}
+                            {' '}
                             - {action.description}
                           </span>
                         )}

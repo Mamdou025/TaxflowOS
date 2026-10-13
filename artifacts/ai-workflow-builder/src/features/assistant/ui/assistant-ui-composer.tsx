@@ -34,6 +34,7 @@ import { AsideComposerContext, type ComposerSuggestion } from '../workspace/comp
 import { ChatSourcePicker } from './chat-source-picker';
 import { ComposerAgentMenu, ComposerAttachmentMenu } from './composer-menus';
 import { CoworkerAvatar } from './coworker-avatar';
+import { ToolsMenu } from './tools-menu';
 
 const ACCENT = 'var(--sx-accent)';
 const popoverStyle: CSSProperties = {
@@ -546,6 +547,13 @@ export function AssistantUIComposer() {
               }
             />
             <MkoroComputerSettings presentation="composer" />
+            <ToolsMenu
+              compact
+              panelSide="top"
+              onRunResult={ctx?.onRunResult}
+              onAsk={ctx?.onSend}
+              onArm={ctx?.setArmedTool}
+            />
             <span className="flex-1" />
             {canCancel && (
               <ComposerPrimitive.Cancel aria-label="Stop" title="Stop" style={sendButton}>

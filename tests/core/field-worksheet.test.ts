@@ -155,6 +155,38 @@ test('declared worksheet lines exist before execution with formula and nested re
   );
 });
 
+test('a declared default shows a labeled value in place of missing, but never overrides invalid or stale', () => {
+  const { field, definition, results } = fixture();
+  const line = (field.config.worksheetLines as Record<string, unknown>[])[0];
+  line.defaultValue = 0;
+
+  // Not yet computed at all (no results supplied): the default fills in,
+  // clearly labeled as 'default', not silently presented as 'current'.
+  const beforeRun = projectFieldWorksheet({ block: field, definition });
+  assert.equal(beforeRun.lines[0].status, 'default');
+  assert.equal(beforeRun.lines[0].value, 0);
+  assert.match(beforeRun.lines[0].message ?? '', /declared default/);
+
+  // A different declared default value is honored exactly.
+  line.defaultValue = -42;
+  const otherDefault = projectFieldWorksheet({ block: field, definition });
+  assert.equal(otherDefault.lines[0].status, 'default');
+  assert.equal(otherDefault.lines[0].value, -42);
+
+  // Once the real calculation has actually produced the result, the real
+  // value wins — the default only ever fills a true gap.
+  const computed = projectFieldWorksheet({ block: field, definition, results });
+  assert.equal(computed.lines[0].status, 'current');
+  assert.equal(computed.lines[0].value, 2);
+
+  // A genuinely broken reference (resultKey not declared by any formula)
+  // must stay 'invalid' — a default must never paper over a real problem.
+  line.resultKey = 'does-not-exist';
+  const invalid = projectFieldWorksheet({ block: field, definition });
+  assert.equal(invalid.lines[0].status, 'invalid');
+  assert.equal(invalid.lines[0].value, undefined);
+});
+
 test('result presentation metadata survives projection without rounding or changing value states', () => {
   const { field, definition, results } = fixture();
   const display = {

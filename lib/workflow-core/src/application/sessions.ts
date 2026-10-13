@@ -12,6 +12,7 @@ import { DocumentExtractionSchema } from '@workspace/workflow-contracts/generate
 import { makeDocumentReview, documentReviewSummaries } from './document-review';
 import type { DocumentReviewDraft } from '@workspace/workflow-contracts/domain/document-review';
 import { runInputKeys, validateRunInputPatch, hasRunExchangeRate } from './session-inputs';
+import { describeWorkflowBlock } from './block-summary';
 import {
   hasMissingCalculationInputs,
   isCalculationInputBlock,
@@ -270,6 +271,7 @@ export function sessionContext(entry: PersonalWorkflow, session: WorkflowSession
       id: block.id,
       label: block.label,
       family: block.family,
+      summary: describeWorkflowBlock(block, definition),
       dependencies,
       status,
       ready,

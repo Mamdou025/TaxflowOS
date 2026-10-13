@@ -14,9 +14,15 @@ export type WorksheetLine = {
   description?: string;
   /** Display precision only, from 0 to 6; the recorded value remains unchanged. */
   decimalPlaces?: number;
+  /** Shown, clearly labeled as a default (status 'default'), only when the
+   *  calculation hasn't yet produced this result — e.g. a line that's
+   *  legitimately zero when not applicable (debt forgiveness, prior-year G).
+   *  Never substitutes for a genuinely required value: an 'invalid' or
+   *  'stale' result is never overridden, only a 'missing' one. */
+  defaultValue?: number;
 };
 
-export type FieldWorksheetValueStatus = 'current' | 'missing' | 'invalid' | 'stale';
+export type FieldWorksheetValueStatus = 'current' | 'missing' | 'invalid' | 'stale' | 'default';
 
 export type FieldWorksheetDependency = {
   key: string;

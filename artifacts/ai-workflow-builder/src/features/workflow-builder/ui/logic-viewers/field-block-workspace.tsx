@@ -1,19 +1,84 @@
-
-
-import { ChevronDown, ChevronRight, Clock, Database, LayoutList, Play, X } from "lucide-react";
-import { useCallback, useState } from "react";
-import { type LocalRunRecord, type WorkflowBlock } from "@/shared/workflow-engine/workflow/contracts";
-import type { WorkflowEdge, WorkflowNode } from "@/shared/workflow-engine/state/workflow-store";
-import { BlockDataFlowColumn } from "../workspace/block-data-flow-pane";
+import { ChevronDown, ChevronRight, Clock, Database, LayoutList, Play, X } from 'lucide-react';
+import { useCallback, useState } from 'react';
+import {
+  type LocalRunRecord,
+  type WorkflowBlock,
+} from '@/shared/workflow-engine/workflow/contracts';
+import type { WorkflowEdge, WorkflowNode } from '@/shared/workflow-engine/state/workflow-store';
+import {
+  type BlockReadiness,
+  WorkflowBlockCard,
+  WorkflowBlockCardEmptyTab,
+  type WorkflowBlockCardTabId,
+} from '@/features/workflow-builder/ui/block-card/workflow-block-card';
+import { BlockDataFlowColumn } from '../workspace/block-data-flow-pane';
+import type {
+  FieldWorksheetDependency,
+  FieldWorksheetLineProjection,
+} from '@workspace/workflow-core/field-worksheet';
 import { projectFieldWorksheet } from '@workspace/workflow-core/field-worksheet';
+import { CalculationVariablePanel } from './calculation-variable-panel';
 import { FieldWorksheetView } from './field-worksheet-view';
 import { FieldWorksheetEditor } from './field-worksheet-editor';
 import { fieldWorksheetCanvasContext } from './field-worksheet-canvas';
 
+function isCalculationEngineBlock(block?: WorkflowBlock | null): boolean {
+  return (
+    block?.config?.toolId === 'logic.calculation_engine' || block?.subtype === 'Calculation Engine'
+  );
+}
+
+/** Upstream calculators feeding this Field block — what the Inputs tab lets you supply values for. */
+function connectedCalculators(
+  block: WorkflowBlock,
+  edges: WorkflowEdge[],
+  nodes: WorkflowNode[],
+): WorkflowBlock[] {
+  const incomingIds = new Set(
+    edges
+      .filter((edge) => edge.target === block.id && edge.data?.status !== 'disabled')
+      .map((edge) => edge.source),
+  );
+  return nodes
+    .filter((node) => incomingIds.has(node.id) && isCalculationEngineBlock(node.data.block))
+    .map((node) => node.data.block as WorkflowBlock);
+}
+
+/** Mirrors configuration-overlay.tsx's getRunOutputsByBlockId — the shape CalculationVariablePanel expects. */
+function runOutputsByBlockId(lastRun: LocalRunRecord | undefined): Record<string, unknown> {
+  return Object.fromEntries(
+    (lastRun?.logs || []).map((log) => {
+      const outer = asRecord(log.output);
+      const inner = asRecord(outer.output);
+      return [log.nodeId, Object.keys(inner).length > 0 ? inner : outer];
+    }),
+  );
+}
+
+type FieldLineIssue = { label: string; status: 'invalid' | 'stale'; message?: string };
+
+/** Recursively collects lines/dependencies that need attention, for the Review tab. */
+function collectFieldIssues(lines: FieldWorksheetLineProjection[]): FieldLineIssue[] {
+  const issues: FieldLineIssue[] = [];
+  const visit = (deps: FieldWorksheetDependency[]) => {
+    for (const dep of deps) {
+      if (dep.status === 'invalid' || dep.status === 'stale')
+        issues.push({ label: dep.label, status: dep.status, message: dep.message });
+      visit(dep.dependencies);
+    }
+  };
+  for (const line of lines) {
+    if (line.status === 'invalid' || line.status === 'stale')
+      issues.push({ label: line.label, status: line.status, message: line.message });
+    visit(line.dependencies);
+  }
+  return issues;
+}
+
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 function asRecord(value: unknown): Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value)
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
 }
@@ -26,7 +91,7 @@ function asNumber(value: unknown): number | undefined {
 
 export function formatNumber(value: number | undefined): string {
   if (value === undefined || !Number.isFinite(value)) return '—';
-  return value.toLocaleString("en-CA", {
+  return value.toLocaleString('en-CA', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -34,7 +99,7 @@ export function formatNumber(value: number | undefined): string {
 
 export function getBackendOutputs(
   blockId: string,
-  lastRun: LocalRunRecord | undefined
+  lastRun: LocalRunRecord | undefined,
 ): Record<string, unknown> {
   const log = lastRun?.logs.find((l) => l.nodeId === blockId);
   const outer = asRecord(log?.output);
@@ -64,14 +129,14 @@ export type SourcePanelState = {
   parentLabel: string;
   blockLabel: string;
   sourceId: string;
-  initialTab: "evidence" | "history";
+  initialTab: 'evidence' | 'history';
 };
 
 type TraceStep = {
   id: string;
   label: string;
   catalogId?: string;
-  role: "upstream" | "source" | "field";
+  role: 'upstream' | 'source' | 'field';
   edgeBelow?: { fromRole?: string; toRole?: string; bindingLabel?: string };
 };
 
@@ -79,7 +144,7 @@ function buildTrace(
   sourceId: string,
   fieldBlockId: string,
   nodes: WorkflowNode[],
-  edges: WorkflowEdge[]
+  edges: WorkflowEdge[],
 ): TraceStep[] {
   const steps: TraceStep[] = [];
 
@@ -91,7 +156,7 @@ function buildTrace(
       id: edge.source,
       label: upNode?.data.label || edge.source,
       catalogId: upNode?.data.block?.catalogId,
-      role: "upstream",
+      role: 'upstream',
       edgeBelow: {
         fromRole: edge.data?.sourceOutputRole,
         toRole: edge.data?.targetInputRole,
@@ -102,14 +167,12 @@ function buildTrace(
 
   // Source block itself
   const sourceNode = nodes.find((n) => n.id === sourceId);
-  const fieldEdge = edges.find(
-    (e) => e.source === sourceId && e.target === fieldBlockId
-  );
+  const fieldEdge = edges.find((e) => e.source === sourceId && e.target === fieldBlockId);
   steps.push({
     id: sourceId,
     label: sourceNode?.data.label || sourceId,
     catalogId: sourceNode?.data.block?.catalogId,
-    role: "source",
+    role: 'source',
     edgeBelow: fieldEdge
       ? {
           fromRole: fieldEdge.data?.sourceOutputRole,
@@ -125,7 +188,7 @@ function buildTrace(
     id: fieldBlockId,
     label: fieldNode?.data.label || fieldBlockId,
     catalogId: fieldNode?.data.block?.catalogId,
-    role: "field",
+    role: 'field',
   });
 
   return steps;
@@ -133,9 +196,7 @@ function buildTrace(
 
 // ── data extraction ───────────────────────────────────────────────────────────
 
-function extractFromRollupAggregator(
-  backendOutputs: Record<string, unknown>
-): FieldEntry[] {
+function extractFromRollupAggregator(backendOutputs: Record<string, unknown>): FieldEntry[] {
   const rollupTotalsBlock = asRecord(backendOutputs.rollup_totals);
   const rollupTotals = asRecord(rollupTotalsBlock.rollupTotals);
   const rollupTotalDetails = asRecord(rollupTotalsBlock.rollupTotalDetails);
@@ -169,9 +230,7 @@ function extractFromRollupAggregator(
   });
 }
 
-function extractFromCalculationEngine(
-  backendOutputs: Record<string, unknown>
-): FieldEntry[] {
+function extractFromCalculationEngine(backendOutputs: Record<string, unknown>): FieldEntry[] {
   const calcBlock = asRecord(backendOutputs.calculated_results);
   const calculatedResults = asRecord(calcBlock.calculatedResults);
   const resultDetails = asRecord(calcBlock.resultDetails);
@@ -197,16 +256,14 @@ function extractFromCalculationEngine(
     return {
       key,
       label: String(detail.label || key),
-      description: String(trace.expression || detail.description || ""),
+      description: String(trace.expression || detail.description || ''),
       value: asNumber(value),
       subcategories,
     };
   });
 }
 
-function extractFromHierarchyAggregator(
-  backendOutputs: Record<string, unknown>
-): FieldEntry[] {
+function extractFromHierarchyAggregator(backendOutputs: Record<string, unknown>): FieldEntry[] {
   const finalTotalsBlock = asRecord(backendOutputs.final_totals);
   const finalTotals = asRecord(finalTotalsBlock.finalTotals);
 
@@ -216,8 +273,8 @@ function extractFromHierarchyAggregator(
   if (Object.keys(finalTotals).length === 0) return [];
 
   return Object.entries(finalTotals).map(([key, value]) => {
-    const subcategories: Subcategory[] = Object.entries(categoryTotalDetails)
-      .map(([catId, catDetail]) => {
+    const subcategories: Subcategory[] = Object.entries(categoryTotalDetails).map(
+      ([catId, catDetail]) => {
         const detail = asRecord(catDetail);
         return {
           id: catId,
@@ -225,7 +282,8 @@ function extractFromHierarchyAggregator(
           value: asNumber(detail.value),
           rowCount: asNumber(detail.rowCount),
         };
-      });
+      },
+    );
 
     return {
       key,
@@ -236,9 +294,7 @@ function extractFromHierarchyAggregator(
   });
 }
 
-function extractFromNamedValues(
-  backendOutputs: Record<string, unknown>
-): FieldEntry[] {
+function extractFromNamedValues(backendOutputs: Record<string, unknown>): FieldEntry[] {
   const namedValuesBlock = asRecord(backendOutputs.named_values);
   const namedValues = asRecord(namedValuesBlock.namedValues);
   return Object.entries(namedValues).map(([key, value]) => ({
@@ -249,9 +305,7 @@ function extractFromNamedValues(
   }));
 }
 
-export function extractFieldEntries(
-  backendOutputs: Record<string, unknown>
-): FieldEntry[] {
+export function extractFieldEntries(backendOutputs: Record<string, unknown>): FieldEntry[] {
   const fromRollup = extractFromRollupAggregator(backendOutputs);
   if (fromRollup.length > 0) return fromRollup;
 
@@ -264,15 +318,15 @@ export function extractFieldEntries(
   return extractFromNamedValues(backendOutputs);
 }
 
-function getOperationLabel(catalogId?: string, role?: TraceStep["role"]): string {
-  if (role === "field") return "displays";
-  if (!catalogId) return "";
-  if (catalogId.startsWith("source:")) return "provides";
-  if (catalogId === "logic:classification-mapping") return "classifies";
-  if (catalogId === "logic:category-rollup-aggregator") return "aggregates";
-  if (catalogId === "logic:calculation-engine") return "computes";
-  if (catalogId === "logic:hierarchy-aggregator") return "aggregates";
-  return "";
+function getOperationLabel(catalogId?: string, role?: TraceStep['role']): string {
+  if (role === 'field') return 'displays';
+  if (!catalogId) return '';
+  if (catalogId.startsWith('source:')) return 'provides';
+  if (catalogId === 'logic:classification-mapping') return 'classifies';
+  if (catalogId === 'logic:category-rollup-aggregator') return 'aggregates';
+  if (catalogId === 'logic:calculation-engine') return 'computes';
+  if (catalogId === 'logic:hierarchy-aggregator') return 'aggregates';
+  return '';
 }
 
 // ── SourceDetailPanel ─────────────────────────────────────────────────────────
@@ -288,7 +342,7 @@ type MappedRowSummary = {
 function getCategoryRows(
   blockId: string,
   categoryId: string,
-  lastRun: LocalRunRecord | undefined
+  lastRun: LocalRunRecord | undefined,
 ): MappedRowSummary[] {
   const outputs = getBackendOutputs(blockId, lastRun);
   const mappedRowsBlock = asRecord(outputs.mapped_rows);
@@ -322,7 +376,7 @@ export function SourceDetailPanel({
   onClose: () => void;
 }) {
   const { sub, parentLabel, sourceId, initialTab } = state;
-  const [tab, setTab] = useState<"evidence" | "history">(initialTab);
+  const [tab, setTab] = useState<'evidence' | 'history'>(initialTab);
 
   const traceSteps = buildTrace(sourceId, block.id, nodes, edges);
 
@@ -335,9 +389,9 @@ export function SourceDetailPanel({
             Review Workspace
           </div>
           <div className="mt-0.5 truncate font-semibold text-sm">
-            {sub.label !== sub.id ? sub.label : sub.id}{" "}
+            {sub.label !== sub.id ? sub.label : sub.id}{' '}
             <span className="font-normal text-muted-foreground">
-              — {tab === "history" ? "History" : "Evidence"}
+              — {tab === 'history' ? 'History' : 'Evidence'}
             </span>
           </div>
           <div className="mt-0.5 text-[10px] text-muted-foreground/70">in {parentLabel}</div>
@@ -353,25 +407,25 @@ export function SourceDetailPanel({
 
       {/* tabs */}
       <div className="flex border-b">
-        {(["evidence", "history"] as const).map((t) => (
+        {(['evidence', 'history'] as const).map((t) => (
           <button
             className={
-              "flex items-center gap-1.5 px-4 py-2 text-xs font-medium transition-colors " +
+              'flex items-center gap-1.5 px-4 py-2 text-xs font-medium transition-colors ' +
               (tab === t
-                ? "border-b-2 border-primary text-primary"
-                : "text-muted-foreground hover:text-foreground")
+                ? 'border-b-2 border-primary text-primary'
+                : 'text-muted-foreground hover:text-foreground')
             }
             key={t}
             onClick={() => setTab(t)}
             type="button"
           >
-            {t === "evidence" ? <Database className="size-3" /> : <Clock className="size-3" />}
+            {t === 'evidence' ? <Database className="size-3" /> : <Clock className="size-3" />}
             {t.charAt(0).toUpperCase() + t.slice(1)}
           </button>
         ))}
       </div>
 
-      {tab === "evidence" && (
+      {tab === 'evidence' && (
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
           {/* compact value header — no rectangle */}
           <div className="mb-5 border-b pb-3">
@@ -380,7 +434,7 @@ export function SourceDetailPanel({
                 {sub.label !== sub.id ? sub.label : sub.id}
               </span>
               <span className="shrink-0 font-mono font-bold text-sm tabular-nums">
-                {formatNumber(sub.value)}{" "}
+                {formatNumber(sub.value)}{' '}
                 <span className="font-normal text-muted-foreground text-xs">CAD</span>
               </span>
             </div>
@@ -405,15 +459,13 @@ export function SourceDetailPanel({
 
             {traceSteps.map((step, i) => {
               const isLast = i === traceSteps.length - 1;
-              const isSource = step.role === "source";
-              const isClassifier = step.catalogId === "logic:classification-mapping";
-              const isSourceBlock = step.catalogId?.startsWith("source:") ?? false;
+              const isSource = step.role === 'source';
+              const isClassifier = step.catalogId === 'logic:classification-mapping';
+              const isSourceBlock = step.catalogId?.startsWith('source:') ?? false;
               const opLabel = getOperationLabel(step.catalogId, step.role);
 
               // rows classified into sub.id by this block (only for classifier steps)
-              const matchedRows = isClassifier
-                ? getCategoryRows(step.id, sub.id, lastRun)
-                : [];
+              const matchedRows = isClassifier ? getCategoryRows(step.id, sub.id, lastRun) : [];
               const shownRows = matchedRows.slice(0, 6);
               const hiddenCount = matchedRows.length - shownRows.length;
 
@@ -422,18 +474,18 @@ export function SourceDetailPanel({
               const stepConfig = asRecord(stepNode?.data.block?.config ?? {});
 
               return (
-                <div key={`${step.id}-${i}`} className={isLast ? "" : "mb-1"}>
+                <div key={`${step.id}-${i}`} className={isLast ? '' : 'mb-1'}>
                   {/* step row */}
                   <div className="relative flex gap-3 pl-6">
                     {/* dot on the spine */}
                     <div
                       className={
-                        "absolute left-0 top-[5px] size-3.5 rounded-full border-2 " +
+                        'absolute left-0 top-[5px] size-3.5 rounded-full border-2 ' +
                         (isSource
-                          ? "border-violet-500 bg-violet-500"
+                          ? 'border-violet-500 bg-violet-500'
                           : isClassifier
-                          ? "border-amber-400 bg-amber-400"
-                          : "border-border bg-background")
+                            ? 'border-amber-400 bg-amber-400'
+                            : 'border-border bg-background')
                       }
                     />
 
@@ -442,8 +494,8 @@ export function SourceDetailPanel({
                       <div className="flex items-center gap-2">
                         <span
                           className={
-                            "font-medium text-sm " +
-                            (isSource || isClassifier ? "text-foreground" : "text-muted-foreground")
+                            'font-medium text-sm ' +
+                            (isSource || isClassifier ? 'text-foreground' : 'text-muted-foreground')
                           }
                         >
                           {step.label}
@@ -451,12 +503,12 @@ export function SourceDetailPanel({
                         {opLabel && (
                           <span
                             className={
-                              "rounded px-1.5 py-0.5 text-[10px] font-medium " +
+                              'rounded px-1.5 py-0.5 text-[10px] font-medium ' +
                               (isSource
-                                ? "bg-violet-500/15 text-violet-500"
+                                ? 'bg-violet-500/15 text-violet-500'
                                 : isClassifier
-                                ? "bg-amber-400/15 text-amber-600"
-                                : "bg-muted text-muted-foreground")
+                                  ? 'bg-amber-400/15 text-amber-600'
+                                  : 'bg-muted text-muted-foreground')
                             }
                           >
                             {opLabel}
@@ -470,8 +522,8 @@ export function SourceDetailPanel({
                           {stepConfig.workbookName
                             ? String(stepConfig.workbookName)
                             : stepConfig.sourceKind
-                            ? String(stepConfig.sourceKind).replace(/_/g, " ")
-                            : step.catalogId?.replace("source:", "") ?? ""}
+                              ? String(stepConfig.sourceKind).replace(/_/g, ' ')
+                              : (step.catalogId?.replace('source:', '') ?? '')}
                         </div>
                       )}
 
@@ -482,7 +534,7 @@ export function SourceDetailPanel({
                             <div key={j} className="border-l-2 border-amber-300 pl-2">
                               <div className="flex items-baseline justify-between gap-2">
                                 <span className="min-w-0 truncate text-[11px] font-medium">
-                                  {row.label || row.account || "—"}
+                                  {row.label || row.account || '—'}
                                 </span>
                                 <span className="shrink-0 font-mono text-[11px] tabular-nums">
                                   {formatNumber(row.amount)} CAD
@@ -490,7 +542,7 @@ export function SourceDetailPanel({
                               </div>
                               {row.matchedKeyword && (
                                 <div className="text-[10px] text-muted-foreground">
-                                  keyword:{" "}
+                                  keyword:{' '}
                                   <span className="font-mono text-amber-600">
                                     &ldquo;{row.matchedKeyword}&rdquo;
                                   </span>
@@ -503,7 +555,7 @@ export function SourceDetailPanel({
                           ))}
                           {hiddenCount > 0 && (
                             <div className="pl-2 text-[10px] text-muted-foreground/60">
-                              +{hiddenCount} more row{hiddenCount !== 1 ? "s" : ""}
+                              +{hiddenCount} more row{hiddenCount !== 1 ? 's' : ''}
                             </div>
                           )}
                         </div>
@@ -526,7 +578,7 @@ export function SourceDetailPanel({
                         </div>
                       )}
 
-                      {step.role === "field" && (
+                      {step.role === 'field' && (
                         <div className="text-[10px] text-muted-foreground">in {parentLabel}</div>
                       )}
                     </div>
@@ -544,7 +596,7 @@ export function SourceDetailPanel({
                         {(step.edgeBelow.fromRole || step.edgeBelow.toRole) && (
                           <div className="font-mono text-[10px] text-muted-foreground/50">
                             {step.edgeBelow.fromRole}
-                            {step.edgeBelow.fromRole && step.edgeBelow.toRole ? " → " : ""}
+                            {step.edgeBelow.fromRole && step.edgeBelow.toRole ? ' → ' : ''}
                             {step.edgeBelow.toRole}
                           </div>
                         )}
@@ -558,7 +610,7 @@ export function SourceDetailPanel({
         </div>
       )}
 
-      {tab === "history" && (
+      {tab === 'history' && (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 py-12 text-center text-muted-foreground">
           <Clock className="size-8 opacity-30" />
           <p className="text-xs">No history recorded for this line</p>
@@ -590,7 +642,7 @@ export function FieldRow({
       <button
         className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/30"
         onClick={() => hasChildren && setOpen((v) => !v)}
-        style={{ cursor: hasChildren ? "pointer" : "default" }}
+        style={{ cursor: hasChildren ? 'pointer' : 'default' }}
         type="button"
       >
         <span className="flex w-4 shrink-0 items-center justify-center text-muted-foreground">
@@ -624,9 +676,7 @@ export function FieldRow({
             </span>
           )}
         </span>
-        <span className="shrink-0 font-mono text-sm tabular-nums">
-          {formatNumber(entry.value)}
-        </span>
+        <span className="shrink-0 font-mono text-sm tabular-nums">{formatNumber(entry.value)}</span>
         <span className="w-10 shrink-0 text-right text-muted-foreground text-xs">CAD</span>
       </button>
 
@@ -636,10 +686,8 @@ export function FieldRow({
           {entry.subcategories.map((sub) => (
             <div
               className={
-                "flex items-center gap-3 border-b px-4 py-2.5 last:border-b-0 " +
-                (activeSubId === sub.id
-                  ? "bg-primary/5 border-l-2 border-l-primary"
-                  : "")
+                'flex items-center gap-3 border-b px-4 py-2.5 last:border-b-0 ' +
+                (activeSubId === sub.id ? 'bg-primary/5 border-l-2 border-l-primary' : '')
               }
               key={sub.id}
             >
@@ -648,7 +696,7 @@ export function FieldRow({
                 {sub.id}
               </span>
               <span className="min-w-0 flex-1 truncate text-muted-foreground text-sm">
-                {sub.label !== sub.id ? sub.label : ""}
+                {sub.label !== sub.id ? sub.label : ''}
                 {sub.rowCount !== undefined && sub.rowCount > 0 && (
                   <span className="ml-1.5 text-xs opacity-60">({sub.rowCount})</span>
                 )}
@@ -684,7 +732,6 @@ export function FieldRow({
   );
 }
 
-
 function SourceHeader({ label, subtype }: { label: string; subtype?: string }) {
   return (
     <div className="flex items-center gap-2 border-b border-t bg-muted/30 px-4 py-1.5">
@@ -700,7 +747,6 @@ function SourceHeader({ label, subtype }: { label: string; subtype?: string }) {
     </div>
   );
 }
-
 
 function LegacyFieldBlockWorkspace({
   block,
@@ -719,9 +765,7 @@ function LegacyFieldBlockWorkspace({
 }) {
   const [selectedPanel, setSelectedPanel] = useState<SourcePanelState | null>(null);
 
-  const upstreamIds = edges
-    .filter((e) => e.target === block.id)
-    .map((e) => e.source);
+  const upstreamIds = edges.filter((e) => e.target === block.id).map((e) => e.source);
 
   const sourceGroups = upstreamIds
     .map((upstreamId) => {
@@ -752,12 +796,12 @@ function LegacyFieldBlockWorkspace({
               <LayoutList className="size-8 text-muted-foreground/40" />
               <div>
                 <p className="font-medium text-sm text-muted-foreground">
-                  {hasRun ? "No values to display" : "No run data yet"}
+                  {hasRun ? 'No values to display' : 'No run data yet'}
                 </p>
                 <p className="mt-1 text-muted-foreground text-xs">
                   {hasRun
-                    ? "Connect this block to a Calculation Engine, Category Rollup, or Rollup & Calculation Engine."
-                    : "Run the workflow to see computed values here."}
+                    ? 'Connect this block to a Calculation Engine, Category Rollup, or Rollup & Calculation Engine.'
+                    : 'Run the workflow to see computed values here.'}
                 </p>
               </div>
             </div>
@@ -773,16 +817,11 @@ function LegacyFieldBlockWorkspace({
               </div>
               {sourceGroups.map((group) => (
                 <div key={group.sourceId}>
-                  <SourceHeader
-                    label={group.sourceLabel}
-                    subtype={group.sourceSubtype}
-                  />
+                  <SourceHeader label={group.sourceLabel} subtype={group.sourceSubtype} />
                   {group.entries.map((entry) => (
                     <FieldRow
                       activeSubId={
-                        selectedPanel?.parentLabel === entry.label
-                          ? selectedPanel.sub.id
-                          : null
+                        selectedPanel?.parentLabel === entry.label ? selectedPanel.sub.id : null
                       }
                       entry={entry}
                       key={`${group.sourceId}:${entry.key}`}
@@ -790,18 +829,30 @@ function LegacyFieldBlockWorkspace({
                         setSelectedPanel((prev) =>
                           prev?.sub.id === sub.id &&
                           prev?.parentLabel === entry.label &&
-                          prev?.initialTab === "evidence"
+                          prev?.initialTab === 'evidence'
                             ? null
-                            : { sub, parentLabel: entry.label, blockLabel: group.sourceLabel, sourceId: group.sourceId, initialTab: "evidence" }
+                            : {
+                                sub,
+                                parentLabel: entry.label,
+                                blockLabel: group.sourceLabel,
+                                sourceId: group.sourceId,
+                                initialTab: 'evidence',
+                              },
                         )
                       }
                       onShowHistory={(sub) =>
                         setSelectedPanel((prev) =>
                           prev?.sub.id === sub.id &&
                           prev?.parentLabel === entry.label &&
-                          prev?.initialTab === "history"
+                          prev?.initialTab === 'history'
                             ? null
-                            : { sub, parentLabel: entry.label, blockLabel: group.sourceLabel, sourceId: group.sourceId, initialTab: "history" }
+                            : {
+                                sub,
+                                parentLabel: entry.label,
+                                blockLabel: group.sourceLabel,
+                                sourceId: group.sourceId,
+                                initialTab: 'history',
+                              },
                         )
                       }
                     />
@@ -811,8 +862,6 @@ function LegacyFieldBlockWorkspace({
             </>
           )}
         </div>
-
-
       </div>
 
       {/* source detail side panel */}
@@ -839,13 +888,143 @@ export function FieldBlockWorkspace(props: {
   compact?: boolean;
   disabled?: boolean;
   onConfigPatch?: (patch: Record<string, unknown>) => void;
+  /** Patches an upstream calculator's config — what the Inputs tab edits. */
+  onCalculatorConfigPatch?: (calculatorId: string, patch: Record<string, unknown>) => void;
 }) {
+  const [activeTab, setActiveTab] = useState<WorkflowBlockCardTabId>('results');
+  // worksheet-page-view.tsx lists several Field blocks' sections one after
+  // another with no height-constrained parent — compact signals that context,
+  // so the card sizes to its content there instead of imposing a fixed height.
+  const fill = props.compact ? 'auto' : true;
   const context = fieldWorksheetCanvasContext(props.block, props.nodes, props.edges, props.lastRun);
   const declared = props.block.config.worksheetLines !== undefined;
-  return <div className="min-h-0 flex-1 overflow-auto">
-    {props.onConfigPatch && <div className="p-3"><FieldWorksheetEditor block={props.block} definition={context.definition} disabled={props.disabled} onConfigPatch={props.onConfigPatch} /></div>}
-    {declared
-      ? <div className="p-3"><FieldWorksheetView label={props.block.label} projection={projectFieldWorksheet(context)} lastRun /></div>
-      : <LegacyFieldBlockWorkspace {...props} />}
-  </div>;
+  const projection = declared ? projectFieldWorksheet(context) : undefined;
+
+  const calculators = connectedCalculators(props.block, props.edges, props.nodes);
+  const runOutputs = runOutputsByBlockId(props.lastRun);
+  const inputsTabContent =
+    calculators.length === 0 ? (
+      <WorkflowBlockCardEmptyTab>
+        Connect a Calculation Engine to this Workpaper to supply its inputs here.
+      </WorkflowBlockCardEmptyTab>
+    ) : (
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
+        {calculators.map((calculator) => (
+          <div key={calculator.id}>
+            <div className="mb-1 text-xs font-medium text-muted-foreground">{calculator.label}</div>
+            <CalculationVariablePanel
+              block={calculator}
+              disabled={!!props.disabled || !props.onCalculatorConfigPatch}
+              edges={props.edges}
+              nodes={props.nodes}
+              onChange={(key, value) =>
+                props.onCalculatorConfigPatch?.(calculator.id, { [key]: value })
+              }
+              outputs={runOutputs}
+            />
+          </div>
+        ))}
+      </div>
+    );
+
+  const logicTabContent = props.onConfigPatch ? (
+    <div className="min-h-0 flex-1 overflow-y-auto p-3">
+      <FieldWorksheetEditor
+        block={props.block}
+        definition={context.definition}
+        disabled={props.disabled}
+        onConfigPatch={props.onConfigPatch}
+      />
+    </div>
+  ) : declared && projection ? (
+    <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3 text-xs">
+      {projection.lines.map((line) => (
+        <div className="flex justify-between gap-2 rounded border p-2" key={line.id}>
+          <span>{line.label}</span>
+          <code className="text-muted-foreground">
+            {line.calculationLabel ?? line.calculationBlockId} · {line.resultKey}
+          </code>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <WorkflowBlockCardEmptyTab>No worksheet lines declared yet.</WorkflowBlockCardEmptyTab>
+  );
+
+  const resultsTabContent =
+    declared && projection ? (
+      <div className="min-h-0 flex-1 overflow-y-auto p-3">
+        <FieldWorksheetView label={props.block.label} lastRun projection={projection} />
+      </div>
+    ) : (
+      <LegacyFieldBlockWorkspace {...props} />
+    );
+
+  const issues = projection ? collectFieldIssues(projection.lines) : [];
+  const reviewTabContent = !declared ? (
+    <WorkflowBlockCardEmptyTab>
+      No worksheet lines declared yet — nothing to review.
+    </WorkflowBlockCardEmptyTab>
+  ) : issues.length === 0 ? (
+    <WorkflowBlockCardEmptyTab>
+      Nothing needs attention — every declared line is current.
+    </WorkflowBlockCardEmptyTab>
+  ) : (
+    <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
+      {issues.map((issue, index) => (
+        <div
+          className="rounded border border-amber-300 bg-amber-50/50 p-2 text-xs dark:bg-amber-950/20"
+          key={`${issue.label}:${index}`}
+        >
+          <div className="font-medium">
+            {issue.label} — {issue.status === 'invalid' ? 'Needs attention' : 'Outdated'}
+          </div>
+          {issue.message && <div className="text-muted-foreground">{issue.message}</div>}
+        </div>
+      ))}
+    </div>
+  );
+
+  const legacyHasEntries =
+    !declared &&
+    props.edges
+      .filter((edge) => edge.target === props.block.id)
+      .some(
+        (edge) => extractFieldEntries(getBackendOutputs(edge.source, props.lastRun)).length > 0,
+      );
+  const readiness: BlockReadiness = !declared
+    ? legacyHasEntries
+      ? 'computed'
+      : 'not_configured'
+    : issues.some((issue) => issue.status === 'invalid')
+      ? 'needs_review'
+      : projection!.lines.some((line) => line.status === 'missing')
+        ? 'waiting_on_input'
+        : issues.length > 0
+          ? 'needs_review'
+          : 'computed';
+  const primaryLine = projection?.lines.find((line) => line.presentation === 'primary');
+  const keyResult = !declared
+    ? undefined
+    : primaryLine
+      ? `${formatNumber(primaryLine.value)}${primaryLine.unit ? ` ${primaryLine.unit}` : ''}`
+      : `${projection!.lines.filter((line) => line.status === 'current' || line.status === 'default').length}/${projection!.lines.length} ready`;
+
+  return (
+    <WorkflowBlockCard
+      activeTab={activeTab}
+      fill={fill}
+      label={props.block.label}
+      onActiveTabChange={setActiveTab}
+      readiness={readiness}
+      keyResult={keyResult}
+      tabs={{
+        inputs: inputsTabContent,
+        logic: logicTabContent,
+        results: resultsTabContent,
+        review: reviewTabContent,
+      }}
+      visualLevel="L2"
+    />
+  );
 }

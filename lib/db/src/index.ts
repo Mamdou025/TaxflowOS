@@ -10,7 +10,14 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  // Fail fast instead of hanging a request indefinitely on a stuck connection
+  // or query (e.g. a dev-stack DB hiccup) — callers get a clear error instead
+  // of silently burning their own request timeout waiting on the pool.
+  connectionTimeoutMillis: 10_000,
+  statement_timeout: 10_000,
+});
 export const db = drizzle(pool, { schema });
 
 export * from "./schema";

@@ -7,7 +7,6 @@ export type RulebookKeywordRule = {
   categoryLabel: string;
   confidence: number;
   priority: number;
-  scope: string;
   description: string;
   exactKeywords: string[];
   containsKeywords: string[];
@@ -57,7 +56,6 @@ export function saveToRulebook(
     categoryLabel: String(rule.categoryLabel || ""),
     confidence: Number(rule.confidence ?? 0.9),
     priority: Number(rule.priority ?? 1),
-    scope: String(rule.scope || "company"),
     description: String(rule.description || ""),
     exactKeywords: toStringArray(rule.exactKeywords),
     containsKeywords: toStringArray(rule.containsKeywords),

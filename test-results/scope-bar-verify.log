@@ -25,3 +25,14 @@ Architecture checks passed across 1150 source files.
 Checking formatting...
 All matched files use Prettier code style!
 Checking formatting...
+[warn] lib/workflow-core/src/application/commands.ts
+[warn] Code style issues found in the above file. Run Prettier with --write to fix.
+Checking formatting...
+[warn] artifacts/ai-workflow-builder/src/features/workflows-hub/services/workflow-sync-service.ts
+[warn] tests/unit/workflow-draft-removal.test.ts
+[warn] tests/core/workflow-draft-removal.test.ts
+[warn] Code style issues found in 3 files. Run Prettier with --write to fix.
+Checking formatting...
+All matched files use Prettier code style!
+ ELIFECYCLE  Command failed with exit code 1.
+ ELIFECYCLE  Command failed with exit code 1.

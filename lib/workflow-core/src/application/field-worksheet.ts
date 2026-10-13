@@ -75,7 +75,9 @@ export function readWorksheetLines(config: Record<string, unknown>) {
       !line.label.trim() ||
       !isSafeCalculationInputName(line.calculationBlockId) ||
       !isSafeCalculationInputName(line.resultKey) ||
-      (line.unit !== undefined && typeof line.unit !== 'string')
+      (line.unit !== undefined && typeof line.unit !== 'string') ||
+      (line.defaultValue !== undefined &&
+        (typeof line.defaultValue !== 'number' || !finite(line.defaultValue)))
     ) {
       errors.push(`Worksheet line ${index + 1} needs an ID, label and calculation result.`);
       continue;
@@ -116,6 +118,7 @@ export function readWorksheetLines(config: Record<string, unknown>) {
       ...(typeof line.group === 'string' ? { group: line.group } : {}),
       ...(typeof line.description === 'string' ? { description: line.description } : {}),
       ...(typeof line.decimalPlaces === 'number' ? { decimalPlaces: line.decimalPlaces } : {}),
+      ...(typeof line.defaultValue === 'number' ? { defaultValue: line.defaultValue } : {}),
     });
   }
   return { declared: true, lines, errors };
@@ -405,15 +408,21 @@ function projectLine(
     return { ...node, ...value, dependencies };
   };
   const projected = dependency(calculation, line.resultKey, []);
+  // A declared default is shown only in place of 'missing' — never for
+  // 'invalid' or 'stale', which mean something needs attention, not that
+  // nothing has run yet. The line is still clearly labeled as a default,
+  // not presented as a real recorded result.
+  const useDefault = projected.status === 'missing' && line.defaultValue !== undefined;
   return {
     ...line,
     calculationLabel: calculation.label,
     unit: line.unit ?? projected.unit,
-    status: projected.status,
-    value: projected.value,
+    status: useDefault ? 'default' : projected.status,
+    value: useDefault ? line.defaultValue : projected.value,
     formula: projected.formula,
-    message:
-      projected.message ?? (projected.status !== 'current' ? resolution.errors[0] : undefined),
+    message: useDefault
+      ? 'Not yet computed or provided — showing the declared default.'
+      : (projected.message ?? (projected.status !== 'current' ? resolution.errors[0] : undefined)),
     dependencies: projected.dependencies,
     evidenceRefs: projected.evidenceRefs,
     sourceTrace: projected.sourceTrace,

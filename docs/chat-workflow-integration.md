@@ -329,8 +329,36 @@ including where the file already had unrelated changes.
 
 ### Verification for this increment
 
-Verification is in progress. Results below will be updated from the actual runs.
-The earlier Tier 1 verification failed at a generated core-export type check;
-its earlier browser run timed out during cold startup before any test executed.
-Neither is evidence for the Scope change. The block-design review is read-only;
-no block removal, executor replacement or provider verification is claimed.
+- `pnpm run typecheck`: passed across the workspace, including the frontend,
+  API and package builds. Log: `test-results/scope-bar-typecheck.log`.
+- `pnpm run verify`: failed at maintained formatting. Doctor, generated contracts
+  and architecture checks passed (1,150 source files). Four files from the
+  earlier unfinished draft-removal change failed formatting:
+  `lib/workflow-core/src/application/commands.ts`,
+  `artifacts/ai-workflow-builder/src/features/workflows-hub/services/workflow-sync-service.ts`,
+  `tests/unit/workflow-draft-removal.test.ts` and
+  `tests/core/workflow-draft-removal.test.ts`. No subsequent stages of this verify
+  run executed. The Scope files passed their formatting group. Log:
+  `test-results/scope-bar-verify.log`.
+- The five-case `test:workflow-reliability` selection failed during cold browser
+  preparation at the unchanged 300,000ms navigation limit: **zero test cases
+  executed**. Vite was running without a logged module error; the isolated
+  dependency cache still contained temporary optimization output. This is not
+  a passing interaction check or a demonstrated Scope regression. The selected
+  cases cover Sina context/restoration, recovery locks, adding source text,
+  attaching a workflow draft and returning to the active FAPI card. Log:
+  `test-results/scope-bar-browser.log`; trace/startup evidence:
+  `test-results/phase2/04a727d1-d235661d-9750-4298-a72b-493caecb1a5a`.
+- Explicit formatting checks for the five changed documentation files and
+  scoped Git whitespace checks passed. A second source review found no concrete
+  blocker. There was no successful screenshot-based visual review in this run.
+
+Browser interaction/visual verification remains outstanding. No timeout,
+validation rule, expected calculation, or architecture threshold was relaxed.
+No live provider or deployed environment was tested. The block-design review
+is read-only; no block removal or executor replacement was implemented.
+
+An external Git checkpoint, `ddfef7b` (`befclaude`), included the existing changes
+while verification was running. This task did not create that commit, push or
+deploy. The file table above distinguishes this increment from the preserved
+Tier 1 and saved-draft cleanup changes already present at its start.

@@ -22,6 +22,7 @@ function statusText(status: FieldWorksheetDependency['status']) {
     missing: 'Missing',
     invalid: 'Needs attention',
     stale: 'Outdated',
+    default: 'Default',
   }[status];
 }
 

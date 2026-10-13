@@ -13,13 +13,6 @@ import {
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
-import {
   getRulebookEntries,
   removeFromRulebook,
   saveToRulebook,
@@ -28,7 +21,6 @@ import {
 import { cn } from "@/lib/utils";
 import { TwoPanelToolShell } from "@/features/workflow-builder/ui/two-panel-tool-shell";
 
-const DEFAULT_SCOPE = "company";
 const KEYWORD_LIST_DELIMITER_REGEX = /[,;\n|]/;
 const KEYWORD_BUCKETS = [
   {
@@ -166,7 +158,6 @@ function normalizeRule(rule: Record<string, unknown>, index: number) {
         : "contains",
     priority: asNumber(rule.priority, index + 1),
     ruleId: getRuleId(rule) || makeRuleId(categoryId, index),
-    scope: String(rule.scope || DEFAULT_SCOPE),
   };
 }
 
@@ -509,26 +500,6 @@ function CategoryEditor({
             value={String(priority)}
           />
         </div>
-        <div className="space-y-1.5">
-          <Label>Scope</Label>
-          <Select
-            disabled={disabled}
-            onValueChange={(scope) => onUpdate({ scope })}
-            value={String(rule.scope || DEFAULT_SCOPE)}
-          >
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue placeholder="Scope" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="company">company</SelectItem>
-              <SelectItem value="country">country</SelectItem>
-              <SelectItem value="affiliate_exception">
-                affiliate exception
-              </SelectItem>
-              <SelectItem value="global">global</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
         <div className="space-y-1.5 sm:col-span-2">
           <Label>Description</Label>
           <Input
@@ -597,7 +568,6 @@ function CategoryEditor({
 function CategorySummaryPanel({ rule }: { rule: Record<string, unknown> }) {
   const confidence = asNumber(rule.confidence, 0.9);
   const priority = asNumber(rule.priority, 1);
-  const scope = String(rule.scope || DEFAULT_SCOPE);
   const buckets = getKeywordBuckets(rule);
   const totalKeywords = getKeywordCount(rule);
 
@@ -623,8 +593,6 @@ function CategorySummaryPanel({ rule }: { rule: Record<string, unknown> }) {
       <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
         <span className="text-muted-foreground">Priority</span>
         <span className="text-right font-medium">{priority}</span>
-        <span className="text-muted-foreground">Scope</span>
-        <span className="text-right font-medium">{scope}</span>
         <span className="text-muted-foreground">Total kw</span>
         <span className="text-right font-medium">{totalKeywords}</span>
       </div>
@@ -1005,7 +973,6 @@ export function KeywordRulebookEditor({
         excludeKeywords: [],
         priority: index + 1,
         ruleVersion: `v${sourceVersion}`,
-        scope: DEFAULT_SCOPE,
       },
       index
     );
@@ -1095,7 +1062,6 @@ export function KeywordRulebookEditor({
         excludeKeywords: entry.excludeKeywords,
         priority: entry.priority,
         ruleVersion: entry.ruleVersion,
-        scope: entry.scope,
       },
       index
     );

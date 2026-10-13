@@ -1560,6 +1560,14 @@ export function ConfigurationOverlay({ overlayId }: ConfigurationOverlayProps) {
           block={selectedBlock}
           disabled={isGenerating || !isOwner || !!inspection}
           onConfigPatch={handlePatchSelectedBlockConfig}
+          onCalculatorConfigPatch={inspection ? undefined : (id, patch) => {
+            const node = nodes.find((node) => node.id === id);
+            if (!node?.data.block) return;
+            const config = { ...node.data.block.config, ...patch };
+            updateNodeData({ id, data: { config, block: { ...node.data.block, config } } });
+            setHasUnsavedChanges(true);
+            triggerAutosave({ immediate: true });
+          }}
           edges={edges}
           lastRun={latestSelectedBlockRun}
           nodes={nodes}

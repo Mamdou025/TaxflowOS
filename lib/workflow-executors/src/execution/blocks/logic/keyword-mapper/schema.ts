@@ -220,7 +220,6 @@ function keywordRuleFromRecord(ruleRecord: Record<string, unknown>, index: numbe
     categoryLabel: String(
       ruleRecord.categoryLabel || ruleRecord.label || humanizeCategoryId(categoryId),
     ),
-    comment: optionalString(ruleRecord.comment),
     confidence: parseNumber(ruleRecord.confidence) ?? 0.85,
     containsKeywords,
     description: optionalString(ruleRecord.description),
@@ -235,14 +234,11 @@ function keywordRuleFromRecord(ruleRecord: Record<string, unknown>, index: numbe
     priority: parseNumber(ruleRecord.priority) ?? undefined,
     ruleId: String(ruleRecord.ruleId || ruleRecord.id || `keyword-rule-${index + 1}`),
     sectionId: optionalString(ruleRecord.sectionId),
-    scope: optionalString(ruleRecord.scope),
     sourceTrace: optionalTraceArray(ruleRecord.sourceTrace),
     suggestedLine: getSuggestedString(ruleRecord, 'suggestedLine', 'lineId'),
     suggestedSection: getSuggestedString(ruleRecord, 'suggestedSection', 'sectionId'),
     suggestedSubsection: getSuggestedString(ruleRecord, 'suggestedSubsection', 'subsectionId'),
-    suggestedUse: optionalString(ruleRecord.suggestedUse),
     subsectionId: optionalString(ruleRecord.subsectionId),
-    tags: asStringArray(ruleRecord.tags),
     target: optionalString(ruleRecord.target),
   };
 }

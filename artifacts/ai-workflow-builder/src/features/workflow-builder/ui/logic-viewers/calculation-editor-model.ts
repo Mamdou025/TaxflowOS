@@ -24,6 +24,7 @@ export type DisplayToken =
 
 const KNOWN_FUNCTIONS = new Set([
   'abs',
+  'if',
   'max',
   'min',
   'round',
@@ -37,6 +38,10 @@ const NUMBER_PREFIX_REGEX = /^(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/;
 const NUMERIC_LITERAL_REGEX = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/;
 const WHITESPACE_CHARACTER_REGEX = /\s/;
 const OPERATOR_TOKENS = new Set(['+', '-', '*', '/']);
+// Mirrors the engine tokenizer's comparator support
+// (lib/workflow-core/src/core/formula-references.ts) so a formula built here
+// round-trips back into the same visual tokens when the editor reopens.
+const COMPARATOR_START_CHARACTERS = new Set(['>', '<', '=', '!']);
 
 export const SPECIAL_FUNCTIONS = [
   { display: 'max(A−B, 0)', name: 'max_subtract_zero' },
@@ -45,6 +50,7 @@ export const SPECIAL_FUNCTIONS = [
   { display: 'max(…)', name: 'max' },
   { display: 'min(…)', name: 'min' },
   { display: 'round(…)', name: 'round' },
+  { display: 'if(cond, then, else)', name: 'if' },
 ] as const;
 
 export const OPERATOR_KEYS = [
@@ -55,6 +61,12 @@ export const OPERATOR_KEYS = [
   { label: '(', value: '(' },
   { label: ')', value: ')' },
   { label: ',', value: ',' },
+  { label: '>', value: '>' },
+  { label: '<', value: '<' },
+  { label: '≥', value: '>=' },
+  { label: '≤', value: '<=' },
+  { label: '=', value: '==' },
+  { label: '≠', value: '!=' },
 ] as const;
 
 export const CALCULATION_TOKEN_LEGEND = [
@@ -74,6 +86,27 @@ function getSingleCharacterToken(character: string): DisplayToken | null {
   if (character === '(' || character === ')') return { type: 'paren', value: character };
   if (character === ',') return { type: 'op', value: character };
   if (OPERATOR_TOKENS.has(character)) return { type: 'op', value: character };
+  return null;
+}
+
+function getComparatorToken(
+  expression: string,
+  index: number,
+): { nextIndex: number; token: DisplayToken } | null {
+  const character = expression[index];
+  if (!COMPARATOR_START_CHARACTERS.has(character)) return null;
+  const twoCharacters = expression.slice(index, index + 2);
+  if (
+    twoCharacters === '>=' ||
+    twoCharacters === '<=' ||
+    twoCharacters === '==' ||
+    twoCharacters === '!='
+  )
+    return { nextIndex: index + 2, token: { type: 'op', value: twoCharacters } };
+  if (character === '>' || character === '<')
+    return { nextIndex: index + 1, token: { type: 'op', value: character } };
+  // A bare '=' or '!' isn't a valid comparator on its own — let it fall
+  // through so the caller's existing unrecognized-character handling applies.
   return null;
 }
 
@@ -104,6 +137,8 @@ function getTokenAt(expression: string, index: number) {
   if (WHITESPACE_CHARACTER_REGEX.test(character)) return { nextIndex: index + 1, token: null };
   const singleCharacterToken = getSingleCharacterToken(character);
   if (singleCharacterToken) return { nextIndex: index + 1, token: singleCharacterToken };
+  const comparatorToken = getComparatorToken(expression, index);
+  if (comparatorToken) return comparatorToken;
   if (
     DIGIT_CHARACTER_REGEX.test(character) ||
     (character === '.' && DIGIT_CHARACTER_REGEX.test(expression[index + 1] ?? ''))

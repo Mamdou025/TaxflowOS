@@ -31,6 +31,13 @@ const server = app.listen(isolatedTest ? { port, host: "127.0.0.1" } : { port },
   }
 
   logger.info({ port }, "Server listening");
+  // Node's http.Server defaults to a 5s keepAliveTimeout, far shorter than the
+  // frontend's 60s session/workspace poll (see AuthProvider). An idle pooled
+  // connection that outlives this window races the client's next request,
+  // surfacing as "TypeError: Failed to fetch" with no clear server-side cause.
+  // Keep this comfortably above the longest known client idle gap.
+  server.keepAliveTimeout = 75_000;
+  server.headersTimeout = 80_000;
   if (isolatedTest) {
     const address = server.address();
     if (address && typeof address !== "string") {

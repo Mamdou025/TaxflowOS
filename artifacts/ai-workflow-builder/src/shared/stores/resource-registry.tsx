@@ -112,8 +112,19 @@ export const KIND_LABEL: Record<ResourceKind, string> = {
 };
 
 // ─── Lazy page loading ──────────────────────────────────────────────────────
+// Ghosts a title + content block instead of bare text, so the same wait reads
+// as a page assembling itself rather than a blank screen that might be stuck.
 const Loading = () => (
-  <div style={{ padding: 32, fontSize: 13, color: '#6B7280' }}>Loading page…</div>
+  <div role="status" aria-label="Loading page" style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 32 }}>
+    <div
+      className="motion-safe:animate-pulse"
+      style={{ height: 20, width: 180, borderRadius: 6, background: '#E5E7EB' }}
+    />
+    <div
+      className="motion-safe:animate-pulse"
+      style={{ height: 120, width: '100%', maxWidth: 480, borderRadius: 10, background: '#E5E7EB' }}
+    />
+  </div>
 );
 const lazyPage = (loader: () => Promise<{ default: ComponentType }>) =>
   dynamic(loader, { ssr: false, loading: Loading });

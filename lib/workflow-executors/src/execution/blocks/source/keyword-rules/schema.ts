@@ -14,16 +14,11 @@ export type KeywordRule = {
   excludeKeywords?: string[];
   confidence: number;
   description?: string;
-  comment?: string;
-  scope?: string;
-  suggestedUse?: string;
   suggestedLine?: string;
   suggestedSection?: string;
   suggestedSubsection?: string;
-  tags?: string[];
   priority?: number;
   matchMode: KeywordRuleMatchMode;
-  metadata?: Record<string, unknown>;
   target?: string;
   lineId?: string;
   sectionId?: string;
@@ -158,7 +153,6 @@ export function normalizeKeywordRule(value: unknown, index: number): KeywordRule
   return {
     categoryId,
     categoryLabel,
-    comment: optionalString(record.comment),
     containsKeywords: keywordBuckets.containsKeywords,
     confidence: parseNumber(record.confidence) ?? 0.85,
     description: optionalString(record.description),
@@ -167,18 +161,14 @@ export function normalizeKeywordRule(value: unknown, index: number): KeywordRule
     keywords: keywordBuckets.keywords,
     lineId: optionalString(record.lineId),
     matchMode: parseMatchMode(record.matchMode),
-    metadata: asRecord(record.metadata) || undefined,
     priority: parseNumber(record.priority),
     ruleId: String(record.ruleId || record.id || `keyword-rule-${index + 1}`),
     sectionId: optionalString(record.sectionId),
-    scope: optionalString(record.scope),
     suggestedLine: optionalString(record.suggestedLine) || optionalString(record.lineId),
     suggestedSection: optionalString(record.suggestedSection) || optionalString(record.sectionId),
     suggestedSubsection:
       optionalString(record.suggestedSubsection) || optionalString(record.subsectionId),
-    suggestedUse: optionalString(record.suggestedUse),
     subsectionId: optionalString(record.subsectionId),
-    tags: asStringArray(record.tags),
     target: optionalString(record.target),
   };
 }

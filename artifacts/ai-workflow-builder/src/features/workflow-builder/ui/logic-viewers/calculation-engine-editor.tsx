@@ -1,5 +1,14 @@
 import { Plus, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  calculationInputOptionsFromOutputs,
+  describeCalculationInputs,
+} from '@workspace/workflow-executors/calculation-inputs';
+import {
+  type BlockReadiness,
+  WorkflowBlockCard,
+  type WorkflowBlockCardTabId,
+} from '@/features/workflow-builder/ui/block-card/workflow-block-card';
 import { TwoPanelToolShell } from '@/features/workflow-builder/ui/two-panel-tool-shell';
 import { cn } from '@/lib/utils';
 import { Input } from '@/shared/ui/input';
@@ -26,8 +35,13 @@ import { CalculationEngineRunSections } from './calculation-engine-run-sections'
 import { CalculationSettings } from './calculation-settings';
 import { CalculationSourcePicker, calculationSources } from './calculation-source-picker';
 import { CalculationTokenChip } from './calculation-token-chip';
+import { calculationInputRules } from './calculation-variable-model';
 import { CalculationVariableInsert } from './calculation-variable-insert';
 import { CalculationVariablePanel } from './calculation-variable-panel';
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
+}
 
 // A template's first edit creates a personal workflow and remounts the editor.
 // Keep its selection through that transition without writing UI state to rules.
@@ -76,7 +90,12 @@ export function CalculationEngineEditor({
     selectedIndex === null ? [] : tokenizeExpression(formulaToExpression(formulas[selectedIndex])),
   );
   const [constantInput, setConstantInput] = useState('');
-  const [activeTab, setActiveTab] = useState<'edit' | 'summary'>('edit');
+  // Now the shared WorkflowBlockCard's four tabs (docs/block-palette-redesign.md,
+  // "Shared visual shell"). Inputs moved into its own tab — the compact
+  // header's readiness badge (derived below) is what now keeps input
+  // satisfaction visible while on Logic/Results/Review, instead of pinning
+  // CalculationVariablePanel open above the tabs as before.
+  const [activeTab, setActiveTab] = useState<WorkflowBlockCardTabId>('logic');
   const handledCreateRequestRef = useRef<number | undefined>(undefined);
   const handledInsertRequestRef = useRef<string | undefined>(undefined);
 
@@ -91,6 +110,41 @@ export function CalculationEngineEditor({
   const tokenItems = getTokenItems(tokens);
   const selectedFormula = selectedIndex !== null ? (formulas[selectedIndex] ?? null) : null;
   const hasExternalRules = hasConnectedCalculationRuleSource(block, edges);
+
+  // Readiness + key result for the shared header — mirrors what
+  // CalculationVariablePanel computes for itself, so the badge reflects the
+  // same "is every input satisfied" answer the Inputs tab shows.
+  const inputSources = calculationSources(inputContextBlock ?? block, edges, nodes);
+  const inputRequirements = describeCalculationInputs(
+    calculationInputRules(inputContextBlock ?? block, edges, nodes),
+    (inputContextBlock ?? block).config,
+    calculationInputOptionsFromOutputs(
+      inputSources
+        .filter((source) => lastRunOutput[source.id] !== undefined)
+        .map((source) => ({ blockId: source.id, output: lastRunOutput[source.id] })),
+    ),
+  );
+  const inputsSatisfied = inputRequirements.every((input) => input.status === 'provided');
+  const runWarnings = Array.isArray(lastRunOutput.warnings)
+    ? (lastRunOutput.warnings as string[])
+    : [];
+  const calculatedResultCount = Object.keys(
+    asRecord(asRecord(lastRunOutput.calculated_results).calculatedResults),
+  ).length;
+  const readiness: BlockReadiness =
+    formulas.length === 0
+      ? 'not_configured'
+      : !inputsSatisfied
+        ? 'waiting_on_input'
+        : runWarnings.length > 0
+          ? 'needs_review'
+          : 'computed';
+  const keyResult =
+    formulas.length === 0
+      ? undefined
+      : calculatedResultCount > 0
+        ? `${calculatedResultCount} result${calculatedResultCount === 1 ? '' : 's'}`
+        : 'Not run yet';
 
   const saveFormulas = useCallback(
     (next: InlineFormula[]) => onUpdateConfig('formulas', next),
@@ -329,301 +383,267 @@ export function CalculationEngineEditor({
     </div>
   );
 
-  // ─── Right panel: Edit | Summary tabs ────────────────────────────────────
+  // ─── Logic tab content: term name/formula editor, right of the term index ──
 
-  const rightPanel = (
+  const logicRightPanel = (
     <div className="flex h-full flex-col">
-      {/* Tab bar */}
-      <div className="flex shrink-0 border-b bg-muted/10">
-        {(['edit', 'summary'] as const).map((tab) => (
-          <button
-            className={cn(
-              'px-4 py-2 text-xs font-medium transition-colors',
-              activeTab === tab
-                ? 'border-b-2 border-primary text-foreground'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            type="button"
-          >
-            {tab === 'edit' ? 'Edit' : 'Summary'}
-          </button>
-        ))}
-      </div>
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {selectedFormula ? (
+          <>
+            {/* Term name row */}
+            <div className="flex shrink-0 items-center gap-2 border-b bg-muted/10 px-3 py-2">
+              <Input
+                className="h-6 w-24 font-mono text-xs"
+                disabled={disabled}
+                onChange={(e) => updateFormulaField('resultKey', e.target.value)}
+                placeholder="KEY"
+                value={selectedFormula.resultKey}
+              />
+              <span className="select-none font-light text-muted-foreground text-sm">=</span>
+              <Input
+                className="h-6 flex-1 text-xs"
+                disabled={disabled}
+                onChange={(e) => updateFormulaField('label', e.target.value)}
+                placeholder="Label"
+                value={selectedFormula.label}
+              />
+            </div>
 
-      {/* Edit tab */}
-      {activeTab === 'edit' && (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          {selectedFormula ? (
-            <>
-              {/* Term name row */}
-              <div className="flex shrink-0 items-center gap-2 border-b bg-muted/10 px-3 py-2">
-                <Input
-                  className="h-6 w-24 font-mono text-xs"
-                  disabled={disabled}
-                  onChange={(e) => updateFormulaField('resultKey', e.target.value)}
-                  placeholder="KEY"
-                  value={selectedFormula.resultKey}
-                />
-                <span className="select-none font-light text-muted-foreground text-sm">=</span>
-                <Input
-                  className="h-6 flex-1 text-xs"
-                  disabled={disabled}
-                  onChange={(e) => updateFormulaField('label', e.target.value)}
-                  placeholder="Label"
-                  value={selectedFormula.label}
-                />
-              </div>
-
-              {/* Formula tape */}
-              <div className="shrink-0 border-b px-3 pt-3 pb-2">
-                <div className="flex flex-wrap gap-3 text-xs">
-                  <label>
-                    Round this term{' '}
-                    <select
-                      aria-label="Term rounding"
-                      disabled={disabled}
-                      value={selectedFormula.roundingDigits ?? ''}
-                      onChange={(event) =>
-                        updateFormulaField(
-                          'roundingDigits',
-                          event.target.value === '' ? undefined : Number(event.target.value),
-                        )
-                      }
-                    >
-                      <option value="">Keep full precision</option>
-                      {Array.from({ length: 16 }, (_, i) => (
-                        <option key={i} value={i}>
-                          {i} decimal places
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    Unit{' '}
-                    <input
-                      aria-label="Result unit"
-                      placeholder="e.g. kg, CAD, units"
-                      value={selectedFormula.unit ?? ''}
-                      disabled={disabled}
-                      onChange={(event) => updateFormulaField('unit', event.target.value)}
-                    />
-                  </label>
-                </div>
-                <div className="flex min-h-11 flex-wrap items-center gap-1 rounded-md border bg-background px-2 py-1.5">
-                  {tokens.length === 0 ? (
-                    <span className="select-none text-[11px] text-muted-foreground italic">
-                      Formula is empty
-                    </span>
-                  ) : (
-                    tokenItems.map(({ key, token }) => (
-                      <CalculationTokenChip
-                        sourceLabels={
-                          new Map(nodes.map((node) => [node.id, node.data.block?.label ?? node.id]))
-                        }
-                        key={key}
-                        termKeys={allTermKeys}
-                        token={token}
-                        upstreamKeys={upstreamKeys}
-                      />
-                    ))
-                  )}
-                </div>
-                <div className="mt-2 flex flex-wrap items-center gap-1">
-                  {OPERATOR_KEYS.map(({ label, value }) => (
-                    <button
-                      className="flex h-7 min-w-7 select-none items-center justify-center rounded border bg-background px-1.5 font-mono font-semibold text-sm transition-colors hover:bg-muted disabled:opacity-40"
-                      disabled={disabled}
-                      key={value}
-                      onClick={() => appendOp(value)}
-                      type="button"
-                    >
-                      {label}
-                    </button>
-                  ))}
-                  <div className="ml-auto flex gap-1">
-                    <button
-                      className="flex h-7 items-center gap-1 rounded border bg-background px-2 text-[10px] text-muted-foreground transition-colors hover:bg-muted disabled:opacity-40"
-                      disabled={disabled || tokens.length === 0}
-                      onClick={backspace}
-                      type="button"
-                    >
-                      ⌫
-                    </button>
-                    <button
-                      className="flex h-7 items-center gap-1 rounded border bg-background px-2 text-[10px] text-muted-foreground transition-colors hover:bg-muted hover:text-destructive disabled:opacity-40"
-                      disabled={disabled || tokens.length === 0}
-                      onClick={clearFormula}
-                      type="button"
-                    >
-                      Clear
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Constant */}
-              <div className="shrink-0 space-y-1.5 border-b px-3 py-2">
-                <div className="font-bold text-[9px] text-amber-600/80 uppercase tracking-widest">
-                  Add a number
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Input
-                    className="h-7 w-28 font-mono text-xs"
+            {/* Formula tape */}
+            <div className="shrink-0 border-b px-3 pt-3 pb-2">
+              <div className="flex flex-wrap gap-3 text-xs">
+                <label>
+                  Round this term{' '}
+                  <select
+                    aria-label="Term rounding"
                     disabled={disabled}
-                    onChange={(e) => setConstantInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && insertConstant()}
-                    aria-label="Number to add"
-                    step="any"
-                    placeholder="e.g. 500 or 2"
-                    type="number"
-                    value={constantInput}
+                    value={selectedFormula.roundingDigits ?? ''}
+                    onChange={(event) =>
+                      updateFormulaField(
+                        'roundingDigits',
+                        event.target.value === '' ? undefined : Number(event.target.value),
+                      )
+                    }
+                  >
+                    <option value="">Keep full precision</option>
+                    {Array.from({ length: 16 }, (_, i) => (
+                      <option key={i} value={i}>
+                        {i} decimal places
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Unit{' '}
+                  <input
+                    aria-label="Result unit"
+                    placeholder="e.g. kg, CAD, units"
+                    value={selectedFormula.unit ?? ''}
+                    disabled={disabled}
+                    onChange={(event) => updateFormulaField('unit', event.target.value)}
                   />
+                </label>
+              </div>
+              <div className="flex min-h-11 flex-wrap items-center gap-1 rounded-md border bg-background px-2 py-1.5">
+                {tokens.length === 0 ? (
+                  <span className="select-none text-[11px] text-muted-foreground italic">
+                    Formula is empty
+                  </span>
+                ) : (
+                  tokenItems.map(({ key, token }) => (
+                    <CalculationTokenChip
+                      sourceLabels={
+                        new Map(nodes.map((node) => [node.id, node.data.block?.label ?? node.id]))
+                      }
+                      key={key}
+                      termKeys={allTermKeys}
+                      token={token}
+                      upstreamKeys={upstreamKeys}
+                    />
+                  ))
+                )}
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-1">
+                {OPERATOR_KEYS.map(({ label, value }) => (
                   <button
-                    className="h-7 rounded border border-amber-400/40 bg-amber-400/10 px-2 font-semibold text-[10px] text-amber-700 transition-colors hover:bg-amber-400/25 disabled:opacity-40 dark:text-amber-400"
-                    disabled={disabled || !isValidNumericLiteral(constantInput)}
-                    onClick={insertConstant}
+                    className="flex h-7 min-w-7 select-none items-center justify-center rounded border bg-background px-1.5 font-mono font-semibold text-sm transition-colors hover:bg-muted disabled:opacity-40"
+                    disabled={disabled}
+                    key={value}
+                    onClick={() => appendOp(value)}
                     type="button"
                   >
-                    Add number
+                    {label}
+                  </button>
+                ))}
+                <div className="ml-auto flex gap-1">
+                  <button
+                    className="flex h-7 items-center gap-1 rounded border bg-background px-2 text-[10px] text-muted-foreground transition-colors hover:bg-muted disabled:opacity-40"
+                    disabled={disabled || tokens.length === 0}
+                    onClick={backspace}
+                    type="button"
+                  >
+                    ⌫
+                  </button>
+                  <button
+                    className="flex h-7 items-center gap-1 rounded border bg-background px-2 text-[10px] text-muted-foreground transition-colors hover:bg-muted hover:text-destructive disabled:opacity-40"
+                    disabled={disabled || tokens.length === 0}
+                    onClick={clearFormula}
+                    type="button"
+                  >
+                    Clear
                   </button>
                 </div>
               </div>
+            </div>
 
-              {/* Builder tools */}
-              <div className="flex-1 space-y-4 overflow-y-auto px-3 py-3">
-                <CalculationVariableInsert disabled={disabled} onInsert={appendRef} />
-                <CalculationSourcePicker
-                  sources={calculationSources(inputContextBlock ?? block, edges, nodes)}
-                  outputs={lastRunOutput}
+            {/* Constant */}
+            <div className="shrink-0 space-y-1.5 border-b px-3 py-2">
+              <div className="font-bold text-[9px] text-amber-600/80 uppercase tracking-widest">
+                Add a number
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Input
+                  className="h-7 w-28 font-mono text-xs"
                   disabled={disabled}
-                  onInsert={appendRef}
+                  onChange={(e) => setConstantInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && insertConstant()}
+                  aria-label="Number to add"
+                  step="any"
+                  placeholder="e.g. 500 or 2"
+                  type="number"
+                  value={constantInput}
                 />
-                {/* Upstream keys */}
-                {upstreamValues.length > 0 && (
-                  <div className="space-y-1.5">
-                    <div className="font-bold text-[9px] text-sky-600/80 uppercase tracking-widest">
-                      Upstream values
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {upstreamValues.map(({ key, value }) => (
-                        <button
-                          className="flex select-none items-center gap-1 rounded border border-sky-400/40 bg-sky-400/10 px-2 py-0.5 font-mono text-[10px] text-sky-700 transition-colors hover:bg-sky-400/25 disabled:opacity-40 dark:text-sky-400"
-                          disabled={disabled}
-                          key={key}
-                          onClick={() => appendRef(key)}
-                          title={
-                            value !== null
-                              ? String(value)
-                              : 'Awaiting data — you can use this term now'
-                          }
-                          type="button"
-                        >
-                          {key}
-                          {value !== null && <span className="text-sky-500/70">= {value}</span>}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <button
+                  className="h-7 rounded border border-amber-400/40 bg-amber-400/10 px-2 font-semibold text-[10px] text-amber-700 transition-colors hover:bg-amber-400/25 disabled:opacity-40 dark:text-amber-400"
+                  disabled={disabled || !isValidNumericLiteral(constantInput)}
+                  onClick={insertConstant}
+                  type="button"
+                >
+                  Add number
+                </button>
+              </div>
+            </div>
 
-                {/* Other terms */}
-                {formulas.filter((_, i) => i !== selectedIndex).length > 0 && (
-                  <div className="space-y-1.5">
-                    <div className="font-bold text-[9px] text-emerald-600/80 uppercase tracking-widest">
-                      Other terms
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {formulas
-                        .filter((_, i) => i !== selectedIndex)
-                        .map((f) => (
-                          <button
-                            className="select-none rounded border border-emerald-400/40 bg-emerald-400/10 px-2 py-0.5 font-mono text-[10px] text-emerald-700 transition-colors hover:bg-emerald-400/25 disabled:opacity-40 dark:text-emerald-400"
-                            disabled={disabled}
-                            key={f.calculationId}
-                            onClick={() => appendRef(f.resultKey)}
-                            type="button"
-                          >
-                            {f.resultKey}
-                          </button>
-                        ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Functions */}
+            {/* Builder tools */}
+            <div className="flex-1 space-y-4 overflow-y-auto px-3 py-3">
+              <CalculationVariableInsert disabled={disabled} onInsert={appendRef} />
+              <CalculationSourcePicker
+                sources={calculationSources(inputContextBlock ?? block, edges, nodes)}
+                outputs={lastRunOutput}
+                disabled={disabled}
+                onInsert={appendRef}
+              />
+              {/* Upstream keys */}
+              {upstreamValues.length > 0 && (
                 <div className="space-y-1.5">
-                  <div className="font-bold text-[9px] text-violet-600/80 uppercase tracking-widest">
-                    Functions
+                  <div className="font-bold text-[9px] text-sky-600/80 uppercase tracking-widest">
+                    Upstream values
                   </div>
                   <div className="flex flex-wrap gap-1">
-                    {SPECIAL_FUNCTIONS.map(({ display, name }) => (
+                    {upstreamValues.map(({ key, value }) => (
                       <button
-                        className="select-none rounded border border-violet-400/40 bg-violet-400/10 px-2 py-0.5 font-mono text-[10px] text-violet-700 transition-colors hover:bg-violet-400/25 disabled:opacity-40 dark:text-violet-400"
+                        className="flex select-none items-center gap-1 rounded border border-sky-400/40 bg-sky-400/10 px-2 py-0.5 font-mono text-[10px] text-sky-700 transition-colors hover:bg-sky-400/25 disabled:opacity-40 dark:text-sky-400"
                         disabled={disabled}
-                        key={name}
-                        onClick={() => appendFunc(name)}
-                        title={name}
+                        key={key}
+                        onClick={() => appendRef(key)}
+                        title={
+                          value !== null
+                            ? String(value)
+                            : 'Awaiting data — you can use this term now'
+                        }
                         type="button"
                       >
-                        {display}
+                        {key}
+                        {value !== null && <span className="text-sky-500/70">= {value}</span>}
                       </button>
                     ))}
                   </div>
                 </div>
+              )}
 
-                {/* Legend */}
-                <div className="flex flex-wrap gap-x-3 gap-y-1 border-t pt-2">
-                  {LEGEND.map(({ cls, label }) => (
-                    <div className="flex items-center gap-1" key={label}>
-                      <span className={`rounded border px-1.5 py-px font-mono text-[9px] ${cls}`}>
-                        {label}
-                      </span>
-                    </div>
+              {/* Other terms */}
+              {formulas.filter((_, i) => i !== selectedIndex).length > 0 && (
+                <div className="space-y-1.5">
+                  <div className="font-bold text-[9px] text-emerald-600/80 uppercase tracking-widest">
+                    Other terms
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {formulas
+                      .filter((_, i) => i !== selectedIndex)
+                      .map((f) => (
+                        <button
+                          className="select-none rounded border border-emerald-400/40 bg-emerald-400/10 px-2 py-0.5 font-mono text-[10px] text-emerald-700 transition-colors hover:bg-emerald-400/25 disabled:opacity-40 dark:text-emerald-400"
+                          disabled={disabled}
+                          key={f.calculationId}
+                          onClick={() => appendRef(f.resultKey)}
+                          type="button"
+                        >
+                          {f.resultKey}
+                        </button>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Functions */}
+              <div className="space-y-1.5">
+                <div className="font-bold text-[9px] text-violet-600/80 uppercase tracking-widest">
+                  Functions
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {SPECIAL_FUNCTIONS.map(({ display, name }) => (
+                    <button
+                      className="select-none rounded border border-violet-400/40 bg-violet-400/10 px-2 py-0.5 font-mono text-[10px] text-violet-700 transition-colors hover:bg-violet-400/25 disabled:opacity-40 dark:text-violet-400"
+                      disabled={disabled}
+                      key={name}
+                      onClick={() => appendFunc(name)}
+                      title={name}
+                      type="button"
+                    >
+                      {display}
+                    </button>
                   ))}
                 </div>
               </div>
-            </>
-          ) : (
-            <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-              <div className="select-none font-light font-mono text-3xl text-muted-foreground/40">
-                ƒ(x)
-              </div>
-              <p className="max-w-40 text-muted-foreground text-xs">
-                Select a term on the left or create a new one to edit its formula.
-              </p>
-              {!disabled && formulas.length === 0 && (
-                <button
-                  className="mt-1 flex items-center gap-1.5 rounded border px-3 py-1.5 text-xs transition-colors hover:bg-muted"
-                  onClick={addTerm}
-                  type="button"
-                >
-                  <Plus className="size-3" />
-                  Create first term
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      )}
 
-      {/* Summary tab */}
-      {activeTab === 'summary' && (
-        <div className="flex-1 overflow-y-auto p-3">
-          <CalculationEngineRunSections lastRunOutput={lastRunOutput} />
-        </div>
-      )}
+              {/* Legend */}
+              <div className="flex flex-wrap gap-x-3 gap-y-1 border-t pt-2">
+                {LEGEND.map(({ cls, label }) => (
+                  <div className="flex items-center gap-1" key={label}>
+                    <span className={`rounded border px-1.5 py-px font-mono text-[9px] ${cls}`}>
+                      {label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+            <div className="select-none font-light font-mono text-3xl text-muted-foreground/40">
+              ƒ(x)
+            </div>
+            <p className="max-w-40 text-muted-foreground text-xs">
+              Select a term on the left or create a new one to edit its formula.
+            </p>
+            {!disabled && formulas.length === 0 && (
+              <button
+                className="mt-1 flex items-center gap-1.5 rounded border px-3 py-1.5 text-xs transition-colors hover:bg-muted"
+                onClick={addTerm}
+                type="button"
+              >
+                <Plus className="size-3" />
+                Create first term
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 
-  return (
-    <div
-      className={cn(
-        fill ? 'h-full' : 'h-[560px]',
-        'flex flex-col overflow-hidden rounded-md border',
-      )}
-    >
+  const inputsTabContent = (
+    <div className="min-h-0 flex-1 overflow-y-auto">
       <CalculationSettings
         config={(inputContextBlock ?? block).config}
         disabled={disabled}
@@ -639,17 +659,50 @@ export function CalculationEngineEditor({
           onChange={onInputConfigChange ?? onUpdateConfig}
         />
       )}
-      <div className="min-h-0 flex-1">
-        <TwoPanelToolShell
-          badge="Logic"
-          badgeVariant="logic"
-          defaultLeftPercent={30}
-          leftPanel={leftPanel}
-          minLeftPx={180}
-          rightPanel={rightPanel}
-          title="Calculation Engine"
-        />
-      </div>
     </div>
+  );
+
+  const logicTabContent = (
+    <TwoPanelToolShell
+      defaultLeftPercent={30}
+      leftPanel={leftPanel}
+      minLeftPx={180}
+      rightPanel={logicRightPanel}
+    />
+  );
+
+  // Results tab — what this block computed, with full evidence trace
+  const resultsTabContent = (
+    <div className="flex-1 overflow-y-auto p-3">
+      <CalculationEngineRunSections
+        lastRunOutput={lastRunOutput}
+        sections={['summary', 'results', 'trace']}
+      />
+    </div>
+  );
+
+  // Review tab — what needs attention before trusting this result
+  const reviewTabContent = (
+    <div className="flex-1 overflow-y-auto p-3">
+      <CalculationEngineRunSections lastRunOutput={lastRunOutput} sections={['warnings']} />
+    </div>
+  );
+
+  return (
+    <WorkflowBlockCard
+      activeTab={activeTab}
+      fill={fill}
+      keyResult={keyResult}
+      label={(inputContextBlock ?? block).label}
+      onActiveTabChange={setActiveTab}
+      readiness={readiness}
+      tabs={{
+        inputs: inputsTabContent,
+        logic: logicTabContent,
+        results: resultsTabContent,
+        review: reviewTabContent,
+      }}
+      visualLevel="L2"
+    />
   );
 }

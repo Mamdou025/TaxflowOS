@@ -200,17 +200,13 @@ export type KeywordRule = {
   excludeKeywords?: string[];
   confidence: number;
   description?: string;
-  comment?: string;
   matchMode?: 'contains' | 'exact' | 'starts_with';
-  scope?: string;
   lineId?: string;
   sectionId?: string;
   subsectionId?: string;
   suggestedLine?: string;
   suggestedSection?: string;
   suggestedSubsection?: string;
-  suggestedUse?: string;
-  tags?: string[];
   target?: string;
   sourceTrace?: SourceTraceRef[];
   evidenceRefs?: EvidenceRef[];

@@ -79,3 +79,43 @@ test('calculation config filtering and token keys reject malformed ambiguity', (
   assert.equal(isValidNumericLiteral('12oops'), false);
   assert.equal(isValidNumericLiteral(''), false);
 });
+
+test('comparators and if() tokenize and round-trip the same way the engine parses them', () => {
+  const expression = 'if ( income > threshold , income * highRate , income * lowRate )';
+  const tokens = tokenizeExpression(expression);
+  assert.deepEqual(
+    tokens.map(({ type, value }) => [type, value]),
+    [
+      ['func', 'if'],
+      ['paren', '('],
+      ['ref', 'income'],
+      ['op', '>'],
+      ['ref', 'threshold'],
+      ['op', ','],
+      ['ref', 'income'],
+      ['op', '*'],
+      ['ref', 'highRate'],
+      ['op', ','],
+      ['ref', 'income'],
+      ['op', '*'],
+      ['ref', 'lowRate'],
+      ['paren', ')'],
+    ],
+  );
+  assert.equal(tokensToExpression(tokens), expression);
+
+  // Every two-character comparator tokenizes as one token, not two.
+  for (const [source, expected] of [
+    ['a >= b', '>='],
+    ['a <= b', '<='],
+    ['a == b', '=='],
+    ['a != b', '!='],
+  ] as const) {
+    const opTokens = tokenizeExpression(source).filter((token) => token.type === 'op');
+    assert.deepEqual(
+      opTokens.map((token) => token.value),
+      [expected],
+      source,
+    );
+  }
+});

@@ -104,11 +104,15 @@ function paramNames(schema: any): string[] {
 
 export function ToolsMenu({
   compact = false,
+  panelSide = 'bottom',
   onRunResult,
   onAsk,
   onArm,
 }: {
   compact?: boolean;
+  /** Which side of the trigger the panel opens toward — 'top' for a composer-row
+   *  trigger near the bottom of the viewport, 'bottom' (default) for a header trigger. */
+  panelSide?: 'top' | 'bottom';
   /** Run ▸ finished — pin the raw result into the chat. */
   onRunResult?: (r: ToolRunResult) => void;
   /** Ask Sina 💬 / a form's conversational path — send this message to the chat. */
@@ -233,11 +237,14 @@ export function ToolsMenu({
             data-testid="tools-menu-panel"
             style={{
               position: 'absolute',
-              top: 'calc(100% + 6px)',
+              ...(panelSide === 'top'
+                ? { bottom: 'calc(100% + 6px)' }
+                : { top: 'calc(100% + 6px)' }),
               right: 0,
               zIndex: 41,
               width: 448,
-              maxHeight: 588,
+              maxWidth: 'calc(100vw - 24px)',
+              maxHeight: 'min(588px, 60dvh)',
               overflowY: 'auto',
               background: LC.surface,
               border: `1px solid ${LC.border}`,

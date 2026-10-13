@@ -33,7 +33,10 @@ function sameData(left: unknown, right: unknown): boolean {
   const a = left as Record<string, unknown>;
   const b = right as Record<string, unknown>;
   const keys = Object.keys(a);
-  return keys.length === Object.keys(b).length && keys.every((key) => Object.hasOwn(b, key) && sameData(a[key], b[key]));
+  return (
+    keys.length === Object.keys(b).length &&
+    keys.every((key) => Object.hasOwn(b, key) && sameData(a[key], b[key]))
+  );
 }
 
 /** One instance owns one workspace session; React and browser globals are adapters. */
@@ -164,7 +167,8 @@ export function createWorkflowSyncService(deps: Dependencies) {
     return active;
   }
   async function open(code: string) {
-    if (deleting) throw new Error('Wait for the selected draft removal before opening another workspace.');
+    if (deleting)
+      throw new Error('Wait for the selected draft removal before opening another workspace.');
     let valid: { data: string };
     try {
       valid = { data: parseCode(code.trim()) };
@@ -227,9 +231,12 @@ export function createWorkflowSyncService(deps: Dependencies) {
       status('Removing selected unused drafts…');
       const remote = await deps.client.read(code);
       check();
-      const remoteLibrary = remote.payload === null ? {} : validateWorkflowLibrary(deps.decode(remote.payload));
+      const remoteLibrary =
+        remote.payload === null ? {} : validateWorkflowLibrary(deps.decode(remote.payload));
       const present = selected.filter((id) => Object.hasOwn(remoteLibrary, id));
-      const remainingRemote = present.length ? deleteUnusedWorkflowDrafts(remoteLibrary, present) : remoteLibrary;
+      const remainingRemote = present.length
+        ? deleteUnusedWorkflowDrafts(remoteLibrary, present)
+        : remoteLibrary;
       const saved = await deps.client.save(code, {
         payload: deps.encode(remainingRemote),
         revision: remote.revision,
@@ -243,7 +250,11 @@ export function createWorkflowSyncService(deps: Dependencies) {
       loaded = true;
       conflict = false;
       saveMeta({ revision: saved.revision, dirty });
-      status(dirty ? 'Selected drafts removed. Other local changes still need saving.' : 'Saved to server');
+      status(
+        dirty
+          ? 'Selected drafts removed. Other local changes still need saving.'
+          : 'Saved to server',
+      );
       return { removedIds: selected, dirty };
     } catch (error) {
       if (sequence === deletionSequence && epoch === currentEpoch) {
@@ -251,9 +262,13 @@ export function createWorkflowSyncService(deps: Dependencies) {
           conflict = true;
           saveMeta({ ...meta(), dirty: true });
         }
-        status(committed
-          ? 'Server draft removal completed, but local work changed. Local data was kept. Export it before reloading the server copy.'
-          : error instanceof Error ? error.message : 'Draft removal failed. Local data was kept.');
+        status(
+          committed
+            ? 'Server draft removal completed, but local work changed. Local data was kept. Export it before reloading the server copy.'
+            : error instanceof Error
+              ? error.message
+              : 'Draft removal failed. Local data was kept.',
+        );
       }
       throw error;
     } finally {

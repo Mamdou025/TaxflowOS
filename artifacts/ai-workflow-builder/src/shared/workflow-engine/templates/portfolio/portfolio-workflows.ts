@@ -2,6 +2,10 @@ import type { WorkflowRelationshipType } from '@workspace/workflow-contracts/dom
 import { DOCUMENT_CALCULATOR } from './document-calculator';
 import { EXECUTABLE_WORKPAPERS } from './executable-workpapers';
 import { FAPI_TEMPLATE_BLOCK_SPECS, FAPI_TEMPLATE_EDGE_SPECS } from '../fapi/fapi-template';
+import {
+  FOREIGN_TAX_CALC_BLOCK_SPECS,
+  FOREIGN_TAX_CALC_EDGE_SPECS,
+} from '../fapi/foreign-tax-calculator-template';
 import { EXPENSE_TEMPLATE_BLOCK_SPECS, EXPENSE_TEMPLATE_EDGE_SPECS } from '../sample-workflows/expense-reimbursement-template';
 import {
   HOLIDAY_TEMPLATE_BLOCK_SPECS,
@@ -900,7 +904,22 @@ const EXECUTABLE_FAPI: PortfolioWorkflowDef = {
   blocks: FAPI_TEMPLATE_BLOCK_SPECS.map(block => ({ id: block.id, catalogId: block.catalogId, label: block.label, description: block.description, config: block.config, stage: Math.round((block.position.x + 520) / 460), row: Math.round(block.position.y / 400) })),
   edges: FAPI_TEMPLATE_EDGE_SPECS.map(edge => ({ from: edge.sourceBlockId, to: edge.targetBlockId, label: edge.bindingLabel, reason: edge.reason, rel: edge.relationshipType as WorkflowRelationshipType, fromRole: edge.sourceOutputRole, toRole: edge.targetInputRole })),
 };
-export const PORTFOLIO_WORKFLOWS: PortfolioWorkflowDef[] = [EXECUTABLE_FAPI, ...EXECUTABLE_WORKPAPERS];
+// Rebuilt from fapi-template.ts with a widened keyword rulebook, non-blocking
+// confidence/unmatched-row flags right after classification, and declared
+// Workpaper worksheetLines (with default-when-missing on the situational
+// lines) in place of the undeclared legacy Field blocks. Same FAPI math; see
+// foreign-tax-calculator-template.ts for exactly what changed and why.
+const EXECUTABLE_FOREIGN_TAX_CALCULATOR: PortfolioWorkflowDef = {
+  id: 'pf-foreign-tax-calculator',
+  name: 'Foreign Tax Calculator',
+  group: 'tier1',
+  sub: 'Trial balance → widened keyword mapping → confidence review → FAPI calculations',
+  description: 'Calculate FAPI from supplied trial-balance rows, a widened classification rulebook, preparer inputs and an FX rate. Low-confidence and unmatched rows are flagged for review before the figures are relied on. Produces calculation displays, canonical JSON and an evidence pack; it does not determine a complete tax position or file a return.',
+  canvasFromRunnable: true,
+  blocks: FOREIGN_TAX_CALC_BLOCK_SPECS.map(block => ({ id: block.id, catalogId: block.catalogId, label: block.label, description: block.description, config: block.config, stage: Math.round((block.position.x + 520) / 460), row: Math.round(block.position.y / 400) })),
+  edges: FOREIGN_TAX_CALC_EDGE_SPECS.map(edge => ({ from: edge.sourceBlockId, to: edge.targetBlockId, label: edge.bindingLabel, reason: edge.reason, rel: edge.relationshipType as WorkflowRelationshipType, fromRole: edge.sourceOutputRole, toRole: edge.targetInputRole })),
+};
+export const PORTFOLIO_WORKFLOWS: PortfolioWorkflowDef[] = [EXECUTABLE_FAPI, EXECUTABLE_FOREIGN_TAX_CALCULATOR, ...EXECUTABLE_WORKPAPERS];
 
 export function getPortfolioWorkflowDef(id: string): PortfolioWorkflowDef | null {
   return PORTFOLIO_WORKFLOWS.find((w) => w.id === id) ?? null;

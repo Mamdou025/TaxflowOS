@@ -1,10 +1,11 @@
 .chat-scope {
   display: flex;
+  position: relative;
   flex-direction: column;
   align-items: stretch;
   width: 100%;
   min-width: 0;
-  max-width: 640px;
+  max-width: 720px;
 }
 .chat-scope-trigger {
   display: flex;
@@ -14,13 +15,18 @@
   max-width: 100%;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px 10px 10px;
+  padding: 9px 16px 9px 9px;
   border: 1px solid var(--sx-hairline);
-  border-radius: 20px;
+  border-radius: 999px;
   background: var(--sx-surface);
+  box-shadow: var(--sx-shadow-sm);
   color: var(--sx-ink);
   text-align: left;
   cursor: pointer;
+  transition: box-shadow 160ms;
+}
+.chat-scope-trigger:hover {
+  box-shadow: var(--sx-shadow-out);
 }
 .chat-scope-trigger:hover .chat-scope-summary {
   color: var(--sx-ink);
@@ -52,11 +58,6 @@
   line-height: 1.5;
   color: var(--sx-muted);
 }
-.chat-scope-label {
-  color: var(--sx-ink);
-  font-size: 11px;
-  font-weight: 650;
-}
 .chat-scope-values {
   display: flex;
   flex-wrap: wrap;
@@ -76,6 +77,130 @@
 .chat-scope-values > [data-scope-field='workflow'] {
   color: var(--sx-body);
 }
+.chat-scope-fields {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  overflow: hidden;
+}
+.chat-scope-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex-shrink: 1;
+}
+.chat-scope-field-workflow {
+  flex-shrink: 0;
+}
+.chat-scope-field-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--sx-muted);
+}
+.chat-scope-field[data-filled] .chat-scope-field-text {
+  color: var(--sx-ink);
+}
+.chat-scope-field-icon {
+  flex-shrink: 0;
+  color: var(--sx-muted);
+}
+.chat-scope-field[data-filled] .chat-scope-field-icon {
+  color: var(--sx-accent);
+}
+.chat-scope-placeholder-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border: 1px dashed var(--sx-hairline);
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--sx-muted);
+}
+.chat-scope-company-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 19px;
+  height: 19px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+}
+.chat-scope-divider {
+  flex-shrink: 0;
+  width: 1px;
+  height: 16px;
+  background: var(--sx-hairline);
+}
+.chat-scope-field-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
+}
+.chat-scope-field-sub {
+  font-size: 10.5px;
+  font-weight: 650;
+  color: var(--sx-muted);
+  white-space: nowrap;
+}
+.chat-scope-status-badge {
+  margin-left: 2px;
+}
+.chat-scope-status-badge[data-status='done'] {
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+}
+.chat-scope-status-badge[data-status='active'] {
+  background: rgba(59, 130, 246, 0.14);
+  color: #1d4ed8;
+}
+.chat-scope-status-badge[data-status='paused'] {
+  background: var(--sx-raised-hover);
+  color: var(--sx-muted);
+}
+.dark .chat-scope-status-badge[data-status='done'] {
+  color: #6ee7b7;
+}
+.dark .chat-scope-status-badge[data-status='active'] {
+  color: #93c5fd;
+}
+/* Keyed to the chat-panel container (declared by assistant-thread.tsx), not the
+   viewport — this bar can be squeezed by a docked side panel (e.g. Sources open
+   beside Chat) at any viewport size, long before the viewport itself is narrow.
+   Shed the least-identifying fields first so what's left stays legible instead
+   of every field reading as a near-illegible ellipsis fragment. */
+@container chat-panel (max-width: 460px) {
+  .chat-scope-fields {
+    gap: 6px;
+  }
+  .chat-scope-field[data-scope-field='sources'],
+  .chat-scope-fields [data-scope-divider-sources] {
+    display: none;
+  }
+}
+@container chat-panel (max-width: 340px) {
+  .chat-scope-field[data-scope-field='year'],
+  .chat-scope-fields [data-scope-divider-year] {
+    display: none;
+  }
+}
 .chat-scope-chevron {
   flex-shrink: 0;
   color: var(--sx-muted);
@@ -88,37 +213,67 @@
   width: auto;
   align-self: center;
   flex-direction: column;
-  gap: 8px;
+  gap: 14px;
   padding: 10px 8px;
   border-color: transparent;
   background: transparent;
+  /* The base trigger's neumorphic shadow is for the compact pill bar — at hero's
+     stacked orb+wordmark+summary height it reads as a big oval card, not a pill. */
+  box-shadow: none;
   text-align: center;
 }
+.chat-scope-trigger[data-hero]:hover {
+  box-shadow: none;
+}
 .chat-scope-trigger[data-hero] .chat-scope-summary {
+  flex-direction: row;
   align-items: center;
-  padding-right: 16px;
+  gap: 8px;
+  padding: 7px 14px;
+  border: 1px solid var(--sx-hairline);
+  border-radius: 999px;
+  background: var(--sx-raised);
+  box-shadow: var(--sx-shadow-sm);
   font-size: 12px;
+  transition:
+    background 160ms,
+    box-shadow 160ms,
+    border-color 160ms;
+}
+.chat-scope-trigger[data-hero]:hover .chat-scope-summary {
+  border-color: var(--sx-accent);
+  background: var(--sx-raised-hover);
+  box-shadow: var(--sx-shadow-out);
 }
 .chat-scope-trigger[data-hero] .chat-scope-values {
   justify-content: center;
+  color: var(--sx-body);
+  font-weight: 600;
+}
+.chat-scope-trigger[data-hero] .chat-scope-values > span:first-child:last-child {
+  color: var(--sx-muted);
+  font-weight: 500;
 }
 .chat-scope-trigger[data-hero] .chat-scope-chevron {
-  position: absolute;
-  right: 6px;
-  bottom: 12px;
+  flex-shrink: 0;
 }
 .chat-scope-panel {
   display: flex;
   flex-direction: column;
-  width: 100%;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  width: auto;
+  z-index: 50;
   max-height: min(440px, 40dvh);
-  margin-top: 8px;
   gap: 0;
   padding: 0;
   overflow: hidden;
   border: 1px solid var(--sx-hairline);
   border-radius: 18px;
   background: var(--sx-surface);
+  box-shadow: var(--sx-shadow-out);
   color: var(--sx-body);
 }
 .chat-scope-panel[hidden] {

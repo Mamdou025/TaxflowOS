@@ -1,0 +1,8 @@
+
+> workspace@0.0.0 test:workflow-reliability C:\Users\Mamad\Sinaxe\TaxflowOS
+> node scripts/run-browser-tests.mjs reliability "e2e/chat-context.spec.ts" "e2e/assistant-ui-chat.spec.ts" "e2e/phase-7-navigation.spec.ts" "e2e/mkoro-delegation.spec.ts" "--grep" "saved chat restoration keeps the normal shell|explicit chat context reaches sina|Sources adds text documents only|attaching workflow scope preserves|the registered native workflow tool opens FAPI"
+
+Test run 04a727d1-d235661d-9750-4298-a72b-493caecb1a5a; reports and logs: C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-d235661d-9750-4298-a72b-493caecb1a5a
+Preparing the isolated browser dependency cache…
+browser-warmup exited 1; see C:\Users\Mamad\Sinaxe\TaxflowOS\test-results\phase2\04a727d1-d235661d-9750-4298-a72b-493caecb1a5a\browser-warmup.log
+ ELIFECYCLE  Command failed with exit code 1.
