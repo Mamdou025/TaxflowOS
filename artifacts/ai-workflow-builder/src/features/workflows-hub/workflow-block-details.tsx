@@ -17,6 +17,9 @@ export function WorkflowBlockDetails({
   const detail = projectWorkflowBlockDetail(definition, blockId, session);
   if (!detail) return null;
   const { block, result } = detail;
+  const needsAttention = detail.state === 'failed' || detail.state === 'previous';
+  const hasFullDetail =
+    detail.formulas.length > 0 || detail.sections.length > 0 || !!block.code?.body || !!result;
   return (
     <div className="workflow-block-details space-y-3 text-sm" data-block-details={block.id}>
       <div className="space-y-1">
@@ -39,64 +42,6 @@ export function WorkflowBlockDetails({
           </ul>
         )}
       </div>
-      {detail.formulas.length > 0 && (
-        <section aria-label="Saved formulas" className="space-y-2">
-          <h6 className="font-medium">Saved formulas</h6>
-          <p className="text-xs text-muted-foreground">
-            {session
-              ? "Definitions from this run's workflow version"
-              : 'Definitions from this workflow'}
-            {detail.mode ? ` · configured mode: ${detail.mode}` : ''}. Recorded execution is shown
-            separately below.
-          </p>
-          {detail.formulas.map((formula, index) => (
-            <div key={index} className="space-y-1 rounded-lg border bg-muted/20 p-3">
-              {(formula.label || formula.resultKey) && (
-                <p className="font-medium">
-                  {formula.label ?? formula.resultKey}
-                  {formula.label && formula.resultKey && formula.label !== formula.resultKey
-                    ? ` · ${formula.resultKey}`
-                    : ''}
-                  {formula.unit ? ` (${formula.unit})` : ''}
-                </p>
-              )}
-              {formula.expression ? (
-                <pre className="whitespace-pre-wrap break-words text-xs">{formula.expression}</pre>
-              ) : (
-                <>
-                  {formula.operation && (
-                    <p className="text-xs">
-                      Operation: <code>{formula.operation}</code>
-                    </p>
-                  )}
-                  {formula.operands !== undefined && (
-                    <div className="text-xs">
-                      Operands: <ReadableData value={formula.operands} />
-                    </div>
-                  )}
-                </>
-              )}
-              {formula.description && (
-                <p className="text-xs text-muted-foreground">{formula.description}</p>
-              )}
-            </div>
-          ))}
-        </section>
-      )}
-      {detail.sections.map((section) => (
-        <section key={section.key} aria-label={section.label} className="space-y-2">
-          <h6 className="font-medium">{section.label}</h6>
-          <ReadableData value={section.value} />
-        </section>
-      ))}
-      {block.code?.body && (
-        <section aria-label="Saved block code" className="space-y-2">
-          <h6 className="font-medium">Saved block code</h6>
-          <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-words rounded border p-3 text-xs">
-            {block.code.body}
-          </pre>
-        </section>
-      )}
       <section
         aria-label="Recorded execution"
         className="space-y-2 border-t pt-3"
@@ -133,39 +78,112 @@ export function WorkflowBlockDetails({
                 {message}
               </p>
             ))}
-            <h6 className="font-medium">Recorded input</h6>
-            {result.input !== undefined ? (
-              <ReadableData value={result.input} />
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                Input was not recorded for this attempt.
-              </p>
-            )}
-            <h6 className="font-medium">Recorded result</h6>
-            <DocumentExtractionEvidence value={result.output.extractions} />
-            <ReadableData value={presentToolOutput(result, block)} />
-            {detail.trace !== undefined && (
-              <>
-                <h6 className="font-medium">Recorded calculation trace</h6>
-                <ReadableData value={detail.trace} />
-              </>
-            )}
-            {!!result.inputTransfers?.length && (
-              <>
-                <h6 className="font-medium">Recorded input transfers</h6>
-                <ReadableData value={result.inputTransfers} />
-              </>
-            )}
-            {(result.evidenceRefs.length > 0 || result.sourceTrace.length > 0) && (
-              <>
-                <h6 className="font-medium">Recorded source evidence</h6>
-                {result.evidenceRefs.length > 0 && <ReadableData value={result.evidenceRefs} />}
-                {result.sourceTrace.length > 0 && <ReadableData value={result.sourceTrace} />}
-              </>
-            )}
           </>
         )}
       </section>
+      {hasFullDetail && (
+        <details open={needsAttention}>
+          <summary className="cursor-pointer text-sm font-medium">
+            Full calculation detail &amp; trace
+          </summary>
+          <div className="mt-3 space-y-3">
+            {detail.formulas.length > 0 && (
+              <section aria-label="Saved formulas" className="space-y-2">
+                <h6 className="font-medium">Saved formulas</h6>
+                <p className="text-xs text-muted-foreground">
+                  {session
+                    ? "Definitions from this run's workflow version"
+                    : 'Definitions from this workflow'}
+                  {detail.mode ? ` · configured mode: ${detail.mode}` : ''}. Recorded execution is
+                  shown separately below.
+                </p>
+                {detail.formulas.map((formula, index) => (
+                  <div key={index} className="space-y-1 rounded-lg border bg-muted/20 p-3">
+                    {(formula.label || formula.resultKey) && (
+                      <p className="font-medium">
+                        {formula.label ?? formula.resultKey}
+                        {formula.label && formula.resultKey && formula.label !== formula.resultKey
+                          ? ` · ${formula.resultKey}`
+                          : ''}
+                        {formula.unit ? ` (${formula.unit})` : ''}
+                      </p>
+                    )}
+                    {formula.expression ? (
+                      <pre className="whitespace-pre-wrap break-words text-xs">
+                        {formula.expression}
+                      </pre>
+                    ) : (
+                      <>
+                        {formula.operation && (
+                          <p className="text-xs">
+                            Operation: <code>{formula.operation}</code>
+                          </p>
+                        )}
+                        {formula.operands !== undefined && (
+                          <div className="text-xs">
+                            Operands: <ReadableData value={formula.operands} />
+                          </div>
+                        )}
+                      </>
+                    )}
+                    {formula.description && (
+                      <p className="text-xs text-muted-foreground">{formula.description}</p>
+                    )}
+                  </div>
+                ))}
+              </section>
+            )}
+            {detail.sections.map((section) => (
+              <section key={section.key} aria-label={section.label} className="space-y-2">
+                <h6 className="font-medium">{section.label}</h6>
+                <ReadableData value={section.value} />
+              </section>
+            ))}
+            {block.code?.body && (
+              <section aria-label="Saved block code" className="space-y-2">
+                <h6 className="font-medium">Saved block code</h6>
+                <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-words rounded border p-3 text-xs">
+                  {block.code.body}
+                </pre>
+              </section>
+            )}
+            {result && (
+              <>
+                <h6 className="font-medium">Recorded input</h6>
+                {result.input !== undefined ? (
+                  <ReadableData value={result.input} />
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Input was not recorded for this attempt.
+                  </p>
+                )}
+                <h6 className="font-medium">Recorded result</h6>
+                <DocumentExtractionEvidence value={result.output.extractions} />
+                <ReadableData value={presentToolOutput(result, block)} />
+                {detail.trace !== undefined && (
+                  <>
+                    <h6 className="font-medium">Recorded calculation trace</h6>
+                    <ReadableData value={detail.trace} />
+                  </>
+                )}
+                {!!result.inputTransfers?.length && (
+                  <>
+                    <h6 className="font-medium">Recorded input transfers</h6>
+                    <ReadableData value={result.inputTransfers} />
+                  </>
+                )}
+                {(result.evidenceRefs.length > 0 || result.sourceTrace.length > 0) && (
+                  <>
+                    <h6 className="font-medium">Recorded source evidence</h6>
+                    {result.evidenceRefs.length > 0 && <ReadableData value={result.evidenceRefs} />}
+                    {result.sourceTrace.length > 0 && <ReadableData value={result.sourceTrace} />}
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        </details>
+      )}
     </div>
   );
 }

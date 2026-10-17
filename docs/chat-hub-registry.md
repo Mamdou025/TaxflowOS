@@ -53,7 +53,8 @@ All paths are relative to `artifacts/ai-workflow-builder/src/` unless noted.
 | --- | --- | --- | --- |
 | Shared session panel | `features/workflows-hub/workflow-session-panel.tsx` (~414) | **The same component** renders the full workflow session both standalone (`/run/[workflowId]`) and inline in chat (`presentation="chat"`, mounted via `ChatWorkflowThread`/`assistant-ui-transcript.tsx` when a message carries `metadata.custom.workflow === true`). | Intentional one-component-two-themes design — don't fork it into a separate "chat-lite" copy without a decision; that reintroduces the duplication Phase 4/8 removed. But see smell #2: it is genuinely page-sized, themed rather than trimmed. |
 | Workflow discovery | `workflow-choice-model.ts` (~137), `workflow-choice-list.tsx` (~230) | Parses tool results into clickable workflow choices; re-resolves against the live library at click time, never a stale snapshot. | Never trust a cached choice as still valid — always re-check at click. |
-| FAPI step timeline | `workflow-step-timeline.tsx` (~147, generic accordion), `fapi-workflow-steps.tsx` (~120, FAPI's 4 colored stages), `workflow-step-model.ts` (~65), `fapi-session-worksheet.tsx` (~245) | FAPI-specific 4-stage (Collect/Classify/Compute/Review) presentation layered on the generic accordion. | FAPI-only. `supportsFapiStages` must keep gating this — don't let FAPI's bespoke presentation leak onto other workflow types without a decision. |
+| FAPI step timeline | `workflow-step-timeline.tsx` (~147, generic accordion), `fapi-workflow-steps.tsx` (~120, FAPI's 4 colored stages), `workflow-step-model.ts` (~65), `fapi-session-worksheet.tsx` (~245) | FAPI-specific 4-stage (Collect/Classify/Compute/Review) presentation layered on the generic accordion. | FAPI-only. `supportsFapiStages` must keep gating this — don't let FAPI's bespoke presentation leak onto other workflow types without a decision. The FAPI worksheet summary (`fapi-session-worksheet.tsx`) is now rendered in `workflow-session-panel.tsx` right after the action buttons, *before* the step timeline — so the recorded figures are visible without first expanding every stage (2026-10-13, see Design polish backlog). |
+| Required-input & block-detail renderers | `session-calculation-inputs.tsx` (~245), `workflow-required-inputs.tsx` (~115), `session-input-forms.tsx` (~215), `workflow-block-details.tsx` (~215) | Per-block calculation-input forms and the generic "everything about this block" detail dump (formulas, saved config, recorded input/output, trace, evidence). Reused by every workflow type via `inputForms`/`stepDetails` in the session panel — not FAPI-specific, even though FAPI's multi-block compute stage is what currently exercises the most fields. | Progressive disclosure only, never deletion: an already-`provided` calculation-input field, and a block's formulas/trace/evidence, now render inside a `<details>` collapsed by default (auto-open only when something needs attention: a field that's missing/invalid, or a block whose state is `failed`/`previous`). All data and edit affordances (provider dropdown, manual value, Apply) stay in the DOM and reachable — don't let a future pass turn "collapsed" into "removed." |
 
 ## Generative + predefined UI
 
@@ -184,6 +185,29 @@ polished. Log items here as they're found; this list is expected to grow.
   `configuration-overlay.tsx` earlier. Reverted from `git show HEAD:...` and
   reapplied the 13-line addition by hand in the file's existing style rather
   than rerun `--write` on it.
+- [x] **Running a workflow in chat buried the calculation behind too much to
+  read/approve** — the user reported (2026-10-13) that starting a FAPI run in
+  chat meant reading "multiple lines about multiple fields, approving every
+  single section" before ever seeing a number. Traced to three concrete
+  sources, not a vague "too busy" feeling: (1) `FapiSessionWorksheet` — which
+  already has the computed result — was rendered *after* the full
+  Collect/Classify/Compute/Review step timeline in `workflow-session-panel.tsx`,
+  so the number was always the last thing on the screen; (2)
+  `SessionCalculationInputs` rendered one full card per formula variable
+  unconditionally, including variables already satisfied from a connected
+  source or default, so a calculation with a dozen-plus fields showed a dozen-plus
+  cards regardless of whether any needed action; (3) `WorkflowBlockDetails`
+  (rendered for every block in every stage) always dumped saved formulas,
+  block code, recorded input/output, calculation trace and evidence in full,
+  even for a block that had already completed successfully. Fixed: moved the
+  worksheet to render right after the action buttons, before the step
+  timeline; calculation-input fields already `provided` now collapse behind
+  one `<details>` ("N fields already set..."), open only when nothing needs
+  attention; block formula/trace/evidence detail now collapses behind one
+  `<details>` per block, auto-open only when that block's state is
+  `failed`/`previous`. No computation, validation, or approval logic changed
+  — purely disclosure and ordering. Typecheck/verify run; not yet exercised
+  live in a browser.
 - [ ] *(add the next item here when found — file, what's wrong, what "good"
   looks like)*
 
@@ -191,4 +215,4 @@ polished. Log items here as they're found; this list is expected to grow.
 
 Update this file when: a change deliberately alters a documented contract (update the Contract column same-change), or a new chat-hub/workflow-block element is built (add a row). Don't let it go stale — a wrong registry is worse than no registry.
 
-Last verified against code: 2026-10-11.
+Last verified against code: 2026-10-13.

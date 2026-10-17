@@ -221,8 +221,18 @@ export default defineConfig({
     // `docker compose restart web`). Polling restores HMR there. Gated on an env
     // var (set for the `web` service in docker-compose.yml) so native, event-based
     // watching is kept everywhere it actually works (Replit, macOS, bare-metal).
+    //
+    // Measured 2026-10-13: a single stat() pass over this package's ~1.4k watched
+    // files took 9.3s inside the container (~6.5ms/call — per-syscall latency on
+    // this bind mount, not something an interval number fixes: any interval below
+    // the pass duration just means back-to-back passes with no idle time, pinning
+    // a full CPU core continuously and competing with the same process serving
+    // pages — the "whole site is slow" symptom). `dist/` alone was 529 of those
+    // 1.4k files (a stale production build output the dev server never reads) —
+    // excluding it cuts the pass by ~37% for free. 1000ms (was 300ms) still helps
+    // once a pass is cheap enough to finish inside the interval.
     watch: process.env.VITE_USE_POLLING
-      ? { usePolling: true, interval: 300 }
+      ? { usePolling: true, interval: 1000, ignored: ['**/dist/**', '**/test-results/**'] }
       : undefined,
     fs: {
       strict: true,

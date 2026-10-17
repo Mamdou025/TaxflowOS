@@ -486,6 +486,24 @@ not cached. This avoids rebuilding identical schemas for every stored definition
   delivery and live-provider checks remain separate work. See
   [the access design](phase-3-access.md) and [agent boundary](phase-6-agents.md).
 
+## Cross-entity reference index
+
+`entity_references` (migration `0014_entity_references.sql`) is a derived, rebuildable
+index of relationships an owning module already knows about — not a new source of truth
+and not a new owner for any entity. The first populated edge: whenever a workspace saves
+its workflow library (`PUT /api/workflow-library`), the API decodes the payload, finds
+every saved run whose session snapshot cites a document-backed source
+(`sessionSnapshot.sources[].extraction.originalDocumentId`), and replaces that workspace's
+`workflow`→`document` edges with exactly what the payload currently supports
+(`artifacts/api-server/src/lib/entity-references.ts`). Indexing failures are logged and
+never fail the save; the index can always be rebuilt from the payload that's already
+stored. No UI surfaces these edges yet — this is the storage/indexing layer only. See
+[the agent guide's note on run storage](agent-guide/running-a-workflow.md) for why the
+durable `workflow_run_jobs` queue isn't the source for this edge today (document-reading
+tools aren't in its allowlist yet), and extend
+`extractWorkflowDocumentReferences`/`reindexWorkflowDocumentReferences` rather than adding
+a second indexing path when the next relationship (e.g. chat↔run) is worth indexing.
+
 ## API source named outputs
 
 Provider-independent selection and validation live in

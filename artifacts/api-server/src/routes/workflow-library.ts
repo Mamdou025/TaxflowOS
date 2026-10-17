@@ -5,8 +5,9 @@ import {
   RecoveryCodeSchema,
   SaveLibraryRequestSchema,
 } from '@workspace/workflow-contracts/storage-protocol';
-import { validateBackup } from '../storage/validate-backup';
+import { decodeBackup, validateBackup } from '../storage/validate-backup';
 import { requireAccount } from '../security/access';
+import { reindexWorkflowDocumentReferences } from '../lib/entity-references';
 
 const router = Router();
 router.get('/', async (req, res) => {
@@ -48,6 +49,14 @@ router.put('/', async (req, res) => {
     });
     return;
   }
+  // Best-effort derived index, kept synchronous with the save so a caller that reads
+  // it right after a 200 never sees a stale result: never let a reference-indexing bug
+  // fail a save that otherwise succeeded, though.
+  try {
+    await reindexWorkflowDocumentReferences(req.workspaceId, decodeBackup(payload));
+  } catch (err) {
+    req.log.error({ err }, 'Failed to reindex workflow-document references');
+  }
   res.json(rows[0]);
 });
 router.delete('/', async (req, res) => {
@@ -64,6 +73,11 @@ router.delete('/', async (req, res) => {
       req.userId,
     ],
   );
+  try {
+    await reindexWorkflowDocumentReferences(req.workspaceId, {});
+  } catch (err) {
+    req.log.error({ err }, 'Failed to reindex workflow-document references');
+  }
   res.json({ ok: true, revision: rows[0].revision });
 });
 router.post('/claim', requireAccount, async (req, res) => {

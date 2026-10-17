@@ -1,5 +1,10 @@
 import { buildApiRequest, apiRequestToBlockConfig } from '@workspace/source-connectors/connectors';
 import { WORKING_SOURCE_DEMO_RULES } from '../sample-workflows/working-source-rules-demo';
+import {
+  DEFAULT_CONFIDENCE_THRESHOLD,
+  DEFAULT_MODEL,
+  DEFAULT_SYSTEM_PROMPT,
+} from '@workspace/workflow-executors/execution/blocks/ai/classification-suggestion/schema';
 
 // ── Calculation rules ─────────────────────────────────────────────────────────
 
@@ -398,6 +403,22 @@ export const FAPI_TEMPLATE_BLOCK_SPECS = [
     label: 'FAPI Summary Engine',
     position: { x: 1720, y: 80 },
   },
+  {
+    catalogId: 'ai:ai-mapping-suggestion',
+    config: {
+      confidenceThreshold: DEFAULT_CONFIDENCE_THRESHOLD,
+      inputs: 'unmatched_rows, low_confidence_rows, keyword_rules (reference)',
+      model: DEFAULT_MODEL,
+      outputs: 'suggestions',
+      systemPrompt: DEFAULT_SYSTEM_PROMPT,
+      toolId: 'ai.classification_suggestion',
+    },
+    description:
+      'Proposes FAPI category suggestions for trial-balance rows the Keyword Mapper could not confidently classify. Non-authoritative until a reviewer accepts — never feeds the calculation automatically.',
+    id: 'fapi-ai-mapping-suggestion',
+    label: 'AI Mapping Suggestion',
+    position: { x: 340, y: 360 },
+  },
 
   // ── Field blocks ──────────────────────────────────────────────────────────
   {
@@ -473,6 +494,26 @@ export const FAPI_TEMPLATE_EDGE_SPECS = [
     sourceOutputRole: 'mapped_rows',
     targetBlockId: 'fapi-logic-category-rollup',
     targetInputRole: 'mapped_rows',
+  },
+  {
+    bindingLabel: 'Unmatched rows for AI review',
+    reason:
+      'AI Mapping Suggestion proposes categories for rows the Keyword Mapper could not match to any keyword rule.',
+    relationshipType: 'provides_data_to',
+    sourceBlockId: 'fapi-logic-keyword-mapper',
+    sourceOutputRole: 'unmatched_rows',
+    targetBlockId: 'fapi-ai-mapping-suggestion',
+    targetInputRole: 'unmatched_rows',
+  },
+  {
+    bindingLabel: 'Low-confidence rows for AI review',
+    reason:
+      'AI Mapping Suggestion also reviews rows the Keyword Mapper matched below its confidence threshold.',
+    relationshipType: 'provides_data_to',
+    sourceBlockId: 'fapi-logic-keyword-mapper',
+    sourceOutputRole: 'low_confidence_rows',
+    targetBlockId: 'fapi-ai-mapping-suggestion',
+    targetInputRole: 'low_confidence_rows',
   },
   {
     bindingLabel: 'Category totals for FAPI lines',

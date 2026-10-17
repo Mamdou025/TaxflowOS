@@ -1,4 +1,9 @@
 import type { BlockCatalogItem } from '@/shared/workflow-engine/domain/workflow/block-catalog';
+import {
+  DEFAULT_CONFIDENCE_THRESHOLD,
+  DEFAULT_MODEL,
+  DEFAULT_SYSTEM_PROMPT,
+} from '@workspace/workflow-executors/execution/blocks/ai/classification-suggestion/schema';
 
 export const BLOCK_CATALOG: BlockCatalogItem[] = [
   {
@@ -718,12 +723,17 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
     family: 'AI / Agent',
     subtype: 'AI Mapping Suggestion',
     label: 'AI Mapping Suggestion',
-    description: 'Proposal-only mapping suggestion',
+    description:
+      'Model-backed category suggestions for rows a Keyword Mapper could not confidently classify. Non-authoritative until accepted.',
     defaultConfig: {
       owner: 'Builder',
-      inputs: 'source rows',
-      outputs: 'aiMappingProposal',
-      rulebookRef: 'AI mapping suggestions do not mutate the workflow.',
+      inputs: 'unmatched_rows, low_confidence_rows, keyword_rules (reference)',
+      outputs: 'suggestions',
+      rulebookRef: 'AI mapping suggestions do not mutate the workflow until a reviewer accepts them.',
+      toolId: 'ai.classification_suggestion',
+      systemPrompt: DEFAULT_SYSTEM_PROMPT,
+      model: DEFAULT_MODEL,
+      confidenceThreshold: DEFAULT_CONFIDENCE_THRESHOLD,
     },
   },
   {

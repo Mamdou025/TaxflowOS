@@ -166,6 +166,127 @@ test('guided run revisions and pause state roundtrip through the real workspace 
   );
 });
 
+function documentRun(documentId, extractionId) {
+  return {
+    version: 1,
+    at: '2026-10-17T12:00:00.000Z',
+    result: {
+      blockStatuses: {},
+      edgeStatuses: {},
+      record: {
+        execution: {
+          id: `run-${extractionId}`,
+          workflowId: 'placeholder',
+          status: 'success',
+          startedAt: '2026-10-17T12:00:00.000Z',
+          completedAt: '2026-10-17T12:00:01.000Z',
+          duration: '1s',
+          error: null,
+        },
+        logs: [],
+      },
+      result: {
+        runId: `run-${extractionId}`,
+        workflowId: 'placeholder',
+        workflowName: 'test',
+        status: 'success',
+        startedAt: '2026-10-17T12:00:00.000Z',
+        completedAt: '2026-10-17T12:00:01.000Z',
+        results: [],
+        logs: [],
+        warnings: [],
+        errors: [],
+      },
+    },
+    sessionSnapshot: {
+      id: `session-${extractionId}`,
+      version: 1,
+      revision: 1,
+      createdAt: '2026-10-17T11:00:00.000Z',
+      paused: false,
+      results: {},
+      stale: [],
+      reviewed: [],
+      attempts: [],
+      sources: [
+        {
+          id: `source-${extractionId}`,
+          blockId: 'block-1',
+          name: 't4.pdf',
+          at: '2026-10-17T11:00:00.000Z',
+          mode: 'add',
+          rows: [],
+          extraction: {
+            id: extractionId,
+            revision: 1,
+            fileName: 't4.pdf',
+            contentHash: 'hash-1',
+            extractedAt: '2026-10-17T11:00:00.000Z',
+            method: 'pdf_text',
+            originalDocumentId: documentId,
+            segments: [],
+            rows: [],
+            issues: [],
+          },
+        },
+      ],
+    },
+  };
+}
+
+test('a document-backed run indexes a workflow-to-document edge, and a later save without it clears the edge', async () => {
+  const code = await key();
+  const library = JSON.parse(fixture);
+  const entry = Object.values(library)[0];
+  const run = documentRun('doc-1', 'extraction-1');
+  run.result.record.execution.workflowId = entry.id;
+  run.result.result.workflowId = entry.id;
+  entry.runs = [run];
+  await save(code, JSON.stringify(library), 0);
+
+  const indexed = await stack.db.query(
+    'SELECT from_type, from_id, to_type, to_id, context FROM entity_references WHERE workspace_id=$1',
+    [code],
+  );
+  assert.equal(indexed.rows.length, 1);
+  assert.equal(indexed.rows[0].from_type, 'workflow');
+  assert.equal(indexed.rows[0].from_id, entry.id);
+  assert.equal(indexed.rows[0].to_type, 'document');
+  assert.equal(indexed.rows[0].to_id, 'doc-1');
+  assert.equal(indexed.rows[0].context.extractionId, 'extraction-1');
+
+  // The whole payload is always a full snapshot, so the index replaces rather than
+  // accumulates: removing the document-backed run from the saved library clears its edge.
+  entry.runs = [];
+  await save(code, JSON.stringify(library), 1);
+  const cleared = await stack.db.query('SELECT 1 FROM entity_references WHERE workspace_id=$1', [
+    code,
+  ]);
+  assert.equal(cleared.rowCount, 0);
+});
+
+test('deleting a workspace library clears its indexed references too', async () => {
+  const code = await key();
+  const library = JSON.parse(fixture);
+  const entry = Object.values(library)[0];
+  const run = documentRun('doc-2', 'extraction-2');
+  run.result.record.execution.workflowId = entry.id;
+  run.result.result.workflowId = entry.id;
+  entry.runs = [run];
+  await save(code, JSON.stringify(library), 0);
+  assert.equal(
+    (await stack.db.query('SELECT 1 FROM entity_references WHERE workspace_id=$1', [code]))
+      .rowCount,
+    1,
+  );
+  assert.equal((await request('DELETE', code)).status, 200);
+  assert.equal(
+    (await stack.db.query('SELECT 1 FROM entity_references WHERE workspace_id=$1', [code]))
+      .rowCount,
+    0,
+  );
+});
+
 test('invalid request envelopes do not advance a saved revision', async () => {
   const code = await key();
   await save(code, fixture, 0);

@@ -486,3 +486,4 @@ export type WorkflowRunJob = typeof workflowRunJobs.$inferSelect;
 export type NewWorkflowRunJob = typeof workflowRunJobs.$inferInsert;
 
 export * from './chatgpt-source-captures';
+export * from './entity-references';

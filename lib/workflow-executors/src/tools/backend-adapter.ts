@@ -24,6 +24,7 @@ export const BACKEND_ADAPTED_TOOL_IDS = [
   'logic.category_rollup_aggregator',
   'logic.calculation_engine',
   'logic.hierarchy_aggregator',
+  'ai.classification_suggestion',
 ] as const;
 
 function pushInputRole(inputsByRole: Record<string, unknown[]>, role: string, value: unknown) {
@@ -442,6 +443,15 @@ function flattenBackendResultOutput(result: BackendToolRunResult) {
   const rollupSummaryOutput = getBackendOutputRecord(result, 'rollup_summary');
   if (Object.keys(rollupSummaryOutput).length > 0) {
     output.rollupSummary = rollupSummaryOutput;
+  }
+
+  const suggestionsOutput = getBackendOutputRecord(result, 'suggestions');
+  if (Object.keys(suggestionsOutput).length > 0) {
+    output.suggestions = suggestionsOutput.suggestions;
+    output.suggestionsAccepted = suggestionsOutput.accepted;
+    output.suggestionsAuthoritative = suggestionsOutput.authoritative;
+    output.highConfidenceSuggestions = suggestionsOutput.highConfidenceSuggestions;
+    output.lowConfidenceSuggestions = suggestionsOutput.lowConfidenceSuggestions;
   }
 
   return output;

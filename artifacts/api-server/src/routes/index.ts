@@ -13,6 +13,7 @@ import genuiRouter from './genui';
 import documentsRouter from './documents';
 import fxRateRouter from './fx-rate';
 import httpSourceRouter from './http-source';
+import aiClassificationRouter from './ai-classification';
 import paramOptionsRouter from './param-options';
 import agentActionsRouter from './agent-actions';
 import workflowRunsRouter from './workflow-runs';
@@ -27,6 +28,8 @@ router.use('/workflow-library', workflowLibraryRouter);
 router.use(fxRateRouter);
 // Server-side JSON API calls: the builder's API Source block and Sina's callApi tool.
 router.use(httpSourceRouter);
+// Backend for the AI Mapping Suggestion block's config panel (model call + pin).
+router.use('/ai-classification-suggestion', aiClassificationRouter);
 // Live choices for any connector parameter that publishes them (replaced the
 // BoC-specific /api/fx-currencies — see param-options.ts).
 router.use(paramOptionsRouter);

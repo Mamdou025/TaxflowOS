@@ -51,7 +51,7 @@ import {
   generateBlockCodePreview,
 } from "./code-preview/generate-code-preview";
 import { DataPreviewCard } from "./data-preview-card";
-import { AiAgentProposalNotice } from "./family-editors/ai-agent-proposal-notice";
+import { AiAgentConfigureSection } from "./family-editors/ai-agent-configure-section";
 import { LogicModeEditor } from "./family-editors/logic-mode-editor";
 import { SourceVersionNotice } from "./family-editors/source-version-notice";
 import { SourceSetupPanel } from "./source-setup-panel";
@@ -102,7 +102,7 @@ function isExcelWorkbookSource(block: WorkflowBlock) {
   );
 }
 
-function getString(value: unknown, fallback = "") {
+export function getString(value: unknown, fallback = "") {
   return typeof value === "string" ? value : fallback;
 }
 
@@ -178,7 +178,7 @@ function getToolOutputRoleById(block: WorkflowBlock, roleId?: string) {
   return getToolForBlock(block)?.outputRoles.find((role) => role.id === roleId);
 }
 
-function getLatestOutputValueForRole({
+export function getLatestOutputValueForRole({
   block,
   lastRun,
   roleId,
@@ -304,7 +304,7 @@ function formatInlineCalculationFormula(formula: Record<string, unknown>) {
 
 // ─── UI primitives ───────────────────────────────────────────────────────────
 
-function Field({
+export function Field({
   disabled,
   label,
   onChange,
@@ -1169,11 +1169,13 @@ function ConfigureSection({
   protectedUnlocked,
   protectedFieldsDisabled,
   setGovernanceValue,
+  lastRun,
 }: {
   block: WorkflowBlock;
   config: Record<string, unknown>;
   disabled?: boolean;
   edges: WorkflowEdge[];
+  lastRun?: LocalRunRecord;
   nodes: WorkflowNode[];
   onCreateSourceForInput: (inputRoleId: string) => void;
   onCreateSourceLogic: (variant: SourceLogicVariant) => void;
@@ -1551,29 +1553,16 @@ function ConfigureSection({
 
   if (block.family === "AI / Agent") {
     return (
-      <div className="space-y-3">
-        <Field
-          disabled={disabled}
-          label="Prompt / config"
-          onChange={(value) => setConfigValue("aiPrompt", value)}
-          value={getString(config.aiPrompt || config.prompt)}
-        />
-        <div className="grid gap-2.5 sm:grid-cols-2">
-          <Field
-            disabled={disabled}
-            label="Allowed actions"
-            onChange={(value) => setConfigValue("allowedActions", value)}
-            value={getString(config.allowedActions, "propose only")}
-          />
-          <Field
-            disabled={disabled}
-            label="Selected tools"
-            onChange={(value) => setConfigValue("selectedTools", value)}
-            value={getString(config.selectedTools, "local catalog")}
-          />
-        </div>
-        <AiAgentProposalNotice />
-      </div>
+      <AiAgentConfigureSection
+        block={block}
+        config={config}
+        disabled={disabled}
+        edges={edges}
+        lastRun={lastRun}
+        nodes={nodes}
+        setConfigValue={setConfigValue}
+        setConfigValues={setConfigValues}
+      />
     );
   }
 
@@ -1721,6 +1710,7 @@ export function BlockInspector({
           disabled={disabled}
           downstreamBlocks={downstreamBlocks}
           edges={edges}
+          lastRun={lastRun}
           nodes={nodes}
           onCreateSourceForInput={onCreateSourceForInput}
           onCreateSourceLogic={onCreateSourceLogic}

@@ -332,6 +332,24 @@ function WorkflowSessionPanelBody({
             Approve completed results
           </button>
         </div>
+        {fapi && (
+          <div className="space-y-3">
+            <FapiSessionWorksheet definition={definition} session={session} />
+            <button
+              className="text-sm underline"
+              onClick={() => {
+                showSessionInRun(store, ref);
+                store.set(workflowTabAtom, 'results');
+                store.set(workflowSurfaceAtom, 'workflow');
+                store.set(chatPanelModeAtom, 'split');
+                store.set(openWorkspaceWindowAtom, { pageKey: 'workflows', title: 'Workflows' });
+                router.push('/');
+              }}
+            >
+              Open worksheet in Results
+            </button>
+          </div>
+        )}
         {!fapi && <WorkflowSessionWorksheet readModel={readModel} />}
         {fapiStages ? (
           <FapiWorkflowSteps
@@ -363,24 +381,6 @@ function WorkflowSessionPanelBody({
               )}
             />
           </>
-        )}
-        {fapi && (
-          <div className="space-y-3">
-            <FapiSessionWorksheet definition={definition} session={session} />
-            <button
-              className="text-sm underline"
-              onClick={() => {
-                showSessionInRun(store, ref);
-                store.set(workflowTabAtom, 'results');
-                store.set(workflowSurfaceAtom, 'workflow');
-                store.set(chatPanelModeAtom, 'split');
-                store.set(openWorkspaceWindowAtom, { pageKey: 'workflows', title: 'Workflows' });
-                router.push('/');
-              }}
-            >
-              Open worksheet in Results
-            </button>
-          </div>
         )}
         <LazyDetails summary={`Execution history (${session.attempts.length})`}>
           {session.attempts.map((attempt, i) => (

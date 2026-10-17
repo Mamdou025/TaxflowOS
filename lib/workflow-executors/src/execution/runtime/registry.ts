@@ -1,3 +1,4 @@
+import { classificationSuggestionToolModule } from '../blocks/ai/classification-suggestion';
 import { calculationEngineToolModule } from '../blocks/logic/calculation-engine';
 import { categoryRollupAggregatorToolModule } from '../blocks/logic/category-rollup-aggregator';
 import { hierarchyAggregatorToolModule } from '../blocks/logic/hierarchy-aggregator';
@@ -36,6 +37,7 @@ for (const module of [
   categoryRollupAggregatorToolModule,
   calculationEngineToolModule,
   hierarchyAggregatorToolModule,
+  classificationSuggestionToolModule,
 ]) {
   registerToolModule(module);
 }

@@ -81,6 +81,138 @@ export function SessionCalculationInputs({
     else delete next[name];
     onConfigPatch({ inputChoices: next });
   };
+  const attentionInputs = inputs.filter((input) => input.status !== 'provided');
+  const providedInputs = inputs.filter((input) => input.status === 'provided');
+  const renderInput = (input: (typeof inputs)[number]) => {
+    const choice = choices[input.name];
+    const selected = choice?.kind === 'source' ? JSON.stringify(choice) : (choice?.kind ?? 'workflow');
+    const binding = input.binding;
+    const selectedOption = sourceOptions.find((option) => option.value === selected);
+    const source =
+      binding?.kind === 'source'
+        ? sources.find((item) => item.block.id === binding.blockId)
+        : undefined;
+    return (
+      <section
+        key={input.name}
+        aria-label={`Field ${input.name}`}
+        className="space-y-2 rounded border p-3 text-sm"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="font-medium">
+            {input.label}
+            {input.unit ? ` (${input.unit})` : ''}
+          </span>
+          <span
+            className={
+              input.status === 'provided'
+                ? 'rounded bg-green-100 px-2 py-0.5 text-xs text-green-800'
+                : 'rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-900'
+            }
+          >
+            {input.status === 'provided'
+              ? 'Provided'
+              : input.status === 'invalid'
+                ? 'Invalid'
+                : 'Missing'}
+          </span>
+        </div>
+        <p className="break-all text-xs text-muted-foreground">
+          {input.name} · Number · required · finite
+        </p>
+        <label className="block space-y-1">
+          <span>Value comes from</span>
+          <select
+            aria-label={`Value provider for ${input.name}`}
+            className="block w-full rounded border bg-background p-2"
+            value={selected}
+            onChange={(event) => {
+              setPickerName(null);
+              const value = event.target.value;
+              update(
+                input.name,
+                value === 'workflow'
+                  ? undefined
+                  : value === 'manual'
+                    ? { kind: 'manual' }
+                    : (JSON.parse(value) as CalculationInputChoice),
+              );
+            }}
+          >
+            <option value="workflow">Use workflow setting</option>
+            <option value="manual">Enter for this run</option>
+            {choice?.kind === 'source' && (browseSources || !selectedOption) && (
+              <option value={selected}>
+                {selectedOption?.label ?? `${providerLabel(input, sources)} — unavailable`}
+              </option>
+            )}
+            {!browseSources &&
+              sourceOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+          </select>
+        </label>
+        {browseSources && (
+          <button
+            type="button"
+            aria-label={`Browse connected fields for ${input.name}`}
+            className="text-xs underline"
+            onClick={() => setPickerName(input.name)}
+          >
+            Choose a connected field ({sourceOptions.length})
+          </button>
+        )}
+        {browseSources && pickerName === input.name && (
+          <SessionConnectedFieldPicker
+            key={input.name}
+            name={input.name}
+            options={sourceOptions}
+            disabled={disabled}
+            onClose={() => setPickerName(null)}
+            onChoose={(value) => {
+              update(input.name, JSON.parse(value) as CalculationInputChoice);
+              setPickerName(null);
+            }}
+          />
+        )}
+        <p className="break-all text-xs">
+          From: {providerLabel(input, sources)}
+          {choice ? ' · this run' : ' · workflow setting'}
+        </p>
+        {input.binding?.kind === 'manual' && (
+          <label className="block space-y-1">
+            <span>
+              {input.label}
+              {input.unit ? ` (${input.unit})` : ''}
+            </span>
+            <input
+              aria-label={`Value for ${input.name}`}
+              type="number"
+              step="any"
+              className="block w-full rounded border bg-background p-2"
+              value={input.status === 'provided' ? String(input.value) : ''}
+              onChange={(event) => {
+                const text = event.target.value.trim();
+                if (!text) update(input.name, { kind: 'manual' });
+                else if (Number.isFinite(Number(text)))
+                  update(input.name, { kind: 'manual', value: Number(text) });
+              }}
+            />
+          </label>
+        )}
+        {input.status === 'provided' ? (
+          <p>Value: {input.value}</p>
+        ) : (
+          <p className="text-xs text-amber-700">{input.message ?? 'A numeric value is required.'}</p>
+        )}
+        {source?.capturedAt && (
+          <p className="text-xs text-muted-foreground">Source recorded: {source.capturedAt}</p>
+        )}
+      </section>
+    );
+  };
   return (
     <fieldset disabled={disabled} className="space-y-3">
       <p className="text-xs text-muted-foreground">
@@ -93,139 +225,16 @@ export function SessionCalculationInputs({
           removes their choices from this run’s current inputs; earlier history is retained.
         </p>
       )}
-      {inputs.map((input) => {
-        const choice = choices[input.name];
-        const selected =
-          choice?.kind === 'source' ? JSON.stringify(choice) : (choice?.kind ?? 'workflow');
-        const binding = input.binding;
-        const selectedOption = sourceOptions.find((option) => option.value === selected);
-        const source =
-          binding?.kind === 'source'
-            ? sources.find((item) => item.block.id === binding.blockId)
-            : undefined;
-        return (
-          <section
-            key={input.name}
-            aria-label={`Field ${input.name}`}
-            className="space-y-2 rounded border p-3 text-sm"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="font-medium">
-                {input.label}
-                {input.unit ? ` (${input.unit})` : ''}
-              </span>
-              <span
-                className={
-                  input.status === 'provided'
-                    ? 'rounded bg-green-100 px-2 py-0.5 text-xs text-green-800'
-                    : 'rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-900'
-                }
-              >
-                {input.status === 'provided'
-                  ? 'Provided'
-                  : input.status === 'invalid'
-                    ? 'Invalid'
-                    : 'Missing'}
-              </span>
-            </div>
-            <p className="break-all text-xs text-muted-foreground">
-              {input.name} · Number · required · finite
-            </p>
-            <label className="block space-y-1">
-              <span>Value comes from</span>
-              <select
-                aria-label={`Value provider for ${input.name}`}
-                className="block w-full rounded border bg-background p-2"
-                value={selected}
-                onChange={(event) => {
-                  setPickerName(null);
-                  const value = event.target.value;
-                  update(
-                    input.name,
-                    value === 'workflow'
-                      ? undefined
-                      : value === 'manual'
-                        ? { kind: 'manual' }
-                        : (JSON.parse(value) as CalculationInputChoice),
-                  );
-                }}
-              >
-                <option value="workflow">Use workflow setting</option>
-                <option value="manual">Enter for this run</option>
-                {choice?.kind === 'source' && (browseSources || !selectedOption) && (
-                  <option value={selected}>
-                    {selectedOption?.label ?? `${providerLabel(input, sources)} — unavailable`}
-                  </option>
-                )}
-                {!browseSources &&
-                  sourceOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-              </select>
-            </label>
-            {browseSources && (
-              <button
-                type="button"
-                aria-label={`Browse connected fields for ${input.name}`}
-                className="text-xs underline"
-                onClick={() => setPickerName(input.name)}
-              >
-                Choose a connected field ({sourceOptions.length})
-              </button>
-            )}
-            {browseSources && pickerName === input.name && (
-              <SessionConnectedFieldPicker
-                key={input.name}
-                name={input.name}
-                options={sourceOptions}
-                disabled={disabled}
-                onClose={() => setPickerName(null)}
-                onChoose={(value) => {
-                  update(input.name, JSON.parse(value) as CalculationInputChoice);
-                  setPickerName(null);
-                }}
-              />
-            )}
-            <p className="break-all text-xs">
-              From: {providerLabel(input, sources)}
-              {choice ? ' · this run' : ' · workflow setting'}
-            </p>
-            {input.binding?.kind === 'manual' && (
-              <label className="block space-y-1">
-                <span>
-                  {input.label}
-                  {input.unit ? ` (${input.unit})` : ''}
-                </span>
-                <input
-                  aria-label={`Value for ${input.name}`}
-                  type="number"
-                  step="any"
-                  className="block w-full rounded border bg-background p-2"
-                  value={input.status === 'provided' ? String(input.value) : ''}
-                  onChange={(event) => {
-                    const text = event.target.value.trim();
-                    if (!text) update(input.name, { kind: 'manual' });
-                    else if (Number.isFinite(Number(text)))
-                      update(input.name, { kind: 'manual', value: Number(text) });
-                  }}
-                />
-              </label>
-            )}
-            {input.status === 'provided' ? (
-              <p>Value: {input.value}</p>
-            ) : (
-              <p className="text-xs text-amber-700">
-                {input.message ?? 'A numeric value is required.'}
-              </p>
-            )}
-            {source?.capturedAt && (
-              <p className="text-xs text-muted-foreground">Source recorded: {source.capturedAt}</p>
-            )}
-          </section>
-        );
-      })}
+      {attentionInputs.map(renderInput)}
+      {!!providedInputs.length && (
+        <details className="rounded border p-2 text-sm" open={!attentionInputs.length}>
+          <summary className="cursor-pointer text-xs text-muted-foreground">
+            {providedInputs.length} field{providedInputs.length === 1 ? '' : 's'} already set from
+            sources or defaults — review or change
+          </summary>
+          <div className="mt-3 space-y-3">{providedInputs.map(renderInput)}</div>
+        </details>
+      )}
       {!inputs.length && (
         <p className="text-xs text-muted-foreground">
           No variables are required by the current formulas.
